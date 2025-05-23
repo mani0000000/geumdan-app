@@ -194,6 +194,9 @@ export default function GasWidget() {
   const [selected,   setSelected]   = useState<GasStation | null>(null);
   const [flyTo,      setFlyTo]      = useState<[number, number] | null>(null);
   const [myPos,      setMyPos]      = useState<[number, number] | null>(null);
+  const [showAll,    setShowAll]    = useState(false);
+
+  const PAGE = 4; // 초기 표시 개수
 
   // ── 데이터 로드 ──────────────────────────────────────────
   const load = useCallback(async (bust = false) => {
@@ -229,6 +232,7 @@ export default function GasWidget() {
         setMyPos(p);
         setFlyTo(p);
         setSort("distance");
+        setShowAll(false);
         setLocating(false);
       },
       () => setLocating(false),
@@ -361,7 +365,7 @@ export default function GasWidget() {
             거리순
           </button>
           <button
-            onClick={() => setSort("price")}
+            onClick={() => { setSort("price"); setShowAll(false); }}
             className={`h-7 px-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-colors ${
               sort === "price" ? "bg-[#DC2626] text-white" : "bg-[#f5f5f7] text-[#636366]"
             }`}
@@ -410,82 +414,97 @@ export default function GasWidget() {
             </div>
           </div>
         ) : (
-          /* ── 전체 주유소 목록 ── */
-          sorted.map((s, idx) => {
-            const isLowest  = lowestGasoline != null && s.prices.gasoline === lowestGasoline;
-            const isSelected = selected?.id === s.id;
-            const dist = userLat != null && userLng != null
-              ? haversineKm(userLat, userLng, s.lat, s.lng)
-              : s.distanceKm;
-            const dText = dist > 0 ? distLabel(dist) : null;
-            const hasPrice = s.prices.gasoline != null || s.prices.diesel != null;
+          /* ── 주유소 목록 (처음 4개 + 더보기) ── */
+          <>
+            {(showAll ? sorted : sorted.slice(0, PAGE)).map((s, idx) => {
+              const isLowest  = lowestGasoline != null && s.prices.gasoline === lowestGasoline;
+              const isSelected = selected?.id === s.id;
+              const dist = userLat != null && userLng != null
+                ? haversineKm(userLat, userLng, s.lat, s.lng)
+                : s.distanceKm;
+              const dText = dist > 0 ? distLabel(dist) : null;
+              const hasPrice = s.prices.gasoline != null || s.prices.diesel != null;
 
-            return (
-              <button
-                key={s.id}
-                onClick={() => handleSelect(s)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all active:scale-[0.99] ${
-                  isSelected ? "border-[#0071e3] bg-[#EFF6FF]" :
-                  isLowest   ? "bg-[#FFF5F5] border-[#FECACA]" :
-                               "bg-white border-[#f0f0f3]"
-                }`}
-              >
-                {/* 순위 */}
-                <div className="w-5 text-center shrink-0">
-                  <span className={`text-[12px] font-black ${
-                    idx === 0 ? "text-[#DC2626]" : idx === 1 ? "text-[#EA580C]" : idx === 2 ? "text-[#D97706]" : "text-[#d2d2d7]"
-                  }`}>{idx + 1}</span>
-                </div>
-
-                {/* 브랜드 뱃지 */}
-                <div
-                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[10px] font-black leading-tight text-center"
-                  style={{ background: s.brandBg, color: s.brandColor }}
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => handleSelect(s)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all active:scale-[0.99] ${
+                    isSelected ? "border-[#0071e3] bg-[#EFF6FF]" :
+                    isLowest   ? "bg-[#FFF5F5] border-[#FECACA]" :
+                                 "bg-white border-[#f0f0f3]"
+                  }`}
                 >
-                  <div>
-                    <div style={{ fontSize: 13 }}>⛽</div>
-                    <div>{s.brandShort}</div>
+                  {/* 순위 */}
+                  <div className="w-5 text-center shrink-0">
+                    <span className={`text-[12px] font-black ${
+                      idx === 0 ? "text-[#DC2626]" : idx === 1 ? "text-[#EA580C]" : idx === 2 ? "text-[#D97706]" : "text-[#d2d2d7]"
+                    }`}>{idx + 1}</span>
                   </div>
-                </div>
 
-                {/* 이름 + 지역 */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-[13px] font-bold truncate ${isLowest ? "text-[#DC2626]" : "text-[#1d1d1f]"}`}>
-                      {s.name}
-                    </span>
-                    {s.isAlttul && <Tag color="#059669">알뜰</Tag>}
-                    {s.isSelf   && <Tag color="#0071e3">셀프</Tag>}
+                  {/* 브랜드 뱃지 */}
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[10px] font-black leading-tight text-center"
+                    style={{ background: s.brandBg, color: s.brandColor }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 13 }}>⛽</div>
+                      <div>{s.brandShort}</div>
+                    </div>
                   </div>
-                  <p className="text-[10px] text-[#86868b] mt-0.5 flex items-center gap-0.5 truncate">
-                    <MapPin size={8} className="shrink-0" />
-                    {s.area}
-                    {dText && <> · <Zap size={8} className="shrink-0" />{dText}</>}
-                  </p>
-                </div>
 
-                {/* 가격 */}
-                <div className="flex flex-col items-end gap-0.5 shrink-0">
-                  {hasPrice ? (
-                    <>
-                      {s.prices.gasoline != null && (
-                        <span className={`text-[13px] font-black tabular-nums ${isLowest ? "text-[#DC2626]" : "text-[#1d1d1f]"}`}>
-                          {won(s.prices.gasoline)}
-                        </span>
-                      )}
-                      {s.prices.diesel != null && (
-                        <span className="text-[10px] text-[#86868b] tabular-nums">
-                          경유 {won(s.prices.diesel)}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-[11px] text-[#c7c7cc]">가격 없음</span>
-                  )}
-                </div>
+                  {/* 이름 + 지역 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[13px] font-bold truncate ${isLowest ? "text-[#DC2626]" : "text-[#1d1d1f]"}`}>
+                        {s.name}
+                      </span>
+                      {s.isAlttul && <Tag color="#059669">알뜰</Tag>}
+                      {s.isSelf   && <Tag color="#0071e3">셀프</Tag>}
+                    </div>
+                    <p className="text-[10px] text-[#86868b] mt-0.5 flex items-center gap-0.5 truncate">
+                      <MapPin size={8} className="shrink-0" />
+                      {s.area}
+                      {dText && <> · <Zap size={8} className="shrink-0" />{dText}</>}
+                    </p>
+                  </div>
+
+                  {/* 가격 */}
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    {hasPrice ? (
+                      <>
+                        {s.prices.gasoline != null && (
+                          <span className={`text-[13px] font-black tabular-nums ${isLowest ? "text-[#DC2626]" : "text-[#1d1d1f]"}`}>
+                            {won(s.prices.gasoline)}
+                          </span>
+                        )}
+                        {s.prices.diesel != null && (
+                          <span className="text-[10px] text-[#86868b] tabular-nums">
+                            경유 {won(s.prices.diesel)}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-[#c7c7cc]">가격 없음</span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+
+            {/* ── 더보기 버튼 ── */}
+            {!showAll && sorted.length > PAGE && (
+              <button
+                onClick={() => setShowAll(true)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl border border-dashed border-[#d2d2d7] bg-[#fafafa] text-[12px] font-semibold text-[#86868b] active:bg-[#f0f0f3] transition-colors"
+              >
+                <span>나머지 {sorted.length - PAGE}개 주유소 더보기</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M6 9l6 6 6-6"/>
+                </svg>
               </button>
-            );
-          })
+            )}
+          </>
         )}
       </section>
 
