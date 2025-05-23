@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { GasStation } from "@/lib/types";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const ANON_KEY     = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
@@ -123,6 +124,82 @@ export async function fetchGasStations(): Promise<GasStationRow[]> {
     return [];
   }
   return (data ?? []) as GasStationRow[];
+}
+
+// ── 위젯용: 가격 포함 전체 주유소 ────────────────────────────────
+// 배치 스크립트(fetch-gas-prices.mjs)가 매시간 price_* 컬럼을 업데이트한다.
+// 정적 빌드(GitHub Pages)에서도 Supabase를 직접 호출하므로 API route 불필요.
+
+/** 검단신도시 중심 (거리 계산용 기준점) */
+const CENTER = { lat: 37.5446, lng: 126.6861 };
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+}
+
+export interface GasStationsResult {
+  stations:  GasStation[];
+  timestamp: string | null;
+  hasPrice:  boolean;
+}
+
+export async function fetchGasStationsWithPrices(): Promise<GasStationsResult> {
+  try {
+    const sb = client();
+    const { data, error } = await sb
+      .from("gas_stations")
+      .select("id,name,brand_code,area,address,lat,lng,is_self,is_alttul,price_gasoline,price_diesel,price_lpg,price_updated_at")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error || !data?.length) throw new Error(error?.message ?? "empty");
+
+    let latestTs: string | null = null;
+
+    const stations: GasStation[] = data.map(row => {
+      const meta = metaFor(row.brand_code as string);
+      const lat  = row.lat as number;
+      const lng  = row.lng as number;
+      const ts   = row.price_updated_at as string | null;
+      if (ts && (!latestTs || ts > latestTs)) latestTs = ts;
+
+      return {
+        id:          String(row.id),
+        name:        row.name as string,
+        brandCode:   row.brand_code as string,
+        brandName:   meta.brandShort,
+        brandColor:  meta.brandColor,
+        brandBg:     meta.brandBg,
+        brandShort:  meta.brandShort,
+        address:     row.address as string,
+        distanceKm:  haversineKm(CENTER.lat, CENTER.lng, lat, lng),
+        lat, lng,
+        area:        row.area as string,
+        isSelf:      row.is_self as boolean,
+        isAlttul:    row.is_alttul as boolean,
+        prices: {
+          gasoline: row.price_gasoline as number | null ?? undefined,
+          diesel:   row.price_diesel   as number | null ?? undefined,
+          lpg:      row.price_lpg      as number | null ?? undefined,
+        },
+      };
+    });
+
+    return {
+      stations,
+      timestamp: latestTs,
+      hasPrice:  stations.some(s => s.prices.gasoline != null || s.prices.diesel != null),
+    };
+  } catch {
+    return { stations: [], timestamp: null, hasPrice: false };
+  }
 }
 
 /** opinet_id 를 자동 저장 (서버사이드 전용 — service key 필요) */

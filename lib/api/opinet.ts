@@ -3,24 +3,19 @@
 // 오피넷 aroundAll.do 는 WGS84(위경도)가 아닌 KATEC 좌표계를 사용한다.
 // 검단신도시 중심 좌표(WGS84)를 KATEC 으로 변환해 /api/gas 에서 사용한다.
 // 변환식: Abridged Molodensky(WGS84→Bessel 1841 한국) + TM(KATEC) 정변환.
-// 검증: 왕복 변환 오차 < 0.5m, 실 API 응답상 최근접 주유소 ~390m (정상).
 
 import { GEUMDAN_CENTER } from "@/lib/geumdan";
 
 const D2R = Math.PI / 180;
 
-// WGS84
 const WGS_A = 6378137.0;
 const WGS_F = 1 / 298.257223563;
-// Bessel 1841
 const BES_A = 6377397.155;
 const BES_F = 1 / 299.1528128;
-// WGS84 → Bessel(한국) 3-파라미터 이동량
 const DX = -146.43;
 const DY = 507.89;
 const DZ = 681.46;
 
-// KATEC TM 파라미터: 원점위도 38°, 중앙경선 128°, 축척 0.9999, 가산 X 400000 / Y 600000
 const K_LAT0 = 38.0 * D2R;
 const K_LON0 = 128.0 * D2R;
 const K_SCALE = 0.9999;
@@ -47,7 +42,6 @@ export function wgs84ToKatec(lat: number, lng: number): { x: number; y: number }
   const Rn = a / Math.sqrt(1 - e2 * sinp * sinp);
   const Rm = (a * (1 - e2)) / Math.pow(1 - e2 * sinp * sinp, 1.5);
 
-  // Abridged Molodensky → Bessel 위경도
   const dphi =
     (-DX * sinp * cosl -
       DY * sinp * sinl +
@@ -60,7 +54,6 @@ export function wgs84ToKatec(lat: number, lng: number): { x: number; y: number }
   const bLat = phi + dphi;
   const bLon = lam + dlam;
 
-  // Bessel 타원체에서 TM(KATEC) 정변환 — Redfearn 급수
   const ba = BES_A;
   const bb = ba * (1 - BES_F);
   const be2 = (ba * ba - bb * bb) / (ba * ba);
@@ -108,7 +101,6 @@ export function wgs84ToKatec(lat: number, lng: number): { x: number; y: number }
   return { x: Math.round(x), y: Math.round(y) };
 }
 
-// 검단신도시 중심 KATEC 좌표 (모듈 로드 시 1회 계산)
 export const GEUMDAN_KATEC = wgs84ToKatec(
   GEUMDAN_CENTER.lat,
   GEUMDAN_CENTER.lng,

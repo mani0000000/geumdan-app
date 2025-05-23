@@ -2,11 +2,12 @@
 import { useCallback, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import {
-  AlertTriangle, Fuel, Info,
+  AlertTriangle, Fuel,
   List, Map as MapIcon,
   MapPin, Navigation, RefreshCw, TrendingDown, X, Zap,
 } from "lucide-react";
-import type { GasApiResponse, GasStation } from "@/lib/types";
+import type { GasStation } from "@/lib/types";
+import { fetchGasStationsWithPrices } from "@/lib/db/gas-stations";
 
 // ── Leaflet 지도 동적 로드 (SSR 비활성화) ─────────────────────
 const GasWidgetMap = dynamic(() => import("./GasWidgetMap"), {
@@ -182,8 +183,15 @@ function StationSheet({
 type SortKey = "price" | "distance";
 type ViewKey = "list" | "map";
 
+interface WidgetData {
+  stations:  GasStation[];
+  timestamp: string | null;
+  hasPrice:  boolean;
+  error:     boolean;
+}
+
 export default function GasWidget() {
-  const [data,       setData]       = useState<GasApiResponse | null>(null);
+  const [data,       setData]       = useState<WidgetData | null>(null);
   const [loading,    setLoading]    = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sort,       setSort]       = useState<SortKey>("price");
@@ -198,16 +206,13 @@ export default function GasWidget() {
 
   const PAGE = 4; // 초기 표시 개수
 
-  // ── 데이터 로드 ──────────────────────────────────────────
-  const load = useCallback(async (bust = false) => {
+  // ── 데이터 로드 (Supabase 직접 — 정적 빌드에서도 동작) ───────
+  const load = useCallback(async () => {
     try {
-      const res  = await fetch(bust ? `/api/gas?t=${Date.now()}` : "/api/gas", {
-        cache: bust ? "no-store" : "default",
-      });
-      const json = await res.json() as GasApiResponse;
-      setData(json);
+      const result = await fetchGasStationsWithPrices();
+      setData({ ...result, error: result.stations.length === 0 });
     } catch {
-      setData({ stations: [], source: "error", timestamp: new Date().toISOString(), success: false, error: "network" });
+      setData({ stations: [], timestamp: null, hasPrice: false, error: true });
     }
   }, []);
 
@@ -216,7 +221,7 @@ export default function GasWidget() {
   async function refresh() {
     if (refreshing) return;
     setRefreshing(true);
-    await load(true);
+    await load();
     setRefreshing(false);
   }
 
@@ -256,7 +261,7 @@ export default function GasWidget() {
 
   const lowestGasoline = sorted.map(s => s.prices.gasoline).find((p): p is number => p != null);
   const lowestStation  = lowestGasoline != null ? sorted.find(s => s.prices.gasoline === lowestGasoline) : undefined;
-  const source         = data?.source;
+  const hasError       = data?.error ?? false;
 
   function handleSelect(s: GasStation) {
     setSelected(s);
@@ -352,7 +357,7 @@ export default function GasWidget() {
       )}
 
       {/* ── 정렬 컨트롤 (목록 뷰에서 표시) ── */}
-      {view === "list" && !loading && source !== "error" && source !== "no_key" && (
+      {view === "list" && !loading && !hasError && (
         <div className="flex items-center gap-1.5 px-4 mb-3">
           <button
             onClick={locate}
@@ -377,7 +382,7 @@ export default function GasWidget() {
       )}
 
       {/* ── 최저가 배너 ── */}
-      {!loading && lowestStation && (view === "list") && (
+      {!loading && !hasError && lowestStation && (view === "list") && (
         <div className="mx-4 mb-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-[#FEF2F2] to-[#FFF5F5] border border-[#FECACA] flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-[#DC2626] flex items-center justify-center shrink-0">
             <TrendingDown size={14} className="text-white" />
@@ -397,20 +402,12 @@ export default function GasWidget() {
       <section className="px-4 space-y-1.5 mb-3">
         {loading ? (
           <Skeleton />
-        ) : source === "error" ? (
+        ) : hasError ? (
           <div className="p-3 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] flex items-start gap-2.5">
             <AlertTriangle size={15} className="text-[#DC2626] mt-0.5 shrink-0" />
             <div className="text-[12px]">
-              <p className="font-bold text-[#991B1B]">오피넷 API 호출 실패</p>
-              <p className="text-[#991B1B]">잠시 후 새로고침해 주세요.{data?.error ? ` (${data.error})` : ""}</p>
-            </div>
-          </div>
-        ) : source === "no_key" ? (
-          <div className="p-3 rounded-2xl bg-[#FFF8E1] border border-[#FFE082] flex items-start gap-2.5">
-            <Info size={15} className="text-[#B45309] mt-0.5 shrink-0" />
-            <div className="text-[12px]">
-              <p className="font-bold text-[#92400E]">오피넷 API 키 미등록</p>
-              <p className="text-[#92400E]">환경변수 OPINET_API_KEY를 설정해야 가격이 표시됩니다.</p>
+              <p className="font-bold text-[#991B1B]">가격 정보를 불러오지 못했습니다</p>
+              <p className="text-[#991B1B]">잠시 후 새로고침해 주세요.</p>
             </div>
           </div>
         ) : (
@@ -509,7 +506,7 @@ export default function GasWidget() {
       </section>
 
       {/* ── 업데이트 시각 ── */}
-      {data?.timestamp && !loading && (
+      {data?.timestamp && !loading && data.hasPrice && (
         <p className="px-4 pb-3 text-[10px] text-[#c7c7cc]">
           오피넷 기준 · {new Date(data.timestamp).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 업데이트
         </p>
