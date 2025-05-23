@@ -8,7 +8,6 @@ import {
   Search, Navigation, Building2, List, Map as MapIcon,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
@@ -1564,7 +1563,6 @@ export default function StoresPage() {
         <StoreSheet store={selected} onClose={() => setSelected(null)}
           onDetail={() => { setSelected(null); router.push(`/stores/detail/?id=${selected.id}`); }} />
       )}
-      <BottomNav />
     </div>
   );
 }

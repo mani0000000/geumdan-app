@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText, MapPin, Megaphone } from "lucide-react";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import { posts } from "@/lib/mockData";
 import {
   getUserProfile,
@@ -509,7 +508,6 @@ export default function MyPage() {
       </div>
 
       <p className="text-center text-[12px] text-[#86868b] pb-4">검단 라이프 v1.1.0</p>
-      <BottomNav />
     </div>
   );
 }

@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import type { GasApiResponse, GasStation } from "@/lib/types";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 
 // ── SSR 비활성화 동적 임포트 ──────────────────────────────────
 const GasMapView = dynamic(() => import("./GasMapView"), {
@@ -431,7 +430,6 @@ export default function GasPageClient() {
         </div>
       )}
 
-      <BottomNav />
     </div>
   );
 }

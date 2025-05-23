@@ -8,7 +8,6 @@ import {
   Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { PostVideo } from "@/components/ui/PostVideo";
@@ -1467,7 +1466,6 @@ function SoikContent() {
         </button>
       )}
 
-      <BottomNav />
     </div>
   );
 }

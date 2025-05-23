@@ -12,7 +12,6 @@ import {
   Navigation, Zap, Accessibility,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
-import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
@@ -2634,7 +2633,6 @@ export default function HomePage() {
       })}
 
       <div className="h-4" />
-      <BottomNav />
 
       <PopupBottomSheet popups={popups} />
     </div>
