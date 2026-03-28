@@ -3,6 +3,7 @@ import { useState, useMemo } from "react";
 import { Search, X, Tag, Download, CheckCircle2, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import BottomNav from "@/components/layout/BottomNav";
+import StoreLogo from "@/components/ui/StoreLogo";
 import { coupons } from "@/lib/mockData";
 import type { Coupon, StoreCategory } from "@/lib/types";
 
@@ -42,44 +43,44 @@ function CouponCard({ coupon, downloaded, onToggle }: {
   onToggle: () => void;
 }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-sm"
-      style={{ borderLeft: `4px solid ${coupon.color}` }}>
-      <div className="px-4 py-4">
-        <div className="flex items-start justify-between gap-3">
-          {/* 왼쪽: 정보 */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white shrink-0"
-                style={{ background: coupon.color }}>
-                {coupon.category}
-              </span>
-              <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full shrink-0">
-                {coupon.floor}
-              </span>
-              <ExpiryBadge expiry={coupon.expiry} />
-            </div>
-            <p className="text-[13px] text-[#8B95A1]">{coupon.storeName}</p>
-            <p className="text-[15px] font-bold text-[#191F28] mt-0.5 leading-snug">{coupon.title}</p>
-          </div>
-          {/* 오른쪽: 할인액 + 버튼 */}
-          <div className="flex flex-col items-end gap-2 shrink-0">
-            <span className="text-[20px] font-black" style={{ color: coupon.color }}>
-              {coupon.discount}
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+      {/* 컬러 상단 바 */}
+      <div className="h-1" style={{ background: coupon.color }} />
+      <div className="px-4 py-3.5 flex items-center gap-3">
+        {/* 로고 */}
+        <StoreLogo name={coupon.storeName} category={coupon.category} size={44} />
+
+        {/* 중간: 정보 */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+              style={{ background: coupon.color }}>
+              {coupon.category}
             </span>
-            <button
-              onClick={onToggle}
-              className={`flex items-center gap-1.5 h-9 px-4 rounded-xl text-[12px] font-bold transition-all active:opacity-70 ${
-                downloaded
-                  ? "bg-[#F2F4F6] text-[#8B95A1]"
-                  : "text-white"
-              }`}
-              style={downloaded ? {} : { background: coupon.color }}>
-              {downloaded
-                ? <><CheckCircle2 size={13} />완료</>
-                : <><Download size={13} />받기</>
-              }
-            </button>
+            <span className="text-[10px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">
+              {coupon.floor}
+            </span>
+            <ExpiryBadge expiry={coupon.expiry} />
           </div>
+          <p className="text-[13px] font-bold text-[#191F28] leading-snug">{coupon.storeName}</p>
+          <p className="text-[12px] text-[#8B95A1] mt-0.5 leading-snug">{coupon.title}</p>
+        </div>
+
+        {/* 오른쪽: 할인액 + 버튼 */}
+        <div className="flex flex-col items-end gap-2 shrink-0">
+          <span className="text-[18px] font-black" style={{ color: coupon.color }}>
+            {coupon.discount}
+          </span>
+          <button
+            onClick={onToggle}
+            className={`flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[11px] font-bold transition-all active:opacity-70 ${
+              downloaded ? "bg-[#F2F4F6] text-[#8B95A1]" : "text-white"
+            }`}
+            style={downloaded ? {} : { background: coupon.color }}>
+            {downloaded
+              ? <><CheckCircle2 size={12} />완료</>
+              : <><Download size={12} />받기</>}
+          </button>
         </div>
       </div>
     </div>

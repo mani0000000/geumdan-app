@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import StoreLogo from "@/components/ui/StoreLogo";
 import { buildings } from "@/lib/mockData";
 import type { Store, StoreCategory, Floor } from "@/lib/types";
 
@@ -165,10 +166,7 @@ function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelec
         <button key={store.id} onClick={() => onSelect(store)}
           className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] text-left">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
-              style={{ background: catDot[store.category] + "22" }}>
-              {catEmoji[store.category]}
-            </div>
+            <StoreLogo name={store.name} category={store.category} size={40} />
             <div>
               <p className="text-[14px] font-semibold text-[#191F28]">{store.name}</p>
               <p className="text-[12px] text-[#8B95A1]">{buildingName} · {floorLabel}</p>
@@ -395,7 +393,7 @@ export default function StoresPage() {
                 <button key={s.id} onClick={() => setSelected(s)}
                   className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] ${selected?.id===s.id ? "ring-2 ring-[#3182F6]" : ""}`}>
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{catEmoji[s.category]}</span>
+                    <StoreLogo name={s.name} category={s.category} size={40} />
                     <div className="text-left">
                       <p className="text-[14px] font-medium text-[#191F28]">{s.name}</p>
                       {s.hours && <p className="text-[12px] text-[#8B95A1]">{s.hours}</p>}

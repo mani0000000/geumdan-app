@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import StoreLogo from "@/components/ui/StoreLogo";
 import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
@@ -229,34 +230,35 @@ function CouponSection() {
         style={{ scrollbarWidth: "none" }}>
         {coupons.map(c => {
           const done = downloaded.has(c.id);
+          const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
           return (
             <div key={c.id}
-              className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm">
+              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden shadow-sm">
               {/* 컬러 상단 바 */}
-              <div className="h-1.5 w-full" style={{ background: c.color }} />
-              <div className="p-3.5">
-                {/* 배지 행 */}
-                <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
-                    style={{ background: c.color }}>{c.floor}</span>
-                  <span className="text-[10px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">{c.category}</span>
-                  {(() => {
-                    const d = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
-                    return d <= 3
-                      ? <span className="text-[10px] font-bold text-[#F04452] ml-auto">D-{d}</span>
-                      : <span className="text-[10px] text-[#B0B8C1] ml-auto">~{c.expiry.slice(5)}</span>;
-                  })()}
+              <div className="h-1" style={{ background: c.color }} />
+              <div className="p-3">
+                {/* 로고 + 매장명 */}
+                <div className="flex items-center gap-2 mb-2">
+                  <StoreLogo name={c.storeName} category={c.category} size={32} rounded="rounded-lg" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[12px] font-bold text-[#191F28] truncate">{c.storeName}</p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+                        style={{ background: c.color }}>{c.floor}</span>
+                      {dDay <= 3
+                        ? <span className="text-[10px] font-bold text-[#F04452]">D-{dDay}</span>
+                        : <span className="text-[10px] text-[#B0B8C1]">~{c.expiry.slice(5)}</span>}
+                    </div>
+                  </div>
                 </div>
-                {/* 매장명 */}
-                <p className="text-[12px] text-[#8B95A1]">{c.storeName}</p>
-                {/* 쿠폰 제목 - 2줄 */}
-                <p className="text-[13px] font-bold text-[#191F28] mt-0.5 leading-snug line-clamp-2 min-h-[36px]">{c.title}</p>
+                {/* 쿠폰 제목 */}
+                <p className="text-[12px] text-[#4E5968] leading-snug line-clamp-2 min-h-[32px]">{c.title}</p>
                 {/* 할인 + 버튼 */}
-                <div className="flex items-center justify-between mt-2.5">
-                  <span className="text-[18px] font-black" style={{ color: c.color }}>{c.discount}</span>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-[16px] font-black" style={{ color: c.color }}>{c.discount}</span>
                   <button
                     onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                    className={`h-8 px-4 rounded-xl text-[12px] font-bold transition-all active:opacity-70 ${
+                    className={`h-7 px-3 rounded-lg text-[11px] font-bold active:opacity-70 ${
                       done ? "bg-[#F2F4F6] text-[#8B95A1]" : "text-white"
                     }`}
                     style={done ? {} : { background: c.color }}>
@@ -295,10 +297,8 @@ function NewOpeningsSection() {
             <button key={s.id}
               onClick={() => router.push(`/stores/detail/?id=${s.storeId}`)}
               className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#F2F4F6] text-left">
-              {/* 이모지 아이콘 */}
-              <div className="w-10 h-10 rounded-xl bg-[#F2F4F6] flex items-center justify-center text-xl shrink-0">
-                {s.emoji}
-              </div>
+                  {/* 매장 로고 */}
+              <StoreLogo name={s.storeName} category={s.category} size={40} />
               {/* 정보: 매장명 → 상가건물(층수) → 업종 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
