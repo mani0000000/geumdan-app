@@ -1,4 +1,16 @@
 import { type ClassValue, clsx } from "clsx";
+import type { Store, Floor, Building } from "./types";
+import { buildings } from "./mockData";
+
+export function findStoreById(id: string): { store: Store; floor: Floor; building: Building } | null {
+  for (const building of buildings) {
+    for (const floor of building.floors) {
+      const store = floor.stores.find(s => s.id === id);
+      if (store) return { store, floor, building };
+    }
+  }
+  return null;
+}
 
 export function cn(...inputs: ClassValue[]) {
   return clsx(inputs);

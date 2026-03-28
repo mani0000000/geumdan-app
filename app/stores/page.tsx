@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { MapPin, Phone, Clock, Lock, ParkingSquare, ChevronLeft, ChevronRight, X, Pencil, CheckCircle2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -58,7 +59,7 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
   );
 }
 
-function StoreSheet({ store, onClose }: { store: Store; onClose: () => void }) {
+function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
   const [sent, setSent] = useState(false);
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
@@ -77,7 +78,7 @@ function StoreSheet({ store, onClose }: { store: Store; onClose: () => void }) {
             </div>
             <button onClick={onClose} className="active:opacity-60"><X size={22} className="text-[#8B95A1]" /></button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {store.hours && (
               <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-3 py-3">
                 <Clock size={16} className="text-[#8B95A1] shrink-0" />
@@ -85,13 +86,20 @@ function StoreSheet({ store, onClose }: { store: Store; onClose: () => void }) {
               </div>
             )}
             {store.phone && (
-              <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-3 py-3">
-                <Phone size={16} className="text-[#8B95A1] shrink-0" />
-                <div><p className="text-[11px] text-[#8B95A1]">전화번호</p><a href={`tel:${store.phone}`} className="text-[14px] font-medium text-[#3182F6]">{store.phone}</a></div>
+              <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+                <div className="flex items-center gap-3">
+                  <Phone size={16} className="text-[#8B95A1] shrink-0" />
+                  <div><p className="text-[11px] text-[#8B95A1]">전화번호</p><p className="text-[14px] font-medium text-[#191F28]">{store.phone}</p></div>
+                </div>
+                <a href={`tel:${store.phone}`} className="h-9 px-4 bg-[#3182F6] rounded-xl text-white text-[13px] font-bold flex items-center active:opacity-80">전화</a>
               </div>
             )}
           </div>
-          <div className="mt-4">
+          <div className="mt-4 space-y-2">
+            <button onClick={onDetail}
+              className="w-full h-12 bg-[#3182F6] rounded-xl flex items-center justify-center gap-2 text-[14px] text-white font-bold active:bg-[#1B64DA] transition-colors">
+              매장 상세 정보 보기
+            </button>
             {!sent
               ? <button onClick={() => setSent(true)}
                   className="w-full h-11 border border-[#E5E8EB] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#4E5968] font-medium active:bg-[#F2F4F6] transition-colors">
@@ -111,6 +119,7 @@ function StoreSheet({ store, onClose }: { store: Store; onClose: () => void }) {
 }
 
 export default function StoresPage() {
+  const router = useRouter();
   const b = buildings[0];
   const [floorIdx, setFloorIdx] = useState(1);
   const [selected, setSelected] = useState<Store | null>(null);
@@ -214,7 +223,10 @@ export default function StoresPage() {
         </div>
       </div>
 
-      {selected && selected.name !== "공실" && <StoreSheet store={selected} onClose={() => setSelected(null)} />}
+      {selected && selected.name !== "공실" && (
+        <StoreSheet store={selected} onClose={() => setSelected(null)}
+          onDetail={() => { setSelected(null); router.push(`/stores/detail/?id=${selected.id}`); }} />
+      )}
       <BottomNav />
     </div>
   );
