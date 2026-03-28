@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -193,23 +193,9 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
 // ─── 쿠폰 섹션 ────────────────────────────────────────────────
 function CouponSection() {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [downloaded, setDownloaded] = useState<Set<string>>(
     new Set(coupons.filter(c => c.downloaded).map(c => c.id))
   );
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const id = setInterval(() => {
-      if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
-        el.scrollTo({ left: 0, behavior: "smooth" });
-      } else {
-        el.scrollBy({ left: 220, behavior: "smooth" });
-      }
-    }, 3500);
-    return () => clearInterval(id);
-  }, []);
 
   return (
     <section className="mb-1">
@@ -227,7 +213,7 @@ function CouponSection() {
       </div>
 
       {/* 가로 스크롤 카드 */}
-      <div ref={scrollRef} className="flex gap-3 overflow-x-auto px-4 pb-1"
+      <div className="flex gap-3 overflow-x-auto px-4 pb-1"
         style={{ scrollbarWidth: "none" }}>
         {coupons.map(c => {
           const done = downloaded.has(c.id);
