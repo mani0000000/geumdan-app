@@ -41,13 +41,13 @@ function NewsCard({ item, gradient, index }: { item: CardItem; gradient: string;
       className={`shrink-0 w-[280px] bg-gradient-to-br ${gradient} rounded-2xl p-5 flex flex-col justify-between min-h-[180px] active:opacity-80`}>
       <div>
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-1 rounded-full">{typeTag}</span>
-          <span className="text-[11px] text-white/70">{item.source}</span>
+          <span className="text-[12px] font-bold bg-white/20 text-white px-2.5 py-1 rounded-full">{typeTag}</span>
+          <span className="text-[12px] text-white/70">{item.source}</span>
         </div>
-        <p className="text-[16px] font-bold text-white leading-snug line-clamp-4">{item.title}</p>
+        <p className="text-[17px] font-bold text-white leading-snug line-clamp-4">{item.title}</p>
       </div>
       <div className="flex items-center justify-between mt-4">
-        <span className="text-[12px] text-white/70">{formatRelativeTime(item.publishedAt)}</span>
+        <span className="text-[13px] text-white/70">{formatRelativeTime(item.publishedAt)}</span>
         <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
           <ExternalLink size={13} className="text-white" />
         </div>
@@ -134,14 +134,14 @@ function NewsListItem({ item }: { item: CardItem }) {
         {tabIcon[item.type]}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+        <p className="text-[15px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
         {item.summary && (
-          <p className="text-[12px] text-[#8B95A1] mt-1 line-clamp-1">{item.summary}</p>
+          <p className="text-[13px] text-[#8B95A1] mt-1 line-clamp-1">{item.summary}</p>
         )}
         <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
-          <span className="text-[11px] text-[#B0B8C1]">·</span>
-          <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+          <span className="text-[12px] font-medium text-[#3182F6]">{item.source}</span>
+          <span className="text-[12px] text-[#B0B8C1]">·</span>
+          <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
           <ExternalLink size={10} className="text-[#B0B8C1] ml-auto" />
         </div>
       </div>
@@ -185,7 +185,7 @@ export default function NewsPage() {
       <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6] flex">
         {tabs.map(tab => (
           <button key={tab} onClick={() => setActive(tab)}
-            className={`flex-1 h-11 flex items-center justify-center gap-1.5 text-[14px] font-semibold border-b-2 transition-colors active:opacity-70 ${active === tab ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"}`}>
+            className={`flex-1 h-11 flex items-center justify-center gap-1.5 text-[15px] font-semibold border-b-2 transition-colors active:opacity-70 ${active === tab ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"}`}>
             <span>{tabIcon[tab]}</span>{tab}
           </button>
         ))}
@@ -196,13 +196,13 @@ export default function NewsPage() {
         {realNews.length > 0 && active === "뉴스"
           ? <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
-              <span className="text-[12px] text-[#4E5968]">실시간 검단 뉴스 {realNews.length}건</span>
+              <span className="text-[13px] text-[#4E5968]">실시간 검단 뉴스 {realNews.length}건</span>
             </div>
-          : <span className="text-[12px] text-[#8B95A1]">검단 신도시 소식</span>
+          : <span className="text-[13px] text-[#8B95A1]">검단 신도시 소식</span>
         }
         <button onClick={loadNews} className="flex items-center gap-1 active:opacity-60">
           <RefreshCw size={12} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
-          {lastUpdated && <span className="text-[11px] text-[#B0B8C1]">{lastUpdated}</span>}
+          {lastUpdated && <span className="text-[12px] text-[#B0B8C1]">{lastUpdated}</span>}
         </button>
       </div>
 
@@ -214,7 +214,7 @@ export default function NewsPage() {
       {/* Rest as list */}
       {rest.length > 0 && (
         <div className="px-4 space-y-2">
-          <p className="text-[13px] font-bold text-[#8B95A1] mb-1">더 보기</p>
+          <p className="text-[14px] font-bold text-[#8B95A1] mb-1">더 보기</p>
           {rest.map(item => (
             <NewsListItem key={item.id} item={item} />
           ))}
@@ -224,8 +224,8 @@ export default function NewsPage() {
       {!loading && newsSource.length === 0 && (
         <div className="flex flex-col items-center justify-center pt-20 text-center px-8">
           <span className="text-5xl mb-4">📭</span>
-          <p className="text-[16px] font-bold text-[#191F28]">뉴스가 없어요</p>
-          <p className="text-[13px] text-[#8B95A1] mt-2">잠시 후 다시 확인해보세요</p>
+          <p className="text-[17px] font-bold text-[#191F28]">뉴스가 없어요</p>
+          <p className="text-[14px] text-[#8B95A1] mt-2">잠시 후 다시 확인해보세요</p>
         </div>
       )}
 

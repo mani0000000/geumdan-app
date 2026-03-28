@@ -31,13 +31,13 @@ export default function SettingsPage() {
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#191F28]" />
         </button>
-        <h1 className="text-[17px] font-bold text-[#191F28]">앱 설정</h1>
+        <h1 className="text-[18px] font-bold text-[#191F28]">앱 설정</h1>
       </div>
 
       <div className="mt-3 space-y-3">
         {/* Push notifications */}
         <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#8B95A1]">알림 설정</p>
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#8B95A1]">알림 설정</p>
           {[
             { label: "전체 알림", sub: "모든 알림 on/off", value: pushAll, set: setPushAll },
             { label: "댓글·답글 알림", sub: "내 글/댓글에 새 반응", value: pushComment, set: setPushComment },
@@ -47,8 +47,8 @@ export default function SettingsPage() {
           ].map(({ label, sub, value, set }, i, arr) => (
             <div key={label} className={`flex items-center px-4 py-4 ${i !== arr.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
               <div className="flex-1">
-                <p className="text-[14px] text-[#191F28] font-medium">{label}</p>
-                <p className="text-[12px] text-[#8B95A1] mt-0.5">{sub}</p>
+                <p className="text-[15px] text-[#191F28] font-medium">{label}</p>
+                <p className="text-[13px] text-[#8B95A1] mt-0.5">{sub}</p>
               </div>
               <Toggle on={value} onToggle={() => set(!value)} />
             </div>
@@ -57,11 +57,11 @@ export default function SettingsPage() {
 
         {/* Privacy */}
         <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#8B95A1]">개인정보 보호</p>
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#8B95A1]">개인정보 보호</p>
           <div className="flex items-center px-4 py-4 border-b border-[#F2F4F6]">
             <div className="flex-1">
-              <p className="text-[14px] text-[#191F28] font-medium">위치 정보 사용</p>
-              <p className="text-[12px] text-[#8B95A1] mt-0.5">버스·상가 내 위치 기반 서비스</p>
+              <p className="text-[15px] text-[#191F28] font-medium">위치 정보 사용</p>
+              <p className="text-[13px] text-[#8B95A1] mt-0.5">버스·상가 내 위치 기반 서비스</p>
             </div>
             <Toggle on={locationOn} onToggle={() => setLocationOn(!locationOn)} />
           </div>
@@ -71,7 +71,7 @@ export default function SettingsPage() {
             { label: "위치기반 서비스 이용약관", href: "#" },
           ].map(({ label }, i, arr) => (
             <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#F2F4F6] transition-colors ${i !== arr.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
-              <span className="flex-1 text-[14px] text-[#191F28] text-left">{label}</span>
+              <span className="flex-1 text-[15px] text-[#191F28] text-left">{label}</span>
               <ChevronRight size={16} className="text-[#E5E8EB]" />
             </button>
           ))}
@@ -79,11 +79,11 @@ export default function SettingsPage() {
 
         {/* Display */}
         <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#8B95A1]">화면 설정</p>
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#8B95A1]">화면 설정</p>
           <div className="flex items-center px-4 py-4">
             <div className="flex-1">
-              <p className="text-[14px] text-[#191F28] font-medium">다크 모드</p>
-              <p className="text-[12px] text-[#8B95A1] mt-0.5">준비 중인 기능이에요</p>
+              <p className="text-[15px] text-[#191F28] font-medium">다크 모드</p>
+              <p className="text-[13px] text-[#8B95A1] mt-0.5">준비 중인 기능이에요</p>
             </div>
             <Toggle on={darkMode} onToggle={() => setDarkMode(!darkMode)} />
           </div>
@@ -91,16 +91,16 @@ export default function SettingsPage() {
 
         {/* App info */}
         <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#8B95A1]">앱 정보</p>
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#8B95A1]">앱 정보</p>
           {[
             { label: "버전 정보", value: "v1.0.0 (최신)" },
             { label: "캐시 초기화", value: "12.3 MB" },
             { label: "오픈소스 라이선스", value: "" },
           ].map(({ label, value }, i, arr) => (
             <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#F2F4F6] transition-colors ${i !== arr.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
-              <span className="flex-1 text-[14px] text-[#191F28] text-left">{label}</span>
+              <span className="flex-1 text-[15px] text-[#191F28] text-left">{label}</span>
               <div className="flex items-center gap-1">
-                {value && <span className="text-[13px] text-[#8B95A1]">{value}</span>}
+                {value && <span className="text-[14px] text-[#8B95A1]">{value}</span>}
                 <ChevronRight size={16} className="text-[#E5E8EB]" />
               </div>
             </button>
@@ -109,7 +109,7 @@ export default function SettingsPage() {
 
         {/* Delete account */}
         <div className="mx-4 mb-6">
-          <button className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[14px] font-medium active:bg-[#FEE2E2] transition-colors">
+          <button className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
             회원 탈퇴
           </button>
         </div>

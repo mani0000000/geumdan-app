@@ -24,11 +24,11 @@ export default function Header({ title, showLocation, showBack, backHref }: Head
           )}
           {showLocation ? (
             <button className="flex items-center gap-0.5 active:opacity-60">
-              <span className="text-[18px] font-bold text-[#191F28]">검단 신도시</span>
+              <span className="text-[19px] font-bold text-[#191F28]">검단 신도시</span>
               <ChevronDown size={16} className="text-[#8B95A1] mt-0.5" />
             </button>
           ) : (
-            <h1 className="text-[18px] font-bold text-[#191F28]">{title}</h1>
+            <h1 className="text-[19px] font-bold text-[#191F28]">{title}</h1>
           )}
         </div>
         <Link href="/mypage/" className="relative active:opacity-60">

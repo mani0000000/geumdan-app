@@ -25,7 +25,7 @@ export default function BottomNav() {
               className="flex-1 flex flex-col items-center justify-center gap-0.5 active:opacity-60 transition-opacity">
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8}
                 className={active ? "text-[#3182F6]" : "text-[#B0B8C1]"} />
-              <span className={`text-[10px] font-medium ${active ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
+              <span className={`text-[11px] font-medium ${active ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
                 {label}
               </span>
             </Link>

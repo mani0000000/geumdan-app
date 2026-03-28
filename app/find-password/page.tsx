@@ -63,7 +63,7 @@ export default function FindPasswordPage() {
           ? <button onClick={() => setStep("verify")} className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></button>
           : null
         }
-        <h1 className="text-[17px] font-bold text-[#191F28]">비밀번호 찾기</h1>
+        <h1 className="text-[18px] font-bold text-[#191F28]">비밀번호 찾기</h1>
       </div>
 
       {/* Step bar */}
@@ -83,19 +83,19 @@ export default function FindPasswordPage() {
           <>
             <div className="mb-8">
               <div className="w-14 h-14 bg-[#EBF3FE] rounded-2xl flex items-center justify-center text-2xl mb-5">🔐</div>
-              <h2 className="text-[22px] font-bold text-[#191F28] leading-snug">
+              <h2 className="text-[23px] font-bold text-[#191F28] leading-snug">
                 본인 인증 후<br />비밀번호를 재설정해요
               </h2>
-              <p className="text-[14px] text-[#8B95A1] mt-2">가입한 휴대폰 번호로 인증해주세요</p>
+              <p className="text-[15px] text-[#8B95A1] mt-2">가입한 휴대폰 번호로 인증해주세요</p>
             </div>
             <div className="flex gap-2 mb-3">
               <input
                 type="tel" placeholder="휴대폰 번호" value={phone}
                 onChange={e => setPhone(e.target.value)}
-                className="flex-1 h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[15px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
+                className="flex-1 h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
               />
               <button onClick={sendCode} disabled={phone.length < 10 || loading}
-                className="h-[52px] px-4 rounded-xl bg-[#3182F6] text-white text-[13px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#1B64DA]">
+                className="h-[52px] px-4 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#1B64DA]">
                 {loading ? "전송 중..." : codeSent ? "재전송" : "인증번호 받기"}
               </button>
             </div>
@@ -104,16 +104,16 @@ export default function FindPasswordPage() {
                 <div className="relative mb-3">
                   <input type="text" placeholder="인증번호 6자리" value={code}
                     onChange={e => setCode(e.target.value)} maxLength={6}
-                    className="w-full h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[15px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
+                    className="w-full h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] font-bold text-[#F04452]">2:59</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-[#F04452]">2:59</span>
                 </div>
-                <p className="text-[12px] text-[#3182F6]">인증번호가 발송됐어요 (유효시간 3분)</p>
+                <p className="text-[13px] text-[#3182F6]">인증번호가 발송됐어요 (유효시간 3분)</p>
               </>
             )}
             <div className="mt-auto pb-8">
               <button onClick={verifyAndNext} disabled={code.length < 6 || loading}
-                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[16px] font-bold flex items-center justify-center active:bg-[#1B64DA] disabled:opacity-40">
+                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#1B64DA] disabled:opacity-40">
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "다음"}
               </button>
             </div>
@@ -125,10 +125,10 @@ export default function FindPasswordPage() {
           <>
             <div className="mb-8">
               <div className="w-14 h-14 bg-[#EBF3FE] rounded-2xl flex items-center justify-center text-2xl mb-5">✏️</div>
-              <h2 className="text-[22px] font-bold text-[#191F28] leading-snug">
+              <h2 className="text-[23px] font-bold text-[#191F28] leading-snug">
                 새 비밀번호를<br />설정해주세요
               </h2>
-              <p className="text-[14px] text-[#8B95A1] mt-2">8자 이상, 영문·숫자·특수문자 조합 권장</p>
+              <p className="text-[15px] text-[#8B95A1] mt-2">8자 이상, 영문·숫자·특수문자 조합 권장</p>
             </div>
             <div className="space-y-3">
               <div className="relative">
@@ -137,7 +137,7 @@ export default function FindPasswordPage() {
                   placeholder="새 비밀번호"
                   value={newPw}
                   onChange={e => setNewPw(e.target.value)}
-                  className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[15px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
+                  className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#191F28] placeholder:text-[#B0B8C1]"
                 />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#B0B8C1]">
                   {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -149,7 +149,7 @@ export default function FindPasswordPage() {
                   <div className="h-1.5 bg-[#F2F4F6] rounded-full overflow-hidden">
                     <div className={`h-full ${strength.color} ${strength.w} rounded-full transition-all`} />
                   </div>
-                  <p className={`text-[12px] mt-1 font-medium`}
+                  <p className={`text-[13px] mt-1 font-medium`}
                     style={{ color: strength.color.replace("bg-","").replace("[","").replace("]","") }}>
                     비밀번호 강도: {strength.label}
                   </p>
@@ -161,7 +161,7 @@ export default function FindPasswordPage() {
                   placeholder="새 비밀번호 확인"
                   value={confirmPw}
                   onChange={e => setConfirmPw(e.target.value)}
-                  className={`w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[15px] outline-none text-[#191F28] placeholder:text-[#B0B8C1] ${
+                  className={`w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[16px] outline-none text-[#191F28] placeholder:text-[#B0B8C1] ${
                     confirmPw && (pwMatch ? "ring-2 ring-[#00C471]" : "ring-2 ring-[#F04452]")
                   }`}
                 />
@@ -170,15 +170,15 @@ export default function FindPasswordPage() {
                 </button>
               </div>
               {confirmPw && !pwMatch && (
-                <p className="text-[12px] text-[#F04452]">비밀번호가 일치하지 않아요</p>
+                <p className="text-[13px] text-[#F04452]">비밀번호가 일치하지 않아요</p>
               )}
               {confirmPw && pwMatch && (
-                <p className="text-[12px] text-[#00C471]">비밀번호가 일치해요 ✓</p>
+                <p className="text-[13px] text-[#00C471]">비밀번호가 일치해요 ✓</p>
               )}
             </div>
             <div className="mt-auto pb-8">
               <button onClick={resetPassword} disabled={!pwValid || !pwMatch || loading}
-                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[16px] font-bold flex items-center justify-center active:bg-[#1B64DA] disabled:opacity-40">
+                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#1B64DA] disabled:opacity-40">
                 {loading ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "비밀번호 재설정"}
               </button>
             </div>
@@ -191,14 +191,14 @@ export default function FindPasswordPage() {
             <div className="w-20 h-20 bg-[#D1FAE5] rounded-full flex items-center justify-center mb-6">
               <CheckCircle2 size={44} className="text-[#00C471]" />
             </div>
-            <h2 className="text-[24px] font-bold text-[#191F28]">비밀번호 재설정 완료!</h2>
-            <p className="text-[14px] text-[#8B95A1] mt-3 leading-relaxed">
+            <h2 className="text-[25px] font-bold text-[#191F28]">비밀번호 재설정 완료!</h2>
+            <p className="text-[15px] text-[#8B95A1] mt-3 leading-relaxed">
               새 비밀번호로 로그인해주세요.<br />
               보안을 위해 이전 비밀번호는 사용할 수 없어요.
             </p>
             <div className="w-full mt-10 flex flex-col gap-3">
               <Link href="/login/"
-                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[15px] font-bold flex items-center justify-center active:bg-[#1B64DA]">
+                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[16px] font-bold flex items-center justify-center active:bg-[#1B64DA]">
                 로그인하기
               </Link>
             </div>

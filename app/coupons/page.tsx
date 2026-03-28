@@ -23,17 +23,17 @@ function daysLeft(expiry: string) {
 function ExpiryBadge({ expiry }: { expiry: string }) {
   const days = daysLeft(expiry);
   if (days <= 3) return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">
+    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">
       D-{days}
     </span>
   );
   if (days <= 7) return (
-    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#D97706]">
+    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#D97706]">
       D-{days}
     </span>
   );
   return (
-    <span className="text-[10px] text-[#8B95A1]">~ {expiry.slice(5)}</span>
+    <span className="text-[11px] text-[#8B95A1]">~ {expiry.slice(5)}</span>
   );
 }
 
@@ -53,27 +53,27 @@ function CouponCard({ coupon, downloaded, onToggle }: {
         {/* 중간: 정보 */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+            <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
               style={{ background: coupon.color }}>
               {coupon.category}
             </span>
-            <span className="text-[10px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">
+            <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">
               {coupon.floor}
             </span>
             <ExpiryBadge expiry={coupon.expiry} />
           </div>
-          <p className="text-[13px] font-bold text-[#191F28] leading-snug">{coupon.storeName}</p>
-          <p className="text-[12px] text-[#8B95A1] mt-0.5 leading-snug">{coupon.title}</p>
+          <p className="text-[14px] font-bold text-[#191F28] leading-snug">{coupon.storeName}</p>
+          <p className="text-[13px] text-[#8B95A1] mt-0.5 leading-snug">{coupon.title}</p>
         </div>
 
         {/* 오른쪽: 할인액 + 버튼 */}
         <div className="flex flex-col items-end gap-2 shrink-0">
-          <span className="text-[18px] font-black" style={{ color: coupon.color }}>
+          <span className="text-[19px] font-black" style={{ color: coupon.color }}>
             {coupon.discount}
           </span>
           <button
             onClick={onToggle}
-            className={`flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[11px] font-bold transition-all active:opacity-70 ${
+            className={`flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[12px] font-bold transition-all active:opacity-70 ${
               downloaded ? "bg-[#F2F4F6] text-[#8B95A1]" : "text-white"
             }`}
             style={downloaded ? {} : { background: coupon.color }}>
@@ -129,10 +129,10 @@ export default function CouponsPage() {
           <Link href="/home/" className="active:opacity-60">
             <ChevronLeft size={22} className="text-[#191F28]" />
           </Link>
-          <h1 className="text-[17px] font-bold text-[#191F28] flex-1">쿠폰 센터</h1>
+          <h1 className="text-[18px] font-bold text-[#191F28] flex-1">쿠폰 센터</h1>
           <div className="flex items-center gap-1 bg-[#FEF3C7] px-2.5 py-1 rounded-full">
             <Tag size={12} className="text-[#D97706]" />
-            <span className="text-[12px] font-bold text-[#D97706]">총 {coupons.length}장</span>
+            <span className="text-[13px] font-bold text-[#D97706]">총 {coupons.length}장</span>
           </div>
         </div>
 
@@ -144,7 +144,7 @@ export default function CouponsPage() {
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="매장명, 혜택 검색"
-              className="flex-1 bg-transparent text-[14px] focus:outline-none text-[#191F28] placeholder:text-[#B0B8C1]"
+              className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#191F28] placeholder:text-[#B0B8C1]"
             />
             {query && (
               <button onClick={() => setQuery("")}>
@@ -158,7 +158,7 @@ export default function CouponsPage() {
         <div className="px-4 pb-2 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {CATEGORIES.map(c => (
             <button key={c} onClick={() => setCat(c)}
-              className={`shrink-0 h-8 px-3.5 rounded-full text-[12px] font-semibold transition-colors ${
+              className={`shrink-0 h-8 px-3.5 rounded-full text-[13px] font-semibold transition-colors ${
                 cat === c ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"
               }`}>
               {c}
@@ -170,7 +170,7 @@ export default function CouponsPage() {
         <div className="px-4 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {FLOORS.map(f => (
             <button key={f} onClick={() => setFloor(f)}
-              className={`shrink-0 h-7 px-3 rounded-full text-[11px] font-semibold transition-colors border ${
+              className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-colors border ${
                 floor === f
                   ? "bg-[#3182F6] text-white border-[#3182F6]"
                   : "bg-white text-[#4E5968] border-[#E5E8EB]"
@@ -185,7 +185,7 @@ export default function CouponsPage() {
         {filtered.length === 0 ? (
           <div className="py-20 flex flex-col items-center gap-3">
             <span className="text-4xl">🎟️</span>
-            <p className="text-[14px] text-[#8B95A1]">조건에 맞는 쿠폰이 없습니다</p>
+            <p className="text-[15px] text-[#8B95A1]">조건에 맞는 쿠폰이 없습니다</p>
           </div>
         ) : (
           <>
@@ -193,8 +193,8 @@ export default function CouponsPage() {
             {urgent.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <span className="text-[13px] font-bold text-[#F04452]">⏰ 마감임박</span>
-                  <span className="text-[11px] text-[#8B95A1]">{urgent.length}장</span>
+                  <span className="text-[14px] font-bold text-[#F04452]">⏰ 마감임박</span>
+                  <span className="text-[12px] text-[#8B95A1]">{urgent.length}장</span>
                 </div>
                 <div className="space-y-2.5">
                   {urgent.map(c => (
@@ -211,8 +211,8 @@ export default function CouponsPage() {
               <div>
                 {urgent.length > 0 && (
                   <div className="flex items-center gap-1.5 mb-2 mt-1">
-                    <span className="text-[13px] font-bold text-[#191F28]">이번 주 쿠폰</span>
-                    <span className="text-[11px] text-[#8B95A1]">{regular.length}장</span>
+                    <span className="text-[14px] font-bold text-[#191F28]">이번 주 쿠폰</span>
+                    <span className="text-[12px] text-[#8B95A1]">{regular.length}장</span>
                   </div>
                 )}
                 <div className="space-y-2.5">

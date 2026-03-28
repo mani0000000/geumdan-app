@@ -52,7 +52,7 @@ function WeeklyModal({ weekly, onClose }: {
         <div className="flex items-center justify-between px-5 py-3 border-b border-[#F2F4F6]">
           <div className="flex items-center gap-2">
             <Calendar size={16} className="text-[#3182F6]" />
-            <span className="text-[16px] font-bold text-[#191F28]">주간 날씨</span>
+            <span className="text-[17px] font-bold text-[#191F28]">주간 날씨</span>
           </div>
           <button onClick={onClose} className="active:opacity-60">
             <X size={20} className="text-[#8B95A1]" />
@@ -65,21 +65,21 @@ function WeeklyModal({ weekly, onClose }: {
                 day.isToday ? "bg-[#EBF3FE]" : "hover:bg-[#F2F4F6]"
               }`}>
               <div className="w-14 shrink-0">
-                <p className={`text-[13px] font-bold ${day.isToday ? "text-[#3182F6]" : "text-[#4E5968]"}`}>
+                <p className={`text-[14px] font-bold ${day.isToday ? "text-[#3182F6]" : "text-[#4E5968]"}`}>
                   {day.isToday ? "오늘" : day.dayLabel}
                 </p>
-                <p className="text-[11px] text-[#B0B8C1]">{day.date}</p>
+                <p className="text-[12px] text-[#B0B8C1]">{day.date}</p>
               </div>
-              <span className="text-[24px] w-8 shrink-0">{day.emoji}</span>
+              <span className="text-[25px] w-8 shrink-0">{day.emoji}</span>
               <div className="flex-1">
                 {day.precipitation > 0 && (
-                  <p className="text-[11px] text-[#3182F6]">💧 {day.precipitation}mm</p>
+                  <p className="text-[12px] text-[#3182F6]">💧 {day.precipitation}mm</p>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[14px] font-bold text-[#F04452]">{day.high}°</span>
-                <span className="text-[12px] text-[#B0B8C1]">/</span>
-                <span className="text-[14px] font-semibold text-[#3182F6]">{day.low}°</span>
+                <span className="text-[15px] font-bold text-[#F04452]">{day.high}°</span>
+                <span className="text-[13px] text-[#B0B8C1]">/</span>
+                <span className="text-[15px] font-semibold text-[#3182F6]">{day.low}°</span>
               </div>
             </div>
           ))}
@@ -126,16 +126,16 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
         {/* 항상 보이는 바 */}
         <button onClick={() => setExpanded(e => !e)}
           className="w-full flex items-center gap-3 px-4 py-3.5 active:opacity-80">
-          <span className="text-[32px] leading-none shrink-0">{weather.emoji}</span>
+          <span className="text-[33px] leading-none shrink-0">{weather.emoji}</span>
           <div className="flex-1 text-left">
             <div className="flex items-baseline gap-2">
-              <span className="text-[28px] font-black text-white leading-none">{weather.temp}°</span>
-              <span className="text-[13px] text-white/80">{weather.label}</span>
+              <span className="text-[29px] font-black text-white leading-none">{weather.temp}°</span>
+              <span className="text-[14px] text-white/80">{weather.label}</span>
             </div>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-[12px] text-white/60">최고 {weather.high}° · 최저 {weather.low}°</span>
+              <span className="text-[13px] text-white/60">최고 {weather.high}° · 최저 {weather.low}°</span>
               {tempDiff !== null && (
-                <span className={`flex items-center gap-0.5 text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                <span className={`flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full ${
                   tempDiff > 0 ? "bg-red-400/30 text-red-100" : tempDiff < 0 ? "bg-blue-300/30 text-blue-100" : "bg-white/20 text-white/70"
                 }`}>
                   {tempDiff > 0 ? <TrendingUp size={10} /> : tempDiff < 0 ? <TrendingDown size={10} /> : null}
@@ -147,7 +147,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
           <button
             onClick={e => { e.stopPropagation(); setShowWeekly(true); }}
             className="shrink-0 bg-white/20 rounded-xl px-3 py-2 active:bg-white/30">
-            <span className="text-[11px] font-bold text-white">주간</span>
+            <span className="text-[12px] font-bold text-white">주간</span>
           </button>
           {expanded
             ? <ChevronUp size={15} className="text-white/60 shrink-0" />
@@ -160,21 +160,21 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
             <div className="flex items-center gap-4 py-2.5 mb-2">
               <div className="flex items-center gap-1.5">
                 <Droplets size={12} className="text-white/70" />
-                <span className="text-[12px] text-white/80">습도 {weather.humidity}%</span>
+                <span className="text-[13px] text-white/80">습도 {weather.humidity}%</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Wind size={12} className="text-white/70" />
-                <span className="text-[12px] text-white/80">바람 {weather.windSpeed}m/s</span>
+                <span className="text-[13px] text-white/80">바람 {weather.windSpeed}m/s</span>
               </div>
-              <span className="text-[12px] text-white/60 ml-auto">체감 {weather.feelsLike}°</span>
+              <span className="text-[13px] text-white/60 ml-auto">체감 {weather.feelsLike}°</span>
             </div>
             {weather.hourly.length > 0 && (
               <div className="flex gap-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
                 {weather.hourly.map(h => (
                   <div key={h.hour} className="flex flex-col items-center gap-1.5 shrink-0">
-                    <span className="text-[11px] text-white/60">{h.hour}</span>
-                    <span className="text-[18px]">{h.emoji}</span>
-                    <span className="text-[12px] text-white font-bold">{h.temp}°</span>
+                    <span className="text-[12px] text-white/60">{h.hour}</span>
+                    <span className="text-[19px]">{h.emoji}</span>
+                    <span className="text-[13px] text-white font-bold">{h.temp}°</span>
                   </div>
                 ))}
               </div>
@@ -218,9 +218,9 @@ function CouponSection() {
           <div className="w-5 h-5 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
             <Tag size={12} className="text-[#F59E0B]" />
           </div>
-          <span className="text-[14px] font-bold text-[#191F28]">이번 주 쿠폰</span>
+          <span className="text-[15px] font-bold text-[#191F28]">이번 주 쿠폰</span>
         </div>
-        <Link href="/coupons/" className="text-[12px] text-[#3182F6] font-medium flex items-center gap-0.5">
+        <Link href="/coupons/" className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5">
           전체보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -241,24 +241,24 @@ function CouponSection() {
                 <div className="flex items-center gap-2 mb-2">
                   <StoreLogo name={c.storeName} category={c.category} size={32} rounded="rounded-lg" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-bold text-[#191F28] truncate">{c.storeName}</p>
+                    <p className="text-[13px] font-bold text-[#191F28] truncate">{c.storeName}</p>
                     <div className="flex items-center gap-1">
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full text-white"
+                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full text-white"
                         style={{ background: c.color }}>{c.floor}</span>
                       {dDay <= 3
-                        ? <span className="text-[10px] font-bold text-[#F04452]">D-{dDay}</span>
-                        : <span className="text-[10px] text-[#B0B8C1]">~{c.expiry.slice(5)}</span>}
+                        ? <span className="text-[11px] font-bold text-[#F04452]">D-{dDay}</span>
+                        : <span className="text-[11px] text-[#B0B8C1]">~{c.expiry.slice(5)}</span>}
                     </div>
                   </div>
                 </div>
                 {/* 쿠폰 제목 */}
-                <p className="text-[12px] text-[#4E5968] leading-snug line-clamp-2 min-h-[32px]">{c.title}</p>
+                <p className="text-[13px] text-[#4E5968] leading-snug line-clamp-2 min-h-[32px]">{c.title}</p>
                 {/* 할인 + 버튼 */}
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-[16px] font-black" style={{ color: c.color }}>{c.discount}</span>
+                  <span className="text-[17px] font-black" style={{ color: c.color }}>{c.discount}</span>
                   <button
                     onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                    className={`h-7 px-3 rounded-lg text-[11px] font-bold active:opacity-70 ${
+                    className={`h-7 px-3 rounded-lg text-[12px] font-bold active:opacity-70 ${
                       done ? "bg-[#F2F4F6] text-[#8B95A1]" : "text-white"
                     }`}
                     style={done ? {} : { background: c.color }}>
@@ -285,10 +285,10 @@ function NewOpeningsSection() {
       <div className="bg-white rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-[14px] font-bold text-[#191F28]">이번 주 신규 오픈</span>
-            <span className="text-[11px] font-bold bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
+            <span className="text-[15px] font-bold text-[#191F28]">이번 주 신규 오픈</span>
+            <span className="text-[12px] font-bold bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
           </div>
-          <Link href="/stores/" className="text-[12px] text-[#3182F6] font-medium flex items-center gap-0.5">
+          <Link href="/stores/" className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5">
             지도 보기 <ChevronRight size={13} />
           </Link>
         </div>
@@ -302,22 +302,22 @@ function NewOpeningsSection() {
               {/* 정보: 매장명 → 상가건물(층수) → 업종 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-[14px] font-bold text-[#191F28] truncate">{s.storeName}</p>
+                  <p className="text-[15px] font-bold text-[#191F28] truncate">{s.storeName}</p>
                   {s.isNew && (
-                    <span className="shrink-0 text-[9px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
+                    <span className="shrink-0 text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[11px] text-[#8B95A1]">검단 센트럴 타워</span>
-                  <span className="text-[11px] text-[#B0B8C1]">·</span>
-                  <span className="text-[11px] font-semibold text-[#3182F6]">{s.floor}</span>
-                  <span className="text-[11px] text-[#B0B8C1]">·</span>
-                  <span className="text-[11px] text-[#8B95A1]">{s.category}</span>
+                  <span className="text-[12px] text-[#8B95A1]">검단 센트럴 타워</span>
+                  <span className="text-[12px] text-[#B0B8C1]">·</span>
+                  <span className="text-[12px] font-semibold text-[#3182F6]">{s.floor}</span>
+                  <span className="text-[12px] text-[#B0B8C1]">·</span>
+                  <span className="text-[12px] text-[#8B95A1]">{s.category}</span>
                 </div>
               </div>
               {/* 오픈일 */}
               <div className="text-right shrink-0">
-                <p className="text-[11px] text-[#B0B8C1]">{s.openDate.slice(5)} 오픈</p>
+                <p className="text-[12px] text-[#B0B8C1]">{s.openDate.slice(5)} 오픈</p>
               </div>
             </button>
           ))}
@@ -342,7 +342,7 @@ function SosikSection() {
         <div className="flex border-b border-[#F2F4F6]">
           {(["커뮤니티", "뉴스", "시세"] as SosikTab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-3 text-[13px] font-semibold border-b-2 transition-colors ${
+              className={`flex-1 py-3 text-[14px] font-semibold border-b-2 transition-colors ${
                 tab === t ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
               }`}>
               {t}
@@ -355,25 +355,25 @@ function SosikSection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <div className="flex items-center gap-1.5">
                 <Flame size={14} className="text-[#F04452]" />
-                <span className="text-[13px] font-bold text-[#191F28]">HOT 게시글</span>
+                <span className="text-[14px] font-bold text-[#191F28]">HOT 게시글</span>
               </div>
-              <Link href="/community/" className="text-[12px] text-[#3182F6]">전체보기</Link>
+              <Link href="/community/" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
             <div className="divide-y divide-[#F2F4F6]">
               {hotPosts.map(post => (
                 <button key={post.id}
                   onClick={() => router.push(`/community/detail/?id=${post.id}`)}
                   className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#F2F4F6] text-left">
-                  <span className="text-[11px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+                  <span className="text-[12px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
                     {post.category}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-[#191F28] truncate">{post.title}</p>
+                    <p className="text-[14px] font-medium text-[#191F28] truncate">{post.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[11px] text-[#8B95A1]">{post.authorDong}</span>
-                      <span className="text-[11px] text-[#B0B8C1]">·</span>
-                      <span className="text-[11px] text-[#8B95A1]">{formatRelativeTime(post.createdAt)}</span>
-                      <span className="text-[11px] text-[#B0B8C1] ml-auto">❤️ {post.likeCount}</span>
+                      <span className="text-[12px] text-[#8B95A1]">{post.authorDong}</span>
+                      <span className="text-[12px] text-[#B0B8C1]">·</span>
+                      <span className="text-[12px] text-[#8B95A1]">{formatRelativeTime(post.createdAt)}</span>
+                      <span className="text-[12px] text-[#B0B8C1] ml-auto">❤️ {post.likeCount}</span>
                     </div>
                   </div>
                 </button>
@@ -381,7 +381,7 @@ function SosikSection() {
             </div>
             <div className="px-4 py-3">
               <Link href="/community/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[13px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
                 커뮤니티 전체 보기 →
               </Link>
             </div>
@@ -391,8 +391,8 @@ function SosikSection() {
         {tab === "뉴스" && (
           <div>
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
-              <span className="text-[13px] font-bold text-[#191F28]">검단 최신 뉴스</span>
-              <Link href="/news/" className="text-[12px] text-[#3182F6]">전체보기</Link>
+              <span className="text-[14px] font-bold text-[#191F28]">검단 최신 뉴스</span>
+              <Link href="/news/" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
             <div className="divide-y divide-[#F2F4F6]">
               {topNews.map(item => (
@@ -401,10 +401,10 @@ function SosikSection() {
                   className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
                   <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">📰</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                    <p className="text-[14px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[11px] text-[#3182F6] font-medium">{item.source}</span>
-                      <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                      <span className="text-[12px] text-[#3182F6] font-medium">{item.source}</span>
+                      <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
                     </div>
                   </div>
                 </button>
@@ -412,7 +412,7 @@ function SosikSection() {
             </div>
             <div className="px-4 py-3">
               <Link href="/news/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[13px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
                 뉴스 전체 보기 →
               </Link>
             </div>
@@ -424,9 +424,9 @@ function SosikSection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <div className="flex items-center gap-1.5">
                 <TrendingUp size={14} className="text-[#00C471]" />
-                <span className="text-[13px] font-bold text-[#191F28]">부동산 시세</span>
+                <span className="text-[14px] font-bold text-[#191F28]">부동산 시세</span>
               </div>
-              <Link href="/real-estate/" className="text-[12px] text-[#3182F6]">전체보기</Link>
+              <Link href="/real-estate/" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
             <div className="divide-y divide-[#F2F4F6]">
               {apartments.slice(0, 4).map(apt => (
@@ -434,19 +434,19 @@ function SosikSection() {
                   onClick={() => router.push("/real-estate/")}
                   className="w-full px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6]">
                   <div className="text-left min-w-0 flex-1 pr-2">
-                    <p className="text-[13px] font-medium text-[#191F28] truncate">{apt.name}</p>
-                    <p className="text-[11px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
+                    <p className="text-[14px] font-medium text-[#191F28] truncate">{apt.name}</p>
+                    <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[14px] font-bold text-[#00C471]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-                    <p className="text-[10px] text-[#8B95A1]">실거래</p>
+                    <p className="text-[15px] font-bold text-[#00C471]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
+                    <p className="text-[11px] text-[#8B95A1]">실거래</p>
                   </div>
                 </button>
               ))}
             </div>
             <div className="px-4 py-3">
               <Link href="/real-estate/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[13px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
                 부동산 시세 전체 보기 →
               </Link>
             </div>
@@ -460,7 +460,7 @@ function SosikSection() {
 // ─── 섹션 헤더 ────────────────────────────────────────────────
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="text-[12px] font-bold text-[#8B95A1] uppercase tracking-wide px-4 mb-1.5 mt-3">
+    <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide px-4 mb-1.5 mt-3">
       {label}
     </p>
   );
@@ -496,7 +496,7 @@ export default function HomePage() {
                 style={{ background: bg }}>
                 <Icon size={20} color={color} strokeWidth={2.2} />
               </div>
-              <span className="text-[10px] text-[#4E5968] font-semibold text-center leading-tight">{label}</span>
+              <span className="text-[11px] text-[#4E5968] font-semibold text-center leading-tight">{label}</span>
             </Link>
           ))}
         </div>
@@ -521,12 +521,12 @@ export default function HomePage() {
                 <Bus size={20} className="text-[#3182F6]" />
               </div>
               <div className="text-left">
-                <p className="text-[11px] text-[#8B95A1]">{stop.name}</p>
+                <p className="text-[12px] text-[#8B95A1]">{stop.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[15px] font-black text-[#191F28]">{bus.routeNo}번</span>
-                  <span className="text-[12px] text-[#4E5968]">{bus.destination} 방면</span>
+                  <span className="text-[16px] font-black text-[#191F28]">{bus.routeNo}번</span>
+                  <span className="text-[13px] text-[#4E5968]">{bus.destination} 방면</span>
                   {bus.isExpress && (
-                    <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded">급행</span>
+                    <span className="text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded">급행</span>
                   )}
                 </div>
               </div>
@@ -535,8 +535,8 @@ export default function HomePage() {
               <div className={`rounded-xl px-3 py-2 text-center min-w-[50px] ${
                 bus.arrivalMin <= 3 ? "bg-[#F04452]" : bus.arrivalMin <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]"
               }`}>
-                <span className="text-white text-[20px] font-black leading-none">{bus.arrivalMin}</span>
-                <span className="text-white/80 text-[10px] block leading-none">분 후</span>
+                <span className="text-white text-[21px] font-black leading-none">{bus.arrivalMin}</span>
+                <span className="text-white/80 text-[11px] block leading-none">분 후</span>
               </div>
               <ChevronRight size={16} className="text-[#B0B8C1]" />
             </div>
@@ -548,7 +548,7 @@ export default function HomePage() {
       <div className="flex items-center justify-between px-4 mt-3 mb-1.5">
         <div className="flex items-center gap-1.5">
           <MapPin size={13} className="text-[#3182F6]" />
-          <span className="text-[12px] font-bold text-[#8B95A1] uppercase tracking-wide">검단 소식</span>
+          <span className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide">검단 소식</span>
         </div>
       </div>
       <SosikSection />

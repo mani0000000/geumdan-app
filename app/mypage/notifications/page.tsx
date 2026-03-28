@@ -127,15 +127,15 @@ export default function NotificationsPage() {
           <ChevronLeft size={24} className="text-[#191F28]" />
         </button>
         <div className="flex items-center gap-2">
-          <h1 className="text-[17px] font-bold text-[#191F28]">알림</h1>
+          <h1 className="text-[18px] font-bold text-[#191F28]">알림</h1>
           {unreadCount > 0 && (
-            <span className="bg-[#F04452] text-white text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+            <span className="bg-[#F04452] text-white text-[12px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
               {unreadCount}
             </span>
           )}
         </div>
         {unreadCount > 0 ? (
-          <button onClick={markAllRead} className="text-[13px] text-[#3182F6] font-medium active:opacity-60">
+          <button onClick={markAllRead} className="text-[14px] text-[#3182F6] font-medium active:opacity-60">
             모두 읽음
           </button>
         ) : <div className="w-16" />}
@@ -146,8 +146,8 @@ export default function NotificationsPage() {
         <button onClick={() => router.push("/mypage/")}
           className="w-full flex items-center gap-3 bg-[#FFF9C4] border-b-2 border-[#F59E0B] px-4 py-3 active:opacity-80">
           <Tag size={18} className="text-[#F59E0B] shrink-0" />
-          <p className="flex-1 text-[13px] font-bold text-[#92400E] text-left">만료 임박 쿠폰 {urgentCount}개가 있어요! 오늘 사용하세요</p>
-          <span className="text-[11px] font-bold text-[#F59E0B]">보기 →</span>
+          <p className="flex-1 text-[14px] font-bold text-[#92400E] text-left">만료 임박 쿠폰 {urgentCount}개가 있어요! 오늘 사용하세요</p>
+          <span className="text-[12px] font-bold text-[#F59E0B]">보기 →</span>
         </button>
       )}
 
@@ -155,7 +155,7 @@ export default function NotificationsPage() {
       <div className="flex gap-2 px-4 py-3 overflow-x-auto bg-white border-b border-[#F2F4F6]" style={{ scrollbarWidth: "none" }}>
         {filterTypes.map(f => (
           <button key={f} onClick={() => setFilter(f)}
-            className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-bold transition-colors active:opacity-70 ${
+            className={`shrink-0 h-8 px-3 rounded-full text-[13px] font-bold transition-colors active:opacity-70 ${
               filter === f ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"
             }`}>
             {f === "전체" ? "전체" : typeLabel[f]}
@@ -176,13 +176,13 @@ export default function NotificationsPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-[13px] font-bold text-[#191F28]">{n.title}</p>
+                <p className="text-[14px] font-bold text-[#191F28]">{n.title}</p>
                 {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-[#3182F6] shrink-0" />}
               </div>
-              <p className="text-[13px] text-[#4E5968] leading-relaxed">{n.body}</p>
+              <p className="text-[14px] text-[#4E5968] leading-relaxed">{n.body}</p>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-[11px] text-[#B0B8C1]">{n.time}</p>
-                {n.href && <span className="text-[11px] text-[#3182F6]">바로가기 →</span>}
+                <p className="text-[12px] text-[#B0B8C1]">{n.time}</p>
+                {n.href && <span className="text-[12px] text-[#3182F6]">바로가기 →</span>}
               </div>
             </div>
           </button>
@@ -192,8 +192,8 @@ export default function NotificationsPage() {
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center pt-24 text-center px-8">
           <Bell size={48} className="text-[#E5E8EB] mb-4" />
-          <p className="text-[16px] font-bold text-[#191F28]">알림이 없어요</p>
-          <p className="text-[14px] text-[#8B95A1] mt-2">새로운 소식이 오면 알려드릴게요</p>
+          <p className="text-[17px] font-bold text-[#191F28]">알림이 없어요</p>
+          <p className="text-[15px] text-[#8B95A1] mt-2">새로운 소식이 오면 알려드릴게요</p>
         </div>
       )}
     </div>

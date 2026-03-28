@@ -31,10 +31,10 @@ export default function LoginPage() {
         <div className="w-12 h-12 rounded-2xl bg-[#3182F6] flex items-center justify-center mb-6">
           <span className="text-2xl">🏡</span>
         </div>
-        <h1 className="text-[28px] font-bold text-[#191F28] leading-tight">
+        <h1 className="text-[29px] font-bold text-[#191F28] leading-tight">
           검단 라이프에<br />오신 걸 환영해요
         </h1>
-        <p className="text-[15px] text-[#8B95A1] mt-2">검단 신도시 주민을 위한 슈퍼앱</p>
+        <p className="text-[16px] text-[#8B95A1] mt-2">검단 신도시 주민을 위한 슈퍼앱</p>
       </div>
 
       {/* Form */}
@@ -44,7 +44,7 @@ export default function LoginPage() {
           placeholder="휴대폰 번호"
           value={phone}
           onChange={e => setPhone(e.target.value)}
-          className="w-full h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[15px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
+          className="w-full h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[16px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
         />
         <div className="relative">
           <input
@@ -52,7 +52,7 @@ export default function LoginPage() {
             placeholder="비밀번호"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[15px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
+            className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[16px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
           />
           <button
             type="button"
@@ -66,7 +66,7 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[16px] font-bold mt-1 flex items-center justify-center active:bg-[#1B64DA] transition-colors disabled:opacity-60"
+          className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold mt-1 flex items-center justify-center active:bg-[#1B64DA] transition-colors disabled:opacity-60"
         >
           {loading
             ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -76,20 +76,20 @@ export default function LoginPage() {
         {/* Divider */}
         <div className="flex items-center gap-3 my-1">
           <div className="flex-1 h-px bg-[#E5E8EB]" />
-          <span className="text-[13px] text-[#8B95A1]">또는</span>
+          <span className="text-[14px] text-[#8B95A1]">또는</span>
           <div className="flex-1 h-px bg-[#E5E8EB]" />
         </div>
 
         {/* Social */}
         <button
           onClick={handleSocial}
-          className="w-full h-[52px] rounded-xl bg-[#FEE500] text-[#191F28] text-[15px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
+          className="w-full h-[52px] rounded-xl bg-[#FEE500] text-[#191F28] text-[16px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
         >
           <span className="text-xl">💬</span> 카카오로 시작하기
         </button>
         <button
           onClick={handleSocial}
-          className="w-full h-[52px] rounded-xl bg-[#03C75A] text-white text-[15px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
+          className="w-full h-[52px] rounded-xl bg-[#03C75A] text-white text-[16px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
         >
           <span className="font-black text-lg">N</span> 네이버로 시작하기
         </button>
@@ -97,11 +97,11 @@ export default function LoginPage() {
 
       {/* Bottom Links */}
       <div className="px-6 py-8 flex items-center justify-center gap-5">
-        <Link href="/signup/" className="text-[14px] text-[#8B95A1]">회원가입</Link>
+        <Link href="/signup/" className="text-[15px] text-[#8B95A1]">회원가입</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <Link href="/find-id/" className="text-[14px] text-[#8B95A1]">아이디 찾기</Link>
+        <Link href="/find-id/" className="text-[15px] text-[#8B95A1]">아이디 찾기</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <Link href="/find-password/" className="text-[14px] text-[#8B95A1]">비밀번호 찾기</Link>
+        <Link href="/find-password/" className="text-[15px] text-[#8B95A1]">비밀번호 찾기</Link>
       </div>
     </div>
   );

@@ -30,11 +30,11 @@ export default function WritePage() {
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#191F28]" />
         </button>
-        <h1 className="text-[17px] font-bold text-[#191F28]">글쓰기</h1>
+        <h1 className="text-[18px] font-bold text-[#191F28]">글쓰기</h1>
         <button
           onClick={submit}
           disabled={!canSubmit || submitting}
-          className="h-9 px-4 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold disabled:opacity-40 active:bg-[#1B64DA] transition-colors"
+          className="h-9 px-4 rounded-xl bg-[#3182F6] text-white text-[15px] font-bold disabled:opacity-40 active:bg-[#1B64DA] transition-colors"
         >
           {submitting ? "등록 중..." : "등록"}
         </button>
@@ -45,7 +45,7 @@ export default function WritePage() {
         onClick={() => setShowCatPicker(!showCatPicker)}
         className="flex items-center justify-between px-5 py-4 border-b border-[#F2F4F6] active:bg-[#F9FAFB] transition-colors"
       >
-        <span className={`text-[15px] font-medium ${category ? "text-[#191F28]" : "text-[#B0B8C1]"}`}>
+        <span className={`text-[16px] font-medium ${category ? "text-[#191F28]" : "text-[#B0B8C1]"}`}>
           {category || "카테고리 선택"}
         </span>
         <ChevronDown size={18} className={`text-[#B0B8C1] transition-transform ${showCatPicker ? "rotate-180" : ""}`} />
@@ -58,7 +58,7 @@ export default function WritePage() {
               <button
                 key={c}
                 onClick={() => { setCategory(c); setShowCatPicker(false); }}
-                className={`h-8 px-4 rounded-full text-[13px] font-medium transition-colors active:opacity-70 ${
+                className={`h-8 px-4 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
                   category === c ? "bg-[#3182F6] text-white" : "bg-white text-[#4E5968] border border-[#E5E8EB]"
                 }`}
               >
@@ -77,10 +77,10 @@ export default function WritePage() {
             onChange={e => setTitle(e.target.value)}
             placeholder="제목을 입력해주세요"
             maxLength={50}
-            className="w-full px-5 py-4 text-[17px] font-medium text-[#191F28] placeholder:text-[#B0B8C1] outline-none"
+            className="w-full px-5 py-4 text-[18px] font-medium text-[#191F28] placeholder:text-[#B0B8C1] outline-none"
           />
           <div className="px-5 pb-2 text-right">
-            <span className="text-[12px] text-[#B0B8C1]">{title.length}/50</span>
+            <span className="text-[13px] text-[#B0B8C1]">{title.length}/50</span>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function WritePage() {
             value={content}
             onChange={e => setContent(e.target.value)}
             placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
-            className="w-full h-full min-h-[200px] px-5 py-4 text-[15px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none resize-none leading-relaxed"
+            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none resize-none leading-relaxed"
           />
         </div>
 
@@ -100,11 +100,11 @@ export default function WritePage() {
             <button className="w-9 h-9 rounded-xl bg-[#F2F4F6] flex items-center justify-center active:opacity-60">
               <ImageIcon size={18} className="text-[#8B95A1]" />
             </button>
-            <span className="text-[12px] text-[#B0B8C1]">사진 첨부</span>
+            <span className="text-[13px] text-[#B0B8C1]">사진 첨부</span>
           </div>
           <button
             onClick={() => setAnonymous(!anonymous)}
-            className={`flex items-center gap-2 h-8 px-3 rounded-full text-[13px] font-medium transition-colors active:opacity-70 ${
+            className={`flex items-center gap-2 h-8 px-3 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
               anonymous ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"
             }`}
           >
@@ -117,8 +117,8 @@ export default function WritePage() {
 
         {/* Tips */}
         <div className="mx-4 mb-4 bg-[#EBF3FE] rounded-xl px-4 py-3">
-          <p className="text-[12px] font-bold text-[#3182F6] mb-1">💡 이런 글은 삭제될 수 있어요</p>
-          <p className="text-[12px] text-[#3182F6]/80 leading-relaxed">
+          <p className="text-[13px] font-bold text-[#3182F6] mb-1">💡 이런 글은 삭제될 수 있어요</p>
+          <p className="text-[13px] text-[#3182F6]/80 leading-relaxed">
             광고·홍보 목적 게시글, 타인 비방·혐오 표현,
             개인정보 노출, 불법 정보 공유
           </p>

@@ -91,61 +91,61 @@ function DetailContent() {
         <article className="px-5 py-5 border-b border-[#F2F4F6]">
           {/* Category + Author */}
           <div className="flex items-center gap-2 mb-3">
-            <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#EBF3FE] text-[#3182F6]"}`}>
+            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#EBF3FE] text-[#3182F6]"}`}>
               {post.category}
             </span>
-            {post.isPinned && <span className="text-[11px] text-[#3182F6] font-medium">📌 공지</span>}
+            {post.isPinned && <span className="text-[12px] text-[#3182F6] font-medium">📌 공지</span>}
           </div>
-          <h1 className="text-[20px] font-bold text-[#191F28] leading-snug mb-4">{post.title}</h1>
+          <h1 className="text-[21px] font-bold text-[#191F28] leading-snug mb-4">{post.title}</h1>
 
           {/* Author info */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-9 h-9 rounded-full bg-[#EBF3FE] flex items-center justify-center text-base">👤</div>
             <div>
-              <p className="text-[14px] font-semibold text-[#191F28]">{post.author}</p>
-              <p className="text-[12px] text-[#8B95A1]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
+              <p className="text-[15px] font-semibold text-[#191F28]">{post.author}</p>
+              <p className="text-[13px] text-[#8B95A1]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
             </div>
           </div>
 
           {/* Content */}
-          <p className="text-[15px] text-[#191F28] leading-relaxed whitespace-pre-line">{post.content}</p>
+          <p className="text-[16px] text-[#191F28] leading-relaxed whitespace-pre-line">{post.content}</p>
 
           {/* Reaction bar */}
           <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#F2F4F6]">
             <button onClick={toggleLike}
               className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#EBF3FE] text-[#3182F6]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
               <ThumbsUp size={15} className={liked ? "fill-[#3182F6]" : ""} />
-              <span className="text-[13px] font-semibold">{likeCount}</span>
+              <span className="text-[14px] font-semibold">{likeCount}</span>
             </button>
             <div className="flex items-center gap-1.5 text-[#8B95A1]">
               <MessageSquare size={15} />
-              <span className="text-[13px]">{comments.length}</span>
+              <span className="text-[14px]">{comments.length}</span>
             </div>
             <button className="ml-auto flex items-center gap-1 text-[#8B95A1] active:opacity-60">
               <Flag size={14} />
-              <span className="text-[12px]">신고</span>
+              <span className="text-[13px]">신고</span>
             </button>
           </div>
         </article>
 
         {/* Comments */}
         <div className="px-5 py-4">
-          <p className="text-[14px] font-bold text-[#191F28] mb-4">댓글 {comments.length}개</p>
+          <p className="text-[15px] font-bold text-[#191F28] mb-4">댓글 {comments.length}개</p>
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-[#F2F4F6] flex items-center justify-center text-sm shrink-0">👤</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[13px] font-semibold text-[#191F28]">{c.author}</span>
-                    <span className="text-[11px] text-[#B0B8C1]">{c.dong}</span>
-                    <span className="text-[11px] text-[#B0B8C1] ml-auto">{formatRelativeTime(c.createdAt)}</span>
+                    <span className="text-[14px] font-semibold text-[#191F28]">{c.author}</span>
+                    <span className="text-[12px] text-[#B0B8C1]">{c.dong}</span>
+                    <span className="text-[12px] text-[#B0B8C1] ml-auto">{formatRelativeTime(c.createdAt)}</span>
                   </div>
-                  <p className="text-[14px] text-[#191F28] leading-relaxed">{c.content}</p>
+                  <p className="text-[15px] text-[#191F28] leading-relaxed">{c.content}</p>
                   <button onClick={() => toggleCommentLike(c.id)}
                     className="flex items-center gap-1 mt-2 active:opacity-60">
                     <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#3182F6] fill-[#3182F6]" : "text-[#B0B8C1]"} />
-                    <span className={`text-[12px] ${commentLikes.has(c.id) ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
+                    <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
                       {c.likes + (commentLikes.has(c.id) ? 1 : 0)}
                     </span>
                   </button>
@@ -166,7 +166,7 @@ function DetailContent() {
             onChange={e => setCommentText(e.target.value)}
             onKeyDown={e => e.key === "Enter" && submitComment()}
             placeholder="따뜻한 댓글을 남겨보세요"
-            className="flex-1 bg-transparent text-[14px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none"
+            className="flex-1 bg-transparent text-[15px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none"
           />
           <button onClick={submitComment} disabled={!commentText.trim()}
             className="shrink-0 active:opacity-60 disabled:opacity-30">
