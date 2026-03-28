@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TrendingUp, TrendingDown, MapPin, Search } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import Header from "@/components/layout/Header";
@@ -20,7 +21,7 @@ function Tooltip2({ active, payload, label }: { active?: boolean; payload?: { va
   );
 }
 
-function AptCard({ apt, selected, onClick }: { apt: Apartment; selected: boolean; onClick: () => void }) {
+function AptCard({ apt, selected, onClick, onDetail }: { apt: Apartment; selected: boolean; onClick: () => void; onDetail: () => void }) {
   const sz = apt.sizes[0];
   const hist = sz.priceHistory;
   const diff = hist.length >= 2 ? hist[hist.length-1].price - hist[hist.length-2].price : 0;
@@ -72,6 +73,10 @@ function AptCard({ apt, selected, onClick }: { apt: Apartment; selected: boolean
               <Line type="monotone" dataKey="price" stroke="#00C471" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: "#00C471" }} />
             </LineChart>
           </ResponsiveContainer>
+          <button onClick={e => { e.stopPropagation(); onDetail(); }}
+            className="mt-2 w-full h-9 rounded-xl bg-[#EBF3FE] text-[#3182F6] text-[13px] font-bold active:bg-[#D1E8FF] transition-colors">
+            상세 정보 보기
+          </button>
         </div>
       )}
     </div>
@@ -79,6 +84,7 @@ function AptCard({ apt, selected, onClick }: { apt: Apartment; selected: boolean
 }
 
 export default function RealEstatePage() {
+  const router = useRouter();
   const [dongFilter, setDongFilter] = useState("전체");
   const [selected, setSelected] = useState<string | null>(null);
   const [q, setQ] = useState("");
@@ -131,7 +137,8 @@ export default function RealEstatePage() {
       <div className="px-4 pt-3 space-y-3">
         {filtered.map(apt => (
           <AptCard key={apt.id} apt={apt} selected={selected === apt.id}
-            onClick={() => setSelected(selected === apt.id ? null : apt.id)} />
+            onClick={() => setSelected(selected === apt.id ? null : apt.id)}
+            onDetail={() => router.push(`/geumdan-app/real-estate/detail/?id=${apt.id}`)} />
         ))}
       </div>
 

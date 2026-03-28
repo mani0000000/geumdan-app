@@ -99,9 +99,9 @@ export default function LoginPage() {
       <div className="px-6 py-8 flex items-center justify-center gap-5">
         <Link href="/geumdan-app/signup/" className="text-[14px] text-[#8B95A1]">회원가입</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <button className="text-[14px] text-[#8B95A1]">아이디 찾기</button>
+        <Link href="/geumdan-app/find-id/" className="text-[14px] text-[#8B95A1]">아이디 찾기</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <button className="text-[14px] text-[#8B95A1]">비밀번호 찾기</button>
+        <Link href="/geumdan-app/find-password/" className="text-[14px] text-[#8B95A1]">비밀번호 찾기</Link>
       </div>
     </div>
   );

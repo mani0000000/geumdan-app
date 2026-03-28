@@ -45,7 +45,7 @@ function CommunityContent() {
       {/* Posts */}
       <div className="px-4 pt-3 space-y-2">
         {filtered.map(post => (
-          <button key={post.id} onClick={() => router.push("/geumdan-app/community/")}
+          <button key={post.id} onClick={() => router.push(`/geumdan-app/community/detail/?id=${post.id}`)}
             className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#F2F4F6] transition-colors">
             <div className="flex items-center gap-2 mb-2">
               {post.isPinned && <Pin size={12} className="text-[#3182F6]" />}
@@ -83,7 +83,7 @@ function CommunityContent() {
       </div>
 
       {/* FAB */}
-      <button onClick={() => router.push("/geumdan-app/community/")}
+      <button onClick={() => router.push("/geumdan-app/community/write/")}
         className="fixed bottom-[74px] right-4 w-14 h-14 bg-[#3182F6] rounded-full shadow-lg flex items-center justify-center active:bg-[#1B64DA] transition-colors z-40">
         <Plus size={24} className="text-white" />
       </button>

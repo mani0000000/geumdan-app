@@ -17,26 +17,26 @@ const menuGroups = [
   {
     title: "내 활동",
     items: [
-      { icon: FileText, label: "내가 쓴 글", badge: String(currentUser.postCount), color: "text-[#3182F6]" },
-      { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(currentUser.commentCount), color: "text-[#8B5CF6]" },
-      { icon: Tag, label: "다운로드한 쿠폰", badge: "3", color: "text-[#F59E0B]" },
+      { icon: FileText, label: "내가 쓴 글", badge: String(currentUser.postCount), color: "text-[#3182F6]", href: "/geumdan-app/community/" },
+      { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(currentUser.commentCount), color: "text-[#8B5CF6]", href: "/geumdan-app/community/" },
+      { icon: Tag, label: "다운로드한 쿠폰", badge: "3", color: "text-[#F59E0B]", href: null },
     ],
   },
   {
     title: "즐겨찾기",
     items: [
-      { icon: Star, label: "즐겨찾는 버스", badge: "2", color: "text-[#FBBF24]" },
-      { icon: Star, label: "즐겨찾는 상가", badge: "5", color: "text-[#FBBF24]" },
-      { icon: Star, label: "관심 아파트", badge: "3", color: "text-[#FBBF24]" },
+      { icon: Star, label: "즐겨찾는 버스", badge: "2", color: "text-[#FBBF24]", href: "/geumdan-app/transport/" },
+      { icon: Star, label: "즐겨찾는 상가", badge: "5", color: "text-[#FBBF24]", href: "/geumdan-app/stores/" },
+      { icon: Star, label: "관심 아파트", badge: "3", color: "text-[#FBBF24]", href: "/geumdan-app/real-estate/" },
     ],
   },
   {
     title: "설정",
     items: [
-      { icon: Bell, label: "알림 설정", badge: null, color: "text-[#8B95A1]" },
-      { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#8B95A1]" },
-      { icon: Settings, label: "앱 설정", badge: null, color: "text-[#8B95A1]" },
-      { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#8B95A1]" },
+      { icon: Bell, label: "알림 설정", badge: null, color: "text-[#8B95A1]", href: "/geumdan-app/mypage/notifications/" },
+      { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#8B95A1]", href: "/geumdan-app/mypage/settings/" },
+      { icon: Settings, label: "앱 설정", badge: null, color: "text-[#8B95A1]", href: "/geumdan-app/mypage/settings/" },
+      { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#8B95A1]", href: null },
     ],
   },
 ];
@@ -53,7 +53,7 @@ export default function MyPage() {
         <div className="px-4 pb-5">
           <div className="flex items-end justify-between -mt-8 mb-3">
             <div className="w-16 h-16 rounded-full bg-[#EBF3FE] border-4 border-white flex items-center justify-center text-2xl">👤</div>
-            <button className="h-8 px-3.5 border border-[#E5E8EB] rounded-xl text-[12px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
+            <button onClick={() => router.push("/geumdan-app/mypage/edit/")} className="h-8 px-3.5 border border-[#E5E8EB] rounded-xl text-[12px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
               프로필 수정
             </button>
           </div>
@@ -109,8 +109,8 @@ export default function MyPage() {
         <div key={g.title} className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
           <p className="px-4 pt-4 pb-1 text-[12px] font-bold text-[#8B95A1]">{g.title}</p>
           <div className="divide-y divide-[#F2F4F6]">
-            {g.items.map(({ icon: Icon, label, badge, color }) => (
-              <button key={label} className="w-full flex items-center px-4 py-3.5 active:bg-[#F2F4F6] transition-colors">
+            {g.items.map(({ icon: Icon, label, badge, color, href }) => (
+              <button key={label} onClick={() => href && router.push(href)} className="w-full flex items-center px-4 py-3.5 active:bg-[#F2F4F6] transition-colors">
                 <Icon size={18} className={`${color} mr-3 shrink-0`} />
                 <span className="flex-1 text-[14px] text-[#191F28] text-left">{label}</span>
                 {badge && <span className="bg-[#EBF3FE] text-[#3182F6] text-[12px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>}
