@@ -463,6 +463,77 @@ export const newStoreOpenings: NewStoreOpening[] = [
   { id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F", openDate: "2026-03-20", emoji: "💇", isNew: false },
 ];
 
+// ---------- Pharmacies ----------
+export interface Pharmacy {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  weekendHours: string | null;   // null = 미운영
+  nightHours: string | null;     // null = 미운영
+  isOpenNow: boolean;
+  tags: string[];                // e.g. ["주말", "심야"]
+  distance?: string;
+}
+
+export const pharmacies: Pharmacy[] = [
+  {
+    id: "ph1",
+    name: "검단 온누리약국",
+    address: "인천 서구 검단로 512",
+    phone: "032-562-1234",
+    weekendHours: "토 09:00~18:00 / 일 10:00~15:00",
+    nightHours: "평일 22:00까지",
+    isOpenNow: true,
+    tags: ["주말", "심야"],
+    distance: "350m",
+  },
+  {
+    id: "ph2",
+    name: "당하 건강약국",
+    address: "인천 서구 당하동 123-4",
+    phone: "032-563-2345",
+    weekendHours: "토 10:00~17:00",
+    nightHours: null,
+    isOpenNow: false,
+    tags: ["주말"],
+    distance: "620m",
+  },
+  {
+    id: "ph3",
+    name: "검단신도시 24약국",
+    address: "인천 서구 마전동 456-7",
+    phone: "032-564-3456",
+    weekendHours: "토·일 09:00~21:00",
+    nightHours: "매일 24시간",
+    isOpenNow: true,
+    tags: ["주말", "심야", "24시"],
+    distance: "980m",
+  },
+  {
+    id: "ph4",
+    name: "불로 해맑은약국",
+    address: "인천 서구 불로동 789-1",
+    phone: "032-565-4567",
+    weekendHours: "토 09:00~19:00 / 일 휴무",
+    nightHours: "평일 21:00까지",
+    isOpenNow: false,
+    tags: ["주말", "심야"],
+    distance: "1.2km",
+  },
+  {
+    id: "ph5",
+    name: "왕길 드림약국",
+    address: "인천 서구 왕길동 321-5",
+    phone: "032-566-5678",
+    weekendHours: "토·일 10:00~18:00",
+    nightHours: null,
+    isOpenNow: true,
+    tags: ["주말"],
+    distance: "1.5km",
+  },
+];
+
 // ---------- Gamification ----------
 export const userGameData = {
   points: 1250,

@@ -7,12 +7,13 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar,
-  TrendingDown,
+  TrendingDown, Phone, Clock, PillBottle,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies } from "@/lib/mockData";
+import type { Pharmacy } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 
@@ -457,6 +458,113 @@ function SosikSection() {
   );
 }
 
+// ─── 약국 위젯 ────────────────────────────────────────────────
+type PharmacyFilter = "전체" | "주말" | "심야";
+
+function PharmacySection() {
+  const [filter, setFilter] = useState<PharmacyFilter>("전체");
+  const [showAll, setShowAll] = useState(false);
+
+  const now = new Date();
+  const isWeekend = now.getDay() === 0 || now.getDay() === 6;
+  const hour = now.getHours();
+  const isNight = hour >= 21 || hour < 6;
+
+  const filtered = pharmacies.filter(p => {
+    if (filter === "주말") return p.tags.includes("주말");
+    if (filter === "심야") return p.tags.includes("심야");
+    return true;
+  });
+
+  const displayed = showAll ? filtered : filtered.slice(0, 3);
+
+  const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
+
+  return (
+    <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden">
+        {/* 상태 배너 */}
+        {(isWeekend || isNight) && (
+          <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#EBF3FE]"}`}>
+            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#3182F6]"} />
+            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#3182F6]"}`}>
+              {isNight ? "지금은 심야 시간이에요 — 운영 중인 약국을 확인하세요" : "오늘은 주말이에요 — 운영 약국을 확인하세요"}
+            </span>
+          </div>
+        )}
+
+        {/* 필터 */}
+        <div className="flex gap-2 px-4 pt-3 pb-2">
+          {filterBtns.map(f => (
+            <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
+              className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+              {f === "심야" ? "🌙 심야" : f === "주말" ? "📅 주말" : "전체"}
+            </button>
+          ))}
+        </div>
+
+        {/* 약국 목록 */}
+        <div className="divide-y divide-[#F2F4F6]">
+          {displayed.map(p => (
+            <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
+              {/* 아이콘 */}
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#F2F4F6]"}`}>
+                <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#8B95A1]"} />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[14px] font-bold text-[#191F28]">{p.name}</span>
+                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
+                    {p.isOpenNow ? "영업 중" : "영업 종료"}
+                  </span>
+                  {p.tags.includes("24시") && (
+                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
+                  )}
+                </div>
+                <p className="text-[12px] text-[#8B95A1] mt-0.5">{p.address}</p>
+                <div className="flex flex-col gap-0.5 mt-1.5">
+                  {p.weekendHours && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-[#3182F6] w-6 shrink-0">주말</span>
+                      <span className="text-[12px] text-[#4E5968]">{p.weekendHours}</span>
+                    </div>
+                  )}
+                  {p.nightHours && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
+                      <span className="text-[12px] text-[#4E5968]">{p.nightHours}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-col items-end gap-1.5 shrink-0">
+                {p.distance && (
+                  <span className="text-[12px] text-[#8B95A1]">{p.distance}</span>
+                )}
+                <a href={`tel:${p.phone}`}
+                  className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
+                  <Phone size={14} className="text-[#3182F6]" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* 더보기 / 접기 */}
+        {filtered.length > 3 && (
+          <button onClick={() => setShowAll(v => !v)}
+            className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#F2F4F6] active:bg-[#F2F4F6]">
+            <span className="text-[13px] font-semibold text-[#4E5968]">{showAll ? "접기" : `${filtered.length - 3}개 더 보기`}</span>
+            {showAll ? <ChevronUp size={14} className="text-[#8B95A1]" /> : <ChevronDown size={14} className="text-[#8B95A1]" />}
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
 // ─── 섹션 헤더 ────────────────────────────────────────────────
 function SectionLabel({ label }: { label: string }) {
   return (
@@ -509,6 +617,10 @@ export default function HomePage() {
       {/* ── 신규 오픈 ── */}
       <SectionLabel label="신규 오픈" />
       <NewOpeningsSection />
+
+      {/* ── 약국 ── */}
+      <SectionLabel label="주말·심야 약국" />
+      <PharmacySection />
 
       {/* ── 교통 ── */}
       <SectionLabel label="교통" />
