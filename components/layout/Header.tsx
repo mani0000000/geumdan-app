@@ -31,7 +31,7 @@ export default function Header({ title, showLocation, showBack, backHref }: Head
             <h1 className="text-[18px] font-bold text-[#191F28]">{title}</h1>
           )}
         </div>
-        <Link href="/geumdan-app/mypage/" className="relative active:opacity-60">
+        <Link href="/mypage/" className="relative active:opacity-60">
           <Bell size={22} className="text-[#191F28]" />
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#F04452] rounded-full" />
         </Link>

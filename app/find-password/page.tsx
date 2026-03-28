@@ -58,7 +58,7 @@ export default function FindPasswordPage() {
       {/* Header */}
       <div className="flex items-center gap-2 px-4 h-14 border-b border-[#F2F4F6]">
         {step === "verify"
-          ? <Link href="/geumdan-app/login/" className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></Link>
+          ? <Link href="/login/" className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></Link>
           : step === "reset"
           ? <button onClick={() => setStep("verify")} className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></button>
           : null
@@ -197,7 +197,7 @@ export default function FindPasswordPage() {
               보안을 위해 이전 비밀번호는 사용할 수 없어요.
             </p>
             <div className="w-full mt-10 flex flex-col gap-3">
-              <Link href="/geumdan-app/login/"
+              <Link href="/login/"
                 className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[15px] font-bold flex items-center justify-center active:bg-[#1B64DA]">
                 로그인하기
               </Link>

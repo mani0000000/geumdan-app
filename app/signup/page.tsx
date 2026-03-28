@@ -33,7 +33,7 @@ export default function SignupPage() {
     if (step === 2) {
       setLoading(true);
       await new Promise(r => setTimeout(r, 800));
-      router.push("/geumdan-app/home/");
+      router.push("/home/");
     } else setStep(s => s + 1);
   };
 
@@ -52,7 +52,7 @@ export default function SignupPage() {
       <div className="flex items-center gap-2 px-4 h-14">
         {step > 0
           ? <button onClick={() => setStep(s => s - 1)} className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></button>
-          : <Link href="/geumdan-app/login/" className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></Link>
+          : <Link href="/login/" className="active:opacity-60"><ChevronLeft size={24} className="text-[#191F28]" /></Link>
         }
       </div>
 

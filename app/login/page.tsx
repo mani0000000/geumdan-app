@@ -15,13 +15,13 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     await new Promise(r => setTimeout(r, 700));
-    router.push("/geumdan-app/home/");
+    router.push("/home/");
   };
 
   const handleSocial = async () => {
     setLoading(true);
     await new Promise(r => setTimeout(r, 500));
-    router.push("/geumdan-app/home/");
+    router.push("/home/");
   };
 
   return (
@@ -97,11 +97,11 @@ export default function LoginPage() {
 
       {/* Bottom Links */}
       <div className="px-6 py-8 flex items-center justify-center gap-5">
-        <Link href="/geumdan-app/signup/" className="text-[14px] text-[#8B95A1]">회원가입</Link>
+        <Link href="/signup/" className="text-[14px] text-[#8B95A1]">회원가입</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <Link href="/geumdan-app/find-id/" className="text-[14px] text-[#8B95A1]">아이디 찾기</Link>
+        <Link href="/find-id/" className="text-[14px] text-[#8B95A1]">아이디 찾기</Link>
         <div className="w-px h-3 bg-[#E5E8EB]" />
-        <Link href="/geumdan-app/find-password/" className="text-[14px] text-[#8B95A1]">비밀번호 찾기</Link>
+        <Link href="/find-password/" className="text-[14px] text-[#8B95A1]">비밀번호 찾기</Link>
       </div>
     </div>
   );

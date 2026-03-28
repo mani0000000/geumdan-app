@@ -20,7 +20,7 @@ export default function WritePage() {
   const submit = async () => {
     setSubmitting(true);
     await new Promise(r => setTimeout(r, 800));
-    router.push("/geumdan-app/community/");
+    router.push("/community/");
   };
 
   return (

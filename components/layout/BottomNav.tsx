@@ -4,11 +4,11 @@ import { usePathname } from "next/navigation";
 import { Home, Users, Bus, Building2, User } from "lucide-react";
 
 const navItems = [
-  { href: "/geumdan-app/home/", label: "홈", icon: Home, match: "/home" },
-  { href: "/geumdan-app/community/", label: "소통", icon: Users, match: "/community" },
-  { href: "/geumdan-app/transport/", label: "교통", icon: Bus, match: "/transport" },
-  { href: "/geumdan-app/stores/", label: "상가", icon: Building2, match: "/stores" },
-  { href: "/geumdan-app/mypage/", label: "MY", icon: User, match: "/mypage" },
+  { href: "/home/", label: "홈", icon: Home, match: "/home" },
+  { href: "/community/", label: "소통", icon: Users, match: "/community" },
+  { href: "/transport/", label: "교통", icon: Bus, match: "/transport" },
+  { href: "/stores/", label: "상가", icon: Building2, match: "/stores" },
+  { href: "/mypage/", label: "MY", icon: User, match: "/mypage" },
 ];
 
 export default function BottomNav() {

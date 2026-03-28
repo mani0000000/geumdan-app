@@ -8,14 +8,14 @@ import { posts, newsItems, nearbyStops, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 
 const quickMenus = [
-  { emoji: "🚌", label: "버스", href: "/geumdan-app/transport/" },
-  { emoji: "🗺️", label: "상가지도", href: "/geumdan-app/stores/" },
-  { emoji: "🏠", label: "부동산", href: "/geumdan-app/real-estate/" },
-  { emoji: "📰", label: "뉴스", href: "/geumdan-app/news/" },
-  { emoji: "💬", label: "커뮤니티", href: "/geumdan-app/community/" },
-  { emoji: "🛒", label: "중고거래", href: "/geumdan-app/community/" },
-  { emoji: "🎯", label: "소모임", href: "/geumdan-app/community/" },
-  { emoji: "⭐", label: "즐겨찾기", href: "/geumdan-app/mypage/" },
+  { emoji: "🚌", label: "버스", href: "/transport/" },
+  { emoji: "🗺️", label: "상가지도", href: "/stores/" },
+  { emoji: "🏠", label: "부동산", href: "/real-estate/" },
+  { emoji: "📰", label: "뉴스", href: "/news/" },
+  { emoji: "💬", label: "커뮤니티", href: "/community/" },
+  { emoji: "🛒", label: "중고거래", href: "/community/" },
+  { emoji: "🎯", label: "소모임", href: "/community/" },
+  { emoji: "⭐", label: "즐겨찾기", href: "/mypage/" },
 ];
 
 export default function HomePage() {
@@ -47,7 +47,7 @@ export default function HomePage() {
       {/* Bus Quick */}
       {stop && bus && (
         <section className="mx-4 mb-2">
-          <button onClick={() => router.push("/geumdan-app/transport/")}
+          <button onClick={() => router.push("/transport/")}
             className="w-full bg-white rounded-2xl px-4 py-4 flex items-center justify-between active:bg-[#F2F4F6] transition-colors">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center">
@@ -83,14 +83,14 @@ export default function HomePage() {
               <Flame size={16} className="text-[#F04452]" />
               <span className="text-[15px] font-bold text-[#191F28]">HOT 게시글</span>
             </div>
-            <Link href="/geumdan-app/community/"
+            <Link href="/community/"
               className="text-[13px] text-[#3182F6] font-medium active:opacity-60">
               전체보기
             </Link>
           </div>
           <div className="divide-y divide-[#F2F4F6]">
             {hotPosts.map(post => (
-              <button key={post.id} onClick={() => router.push("/geumdan-app/community/")}
+              <button key={post.id} onClick={() => router.push("/community/")}
                 className="w-full px-4 py-3.5 flex items-start gap-3 active:bg-[#F2F4F6] transition-colors text-left">
                 <span className="text-[11px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
                   {post.category}
@@ -115,9 +115,9 @@ export default function HomePage() {
         <div className="bg-white rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-4 pt-4 pb-3">
             <span className="text-[15px] font-bold text-[#191F28]">검단 뉴스</span>
-            <Link href="/geumdan-app/news/" className="text-[13px] text-[#3182F6] font-medium active:opacity-60">전체보기</Link>
+            <Link href="/news/" className="text-[13px] text-[#3182F6] font-medium active:opacity-60">전체보기</Link>
           </div>
-          <button onClick={() => router.push("/geumdan-app/news/")}
+          <button onClick={() => router.push("/news/")}
             className="w-full px-4 pb-4 flex items-start gap-3 active:opacity-70 text-left">
             <div className="w-16 h-16 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-2xl shrink-0">
               📰
@@ -141,11 +141,11 @@ export default function HomePage() {
               <TrendingUp size={16} className="text-[#00C471]" />
               <span className="text-[15px] font-bold text-[#191F28]">부동산 시세</span>
             </div>
-            <Link href="/geumdan-app/real-estate/" className="text-[13px] text-[#3182F6] font-medium active:opacity-60">전체보기</Link>
+            <Link href="/real-estate/" className="text-[13px] text-[#3182F6] font-medium active:opacity-60">전체보기</Link>
           </div>
           <div className="divide-y divide-[#F2F4F6]">
             {apartments.slice(0, 3).map(apt => (
-              <button key={apt.id} onClick={() => router.push("/geumdan-app/real-estate/")}
+              <button key={apt.id} onClick={() => router.push("/real-estate/")}
                 className="w-full px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] transition-colors">
                 <div className="text-left">
                   <p className="text-[14px] font-medium text-[#191F28]">{apt.name}</p>
@@ -163,7 +163,7 @@ export default function HomePage() {
 
       {/* 상가 지도 배너 */}
       <section className="mx-4 mb-4">
-        <button onClick={() => router.push("/geumdan-app/stores/")}
+        <button onClick={() => router.push("/stores/")}
           className="w-full bg-[#3182F6] rounded-2xl p-4 flex items-center gap-4 active:bg-[#1B64DA] transition-colors">
           <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl shrink-0">🗺️</div>
           <div className="flex-1 text-left">

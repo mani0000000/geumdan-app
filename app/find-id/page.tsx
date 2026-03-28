@@ -32,7 +32,7 @@ export default function FindIdPage() {
     <div className="min-h-dvh bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center gap-2 px-4 h-14 border-b border-[#F2F4F6]">
-        <Link href="/geumdan-app/login/" className="active:opacity-60">
+        <Link href="/login/" className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#191F28]" />
         </Link>
         <h1 className="text-[17px] font-bold text-[#191F28]">아이디 찾기</h1>
@@ -113,11 +113,11 @@ export default function FindIdPage() {
             </p>
 
             <div className="w-full flex flex-col gap-3">
-              <Link href="/geumdan-app/login/"
+              <Link href="/login/"
                 className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[15px] font-bold flex items-center justify-center active:bg-[#1B64DA] transition-colors">
                 로그인하기
               </Link>
-              <Link href="/geumdan-app/find-password/"
+              <Link href="/find-password/"
                 className="w-full h-[52px] rounded-xl bg-[#F2F4F6] text-[#4E5968] text-[15px] font-bold flex items-center justify-center active:opacity-70 transition-opacity">
                 비밀번호 찾기
               </Link>

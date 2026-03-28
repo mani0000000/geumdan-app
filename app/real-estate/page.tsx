@@ -138,7 +138,7 @@ export default function RealEstatePage() {
         {filtered.map(apt => (
           <AptCard key={apt.id} apt={apt} selected={selected === apt.id}
             onClick={() => setSelected(selected === apt.id ? null : apt.id)}
-            onDetail={() => router.push(`/geumdan-app/real-estate/detail/?id=${apt.id}`)} />
+            onDetail={() => router.push(`/real-estate/detail/?id=${apt.id}`)} />
         ))}
       </div>
 
