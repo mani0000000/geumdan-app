@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="12" fill="#00704A"/>
+  <circle cx="24" cy="20" r="10" fill="none" stroke="#CBA258" stroke-width="1.5"/>
+  <circle cx="24" cy="20" r="7.5" fill="none" stroke="#CBA258" stroke-width="1"/>
+  <polygon points="24,11 25.4,15.8 30.4,15.8 26.5,18.7 27.9,23.5 24,20.6 20.1,23.5 21.5,18.7 17.6,15.8 22.6,15.8" fill="#CBA258"/>
+  <text x="24" y="37" text-anchor="middle" fill="#CBA258" font-size="8.5" font-weight="900" font-family="'Georgia',serif" letter-spacing="1">STARBUCKS</text>
+</svg>

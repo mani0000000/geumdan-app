@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="12" fill="#004B9B"/>
+  <!-- BI style circular mark -->
+  <circle cx="24" cy="20" r="9" fill="none" stroke="white" stroke-width="2"/>
+  <circle cx="24" cy="20" r="5" fill="#009BDF"/>
+  <circle cx="24" cy="20" r="2.5" fill="white"/>
+  <text x="24" y="37" text-anchor="middle" fill="white" font-size="10" font-weight="900" font-family="Arial,sans-serif" letter-spacing="-0.3">우리은행</text>
+</svg>

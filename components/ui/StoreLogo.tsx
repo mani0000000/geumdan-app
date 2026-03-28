@@ -1,18 +1,24 @@
-// 브랜드별 로고 설정 (배경색, 텍스트색, 표시 이니셜/약어)
-const BRANDS: Record<string, { bg: string; color: string; label: string }> = {
-  "스타벅스":              { bg: "#00704A", color: "#fff", label: "S" },
-  "스타벅스 DT":           { bg: "#00704A", color: "#fff", label: "S" },
-  "맘스터치":              { bg: "#E63312", color: "#fff", label: "맘" },
-  "올리브영":              { bg: "#FF3399", color: "#fff", label: "O" },
-  "이디야커피":            { bg: "#1A3A6B", color: "#fff", label: "E" },
+"use client";
+import { useState } from "react";
+
+// basePath와 일치해야 함
+const BASE = "/geumdan-app";
+
+// 브랜드별 설정 (bg, color, label = 폴백 / logo = SVG 경로)
+const BRANDS: Record<string, { bg: string; color: string; label: string; logo?: string }> = {
+  "스타벅스":              { bg: "#00704A", color: "#fff", label: "S",   logo: `${BASE}/logos/starbucks.svg` },
+  "스타벅스 DT":           { bg: "#00704A", color: "#fff", label: "S",   logo: `${BASE}/logos/starbucks.svg` },
+  "맘스터치":              { bg: "#E63312", color: "#fff", label: "맘",  logo: `${BASE}/logos/momstouch.svg` },
+  "올리브영":              { bg: "#1D1D1B", color: "#fff", label: "O",   logo: `${BASE}/logos/oliveyoung.svg` },
+  "이디야커피":            { bg: "#1A3A6B", color: "#fff", label: "E",   logo: `${BASE}/logos/ediya.svg` },
   "더본코리아 (백종원)":   { bg: "#D97706", color: "#fff", label: "더" },
   "더본코리아":            { bg: "#D97706", color: "#fff", label: "더" },
   "약국":                  { bg: "#3182F6", color: "#fff", label: "약" },
-  "파리바게뜨":            { bg: "#003087", color: "#fff", label: "P" },
-  "홈플러스 익스프레스":   { bg: "#E21A1A", color: "#fff", label: "H" },
-  "홈플러스":              { bg: "#E21A1A", color: "#fff", label: "H" },
-  "CU 편의점":             { bg: "#7B3F9B", color: "#fff", label: "CU" },
-  "우리은행":              { bg: "#004B9B", color: "#fff", label: "W" },
+  "파리바게뜨":            { bg: "#003087", color: "#fff", label: "P",   logo: `${BASE}/logos/parisbaguette.svg` },
+  "홈플러스 익스프레스":   { bg: "#E21A1A", color: "#fff", label: "H",   logo: `${BASE}/logos/homeplus.svg` },
+  "홈플러스":              { bg: "#E21A1A", color: "#fff", label: "H",   logo: `${BASE}/logos/homeplus.svg` },
+  "CU 편의점":             { bg: "#6935A5", color: "#fff", label: "CU",  logo: `${BASE}/logos/cu.svg` },
+  "우리은행":              { bg: "#004B9B", color: "#fff", label: "우",  logo: `${BASE}/logos/wooribank.svg` },
   "세탁특공대":            { bg: "#0EA5E9", color: "#fff", label: "세" },
   "영어학원":              { bg: "#6366F1", color: "#fff", label: "영" },
   "수학학원":              { bg: "#8B5CF6", color: "#fff", label: "수" },
@@ -22,7 +28,7 @@ const BRANDS: Record<string, { bg: string; color: string; label: string }> = {
   "헤어살롱 모이":         { bg: "#F59E0B", color: "#fff", label: "모" },
 };
 
-// 카테고리 폴백 색상
+// 카테고리 폴백
 const CAT_FALLBACK: Record<string, { bg: string; color: string }> = {
   "카페":      { bg: "#FEF3C7", color: "#92400E" },
   "음식점":    { bg: "#FEE2E2", color: "#991B1B" },
@@ -43,8 +49,8 @@ const CAT_EMOJI: Record<string, string> = {
 interface StoreLogoProps {
   name: string;
   category?: string;
-  size?: number;   // px, 기본 40
-  rounded?: string; // 기본 rounded-xl
+  size?: number;
+  rounded?: string;
 }
 
 export default function StoreLogo({
@@ -55,28 +61,40 @@ export default function StoreLogo({
 }: StoreLogoProps) {
   const brand = BRANDS[name];
   const fallback = CAT_FALLBACK[category] ?? CAT_FALLBACK["기타"];
+  const [imgFailed, setImgFailed] = useState(false);
 
   const bg    = brand?.bg    ?? fallback.bg;
   const color = brand?.color ?? fallback.color;
-
-  const fontSize = size <= 32 ? 11 : size <= 44 ? 13 : 15;
+  const fontSize  = size <= 32 ? 11 : size <= 44 ? 13 : 15;
   const emojiSize = size <= 32 ? 14 : size <= 44 ? 18 : 22;
 
+  // 로고 이미지가 있고 로드 실패하지 않았으면 이미지 표시
+  if (brand?.logo && !imgFailed) {
+    return (
+      <div
+        className={`flex items-center justify-center shrink-0 overflow-hidden ${rounded}`}
+        style={{ width: size, height: size, minWidth: size, background: bg }}
+      >
+        <img
+          src={brand.logo}
+          alt={name}
+          width={size}
+          height={size}
+          onError={() => setImgFailed(true)}
+          style={{ width: size, height: size, objectFit: "cover", display: "block" }}
+        />
+      </div>
+    );
+  }
+
+  // 폴백: 색상 배경 + 이니셜/이모지
   return (
     <div
       className={`flex items-center justify-center shrink-0 ${rounded}`}
       style={{ width: size, height: size, background: bg, minWidth: size }}
     >
       {brand ? (
-        <span
-          style={{
-            color,
-            fontSize,
-            fontWeight: 900,
-            letterSpacing: "-0.5px",
-            lineHeight: 1,
-          }}
-        >
+        <span style={{ color, fontSize, fontWeight: 900, letterSpacing: "-0.5px", lineHeight: 1 }}>
           {brand.label}
         </span>
       ) : (
