@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
+  <rect width="48" height="48" rx="12" fill="#E21A1A"/>
+  <!-- H letter -->
+  <rect x="11" y="12" width="5" height="18" rx="1" fill="white"/>
+  <rect x="21" y="18" width="6" height="6" rx="1" fill="white"/>
+  <rect x="21" y="12" width="5" height="18" rx="1" fill="white"/>
+  <!-- Plus sign -->
+  <rect x="31" y="19" width="8" height="4" rx="1" fill="white"/>
+  <rect x="33" y="16" width="4" height="10" rx="1" fill="white"/>
+  <text x="24" y="38" text-anchor="middle" fill="white" font-size="7.5" font-weight="700" font-family="Arial,sans-serif" letter-spacing="0.2">HOMEPLUS</text>
+</svg>
