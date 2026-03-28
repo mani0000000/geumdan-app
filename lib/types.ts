@@ -180,6 +180,43 @@ export interface NewStoreOpening {
   isNew: boolean;
 }
 
+// My Home Watchlist
+export interface MyHome {
+  id: string;
+  aptId: string;
+  aptName: string;
+  dong: string;
+  pyeong: number;
+  floor: number;
+  label: string; // "내 집", "관심 매물" etc.
+  currentPrice: number; // 만원
+  prevPrice: number; // 만원 (previous month)
+}
+
+// Property Listings
+export type ListingType = "매매" | "전세" | "월세";
+
+export interface Listing {
+  id: string;
+  aptId: string;
+  aptName: string;
+  dong: string;
+  type: ListingType;
+  price: number; // 만원 (매매/전세 price, or 월세 deposit)
+  monthlyRent?: number; // 만원 (월세 only)
+  pyeong: number;
+  sqm: number;
+  floor: number;
+  totalFloors: number;
+  direction: string; // 남향, 남동향, etc.
+  description: string;
+  features: string[];
+  agencyName: string;
+  agencyPhone: string;
+  listedAt: string;
+  isNew: boolean;
+}
+
 export interface Store {
   id: string;
   name: string;

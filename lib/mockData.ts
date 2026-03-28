@@ -8,6 +8,8 @@ import type {
   User,
   Coupon,
   NewStoreOpening,
+  MyHome,
+  Listing,
 } from "./types";
 
 export const currentUser: User = {
@@ -494,6 +496,103 @@ export const userGameData = {
     { id: "r4", title: "이디야 음료 무료", cost: 600, emoji: "☕", stock: 3 },
   ],
 };
+
+// ---------- My Home Watchlist ----------
+export const myHomes: MyHome[] = [
+  { id: "mh1", aptId: "apt1", aptName: "검단 푸르지오 더 퍼스트", dong: "당하동", pyeong: 34, floor: 12, label: "내 집", currentPrice: 55200, prevPrice: 54500 },
+  { id: "mh2", aptId: "apt2", aptName: "검단 SK뷰 센트럴", dong: "불로동", pyeong: 25, floor: 8, label: "관심 매물", currentPrice: 43000, prevPrice: 42500 },
+];
+
+// ---------- Property Listings ----------
+export const listings: Listing[] = [
+  // 매매
+  {
+    id: "l1", aptId: "apt1", aptName: "검단 푸르지오 더 퍼스트", dong: "당하동",
+    type: "매매", price: 56000, pyeong: 34, sqm: 114, floor: 15, totalFloors: 24,
+    direction: "남향", description: "올수리 완료, 즉시 입주 가능. 교통 편리한 역세권.",
+    features: ["올수리", "즉시입주", "주차2대"], agencyName: "검단부동산", agencyPhone: "032-111-2222",
+    listedAt: "2026-03-25", isNew: true,
+  },
+  {
+    id: "l2", aptId: "apt1", aptName: "검단 푸르지오 더 퍼스트", dong: "당하동",
+    type: "매매", price: 41500, pyeong: 24, sqm: 79, floor: 7, totalFloors: 24,
+    direction: "남동향", description: "로얄층 인근, 채광 우수. 초등학교 도보 5분.",
+    features: ["채광좋음", "초품아"], agencyName: "당하공인", agencyPhone: "032-333-4444",
+    listedAt: "2026-03-20", isNew: false,
+  },
+  {
+    id: "l3", aptId: "apt2", aptName: "검단 SK뷰 센트럴", dong: "불로동",
+    type: "매매", price: 44500, pyeong: 25, sqm: 84, floor: 11, totalFloors: 28,
+    direction: "남향", description: "상업시설 5분 거리, 생활 인프라 최상. 신축급 관리 상태.",
+    features: ["신축급", "커뮤니티시설"], agencyName: "SK공인중개", agencyPhone: "032-555-6666",
+    listedAt: "2026-03-27", isNew: true,
+  },
+  {
+    id: "l4", aptId: "apt3", aptName: "검단 한신더휴", dong: "마전동",
+    type: "매매", price: 37500, pyeong: 24, sqm: 79, floor: 3, totalFloors: 20,
+    direction: "동향", description: "저층 선호하시는 분께 추천. 공원 조망 우수.",
+    features: ["공원뷰", "저층"], agencyName: "마전공인", agencyPhone: "032-777-8888",
+    listedAt: "2026-03-18", isNew: false,
+  },
+  {
+    id: "l5", aptId: "apt4", aptName: "검단 아이파크 2단지", dong: "왕길동",
+    type: "매매", price: 53000, pyeong: 34, sqm: 114, floor: 20, totalFloors: 29,
+    direction: "남향", description: "고층 탁 트인 조망. 관리비 저렴. 내부 깔끔.",
+    features: ["고층뷰", "관리비저렴"], agencyName: "왕길부동산", agencyPhone: "032-999-0000",
+    listedAt: "2026-03-22", isNew: false,
+  },
+  // 전세
+  {
+    id: "l6", aptId: "apt1", aptName: "검단 푸르지오 더 퍼스트", dong: "당하동",
+    type: "전세", price: 33000, pyeong: 34, sqm: 114, floor: 9, totalFloors: 24,
+    direction: "남향", description: "전세 안전 단지. 전입신고 즉시 가능. 2년 계약.",
+    features: ["전세대출가능", "즉시입주"], agencyName: "검단부동산", agencyPhone: "032-111-2222",
+    listedAt: "2026-03-26", isNew: true,
+  },
+  {
+    id: "l7", aptId: "apt2", aptName: "검단 SK뷰 센트럴", dong: "불로동",
+    type: "전세", price: 26000, pyeong: 25, sqm: 84, floor: 5, totalFloors: 28,
+    direction: "남동향", description: "깨끗하게 사용, 신축 분위기. 학군 우수.",
+    features: ["학군좋음", "깨끗"], agencyName: "SK공인중개", agencyPhone: "032-555-6666",
+    listedAt: "2026-03-24", isNew: false,
+  },
+  {
+    id: "l8", aptId: "apt3", aptName: "검단 한신더휴", dong: "마전동",
+    type: "전세", price: 22000, pyeong: 24, sqm: 79, floor: 12, totalFloors: 20,
+    direction: "남향", description: "중층 채광 좋음. 공원 산책로 연결.",
+    features: ["공원인접", "채광좋음"], agencyName: "마전공인", agencyPhone: "032-777-8888",
+    listedAt: "2026-03-19", isNew: false,
+  },
+  {
+    id: "l9", aptId: "apt4", aptName: "검단 아이파크 2단지", dong: "왕길동",
+    type: "전세", price: 31000, pyeong: 34, sqm: 114, floor: 17, totalFloors: 29,
+    direction: "남향", description: "브랜드 단지 전세. 커뮤니티 이용 가능. 피트니스 완비.",
+    features: ["피트니스", "커뮤니티"], agencyName: "왕길부동산", agencyPhone: "032-999-0000",
+    listedAt: "2026-03-23", isNew: true,
+  },
+  // 월세
+  {
+    id: "l10", aptId: "apt1", aptName: "검단 푸르지오 더 퍼스트", dong: "당하동",
+    type: "월세", price: 10000, monthlyRent: 80, pyeong: 24, sqm: 79, floor: 6, totalFloors: 24,
+    direction: "남향", description: "보증금 1억, 월세 80. 관리비 별도. 반려동물 불가.",
+    features: ["즉시입주"], agencyName: "검단부동산", agencyPhone: "032-111-2222",
+    listedAt: "2026-03-27", isNew: true,
+  },
+  {
+    id: "l11", aptId: "apt2", aptName: "검단 SK뷰 센트럴", dong: "불로동",
+    type: "월세", price: 5000, monthlyRent: 110, pyeong: 25, sqm: 84, floor: 14, totalFloors: 28,
+    direction: "서향", description: "보증금 5천, 월세 110. 고층 뷰 우수. 주차 1대 포함.",
+    features: ["주차포함", "고층뷰"], agencyName: "SK공인중개", agencyPhone: "032-555-6666",
+    listedAt: "2026-03-21", isNew: false,
+  },
+  {
+    id: "l12", aptId: "apt3", aptName: "검단 한신더휴", dong: "마전동",
+    type: "월세", price: 3000, monthlyRent: 70, pyeong: 24, sqm: 79, floor: 8, totalFloors: 20,
+    direction: "남동향", description: "보증금 3천, 월세 70. 가성비 최고. 신혼부부 환영.",
+    features: ["가성비", "신혼부부환영"], agencyName: "마전공인", agencyPhone: "032-777-8888",
+    listedAt: "2026-03-20", isNew: false,
+  },
+];
 
 // ---------- Stores ----------
 export const buildings: Building[] = [
