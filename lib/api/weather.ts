@@ -35,8 +35,8 @@ export interface WeatherData {
   emoji: string;
   humidity: number;
   windSpeed: number;
-  maxTemp: number;
-  minTemp: number;
+  high: number;
+  low: number;
   hourly: { hour: string; temp: number; emoji: string }[];
 }
 
@@ -85,8 +85,8 @@ export async function fetchWeather(): Promise<WeatherData | null> {
       emoji: wmo.emoji,
       humidity: Math.round(d.current.relative_humidity_2m as number),
       windSpeed: Math.round(d.current.wind_speed_10m as number),
-      maxTemp: Math.round(d.daily.temperature_2m_max[0] as number),
-      minTemp: Math.round(d.daily.temperature_2m_min[0] as number),
+      high: Math.round(d.daily.temperature_2m_max[0] as number),
+      low: Math.round(d.daily.temperature_2m_min[0] as number),
       hourly,
     };
   } catch {

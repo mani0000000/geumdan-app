@@ -138,6 +138,45 @@ export default function TransportPage() {
 
       {tab === "버스" && (
         <div className="px-4 space-y-3">
+          {/* 찜한 정류장 섹션 */}
+          {favs.size > 0 && !loading && (
+            <div className="bg-[#EBF3FE] rounded-2xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-1.5">
+                  <Star size={14} className="text-[#FFBB00] fill-[#FFBB00]" />
+                  <span className="text-[13px] font-bold text-[#1B64DA]">즐겨찾는 정류장</span>
+                </div>
+                <button
+                  onClick={async () => { setRefreshing(true); await loadBusData(); setRefreshing(false); }}
+                  className="flex items-center gap-1 bg-[#3182F6] rounded-xl px-3 py-1.5 active:opacity-70">
+                  <RefreshCw size={12} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
+                  <span className="text-[12px] font-bold text-white">새로고침</span>
+                </button>
+              </div>
+              {stopsWithRoutes.filter(s => favs.has(s.id)).map(stop => (
+                <div key={stop.id} className="mx-3 mb-3 bg-white rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 border-b border-[#F2F4F6]">
+                    <span className="text-[13px] font-bold text-[#191F28]">{stop.name}</span>
+                    <span className="text-[11px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
+                  </div>
+                  <div className="p-2 space-y-1.5">
+                    {stop.routes.slice(0, 3).map(r => (
+                      <div key={r.id} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="bg-[#3182F6] rounded-lg px-2 py-0.5 min-w-[34px] text-center">
+                            <span className="text-white text-[12px] font-black">{r.routeNo}</span>
+                          </div>
+                          <span className="text-[12px] text-[#191F28] font-medium">{r.destination} 방면</span>
+                        </div>
+                        <ArrivalBadge min={r.arrivalMin} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {loading ? (
             <>
               <SkeletonStop />
