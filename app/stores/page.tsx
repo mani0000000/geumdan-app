@@ -1,7 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, Phone, Clock, Lock, ParkingSquare, ChevronLeft, ChevronRight, X, Pencil, CheckCircle2 } from "lucide-react";
+import {
+  MapPin, Phone, Clock, Lock, ParkingSquare,
+  ChevronLeft, ChevronRight, X, Pencil, CheckCircle2,
+  Search, Navigation, Building2, ChevronDown,
+} from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { buildings } from "@/lib/mockData";
@@ -21,6 +25,29 @@ const catBg: Record<StoreCategory, string> = {
   마트:"bg-[#D1FAE5] text-[#065F46]", 기타:"bg-[#F3F4F6] text-[#374151]",
 };
 
+// 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
+const NEARBY_BUILDINGS = [
+  { id: "b1",  name: "검단 센트럴 타워",    address: "인천 서구 당하동 123",  lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true },
+  { id: "nb2", name: "당하 스퀘어몰",        address: "인천 서구 당하동 456",  lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false },
+  { id: "nb3", name: "검단 플리마켓 타운",   address: "인천 서구 불로동 789",  lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false },
+  { id: "nb4", name: "불로 상가단지 A동",    address: "인천 서구 불로동 321",  lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false },
+  { id: "nb5", name: "마전 주민센터 상가",   address: "인천 서구 마전동 654",  lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false },
+];
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function distLabel(km: number) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+}
+
+// ─── SVG 층 지도 ─────────────────────────────────────────────
 function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: string | null; onSelect: (s: Store) => void }) {
   return (
     <svg viewBox="0 0 100 100" className="w-full" style={{ aspectRatio: "1.5/1" }}>
@@ -59,6 +86,7 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
   );
 }
 
+// ─── 매장 바텀시트 ────────────────────────────────────────────
 function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
   const [sent, setSent] = useState(false);
   return (
@@ -97,12 +125,12 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
           </div>
           <div className="mt-4 space-y-2">
             <button onClick={onDetail}
-              className="w-full h-12 bg-[#3182F6] rounded-xl flex items-center justify-center gap-2 text-[14px] text-white font-bold active:bg-[#1B64DA] transition-colors">
+              className="w-full h-12 bg-[#3182F6] rounded-xl flex items-center justify-center gap-2 text-[14px] text-white font-bold active:bg-[#1B64DA]">
               매장 상세 정보 보기
             </button>
             {!sent
               ? <button onClick={() => setSent(true)}
-                  className="w-full h-11 border border-[#E5E8EB] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#4E5968] font-medium active:bg-[#F2F4F6] transition-colors">
+                  className="w-full h-11 border border-[#E5E8EB] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
                   <Pencil size={14} className="text-[#8B95A1]" />정보 수정 제안하기
                 </button>
               : <div className="w-full h-11 bg-[#D1FAE5] rounded-xl flex items-center justify-center gap-2">
@@ -118,110 +146,283 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
   );
 }
 
+// ─── 검색 결과 ────────────────────────────────────────────────
+interface SearchResult { store: Store; floorLabel: string; buildingName: string; }
+
+function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelect: (s: Store) => void }) {
+  if (results.length === 0) {
+    return (
+      <div className="flex flex-col items-center py-12 gap-2">
+        <span className="text-3xl">🔍</span>
+        <p className="text-[14px] text-[#8B95A1]">검색 결과가 없습니다</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2 px-4 pt-2 pb-4">
+      <p className="text-[12px] text-[#8B95A1]">총 {results.length}건</p>
+      {results.map(({ store, floorLabel, buildingName }) => (
+        <button key={store.id} onClick={() => onSelect(store)}
+          className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] text-left">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0"
+              style={{ background: catDot[store.category] + "22" }}>
+              {catEmoji[store.category]}
+            </div>
+            <div>
+              <p className="text-[14px] font-semibold text-[#191F28]">{store.name}</p>
+              <p className="text-[12px] text-[#8B95A1]">{buildingName} · {floorLabel}</p>
+            </div>
+          </div>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
+            <span className={`text-[10px] font-medium ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
+              {store.isOpen !== false ? "영업 중" : "영업 종료"}
+            </span>
+          </div>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── 메인 ────────────────────────────────────────────────────
 export default function StoresPage() {
   const router = useRouter();
   const b = buildings[0];
   const [floorIdx, setFloorIdx] = useState(1);
   const [selected, setSelected] = useState<Store | null>(null);
   const [showCode, setShowCode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [showNearby, setShowNearby] = useState(true);
   const floor = b.floors[floorIdx];
+
+  // 위치 권한 요청
+  function requestLocation() {
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocationLoading(false);
+      },
+      () => {
+        // 위치 거부 시 검단신도시 기본 좌표
+        setUserPos({ lat: 37.5446, lng: 126.6861 });
+        setLocationLoading(false);
+      },
+      { timeout: 8000 }
+    );
+  }
+
+  useEffect(() => {
+    requestLocation();
+  }, []);
+
+  // 검색 결과
+  const searchResults = useMemo<SearchResult[]>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    const results: SearchResult[] = [];
+    buildings.forEach(building => {
+      building.floors.forEach(f => {
+        f.stores.forEach(s => {
+          if (s.name === "공실") return;
+          if (s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)) {
+            results.push({ store: s, floorLabel: f.label, buildingName: building.name });
+          }
+        });
+      });
+    });
+    return results;
+  }, [searchQuery]);
+
+  // 주변 건물 거리 계산
+  const nearbyWithDist = useMemo(() => {
+    const base = userPos ?? { lat: 37.5446, lng: 126.6861 };
+    return NEARBY_BUILDINGS
+      .map(b => ({ ...b, km: haversineKm(base.lat, base.lng, b.lat, b.lng) }))
+      .sort((a, b) => a.km - b.km);
+  }, [userPos]);
+
+  const isSearching = searchQuery.trim().length > 0;
 
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
-      <Header title="상가 지도" />
+      <Header title="상가" />
 
-      {/* Building Info */}
-      <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl px-4 py-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[16px] font-bold text-[#191F28]">{b.name}</p>
-            <div className="flex items-center gap-1 mt-0.5">
-              <MapPin size={12} className="text-[#B0B8C1]" />
-              <span className="text-[12px] text-[#8B95A1]">{b.address}</span>
-            </div>
-          </div>
-          <span className="text-[11px] text-[#8B95A1] bg-[#F2F4F6] px-2 py-1 rounded-lg">{b.openTime}</span>
-        </div>
-        <div className="flex items-center gap-1.5 mt-2">
-          <ParkingSquare size={13} className="text-[#3182F6]" />
-          <span className="text-[12px] text-[#4E5968]">{b.parkingInfo}</span>
-        </div>
-      </div>
-
-      {/* Floor Map */}
-      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        {/* Floor selector */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#F2F4F6]">
-          <button onClick={() => { setFloorIdx(i => Math.max(0,i-1)); setSelected(null); }}
-            disabled={floorIdx === 0}
-            className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center active:opacity-60 disabled:opacity-30">
-            <ChevronLeft size={18} className="text-[#191F28]" />
-          </button>
-          <div className="flex items-center gap-2">
-            {b.floors.map((f,i) => (
-              <button key={f.label} onClick={() => { setFloorIdx(i); setSelected(null); }}
-                className={`w-10 h-10 rounded-xl text-[13px] font-bold transition-colors active:opacity-70 ${i===floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
-                {f.label}
-              </button>
-            ))}
-          </div>
-          <button onClick={() => { setFloorIdx(i => Math.min(b.floors.length-1,i+1)); setSelected(null); }}
-            disabled={floorIdx === b.floors.length-1}
-            className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center active:opacity-60 disabled:opacity-30">
-            <ChevronRight size={18} className="text-[#191F28]" />
-          </button>
-        </div>
-        <div className="p-3">
-          <FloorSVG floor={floor} selectedId={selected?.id ?? null} onSelect={setSelected} />
-        </div>
-        <div className="px-4 py-3 border-t border-[#F2F4F6] flex items-center gap-4">
-          <div className="flex items-center gap-1.5">
-            <div className={`w-2 h-2 rounded-full ${floor.hasRestroom ? "bg-[#3182F6]" : "bg-[#E5E8EB]"}`} />
-            <span className="text-[12px] text-[#8B95A1]">화장실 {floor.hasRestroom ? "있음" : "없음"}</span>
-          </div>
-          {floor.hasRestroom && floor.restroomCode && (
-            <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
-              <Lock size={12} className="text-[#3182F6]" />
-              <span className="text-[12px] text-[#3182F6] font-medium">{showCode ? `비번: ${floor.restroomCode}` : "비번 보기"}</span>
+      {/* 검색바 */}
+      <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#F2F4F6]">
+        <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3.5 h-11">
+          <Search size={16} className="text-[#8B95A1] shrink-0" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="매장명 또는 카테고리 검색 (예: 카페, 스타벅스)"
+            className="flex-1 bg-transparent text-[14px] focus:outline-none text-[#191F28] placeholder:text-[#B0B8C1]"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="active:opacity-60">
+              <X size={16} className="text-[#8B95A1]" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Store list */}
-      <div className="mx-4 mb-4">
-        <p className="text-[14px] font-bold text-[#191F28] mb-2.5">{floor.label} 입점 매장</p>
-        <div className="space-y-2">
-          {floor.stores.filter(s => s.name !== "공실").map(s => (
-            <button key={s.id} onClick={() => setSelected(s)}
-              className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] transition-colors ${selected?.id===s.id ? "ring-2 ring-[#3182F6]" : ""}`}>
-              <div className="flex items-center gap-3">
-                <span className="text-xl">{catEmoji[s.category]}</span>
-                <div className="text-left">
-                  <p className="text-[14px] font-medium text-[#191F28]">{s.name}</p>
-                  {s.hours && <p className="text-[12px] text-[#8B95A1]">{s.hours}</p>}
+      {isSearching ? (
+        /* ─── 검색 결과 모드 ─── */
+        <SearchResults
+          results={searchResults}
+          onSelect={(s) => setSelected(s)}
+        />
+      ) : (
+        <>
+          {/* ─── 내 주변 상가건물 ─── */}
+          <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden">
+            <button
+              onClick={() => setShowNearby(v => !v)}
+              className="w-full flex items-center justify-between px-4 py-3.5 active:opacity-70">
+              <div className="flex items-center gap-2">
+                <Navigation size={15} className="text-[#3182F6]" />
+                <span className="text-[14px] font-bold text-[#191F28]">내 주변 상가건물</span>
+                {userPos && (
+                  <span className="text-[11px] text-[#00C471] bg-[#D1FAE5] px-2 py-0.5 rounded-full font-medium">위치 확인됨</span>
+                )}
+                {locationLoading && (
+                  <span className="text-[11px] text-[#8B95A1]">위치 확인 중...</span>
+                )}
+              </div>
+              <ChevronDown size={16} className={`text-[#8B95A1] transition-transform ${showNearby ? "rotate-180" : ""}`} />
+            </button>
+
+            {showNearby && (
+              <div className="divide-y divide-[#F2F4F6]">
+                {nearbyWithDist.map(nb => (
+                  <button
+                    key={nb.id}
+                    onClick={() => nb.hasData ? undefined : undefined}
+                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#F2F4F6] text-left"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center shrink-0">
+                      <Building2 size={18} className="text-[#3182F6]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[14px] font-semibold text-[#191F28] truncate">{nb.name}</p>
+                        {nb.hasData && (
+                          <span className="text-[10px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full shrink-0">지도</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <MapPin size={11} className="text-[#B0B8C1]" />
+                        <p className="text-[12px] text-[#8B95A1] truncate">{nb.address}</p>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[13px] font-bold text-[#3182F6]">{distLabel(nb.km)}</p>
+                      <p className="text-[11px] text-[#B0B8C1]">{nb.floors}층 · {nb.stores}개 매장</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* ─── 건물 정보 ─── */}
+          <div className="mx-4 mb-3 bg-white rounded-2xl px-4 py-4">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[16px] font-bold text-[#191F28]">{b.name}</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <MapPin size={12} className="text-[#B0B8C1]" />
+                  <span className="text-[12px] text-[#8B95A1]">{b.address}</span>
                 </div>
               </div>
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                {s.isOpen !== false ? "영업 중" : "영업 종료"}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Legend */}
-      <div className="mx-4 mb-4 bg-white rounded-2xl px-4 py-3.5">
-        <p className="text-[12px] font-bold text-[#8B95A1] mb-2.5">범례</p>
-        <div className="grid grid-cols-4 gap-2">
-          {(Object.keys(catDot) as StoreCategory[]).map(c => (
-            <div key={c} className="flex items-center gap-1.5">
-              <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: catDot[c] }} />
-              <span className="text-[11px] text-[#8B95A1] truncate">{c}</span>
+              <span className="text-[11px] text-[#8B95A1] bg-[#F2F4F6] px-2 py-1 rounded-lg">{b.openTime}</span>
             </div>
-          ))}
-        </div>
-      </div>
+            <div className="flex items-center gap-1.5 mt-2">
+              <ParkingSquare size={13} className="text-[#3182F6]" />
+              <span className="text-[12px] text-[#4E5968]">{b.parkingInfo}</span>
+            </div>
+          </div>
+
+          {/* ─── 층별 지도 ─── */}
+          <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-[#F2F4F6]">
+              <button onClick={() => { setFloorIdx(i => Math.max(0,i-1)); setSelected(null); }}
+                disabled={floorIdx === 0}
+                className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center active:opacity-60 disabled:opacity-30">
+                <ChevronLeft size={18} className="text-[#191F28]" />
+              </button>
+              <div className="flex items-center gap-2">
+                {b.floors.map((f,i) => (
+                  <button key={f.label} onClick={() => { setFloorIdx(i); setSelected(null); }}
+                    className={`w-10 h-10 rounded-xl text-[13px] font-bold transition-colors ${i===floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+              <button onClick={() => { setFloorIdx(i => Math.min(b.floors.length-1,i+1)); setSelected(null); }}
+                disabled={floorIdx === b.floors.length-1}
+                className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center active:opacity-60 disabled:opacity-30">
+                <ChevronRight size={18} className="text-[#191F28]" />
+              </button>
+            </div>
+            <div className="p-3">
+              <FloorSVG floor={floor} selectedId={selected?.id ?? null} onSelect={setSelected} />
+            </div>
+            <div className="px-4 py-3 border-t border-[#F2F4F6] flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full ${floor.hasRestroom ? "bg-[#3182F6]" : "bg-[#E5E8EB]"}`} />
+                <span className="text-[12px] text-[#8B95A1]">화장실 {floor.hasRestroom ? "있음" : "없음"}</span>
+              </div>
+              {floor.hasRestroom && floor.restroomCode && (
+                <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
+                  <Lock size={12} className="text-[#3182F6]" />
+                  <span className="text-[12px] text-[#3182F6] font-medium">{showCode ? `비번: ${floor.restroomCode}` : "비번 보기"}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* ─── 매장 목록 ─── */}
+          <div className="mx-4 mb-4">
+            <p className="text-[14px] font-bold text-[#191F28] mb-2.5">{floor.label} 입점 매장</p>
+            <div className="space-y-2">
+              {floor.stores.filter(s => s.name !== "공실").map(s => (
+                <button key={s.id} onClick={() => setSelected(s)}
+                  className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] ${selected?.id===s.id ? "ring-2 ring-[#3182F6]" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xl">{catEmoji[s.category]}</span>
+                    <div className="text-left">
+                      <p className="text-[14px] font-medium text-[#191F28]">{s.name}</p>
+                      {s.hours && <p className="text-[12px] text-[#8B95A1]">{s.hours}</p>}
+                    </div>
+                  </div>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+                    {s.isOpen !== false ? "영업 중" : "영업 종료"}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 범례 */}
+          <div className="mx-4 mb-4 bg-white rounded-2xl px-4 py-3.5">
+            <p className="text-[12px] font-bold text-[#8B95A1] mb-2.5">카테고리</p>
+            <div className="grid grid-cols-4 gap-2">
+              {(Object.keys(catDot) as StoreCategory[]).map(c => (
+                <div key={c} className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: catDot[c] }} />
+                  <span className="text-[11px] text-[#8B95A1] truncate">{c}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {selected && selected.name !== "공실" && (
         <StoreSheet store={selected} onClose={() => setSelected(null)}

@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, Bus, Building2, User } from "lucide-react";
+import { Home, Rss, Bus, Building2, User } from "lucide-react";
 
 const navItems = [
   { href: "/home/", label: "홈", icon: Home, match: "/home" },
-  { href: "/community/", label: "소통", icon: Users, match: "/community" },
-  { href: "/transport/", label: "교통", icon: Bus, match: "/transport" },
   { href: "/stores/", label: "상가", icon: Building2, match: "/stores" },
+  { href: "/transport/", label: "교통", icon: Bus, match: "/transport" },
+  { href: "/community/", label: "소식", icon: Rss, match: ["/community", "/news", "/real-estate"] },
   { href: "/mypage/", label: "MY", icon: User, match: "/mypage" },
 ];
 
@@ -17,7 +17,9 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-[#E5E8EB] z-50">
       <div className="flex h-[58px]">
         {navItems.map(({ href, label, icon: Icon, match }) => {
-          const active = pathname.includes(match);
+          const active = Array.isArray(match)
+            ? match.some((m) => pathname.includes(m))
+            : pathname.includes(match);
           return (
             <Link key={href} href={href}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 active:opacity-60 transition-opacity">
