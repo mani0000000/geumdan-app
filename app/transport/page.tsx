@@ -1,16 +1,44 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { MapPin, RefreshCw, ChevronDown, ChevronUp, Star, Zap, Accessibility, Train } from "lucide-react";
+import { MapPin, RefreshCw, ChevronDown, ChevronUp, Star, Zap, Accessibility, Train, Navigation } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { nearbyStops, subwayStations } from "@/lib/mockData";
-import { formatDistance } from "@/lib/utils";
 import { fetchBusStop, hasBusApiKey } from "@/lib/api/bus";
 import type { BusRoute } from "@/lib/types";
 
 type Tab = "버스" | "지하철";
 
+// ─── 정류장/역 좌표 (검단신도시 기준) ──────────────────────────
+const STOP_COORDS: Record<string, [number, number]> = {
+  bs1: [37.5448, 126.6875], // 당하지구 검단사거리
+  bs2: [37.5452, 126.6842], // 당하동 주민센터
+  bs3: [37.5431, 126.6817], // 불로지구 입구
+};
+const STATION_COORDS: Record<string, [number, number]> = {
+  sw1: [37.5642, 126.6578], // 검암역
+  sw2: [37.5443, 126.7201], // 계양역
+};
+
+// ─── 거리 계산 ────────────────────────────────────────────────
+function haversineM(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function distLabel(m: number) {
+  return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
+
+// ─── 컴포넌트 ─────────────────────────────────────────────────
 function ArrivalBadge({ min }: { min: number }) {
   const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]";
   return (
@@ -60,13 +88,31 @@ export default function TransportPage() {
   const [favs, setFavs] = useState<Set<string>>(new Set());
   const [liveRoutes, setLiveRoutes] = useState<Record<string, BusRoute[]>>({});
   const [lastUpdated, setLastUpdated] = useState("");
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
   const isLive = hasBusApiKey();
 
+  // ─── 위치 요청 ────────────────────────────────────────────
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    setLocState("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocState("ok");
+      },
+      () => {
+        // 위치 거부: 검단신도시 기본 좌표로 fallback
+        setUserPos({ lat: 37.5446, lng: 126.6861 });
+        setLocState("denied");
+      },
+      { timeout: 8000, enableHighAccuracy: false }
+    );
+  }, []);
+
+  // ─── 버스 데이터 로드 ────────────────────────────────────
   const loadBusData = useCallback(async () => {
-    if (!isLive) {
-      setLoading(false);
-      return;
-    }
+    if (!isLive) { setLoading(false); return; }
     try {
       const results = await Promise.all(
         nearbyStops.map(async (stop) => {
@@ -86,9 +132,7 @@ export default function TransportPage() {
       );
       setLiveRoutes(Object.fromEntries(results));
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-    } catch {
-      // fall through to mock
-    }
+    } catch { /* fallback to mock */ }
     setLoading(false);
   }, [isLive]);
 
@@ -100,10 +144,40 @@ export default function TransportPage() {
     setRefreshing(false);
   };
 
-  const stopsWithRoutes = nearbyStops.map(stop => ({
-    ...stop,
-    routes: liveRoutes[stop.id] ?? stop.routes,
-  }));
+  // ─── 위치 기반 정렬 ──────────────────────────────────────
+  const base = userPos ?? { lat: 37.5446, lng: 126.6861 };
+
+  const stopsWithRoutes = nearbyStops
+    .map(stop => {
+      const coords = STOP_COORDS[stop.id];
+      const distM = coords ? haversineM(base.lat, base.lng, coords[0], coords[1]) : stop.distance;
+      return { ...stop, routes: liveRoutes[stop.id] ?? stop.routes, distM };
+    })
+    .sort((a, b) => a.distM - b.distM);
+
+  const stationsWithDist = subwayStations
+    .map(st => {
+      const coords = STATION_COORDS[st.id];
+      const distM = coords ? haversineM(base.lat, base.lng, coords[0], coords[1]) : st.distance;
+      return { ...st, distM };
+    })
+    .sort((a, b) => a.distM - b.distM);
+
+  // ─── 위치 상태 표시 ──────────────────────────────────────
+  function LocationBadge() {
+    if (locState === "loading") return (
+      <span className="text-[11px] text-[#8B95A1] bg-[#F2F4F6] px-2 py-0.5 rounded-full animate-pulse">위치 확인 중...</span>
+    );
+    if (locState === "ok") return (
+      <span className="text-[11px] font-bold bg-[#D1FAE5] text-[#065F46] px-2 py-0.5 rounded-full flex items-center gap-1">
+        <Navigation size={10} />내 위치
+      </span>
+    );
+    if (locState === "denied") return (
+      <span className="text-[11px] text-[#8B95A1] bg-[#F2F4F6] px-2 py-0.5 rounded-full">검단신도시 기준</span>
+    );
+    return null;
+  }
 
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
@@ -119,26 +193,27 @@ export default function TransportPage() {
         ))}
       </div>
 
-      {/* Status bar */}
+      {/* 위치 상태 바 */}
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <MapPin size={14} className="text-[#3182F6]" />
-          <span className="text-[13px] text-[#4E5968]">당하동 현재 위치</span>
+          <span className="text-[13px] text-[#4E5968] font-medium">가까운 순 정렬</span>
+          <LocationBadge />
           {isLive && (
-            <span className="text-[10px] font-bold bg-[#D1FAE5] text-[#065F46] px-1.5 py-0.5 rounded-full ml-1">실시간</span>
+            <span className="text-[10px] font-bold bg-[#D1FAE5] text-[#065F46] px-1.5 py-0.5 rounded-full">실시간</span>
           )}
         </div>
         <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
           <RefreshCw size={14} className={`text-[#8B95A1] ${refreshing ? "animate-spin" : ""}`} />
           <span className="text-[12px] text-[#8B95A1]">
-            {lastUpdated ? `${lastUpdated} 업데이트` : "방금 전"}
+            {lastUpdated ? `${lastUpdated} 업데이트` : "새로고침"}
           </span>
         </button>
       </div>
 
       {tab === "버스" && (
         <div className="px-4 space-y-3">
-          {/* 찜한 정류장 섹션 */}
+          {/* 즐겨찾는 정류장 */}
           {favs.size > 0 && !loading && (
             <div className="bg-[#EBF3FE] rounded-2xl overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3">
@@ -146,8 +221,7 @@ export default function TransportPage() {
                   <Star size={14} className="text-[#FFBB00] fill-[#FFBB00]" />
                   <span className="text-[13px] font-bold text-[#1B64DA]">즐겨찾는 정류장</span>
                 </div>
-                <button
-                  onClick={async () => { setRefreshing(true); await loadBusData(); setRefreshing(false); }}
+                <button onClick={async () => { setRefreshing(true); await loadBusData(); setRefreshing(false); }}
                   className="flex items-center gap-1 bg-[#3182F6] rounded-xl px-3 py-1.5 active:opacity-70">
                   <RefreshCw size={12} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
                   <span className="text-[12px] font-bold text-white">새로고침</span>
@@ -158,6 +232,7 @@ export default function TransportPage() {
                   <div className="flex items-center gap-2 px-3 py-2 border-b border-[#F2F4F6]">
                     <span className="text-[13px] font-bold text-[#191F28]">{stop.name}</span>
                     <span className="text-[11px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
+                    <span className="ml-auto text-[12px] font-semibold text-[#3182F6]">{distLabel(stop.distM)}</span>
                   </div>
                   <div className="p-2 space-y-1.5">
                     {stop.routes.slice(0, 3).map(r => (
@@ -178,26 +253,32 @@ export default function TransportPage() {
           )}
 
           {loading ? (
-            <>
-              <SkeletonStop />
-              <SkeletonStop />
-            </>
+            <><SkeletonStop /><SkeletonStop /></>
           ) : (
-            stopsWithRoutes.map(stop => {
+            stopsWithRoutes.map((stop, idx) => {
               const open = expanded === stop.id;
               const routes = open ? stop.routes : stop.routes.slice(0, 2);
               return (
                 <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
                   <button onClick={() => setExpanded(open ? null : stop.id)}
-                    className="w-full flex items-center justify-between px-4 py-4 active:bg-[#F2F4F6] transition-colors">
+                    className="w-full flex items-center justify-between px-4 py-4 active:bg-[#F2F4F6]">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl">🚏</div>
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl">🚏</div>
+                        {idx === 0 && (
+                          <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#3182F6] text-white px-1 rounded-full">최근접</span>
+                        )}
+                      </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
                           <p className="text-[14px] font-bold text-[#191F28]">{stop.name}</p>
                           <span className="text-[11px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
                         </div>
-                        <p className="text-[12px] text-[#8B95A1] mt-0.5">{formatDistance(stop.distance)} · 노선 {stop.routes.length}개</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <Navigation size={11} className="text-[#3182F6]" />
+                          <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(stop.distM)}</span>
+                          <span className="text-[12px] text-[#B0B8C1]">· 노선 {stop.routes.length}개</span>
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -230,7 +311,7 @@ export default function TransportPage() {
                       </div>
                     ))}
                     {!open && stop.routes.length > 2 && (
-                      <button onClick={() => setExpanded(stop.id)} className="w-full text-[12px] text-[#3182F6] text-center py-1 active:opacity-60">
+                      <button onClick={() => setExpanded(stop.id)} className="w-full text-[12px] text-[#3182F6] text-center py-1">
                         {stop.routes.length - 2}개 노선 더 보기
                       </button>
                     )}
@@ -263,18 +344,26 @@ export default function TransportPage() {
 
       {tab === "지하철" && (
         <div className="px-4 space-y-3">
-          {subwayStations.map(st => (
+          {stationsWithDist.map((st, idx) => (
             <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
               <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: st.lineColor + "20" }}>
-                  <Train size={20} style={{ color: st.lineColor }} />
+                <div className="relative">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: st.lineColor + "20" }}>
+                    <Train size={20} style={{ color: st.lineColor }} />
+                  </div>
+                  {idx === 0 && (
+                    <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#3182F6] text-white px-1 rounded-full">최근접</span>
+                  )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-[15px] font-bold text-[#191F28]">{st.name}</p>
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: st.lineColor }}>{st.line}</span>
                   </div>
-                  <p className="text-[12px] text-[#8B95A1]">{formatDistance(st.distance)}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Navigation size={11} className="text-[#3182F6]" />
+                    <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(st.distM)}</span>
+                  </div>
                 </div>
               </div>
               <div className="px-4 pb-4 space-y-2">
