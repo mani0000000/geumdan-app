@@ -6,6 +6,8 @@ import type {
   Apartment,
   Building,
   User,
+  Coupon,
+  NewStoreOpening,
 } from "./types";
 
 export const currentUser: User = {
@@ -441,6 +443,57 @@ export const apartments: Apartment[] = [
     recentDeal: { price: 52500, date: "2026-03-22", floor: 15, pyeong: 34 },
   },
 ];
+
+// ---------- Coupons ----------
+export const coupons: Coupon[] = [
+  { id: "cp1", storeId: "s_b1_3", storeName: "스타벅스 DT", title: "아메리카노 15% 할인", discount: "15%", discountType: "rate", category: "카페", expiry: "2026-03-31", floor: "B1", color: "#00704A", downloaded: false },
+  { id: "cp2", storeId: "s_2f_1", storeName: "맘스터치", title: "치킨버거 세트 1,000원 할인", discount: "1,000원", discountType: "amount", category: "음식점", expiry: "2026-04-05", floor: "2F", color: "#E63312", downloaded: true },
+  { id: "cp3", storeId: "s_1f_4", storeName: "약국", title: "건강기능식품 10% 할인", discount: "10%", discountType: "rate", category: "병원/약국", expiry: "2026-04-10", floor: "1F", color: "#3182F6", downloaded: false },
+  { id: "cp4", storeId: "s_3f_1", storeName: "더본코리아", title: "런치 세트 2인 이상 20% 할인", discount: "20%", discountType: "rate", category: "음식점", expiry: "2026-04-02", floor: "3F", color: "#F59E0B", downloaded: false },
+  { id: "cp5", storeId: "s_1f_1", storeName: "올리브영", title: "2만원 이상 구매 시 3,000원 할인", discount: "3,000원", discountType: "amount", category: "기타", expiry: "2026-04-15", floor: "1F", color: "#FF3399", downloaded: false },
+  { id: "cp6", storeId: "s_2f_3", storeName: "이디야커피", title: "아이스 음료 500원 할인", discount: "500원", discountType: "amount", category: "카페", expiry: "2026-03-30", floor: "2F", color: "#6366F1", downloaded: true },
+];
+
+// ---------- New Store Openings ----------
+export const newStoreOpenings: NewStoreOpening[] = [
+  { id: "ns1", storeId: "s_3f_1", storeName: "더본코리아 (백종원)", category: "음식점", floor: "3F", openDate: "2026-03-25", emoji: "🍽️", isNew: true },
+  { id: "ns2", storeId: "s_2f_4", storeName: "헬스앤뷰티", category: "미용", floor: "2F", openDate: "2026-03-22", emoji: "💄", isNew: true },
+  { id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F", openDate: "2026-03-20", emoji: "💇", isNew: false },
+];
+
+// ---------- Gamification ----------
+export const userGameData = {
+  points: 1250,
+  weeklyLikes: 5,
+  weeklyLikesMax: 10,
+  weeklyPosts: 2,
+  monthlyLevel: "실버" as "브론즈" | "실버" | "골드" | "플래티넘",
+  monthlyPoints: 1250,
+  monthlyLevelThresholds: { 브론즈: 0, 실버: 500, 골드: 1500, 플래티넘: 3000 },
+  nextLevel: "골드" as "브론즈" | "실버" | "골드" | "플래티넘",
+  nextLevelPoints: 1500,
+  missions: [
+    { id: "m1", title: "글 작성하기", desc: "커뮤니티에 글 1개 작성", reward: 10, done: true, icon: "✍️" },
+    { id: "m2", title: "좋아요 5번", desc: "이번 주 좋아요 5회 이상", reward: 10, done: true, icon: "❤️" },
+    { id: "m3", title: "댓글 달기", desc: "댓글 2개 작성", reward: 6, done: false, icon: "💬" },
+    { id: "m4", title: "7일 연속 방문", desc: "앱 7일 연속 접속", reward: 50, done: false, icon: "🔥" },
+    { id: "m5", title: "부동산 조회", desc: "단지 상세 1회 열람", reward: 5, done: true, icon: "🏠" },
+  ],
+  pointHistory: [
+    { date: "2026-03-28", desc: "글 작성", points: +10 },
+    { date: "2026-03-28", desc: "좋아요 활동", points: +2 },
+    { date: "2026-03-27", desc: "댓글 작성", points: +3 },
+    { date: "2026-03-27", desc: "좋아요 활동", points: +2 },
+    { date: "2026-03-26", desc: "글 작성", points: +10 },
+    { date: "2026-03-25", desc: "출석 보너스", points: +5 },
+  ],
+  rewards: [
+    { id: "r1", title: "스타벅스 아메리카노 교환권", cost: 800, emoji: "☕", stock: 5 },
+    { id: "r2", title: "맘스터치 할인쿠폰 500원", cost: 300, emoji: "🍔", stock: 10 },
+    { id: "r3", title: "올리브영 1,000원 할인", cost: 500, emoji: "🛍️", stock: 8 },
+    { id: "r4", title: "이디야 음료 무료", cost: 600, emoji: "☕", stock: 3 },
+  ],
+};
 
 // ---------- Stores ----------
 export const buildings: Building[] = [

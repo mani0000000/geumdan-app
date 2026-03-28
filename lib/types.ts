@@ -153,6 +153,33 @@ export interface Floor {
   restroomCode?: string;
 }
 
+// Coupons
+export interface Coupon {
+  id: string;
+  storeId: string;
+  storeName: string;
+  title: string;
+  discount: string;
+  discountType: "rate" | "amount";
+  category: StoreCategory;
+  expiry: string;
+  floor: string;
+  color: string;
+  downloaded: boolean;
+}
+
+// New store openings
+export interface NewStoreOpening {
+  id: string;
+  storeId: string;
+  storeName: string;
+  category: StoreCategory;
+  floor: string;
+  openDate: string;
+  emoji: string;
+  isNew: boolean;
+}
+
 export interface Store {
   id: string;
   name: string;
