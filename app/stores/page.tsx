@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   MapPin, Phone, Clock, Lock, ParkingSquare,
   ChevronLeft, ChevronRight, X, Info, Pencil,
-  CheckCircle2
+  CheckCircle2, Navigation, Building2, ChevronDown
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -33,6 +33,18 @@ const categoryEmoji: Record<StoreCategory, string> = {
   마트: "🛒",
   기타: "🏢",
 };
+
+// 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
+const NEARBY_BUILDINGS = [
+  { id: "b1",  name: "롯데마트 검단점",         address: "인천 서구 원당대로 581 (마전동)",  lat: 37.5485, lng: 126.6848, floors: 3, stores: 22, hasData: true },
+  { id: "nb2", name: "JS프라자2 메디컬",        address: "인천 서구 완정로 14 (마전동)",     lat: 37.5505, lng: 126.6828, floors: 6, stores: 15, hasData: false },
+  { id: "nb3", name: "코벤트워크 검단",         address: "인천 서구 이음대로 392 (원당동)",  lat: 37.5441, lng: 126.6875, floors: 5, stores: 30, hasData: false },
+  { id: "nb4", name: "검단탑종합병원",          address: "인천 서구 청마로19번길 5",         lat: 37.5463, lng: 126.6812, floors: 7, stores: 18, hasData: false },
+  { id: "nb5", name: "금강프라자 검단아라",     address: "인천 서구 이음대로 475 (원당동)",  lat: 37.5449, lng: 126.6895, floors: 4, stores: 14, hasData: false },
+  { id: "nb6", name: "검단사거리 상가",         address: "인천 서구 검단로 480 (왕길동)",    lat: 37.5390, lng: 126.6941, floors: 3, stores: 20, hasData: false },
+  { id: "nb7", name: "당하 웰스트리트",         address: "인천 서구 당하로 83 (당하동)",     lat: 37.5461, lng: 126.6876, floors: 4, stores: 16, hasData: false },
+  { id: "nb8", name: "마전역 근린상가",         address: "인천 서구 원당대로 491 (마전동)",  lat: 37.5472, lng: 126.6840, floors: 3, stores: 11, hasData: false },
+];
 
 function StoreUnit({
   store,
@@ -287,14 +299,47 @@ function StoreDetailSheet({
   );
 }
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function distLabel(km: number) {
+  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+}
+
 export default function StoresPage() {
   const building = buildings[0];
   const [currentFloorIdx, setCurrentFloorIdx] = useState(1); // default 1F
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [showRestroomCode, setShowRestroomCode] = useState(false);
+  const [showNearby, setShowNearby] = useState(true);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
 
   const floor = building.floors[currentFloorIdx];
   const totalFloors = building.floors.length;
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationLoading(false); },
+      () => { setUserPos({ lat: 37.5446, lng: 126.6861 }); setLocationLoading(false); },
+      { timeout: 8000 }
+    );
+  }, []);
+
+  const nearbyWithDist = useMemo(() => {
+    const base = userPos ?? { lat: 37.5446, lng: 126.6861 };
+    return NEARBY_BUILDINGS
+      .map(b => ({ ...b, km: haversineKm(base.lat, base.lng, b.lat, b.lng) }))
+      .sort((a, b) => a.km - b.km);
+  }, [userPos]);
 
   const goFloor = (dir: "up" | "down") => {
     const next = dir === "up" ? currentFloorIdx - 1 : currentFloorIdx + 1;
@@ -307,6 +352,52 @@ export default function StoresPage() {
   return (
     <div className="min-h-dvh bg-gray-100 pb-[70px]">
       <Header title="상가 지도" showNotification />
+
+      {/* 내 주변 상가건물 */}
+      <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden card-shadow">
+        <button
+          onClick={() => setShowNearby(v => !v)}
+          className="w-full flex items-center justify-between px-4 py-3.5 press-effect">
+          <div className="flex items-center gap-2">
+            <Navigation size={15} className="text-blue-600" />
+            <span className="text-[15px] font-bold text-gray-900">내 주변 상가건물</span>
+            {userPos && !locationLoading && (
+              <span className="text-[11px] text-green-700 bg-green-100 px-2 py-0.5 rounded-full font-medium">위치 확인됨</span>
+            )}
+            {locationLoading && (
+              <span className="text-[11px] text-gray-400">위치 확인 중...</span>
+            )}
+          </div>
+          <ChevronDown size={16} className={cn("text-gray-400 transition-transform", showNearby && "rotate-180")} />
+        </button>
+        {showNearby && (
+          <div className="divide-y divide-gray-100">
+            {nearbyWithDist.map(nb => (
+              <div key={nb.id} className="px-4 py-3.5 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                  <Building2 size={18} className="text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[14px] font-semibold text-gray-900 truncate">{nb.name}</p>
+                    {nb.hasData && (
+                      <span className="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded-full shrink-0">지도</span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <MapPin size={10} className="text-gray-400" />
+                    <p className="text-[12px] text-gray-400 truncate">{nb.address}</p>
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[14px] font-bold text-blue-600">{distLabel(nb.km)}</p>
+                  <p className="text-[11px] text-gray-400">{nb.floors}층 · {nb.stores}개</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Building Info */}
       <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl px-4 py-3.5 card-shadow">

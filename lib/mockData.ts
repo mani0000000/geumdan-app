@@ -41,11 +41,10 @@ export const posts: Post[] = [
   {
     id: "p2",
     category: "맛집",
-    title: "검단사거리 새로 생긴 국밥집 다녀왔어요",
-    content:
-      "어제 점심에 갔는데 육수가 진짜 깔끔하고 맛있더라고요. 뼈해장국 7500원인데 양도 많고 가성비 최고였어요!",
+    title: "마전동 담가화로구이 다녀왔어요 🔥",
+    content: "드디어 갔다왔어요! 연탄 화로 위에 구워주는 고기 진짜 맛있더라고요. 오겹살이랑 목살 조합 강추예요. 주차도 넉넉하고 웨이팅은 저녁 6시 이후엔 좀 있으니 미리 가세요.",
     author: "먹부림러",
-    authorDong: "불로동",
+    authorDong: "마전동",
     createdAt: "2026-03-28T09:15:00",
     viewCount: 891,
     likeCount: 67,
@@ -448,19 +447,318 @@ export const apartments: Apartment[] = [
 
 // ---------- Coupons ----------
 export const coupons: Coupon[] = [
-  { id: "cp1", storeId: "s_b1_3", storeName: "스타벅스 DT", title: "아메리카노 15% 할인", discount: "15%", discountType: "rate", category: "카페", expiry: "2026-03-31", floor: "B1", color: "#00704A", downloaded: false },
-  { id: "cp2", storeId: "s_2f_1", storeName: "맘스터치", title: "치킨버거 세트 1,000원 할인", discount: "1,000원", discountType: "amount", category: "음식점", expiry: "2026-04-05", floor: "2F", color: "#E63312", downloaded: true },
-  { id: "cp3", storeId: "s_1f_4", storeName: "약국", title: "건강기능식품 10% 할인", discount: "10%", discountType: "rate", category: "병원/약국", expiry: "2026-04-10", floor: "1F", color: "#3182F6", downloaded: false },
-  { id: "cp4", storeId: "s_3f_1", storeName: "더본코리아", title: "런치 세트 2인 이상 20% 할인", discount: "20%", discountType: "rate", category: "음식점", expiry: "2026-04-02", floor: "3F", color: "#F59E0B", downloaded: false },
-  { id: "cp5", storeId: "s_1f_1", storeName: "올리브영", title: "2만원 이상 구매 시 3,000원 할인", discount: "3,000원", discountType: "amount", category: "기타", expiry: "2026-04-15", floor: "1F", color: "#FF3399", downloaded: false },
-  { id: "cp6", storeId: "s_2f_3", storeName: "이디야커피", title: "아이스 음료 500원 할인", discount: "500원", discountType: "amount", category: "카페", expiry: "2026-03-30", floor: "2F", color: "#6366F1", downloaded: true },
+  { id: "cp1", storeId: "s_b1_1", storeName: "롯데마트 검단점", title: "전품목 5% 할인 (3만원 이상)", discount: "5%", discountType: "rate", category: "마트", expiry: "2026-03-31", floor: "B1", color: "#E60012", downloaded: false },
+  { id: "cp2", storeId: "s_2f_1", storeName: "하이마트 검단점", title: "가전제품 구매 시 5% 캐시백", discount: "5%", discountType: "rate", category: "기타", expiry: "2026-04-05", floor: "2F", color: "#003DA5", downloaded: true },
+  { id: "cp3", storeId: "s_b1_2", storeName: "즐거운약국", title: "건강기능식품 10% 할인", discount: "10%", discountType: "rate", category: "병원/약국", expiry: "2026-04-10", floor: "B1", color: "#3182F6", downloaded: false },
+  { id: "cp4", storeId: "s_2f_2", storeName: "토이저러스 검단점", title: "완구 2개 이상 구매 시 20% 할인", discount: "20%", discountType: "rate", category: "기타", expiry: "2026-04-02", floor: "2F", color: "#E8251A", downloaded: false },
+  { id: "cp5", storeId: "s_1f_1", storeName: "지오웰치과", title: "스케일링 정기권 3,000원 할인", discount: "3,000원", discountType: "amount", category: "병원/약국", expiry: "2026-04-15", floor: "1F", color: "#0066CC", downloaded: false },
+  { id: "cp6", storeId: "s_1f_4", storeName: "쿨펫동물병원", title: "기본 건강검진 20% 할인", discount: "20%", discountType: "rate", category: "병원/약국", expiry: "2026-03-30", floor: "1F", color: "#6366F1", downloaded: true },
 ];
+
+// ---------- Coupon Details ----------
+export interface CouponDetail {
+  promo: string;              // 한 줄 홍보 문구
+  description: string;        // 상세 설명 (2-3문장)
+  highlights: string[];       // 매장/혜택 포인트 (아이콘 bullet)
+  conditions: string[];       // 사용 조건
+  hours: string;              // 영업시간
+  phone: string;
+  location: string;           // 위치 설명
+  menu?: { name: string; price: string; tag?: string }[]; // 추천 메뉴/상품
+}
+
+export const couponDetails: Record<string, CouponDetail> = {
+  cp1: {
+    promo: "검단 최대 대형마트 — 식품부터 생활용품까지 한 번에",
+    description:
+      "롯데마트 검단점은 마전동 원당대로에 위치한 대형마트로, 신선식품·가공식품·생활용품·의류 등 3만여 품목을 취급합니다. 하이마트·토이저러스·즐거운약국 등이 함께 입점해 있어 원스톱 쇼핑이 가능합니다.",
+    highlights: ["🛒 3만여 품목 원스톱 쇼핑", "🅿️ 지하 3층 대형 주차장 무료", "🍱 신선식품 당일 신선 입고", "🎠 2층 하이마트·토이저러스 입점"],
+    conditions: [
+      "3만원 이상 결제 시 자동 적용 (식품·생활용품)",
+      "롯데마트 L.POINT 중복 적용 가능",
+      "주류·담배·상품권 제외",
+      "의무휴업일(매월 2·4번째 일요일) 사용 불가",
+    ],
+    hours: "매일 10:00 ~ 23:00 (매월 2·4번째 일요일 의무휴업)",
+    phone: "032-560-2590",
+    location: "인천 서구 원당대로 581 (마전동) · 마전역 도보 5분",
+    menu: [
+      { name: "당일 신선 육류 코너", price: "구매가 5% 할인", tag: "인기" },
+      { name: "수산물 코너", price: "구매가 5% 할인" },
+      { name: "유기농 채소·과일", price: "구매가 5% 할인", tag: "추천" },
+    ],
+  },
+  cp2: {
+    promo: "가전 전문 하이마트 검단점 — 국내 최대 가전 매장",
+    description:
+      "LG·삼성·다이슨 등 국내외 주요 가전 브랜드를 한 자리에서 비교·체험할 수 있습니다. 전문 상담사가 상주하여 제품 선택부터 설치까지 도와드립니다.",
+    highlights: ["📺 LG·삼성·다이슨 등 전 브랜드", "🔧 구매 후 무료 설치 서비스", "🛡️ 하이마트 10년 연장 보증", "💳 무이자 할부 최대 36개월"],
+    conditions: [
+      "가전제품 구매 시 5% 캐시백 (다음 방문 시 사용)",
+      "스마트폰·태블릿 제외",
+      "이벤트 상품 중복 적용 불가",
+      "캐시백은 하이마트 멤버십 포인트로 적립",
+    ],
+    hours: "매일 10:00 ~ 21:00",
+    phone: "1588-2552",
+    location: "롯데마트 검단점 2층",
+    menu: [
+      { name: "LG 올레드 TV", price: "캐시백 최대 6만원", tag: "베스트" },
+      { name: "삼성 비스포크 냉장고", price: "캐시백 최대 8만원" },
+      { name: "다이슨 청소기", price: "캐시백 최대 2만5천원", tag: "인기" },
+    ],
+  },
+  cp3: {
+    promo: "전문 약사가 상주하는 즐거운약국 — 편의·전문성 모두 잡다",
+    description:
+      "롯데마트 검단점 B1에 위치한 즐거운약국은 마트 이용 고객이 쇼핑 후 간편하게 약을 구매할 수 있습니다. 건강기능식품부터 일반·전문의약품까지 공인 약사가 직접 상담해 드립니다.",
+    highlights: ["💊 건강기능식품 150종 이상", "👨‍⚕️ 공인 약사 무료 1:1 상담", "🏠 처방전 팩스 접수 가능", "🕙 마트 연계 영업 (10:00~22:00)"],
+    conditions: [
+      "건강기능식품 카테고리 한정",
+      "전문의약품·처방약 제외",
+      "1인 1회 사용 가능",
+      "롯데마트 영수증 지참 시 추가 할인 가능",
+    ],
+    hours: "매일 10:00 ~ 22:00 (마트 휴업일 동일 휴무)",
+    phone: "032-560-2591",
+    location: "롯데마트 검단점 B1층 즐거운약국",
+    menu: [
+      { name: "종합 비타민 (3개월분)", price: "28,000원~", tag: "추천" },
+      { name: "유산균 프로바이오틱스", price: "25,000원~", tag: "인기" },
+      { name: "루테인 아이케어", price: "19,000원~" },
+    ],
+  },
+  cp4: {
+    promo: "아이들의 천국 토이저러스 — 완구·유아용품 전문점",
+    description:
+      "국내외 인기 완구 브랜드를 총망라한 토이저러스 검단점입니다. 레고, 닌텐도, 바비 등 1,500여 종의 완구를 직접 보고 체험할 수 있으며, 생일 선물·어린이날 선물 추천 상담도 제공합니다.",
+    highlights: ["🧸 완구 1,500여 종 한자리", "🎮 닌텐도·레고 체험 존 운영", "🎁 생일·기념일 선물 포장 무료", "👶 0세 영유아 완구 별도 코너"],
+    conditions: [
+      "완구 2개 이상 동시 구매 시 적용",
+      "이미 할인 중인 세일 상품 제외",
+      "온라인 주문·배달 제외 (매장 구매만 적용)",
+      "1인 1회 사용 가능",
+    ],
+    hours: "매일 10:00 ~ 21:00",
+    phone: "1588-2552",
+    location: "롯데마트 검단점 2층 토이저러스",
+    menu: [
+      { name: "레고 시티 시리즈", price: "20% 할인 적용", tag: "인기" },
+      { name: "닌텐도 Switch 게임", price: "20% 할인 적용" },
+      { name: "바비 인형 세트", price: "20% 할인 적용", tag: "추천" },
+    ],
+  },
+  cp5: {
+    promo: "지오웰치과 — 검단 대표 치과, 투명한 진료비",
+    description:
+      "롯데마트 검단점 1층에 위치한 지오웰치과는 임플란트·교정·스케일링 등 다양한 치과 진료를 제공합니다. 디지털 X-ray와 구강 스캐너 등 최신 장비를 갖추고 있으며, 보험 적용 진료는 모두 실비 청구 가능합니다.",
+    highlights: ["🦷 임플란트·교정·스케일링 전문", "📷 디지털 3D 구강 스캐너 보유", "💰 보험 진료 실비 청구 가능", "🅿️ 롯데마트 주차 2시간 무료"],
+    conditions: [
+      "스케일링 정기권 3개월 1회 쿠폰에 적용",
+      "신규 환자 첫 방문 시에만 적용",
+      "임플란트·교정 시술 비용 제외",
+      "전화 예약 필수 (당일 가능)",
+    ],
+    hours: "평일 09:00 ~ 18:30 / 토 09:00 ~ 14:00 / 일·공휴일 휴무",
+    phone: "032-560-2595",
+    location: "롯데마트 검단점 1층 지오웰치과",
+    menu: [
+      { name: "스케일링 (1회)", price: "15,000원~", tag: "추천" },
+      { name: "임플란트 (1개)", price: "80만원~" },
+      { name: "치아 미백", price: "20만원~", tag: "인기" },
+    ],
+  },
+  cp6: {
+    promo: "쿨펫동물병원 — 반려동물 건강 주치의",
+    description:
+      "롯데마트 검단점 1층의 쿨펫동물병원은 강아지·고양이를 비롯한 반려동물 전문 1차 동물병원입니다. 기본 건강검진·예방접종·내과 진료 등을 제공하며, 마트 쇼핑 후 방문하기 편리한 위치입니다.",
+    highlights: ["🐾 강아지·고양이 전문 1차 병원", "💉 예방접종·건강검진 패키지", "🔬 혈액·소변 검사 당일 결과", "🛒 마트 쇼핑 후 바로 방문 가능"],
+    conditions: [
+      "기본 건강검진 패키지 (혈액+신체검사)에만 적용",
+      "예방접종·치료비 별도",
+      "쿠폰 사용 기간 내 1회 가능",
+      "예약 방문 시 우선 진료",
+    ],
+    hours: "평일 10:00 ~ 19:00 / 토 10:00 ~ 17:00 / 일 휴무",
+    phone: "032-560-2598",
+    location: "롯데마트 검단점 1층 쿨펫동물병원",
+    menu: [
+      { name: "기본 건강검진 패키지", price: "5만원~", tag: "추천" },
+      { name: "종합 예방접종", price: "3만원~", tag: "인기" },
+      { name: "심장사상충 검사", price: "2만원~" },
+    ],
+  },
+};
 
 // ---------- New Store Openings ----------
 export const newStoreOpenings: NewStoreOpening[] = [
-  { id: "ns1", storeId: "s_3f_1", storeName: "더본코리아 (백종원)", category: "음식점", floor: "3F", openDate: "2026-03-25", emoji: "🍽️", isNew: true },
-  { id: "ns2", storeId: "s_2f_4", storeName: "헬스앤뷰티", category: "미용", floor: "2F", openDate: "2026-03-22", emoji: "💄", isNew: true },
-  { id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F", openDate: "2026-03-20", emoji: "💇", isNew: false },
+  { id: "ns1", storeId: "s_1f_4", storeName: "쿨펫동물병원", category: "병원/약국", floor: "1F", openDate: "2026-03-25", emoji: "🐾", isNew: true },
+  { id: "ns2", storeId: "s_1f_2", storeName: "시호비전", category: "기타", floor: "1F", openDate: "2026-03-22", emoji: "👓", isNew: true },
+  { id: "ns3", storeId: "s_2f_2", storeName: "토이저러스 검단점", category: "기타", floor: "2F", openDate: "2026-03-18", emoji: "🧸", isNew: false },
+];
+
+// ---------- Pharmacies ----------
+export interface Pharmacy {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  weekendHours: string | null;   // null = 미운영
+  nightHours: string | null;     // null = 미운영
+  isOpenNow: boolean;
+  tags: string[];                // e.g. ["주말", "심야"]
+  distance?: string;
+}
+
+// ---------- Nearby Marts ----------
+export type MartClosingPattern =
+  | "2nd4th"   // 2·4번째 일요일 의무휴업 (대형마트 일반)
+  | "1st3rd"   // 1·3번째 일요일 의무휴업
+  | "open"     // 일요일 정상 영업
+  | "closed";  // 매주 일요일 휴무
+
+export interface NearbyMart {
+  id: string;
+  name: string;
+  brand: string;           // 브랜드명 (로고용)
+  type: "대형마트" | "중형마트" | "슈퍼마트";
+  address: string;
+  phone: string;
+  distance: string;
+  weekdayHours: string;
+  saturdayHours: string;
+  sundayHours: string | null;  // null → 해당 주 휴무
+  closingPattern: MartClosingPattern;
+  notice?: string;         // 추가 안내
+}
+
+export const nearbyMarts: NearbyMart[] = [
+  {
+    id: "m1",
+    name: "롯데마트 검단점",
+    brand: "롯데마트",
+    type: "대형마트",
+    address: "인천 서구 원당대로 581 (마전동)",
+    phone: "032-560-2590",
+    distance: "0.8km",
+    weekdayHours: "10:00 ~ 23:00",
+    saturdayHours: "10:00 ~ 23:00",
+    sundayHours: "10:00 ~ 23:00",
+    closingPattern: "2nd4th",
+    notice: "매월 2·4번째 일요일 의무휴업 · 하이마트·토이저러스 입점",
+  },
+  {
+    id: "m2",
+    name: "홈플러스 검단점",
+    brand: "홈플러스",
+    type: "대형마트",
+    address: "인천 서구 당하동 110",
+    phone: "1588-5678",
+    distance: "1.8km",
+    weekdayHours: "10:00 ~ 24:00",
+    saturdayHours: "10:00 ~ 24:00",
+    sundayHours: "10:00 ~ 24:00",
+    closingPattern: "2nd4th",
+    notice: "매월 2·4번째 일요일 의무휴업",
+  },
+  {
+    id: "m3",
+    name: "이마트 청라점",
+    brand: "이마트",
+    type: "대형마트",
+    address: "인천 서구 청라커낼로 228",
+    phone: "1588-1234",
+    distance: "4.2km",
+    weekdayHours: "10:00 ~ 23:00",
+    saturdayHours: "10:00 ~ 23:00",
+    sundayHours: "10:00 ~ 23:00",
+    closingPattern: "1st3rd",
+    notice: "매월 1·3번째 일요일 의무휴업",
+  },
+  {
+    id: "m4",
+    name: "홈플러스 익스프레스 검단",
+    brand: "홈플러스 익스프레스",
+    type: "슈퍼마트",
+    address: "인천 서구 마전동 345",
+    phone: "032-567-0001",
+    distance: "650m",
+    weekdayHours: "08:00 ~ 23:00",
+    saturdayHours: "08:00 ~ 23:00",
+    sundayHours: "09:00 ~ 22:00",
+    closingPattern: "open",
+  },
+  {
+    id: "m5",
+    name: "GS더프레시 검단신도시점",
+    brand: "GS더프레시",
+    type: "슈퍼마트",
+    address: "인천 서구 불로동 501",
+    phone: "032-567-0002",
+    distance: "900m",
+    weekdayHours: "09:00 ~ 22:00",
+    saturdayHours: "09:00 ~ 22:00",
+    sundayHours: "10:00 ~ 21:00",
+    closingPattern: "open",
+  },
+];
+
+export const pharmacies: Pharmacy[] = [
+  {
+    id: "ph1",
+    name: "검단 온누리약국",
+    address: "인천 서구 검단로 512",
+    phone: "032-562-1234",
+    weekendHours: "토 09:00~18:00 / 일 10:00~15:00",
+    nightHours: "평일 22:00까지",
+    isOpenNow: true,
+    tags: ["주말", "심야"],
+    distance: "350m",
+  },
+  {
+    id: "ph2",
+    name: "당하 건강약국",
+    address: "인천 서구 당하동 123-4",
+    phone: "032-563-2345",
+    weekendHours: "토 10:00~17:00",
+    nightHours: null,
+    isOpenNow: false,
+    tags: ["주말"],
+    distance: "620m",
+  },
+  {
+    id: "ph3",
+    name: "검단신도시 24약국",
+    address: "인천 서구 마전동 456-7",
+    phone: "032-564-3456",
+    weekendHours: "토·일 09:00~21:00",
+    nightHours: "매일 24시간",
+    isOpenNow: true,
+    tags: ["주말", "심야", "24시"],
+    distance: "980m",
+  },
+  {
+    id: "ph4",
+    name: "불로 해맑은약국",
+    address: "인천 서구 불로동 789-1",
+    phone: "032-565-4567",
+    weekendHours: "토 09:00~19:00 / 일 휴무",
+    nightHours: "평일 21:00까지",
+    isOpenNow: false,
+    tags: ["주말", "심야"],
+    distance: "1.2km",
+  },
+  {
+    id: "ph5",
+    name: "왕길 드림약국",
+    address: "인천 서구 왕길동 321-5",
+    phone: "032-566-5678",
+    weekendHours: "토·일 10:00~18:00",
+    nightHours: null,
+    isOpenNow: true,
+    tags: ["주말"],
+    distance: "1.5km",
+  },
 ];
 
 // ---------- Gamification ----------
@@ -598,10 +896,10 @@ export const listings: Listing[] = [
 export const buildings: Building[] = [
   {
     id: "b1",
-    name: "검단 센트럴 타워",
-    address: "인천 서구 당하동 123",
-    parkingInfo: "지하 1~2층 (3시간 무료)",
-    openTime: "매일 10:00 ~ 22:00",
+    name: "롯데마트 검단점",
+    address: "인천 서구 원당대로 581 (마전동)",
+    parkingInfo: "지하 1~3층 (3시간 무료, 마트 이용 시 1시간 추가)",
+    openTime: "매일 10:00 ~ 23:00 (의무휴업일 제외)",
     floors: [
       {
         level: -1,
@@ -611,47 +909,38 @@ export const buildings: Building[] = [
         stores: [
           {
             id: "s_b1_1",
-            name: "홈플러스 익스프레스",
+            name: "롯데마트",
             category: "마트",
-            hours: "08:00~23:00",
-            phone: "032-123-4567",
+            hours: "10:00~23:00",
+            phone: "032-560-2590",
             x: 5,
             y: 5,
             w: 90,
-            h: 50,
-            isOpen: true,
-          },
-          {
-            id: "s_b1_2",
-            name: "세탁특공대",
-            category: "기타",
-            hours: "09:00~21:00",
-            x: 5,
-            y: 62,
-            w: 25,
-            h: 30,
-            isOpen: true,
-          },
-          {
-            id: "s_b1_3",
-            name: "스타벅스 DT",
-            category: "카페",
-            hours: "07:00~22:00",
-            x: 35,
-            y: 62,
-            w: 30,
-            h: 30,
+            h: 60,
             isOpen: true,
             isPremium: true,
           },
           {
-            id: "s_b1_4",
-            name: "주차장 입구",
+            id: "s_b1_2",
+            name: "즐거운약국",
+            category: "병원/약국",
+            hours: "10:00~22:00",
+            phone: "032-560-2591",
+            x: 5,
+            y: 71,
+            w: 43,
+            h: 24,
+            isOpen: true,
+          },
+          {
+            id: "s_b1_3",
+            name: "고객서비스센터",
             category: "기타",
-            x: 70,
-            y: 62,
-            w: 25,
-            h: 30,
+            hours: "10:00~22:00",
+            x: 52,
+            y: 71,
+            w: 43,
+            h: 24,
             isOpen: true,
           },
         ],
@@ -659,26 +948,25 @@ export const buildings: Building[] = [
       {
         level: 0,
         label: "1F",
-        hasRestroom: false,
+        hasRestroom: true,
         stores: [
           {
             id: "s_1f_1",
-            name: "올리브영",
-            category: "기타",
-            hours: "10:00~22:00",
-            phone: "032-234-5678",
+            name: "지오웰치과",
+            category: "병원/약국",
+            hours: "09:00~18:30",
+            phone: "032-560-2595",
             x: 5,
             y: 5,
-            w: 40,
+            w: 43,
             h: 42,
             isOpen: true,
-            isPremium: true,
           },
           {
             id: "s_1f_2",
-            name: "파리바게뜨",
-            category: "카페",
-            hours: "08:00~22:00",
+            name: "시호비전",
+            category: "기타",
+            hours: "10:00~20:00",
             x: 52,
             y: 5,
             w: 43,
@@ -687,25 +975,36 @@ export const buildings: Building[] = [
           },
           {
             id: "s_1f_3",
-            name: "우리은행",
+            name: "크린토피아",
             category: "기타",
-            hours: "09:00~16:00",
+            hours: "08:00~21:00",
             x: 5,
             y: 54,
-            w: 40,
+            w: 28,
             h: 38,
-            isOpen: false,
+            isOpen: true,
           },
           {
             id: "s_1f_4",
-            name: "약국",
+            name: "쿨펫동물병원",
             category: "병원/약국",
-            hours: "09:00~21:00",
-            x: 52,
+            hours: "10:00~19:00",
+            phone: "032-560-2598",
+            x: 37,
             y: 54,
-            w: 43,
+            w: 30,
             h: 38,
             isOpen: true,
+          },
+          {
+            id: "s_1f_5",
+            name: "공실",
+            category: "기타",
+            x: 71,
+            y: 54,
+            w: 24,
+            h: 38,
+            isOpen: false,
           },
         ],
       },
@@ -717,61 +1016,10 @@ export const buildings: Building[] = [
         stores: [
           {
             id: "s_2f_1",
-            name: "맘스터치",
-            category: "음식점",
-            hours: "10:00~22:00",
-            x: 5,
-            y: 5,
-            w: 40,
-            h: 42,
-            isOpen: true,
-          },
-          {
-            id: "s_2f_2",
-            name: "CU 편의점",
-            category: "편의점",
-            hours: "24시간",
-            x: 52,
-            y: 5,
-            w: 43,
-            h: 42,
-            isOpen: true,
-          },
-          {
-            id: "s_2f_3",
-            name: "이디야커피",
-            category: "카페",
-            hours: "08:00~22:00",
-            x: 5,
-            y: 54,
-            w: 40,
-            h: 38,
-            isOpen: true,
-          },
-          {
-            id: "s_2f_4",
-            name: "헬스앤뷰티",
-            category: "미용",
-            hours: "10:00~20:00",
-            x: 52,
-            y: 54,
-            w: 43,
-            h: 38,
-            isOpen: true,
-          },
-        ],
-      },
-      {
-        level: 2,
-        label: "3F",
-        hasRestroom: true,
-        restroomCode: "9012",
-        stores: [
-          {
-            id: "s_3f_1",
-            name: "더본코리아 (백종원)",
-            category: "음식점",
-            hours: "11:00~22:00",
+            name: "하이마트",
+            category: "기타",
+            hours: "10:00~21:00",
+            phone: "1588-2552",
             x: 5,
             y: 5,
             w: 55,
@@ -780,76 +1028,24 @@ export const buildings: Building[] = [
             isPremium: true,
           },
           {
-            id: "s_3f_2",
-            name: "영어학원",
-            category: "학원",
-            hours: "13:00~21:00",
-            x: 66,
+            id: "s_2f_2",
+            name: "토이저러스",
+            category: "기타",
+            hours: "10:00~21:00",
+            x: 65,
             y: 5,
-            w: 29,
+            w: 30,
             h: 42,
             isOpen: true,
           },
           {
-            id: "s_3f_3",
-            name: "수학학원",
-            category: "학원",
-            hours: "14:00~22:00",
-            x: 66,
-            y: 54,
-            w: 29,
-            h: 39,
-            isOpen: true,
-          },
-        ],
-      },
-      {
-        level: 3,
-        label: "4F",
-        hasRestroom: false,
-        stores: [
-          {
-            id: "s_4f_1",
-            name: "가정의학과",
-            category: "병원/약국",
-            hours: "09:00~18:00",
-            phone: "032-345-6789",
-            x: 5,
-            y: 5,
-            w: 43,
-            h: 42,
-            isOpen: false,
-          },
-          {
-            id: "s_4f_2",
-            name: "치과",
-            category: "병원/약국",
-            hours: "09:00~19:00",
-            x: 52,
-            y: 5,
-            w: 43,
-            h: 42,
-            isOpen: true,
-          },
-          {
-            id: "s_4f_3",
-            name: "헤어살롱 모이",
-            category: "미용",
-            hours: "10:00~20:00",
-            x: 5,
-            y: 54,
-            w: 43,
-            h: 38,
-            isOpen: true,
-          },
-          {
-            id: "s_4f_4",
+            id: "s_2f_3",
             name: "공실",
             category: "기타",
-            x: 52,
+            x: 65,
             y: 54,
-            w: 43,
-            h: 38,
+            w: 30,
+            h: 39,
             isOpen: false,
           },
         ],
