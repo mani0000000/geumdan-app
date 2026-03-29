@@ -17,7 +17,7 @@ import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
 
-const dongs = ["전체", "당하동", "불로동", "마전동", "왕길동"];
+const dongs = ["전체", "마전동", "당하동", "원당동", "불로동", "대곡동", "금곡동", "오류동", "왕길동", "백석동"];
 type MainTab = "실거래" | "매물" | "전월세";
 
 // ---------- Custom Tooltip ----------
