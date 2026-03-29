@@ -9,10 +9,10 @@ import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 
 const mockComments = [
-  { id: "c1", author: "이웃주민", dong: "당하동", content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊", createdAt: "2026-03-28T10:45:00", likes: 5 },
-  { id: "c2", author: "검단맘", dong: "불로동", content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.", createdAt: "2026-03-28T11:20:00", likes: 3 },
-  { id: "c3", author: "신혼부부", dong: "마전동", content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?", createdAt: "2026-03-28T12:05:00", likes: 1 },
-  { id: "c4", author: "육아맘김씨", dong: "당하동", content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", createdAt: "2026-03-28T12:30:00", likes: 8 },
+  { id: "c1", author: "이웃주민",  dong: "당하동",  content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              createdAt: "2026-03-28T10:45:00", likes: 5 },
+  { id: "c2", author: "검단맘",    dong: "원당동",  content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               createdAt: "2026-03-28T11:20:00", likes: 3 },
+  { id: "c3", author: "신혼부부",  dong: "대곡동",  content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       createdAt: "2026-03-28T12:05:00", likes: 1 },
+  { id: "c4", author: "육아맘김씨",dong: "당하동",  content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", createdAt: "2026-03-28T12:30:00", likes: 8 },
 ];
 
 function DetailContent() {

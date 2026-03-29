@@ -5,7 +5,8 @@ import { ChevronLeft, Check } from "lucide-react";
 import Link from "next/link";
 
 const steps = ["약관 동의", "본인 인증", "프로필 설정"];
-const dongs = ["당하동","불로동","마전동","왕길동","오류동","검단동","신현동","경서동","청라동"];
+import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
+const dongs = DONG_SELECT_OPTIONS;
 
 export default function SignupPage() {
   const router = useRouter();

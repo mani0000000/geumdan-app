@@ -17,7 +17,8 @@ import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
 
-const dongs = ["전체", "당하동", "불로동", "마전동", "왕길동"];
+import { LEGAL_DONGS } from "@/lib/geumdan";
+const dongs = ["전체", ...LEGAL_DONGS];
 type MainTab = "실거래" | "매물" | "전월세";
 type RentSubTab = "전체" | "전세" | "월세";
 

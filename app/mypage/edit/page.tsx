@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera } from "lucide-react";
 import { currentUser } from "@/lib/mockData";
 
-const dongs = ["당하동", "불로동", "마전동", "왕길동", "원당동", "대곡동"];
+import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
+const dongs = DONG_SELECT_OPTIONS;
 
 export default function EditProfilePage() {
   const router = useRouter();

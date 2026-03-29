@@ -28,11 +28,14 @@ const catBg: Record<StoreCategory, string> = {
 
 // 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
 const NEARBY_BUILDINGS = [
-  { id: "b1",  name: "검단 센트럴 타워",    address: "인천 서구 당하동 123",  lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true },
-  { id: "nb2", name: "당하 스퀘어몰",        address: "인천 서구 당하동 456",  lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false },
-  { id: "nb3", name: "검단 플리마켓 타운",   address: "인천 서구 불로동 789",  lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false },
-  { id: "nb4", name: "불로 상가단지 A동",    address: "인천 서구 불로동 321",  lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false },
-  { id: "nb5", name: "마전 주민센터 상가",   address: "인천 서구 마전동 654",  lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false },
+  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true },
+  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false },
+  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false },
+  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false },
+  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false },
+  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: false },
+  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: false },
+  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: false },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
