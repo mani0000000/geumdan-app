@@ -7,13 +7,13 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar,
-  TrendingDown, Phone, Clock, PillBottle,
+  TrendingDown, Phone, Clock, PillBottle, Store,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies } from "@/lib/mockData";
-import type { Pharmacy } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies, nearbyMarts } from "@/lib/mockData";
+import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 
@@ -444,6 +444,162 @@ function SosikSection() {
   );
 }
 
+// ─── 마트 의무휴업 유틸 ──────────────────────────────────────────
+/** date 기준 해당 월의 n번째 요일(0=일~6=토) 날짜 반환 */
+function nthWeekdayOfMonth(year: number, month: number, weekday: number, nth: number): Date {
+  const d = new Date(year, month, 1);
+  let count = 0;
+  while (true) {
+    if (d.getDay() === weekday) { count++; if (count === nth) return new Date(d); }
+    d.setDate(d.getDate() + 1);
+  }
+}
+
+/** 해당 날짜가 해당 마트의 의무휴업일인지 */
+function isMandatoryClosed(date: Date, pattern: MartClosingPattern): boolean {
+  if (pattern === "open")   return false;
+  if (pattern === "closed") return true;
+  if (date.getDay() !== 0)  return false; // 일요일이 아니면 false
+  const y = date.getFullYear(), m = date.getMonth();
+  const sundays = [1, 2, 3, 4, 5].map(n => {
+    try { return nthWeekdayOfMonth(y, m, 0, n); } catch { return null; }
+  }).filter(Boolean) as Date[];
+  const idx = sundays.findIndex(s => s.toDateString() === date.toDateString()) + 1; // 1~5
+  if (pattern === "2nd4th") return idx === 2 || idx === 4;
+  if (pattern === "1st3rd") return idx === 1 || idx === 3;
+  return false;
+}
+
+/** 특정 날짜 기준 마트 영업 여부 */
+function getMartStatus(mart: NearbyMart, date: Date): {
+  isOpen: boolean;
+  hours: string | null;
+  reason?: string;
+} {
+  const day = date.getDay(); // 0=일, 6=토
+  if (isMandatoryClosed(date, mart.closingPattern)) {
+    return { isOpen: false, hours: null, reason: "의무휴업일" };
+  }
+  if (day === 0) {
+    return mart.sundayHours
+      ? { isOpen: true, hours: mart.sundayHours }
+      : { isOpen: false, hours: null, reason: "일요일 휴무" };
+  }
+  if (day === 6) return { isOpen: true, hours: mart.saturdayHours };
+  return { isOpen: true, hours: mart.weekdayHours };
+}
+
+// ─── 마트 위젯 ────────────────────────────────────────────────
+function MartSection() {
+  const now   = new Date();
+  const today = now.getDay();  // 0=일, 6=토
+  const isWeekend = today === 0 || today === 6;
+
+  if (!isWeekend) return null;
+
+  // 오늘 + 내일(토→일) 상태 계산
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const showTomorrow = today === 6; // 토요일이면 내일(일) 경고 함께 표시
+
+  // 오늘 기준 휴무인 마트
+  const closedToday = nearbyMarts.filter(m => !getMartStatus(m, now).isOpen);
+  // 내일 기준 휴무인 마트 (토요일에만)
+  const closedTomorrow = showTomorrow
+    ? nearbyMarts.filter(m => !getMartStatus(m, tomorrow).isOpen)
+    : [];
+
+  return (
+    <>
+      <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide px-4 mb-1.5 mt-3">주변 마트</p>
+      <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden">
+
+        {/* 배너 */}
+        <div className={`px-4 py-2.5 flex items-center gap-2 ${
+          closedToday.length > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
+        }`}>
+          <ShoppingBag size={13} className={closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"} />
+          <span className={`text-[13px] font-semibold ${closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"}`}>
+            {closedToday.length > 0
+              ? `오늘 ${closedToday.length}곳 휴무 — 미리 확인하세요`
+              : "오늘 주변 마트 모두 정상 영업 중"
+            }
+          </span>
+        </div>
+
+        {/* 내일 경고 (토요일에 일요일 휴무 예고) */}
+        {showTomorrow && closedTomorrow.length > 0 && (
+          <div className="px-4 py-2 bg-[#FEE2E2] flex items-center gap-2 border-t border-white">
+            <span className="text-[13px]">⚠️</span>
+            <span className="text-[13px] font-semibold text-[#F04452]">
+              내일(일) {closedTomorrow.map(m => m.brand).join("·")} 의무휴업
+            </span>
+          </div>
+        )}
+
+        {/* 마트 목록 */}
+        <div className="divide-y divide-[#F2F4F6]">
+          {nearbyMarts.map(mart => {
+            const todayStatus = getMartStatus(mart, now);
+            const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
+
+            return (
+              <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
+                {/* 로고 */}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#F2F4F6]"
+                }`}>
+                  <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#8B95A1]"} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[14px] font-bold text-[#191F28]">{mart.name}</span>
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
+                      mart.type === "대형마트"
+                        ? "bg-[#EDE9FE] text-[#6D28D9]"
+                        : "bg-[#E0F2FE] text-[#0369A1]"
+                    }`}>{mart.type}</span>
+                  </div>
+
+                  {/* 오늘 상태 */}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`text-[12px] font-semibold ${todayStatus.isOpen ? "text-[#059669]" : "text-[#F04452]"}`}>
+                      {todayStatus.isOpen ? `영업 중 · ${todayStatus.hours}` : `오늘 휴무${todayStatus.reason ? ` (${todayStatus.reason})` : ""}`}
+                    </span>
+                  </div>
+
+                  {/* 내일 상태 (토요일에) */}
+                  {tmrStatus && !tmrStatus.isOpen && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-[11px] text-[#F04452]">⚠ 내일 의무휴업</span>
+                    </div>
+                  )}
+
+                  {/* 의무휴업 안내 */}
+                  {mart.notice && mart.type === "대형마트" && (
+                    <p className="text-[11px] text-[#B0B8C1] mt-0.5">{mart.notice}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="text-[12px] text-[#8B95A1]">{mart.distance}</span>
+                  <a href={`tel:${mart.phone}`}
+                    className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
+                    <Phone size={14} className="text-[#3182F6]" />
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      </section>
+    </>
+  );
+}
+
 // ─── 약국 위젯 ────────────────────────────────────────────────
 type PharmacyFilter = "전체" | "주말" | "심야";
 
@@ -603,6 +759,9 @@ export default function HomePage() {
       {/* ── 신규 오픈 ── */}
       <SectionLabel label="신규 오픈" />
       <NewOpeningsSection />
+
+      {/* ── 주변 마트 (주말만 표시) ── */}
+      <MartSection />
 
       {/* ── 약국 ── */}
       <SectionLabel label="주말·심야 약국" />

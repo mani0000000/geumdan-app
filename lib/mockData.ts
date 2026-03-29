@@ -611,6 +611,99 @@ export interface Pharmacy {
   distance?: string;
 }
 
+// ---------- Nearby Marts ----------
+export type MartClosingPattern =
+  | "2nd4th"   // 2·4번째 일요일 의무휴업 (대형마트 일반)
+  | "1st3rd"   // 1·3번째 일요일 의무휴업
+  | "open"     // 일요일 정상 영업
+  | "closed";  // 매주 일요일 휴무
+
+export interface NearbyMart {
+  id: string;
+  name: string;
+  brand: string;           // 브랜드명 (로고용)
+  type: "대형마트" | "중형마트" | "슈퍼마트";
+  address: string;
+  phone: string;
+  distance: string;
+  weekdayHours: string;
+  saturdayHours: string;
+  sundayHours: string | null;  // null → 해당 주 휴무
+  closingPattern: MartClosingPattern;
+  notice?: string;         // 추가 안내
+}
+
+export const nearbyMarts: NearbyMart[] = [
+  {
+    id: "m1",
+    name: "이마트 검단점",
+    brand: "이마트",
+    type: "대형마트",
+    address: "인천 서구 검단로 678",
+    phone: "1588-1234",
+    distance: "1.1km",
+    weekdayHours: "10:00 ~ 23:00",
+    saturdayHours: "10:00 ~ 23:00",
+    sundayHours: "10:00 ~ 23:00",
+    closingPattern: "2nd4th",
+    notice: "매월 2·4번째 일요일 의무휴업",
+  },
+  {
+    id: "m2",
+    name: "홈플러스 검단점",
+    brand: "홈플러스",
+    type: "대형마트",
+    address: "인천 서구 당하동 110",
+    phone: "1588-5678",
+    distance: "1.8km",
+    weekdayHours: "10:00 ~ 24:00",
+    saturdayHours: "10:00 ~ 24:00",
+    sundayHours: "10:00 ~ 24:00",
+    closingPattern: "2nd4th",
+    notice: "매월 2·4번째 일요일 의무휴업",
+  },
+  {
+    id: "m3",
+    name: "롯데마트 청라점",
+    brand: "롯데마트",
+    type: "대형마트",
+    address: "인천 서구 청라동 200",
+    phone: "1588-9012",
+    distance: "3.2km",
+    weekdayHours: "10:00 ~ 23:00",
+    saturdayHours: "10:00 ~ 23:00",
+    sundayHours: "10:00 ~ 23:00",
+    closingPattern: "1st3rd",
+    notice: "매월 1·3번째 일요일 의무휴업",
+  },
+  {
+    id: "m4",
+    name: "홈플러스 익스프레스 검단",
+    brand: "홈플러스 익스프레스",
+    type: "슈퍼마트",
+    address: "인천 서구 마전동 345",
+    phone: "032-567-0001",
+    distance: "650m",
+    weekdayHours: "08:00 ~ 23:00",
+    saturdayHours: "08:00 ~ 23:00",
+    sundayHours: "09:00 ~ 22:00",
+    closingPattern: "open",
+  },
+  {
+    id: "m5",
+    name: "GS더프레시 검단신도시점",
+    brand: "GS더프레시",
+    type: "슈퍼마트",
+    address: "인천 서구 불로동 501",
+    phone: "032-567-0002",
+    distance: "900m",
+    weekdayHours: "09:00 ~ 22:00",
+    saturdayHours: "09:00 ~ 22:00",
+    sundayHours: "10:00 ~ 21:00",
+    closingPattern: "open",
+  },
+];
+
 export const pharmacies: Pharmacy[] = [
   {
     id: "ph1",
