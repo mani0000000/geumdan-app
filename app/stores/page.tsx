@@ -512,7 +512,7 @@ export default function StoresPage() {
               <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
                 className={`flex-1 h-9 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${viewMode === mode ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
                 {mode === "리스트" ? <List size={15} /> : <MapIcon size={15} />}
-                {mode} 모두
+                {mode === "리스트" ? "매장 리스트" : "상가 지도"}
               </button>
             ))}
           </div>
