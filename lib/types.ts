@@ -178,6 +178,7 @@ export interface NewStoreOpening {
   openDate: string;
   emoji: string;
   isNew: boolean;
+  event?: string;   // 오픈 기념 행사/이벤트 한 줄 요약
 }
 
 // My Home Watchlist

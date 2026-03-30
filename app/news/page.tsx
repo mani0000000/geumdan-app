@@ -61,7 +61,10 @@ export default function NewsPage() {
       <div className="px-4 pt-4 space-y-3">
         {/* Featured Article */}
         {featured && (
-          <div className="bg-white rounded-2xl overflow-hidden card-shadow press-effect">
+          <div
+            className="bg-white rounded-2xl overflow-hidden card-shadow press-effect"
+            onClick={() => featured.url !== "#" && window.open(featured.url, "_blank")}
+          >
             <div className="h-48 bg-gradient-to-br from-blue-100 via-blue-200 to-indigo-200 relative flex items-center justify-center">
               {featured.type === "유튜브" && (
                 <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center">
@@ -102,7 +105,10 @@ export default function NewsPage() {
                     </>
                   )}
                 </div>
-                <button className="flex items-center gap-1 text-blue-600 press-effect">
+                <button
+                  onClick={e => { e.stopPropagation(); if (featured.url !== "#") window.open(featured.url, "_blank"); }}
+                  className="flex items-center gap-1 text-blue-600 press-effect"
+                >
                   <span className="text-[12px] font-medium">보기</span>
                   <ExternalLink size={12} />
                 </button>
@@ -116,6 +122,7 @@ export default function NewsPage() {
           <div
             key={item.id}
             className="bg-white rounded-xl overflow-hidden card-shadow press-effect flex gap-0"
+            onClick={() => item.url !== "#" && window.open(item.url, "_blank")}
           >
             <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center shrink-0 relative">
               {item.type === "유튜브" && (
