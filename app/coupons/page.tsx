@@ -13,7 +13,7 @@ import type { Coupon, StoreCategory } from "@/lib/types";
 const CATEGORIES: (StoreCategory | "전체")[] = [
   "전체", "카페", "음식점", "병원/약국", "미용", "마트", "기타",
 ];
-const FLOORS = ["전체", "B1", "1F", "2F", "3F", "4F"];
+const BUILDINGS = ["전체", ...Array.from(new Set(coupons.map(c => c.buildingName)))];
 
 function daysLeft(expiry: string) {
   return Math.ceil((new Date(expiry).getTime() - Date.now()) / 86400000);
@@ -86,7 +86,7 @@ function CouponDetailSheet({
               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                 <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: coupon.color }}>{coupon.category}</span>
-                <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">{coupon.floor}</span>
+                <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
                 <ExpiryBadge expiry={coupon.expiry} />
               </div>
               <p className="text-[17px] font-black text-[#191F28] leading-snug">{coupon.storeName}</p>
@@ -281,7 +281,7 @@ function CouponCard({ coupon, downloaded, onToggle, onDetail }: {
           <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
             <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
               style={{ background: coupon.color }}>{coupon.category}</span>
-            <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">{coupon.floor}</span>
+            <span className="text-[11px] bg-[#F2F4F6] text-[#4E5968] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
             <ExpiryBadge expiry={coupon.expiry} />
           </div>
           <p className="text-[14px] font-bold text-[#191F28] leading-snug">{coupon.storeName}</p>
@@ -307,7 +307,7 @@ function CouponCard({ coupon, downloaded, onToggle, onDetail }: {
 export default function CouponsPage() {
   const [query, setQuery] = useState("");
   const [cat, setCat] = useState<StoreCategory | "전체">("전체");
-  const [floor, setFloor] = useState("전체");
+  const [building, setBuilding] = useState("전체");
   const [downloaded, setDownloaded] = useState<Set<string>>(
     new Set(coupons.filter(c => c.downloaded).map(c => c.id))
   );
@@ -315,7 +315,7 @@ export default function CouponsPage() {
 
   const filtered = useMemo(() => coupons.filter(c => {
     if (cat !== "전체" && c.category !== cat) return false;
-    if (floor !== "전체" && c.floor !== floor) return false;
+    if (building !== "전체" && c.buildingName !== building) return false;
     if (query) {
       const q = query.toLowerCase();
       if (!c.storeName.toLowerCase().includes(q) &&
@@ -323,7 +323,7 @@ export default function CouponsPage() {
           !c.category.toLowerCase().includes(q)) return false;
     }
     return true;
-  }), [query, cat, floor]);
+  }), [query, cat, building]);
 
   const urgent  = filtered.filter(c => daysLeft(c.expiry) <= 3);
   const regular = filtered.filter(c => daysLeft(c.expiry) > 3);
@@ -364,10 +364,10 @@ export default function CouponsPage() {
           ))}
         </div>
         <div className="px-4 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {FLOORS.map(f => (
-            <button key={f} onClick={() => setFloor(f)}
-              className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-colors border ${floor === f ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
-              {f}
+          {BUILDINGS.map(b => (
+            <button key={b} onClick={() => setBuilding(b)}
+              className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-colors border ${building === b ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
+              {b}
             </button>
           ))}
         </div>

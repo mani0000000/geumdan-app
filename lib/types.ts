@@ -158,12 +158,12 @@ export interface Coupon {
   id: string;
   storeId: string;
   storeName: string;
+  buildingName: string;
   title: string;
   discount: string;
   discountType: "rate" | "amount";
   category: StoreCategory;
   expiry: string;
-  floor: string;
   color: string;
   downloaded: boolean;
 }

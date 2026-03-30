@@ -421,12 +421,12 @@ export const apartments: Apartment[] = [
 
 // ---------- Coupons ----------
 export const coupons: Coupon[] = [
-  { id: "cp1", storeId: "s_b1_3", storeName: "스타벅스 DT", title: "아메리카노 15% 할인", discount: "15%", discountType: "rate", category: "카페", expiry: "2026-03-31", floor: "B1", color: "#00704A", downloaded: false },
-  { id: "cp2", storeId: "s_2f_1", storeName: "맘스터치", title: "치킨버거 세트 1,000원 할인", discount: "1,000원", discountType: "amount", category: "음식점", expiry: "2026-04-05", floor: "2F", color: "#E63312", downloaded: true },
-  { id: "cp3", storeId: "s_1f_4", storeName: "약국", title: "건강기능식품 10% 할인", discount: "10%", discountType: "rate", category: "병원/약국", expiry: "2026-04-10", floor: "1F", color: "#3182F6", downloaded: false },
-  { id: "cp4", storeId: "s_3f_1", storeName: "더본코리아", title: "런치 세트 2인 이상 20% 할인", discount: "20%", discountType: "rate", category: "음식점", expiry: "2026-04-02", floor: "3F", color: "#F59E0B", downloaded: false },
-  { id: "cp5", storeId: "s_1f_1", storeName: "올리브영", title: "2만원 이상 구매 시 3,000원 할인", discount: "3,000원", discountType: "amount", category: "기타", expiry: "2026-04-15", floor: "1F", color: "#FF3399", downloaded: false },
-  { id: "cp6", storeId: "s_2f_3", storeName: "이디야커피", title: "아이스 음료 500원 할인", discount: "500원", discountType: "amount", category: "카페", expiry: "2026-03-30", floor: "2F", color: "#6366F1", downloaded: true },
+  { id: "cp1", storeId: "s_b1_3", storeName: "스타벅스 DT", buildingName: "검단 센트럴 타워", title: "아메리카노 15% 할인", discount: "15%", discountType: "rate", category: "카페", expiry: "2026-03-31", color: "#00704A", downloaded: false },
+  { id: "cp2", storeId: "s_2f_1", storeName: "맘스터치", buildingName: "검단 센트럴 타워", title: "치킨버거 세트 1,000원 할인", discount: "1,000원", discountType: "amount", category: "음식점", expiry: "2026-04-05", color: "#E63312", downloaded: true },
+  { id: "cp3", storeId: "s_1f_4", storeName: "약국", buildingName: "검단 센트럴 타워", title: "건강기능식품 10% 할인", discount: "10%", discountType: "rate", category: "병원/약국", expiry: "2026-04-10", color: "#3182F6", downloaded: false },
+  { id: "cp4", storeId: "s_3f_1", storeName: "더본코리아", buildingName: "검단 센트럴 타워", title: "런치 세트 2인 이상 20% 할인", discount: "20%", discountType: "rate", category: "음식점", expiry: "2026-04-02", color: "#F59E0B", downloaded: false },
+  { id: "cp5", storeId: "s_1f_1", storeName: "올리브영", buildingName: "당하 스퀘어몰", title: "2만원 이상 구매 시 3,000원 할인", discount: "3,000원", discountType: "amount", category: "기타", expiry: "2026-04-15", color: "#FF3399", downloaded: false },
+  { id: "cp6", storeId: "s_2f_3", storeName: "이디야커피", buildingName: "당하 스퀘어몰", title: "아이스 음료 500원 할인", discount: "500원", discountType: "amount", category: "카페", expiry: "2026-03-30", color: "#6366F1", downloaded: true },
 ];
 
 // ---------- Coupon Details ----------

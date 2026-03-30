@@ -199,7 +199,6 @@ function CouponSection() {
 
   return (
     <section className="mb-1">
-      {/* 섹션 헤더 */}
       <div className="flex items-center justify-between px-4 mb-2.5">
         <div className="flex items-center gap-1.5">
           <div className="w-5 h-5 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
@@ -212,45 +211,66 @@ function CouponSection() {
         </Link>
       </div>
 
-      {/* 가로 스크롤 카드 */}
-      <div className="flex gap-3 overflow-x-auto px-4 pb-1"
-        style={{ scrollbarWidth: "none" }}>
+      <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
         {coupons.map(c => {
           const done = downloaded.has(c.id);
           const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
+          const urgent = dDay <= 3;
           return (
-            <div key={c.id}
-              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden shadow-sm">
-              {/* 컬러 상단 바 */}
-              <div className="h-1" style={{ background: c.color }} />
-              <div className="p-3">
-                {/* 로고 + 매장명 */}
-                <div className="flex items-center gap-2 mb-2">
-                  <StoreLogo name={c.storeName} category={c.category} size={32} rounded="rounded-lg" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-bold text-[#191F28] truncate">{c.storeName}</p>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full text-white"
-                        style={{ background: c.color }}>{c.floor}</span>
-                      {dDay <= 3
-                        ? <span className="text-[11px] font-bold text-[#F04452]">D-{dDay}</span>
-                        : <span className="text-[11px] text-[#B0B8C1]">~{c.expiry.slice(5)}</span>}
+            <div key={c.id} className="shrink-0 w-[230px]">
+              {/* 쿠폰 래퍼 — 반원 노치 절취선 구조 */}
+              <div className="relative rounded-2xl overflow-hidden shadow-md"
+                style={{ background: "white", border: `1.5px solid ${c.color}22` }}>
+
+                {/* ── 상단 컬러 영역 ── */}
+                <div className="px-4 pt-3.5 pb-3" style={{ background: `${c.color}14` }}>
+                  <div className="flex items-center gap-2.5">
+                    <StoreLogo name={c.storeName} category={c.category} size={36} rounded="rounded-xl" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[14px] font-extrabold text-[#191F28] truncate">{c.storeName}</p>
+                      <p className="text-[11px] text-[#8B95A1] truncate mt-0.5">{c.buildingName}</p>
                     </div>
                   </div>
                 </div>
-                {/* 쿠폰 제목 */}
-                <p className="text-[13px] text-[#4E5968] leading-snug line-clamp-2 min-h-[32px]">{c.title}</p>
-                {/* 할인 + 버튼 */}
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-[17px] font-black" style={{ color: c.color }}>{c.discount}</span>
-                  <button
-                    onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                    className={`h-7 px-3 rounded-lg text-[12px] font-bold active:opacity-70 ${
-                      done ? "bg-[#F2F4F6] text-[#8B95A1]" : "text-white"
-                    }`}
-                    style={done ? {} : { background: c.color }}>
-                    {done ? "완료 ✓" : "받기"}
-                  </button>
+
+                {/* ── 절취선 노치 ── */}
+                <div className="relative flex items-center" style={{ height: "14px" }}>
+                  {/* 배경 선 */}
+                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2"
+                    style={{ borderTop: `2px dashed ${c.color}55` }} />
+                  {/* 좌측 반원 */}
+                  <div className="absolute -left-[7px] w-[14px] h-[14px] rounded-full bg-[#F2F4F6] border-r-0"
+                    style={{ border: `1.5px solid ${c.color}22`, borderLeft: "none" }} />
+                  {/* 우측 반원 */}
+                  <div className="absolute -right-[7px] w-[14px] h-[14px] rounded-full bg-[#F2F4F6] border-l-0"
+                    style={{ border: `1.5px solid ${c.color}22`, borderRight: "none" }} />
+                </div>
+
+                {/* ── 하단 흰 영역 ── */}
+                <div className="px-4 pt-2 pb-3.5">
+                  {/* 할인 금액 크게 */}
+                  <div className="flex items-baseline gap-1 mb-1">
+                    <span className="text-[28px] font-black leading-none" style={{ color: c.color }}>
+                      {c.discount}
+                    </span>
+                    <span className="text-[12px] font-bold text-[#8B95A1]">할인</span>
+                  </div>
+                  {/* 쿠폰 제목 */}
+                  <p className="text-[12px] text-[#4E5968] leading-snug line-clamp-2 mb-2.5">{c.title}</p>
+                  {/* 하단: 만료일 + 받기 버튼 */}
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[11px] font-bold ${urgent ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
+                      {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
+                    </span>
+                    <button
+                      onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
+                      className={`h-7 px-3.5 rounded-lg text-[12px] font-extrabold active:opacity-70 transition-all ${
+                        done ? "bg-[#F2F4F6] text-[#B0B8C1]" : "text-white shadow-sm"
+                      }`}
+                      style={done ? {} : { background: c.color }}>
+                      {done ? "✓ 완료" : "쿠폰받기"}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
