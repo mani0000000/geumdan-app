@@ -169,6 +169,12 @@ export interface Coupon {
 }
 
 // New store openings
+export interface OpenBenefit {
+  summary: string;          // 1줄 요약 (카드에 표시)
+  details: string[];        // 상세 항목 리스트 (상세 화면에 표시)
+  validUntil?: string;      // 혜택 마감일 (YYYY-MM-DD)
+}
+
 export interface NewStoreOpening {
   id: string;
   storeId: string;
@@ -178,6 +184,7 @@ export interface NewStoreOpening {
   openDate: string;
   emoji: string;
   isNew: boolean;
+  openBenefit?: OpenBenefit;
 }
 
 // My Home Watchlist

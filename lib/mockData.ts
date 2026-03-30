@@ -566,9 +566,48 @@ export const couponDetails: Record<string, CouponDetail> = {
 
 // ---------- New Store Openings ----------
 export const newStoreOpenings: NewStoreOpening[] = [
-  { id: "ns1", storeId: "s_3f_1", storeName: "더본코리아 (백종원)", category: "음식점", floor: "3F", openDate: "2026-03-25", emoji: "🍽️", isNew: true },
-  { id: "ns2", storeId: "s_2f_4", storeName: "헬스앤뷰티", category: "미용", floor: "2F", openDate: "2026-03-22", emoji: "💄", isNew: true },
-  { id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F", openDate: "2026-03-20", emoji: "💇", isNew: false },
+  {
+    id: "ns1", storeId: "s_3f_1", storeName: "더본코리아 (백종원)", category: "음식점", floor: "3F",
+    openDate: "2026-03-25", emoji: "🍽️", isNew: true,
+    openBenefit: {
+      summary: "오픈 기념 전 메뉴 20% 할인 + 음료 1잔 무료",
+      details: [
+        "전 메뉴 20% 할인 (4/6까지)",
+        "1인 1음료 무료 제공 (테이크아웃 포함)",
+        "앱 첫 주문 시 추가 10% 즉시 할인",
+        "SNS 리뷰 작성 고객 디저트 1종 증정",
+      ],
+      validUntil: "2026-04-06",
+    },
+  },
+  {
+    id: "ns2", storeId: "s_2f_4", storeName: "헬스앤뷰티", category: "미용", floor: "2F",
+    openDate: "2026-03-22", emoji: "💄", isNew: true,
+    openBenefit: {
+      summary: "오픈 특가 전품목 30% OFF + 회원 가입 시 5,000원 적립",
+      details: [
+        "오픈 기념 전품목 30% 할인 (3/31까지)",
+        "신규 회원 가입 시 5,000 포인트 즉시 적립",
+        "3만원 이상 구매 시 샘플 키트 증정",
+        "SNS 팔로우 + 태그 시 추첨 경품 이벤트",
+      ],
+      validUntil: "2026-03-31",
+    },
+  },
+  {
+    id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F",
+    openDate: "2026-03-20", emoji: "💇", isNew: false,
+    openBenefit: {
+      summary: "오픈 한 달 커트 10,000원 고정 + 첫 방문 드라이 무료",
+      details: [
+        "오픈 기념 커트 10,000원 고정가 (4/20까지)",
+        "첫 방문 드라이 무료 서비스",
+        "펌·염색 예약 시 트리트먼트 무료 업그레이드",
+        "인스타 후기 작성 시 다음 방문 20% 할인 쿠폰 증정",
+      ],
+      validUntil: "2026-04-20",
+    },
+  },
 ];
 
 // ---------- Pharmacies ----------

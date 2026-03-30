@@ -262,10 +262,75 @@ function CouponSection() {
 }
 
 // ─── 신규 오픈 ────────────────────────────────────────────────
+function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0]; onClose: () => void }) {
+  const b = store.openBenefit;
+  if (!b) return null;
+  const dDay = b.validUntil
+    ? Math.ceil((new Date(b.validUntil).getTime() - Date.now()) / 86400000)
+    : null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
+        {/* 헤더 */}
+        <div className="px-5 pt-4 pb-3 flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-[#FFF0F0] flex items-center justify-center text-xl">{store.emoji}</div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[16px] font-bold text-[#191F28]">{store.storeName}</span>
+                {store.isNew && <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>}
+              </div>
+              <p className="text-[12px] text-[#8B95A1] mt-0.5">검단 센트럴 타워 {store.floor} · {store.category}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="active:opacity-60 mt-0.5">
+            <X size={20} className="text-[#8B95A1]" />
+          </button>
+        </div>
+        {/* D-day 배너 */}
+        {dDay !== null && (
+          <div className={`mx-5 mb-3 rounded-xl px-4 py-2.5 flex items-center justify-between ${dDay <= 3 ? "bg-[#FFF0F0]" : "bg-[#EBF3FE]"}`}>
+            <span className="text-[13px] font-semibold text-[#4E5968]">혜택 마감까지</span>
+            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
+              {dDay > 0 ? `D-${dDay}` : dDay === 0 ? "오늘 마감!" : "종료"}
+            </span>
+          </div>
+        )}
+        {/* 혜택 항목 */}
+        <div className="px-5 pb-2">
+          <p className="text-[13px] font-bold text-[#8B95A1] mb-2.5">오픈 혜택 안내</p>
+          <div className="space-y-2">
+            {b.details.map((d, i) => (
+              <div key={i} className="flex items-start gap-2.5 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
+                <div className="w-5 h-5 rounded-full bg-[#3182F6] flex items-center justify-center shrink-0 mt-0.5">
+                  <span className="text-[10px] font-black text-white">{i + 1}</span>
+                </div>
+                <p className="text-[14px] text-[#191F28] leading-snug">{d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* 유효기간 */}
+        {b.validUntil && (
+          <p className="text-[12px] text-[#B0B8C1] text-center pt-2 pb-2">
+            혜택 기간: ~{b.validUntil.slice(5).replace("-", "/")}
+          </p>
+        )}
+        <div className="px-5 pb-10 pt-1">
+          <button onClick={onClose}
+            className="w-full h-12 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold active:bg-[#1B64DA]">
+            확인
+          </button>
+        </div>
+      </div>
+      <div className="absolute inset-0 bg-black/40 -z-10" />
+    </div>
+  );
+}
+
 function NewOpeningsSection() {
-  const router = useRouter();
-  const newOnes = newStoreOpenings.filter(s => s.isNew);
-  if (newOnes.length === 0) return null;
+  const [sheetStore, setSheetStore] = useState<typeof newStoreOpenings[0] | null>(null);
 
   return (
     <section className="mx-4 mb-1">
@@ -282,11 +347,9 @@ function NewOpeningsSection() {
         <div className="divide-y divide-[#F2F4F6]">
           {newStoreOpenings.map(s => (
             <button key={s.id}
-              onClick={() => router.push(`/stores/detail/?id=${s.storeId}`)}
-              className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#F2F4F6] text-left">
-                  {/* 매장 로고 */}
+              onClick={() => setSheetStore(s)}
+              className="w-full flex items-start gap-3 px-4 py-3 active:bg-[#F2F4F6] text-left">
               <StoreLogo name={s.storeName} category={s.category} size={40} />
-              {/* 정보: 매장명 → 상가건물(층수) → 업종 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-[15px] font-bold text-[#191F28] truncate">{s.storeName}</p>
@@ -301,15 +364,21 @@ function NewOpeningsSection() {
                   <span className="text-[12px] text-[#B0B8C1]">·</span>
                   <span className="text-[12px] text-[#8B95A1]">{s.category}</span>
                 </div>
+                {s.openBenefit && (
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span className="text-[10px] font-bold bg-[#FFF0F0] text-[#F04452] px-1.5 py-0.5 rounded-full shrink-0">혜택</span>
+                    <span className="text-[12px] text-[#F04452] font-medium truncate">{s.openBenefit.summary}</span>
+                  </div>
+                )}
               </div>
-              {/* 오픈일 */}
-              <div className="text-right shrink-0">
+              <div className="text-right shrink-0 pt-0.5">
                 <p className="text-[12px] text-[#B0B8C1]">{s.openDate.slice(5)} 오픈</p>
               </div>
             </button>
           ))}
         </div>
       </div>
+      {sheetStore && <OpenBenefitSheet store={sheetStore} onClose={() => setSheetStore(null)} />}
     </section>
   );
 }
