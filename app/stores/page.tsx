@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useMemo } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   MapPin, Phone, Clock, Lock,
@@ -613,71 +614,21 @@ function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelec
   );
 }
 
-// ─── 지도 좌표 변환 ──────────────────────────────────────────
-const MAP_LAT_MIN = 37.5345, MAP_LAT_MAX = 37.5550;
-const MAP_LNG_MIN = 126.6710, MAP_LNG_MAX = 126.6960;
-function toMapXY(lat: number, lng: number) {
-  return {
-    x: ((lng - MAP_LNG_MIN) / (MAP_LNG_MAX - MAP_LNG_MIN)) * 100,
-    y: 100 - ((lat - MAP_LAT_MIN) / (MAP_LAT_MAX - MAP_LAT_MIN)) * 100,
-  };
-}
-
-// ─── 지도 뷰 ────────────────────────────────────────────────
-function MapView({
-  buildings: bList,
-  selectedId,
-  onSelect,
-}: {
-  buildings: typeof NEARBY_BUILDINGS;
-  selectedId: string | null;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div className="mx-4 mt-3 mb-3 bg-white rounded-2xl overflow-hidden">
-      <div className="px-4 py-3 border-b border-[#F2F4F6]">
-        <p className="text-[14px] font-bold text-[#191F28]">검단신도시 상가 지도</p>
-        <p className="text-[12px] text-[#8B95A1] mt-0.5">핀을 눌러 매장 정보를 확인하세요</p>
-      </div>
-      <div className="relative bg-[#EEF2EE] overflow-hidden">
-        <svg viewBox="0 0 100 67" className="w-full" style={{ aspectRatio: "1.5/1" }}>
-          <rect width="100" height="67" fill="#EEF2EE" />
-          {/* 도로 */}
-          <rect x="0" y="30" width="100" height="4" fill="#D9DFD9" opacity="0.8" />
-          <rect x="45" y="0" width="4" height="67" fill="#D9DFD9" opacity="0.8" />
-          <rect x="20" y="0" width="2.5" height="67" fill="#E0E5E0" opacity="0.6" />
-          <rect x="72" y="0" width="2.5" height="67" fill="#E0E5E0" opacity="0.6" />
-          <text x="50" y="28.5" textAnchor="middle" fontSize="2.5" fill="#9CA3AF">검단로</text>
-          <text x="43" y="16" textAnchor="middle" fontSize="2.2" fill="#9CA3AF" transform="rotate(-90,43,16)">아라로</text>
-          {bList.map(nb => {
-            const { x, y } = toMapXY(nb.lat, nb.lng);
-            const isSel = selectedId === nb.id;
-            return (
-              <g key={nb.id} onClick={() => onSelect(nb.id)} style={{ cursor: "pointer" }}>
-                <circle cx={`${x}`} cy={`${y}`} r={isSel ? "4.5" : "3.5"}
-                  fill={isSel ? "#3182F6" : nb.hasData ? "#1B64DA" : "#8B95A1"}
-                  stroke="white" strokeWidth="1" />
-                <text x={`${x}`} y={`${y - 5.5}`} textAnchor="middle" fontSize="2.8" fill="#191F28" fontWeight="bold">
-                  {nb.name.slice(0, 5)}
-                </text>
-              </g>
-            );
-          })}
-        </svg>
-      </div>
-      <div className="px-4 py-2.5 flex items-center gap-4">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#1B64DA]" />
-          <span className="text-[12px] text-[#4E5968]">지도 데이터 있음</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-[#8B95A1]" />
-          <span className="text-[12px] text-[#8B95A1]">준비 중</span>
-        </div>
+// ─── 실제 지도 (Leaflet) — SSR 비활성화 ─────────────────────
+const StoreMapView = dynamic(() => import("./StoreMapView"), {
+  ssr: false,
+  loading: () => (
+    <div className="mx-4 mt-3 mb-3 rounded-2xl bg-[#F2F4F6] flex items-center justify-center border border-[#E5E8EB]"
+      style={{ height: 440 }}>
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-3 border-[#3182F6] border-t-transparent rounded-full animate-spin"
+          style={{ borderWidth: 3 }} />
+        <p className="text-[13px] text-[#8B95A1]">지도 불러오는 중...</p>
       </div>
     </div>
-  );
-}
+  ),
+});
+
 
 // ─── 건물 상세 (층별 / 업종별) ──────────────────────────────
 function BuildingDetail({
@@ -956,7 +907,7 @@ export default function StoresPage() {
       ) : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
         <>
-          <MapView
+          <StoreMapView
             buildings={nearbyWithDist}
             selectedId={selectedBuildingId}
             onSelect={id => setSelectedBuildingId(id)}
