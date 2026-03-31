@@ -967,19 +967,22 @@ export default function StoresPage() {
 
           {/* ── 바텀 시트 ── */}
           <div
-            className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[999] transition-all duration-300"
+            className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl"
             style={{
-              height: sheetOpen ? 340 : 68,
-              boxShadow: "0 -4px 24px rgba(0,0,0,0.13)",
+              height: sheetOpen ? 360 : 64,
+              boxShadow: "0 -4px 32px rgba(0,0,0,0.18)",
               overflow: "hidden",
+              zIndex: 2000,
+              transition: "height 0.3s cubic-bezier(0.4,0,0.2,1)",
             }}
           >
             {/* 핸들 + 타이틀 */}
             <button
-              className="w-full flex flex-col items-center px-4 pt-2.5 pb-2 active:opacity-70"
+              className="w-full flex flex-col items-center px-4 active:opacity-70"
+              style={{ height: 64, paddingTop: 10 }}
               onClick={() => setSheetOpen(v => !v)}
             >
-              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full mb-2.5" />
+              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" style={{ marginBottom: 10 }} />
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
                   <Building2 size={16} className="text-[#3182F6]" />
@@ -989,13 +992,17 @@ export default function StoresPage() {
                 </div>
                 <ChevronUp
                   size={18}
-                  className={`text-[#8B95A1] transition-transform duration-300 ${sheetOpen ? "" : "rotate-180"}`}
+                  className="text-[#8B95A1]"
+                  style={{
+                    transition: "transform 0.3s",
+                    transform: sheetOpen ? "rotate(0deg)" : "rotate(180deg)",
+                  }}
                 />
               </div>
             </button>
 
             {/* 건물 리스트 */}
-            <div className="overflow-y-auto" style={{ height: 272 }}>
+            <div className="overflow-y-auto" style={{ height: 296 }}>
               <div className="px-4 pt-1 pb-4 space-y-2">
                 {nearbyWithDist.map(nb => (
                   <button key={nb.id}

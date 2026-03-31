@@ -108,7 +108,7 @@ export default function StoreMapView({ buildings, selectedId, onSelect }: Props)
 
   return (
     <div className="w-full overflow-hidden"
-      style={{ height: "100%", position: "relative" }}>
+      style={{ height: "100%", position: "relative", isolation: "isolate" }}>
 
       <MapContainer
         center={center}
