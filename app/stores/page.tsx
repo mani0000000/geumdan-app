@@ -496,26 +496,27 @@ function StoreListView() {
             <span className="text-[14px] font-bold text-[#191F28]">이번 주 신규 오픈</span>
             <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
           </div>
-          <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          <div className="px-4 space-y-2">
             {newStoreOpenings.filter(o => o.isNew).map(o => {
               const store = allStores.find(s => s.id === o.storeId);
               return (
                 <button key={o.id}
                   onClick={() => store && setSelectedStore(store)}
-                  className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left">
-                  <div className="h-1 bg-[#F04452]" />
-                  <div className="p-3">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <StoreLogo name={o.storeName} category={o.category} size={32} />
-                      <div className="min-w-0">
-                        <p className="text-[13px] font-bold text-[#191F28] truncate">{o.storeName}</p>
-                        <p className="text-[11px] text-[#8B95A1]">{o.floor} · {o.openDate.slice(5)} 오픈</p>
-                      </div>
+                  className="w-full bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left flex items-center gap-3 px-3 py-3">
+                  <div className="shrink-0">
+                    <StoreLogo name={o.storeName} category={o.category} size={40} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-[14px] font-bold text-[#191F28] truncate">{o.storeName}</p>
+                      <span className="shrink-0 text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
                     </div>
+                    <p className="text-[12px] text-[#8B95A1] mb-1">{o.floor} · {o.openDate.slice(5)} 오픈</p>
                     {o.openBenefit && (
-                      <p className="text-[11px] text-[#F04452] font-medium leading-snug line-clamp-2">{o.openBenefit.summary}</p>
+                      <p className="text-[12px] text-[#F04452] font-medium leading-snug line-clamp-1">{o.openBenefit.summary}</p>
                     )}
                   </div>
+                  <span className="shrink-0 text-[#B0B8C1] text-lg">›</span>
                 </button>
               );
             })}
