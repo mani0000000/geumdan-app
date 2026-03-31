@@ -1,2 +1,2 @@
-:HL["/geumdan-app/_next/static/chunks/18cu.jdq5qh~4.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"community","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"ZN4-LnSUyVOnv2N1uXZBe"}
+:HL["/geumdan-app/_next/static/chunks/0haz1xfqbm1zt.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"community","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}},"staleTime":300,"buildId":"LrR91bwd9a2TG1mYclD12"}
