@@ -32,24 +32,44 @@ interface CardItem {
   publishedAt: string;
   url: string;
   type: NewsType;
+  thumbnail?: string;
 }
 
-function NewsCard({ item, gradient, index }: { item: CardItem; gradient: string; index: number }) {
+function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index: number }) {
   const typeTag = item.type === "유튜브" ? "▶ 유튜브" : item.type === "인스타" ? "📷 인스타" : "📰 뉴스";
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
-      className={`shrink-0 w-[280px] bg-gradient-to-br ${gradient} rounded-2xl p-5 flex flex-col justify-between min-h-[180px] active:opacity-80`}>
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-[12px] font-bold bg-white/20 text-white px-2.5 py-1 rounded-full">{typeTag}</span>
-          <span className="text-[12px] text-white/70">{item.source}</span>
-        </div>
-        <p className="text-[17px] font-bold text-white leading-snug line-clamp-4">{item.title}</p>
+      className="shrink-0 w-[280px] rounded-2xl overflow-hidden active:opacity-80"
+      style={{ minHeight: 320 }}>
+      {/* Image area */}
+      <div className="relative w-full" style={{ height: 180 }}>
+        {item.thumbnail ? (
+          <img src={item.thumbnail} alt={item.title}
+            className="w-full h-full object-cover" />
+        ) : (
+          <div className={`w-full h-full bg-gradient-to-br ${gradient}`} />
+        )}
+        {/* Dark overlay gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        {/* Type badge */}
+        <span className="absolute top-3 left-3 text-[12px] font-bold bg-black/40 text-white px-2.5 py-1 rounded-full backdrop-blur-sm">
+          {typeTag}
+        </span>
+        <span className="absolute top-3 right-3 text-[12px] text-white/80 font-medium">
+          {item.source}
+        </span>
       </div>
-      <div className="flex items-center justify-between mt-4">
-        <span className="text-[13px] text-white/70">{formatRelativeTime(item.publishedAt)}</span>
-        <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
-          <ExternalLink size={13} className="text-white" />
+      {/* Text area */}
+      <div className="bg-white px-4 py-3 flex flex-col gap-1" style={{ minHeight: 140 }}>
+        <p className="text-[16px] font-bold text-[#191F28] leading-snug line-clamp-3">{item.title}</p>
+        {item.summary && (
+          <p className="text-[13px] text-[#8B95A1] line-clamp-2 mt-0.5">{item.summary}</p>
+        )}
+        <div className="flex items-center justify-between mt-auto pt-2">
+          <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+          <div className="w-7 h-7 bg-[#EBF3FE] rounded-full flex items-center justify-center">
+            <ExternalLink size={13} className="text-[#3182F6]" />
+          </div>
         </div>
       </div>
     </a>
@@ -170,9 +190,9 @@ export default function NewsPage() {
   const newsSource: CardItem[] = active === "뉴스"
     ? (realNews.length > 0
         ? realNews.map(n => ({ ...n, summary: n.summary }))
-        : newsItems.filter(n => n.type === "뉴스").map(n => ({ ...n, summary: n.summary }))
+        : newsItems.filter(n => n.type === "뉴스").map(n => ({ ...n, summary: n.summary, thumbnail: n.thumbnail }))
       )
-    : newsItems.filter(n => n.type === active).map(n => ({ ...n }));
+    : newsItems.filter(n => n.type === active).map(n => ({ ...n, thumbnail: n.thumbnail }));
 
   const featured = newsSource.slice(0, 8);
   const rest = newsSource.slice(8);
