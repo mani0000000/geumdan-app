@@ -465,32 +465,65 @@ function SosikSection() {
         )}
 
         {tab === "뉴스" && (
-          <div>
-            <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
+          <div className="pt-3 pb-4">
+            <div className="flex items-center justify-between px-4 mb-3">
               <span className="text-[14px] font-bold text-[#191F28]">검단 최신 뉴스</span>
               <Link href="/news/" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
-            <div className="divide-y divide-[#F2F4F6]">
-              {topNews.map(item => (
-                <button key={item.id}
-                  onClick={() => router.push("/news/")}
-                  className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
-                  <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">📰</div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[12px] text-[#3182F6] font-medium">{item.source}</span>
-                      <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+            {/* 인스타그램 카드뉴스 스타일 — 가로 스크롤 */}
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
+              {topNews.map((item, idx) => {
+                const typeMeta = {
+                  "뉴스":   { bg: "#3182F6",  label: "NEWS",    icon: "📰" },
+                  "유튜브": { bg: "#FF0000",  label: "YouTube", icon: "▶" },
+                  "인스타": { bg: "linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)", label: "Instagram", icon: "📸" },
+                }[item.type] ?? { bg: "#8B95A1", label: item.type, icon: "📄" };
+                const isFirst = idx === 0;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => item.url && item.url !== "#" && window.open(item.url, "_blank")}
+                    className="shrink-0 relative rounded-2xl overflow-hidden active:opacity-90 text-left"
+                    style={{ width: isFirst ? 260 : 170, height: isFirst ? 340 : 220 }}
+                  >
+                    {/* 배경 이미지 */}
+                    <img
+                      src={item.thumbnail}
+                      alt={item.title}
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
+                    {/* 그라디언트 오버레이 */}
+                    <div className="absolute inset-0"
+                      style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.0) 30%, rgba(0,0,0,.5) 60%, rgba(0,0,0,.88) 100%)" }} />
+
+                    {/* 타입 뱃지 */}
+                    <div className="absolute top-3 left-3">
+                      <span className="text-[10px] font-black text-white px-2 py-1 rounded-full"
+                        style={{ background: typeMeta.bg }}>
+                        {typeMeta.icon} {typeMeta.label}
+                      </span>
                     </div>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="px-4 py-3">
-              <Link href="/news/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
-                뉴스 전체 보기 →
-              </Link>
+
+                    {/* 하단 텍스트 */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                      <p className={`font-bold text-white leading-snug mb-1.5 ${isFirst ? "text-[15px] line-clamp-3" : "text-[12px] line-clamp-2"}`}>
+                        {item.title}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-white/70 truncate">{item.source}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <span className="text-[10px] text-white/60">👁</span>
+                          <span className="text-[10px] text-white/70">
+                            {(item.viewCount ?? 0) >= 1000
+                              ? `${((item.viewCount ?? 0) / 1000).toFixed(1)}k`
+                              : item.viewCount}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}

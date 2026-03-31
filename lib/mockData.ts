@@ -115,7 +115,7 @@ export const newsItems: NewsItem[] = [
     title: "지하철 5호선 검단 연장, 예비타당성 최종 통과",
     summary:
       "서울 지하철 5호선이 방화역에서 김포·인천 검단까지 연장되는 사업이 예비타당성 조사를 최종 통과했다. 총 사업비 약 3조원, 구간 25.8km로 검단신도시 주민들의 서울 접근성이 크게 개선될 전망이다.",
-    thumbnail: "/images/news1.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1474487548417-781cb71495f3?w=600&h=800&fit=crop&auto=format",
     source: "헤럴드경제",
     publishedAt: "2026-03-11T09:00:00",
     url: "https://biz.heraldcorp.com/article/10691408",
@@ -127,7 +127,7 @@ export const newsItems: NewsItem[] = [
     title: "검단신도시 5단계 사업구역 올해 준공…240만㎡ 신도시 완성",
     summary:
       "인천 검단신도시 5단계 사업구역이 2026년 준공을 앞두고 있다. 16개 주거블록과 공원·도로·상수도 등 도시 기반시설이 완성되면서 명실상부한 신도시로 완성될 예정이다.",
-    thumbnail: "/images/news2.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=800&fit=crop&auto=format",
     source: "헤럴드경제",
     publishedAt: "2026-03-24T10:00:00",
     url: "https://biz.heraldcorp.com/article/10701358",
@@ -139,7 +139,7 @@ export const newsItems: NewsItem[] = [
     title: "검단신도시 2026 봄 근황 — 5호선 예타 확정 후 달라진 분위기",
     summary:
       "지하철 5호선 예타 통과 이후 검단신도시의 분위기 변화를 담은 영상. 신규 상가 입점 현황과 아파트 시세 동향까지 현장에서 직접 전달합니다.",
-    thumbnail: "/images/youtube1.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=600&h=800&fit=crop&auto=format",
     source: "유튜브",
     publishedAt: "2026-03-27T12:00:00",
     url: "https://www.youtube.com/results?search_query=검단신도시+2026+근황",
@@ -151,7 +151,7 @@ export const newsItems: NewsItem[] = [
     title: "검단 아파트 '10억 클럽' 진입하나…아라역 초근접 단지 상승세",
     summary:
       "인천 지하철 1호선 연장으로 아라역 개통을 앞두고 있는 검단신도시의 아파트 값이 상승세다. 아라역 인근 단지들이 10억원 진입을 눈앞에 두고 있다.",
-    thumbnail: "/images/news3.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=800&fit=crop&auto=format",
     source: "헤럴드경제",
     publishedAt: "2026-02-14T09:00:00",
     url: "https://biz.heraldcorp.com/article/10492945",
@@ -163,7 +163,7 @@ export const newsItems: NewsItem[] = [
     title: "#검단맛집 이번 주 핫플 — 마전동 화로구이부터 신규 카페까지",
     summary:
       "검단 주민들이 공유하는 이번 주 맛집 사진들. 마전동 담가화로구이, 당하동 신규 브런치 카페 등 검단 핫플레이스 한눈에 보기.",
-    thumbnail: "/images/insta1.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1498654896293-37aaa4f3ced9?w=600&h=800&fit=crop&auto=format",
     source: "@geumdan_food",
     publishedAt: "2026-03-28T09:00:00",
     url: "https://www.instagram.com/explore/tags/%EA%B2%80%EB%8B%A8%EB%A7%9B%EC%A7%91/",
@@ -175,7 +175,7 @@ export const newsItems: NewsItem[] = [
     title: "검단 아파트 단지 투어 — 당하동·불로동 실거래가 분석 2026",
     summary:
       "2026년 봄 검단신도시 주요 아파트 단지를 직접 방문해 실거래가 현황을 분석했습니다. 5호선 개통 이후 어느 단지가 가장 많이 오를지 살펴봅니다.",
-    thumbnail: "/images/youtube2.jpg",
+    thumbnail: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=800&fit=crop&auto=format",
     source: "유튜브",
     publishedAt: "2026-03-25T15:00:00",
     url: "https://www.youtube.com/results?search_query=검단+아파트+부동산+시세+2026",
