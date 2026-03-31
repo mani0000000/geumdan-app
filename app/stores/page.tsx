@@ -151,46 +151,96 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
   );
 }
 
+// 업종별 대표 이미지 (Unsplash 특정 사진 ID — 안정적으로 로드됨)
+const catHeroImage: Record<StoreCategory, string> = {
+  카페:       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=260&fit=crop&auto=format",
+  음식점:     "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=260&fit=crop&auto=format",
+  편의점:     "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600&h=260&fit=crop&auto=format",
+  "병원/약국":"https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=260&fit=crop&auto=format",
+  미용:       "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=260&fit=crop&auto=format",
+  학원:       "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&h=260&fit=crop&auto=format",
+  마트:       "https://images.unsplash.com/photo-1534723452862-4c874986a2f6?w=600&h=260&fit=crop&auto=format",
+  기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
+};
+
 // ─── 매장 리스트 상세 시트 ──────────────────────────────────
 type EnrichedStore = Store & { floorLabel: string; buildingName: string };
 
 function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClose: () => void }) {
   const [sent, setSent] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const detail = storeDetails[store.id];
   const coupon = coupons.find(c => c.storeId === store.id);
   const opening = newStoreOpenings.find(o => o.storeId === store.id);
   const color = catDot[store.category];
   const dDay = coupon ? Math.ceil((new Date(coupon.expiry).getTime() - Date.now()) / 86400000) : null;
+  const heroImg = catHeroImage[store.category];
 
   return (
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[90dvh] flex flex-col"
         onClick={e => e.stopPropagation()}>
-        {/* 핸들 */}
-        <div className="flex justify-center pt-3 shrink-0"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
 
-        {/* 헤더 */}
-        <div className="px-5 pt-3 pb-4 shrink-0" style={{ borderBottom: `3px solid ${color}33` }}>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <StoreLogo name={store.name} category={store.category} size={48} />
-              <div>
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-                  {store.isPremium && <span className="text-[10px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
-                  {opening?.isNew && <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>}
-                </div>
-                <p className="text-[19px] font-black text-[#191F28] mt-0.5">{store.name}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`text-[12px] font-bold ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
-                    {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
-                  </span>
-                  <span className="text-[12px] text-[#B0B8C1]">·</span>
-                  <span className="text-[12px] text-[#8B95A1]">{store.buildingName} {store.floorLabel}</span>
-                </div>
+        {/* ── 대표 이미지 헤더 ── */}
+        <div className="relative shrink-0" style={{ height: 220 }}>
+          {/* 이미지 or 컬러 fallback */}
+          {!imgFailed ? (
+            <img
+              src={heroImg}
+              alt={store.name}
+              onError={() => setImgFailed(true)}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center"
+              style={{ background: `linear-gradient(135deg, ${color}cc, ${color}55)` }}>
+              <span style={{ fontSize: 72 }}>{catEmoji[store.category]}</span>
+            </div>
+          )}
+
+          {/* 하단 그라디언트 오버레이 */}
+          <div className="absolute inset-0"
+            style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.08) 0%, rgba(0,0,0,.0) 35%, rgba(0,0,0,.55) 75%, rgba(0,0,0,.82) 100%)" }} />
+
+          {/* 드래그 핸들 */}
+          <div className="absolute top-2.5 left-1/2 -translate-x-1/2">
+            <div className="w-10 h-1 rounded-full bg-white/50" />
+          </div>
+
+          {/* 닫기 버튼 */}
+          <button onClick={onClose}
+            className="absolute top-3.5 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+            <X size={16} className="text-white" />
+          </button>
+
+          {/* 영업 상태 뱃지 */}
+          <div className="absolute top-4 left-4 flex items-center gap-1.5">
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm ${
+              store.isOpen !== false ? "bg-[#00C471]/90 text-white" : "bg-black/40 text-white"}`}>
+              {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
+            </span>
+            {store.isPremium && (
+              <span className="text-[10px] font-black bg-[#F59E0B]/90 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">★ PREMIUM</span>
+            )}
+            {opening?.isNew && (
+              <span className="text-[10px] font-black bg-[#F04452]/90 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">NEW</span>
+            )}
+          </div>
+
+          {/* 매장명 + 위치 — 이미지 하단 */}
+          <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
+            <div className="flex items-end justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]} inline-block mb-1.5`}>
+                  {catEmoji[store.category]} {store.category}
+                </span>
+                <p className="text-[22px] font-black text-white leading-tight drop-shadow-sm">{store.name}</p>
+                <p className="text-[12px] text-white/80 mt-0.5">{store.buildingName} · {store.floorLabel}</p>
+              </div>
+              <div className="shrink-0 ring-2 ring-white/40 rounded-2xl shadow-lg overflow-hidden">
+                <StoreLogo name={store.name} category={store.category} size={48} rounded="rounded-2xl" />
               </div>
             </div>
-            <button onClick={onClose} className="active:opacity-60 mt-0.5"><X size={20} className="text-[#8B95A1]" /></button>
           </div>
         </div>
 
