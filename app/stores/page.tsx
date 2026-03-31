@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
   MapPin, Phone, Clock, Lock,
-  ChevronLeft, ChevronRight, X, Pencil, CheckCircle2,
+  ChevronLeft, ChevronRight, ChevronUp, X, Pencil, CheckCircle2,
   Search, Navigation, Building2, List, Map as MapIcon,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -856,6 +856,7 @@ export default function StoresPage() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   // 위치 권한 요청
   function requestLocation() {
@@ -957,34 +958,72 @@ export default function StoresPage() {
         />
       ) : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
-        <>
+        <div className="relative" style={{ height: "calc(100dvh - 234px)" }}>
           <StoreMapView
             buildings={nearbyWithDist}
             selectedId={selectedBuildingId}
-            onSelect={id => setSelectedBuildingId(id)}
+            onSelect={id => { setSelectedBuildingId(id); setSheetOpen(false); }}
           />
-          <div className="px-4 pb-4 space-y-2">
-            {nearbyWithDist.map(nb => (
-              <button key={nb.id} onClick={() => setSelectedBuildingId(nb.id)}
-                className="w-full bg-white rounded-xl px-4 py-3 flex items-center gap-3 active:bg-[#F2F4F6] text-left">
-                <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center shrink-0">
-                  <Building2 size={18} className="text-[#3182F6]" />
+
+          {/* ── 바텀 시트 ── */}
+          <div
+            className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[999] transition-all duration-300"
+            style={{
+              height: sheetOpen ? 340 : 68,
+              boxShadow: "0 -4px 24px rgba(0,0,0,0.13)",
+              overflow: "hidden",
+            }}
+          >
+            {/* 핸들 + 타이틀 */}
+            <button
+              className="w-full flex flex-col items-center px-4 pt-2.5 pb-2 active:opacity-70"
+              onClick={() => setSheetOpen(v => !v)}
+            >
+              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full mb-2.5" />
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2">
+                  <Building2 size={16} className="text-[#3182F6]" />
+                  <span className="text-[14px] font-bold text-[#191F28]">
+                    상가 건물 {nearbyWithDist.length}개
+                  </span>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-[15px] font-semibold text-[#191F28] truncate">{nb.name}</p>
-                    {nb.hasData && <span className="text-[11px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full shrink-0">지도</span>}
-                  </div>
-                  <p className="text-[13px] text-[#8B95A1] truncate mt-0.5">{nb.address}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[14px] font-bold text-[#3182F6]">{distLabel(nb.km)}</p>
-                  <p className="text-[12px] text-[#B0B8C1]">{nb.floors}층 · {nb.stores}개</p>
-                </div>
-              </button>
-            ))}
+                <ChevronUp
+                  size={18}
+                  className={`text-[#8B95A1] transition-transform duration-300 ${sheetOpen ? "" : "rotate-180"}`}
+                />
+              </div>
+            </button>
+
+            {/* 건물 리스트 */}
+            <div className="overflow-y-auto" style={{ height: 272 }}>
+              <div className="px-4 pt-1 pb-4 space-y-2">
+                {nearbyWithDist.map(nb => (
+                  <button key={nb.id}
+                    onClick={() => { setSelectedBuildingId(nb.id); setSheetOpen(false); }}
+                    className={`w-full bg-white rounded-xl px-4 py-3 flex items-center gap-3 active:bg-[#F2F4F6] text-left border transition-colors ${selectedBuildingId === nb.id ? "border-[#3182F6] bg-[#EBF3FE]" : "border-[#F2F4F6]"}`}
+                  >
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selectedBuildingId === nb.id ? "bg-[#3182F6]" : "bg-[#EBF3FE]"}`}>
+                      <Building2 size={18} className={selectedBuildingId === nb.id ? "text-white" : "text-[#3182F6]"} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <p className="text-[14px] font-semibold text-[#191F28] truncate">{nb.name}</p>
+                        {nb.hasData && (
+                          <span className="shrink-0 text-[10px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">지도</span>
+                        )}
+                      </div>
+                      <p className="text-[12px] text-[#8B95A1] truncate">{nb.address}</p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-[13px] font-bold text-[#3182F6]">{distLabel(nb.km)}</p>
+                      <p className="text-[11px] text-[#B0B8C1] mt-0.5">{nb.floors}층 · {nb.stores}개</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </>
+        </div>
       ) : (
         /* ─── 리스트 모드 ─── */
         <StoreListView />
