@@ -686,14 +686,29 @@ function MapBuildingSheet({
   nearbyInfo,
   buildingData,
   onClose,
-  onStoreSelect,
 }: {
   nearbyInfo: typeof NEARBY_BUILDINGS[0];
   buildingData: typeof buildings[0] | null;
   onClose: () => void;
-  onStoreSelect: (s: Store) => void;
 }) {
-  const [floorIdx, setFloorIdx] = useState(0);
+  // -1 = 전체
+  const [floorIdx, setFloorIdx] = useState<number>(-1);
+  const [detailStore, setDetailStore] = useState<EnrichedStore | null>(null);
+
+  // 전체 매장 (전체 탭용)
+  const allStores: { store: Store; floorLabel: string }[] = buildingData
+    ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
+    : [];
+
+  // 현재 탭에서 보여줄 매장
+  const visibleStores: { store: Store; floorLabel: string }[] = floorIdx === -1
+    ? allStores
+    : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
+
+  function openDetail(store: Store, floorLabel: string) {
+    setDetailStore({ ...store, floorLabel, buildingName: nearbyInfo.name });
+  }
+
   return (
     <>
       {/* 반투명 배경 */}
@@ -720,8 +735,12 @@ function MapBuildingSheet({
 
         {buildingData ? (
           <>
-            {/* 층 탭 */}
+            {/* 층 탭 — 전체 포함 */}
             <div className="flex gap-2 px-4 pb-2 border-b border-[#F2F4F6] overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+              <button onClick={() => setFloorIdx(-1)}
+                className={`shrink-0 px-3.5 h-9 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                전체
+              </button>
               {buildingData.floors.map((f, i) => (
                 <button key={f.label} onClick={() => setFloorIdx(i)}
                   className={`shrink-0 px-3.5 h-9 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
@@ -731,16 +750,20 @@ function MapBuildingSheet({
             </div>
             {/* 매장 리스트 */}
             <div className="overflow-y-auto flex-1">
-              {buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").length === 0 ? (
+              {visibleStores.length === 0 ? (
                 <div className="flex items-center justify-center py-10 text-[13px] text-[#B0B8C1]">입점 매장 없음</div>
               ) : (
-                buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => (
-                  <button key={s.id} onClick={() => { onStoreSelect(s); onClose(); }}
+                visibleStores.map(({ store: s, floorLabel }) => (
+                  <button key={s.id} onClick={() => openDetail(s, floorLabel)}
                     className="w-full px-4 py-3 flex items-center gap-3 active:bg-[#F2F4F6] border-b border-[#F2F4F6] text-left">
                     <StoreLogo name={s.name} category={s.category} size={40} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-[#191F28]">{s.name}</p>
-                      <p className="text-[12px] text-[#8B95A1] mt-0.5">{catEmoji[s.category]} {s.category}{s.hours ? ` · ${s.hours}` : ""}</p>
+                      <p className="text-[12px] text-[#8B95A1] mt-0.5">
+                        {catEmoji[s.category]} {s.category}
+                        {floorIdx === -1 ? ` · ${floorLabel}` : ""}
+                        {s.hours ? ` · ${s.hours}` : ""}
+                      </p>
                     </div>
                     <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
                       {s.isOpen !== false ? "영업 중" : "영업 종료"}
@@ -761,6 +784,11 @@ function MapBuildingSheet({
           </div>
         )}
       </div>
+
+      {/* 매장 상세 시트 */}
+      {detailStore && (
+        <StoreListDetailSheet store={detailStore} onClose={() => setDetailStore(null)} />
+      )}
     </>
   );
 }
@@ -1076,7 +1104,6 @@ export default function StoresPage() {
               nearbyInfo={selectedNearby}
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
-              onStoreSelect={s => setSelected(s)}
             />
           )}
         </div>
