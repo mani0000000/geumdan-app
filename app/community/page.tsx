@@ -245,15 +245,83 @@ function SiseTab() {
   const [selected, setSelected] = useState<string | null>(null);
   const avgPrice = Math.round(apartments.reduce((s, a) => s + (a.recentDeal?.price ?? 0), 0) / apartments.length);
 
+  // 내 집 시세
+  const [myAptId, setMyAptId] = useState<string | null>(() =>
+    typeof window !== "undefined" ? localStorage.getItem("myAptId") : null
+  );
+  const [showPicker, setShowPicker] = useState(false);
+  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+
+  function pickApt(id: string) {
+    setMyAptId(id);
+    if (typeof window !== "undefined") localStorage.setItem("myAptId", id);
+    setShowPicker(false);
+  }
+  function clearApt() {
+    setMyAptId(null);
+    if (typeof window !== "undefined") localStorage.removeItem("myAptId");
+  }
+
+  // 내 집 가격 변동
+  const myH = myApt?.sizes[0].priceHistory ?? [];
+  const myCurr = myH[myH.length - 1]?.price ?? 0;
+  const myPrev = myH[myH.length - 2]?.price ?? myCurr;
+  const myDiff = myCurr - myPrev;
+  const myPct = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
+
   return (
     <div className="pb-4">
-      {/* Summary banner */}
-      <div className="mx-4 mt-3 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-4 mb-3">
-        <p className="text-emerald-100 text-[13px] font-medium">검단 신도시 평균 실거래가</p>
-        <p className="text-white text-[25px] font-black mt-1">{formatPrice(avgPrice)}</p>
-        <div className="flex items-center gap-1.5 mt-2">
-          <TrendingUp size={14} className="text-emerald-300" />
-          <span className="text-emerald-200 text-[13px]">전월 대비 평균 +1.2% 상승</span>
+      {/* ── 최상단: 내 집 시세 + 평균 실거래가 ── */}
+      <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden shadow-sm">
+        {/* 내 집 시세 */}
+        <div className="bg-white px-4 pt-3.5 pb-3 border border-[#E5E8EB] rounded-t-2xl border-b-0">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <span className="text-[13px]">🏠</span>
+              <span className="text-[13px] font-bold text-[#191F28]">내 집 시세</span>
+            </div>
+            <button onClick={() => setShowPicker(true)}
+              className="text-[12px] text-[#3182F6] font-semibold bg-[#EBF3FE] px-2.5 py-1 rounded-full active:opacity-70">
+              {myApt ? "변경" : "+ 등록"}
+            </button>
+          </div>
+
+          {myApt ? (
+            <div className="flex items-center justify-between">
+              <div className="min-w-0 flex-1 pr-2">
+                <p className="text-[15px] font-bold text-[#191F28] truncate">{myApt.name}</p>
+                <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {myApt.recentDeal?.pyeong}평</p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-[18px] font-black text-[#191F28]">{formatPrice(myCurr)}</p>
+                <div className="flex items-center justify-end gap-0.5 mt-0.5">
+                  {myDiff === 0
+                    ? <span className="text-[12px] text-[#8B95A1]">보합</span>
+                    : myDiff > 0
+                      ? <><TrendingUp size={11} className="text-[#F04452]" /><span className="text-[12px] font-semibold text-[#F04452]">+{myPct}%</span></>
+                      : <><TrendingDown size={11} className="text-[#3182F6]" /><span className="text-[12px] font-semibold text-[#3182F6]">-{myPct}%</span></>
+                  }
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => setShowPicker(true)}
+              className="w-full border-2 border-dashed border-[#E5E8EB] rounded-xl py-3 flex items-center justify-center gap-2 active:bg-[#F2F4F6]">
+              <span className="text-[13px] text-[#8B95A1]">내 아파트를 등록하면 시세를 바로 확인해요</span>
+            </button>
+          )}
+        </div>
+
+        {/* 평균 실거래가 배너 */}
+        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3.5 pb-4">
+          <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
+          <div className="flex items-end justify-between mt-1">
+            <p className="text-white text-[24px] font-black">{formatPrice(avgPrice)}</p>
+            <div className="flex items-center gap-1 pb-0.5">
+              <TrendingUp size={13} className="text-emerald-300" />
+              <span className="text-emerald-200 text-[12px]">전월 대비 +1.2%</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -333,6 +401,46 @@ function SiseTab() {
         </div>
         <ChevronRight size={18} className="text-[#B0B8C1]" />
       </button>
+
+      {/* 아파트 선택 모달 */}
+      {showPicker && (
+        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowPicker(false)}>
+          <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[70vh] flex flex-col"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
+            </div>
+            <div className="flex items-center justify-between px-4 pt-2 pb-3 border-b border-[#F2F4F6]">
+              <h3 className="text-[17px] font-bold text-[#191F28]">내 집 선택</h3>
+              {myApt && (
+                <button onClick={clearApt} className="text-[13px] text-[#F04452] font-medium active:opacity-70">
+                  등록 해제
+                </button>
+              )}
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {apartments.map(apt => {
+                const h = apt.sizes[0].priceHistory;
+                const curr = h[h.length - 1]?.price ?? 0;
+                const isSelected = myAptId === apt.id;
+                return (
+                  <button key={apt.id} onClick={() => pickApt(apt.id)}
+                    className={`w-full px-4 py-3.5 flex items-center justify-between border-b border-[#F2F4F6] active:bg-[#F2F4F6] text-left ${isSelected ? "bg-[#EBF3FE]" : ""}`}>
+                    <div className="min-w-0 flex-1 pr-3">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[14px] font-semibold text-[#191F28] truncate">{apt.name}</p>
+                        {isSelected && <span className="shrink-0 text-[10px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">선택됨</span>}
+                      </div>
+                      <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대</p>
+                    </div>
+                    <p className="text-[16px] font-black text-emerald-600 shrink-0">{formatPrice(curr)}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
