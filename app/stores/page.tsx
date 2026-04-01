@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -857,6 +857,7 @@ export default function StoresPage() {
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const touchStartY = useRef(0);
 
   // 위치 권한 요청
   function requestLocation() {
@@ -957,8 +958,8 @@ export default function StoresPage() {
           onBack={() => setSelectedBuildingId(null)}
         />
       ) : viewMode === "지도" ? (
-        /* ─── 지도 모드 ─── */
-        <div className="relative" style={{ height: "calc(100dvh - 234px)" }}>
+        /* ─── 지도 모드: fixed로 여백 없이 꽉 채움 ─── */
+        <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
           <StoreMapView
             buildings={nearbyWithDist}
             selectedId={selectedBuildingId}
@@ -969,20 +970,26 @@ export default function StoresPage() {
           <div
             className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl"
             style={{
-              height: sheetOpen ? 360 : 64,
+              height: sheetOpen ? "70%" : 64,
               boxShadow: "0 -4px 32px rgba(0,0,0,0.18)",
               overflow: "hidden",
               zIndex: 2000,
-              transition: "height 0.3s cubic-bezier(0.4,0,0.2,1)",
+              transition: "height 0.35s cubic-bezier(0.4,0,0.2,1)",
             }}
           >
-            {/* 핸들 + 타이틀 */}
-            <button
-              className="w-full flex flex-col items-center px-4 active:opacity-70"
-              style={{ height: 64, paddingTop: 10 }}
+            {/* 핸들 영역 — 터치 스와이프로 열고 닫기 */}
+            <div
+              className="w-full flex flex-col items-center px-4 select-none"
+              style={{ height: 64, paddingTop: 10, cursor: "grab" }}
+              onTouchStart={e => { touchStartY.current = e.touches[0].clientY; }}
+              onTouchEnd={e => {
+                const delta = e.changedTouches[0].clientY - touchStartY.current;
+                if (delta < -30) setSheetOpen(true);
+                else if (delta > 30) setSheetOpen(false);
+              }}
               onClick={() => setSheetOpen(v => !v)}
             >
-              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" style={{ marginBottom: 10 }} />
+              <div className="w-10 h-1 bg-[#D1D6DB] rounded-full" style={{ marginBottom: 10 }} />
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-2">
                   <Building2 size={16} className="text-[#3182F6]" />
@@ -994,15 +1001,15 @@ export default function StoresPage() {
                   size={18}
                   className="text-[#8B95A1]"
                   style={{
-                    transition: "transform 0.3s",
+                    transition: "transform 0.35s",
                     transform: sheetOpen ? "rotate(0deg)" : "rotate(180deg)",
                   }}
                 />
               </div>
-            </button>
+            </div>
 
             {/* 건물 리스트 */}
-            <div className="overflow-y-auto" style={{ height: 296 }}>
+            <div className="overflow-y-auto" style={{ height: "calc(100% - 64px)" }}>
               <div className="px-4 pt-1 pb-4 space-y-2">
                 {nearbyWithDist.map(nb => (
                   <button key={nb.id}
