@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
-  ChevronRight, ChevronUp, ChevronDown,
+  ChevronRight, ChevronUp, ChevronDown, Play,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -93,139 +93,158 @@ function CommunityTab() {
 }
 
 // ─── News ─────────────────────────────────────────────────────
-const newsTabTypes: NewsType[] = ["뉴스", "유튜브", "인스타"];
-const tabIcon: Record<NewsType, string> = { 뉴스: "📰", 유튜브: "▶️", 인스타: "📷" };
-const cardGradients = [
-  "from-[#1B64DA] to-[#3182F6]",
-  "from-[#065F46] to-[#00C471]",
-  "from-[#7C3AED] to-[#A78BFA]",
-  "from-[#B45309] to-[#F59E0B]",
-  "from-[#BE123C] to-[#F43F5E]",
-  "from-[#0E7490] to-[#22D3EE]",
-];
-
-interface CardItem {
-  id: string; title: string; summary?: string;
-  source: string; publishedAt: string; url: string; type: NewsType;
-}
-
 function NewsTab() {
-  const [active, setActive] = useState<NewsType>("뉴스");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    (async () => {
-      const articles = await fetchGeumdanNews();
-      if (articles.length > 0) {
-        setRealNews(articles);
-        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-      }
-      setLoading(false);
-    })();
-  }, []);
+  const refresh = async () => {
+    setLoading(true);
+    const articles = await fetchGeumdanNews();
+    if (articles.length > 0) {
+      setRealNews(articles);
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    }
+    setLoading(false);
+  };
 
-  const items: CardItem[] = active === "뉴스"
-    ? (realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스")).map(n => ({ ...n }))
-    : newsItems.filter(n => n.type === active).map(n => ({ ...n }));
+  useEffect(() => { refresh(); }, []);
 
-  const featured = items.slice(0, 8);
-  const rest = items.slice(8);
+  const youtubeItems = newsItems.filter(n => n.type === "유튜브");
+  const instaItems   = newsItems.filter(n => n.type === "인스타");
+  const newsSource   = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
   return (
-    <div className="pb-4">
-      {/* Sub-tabs */}
-      <div className="bg-white sticky top-[104px] z-20 border-b border-[#F2F4F6] flex">
-        {newsTabTypes.map(t => (
-          <button key={t} onClick={() => setActive(t)}
-            className={`flex-1 h-11 flex items-center justify-center gap-1.5 text-[15px] font-semibold border-b-2 transition-colors ${active === t ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"}`}>
-            <span>{tabIcon[t]}</span>{t}
+    <div className="pb-6">
+
+      {/* ── 유튜브 ── */}
+      <div className="pt-4">
+        <div className="flex items-center gap-2 px-4 mb-3">
+          <div className="w-6 h-6 bg-[#FF0000] rounded-lg flex items-center justify-center shrink-0">
+            <Play size={11} fill="white" className="text-white ml-0.5" />
+          </div>
+          <span className="text-[15px] font-bold text-[#191F28]">유튜브</span>
+          <span className="text-[12px] text-[#8B95A1]">검단 관련 영상</span>
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {youtubeItems.map(item => (
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+              className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
+              {/* 썸네일 */}
+              <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                  <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                    <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
+                  </div>
+                </div>
+                {item.viewCount && (
+                  <span className="absolute bottom-1.5 right-2 text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">
+                    {(item.viewCount / 1000).toFixed(1)}K
+                  </span>
+                )}
+              </div>
+              <div className="px-3 pt-2.5 pb-3">
+                <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                <p className="text-[11px] text-[#8B95A1] mt-1.5">{formatRelativeTime(item.publishedAt)}</p>
+              </div>
+            </a>
+          ))}
+          <div className="shrink-0 w-2" />
+        </div>
+      </div>
+
+      {/* ── 뉴스 ── */}
+      <div className="pt-5">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-bold text-[#191F28]">📰 뉴스</span>
+            {realNews.length > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
+                <span className="text-[12px] text-[#4E5968]">실시간 {realNews.length}건</span>
+              </div>
+            )}
+          </div>
+          <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
+            <RefreshCw size={13} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
+            {lastUpdated && <span className="text-[11px] text-[#B0B8C1] ml-0.5">{lastUpdated}</span>}
           </button>
-        ))}
+        </div>
+        <div className="px-4 space-y-2.5">
+          {loading ? (
+            [0, 1, 2].map(i => (
+              <div key={i} className="bg-white rounded-2xl h-[76px] animate-pulse" />
+            ))
+          ) : (
+            newsSource.map(item => (
+              <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
+                {item.thumbnail && (
+                  <div className="shrink-0 w-[88px] h-[72px]">
+                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
+                  <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                  <div className="flex items-center gap-1.5 mt-1">
+                    <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
+                    <span className="text-[11px] text-[#B0B8C1]">·</span>
+                    <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                    <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                  </div>
+                </div>
+              </a>
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Status bar */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        {realNews.length > 0 && active === "뉴스"
-          ? <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
-              <span className="text-[13px] text-[#4E5968]">실시간 검단 뉴스 {realNews.length}건</span>
+      {/* ── 인스타그램 ── */}
+      <div className="pt-5">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
+              <span className="text-white text-[11px] font-bold">IG</span>
             </div>
-          : <span className="text-[13px] text-[#8B95A1]">검단 신도시 소식</span>
-        }
-        <button onClick={async () => {
-          setLoading(true);
-          const articles = await fetchGeumdanNews();
-          if (articles.length > 0) { setRealNews(articles); setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })); }
-          setLoading(false);
-        }} className="flex items-center gap-1 active:opacity-60">
-          <RefreshCw size={12} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
-          {lastUpdated && <span className="text-[12px] text-[#B0B8C1]">{lastUpdated}</span>}
-        </button>
+            <span className="text-[15px] font-bold text-[#191F28]">인스타그램</span>
+            <span className="text-[12px] text-[#8B95A1]">검단 피드</span>
+          </div>
+          <a href="https://www.instagram.com/explore/tags/검단신도시/"
+            target="_blank" rel="noopener noreferrer"
+            className="text-[12px] text-[#3182F6] font-medium active:opacity-70">
+            더보기
+          </a>
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {instaItems.map(item => (
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+              className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
+              <div className="w-full" style={{ aspectRatio: "1/1" }}>
+                <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="px-2.5 pt-2 pb-2.5">
+                <p className="text-[11px] font-bold text-[#C13584]">{item.source}</p>
+                <p className="text-[12px] text-[#191F28] leading-snug line-clamp-2 mt-0.5">{item.title}</p>
+                <p className="text-[11px] text-[#B0B8C1] mt-1">{formatRelativeTime(item.publishedAt)}</p>
+              </div>
+            </a>
+          ))}
+          {/* 인스타 API 연동 안내 */}
+          <a href="https://www.instagram.com/explore/tags/검단신도시/"
+            target="_blank" rel="noopener noreferrer"
+            className="shrink-0 w-[120px] rounded-2xl border-2 border-dashed border-[#E5E8EB] flex flex-col items-center justify-center gap-2 py-6 active:opacity-70">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
+              <span className="text-white text-[14px]">📷</span>
+            </div>
+            <p className="text-[11px] text-[#8B95A1] text-center px-2">인스타<br/>더보기</p>
+          </a>
+          <div className="shrink-0 w-2" />
+        </div>
       </div>
 
-      {/* Card scroll */}
-      {loading && active === "뉴스" ? (
-        <div className="flex gap-3 px-4 overflow-hidden">
-          {[0,1].map(i => <div key={i} className="shrink-0 w-[280px] h-[180px] bg-[#E5E8EB] rounded-2xl animate-pulse" />)}
-        </div>
-      ) : (
-        <div ref={scrollRef} className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          {featured.map((item, i) => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className={`shrink-0 w-[280px] bg-gradient-to-br ${cardGradients[i % cardGradients.length]} rounded-2xl p-5 flex flex-col justify-between min-h-[180px] active:opacity-80`}>
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[12px] font-bold bg-white/20 text-white px-2.5 py-1 rounded-full">{tabIcon[item.type]}</span>
-                  <span className="text-[12px] text-white/70">{item.source}</span>
-                </div>
-                <p className="text-[17px] font-bold text-white leading-snug line-clamp-4">{item.title}</p>
-              </div>
-              <div className="flex items-center justify-between mt-4">
-                <span className="text-[13px] text-white/70">{formatRelativeTime(item.publishedAt)}</span>
-                <div className="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center">
-                  <ExternalLink size={13} className="text-white" />
-                </div>
-              </div>
-            </a>
-          ))}
-          <div className="shrink-0 w-4" />
-        </div>
-      )}
-
-      {/* Rest list */}
-      {rest.length > 0 && (
-        <div className="px-4 space-y-2 mt-4">
-          <p className="text-[14px] font-bold text-[#8B95A1] mb-1">더 보기</p>
-          {rest.map(item => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className="bg-white rounded-2xl px-4 py-4 flex items-start gap-3 active:bg-[#F2F4F6] block">
-              <div className="w-[48px] h-[48px] rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">
-                {tabIcon[item.type]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[15px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                {item.summary && <p className="text-[13px] text-[#8B95A1] mt-1 line-clamp-1">{item.summary}</p>}
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[12px] font-medium text-[#3182F6]">{item.source}</span>
-                  <span className="text-[12px] text-[#B0B8C1]">·</span>
-                  <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
-                  <ExternalLink size={10} className="text-[#B0B8C1] ml-auto" />
-                </div>
-              </div>
-            </a>
-          ))}
-        </div>
-      )}
-
-      {!loading && items.length === 0 && (
-        <div className="flex flex-col items-center justify-center pt-20 text-center px-8">
-          <span className="text-5xl mb-4">📭</span>
-          <p className="text-[17px] font-bold text-[#191F28]">뉴스가 없어요</p>
-        </div>
-      )}
     </div>
   );
 }
