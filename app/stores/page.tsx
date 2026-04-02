@@ -750,10 +750,10 @@ function MapBuildingSheet({
       {/* 시트 */}
       <div
         className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[2000]"
-        style={{ maxHeight: "68%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        style={{ maxHeight: "82%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
         {/* 건물 이미지 헤더 */}
-        <div className="relative shrink-0" style={{ height: 110 }}>
+        <div className="relative shrink-0" style={{ height: 160 }}>
           {!imgFailed && nearbyInfo.image ? (
             <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
               className="w-full h-full object-cover" />
