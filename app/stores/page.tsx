@@ -726,11 +726,13 @@ function MapBuildingSheet({
   buildingData,
   onClose,
   onSelectStore,
+  hideBackdrop,
 }: {
   nearbyInfo: typeof NEARBY_BUILDINGS[0];
   buildingData: typeof buildings[0] | null;
   onClose: () => void;
   onSelectStore: (store: EnrichedStore) => void;
+  hideBackdrop?: boolean;
 }) {
   const [floorIdx, setFloorIdx] = useState<number>(-1);
   const [imgFailed, setImgFailed] = useState(false);
@@ -745,8 +747,10 @@ function MapBuildingSheet({
 
   return (
     <>
-      {/* 반투명 배경 — 전체 뷰포트 덮어 헤더/바텀 탭바 터치 차단 */}
-      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
+      {/* 반투명 배경 — 매장 상세가 열려 있으면 숨겨서 이중 딤 방지 */}
+      {!hideBackdrop && (
+        <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
+      )}
       {/* 시트 */}
       <div
         className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
@@ -1153,6 +1157,7 @@ export default function StoresPage() {
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
               onSelectStore={setMapDetailStore}
+              hideBackdrop={!!mapDetailStore}
             />
           )}
         </>
