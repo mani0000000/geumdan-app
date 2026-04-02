@@ -1,9 +1,8 @@
 "use client";
-
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Lock, Phone } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,114 +14,94 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 800));
-    router.push("/home");
+    await new Promise(r => setTimeout(r, 700));
+    router.push("/home/");
   };
 
-  const handleSocial = async (provider: string) => {
+  const handleSocial = async () => {
     setLoading(true);
-    console.log("Social login with", provider);
-    await new Promise((r) => setTimeout(r, 600));
-    router.push("/home");
+    await new Promise(r => setTimeout(r, 500));
+    router.push("/home/");
   };
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
-      {/* Hero */}
-      <div className="gradient-primary flex flex-col items-center justify-center pt-16 pb-12 px-6">
-        <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mb-4">
-          <span className="text-3xl">🏡</span>
+      {/* Brand */}
+      <div className="flex flex-col px-6 pt-16 pb-8">
+        <div className="w-12 h-12 rounded-2xl bg-[#3182F6] flex items-center justify-center mb-6">
+          <span className="text-2xl">🏡</span>
         </div>
-        <h1 className="text-white text-2xl font-bold tracking-tight">검단 라이프</h1>
-        <p className="text-blue-200 text-sm mt-1">검단 신도시 슈퍼앱</p>
+        <h1 className="text-[29px] font-bold text-[#191F28] leading-tight">
+          검단 라이프에<br />오신 걸 환영해요
+        </h1>
+        <p className="text-[16px] text-[#8B95A1] mt-2">검단 신도시 주민을 위한 슈퍼앱</p>
       </div>
 
       {/* Form */}
-      <div className="flex-1 px-6 pt-8 pb-10">
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="relative">
-            <Phone size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="tel"
-              placeholder="휴대폰 번호 (010-0000-0000)"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              className="w-full h-[52px] pl-11 pr-4 rounded-xl border border-gray-200 text-[15px] bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-          <div className="relative">
-            <Lock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type={showPw ? "text" : "password"}
-              placeholder="비밀번호"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full h-[52px] pl-11 pr-11 rounded-xl border border-gray-200 text-[15px] bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPw(!showPw)}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-            >
-              {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-          </div>
-
+      <div className="flex-1 px-6 flex flex-col gap-3">
+        <input
+          type="tel"
+          placeholder="휴대폰 번호"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          className="w-full h-[52px] px-4 rounded-xl bg-[#F2F4F6] text-[16px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
+        />
+        <div className="relative">
+          <input
+            type={showPw ? "text" : "password"}
+            placeholder="비밀번호"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#F2F4F6] text-[16px] text-[#191F28] placeholder:text-[#8B95A1] outline-none focus:ring-2 focus:ring-[#3182F6]"
+          />
           <button
-            type="submit"
-            disabled={loading}
-            className="w-full h-[52px] gradient-primary rounded-xl text-white font-semibold text-[16px] flex items-center justify-center press-effect disabled:opacity-70"
+            type="button"
+            onClick={() => setShowPw(!showPw)}
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-[#8B95A1]"
           >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              "로그인"
-            )}
+            {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
-        </form>
+        </div>
+
+        <button
+          onClick={handleLogin}
+          disabled={loading}
+          className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold mt-1 flex items-center justify-center active:bg-[#1B64DA] transition-colors disabled:opacity-60"
+        >
+          {loading
+            ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            : "로그인"}
+        </button>
 
         {/* Divider */}
-        <div className="flex items-center gap-3 my-6">
-          <div className="flex-1 h-px bg-gray-200" />
-          <span className="text-gray-400 text-sm">또는</span>
-          <div className="flex-1 h-px bg-gray-200" />
+        <div className="flex items-center gap-3 my-1">
+          <div className="flex-1 h-px bg-[#E5E8EB]" />
+          <span className="text-[14px] text-[#8B95A1]">또는</span>
+          <div className="flex-1 h-px bg-[#E5E8EB]" />
         </div>
 
-        {/* Social Login */}
-        <div className="space-y-3">
-          <button
-            onClick={() => handleSocial("kakao")}
-            className="w-full h-[52px] rounded-xl bg-[#FEE500] flex items-center justify-center gap-2.5 press-effect"
-          >
-            <span className="text-[20px]">💬</span>
-            <span className="text-[#3A1D1D] font-semibold text-[15px]">카카오로 시작하기</span>
-          </button>
-          <button
-            onClick={() => handleSocial("naver")}
-            className="w-full h-[52px] rounded-xl bg-[#03C75A] flex items-center justify-center gap-2.5 press-effect"
-          >
-            <span className="text-white font-black text-[18px]">N</span>
-            <span className="text-white font-semibold text-[15px]">네이버로 시작하기</span>
-          </button>
-        </div>
+        {/* Social */}
+        <button
+          onClick={handleSocial}
+          className="w-full h-[52px] rounded-xl bg-[#FEE500] text-[#191F28] text-[16px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
+        >
+          <span className="text-xl">💬</span> 카카오로 시작하기
+        </button>
+        <button
+          onClick={handleSocial}
+          className="w-full h-[52px] rounded-xl bg-[#03C75A] text-white text-[16px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
+        >
+          <span className="font-black text-lg">N</span> 네이버로 시작하기
+        </button>
+      </div>
 
-        {/* Links */}
-        <div className="flex items-center justify-center gap-4 mt-8">
-          <Link href="/signup" className="text-sm text-gray-500 press-effect">
-            회원가입
-          </Link>
-          <div className="w-px h-3 bg-gray-300" />
-          <button className="text-sm text-gray-500 press-effect">아이디 찾기</button>
-          <div className="w-px h-3 bg-gray-300" />
-          <button className="text-sm text-gray-500 press-effect">비밀번호 찾기</button>
-        </div>
-
-        <p className="text-center text-[11px] text-gray-400 mt-8 leading-relaxed">
-          로그인 시 검단 라이프의{" "}
-          <span className="text-blue-500">이용약관</span>과{" "}
-          <span className="text-blue-500">개인정보처리방침</span>에
-          동의하게 됩니다.
-        </p>
+      {/* Bottom Links */}
+      <div className="px-6 py-8 flex items-center justify-center gap-5">
+        <Link href="/signup/" className="text-[15px] text-[#8B95A1]">회원가입</Link>
+        <div className="w-px h-3 bg-[#E5E8EB]" />
+        <Link href="/find-id/" className="text-[15px] text-[#8B95A1]">아이디 찾기</Link>
+        <div className="w-px h-3 bg-[#E5E8EB]" />
+        <Link href="/find-password/" className="text-[15px] text-[#8B95A1]">비밀번호 찾기</Link>
       </div>
     </div>
   );

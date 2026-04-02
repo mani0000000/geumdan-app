@@ -1,50 +1,40 @@
 "use client";
-
-import { Bell, ChevronDown, Search } from "lucide-react";
+import { Bell, ChevronDown, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   title?: string;
   showLocation?: boolean;
-  showSearch?: boolean;
-  showNotification?: boolean;
-  onBack?: () => void;
+  showBack?: boolean;
+  backHref?: string;
 }
 
-export default function Header({
-  title,
-  showLocation = false,
-  showSearch = false,
-  showNotification = true,
-}: HeaderProps) {
+export default function Header({ title, showLocation, showBack, backHref }: HeaderProps) {
+  const router = useRouter();
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-gray-100">
+    <header className="sticky top-0 z-40 bg-white border-b border-[#F2F4F6]">
       <div className="flex items-center justify-between px-4 h-[56px]">
-        {showLocation ? (
-          <button className="flex items-center gap-1 press-effect">
-            <span className="text-[17px] font-bold text-gray-900">검단 신도시</span>
-            <ChevronDown size={18} className="text-gray-500 mt-0.5" />
-          </button>
-        ) : (
-          <h1 className="text-[17px] font-bold text-gray-900">{title}</h1>
-        )}
-
-        <div className="flex items-center gap-2">
-          {showSearch && (
-            <button className="w-9 h-9 flex items-center justify-center press-effect">
-              <Search size={20} className="text-gray-600" />
+        <div className="flex items-center gap-1">
+          {showBack && (
+            <button onClick={() => backHref ? router.push(backHref) : router.back()}
+              className="mr-1 active:opacity-60">
+              <ChevronLeft size={24} className="text-[#191F28]" />
             </button>
           )}
-          {showNotification && (
-            <Link
-              href="/mypage"
-              className="w-9 h-9 flex items-center justify-center press-effect relative"
-            >
-              <Bell size={20} className="text-gray-600" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </Link>
+          {showLocation ? (
+            <button className="flex items-center gap-0.5 active:opacity-60">
+              <span className="text-[19px] font-bold text-[#191F28]">검단 신도시</span>
+              <ChevronDown size={16} className="text-[#8B95A1] mt-0.5" />
+            </button>
+          ) : (
+            <h1 className="text-[19px] font-bold text-[#191F28]">{title}</h1>
           )}
         </div>
+        <Link href="/mypage/" className="relative active:opacity-60">
+          <Bell size={22} className="text-[#191F28]" />
+          <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-[#F04452] rounded-full" />
+        </Link>
       </div>
     </header>
   );
