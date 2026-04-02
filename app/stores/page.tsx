@@ -95,7 +95,7 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
 function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
   const [sent, setSent] = useState(false);
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
         <div className="px-5 pt-4 pb-10">
@@ -146,7 +146,7 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }
@@ -177,7 +177,7 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
   const heroImg = catHeroImage[store.category];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[90dvh] flex flex-col"
         onClick={e => e.stopPropagation()}>
 
@@ -401,7 +401,7 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }
@@ -745,11 +745,11 @@ function MapBuildingSheet({
 
   return (
     <>
-      {/* 반투명 배경 */}
-      <div className="absolute inset-0 bg-black/25 z-[1999]" onClick={onClose} />
+      {/* 반투명 배경 — 전체 뷰포트 덮어 헤더/바텀 탭바 터치 차단 */}
+      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
       {/* 시트 */}
       <div
-        className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[2000]"
+        className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
         style={{ maxHeight: "82%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
         {/* 건물 이미지 헤더 */}
@@ -1122,29 +1122,31 @@ export default function StoresPage() {
         />
       ) : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
-        <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
-          {/* 업종별 필터 바 */}
-          <div className="absolute top-0 left-0 right-0 z-[3000] pt-2 pb-1.5"
-            style={{ background: "linear-gradient(180deg,rgba(255,255,255,.96) 70%,transparent)" }}>
-            <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-              {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
-                <button key={cat} onClick={() => setMapCatFilter(cat)}
-                  className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#3182F6] text-white border-transparent" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
-                  {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
-                </button>
-              ))}
+        <>
+          <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
+            {/* 업종별 필터 바 */}
+            <div className="absolute top-0 left-0 right-0 z-[50] pt-2 pb-1.5"
+              style={{ background: "linear-gradient(180deg,rgba(255,255,255,.96) 70%,transparent)" }}>
+              <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
+                  <button key={cat} onClick={() => setMapCatFilter(cat)}
+                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#3182F6] text-white border-transparent" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
+                    {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* 지도 */}
+            <StoreMapView
+              buildings={nearbyWithDist}
+              selectedId={selectedBuildingId}
+              onSelect={id => setSelectedBuildingId(selectedBuildingId === id ? null : id)}
+              dimmedIds={dimmedIds}
+            />
           </div>
 
-          {/* 지도 */}
-          <StoreMapView
-            buildings={nearbyWithDist}
-            selectedId={selectedBuildingId}
-            onSelect={id => setSelectedBuildingId(selectedBuildingId === id ? null : id)}
-            dimmedIds={dimmedIds}
-          />
-
-          {/* 건물 탭 시 매장 시트 */}
+          {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
           {selectedBuildingId && selectedNearby && (
             <MapBuildingSheet
               nearbyInfo={selectedNearby}
@@ -1153,7 +1155,7 @@ export default function StoresPage() {
               onSelectStore={setMapDetailStore}
             />
           )}
-        </div>
+        </>
       ) : (
         /* ─── 리스트 모드 ─── */
         <StoreListView />

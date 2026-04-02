@@ -44,7 +44,7 @@ function WeeklyModal({ weekly, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
         onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3 pb-1">
@@ -86,7 +86,7 @@ function WeeklyModal({ weekly, onClose }: {
           ))}
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }
@@ -289,7 +289,7 @@ function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0
     ? Math.ceil((new Date(b.validUntil).getTime() - Date.now()) / 86400000)
     : null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
         {/* 헤더 */}
@@ -344,7 +344,7 @@ function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0
           </button>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }

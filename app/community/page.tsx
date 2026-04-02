@@ -423,7 +423,7 @@ function SiseTab() {
 
       {/* 아파트 선택 모달 */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowPicker(false)}>
+        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowPicker(false)}>
           <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[70vh] flex flex-col"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-1">
