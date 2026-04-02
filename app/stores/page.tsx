@@ -29,14 +29,14 @@ const catBg: Record<StoreCategory, string> = {
 
 // 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
 const NEARBY_BUILDINGS = [
-  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true,  categories: ["카페","음식점","병원/약국","미용","기타"] as StoreCategory[] },
-  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false, categories: ["카페","음식점","편의점","마트"] as StoreCategory[] },
-  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false, categories: ["음식점","편의점","기타"] as StoreCategory[] },
-  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false, categories: ["음식점","병원/약국","기타"] as StoreCategory[] },
-  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false, categories: ["음식점","편의점","병원/약국"] as StoreCategory[] },
-  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: false, categories: ["카페","음식점","미용","학원"] as StoreCategory[] },
-  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: false, categories: ["음식점","마트","기타"] as StoreCategory[] },
-  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: false, categories: ["카페","음식점","마트","미용"] as StoreCategory[] },
+  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true,  image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","병원/약국","미용","기타"] as StoreCategory[] },
+  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false, image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","편의점","마트"] as StoreCategory[] },
+  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false, image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","기타"] as StoreCategory[] },
+  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false, image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=280&fit=crop&auto=format", categories: ["음식점","병원/약국","기타"] as StoreCategory[] },
+  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false, image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","병원/약국"] as StoreCategory[] },
+  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: false, image: "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","미용","학원"] as StoreCategory[] },
+  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: false, image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=280&fit=crop&auto=format", categories: ["음식점","마트","기타"] as StoreCategory[] },
+  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: false, image: "https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","마트","미용"] as StoreCategory[] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -489,6 +489,45 @@ function StoreListView() {
 
   return (
     <div>
+      {/* ── 상가 건물 ── */}
+      <div className="pt-4 pb-2">
+        <div className="flex items-center justify-between px-4 mb-2.5">
+          <span className="text-[14px] font-bold text-[#191F28]">주변 상가건물</span>
+          <span className="text-[11px] text-[#8B95A1]">{NEARBY_BUILDINGS.length}개</span>
+        </div>
+        <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          {NEARBY_BUILDINGS.map(b => (
+            <div key={b.id} className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-white shadow-sm">
+              <div className="relative" style={{ height: 90 }}>
+                <img src={b.image} alt={b.name}
+                  className="w-full h-full object-cover"
+                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.6) 100%)" }} />
+                <div className="absolute bottom-2 left-2.5">
+                  <span className="text-[10px] font-bold text-white/90">{b.floors}F · {b.stores}개 매장</span>
+                </div>
+                {b.hasData && (
+                  <div className="absolute top-2 right-2">
+                    <span className="text-[9px] font-black bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">상세정보</span>
+                  </div>
+                )}
+              </div>
+              <div className="px-2.5 py-2">
+                <p className="text-[12px] font-bold text-[#191F28] leading-tight line-clamp-1">{b.name}</p>
+                <div className="flex flex-wrap gap-0.5 mt-1">
+                  {b.categories.slice(0, 3).map(c => (
+                    <span key={c} className="text-[9px] font-semibold px-1 py-0.5 rounded-full"
+                      style={{ background: catDot[c] + "20", color: catDot[c] }}>
+                      {catEmoji[c]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── 신규 오픈 ── */}
       {newStoreOpenings.some(o => o.isNew) && (
         <div className="pt-4 pb-2">
@@ -686,28 +725,23 @@ function MapBuildingSheet({
   nearbyInfo,
   buildingData,
   onClose,
+  onSelectStore,
 }: {
   nearbyInfo: typeof NEARBY_BUILDINGS[0];
   buildingData: typeof buildings[0] | null;
   onClose: () => void;
+  onSelectStore: (store: EnrichedStore) => void;
 }) {
-  // -1 = 전체
   const [floorIdx, setFloorIdx] = useState<number>(-1);
-  const [detailStore, setDetailStore] = useState<EnrichedStore | null>(null);
+  const [imgFailed, setImgFailed] = useState(false);
 
-  // 전체 매장 (전체 탭용)
   const allStores: { store: Store; floorLabel: string }[] = buildingData
     ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
     : [];
 
-  // 현재 탭에서 보여줄 매장
   const visibleStores: { store: Store; floorLabel: string }[] = floorIdx === -1
     ? allStores
     : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
-
-  function openDetail(store: Store, floorLabel: string) {
-    setDetailStore({ ...store, floorLabel, buildingName: nearbyInfo.name });
-  }
 
   return (
     <>
@@ -715,48 +749,61 @@ function MapBuildingSheet({
       <div className="absolute inset-0 bg-black/25 z-[1999]" onClick={onClose} />
       {/* 시트 */}
       <div
-        className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[2000] flex flex-col"
-        style={{ maxHeight: "65%", boxShadow: "0 -4px 32px rgba(0,0,0,.2)", overflow: "hidden" }}
+        className="absolute left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[2000]"
+        style={{ maxHeight: "68%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
-        {/* 핸들 */}
-        <div className="flex justify-center pt-3 pb-0">
-          <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
-        </div>
-        {/* 헤더 */}
-        <div className="flex items-start justify-between px-4 pt-3 pb-2">
-          <div>
-            <h3 className="text-[17px] font-bold text-[#191F28]">{nearbyInfo.name}</h3>
-            <p className="text-[12px] text-[#8B95A1] mt-0.5">{nearbyInfo.address} · {nearbyInfo.floors}층</p>
+        {/* 건물 이미지 헤더 */}
+        <div className="relative shrink-0" style={{ height: 110 }}>
+          {!imgFailed && nearbyInfo.image ? (
+            <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
+              className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center">
+              <Building2 size={36} className="text-white/70" />
+            </div>
+          )}
+          {/* 그라디언트 오버레이 */}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 100%)" }} />
+          {/* 핸들 */}
+          <div className="absolute top-2 left-1/2 -translate-x-1/2">
+            <div className="w-10 h-1 rounded-full bg-white/50" />
           </div>
-          <button onClick={onClose} className="active:opacity-60 mt-0.5">
-            <X size={22} className="text-[#8B95A1]" />
+          {/* 닫기 */}
+          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+            <X size={14} className="text-white" />
           </button>
+          {/* 건물명 */}
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
+            <p className="text-[17px] font-bold text-white leading-tight drop-shadow">{nearbyInfo.name}</p>
+            <p className="text-[11px] text-white/75 mt-0.5">{nearbyInfo.address} · {nearbyInfo.floors}층 · {nearbyInfo.stores}개 매장</p>
+          </div>
         </div>
 
         {buildingData ? (
           <>
-            {/* 층 탭 — 전체 포함 */}
-            <div className="flex gap-2 px-4 pb-2 border-b border-[#F2F4F6] overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            {/* 층 탭 */}
+            <div className="flex gap-2 px-4 py-2 border-b border-[#F2F4F6] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
               <button onClick={() => setFloorIdx(-1)}
-                className={`shrink-0 px-3.5 h-9 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
                 전체
               </button>
               {buildingData.floors.map((f, i) => (
                 <button key={f.label} onClick={() => setFloorIdx(i)}
-                  className={`shrink-0 px-3.5 h-9 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
                   {f.label}
                 </button>
               ))}
             </div>
-            {/* 매장 리스트 */}
-            <div className="overflow-y-auto flex-1">
+            {/* 매장 리스트 — 스크롤 가능 */}
+            <div style={{ overflowY: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
               {visibleStores.length === 0 ? (
                 <div className="flex items-center justify-center py-10 text-[13px] text-[#B0B8C1]">입점 매장 없음</div>
               ) : (
                 visibleStores.map(({ store: s, floorLabel }) => (
-                  <button key={s.id} onClick={() => openDetail(s, floorLabel)}
+                  <button key={s.id}
+                    onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
                     className="w-full px-4 py-3 flex items-center gap-3 active:bg-[#F2F4F6] border-b border-[#F2F4F6] text-left">
-                    <StoreLogo name={s.name} category={s.category} size={40} />
+                    <StoreLogo name={s.name} category={s.category} size={42} />
                     <div className="flex-1 min-w-0">
                       <p className="text-[14px] font-semibold text-[#191F28]">{s.name}</p>
                       <p className="text-[12px] text-[#8B95A1] mt-0.5">
@@ -765,9 +812,12 @@ function MapBuildingSheet({
                         {s.hours ? ` · ${s.hours}` : ""}
                       </p>
                     </div>
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0 ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                      {s.isOpen !== false ? "영업 중" : "영업 종료"}
-                    </span>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+                        {s.isOpen !== false ? "영업 중" : "영업 종료"}
+                      </span>
+                      <ChevronRight size={13} className="text-[#B0B8C1]" />
+                    </div>
                   </button>
                 ))
               )}
@@ -784,11 +834,6 @@ function MapBuildingSheet({
           </div>
         )}
       </div>
-
-      {/* 매장 상세 시트 */}
-      {detailStore && (
-        <StoreListDetailSheet store={detailStore} onClose={() => setDetailStore(null)} />
-      )}
     </>
   );
 }
@@ -969,6 +1014,7 @@ export default function StoresPage() {
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
+  const [mapDetailStore, setMapDetailStore] = useState<EnrichedStore | null>(null);
 
   // 위치 권한 요청
   function requestLocation() {
@@ -1104,12 +1150,18 @@ export default function StoresPage() {
               nearbyInfo={selectedNearby}
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
+              onSelectStore={setMapDetailStore}
             />
           )}
         </div>
       ) : (
         /* ─── 리스트 모드 ─── */
         <StoreListView />
+      )}
+
+      {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}
+      {mapDetailStore && (
+        <StoreListDetailSheet store={mapDetailStore} onClose={() => setMapDetailStore(null)} />
       )}
 
       {selected && selected.name !== "공실" && (
