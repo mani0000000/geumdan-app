@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar,
-  TrendingDown, Phone, Clock, PillBottle, Store,
+  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -691,8 +691,80 @@ function MartSection() {
 
 // ─── 약국 위젯 ────────────────────────────────────────────────
 type PharmacyFilter = "전체" | "주말" | "심야";
+type EmergencyType = "약국" | "응급실" | "소아응급실";
+
+interface EmergencyRoom {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  distance: string;
+  isOpen: boolean;
+  hours: string;
+  isPediatric: boolean;
+  level: string; // 응급의료기관 분류
+}
+
+const emergencyRooms: EmergencyRoom[] = [
+  {
+    id: "er1",
+    name: "검단탑병원",
+    address: "인천 서구 검단로 345",
+    phone: "032-561-1119",
+    distance: "1.4km",
+    isOpen: true,
+    hours: "24시간 응급실 운영",
+    isPediatric: false,
+    level: "지역응급의료기관",
+  },
+  {
+    id: "er2",
+    name: "인천성모병원",
+    address: "인천 부평구 동수로 56",
+    phone: "032-280-5114",
+    distance: "6.2km",
+    isOpen: true,
+    hours: "24시간 응급실 운영",
+    isPediatric: true,
+    level: "권역응급의료센터",
+  },
+  {
+    id: "er3",
+    name: "나사렛국제병원",
+    address: "인천 부평구 부평대로 56",
+    phone: "032-570-2114",
+    distance: "7.1km",
+    isOpen: true,
+    hours: "24시간 응급실 운영",
+    isPediatric: true,
+    level: "지역응급의료센터",
+  },
+  {
+    id: "er4",
+    name: "가천대 길병원",
+    address: "인천 남동구 남동대로 774",
+    phone: "032-460-3114",
+    distance: "11.3km",
+    isOpen: true,
+    hours: "24시간 응급실 운영",
+    isPediatric: true,
+    level: "권역응급의료센터",
+  },
+  {
+    id: "er5",
+    name: "인하대병원",
+    address: "인천 중구 인항로 27",
+    phone: "032-890-2114",
+    distance: "13.8km",
+    isOpen: true,
+    hours: "24시간 응급실 운영",
+    isPediatric: true,
+    level: "권역응급의료센터",
+  },
+];
 
 function PharmacySection() {
+  const [mainType, setMainType] = useState<EmergencyType>("약국");
   const [filter, setFilter] = useState<PharmacyFilter>("전체");
   const [showAll, setShowAll] = useState(false);
 
@@ -711,11 +783,15 @@ function PharmacySection() {
 
   const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
 
+  const erList = emergencyRooms.filter(e =>
+    mainType === "소아응급실" ? e.isPediatric : true
+  );
+
   return (
     <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
         {/* 상태 배너 */}
-        {(isWeekend || isNight) && (
+        {(isWeekend || isNight) && mainType === "약국" && (
           <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#EBF3FE]"}`}>
             <Clock size={13} className={isNight ? "text-blue-300" : "text-[#3182F6]"} />
             <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#3182F6]"}`}>
@@ -723,73 +799,123 @@ function PharmacySection() {
             </span>
           </div>
         )}
+        {(mainType === "응급실" || mainType === "소아응급실") && (
+          <div className="px-4 py-2.5 flex items-center gap-2 bg-[#FEF2F2]">
+            <AlertTriangle size={13} className="text-[#F04452]" />
+            <span className="text-[12px] font-semibold text-[#F04452]">
+              응급 시 119에 먼저 연락하세요 — 가까운 응급실 안내
+            </span>
+          </div>
+        )}
 
-        {/* 필터 */}
-        <div className="flex gap-2 px-4 pt-3 pb-2">
-          {filterBtns.map(f => (
-            <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
-              className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
-              {f === "심야" ? "🌙 심야" : f === "주말" ? "📅 주말" : "전체"}
+        {/* 메인 타입 탭 */}
+        <div className="flex border-b border-[#F2F4F6]">
+          {(["약국", "응급실", "소아응급실"] as EmergencyType[]).map(t => (
+            <button key={t} onClick={() => { setMainType(t); setShowAll(false); }}
+              className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${mainType === t
+                ? t === "약국" ? "text-[#3182F6] border-[#3182F6]"
+                  : t === "응급실" ? "text-[#F04452] border-[#F04452]"
+                  : "text-[#F97316] border-[#F97316]"
+                : "text-[#B0B8C1] border-transparent"}`}>
+              {t === "약국" ? "💊 약국" : t === "응급실" ? "🚨 응급실" : "👶 소아응급실"}
             </button>
           ))}
         </div>
 
-        {/* 약국 목록 */}
-        <div className="divide-y divide-[#F2F4F6]">
-          {displayed.map(p => (
-            <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
-              {/* 아이콘 */}
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#F2F4F6]"}`}>
-                <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#8B95A1]"} />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[14px] font-bold text-[#191F28]">{p.name}</span>
-                  <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
-                    {p.isOpenNow ? "영업 중" : "영업 종료"}
-                  </span>
-                  {p.tags.includes("24시") && (
-                    <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
-                  )}
-                </div>
-                <p className="text-[12px] text-[#8B95A1] mt-0.5">{p.address}</p>
-                <div className="flex flex-col gap-0.5 mt-1.5">
-                  {p.weekendHours && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-[#3182F6] w-6 shrink-0">주말</span>
-                      <span className="text-[12px] text-[#4E5968]">{p.weekendHours}</span>
-                    </div>
-                  )}
-                  {p.nightHours && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
-                      <span className="text-[12px] text-[#4E5968]">{p.nightHours}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-col items-end gap-1.5 shrink-0">
-                {p.distance && (
-                  <span className="text-[12px] text-[#8B95A1]">{p.distance}</span>
-                )}
-                <a href={`tel:${p.phone}`}
-                  className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
-                  <Phone size={14} className="text-[#3182F6]" />
-                </a>
-              </div>
+        {mainType === "약국" ? (
+          <>
+            {/* 약국 서브필터 */}
+            <div className="flex gap-2 px-4 pt-3 pb-2">
+              {filterBtns.map(f => (
+                <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
+                  className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  {f === "심야" ? "🌙 심야" : f === "주말" ? "📅 주말" : "전체"}
+                </button>
+              ))}
             </div>
-          ))}
-        </div>
-
-        {/* 더보기 / 접기 */}
-        {filtered.length > 3 && (
-          <button onClick={() => setShowAll(v => !v)}
-            className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#F2F4F6] active:bg-[#F2F4F6]">
-            <span className="text-[13px] font-semibold text-[#4E5968]">{showAll ? "접기" : `${filtered.length - 3}개 더 보기`}</span>
-            {showAll ? <ChevronUp size={14} className="text-[#8B95A1]" /> : <ChevronDown size={14} className="text-[#8B95A1]" />}
-          </button>
+            {/* 약국 목록 */}
+            <div className="divide-y divide-[#F2F4F6]">
+              {displayed.map(p => (
+                <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#F2F4F6]"}`}>
+                    <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#8B95A1]"} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-[14px] font-bold text-[#191F28]">{p.name}</span>
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
+                        {p.isOpenNow ? "영업 중" : "영업 종료"}
+                      </span>
+                      {p.tags.includes("24시") && (
+                        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
+                      )}
+                    </div>
+                    <p className="text-[12px] text-[#8B95A1] mt-0.5">{p.address}</p>
+                    <div className="flex flex-col gap-0.5 mt-1.5">
+                      {p.weekendHours && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-[#3182F6] w-6 shrink-0">주말</span>
+                          <span className="text-[12px] text-[#4E5968]">{p.weekendHours}</span>
+                        </div>
+                      )}
+                      {p.nightHours && (
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
+                          <span className="text-[12px] text-[#4E5968]">{p.nightHours}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    {p.distance && <span className="text-[12px] text-[#8B95A1]">{p.distance}</span>}
+                    <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
+                      <Phone size={14} className="text-[#3182F6]" />
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {filtered.length > 3 && (
+              <button onClick={() => setShowAll(v => !v)}
+                className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#F2F4F6] active:bg-[#F2F4F6]">
+                <span className="text-[13px] font-semibold text-[#4E5968]">{showAll ? "접기" : `${filtered.length - 3}개 더 보기`}</span>
+                {showAll ? <ChevronUp size={14} className="text-[#8B95A1]" /> : <ChevronDown size={14} className="text-[#8B95A1]" />}
+              </button>
+            )}
+          </>
+        ) : (
+          /* 응급실 / 소아응급실 목록 */
+          <div className="divide-y divide-[#F2F4F6]">
+            {erList.map(er => (
+              <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#FEE2E2]">
+                  {mainType === "소아응급실"
+                    ? <span className="text-[18px]">👶</span>
+                    : <AlertTriangle size={18} className="text-[#F04452]" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[14px] font-bold text-[#191F28]">{er.name}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">{er.level}</span>
+                    {er.isPediatric && mainType === "응급실" && (
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과</span>
+                    )}
+                  </div>
+                  <p className="text-[12px] text-[#8B95A1] mt-0.5">{er.address}</p>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <Clock size={11} className="text-[#8B95A1]" />
+                    <span className="text-[12px] text-[#4E5968]">{er.hours}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="text-[12px] text-[#8B95A1]">{er.distance}</span>
+                  <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
+                    <Phone size={14} className="text-[#F04452]" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </section>
