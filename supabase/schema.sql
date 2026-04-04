@@ -1,0 +1,137 @@
+-- Enable extensions
+create extension if not exists "uuid-ossp";
+
+-- Apartments (아파트 단지 정보 + 실거래가)
+create table if not exists apartments (
+  id text primary key,
+  name text not null,
+  dong text,
+  households integer,
+  built_year integer,
+  lat float,
+  lng float,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create table if not exists apartment_sizes (
+  id uuid default uuid_generate_v4() primary key,
+  apt_id text references apartments(id),
+  pyeong integer,
+  sqm float,
+  avg_price integer -- 만원
+);
+
+create table if not exists apartment_price_history (
+  id uuid default uuid_generate_v4() primary key,
+  apt_id text references apartments(id),
+  pyeong integer,
+  price integer, -- 만원
+  deal_date text, -- "2026-03"
+  floor integer,
+  created_at timestamptz default now()
+);
+
+-- Pharmacies (약국)
+create table if not exists pharmacies (
+  id text primary key,
+  name text not null,
+  address text,
+  phone text,
+  lat float,
+  lng float,
+  is_night_pharmacy boolean default false,
+  weekday_hours text,
+  weekend_hours text,
+  holiday_hours text,
+  dong text,
+  updated_at timestamptz default now()
+);
+
+-- Emergency rooms (응급실/소아응급실)
+create table if not exists emergency_rooms (
+  id text primary key,
+  name text not null,
+  address text,
+  phone text,
+  level text, -- '권역응급의료센터', '지역응급의료기관' etc
+  is_pediatric boolean default false,
+  lat float,
+  lng float,
+  distance_km float,
+  er_available integer, -- 응급실 가용 병상
+  updated_at timestamptz default now()
+);
+
+-- News articles (뉴스)
+create table if not exists news_articles (
+  id uuid default uuid_generate_v4() primary key,
+  title text not null,
+  url text unique,
+  source text,
+  summary text,
+  thumbnail text,
+  published_at timestamptz,
+  news_type text, -- 'local', 'real_estate', 'general'
+  tags text[],
+  created_at timestamptz default now()
+);
+
+-- Buildings & stores (상가)
+create table if not exists buildings (
+  id text primary key,
+  name text not null,
+  address text,
+  lat float,
+  lng float,
+  floors integer,
+  total_stores integer,
+  image_url text,
+  categories text[],
+  has_data boolean default false,
+  updated_at timestamptz default now()
+);
+
+create table if not exists stores (
+  id text primary key,
+  building_id text references buildings(id),
+  name text not null,
+  category text,
+  floor_label text,
+  phone text,
+  hours text,
+  is_open boolean,
+  x float, y float, w float, h float, -- floor map position
+  is_premium boolean default false,
+  updated_at timestamptz default now()
+);
+
+-- Bus stops (교통)
+create table if not exists bus_stops (
+  id text primary key,
+  name text not null,
+  lat float,
+  lng float,
+  routes jsonb -- [{routeNo, destination, nextArrival}]
+);
+
+-- RLS: allow anonymous read
+alter table apartments enable row level security;
+alter table apartment_sizes enable row level security;
+alter table apartment_price_history enable row level security;
+alter table pharmacies enable row level security;
+alter table emergency_rooms enable row level security;
+alter table news_articles enable row level security;
+alter table buildings enable row level security;
+alter table stores enable row level security;
+alter table bus_stops enable row level security;
+
+create policy "Allow anon read" on apartments for select using (true);
+create policy "Allow anon read" on apartment_sizes for select using (true);
+create policy "Allow anon read" on apartment_price_history for select using (true);
+create policy "Allow anon read" on pharmacies for select using (true);
+create policy "Allow anon read" on emergency_rooms for select using (true);
+create policy "Allow anon read" on news_articles for select using (true);
+create policy "Allow anon read" on buildings for select using (true);
+create policy "Allow anon read" on stores for select using (true);
+create policy "Allow anon read" on bus_stops for select using (true);
