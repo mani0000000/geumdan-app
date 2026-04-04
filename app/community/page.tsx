@@ -327,7 +327,8 @@ function SiseTab() {
   const [pyeongFilter, setPyeongFilter] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("recent");
   const [showSort, setShowSort] = useState(false);
-  const [showAvgChart, setShowAvgChart] = useState(false);
+  const [myChartOpen, setMyChartOpen] = useState(false);
+  const [avgChartOpen, setAvgChartOpen] = useState(false);
 
   // 내 집 시세
   const [myAptId, setMyAptId] = useState<string | null>(() =>
@@ -392,9 +393,10 @@ function SiseTab() {
     <div className="pb-4">
       {/* ── 최상단: 내 집 시세 + 평균 실거래가 ── */}
       <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden shadow-sm">
-        {/* 내 집 시세 */}
-        <div className="bg-white px-4 pt-3.5 pb-3 border border-[#E5E8EB] rounded-t-2xl border-b-0">
-          <div className="flex items-center justify-between mb-2">
+        {/* 내 집 시세 — 탭하면 차트 펼침 */}
+        <div className="bg-white border border-[#E5E8EB] rounded-t-2xl border-b-0 overflow-hidden">
+          {/* 헤더 행 — 항상 노출 */}
+          <div className="flex items-center justify-between px-4 pt-3.5 pb-3">
             <div className="flex items-center gap-1.5">
               <span className="text-[13px]">🏠</span>
               <span className="text-[13px] font-bold text-[#191F28]">내 집 시세</span>
@@ -404,40 +406,66 @@ function SiseTab() {
               {myApt ? "변경" : "+ 등록"}
             </button>
           </div>
+
           {myApt ? (
-            <div>
+            /* 탭 가능한 요약 + 펼침 */
+            <button className="w-full px-4 pb-3 text-left active:bg-[#F8FAFB]"
+              onClick={() => setMyChartOpen(v => !v)}>
+              {/* 요약 지표 */}
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1 pr-2">
                   <p className="text-[15px] font-bold text-[#191F28] truncate">{myApt.name}</p>
                   <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {myApt.recentDeal?.pyeong}평</p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[18px] font-black text-[#191F28]">{formatPrice(myCurr)}</p>
-                  <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                    {myDiff === 0 ? <span className="text-[12px] text-[#8B95A1]">보합</span>
-                      : myDiff > 0
-                        ? <><TrendingUp size={11} className="text-[#F04452]" /><span className="text-[12px] font-semibold text-[#F04452]">+{myPct}%</span></>
-                        : <><TrendingDown size={11} className="text-[#3182F6]" /><span className="text-[12px] font-semibold text-[#3182F6]">-{myPct}%</span></>}
+                <div className="text-right shrink-0 flex items-center gap-2">
+                  <div>
+                    <p className="text-[18px] font-black text-[#191F28]">{formatPrice(myCurr)}</p>
+                    <div className="flex items-center justify-end gap-0.5 mt-0.5">
+                      {myDiff === 0 ? <span className="text-[12px] text-[#8B95A1]">보합</span>
+                        : myDiff > 0
+                          ? <><TrendingUp size={11} className="text-[#F04452]" /><span className="text-[12px] font-semibold text-[#F04452]">+{myPct}%</span></>
+                          : <><TrendingDown size={11} className="text-[#3182F6]" /><span className="text-[12px] font-semibold text-[#3182F6]">-{myPct}%</span></>}
+                    </div>
                   </div>
+                  {myChartOpen ? <ChevronUp size={15} className="text-[#B0B8C1] shrink-0" /> : <ChevronDown size={15} className="text-[#B0B8C1] shrink-0" />}
                 </div>
               </div>
-              {/* 내 집 미니 차트 */}
-              <div className="mt-2">
-                <LineChart data={myH} color="#3182F6" height={52} />
-              </div>
-            </div>
+
+              {/* 접힌 상태: 미니 지표 요약 */}
+              {!myChartOpen && (
+                <div className="flex gap-2 mt-2.5">
+                  {myH.slice(-3).map((p, i) => (
+                    <div key={i} className="flex-1 bg-[#F2F4F6] rounded-xl px-2.5 py-1.5 text-center">
+                      <p className="text-[10px] text-[#8B95A1]">{p.date.slice(2).replace("-",".")}</p>
+                      <p className="text-[12px] font-bold text-[#191F28]">{(p.price/10000).toFixed(1)}억</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 펼쳐진 상태: 라인 차트 */}
+              {myChartOpen && (
+                <div className="mt-2">
+                  <LineChart data={myH} color="#3182F6" height={80} showLabels showDots />
+                </div>
+              )}
+            </button>
           ) : (
-            <button onClick={() => setShowPicker(true)}
-              className="w-full border-2 border-dashed border-[#E5E8EB] rounded-xl py-3 flex items-center justify-center gap-2 active:bg-[#F2F4F6]">
-              <span className="text-[13px] text-[#8B95A1]">내 아파트를 등록하면 시세를 바로 확인해요</span>
+            <button onClick={() => setShowPicker(true)} className="w-full px-4 pb-3">
+              <div className="border-2 border-dashed border-[#E5E8EB] rounded-xl py-3 flex items-center justify-center active:bg-[#F2F4F6]">
+                <span className="text-[13px] text-[#8B95A1]">내 아파트를 등록하면 시세를 바로 확인해요</span>
+              </div>
             </button>
           )}
         </div>
 
-        {/* 평균 실거래가 배너 — 탭하면 추세 그래프 */}
+        {/* 평균 실거래가 배너 — 탭하면 차트 인라인 펼침 */}
         <button className="w-full bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3 pb-3 text-left active:opacity-90"
-          onClick={() => setShowAvgChart(true)}>
-          <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
+          onClick={() => setAvgChartOpen(v => !v)}>
+          <div className="flex items-center justify-between">
+            <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
+            {avgChartOpen ? <ChevronUp size={14} className="text-emerald-300" /> : <ChevronDown size={14} className="text-emerald-300" />}
+          </div>
           <div className="flex items-end justify-between mt-0.5">
             <p className="text-white text-[24px] font-black">{formatPrice(avgPrice)}</p>
             <div className="flex items-center gap-1 pb-0.5">
@@ -445,11 +473,42 @@ function SiseTab() {
               <span className="text-emerald-200 text-[12px]">전월 대비 +{avgPct}%</span>
             </div>
           </div>
-          {/* 미니 추세 라인 */}
-          <div className="mt-1 opacity-70">
-            <LineChart data={avgTrend} color="#6EE7B7" height={36} showDots={false} />
-          </div>
-          <p className="text-emerald-300 text-[11px] mt-1 text-right">추세 그래프 보기 ›</p>
+
+          {/* 접힌 상태: 3개월 요약 지표 */}
+          {!avgChartOpen && (
+            <div className="flex gap-2 mt-2">
+              {avgTrend.slice(-3).map((p, i) => (
+                <div key={i} className="flex-1 bg-emerald-700/50 rounded-xl px-2.5 py-1.5 text-center">
+                  <p className="text-[10px] text-emerald-200">{p.date.slice(2).replace("-",".")}</p>
+                  <p className="text-[12px] font-bold text-white">{(p.price/10000).toFixed(1)}억</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 펼쳐진 상태: 라인 차트 + 월별 리스트 */}
+          {avgChartOpen && (
+            <div>
+              <div className="mt-2 bg-emerald-700/30 rounded-xl p-2">
+                <LineChart data={avgTrend} color="#6EE7B7" height={90} showLabels showDots />
+              </div>
+              <div className="mt-2 space-y-0">
+                {avgTrend.slice(-5).reverse().map((p, i, arr) => {
+                  const prevP = arr[i + 1]?.price;
+                  const chg = prevP ? p.price - prevP : 0;
+                  return (
+                    <div key={i} className="flex items-center justify-between py-1.5 border-b border-emerald-500/30 last:border-0">
+                      <span className="text-[11px] text-emerald-200">{p.date.replace("-","년 ")}월</span>
+                      <div className="flex items-center gap-2">
+                        {chg !== 0 && <span className={`text-[10px] font-bold ${chg > 0 ? "text-red-300" : "text-blue-300"}`}>{chg > 0 ? "▲" : "▼"}{Math.abs(chg).toLocaleString()}</span>}
+                        <span className="text-[12px] font-bold text-white">{formatPrice(p.price)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </button>
       </div>
 
@@ -597,64 +656,6 @@ function SiseTab() {
         </div>
         <ChevronRight size={18} className="text-[#B0B8C1]" />
       </button>
-
-      {/* ── 평균 실거래가 추세 그래프 바텀 시트 ── */}
-      {showAvgChart && (
-        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowAvgChart(false)}>
-          <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[75vh] flex flex-col"
-            onClick={e => e.stopPropagation()}>
-            <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
-            <div className="flex items-center justify-between px-5 pt-3 pb-3 border-b border-[#F2F4F6]">
-              <div>
-                <h3 className="text-[17px] font-bold text-[#191F28]">검단 신도시 평균 실거래가</h3>
-                <p className="text-[12px] text-[#8B95A1] mt-0.5">2024.01 ~ 2026.03 추이</p>
-              </div>
-              <button onClick={() => setShowAvgChart(false)} className="active:opacity-60">
-                <X size={20} className="text-[#8B95A1]" />
-              </button>
-            </div>
-            <div className="overflow-y-auto flex-1 px-5 py-4">
-              {/* 현재 평균 요약 */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl px-4 py-3.5 mb-4">
-                <p className="text-[12px] text-emerald-700 font-medium">현재 평균</p>
-                <div className="flex items-end justify-between mt-1">
-                  <p className="text-[26px] font-black text-emerald-700">{formatPrice(avgPrice)}</p>
-                  <div className="flex items-center gap-1 pb-1">
-                    <TrendingUp size={13} className="text-emerald-500" />
-                    <span className="text-[12px] font-semibold text-emerald-600">전월 대비 +{avgPct}%</span>
-                  </div>
-                </div>
-              </div>
-              {/* 큰 추세 차트 */}
-              <div className="bg-[#F8FAFB] rounded-2xl p-3 mb-4">
-                <LineChart data={avgTrend} color="#10B981" height={120} showLabels showDots />
-              </div>
-              {/* 월별 평균 거래가 리스트 */}
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">월별 평균 실거래가</p>
-              <div className="bg-white rounded-2xl overflow-hidden border border-[#F2F4F6]">
-                {avgTrend.slice().reverse().map((p, i, arr) => {
-                  const prevP = arr[i + 1]?.price;
-                  const chg = prevP ? p.price - prevP : 0;
-                  return (
-                    <div key={i} className="flex items-center justify-between px-4 py-3 border-b border-[#F2F4F6] last:border-0">
-                      <span className="text-[13px] text-[#4E5968]">{p.date.replace("-", "년 ")}월</span>
-                      <div className="flex items-center gap-2.5">
-                        {chg !== 0 && (
-                          <span className={`text-[11px] font-bold ${chg > 0 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
-                            {chg > 0 ? "▲" : "▼"} {Math.abs(chg).toLocaleString()}만
-                          </span>
-                        )}
-                        <span className="text-[14px] font-bold text-[#191F28]">{formatPrice(p.price)}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-black/40 z-0" />
-        </div>
-      )}
 
       {/* ── 정렬 선택 바텀 시트 ── */}
       {showSort && (
