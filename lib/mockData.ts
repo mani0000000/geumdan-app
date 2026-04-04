@@ -1167,6 +1167,262 @@ export const buildings: Building[] = [
       },
     ],
   },
+
+  // ─── nb2: 당하 스퀘어몰 ──────────────────────────────────────
+  {
+    id: "nb2",
+    name: "당하 스퀘어몰",
+    address: "인천 서구 당하동 456",
+    parkingInfo: "지상 주차 가능",
+    openTime: "매일 10:00 ~ 22:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: true, restroomCode: "1111",
+        stores: [
+          { id: "nb2_1f_1", name: "GS25",       category: "편의점", hours: "24시간",      x: 5,  y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb2_1f_2", name: "카페베네",    category: "카페",   hours: "08:00~22:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb2_1f_3", name: "크린토피아",  category: "기타",   hours: "09:00~21:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb2_1f_4", name: "당하 부동산", category: "기타",   hours: "09:00~18:00", x: 52, y: 54, w: 43, h: 41, isOpen: true, phone: "032-611-1234" },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: false,
+        stores: [
+          { id: "nb2_2f_1", name: "돼지갈비 명가", category: "음식점", hours: "11:00~22:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true, phone: "032-611-2222" },
+          { id: "nb2_2f_2", name: "닭갈비 순수",   category: "음식점", hours: "11:30~21:30", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb2_2f_3", name: "분식나라",       category: "음식점", hours: "10:00~20:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb2_2f_4", name: "공실",           category: "기타",   x: 52, y: 54, w: 43, h: 41, isOpen: false },
+        ],
+      },
+      {
+        level: 2, label: "3F", hasRestroom: false,
+        stores: [
+          { id: "nb2_3f_1", name: "필라테스 스튜디오", category: "기타", hours: "07:00~22:00", x: 5,  y: 5, w: 55, h: 90, isOpen: true },
+          { id: "nb2_3f_2", name: "독서실 공감",        category: "기타", hours: "06:00~24:00", x: 65, y: 5, w: 30, h: 90, isOpen: true },
+        ],
+      },
+      {
+        level: 3, label: "4F", hasRestroom: true, restroomCode: "2222",
+        stores: [
+          { id: "nb2_4f_1", name: "피아노학원", category: "학원", hours: "13:00~21:00", x: 5,  y: 5, w: 43, h: 90, isOpen: true },
+          { id: "nb2_4f_2", name: "태권도장",   category: "기타", hours: "15:00~20:00", x: 52, y: 5, w: 43, h: 90, isOpen: true, phone: "032-611-4444" },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb3: 검단 플리마켓 타운 ─────────────────────────────────
+  {
+    id: "nb3",
+    name: "검단 플리마켓 타운",
+    address: "인천 서구 불로동 789",
+    parkingInfo: "건물 앞 공영주차장",
+    openTime: "매일 08:00 ~ 22:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: true, restroomCode: "0000",
+        stores: [
+          { id: "nb3_1f_01", name: "반찬가게 푸짐",  category: "음식점", hours: "08:00~19:00", x: 5,  y: 5,  w: 28, h: 42, isOpen: true },
+          { id: "nb3_1f_02", name: "CU 편의점",       category: "편의점", hours: "24시간",      x: 37, y: 5,  w: 28, h: 42, isOpen: true },
+          { id: "nb3_1f_03", name: "국밥 한마당",      category: "음식점", hours: "07:00~21:00", x: 69, y: 5,  w: 26, h: 42, isOpen: true },
+          { id: "nb3_1f_04", name: "분식 터미널",      category: "음식점", hours: "09:00~20:00", x: 5,  y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_1f_05", name: "치킨 더 본",       category: "음식점", hours: "11:00~23:00", x: 37, y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_1f_06", name: "중화요리 금룡",    category: "음식점", hours: "11:00~21:00", x: 69, y: 54, w: 26, h: 41, isOpen: true, phone: "032-622-1234" },
+          { id: "nb3_1f_07", name: "스시 오마카세",    category: "음식점", hours: "11:30~22:00", x: 5,  y: 5,  w: 28, h: 42, isOpen: true, isPremium: true },
+          { id: "nb3_1f_08", name: "족발 보쌈 한가득", category: "음식점", hours: "12:00~22:00", x: 37, y: 5,  w: 28, h: 42, isOpen: true },
+          { id: "nb3_1f_09", name: "갈비탕 정식",      category: "음식점", hours: "10:00~21:00", x: 69, y: 5,  w: 26, h: 42, isOpen: true },
+          { id: "nb3_1f_10", name: "순대국 본가",       category: "음식점", hours: "07:00~20:00", x: 5,  y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_1f_11", name: "커피플레이스",      category: "카페",   hours: "08:00~21:00", x: 37, y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_1f_12", name: "뚜레쥬르",          category: "카페",   hours: "08:00~22:00", x: 69, y: 54, w: 26, h: 41, isOpen: true },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: true, restroomCode: "9999",
+        stores: [
+          { id: "nb3_2f_01", name: "놀이방 카페",    category: "카페",  hours: "10:00~20:00", x: 5,  y: 5,  w: 28, h: 42, isOpen: true, phone: "032-622-3456" },
+          { id: "nb3_2f_02", name: "영어학원 Kids", category: "학원",  hours: "13:00~21:00", x: 37, y: 5,  w: 28, h: 42, isOpen: true },
+          { id: "nb3_2f_03", name: "수학학원 상상",  category: "학원",  hours: "14:00~22:00", x: 69, y: 5,  w: 26, h: 42, isOpen: true },
+          { id: "nb3_2f_04", name: "네일샵",          category: "미용",  hours: "10:00~21:00", x: 5,  y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_2f_05", name: "피부관리실",      category: "미용",  hours: "10:00~20:00", x: 37, y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_2f_06", name: "공실",            category: "기타",  x: 69, y: 54, w: 26, h: 41, isOpen: false },
+          { id: "nb3_2f_07", name: "공실",            category: "기타",  x: 5,  y: 5,  w: 28, h: 42, isOpen: false },
+          { id: "nb3_2f_08", name: "공실",            category: "기타",  x: 37, y: 5,  w: 28, h: 42, isOpen: false },
+          { id: "nb3_2f_09", name: "사무실 A",        category: "기타",  hours: "09:00~18:00", x: 69, y: 5,  w: 26, h: 42, isOpen: true },
+          { id: "nb3_2f_10", name: "사무실 B",        category: "기타",  hours: "09:00~18:00", x: 5,  y: 54, w: 28, h: 41, isOpen: true },
+          { id: "nb3_2f_11", name: "공실",            category: "기타",  x: 37, y: 54, w: 28, h: 41, isOpen: false },
+          { id: "nb3_2f_12", name: "공실",            category: "기타",  x: 69, y: 54, w: 26, h: 41, isOpen: false },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb4: 불로대곡 상가단지 A동 ─────────────────────────────
+  {
+    id: "nb4",
+    name: "불로대곡 상가단지 A동",
+    address: "인천 서구 대곡동 321",
+    openTime: "매일 09:00 ~ 21:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: false,
+        stores: [
+          { id: "nb4_1f_1", name: "불로 마트",   category: "마트", hours: "08:00~22:00", x: 5,  y: 5, w: 55, h: 90, isOpen: true, phone: "032-633-1111" },
+          { id: "nb4_1f_2", name: "대곡 부동산", category: "기타", hours: "09:00~18:00", x: 65, y: 5, w: 30, h: 90, isOpen: true, phone: "032-633-2222" },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: true, restroomCode: "3333",
+        stores: [
+          { id: "nb4_2f_1", name: "내과의원", category: "병원/약국", hours: "09:00~18:00", x: 5,  y: 5, w: 28, h: 90, isOpen: true,  phone: "032-633-3333" },
+          { id: "nb4_2f_2", name: "치과의원", category: "병원/약국", hours: "09:00~19:00", x: 37, y: 5, w: 28, h: 90, isOpen: true,  phone: "032-633-4444" },
+          { id: "nb4_2f_3", name: "정형외과", category: "병원/약국", hours: "09:00~18:00", x: 69, y: 5, w: 26, h: 90, isOpen: false, phone: "032-633-5555" },
+        ],
+      },
+      {
+        level: 2, label: "3F", hasRestroom: false,
+        stores: [
+          { id: "nb4_3f_1", name: "보습학원 한빛", category: "학원", hours: "13:00~21:00", x: 5,  y: 5, w: 43, h: 90, isOpen: true },
+          { id: "nb4_3f_2", name: "보습학원 신화", category: "학원", hours: "13:00~21:00", x: 52, y: 5, w: 21, h: 90, isOpen: true },
+          { id: "nb4_3f_3", name: "태권도장",       category: "기타", hours: "14:00~20:00", x: 76, y: 5, w: 19, h: 90, isOpen: true },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb5: 마전 주민센터 상가 ─────────────────────────────────
+  {
+    id: "nb5",
+    name: "마전 주민센터 상가",
+    address: "인천 서구 마전로 654",
+    openTime: "매일 09:00 ~ 21:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: true,
+        stores: [
+          { id: "nb5_1f_1", name: "세븐일레븐",  category: "편의점",   hours: "24시간",      x: 5,  y: 5, w: 28, h: 90, isOpen: true },
+          { id: "nb5_1f_2", name: "마전 카페",   category: "카페",     hours: "08:00~21:00", x: 37, y: 5, w: 28, h: 90, isOpen: true },
+          { id: "nb5_1f_3", name: "마전 부동산", category: "기타",     hours: "09:00~18:00", x: 69, y: 5, w: 26, h: 90, isOpen: true, phone: "032-644-1111" },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: false,
+        stores: [
+          { id: "nb5_2f_1", name: "가정의학과", category: "병원/약국", hours: "09:00~18:00", x: 5,  y: 5, w: 43, h: 90, isOpen: true, phone: "032-644-2222" },
+          { id: "nb5_2f_2", name: "약국",        category: "병원/약국", hours: "09:00~21:00", x: 52, y: 5, w: 22, h: 90, isOpen: true },
+          { id: "nb5_2f_3", name: "공실",         category: "기타",     x: 78, y: 5, w: 17, h: 90, isOpen: false },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb6: 원당 금곡 상권 A ───────────────────────────────────
+  {
+    id: "nb6",
+    name: "원당 금곡 상권 A",
+    address: "인천 서구 금곡대로 100",
+    openTime: "매일 09:00 ~ 22:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: false,
+        stores: [
+          { id: "nb6_1f_1", name: "미니스톱",       category: "편의점", hours: "24시간",      x: 5,  y: 5,  w: 28, h: 42, isOpen: true },
+          { id: "nb6_1f_2", name: "블루보틀 카페",   category: "카페",   hours: "08:00~22:00", x: 37, y: 5,  w: 28, h: 42, isOpen: true, isPremium: true },
+          { id: "nb6_1f_3", name: "금곡 미용실",     category: "미용",   hours: "10:00~20:00", x: 69, y: 5,  w: 26, h: 42, isOpen: true },
+          { id: "nb6_1f_4", name: "원당 부동산",     category: "기타",   hours: "09:00~18:00", x: 5,  y: 54, w: 90, h: 41, isOpen: true, phone: "032-655-1111" },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: true, restroomCode: "4444",
+        stores: [
+          { id: "nb6_2f_1", name: "금곡 한식당", category: "음식점", hours: "10:00~21:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true, phone: "032-655-2222" },
+          { id: "nb6_2f_2", name: "중식당 화룡", category: "음식점", hours: "11:00~21:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb6_2f_3", name: "원당 분식",   category: "음식점", hours: "09:00~20:00", x: 5,  y: 54, w: 90, h: 41, isOpen: true },
+        ],
+      },
+      {
+        level: 2, label: "3F", hasRestroom: false,
+        stores: [
+          { id: "nb6_3f_1", name: "열람실 24",    category: "기타", hours: "06:00~24:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb6_3f_2", name: "영어학원",      category: "학원", hours: "13:00~21:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb6_3f_3", name: "피아노학원",    category: "학원", hours: "13:00~21:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb6_3f_4", name: "요가 스튜디오", category: "기타", hours: "07:00~21:00", x: 52, y: 54, w: 43, h: 41, isOpen: true },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb7: 오류왕길 근린상가 ─────────────────────────────────
+  {
+    id: "nb7",
+    name: "오류왕길 근린상가",
+    address: "인천 서구 오류동 200",
+    openTime: "매일 08:00 ~ 22:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: true,
+        stores: [
+          { id: "nb7_1f_1", name: "오류 마트",   category: "마트",   hours: "08:00~22:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true, phone: "032-666-1111" },
+          { id: "nb7_1f_2", name: "GS25 오류점", category: "편의점", hours: "24시간",      x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb7_1f_3", name: "왕길 카페",   category: "카페",   hours: "08:00~21:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb7_1f_4", name: "크린존 세탁", category: "기타",   hours: "09:00~21:00", x: 52, y: 54, w: 43, h: 41, isOpen: true },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: false,
+        stores: [
+          { id: "nb7_2f_1", name: "오류 피자", category: "음식점", hours: "11:00~22:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb7_2f_2", name: "왕길 치킨", category: "음식점", hours: "14:00~23:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb7_2f_3", name: "족발집",     category: "음식점", hours: "12:00~22:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb7_2f_4", name: "분식 천국",  category: "음식점", hours: "09:00~20:00", x: 52, y: 54, w: 43, h: 41, isOpen: true },
+        ],
+      },
+    ],
+  },
+
+  // ─── nb8: 백석 아라 타운 ─────────────────────────────────────
+  {
+    id: "nb8",
+    name: "백석 아라 타운",
+    address: "인천 서구 백석동 300",
+    parkingInfo: "지하 주차 가능 (2시간 무료)",
+    openTime: "매일 10:00 ~ 22:00",
+    floors: [
+      {
+        level: 0, label: "1F", hasRestroom: false,
+        stores: [
+          { id: "nb8_1f_1", name: "올리브영",    category: "기타",   hours: "10:00~22:00", x: 5,  y: 5,  w: 40, h: 42, isOpen: true, isPremium: true, phone: "032-677-1111" },
+          { id: "nb8_1f_2", name: "파리바게뜨",  category: "카페",   hours: "08:00~22:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb8_1f_3", name: "GS25 백석점", category: "편의점", hours: "24시간",      x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb8_1f_4", name: "백석 부동산", category: "기타",   hours: "09:00~18:00", x: 52, y: 54, w: 43, h: 41, isOpen: true, phone: "032-677-2222" },
+        ],
+      },
+      {
+        level: 1, label: "2F", hasRestroom: true, restroomCode: "5555",
+        stores: [
+          { id: "nb8_2f_1", name: "제주 흑돼지",     category: "음식점", hours: "11:30~22:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true, isPremium: true, phone: "032-677-3333" },
+          { id: "nb8_2f_2", name: "일본식 라멘",     category: "음식점", hours: "11:00~21:30", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb8_2f_3", name: "이탈리아 파스타", category: "음식점", hours: "11:00~22:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb8_2f_4", name: "중화반점",         category: "음식점", hours: "11:00~21:00", x: 52, y: 54, w: 43, h: 41, isOpen: true },
+        ],
+      },
+      {
+        level: 2, label: "3F", hasRestroom: false,
+        stores: [
+          { id: "nb8_3f_1", name: "독서실 집중",     category: "기타", hours: "06:00~24:00", x: 5,  y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb8_3f_2", name: "영어학원 스마트", category: "학원", hours: "13:00~21:00", x: 52, y: 5,  w: 43, h: 42, isOpen: true },
+          { id: "nb8_3f_3", name: "수학학원 에이플", category: "학원", hours: "14:00~22:00", x: 5,  y: 54, w: 43, h: 41, isOpen: true },
+          { id: "nb8_3f_4", name: "피아노학원",       category: "학원", hours: "13:00~21:00", x: 52, y: 54, w: 43, h: 41, isOpen: true },
+        ],
+      },
+      {
+        level: 3, label: "4F", hasRestroom: true, restroomCode: "6666",
+        stores: [
+          { id: "nb8_4f_1", name: "백석 헬스장",   category: "기타", hours: "06:00~23:00", x: 5,  y: 5, w: 55, h: 90, isOpen: true },
+          { id: "nb8_4f_2", name: "필라테스 아라", category: "기타", hours: "07:00~22:00", x: 65, y: 5, w: 30, h: 90, isOpen: true },
+        ],
+      },
+    ],
+  },
 ];
 
 // ---------- Store Detail Info ----------

@@ -22,21 +22,24 @@ export interface BuildingRow {
   has_data: boolean;
 }
 
+function mockBuildingRow(b: Building): BuildingRow {
+  return {
+    id: b.id,
+    name: b.name,
+    address: b.address,
+    lat: null,
+    lng: null,
+    floors: b.floors.length,
+    total_stores: b.floors.reduce((acc, f) => acc + f.stores.length, 0),
+    image_url: null,
+    categories: null,
+    has_data: true,
+  };
+}
+
 export async function fetchBuildings(): Promise<BuildingRow[]> {
   if (!isSupabaseConfigured()) {
-    console.log('[buildings] Supabase not configured, using mock data');
-    return mockBuildings.map((b) => ({
-      id: b.id,
-      name: b.name,
-      address: b.address,
-      lat: null,
-      lng: null,
-      floors: b.floors.length,
-      total_stores: b.floors.reduce((acc, f) => acc + f.stores.length, 0),
-      image_url: null,
-      categories: null,
-      has_data: true,
-    }));
+    return mockBuildings.map(mockBuildingRow);
   }
 
   try {
@@ -47,19 +50,7 @@ export async function fetchBuildings(): Promise<BuildingRow[]> {
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      console.log('[buildings] No rows in DB, using mock data');
-      return mockBuildings.map((b) => ({
-        id: b.id,
-        name: b.name,
-        address: b.address,
-        lat: null,
-        lng: null,
-        floors: b.floors.length,
-        total_stores: b.floors.reduce((acc, f) => acc + f.stores.length, 0),
-        image_url: null,
-        categories: null,
-        has_data: true,
-      }));
+      return mockBuildings.map(mockBuildingRow);
     }
 
     return data.map((row) => ({
@@ -75,26 +66,90 @@ export async function fetchBuildings(): Promise<BuildingRow[]> {
       has_data: (row.has_data as boolean) ?? false,
     }));
   } catch (err) {
-    console.error('[buildings] Error fetching from Supabase, falling back to mock data:', err);
-    return mockBuildings.map((b) => ({
-      id: b.id,
-      name: b.name,
-      address: b.address,
-      lat: null,
-      lng: null,
-      floors: b.floors.length,
-      total_stores: b.floors.reduce((acc, f) => acc + f.stores.length, 0),
-      image_url: null,
-      categories: null,
-      has_data: true,
+    console.error('[buildings] fetchBuildings error, falling back to mock:', err);
+    return mockBuildings.map(mockBuildingRow);
+  }
+}
+
+export async function fetchBuildingWithFloors(buildingId: string): Promise<Building | null> {
+  if (!isSupabaseConfigured()) {
+    return mockBuildings.find((b) => b.id === buildingId) ?? null;
+  }
+
+  try {
+    // Fetch building meta, floors, and stores in parallel
+    const [buildingRes, floorsRes, storesRes] = await Promise.all([
+      supabase.from('buildings').select('*').eq('id', buildingId).single(),
+      supabase
+        .from('floors')
+        .select('*')
+        .eq('building_id', buildingId)
+        .order('sort_order'),
+      supabase
+        .from('stores')
+        .select('*')
+        .eq('building_id', buildingId)
+        .order('floor_label'),
+    ]);
+
+    if (buildingRes.error) throw buildingRes.error;
+    if (!buildingRes.data) return mockBuildings.find((b) => b.id === buildingId) ?? null;
+
+    const bRow = buildingRes.data;
+    const floorRows = floorsRes.data ?? [];
+    const storeRows = storesRes.data ?? [];
+
+    // Fall back to mock if no floor data in DB yet
+    if (floorRows.length === 0) {
+      return mockBuildings.find((b) => b.id === buildingId) ?? null;
+    }
+
+    // Group stores by floor_label
+    const storesByFloor: Record<string, Store[]> = {};
+    for (const row of storeRows) {
+      const label = row.floor_label as string;
+      if (!storesByFloor[label]) storesByFloor[label] = [];
+      storesByFloor[label].push({
+        id: row.id as string,
+        name: row.name as string,
+        category: (row.category as Store['category']) ?? '기타',
+        phone: (row.phone as string | undefined) ?? undefined,
+        hours: (row.hours as string | undefined) ?? undefined,
+        x: (row.x as number) ?? 0,
+        y: (row.y as number) ?? 0,
+        w: (row.w as number) ?? 10,
+        h: (row.h as number) ?? 10,
+        isOpen: (row.is_open as boolean | undefined) ?? undefined,
+        isPremium: (row.is_premium as boolean | undefined) ?? false,
+      });
+    }
+
+    const floors: Floor[] = floorRows.map((row) => ({
+      level: row.level as number,
+      label: row.label as string,
+      hasRestroom: (row.has_restroom as boolean) ?? false,
+      restroomCode: (row.restroom_code as string | undefined) ?? undefined,
+      stores: storesByFloor[row.label as string] ?? [],
     }));
+
+    return {
+      id: bRow.id as string,
+      name: bRow.name as string,
+      address: (bRow.address as string) ?? '',
+      parkingInfo: (bRow.parking_info as string | undefined) ?? undefined,
+      openTime: (bRow.open_time as string | undefined) ?? undefined,
+      floors,
+    };
+  } catch (err) {
+    console.error(`[buildings] fetchBuildingWithFloors error for ${buildingId}, falling back to mock:`, err);
+    return mockBuildings.find((b) => b.id === buildingId) ?? null;
   }
 }
 
 export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]> {
   if (!isSupabaseConfigured()) {
-    console.log('[buildings] Supabase not configured, using mock store data');
-    return getMockStores(buildingId);
+    const building = mockBuildings.find((b) => b.id === buildingId);
+    return building ? building.floors.flatMap((f) => f.stores) : [];
   }
 
   try {
@@ -106,8 +161,8 @@ export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]
 
     if (error) throw error;
     if (!data || data.length === 0) {
-      console.log(`[buildings] No store rows for building ${buildingId}, using mock data`);
-      return getMockStores(buildingId);
+      const building = mockBuildings.find((b) => b.id === buildingId);
+      return building ? building.floors.flatMap((f) => f.stores) : [];
     }
 
     return data.map((row) => ({
@@ -121,48 +176,11 @@ export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]
       w: (row.w as number) ?? 10,
       h: (row.h as number) ?? 10,
       isOpen: (row.is_open as boolean | undefined) ?? undefined,
-      isPremium: (row.is_premium as boolean | undefined) ?? undefined,
+      isPremium: (row.is_premium as boolean | undefined) ?? false,
     }));
   } catch (err) {
-    console.error(`[buildings] Error fetching stores for building ${buildingId}, falling back to mock data:`, err);
-    return getMockStores(buildingId);
-  }
-}
-
-function getMockStores(buildingId: string): Store[] {
-  const building = mockBuildings.find((b) => b.id === buildingId);
-  if (!building) return [];
-  return building.floors.flatMap((f) => f.stores);
-}
-
-export async function fetchBuildingWithFloors(buildingId: string): Promise<Building | null> {
-  if (!isSupabaseConfigured()) {
-    console.log('[buildings] Supabase not configured, using mock building data');
-    return mockBuildings.find((b) => b.id === buildingId) ?? null;
-  }
-
-  try {
-    const { data: buildingRow, error: buildingError } = await supabase
-      .from('buildings')
-      .select('*')
-      .eq('id', buildingId)
-      .single();
-
-    if (buildingError) throw buildingError;
-    if (!buildingRow) return mockBuildings.find((b) => b.id === buildingId) ?? null;
-
-    const stores = await fetchStoresByBuilding(buildingId);
-
-    // Group stores by floor_label – but since we're returning Building type
-    // which has floors structure, fall back to mock if DB stores aren't structured that way
-    if (stores.length === 0) {
-      return mockBuildings.find((b) => b.id === buildingId) ?? null;
-    }
-
-    // Return mock building structure as DB doesn't store floor hierarchy separately
-    return mockBuildings.find((b) => b.id === buildingId) ?? null;
-  } catch (err) {
-    console.error(`[buildings] Error fetching building ${buildingId}:`, err);
-    return mockBuildings.find((b) => b.id === buildingId) ?? null;
+    console.error(`[buildings] fetchStoresByBuilding error for ${buildingId}:`, err);
+    const building = mockBuildings.find((b) => b.id === buildingId);
+    return building ? building.floors.flatMap((f) => f.stores) : [];
   }
 }

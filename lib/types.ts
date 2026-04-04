@@ -141,8 +141,8 @@ export interface Building {
   name: string;
   address: string;
   floors: Floor[];
-  parkingInfo: string;
-  openTime: string;
+  parkingInfo?: string;
+  openTime?: string;
 }
 
 export interface Floor {

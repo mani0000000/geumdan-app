@@ -167,14 +167,58 @@ const emergencyRooms = [
 ];
 
 const buildings = [
-  { id: 'b1',  name: '검단 센트럴 타워',     address: '인천 서구 당하로 123',    lat: 37.5448, lng: 126.6863, floors: 5,  total_stores: 18, has_data: true,  categories: ['카페','음식점','병원/약국','미용','기타'] },
-  { id: 'nb2', name: '당하 스퀘어몰',         address: '인천 서구 당하동 456',    lat: 37.5462, lng: 126.6878, floors: 4,  total_stores: 12, has_data: false, categories: ['카페','음식점','편의점','마트'] },
-  { id: 'nb3', name: '검단 플리마켓 타운',    address: '인천 서구 불로동 789',    lat: 37.5435, lng: 126.6844, floors: 2,  total_stores: 24, has_data: false, categories: ['음식점','편의점','기타'] },
-  { id: 'nb4', name: '불로대곡 상가단지 A동', address: '인천 서구 대곡동 321',    lat: 37.5421, lng: 126.6831, floors: 3,  total_stores: 9,  has_data: false, categories: ['음식점','병원/약국','기타'] },
-  { id: 'nb5', name: '마전 주민센터 상가',    address: '인천 서구 마전로 654',    lat: 37.5470, lng: 126.6901, floors: 2,  total_stores: 6,  has_data: false, categories: ['음식점','편의점','병원/약국'] },
-  { id: 'nb6', name: '원당 금곡 상권 A',      address: '인천 서구 금곡대로 100',  lat: 37.5535, lng: 126.6730, floors: 3,  total_stores: 11, has_data: false, categories: ['카페','음식점','미용','학원'] },
-  { id: 'nb7', name: '오류왕길 근린상가',     address: '인천 서구 오류동 200',    lat: 37.5500, lng: 126.6940, floors: 2,  total_stores: 8,  has_data: false, categories: ['음식점','마트','기타'] },
-  { id: 'nb8', name: '백석 아라 타운',        address: '인천 서구 백석동 300',    lat: 37.5360, lng: 126.6800, floors: 4,  total_stores: 14, has_data: false, categories: ['카페','음식점','마트','미용'] },
+  { id: 'b1',  name: '검단 센트럴 타워',     address: '인천 서구 당하로 123',    lat: 37.5448, lng: 126.6863, floors: 5,  total_stores: 18, has_data: true, categories: ['카페','음식점','병원/약국','미용','기타'] },
+  { id: 'nb2', name: '당하 스퀘어몰',         address: '인천 서구 당하동 456',    lat: 37.5462, lng: 126.6878, floors: 4,  total_stores: 12, has_data: true, categories: ['카페','음식점','편의점','마트'] },
+  { id: 'nb3', name: '검단 플리마켓 타운',    address: '인천 서구 불로동 789',    lat: 37.5435, lng: 126.6844, floors: 2,  total_stores: 24, has_data: true, categories: ['음식점','편의점','카페','기타'] },
+  { id: 'nb4', name: '불로대곡 상가단지 A동', address: '인천 서구 대곡동 321',    lat: 37.5421, lng: 126.6831, floors: 3,  total_stores: 9,  has_data: true, categories: ['음식점','병원/약국','마트','기타'] },
+  { id: 'nb5', name: '마전 주민센터 상가',    address: '인천 서구 마전로 654',    lat: 37.5470, lng: 126.6901, floors: 2,  total_stores: 6,  has_data: true, categories: ['음식점','편의점','병원/약국'] },
+  { id: 'nb6', name: '원당 금곡 상권 A',      address: '인천 서구 금곡대로 100',  lat: 37.5535, lng: 126.6730, floors: 3,  total_stores: 11, has_data: true, categories: ['카페','음식점','미용','학원'] },
+  { id: 'nb7', name: '오류왕길 근린상가',     address: '인천 서구 오류동 200',    lat: 37.5500, lng: 126.6940, floors: 2,  total_stores: 8,  has_data: true, categories: ['음식점','마트','편의점','기타'] },
+  { id: 'nb8', name: '백석 아라 타운',        address: '인천 서구 백석동 300',    lat: 37.5360, lng: 126.6800, floors: 4,  total_stores: 14, has_data: true, categories: ['카페','음식점','마트','미용','학원'] },
+];
+
+// ─── Floor data (all buildings) ──────────────────────────────
+const floors = [
+  // b1: 검단 센트럴 타워
+  { building_id: 'b1', level: -1, label: 'B1', has_restroom: true,  restroom_code: '1234', sort_order: 0 },
+  { building_id: 'b1', level:  0, label: '1F', has_restroom: false, restroom_code: null,   sort_order: 1 },
+  { building_id: 'b1', level:  1, label: '2F', has_restroom: true,  restroom_code: '5678', sort_order: 2 },
+  { building_id: 'b1', level:  2, label: '3F', has_restroom: true,  restroom_code: '9012', sort_order: 3 },
+  { building_id: 'b1', level:  3, label: '4F', has_restroom: false, restroom_code: null,   sort_order: 4 },
+
+  // nb2: 당하 스퀘어몰
+  { building_id: 'nb2', level:  0, label: '1F', has_restroom: true,  restroom_code: '1111', sort_order: 0 },
+  { building_id: 'nb2', level:  1, label: '2F', has_restroom: false, restroom_code: null,   sort_order: 1 },
+  { building_id: 'nb2', level:  2, label: '3F', has_restroom: false, restroom_code: null,   sort_order: 2 },
+  { building_id: 'nb2', level:  3, label: '4F', has_restroom: true,  restroom_code: '2222', sort_order: 3 },
+
+  // nb3: 검단 플리마켓 타운
+  { building_id: 'nb3', level:  0, label: '1F', has_restroom: true,  restroom_code: '0000', sort_order: 0 },
+  { building_id: 'nb3', level:  1, label: '2F', has_restroom: true,  restroom_code: '9999', sort_order: 1 },
+
+  // nb4: 불로대곡 상가단지 A동
+  { building_id: 'nb4', level:  0, label: '1F', has_restroom: false, restroom_code: null,   sort_order: 0 },
+  { building_id: 'nb4', level:  1, label: '2F', has_restroom: true,  restroom_code: '3333', sort_order: 1 },
+  { building_id: 'nb4', level:  2, label: '3F', has_restroom: false, restroom_code: null,   sort_order: 2 },
+
+  // nb5: 마전 주민센터 상가
+  { building_id: 'nb5', level:  0, label: '1F', has_restroom: true,  restroom_code: null,   sort_order: 0 },
+  { building_id: 'nb5', level:  1, label: '2F', has_restroom: false, restroom_code: null,   sort_order: 1 },
+
+  // nb6: 원당 금곡 상권 A
+  { building_id: 'nb6', level:  0, label: '1F', has_restroom: false, restroom_code: null,   sort_order: 0 },
+  { building_id: 'nb6', level:  1, label: '2F', has_restroom: true,  restroom_code: '4444', sort_order: 1 },
+  { building_id: 'nb6', level:  2, label: '3F', has_restroom: false, restroom_code: null,   sort_order: 2 },
+
+  // nb7: 오류왕길 근린상가
+  { building_id: 'nb7', level:  0, label: '1F', has_restroom: true,  restroom_code: null,   sort_order: 0 },
+  { building_id: 'nb7', level:  1, label: '2F', has_restroom: false, restroom_code: null,   sort_order: 1 },
+
+  // nb8: 백석 아라 타운
+  { building_id: 'nb8', level:  0, label: '1F', has_restroom: false, restroom_code: null,   sort_order: 0 },
+  { building_id: 'nb8', level:  1, label: '2F', has_restroom: true,  restroom_code: '5555', sort_order: 1 },
+  { building_id: 'nb8', level:  2, label: '3F', has_restroom: false, restroom_code: null,   sort_order: 2 },
+  { building_id: 'nb8', level:  3, label: '4F', has_restroom: true,  restroom_code: '6666', sort_order: 3 },
 ];
 
 // Store data for 검단 센트럴 타워 (b1)
@@ -202,6 +246,124 @@ const stores = [
   { id: 's_4f_1', building_id: 'b1', name: '검단 피트니스',      category: '기타',     floor_label: '4F', phone: null,           hours: '06:00~23:00', is_open: true,  x: 5,  y: 5,  w: 55, h: 90, is_premium: false },
   { id: 's_4f_2', building_id: 'b1', name: '수학학원',           category: '학원',     floor_label: '4F', phone: null,           hours: '14:00~22:00', is_open: true,  x: 65, y: 5,  w: 30, h: 42, is_premium: false },
   { id: 's_4f_3', building_id: 'b1', name: '헤어살롱 모이',      category: '미용',     floor_label: '4F', phone: null,           hours: '10:00~21:00', is_open: true,  x: 65, y: 54, w: 30, h: 41, is_premium: false },
+
+  // ─── nb2: 당하 스퀘어몰 ──────────────────────────────────
+  // 1F
+  { id: 'nb2_1f_1', building_id: 'nb2', name: 'GS25',           category: '편의점',   floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb2_1f_2', building_id: 'nb2', name: '카페베네',        category: '카페',     floor_label: '1F', phone: null,           hours: '08:00~22:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb2_1f_3', building_id: 'nb2', name: '크린토피아',      category: '기타',     floor_label: '1F', phone: null,           hours: '09:00~21:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb2_1f_4', building_id: 'nb2', name: '당하 부동산',     category: '기타',     floor_label: '1F', phone: '032-611-1234', hours: '09:00~18:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 2F
+  { id: 'nb2_2f_1', building_id: 'nb2', name: '돼지갈비 명가',   category: '음식점',   floor_label: '2F', phone: '032-611-2222', hours: '11:00~22:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb2_2f_2', building_id: 'nb2', name: '닭갈비 순수',     category: '음식점',   floor_label: '2F', phone: null,           hours: '11:30~21:30', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb2_2f_3', building_id: 'nb2', name: '분식나라',         category: '음식점',   floor_label: '2F', phone: null,           hours: '10:00~20:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb2_2f_4', building_id: 'nb2', name: '공실',             category: '기타',     floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 3F
+  { id: 'nb2_3f_1', building_id: 'nb2', name: '필라테스 스튜디오', category: '기타',   floor_label: '3F', phone: null,           hours: '07:00~22:00', is_open: true,  x: 5,  y: 5,  w: 55, h: 90, is_premium: false },
+  { id: 'nb2_3f_2', building_id: 'nb2', name: '독서실 공감',      category: '기타',    floor_label: '3F', phone: null,           hours: '06:00~24:00', is_open: true,  x: 65, y: 5,  w: 30, h: 90, is_premium: false },
+  // 4F
+  { id: 'nb2_4f_1', building_id: 'nb2', name: '피아노학원',       category: '학원',    floor_label: '4F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 90, is_premium: false },
+  { id: 'nb2_4f_2', building_id: 'nb2', name: '태권도장',          category: '기타',   floor_label: '4F', phone: '032-611-4444', hours: '15:00~20:00', is_open: true,  x: 52, y: 5,  w: 43, h: 90, is_premium: false },
+
+  // ─── nb3: 검단 플리마켓 타운 ─────────────────────────────
+  // 1F (12 stores)
+  { id: 'nb3_1f_01', building_id: 'nb3', name: '반찬가게 푸짐',   category: '음식점',  floor_label: '1F', phone: null,           hours: '08:00~19:00', is_open: true,  x: 5,  y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_1f_02', building_id: 'nb3', name: 'CU 편의점',       category: '편의점',  floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 37, y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_1f_03', building_id: 'nb3', name: '국밥 한마당',      category: '음식점', floor_label: '1F', phone: null,           hours: '07:00~21:00', is_open: true,  x: 69, y: 5,  w: 26, h: 42, is_premium: false },
+  { id: 'nb3_1f_04', building_id: 'nb3', name: '분식 터미널',      category: '음식점', floor_label: '1F', phone: null,           hours: '09:00~20:00', is_open: true,  x: 5,  y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_1f_05', building_id: 'nb3', name: '치킨 더 본',       category: '음식점', floor_label: '1F', phone: null,           hours: '11:00~23:00', is_open: true,  x: 37, y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_1f_06', building_id: 'nb3', name: '중화요리 금룡',    category: '음식점', floor_label: '1F', phone: '032-622-1234', hours: '11:00~21:00', is_open: true,  x: 69, y: 54, w: 26, h: 41, is_premium: false },
+  { id: 'nb3_1f_07', building_id: 'nb3', name: '스시 오마카세',    category: '음식점', floor_label: '1F', phone: '032-622-2345', hours: '11:30~22:00', is_open: true,  x: 5,  y: 5,  w: 28, h: 42, is_premium: true  },
+  { id: 'nb3_1f_08', building_id: 'nb3', name: '족발 보쌈 한가득', category: '음식점', floor_label: '1F', phone: null,           hours: '12:00~22:00', is_open: true,  x: 37, y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_1f_09', building_id: 'nb3', name: '갈비탕 정식',      category: '음식점', floor_label: '1F', phone: null,           hours: '10:00~21:00', is_open: true,  x: 69, y: 5,  w: 26, h: 42, is_premium: false },
+  { id: 'nb3_1f_10', building_id: 'nb3', name: '순대국 본가',      category: '음식점', floor_label: '1F', phone: null,           hours: '07:00~20:00', is_open: true,  x: 5,  y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_1f_11', building_id: 'nb3', name: '커피플레이스',     category: '카페',   floor_label: '1F', phone: null,           hours: '08:00~21:00', is_open: true,  x: 37, y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_1f_12', building_id: 'nb3', name: '뚜레쥬르',         category: '카페',   floor_label: '1F', phone: null,           hours: '08:00~22:00', is_open: true,  x: 69, y: 54, w: 26, h: 41, is_premium: false },
+  // 2F (12 stores)
+  { id: 'nb3_2f_01', building_id: 'nb3', name: '놀이방 카페',      category: '카페',   floor_label: '2F', phone: '032-622-3456', hours: '10:00~20:00', is_open: true,  x: 5,  y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_2f_02', building_id: 'nb3', name: '영어학원 Kids',   category: '학원',   floor_label: '2F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 37, y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_2f_03', building_id: 'nb3', name: '수학학원 상상',    category: '학원',   floor_label: '2F', phone: null,           hours: '14:00~22:00', is_open: true,  x: 69, y: 5,  w: 26, h: 42, is_premium: false },
+  { id: 'nb3_2f_04', building_id: 'nb3', name: '네일샵',            category: '미용',  floor_label: '2F', phone: null,           hours: '10:00~21:00', is_open: true,  x: 5,  y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_2f_05', building_id: 'nb3', name: '피부관리실',        category: '미용',  floor_label: '2F', phone: null,           hours: '10:00~20:00', is_open: true,  x: 37, y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_2f_06', building_id: 'nb3', name: '공실',              category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 69, y: 54, w: 26, h: 41, is_premium: false },
+  { id: 'nb3_2f_07', building_id: 'nb3', name: '공실',              category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 5,  y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_2f_08', building_id: 'nb3', name: '공실',              category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 37, y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb3_2f_09', building_id: 'nb3', name: '사무실 A',          category: '기타',  floor_label: '2F', phone: null,           hours: '09:00~18:00', is_open: true,  x: 69, y: 5,  w: 26, h: 42, is_premium: false },
+  { id: 'nb3_2f_10', building_id: 'nb3', name: '사무실 B',          category: '기타',  floor_label: '2F', phone: null,           hours: '09:00~18:00', is_open: true,  x: 5,  y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_2f_11', building_id: 'nb3', name: '공실',              category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 37, y: 54, w: 28, h: 41, is_premium: false },
+  { id: 'nb3_2f_12', building_id: 'nb3', name: '공실',              category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 69, y: 54, w: 26, h: 41, is_premium: false },
+
+  // ─── nb4: 불로대곡 상가단지 A동 ─────────────────────────
+  // 1F
+  { id: 'nb4_1f_1', building_id: 'nb4', name: '불로 마트',         category: '마트',    floor_label: '1F', phone: '032-633-1111', hours: '08:00~22:00', is_open: true,  x: 5,  y: 5,  w: 55, h: 90, is_premium: false },
+  { id: 'nb4_1f_2', building_id: 'nb4', name: '대곡 부동산',        category: '기타',   floor_label: '1F', phone: '032-633-2222', hours: '09:00~18:00', is_open: true,  x: 65, y: 5,  w: 30, h: 90, is_premium: false },
+  // 2F
+  { id: 'nb4_2f_1', building_id: 'nb4', name: '내과의원',           category: '병원/약국', floor_label: '2F', phone: '032-633-3333', hours: '09:00~18:00', is_open: true,  x: 5,  y: 5,  w: 28, h: 90, is_premium: false },
+  { id: 'nb4_2f_2', building_id: 'nb4', name: '치과의원',           category: '병원/약국', floor_label: '2F', phone: '032-633-4444', hours: '09:00~19:00', is_open: true,  x: 37, y: 5,  w: 28, h: 90, is_premium: false },
+  { id: 'nb4_2f_3', building_id: 'nb4', name: '정형외과',           category: '병원/약국', floor_label: '2F', phone: '032-633-5555', hours: '09:00~18:00', is_open: false, x: 69, y: 5,  w: 26, h: 90, is_premium: false },
+  // 3F
+  { id: 'nb4_3f_1', building_id: 'nb4', name: '보습학원 한빛',      category: '학원',   floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 90, is_premium: false },
+  { id: 'nb4_3f_2', building_id: 'nb4', name: '보습학원 신화',      category: '학원',   floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 52, y: 5,  w: 21, h: 90, is_premium: false },
+  { id: 'nb4_3f_3', building_id: 'nb4', name: '태권도장',            category: '기타',  floor_label: '3F', phone: null,           hours: '14:00~20:00', is_open: true,  x: 76, y: 5,  w: 19, h: 90, is_premium: false },
+  { id: 'nb4_3f_4', building_id: 'nb4', name: '피아노학원',          category: '학원',  floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 52, y: 5,  w: 43, h: 90, is_premium: false },
+
+  // ─── nb5: 마전 주민센터 상가 ─────────────────────────────
+  // 1F
+  { id: 'nb5_1f_1', building_id: 'nb5', name: '세븐일레븐',         category: '편의점', floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 5,  y: 5,  w: 28, h: 90, is_premium: false },
+  { id: 'nb5_1f_2', building_id: 'nb5', name: '마전 카페',          category: '카페',   floor_label: '1F', phone: null,           hours: '08:00~21:00', is_open: true,  x: 37, y: 5,  w: 28, h: 90, is_premium: false },
+  { id: 'nb5_1f_3', building_id: 'nb5', name: '마전 부동산',         category: '기타',  floor_label: '1F', phone: '032-644-1111', hours: '09:00~18:00', is_open: true,  x: 69, y: 5,  w: 26, h: 90, is_premium: false },
+  // 2F
+  { id: 'nb5_2f_1', building_id: 'nb5', name: '가정의학과',          category: '병원/약국', floor_label: '2F', phone: '032-644-2222', hours: '09:00~18:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 90, is_premium: false },
+  { id: 'nb5_2f_2', building_id: 'nb5', name: '약국',                category: '병원/약국', floor_label: '2F', phone: null,           hours: '09:00~21:00', is_open: true,  x: 52, y: 5,  w: 22, h: 90, is_premium: false },
+  { id: 'nb5_2f_3', building_id: 'nb5', name: '공실',                category: '기타',  floor_label: '2F', phone: null,           hours: null,          is_open: null,  x: 78, y: 5,  w: 17, h: 90, is_premium: false },
+
+  // ─── nb6: 원당 금곡 상권 A ───────────────────────────────
+  // 1F
+  { id: 'nb6_1f_1', building_id: 'nb6', name: '미니스톱',            category: '편의점', floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 5,  y: 5,  w: 28, h: 42, is_premium: false },
+  { id: 'nb6_1f_2', building_id: 'nb6', name: '블루보틀 카페',       category: '카페',   floor_label: '1F', phone: null,           hours: '08:00~22:00', is_open: true,  x: 37, y: 5,  w: 28, h: 42, is_premium: true  },
+  { id: 'nb6_1f_3', building_id: 'nb6', name: '금곡 미용실',         category: '미용',   floor_label: '1F', phone: null,           hours: '10:00~20:00', is_open: true,  x: 69, y: 5,  w: 26, h: 42, is_premium: false },
+  { id: 'nb6_1f_4', building_id: 'nb6', name: '원당 부동산',          category: '기타',  floor_label: '1F', phone: '032-655-1111', hours: '09:00~18:00', is_open: true,  x: 5,  y: 54, w: 90, h: 41, is_premium: false },
+  // 2F
+  { id: 'nb6_2f_1', building_id: 'nb6', name: '금곡 한식당',          category: '음식점', floor_label: '2F', phone: '032-655-2222', hours: '10:00~21:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb6_2f_2', building_id: 'nb6', name: '중식당 화룡',          category: '음식점', floor_label: '2F', phone: null,           hours: '11:00~21:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb6_2f_3', building_id: 'nb6', name: '원당 분식',            category: '음식점', floor_label: '2F', phone: null,           hours: '09:00~20:00', is_open: true,  x: 5,  y: 54, w: 90, h: 41, is_premium: false },
+  // 3F
+  { id: 'nb6_3f_1', building_id: 'nb6', name: '열람실 24',            category: '기타',  floor_label: '3F', phone: null,           hours: '06:00~24:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb6_3f_2', building_id: 'nb6', name: '영어학원',             category: '학원',  floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb6_3f_3', building_id: 'nb6', name: '피아노학원',           category: '학원',  floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb6_3f_4', building_id: 'nb6', name: '요가 스튜디오',        category: '기타',  floor_label: '3F', phone: null,           hours: '07:00~21:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+
+  // ─── nb7: 오류왕길 근린상가 ─────────────────────────────
+  // 1F
+  { id: 'nb7_1f_1', building_id: 'nb7', name: '오류 마트',            category: '마트',  floor_label: '1F', phone: '032-666-1111', hours: '08:00~22:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb7_1f_2', building_id: 'nb7', name: 'GS25 오류점',          category: '편의점', floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb7_1f_3', building_id: 'nb7', name: '왕길 카페',             category: '카페',  floor_label: '1F', phone: null,           hours: '08:00~21:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb7_1f_4', building_id: 'nb7', name: '크린존 세탁',           category: '기타',  floor_label: '1F', phone: null,           hours: '09:00~21:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 2F
+  { id: 'nb7_2f_1', building_id: 'nb7', name: '오류 피자',             category: '음식점', floor_label: '2F', phone: null,           hours: '11:00~22:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb7_2f_2', building_id: 'nb7', name: '왕길 치킨',             category: '음식점', floor_label: '2F', phone: null,           hours: '14:00~23:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb7_2f_3', building_id: 'nb7', name: '족발집',                category: '음식점', floor_label: '2F', phone: null,           hours: '12:00~22:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb7_2f_4', building_id: 'nb7', name: '분식 천국',             category: '음식점', floor_label: '2F', phone: null,           hours: '09:00~20:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+
+  // ─── nb8: 백석 아라 타운 ────────────────────────────────
+  // 1F
+  { id: 'nb8_1f_1', building_id: 'nb8', name: '올리브영',             category: '기타',  floor_label: '1F', phone: '032-677-1111', hours: '10:00~22:00', is_open: true,  x: 5,  y: 5,  w: 40, h: 42, is_premium: true  },
+  { id: 'nb8_1f_2', building_id: 'nb8', name: '파리바게뜨',           category: '카페',  floor_label: '1F', phone: null,           hours: '08:00~22:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb8_1f_3', building_id: 'nb8', name: 'GS25 백석점',          category: '편의점', floor_label: '1F', phone: null,           hours: '24시간',     is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb8_1f_4', building_id: 'nb8', name: '백석 부동산',          category: '기타',  floor_label: '1F', phone: '032-677-2222', hours: '09:00~18:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 2F
+  { id: 'nb8_2f_1', building_id: 'nb8', name: '제주 흑돼지',           category: '음식점', floor_label: '2F', phone: '032-677-3333', hours: '11:30~22:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: true  },
+  { id: 'nb8_2f_2', building_id: 'nb8', name: '일본식 라멘',           category: '음식점', floor_label: '2F', phone: null,           hours: '11:00~21:30', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb8_2f_3', building_id: 'nb8', name: '이탈리아 파스타',       category: '음식점', floor_label: '2F', phone: null,           hours: '11:00~22:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb8_2f_4', building_id: 'nb8', name: '중화반점',              category: '음식점', floor_label: '2F', phone: null,           hours: '11:00~21:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 3F
+  { id: 'nb8_3f_1', building_id: 'nb8', name: '독서실 집중',           category: '기타',  floor_label: '3F', phone: null,           hours: '06:00~24:00', is_open: true,  x: 5,  y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb8_3f_2', building_id: 'nb8', name: '영어학원 스마트',       category: '학원',  floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 52, y: 5,  w: 43, h: 42, is_premium: false },
+  { id: 'nb8_3f_3', building_id: 'nb8', name: '수학학원 에이플',       category: '학원',  floor_label: '3F', phone: null,           hours: '14:00~22:00', is_open: true,  x: 5,  y: 54, w: 43, h: 41, is_premium: false },
+  { id: 'nb8_3f_4', building_id: 'nb8', name: '피아노학원',             category: '학원', floor_label: '3F', phone: null,           hours: '13:00~21:00', is_open: true,  x: 52, y: 54, w: 43, h: 41, is_premium: false },
+  // 4F
+  { id: 'nb8_4f_1', building_id: 'nb8', name: '백석 헬스장',           category: '기타',  floor_label: '4F', phone: null,           hours: '06:00~23:00', is_open: true,  x: 5,  y: 5,  w: 55, h: 90, is_premium: false },
+  { id: 'nb8_4f_2', building_id: 'nb8', name: '필라테스 아라',         category: '기타',  floor_label: '4F', phone: null,           hours: '07:00~22:00', is_open: true,  x: 65, y: 5,  w: 30, h: 90, is_premium: false },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -252,6 +414,18 @@ try {
 
   console.log('\n🏢 Seeding buildings...');
   await upsert('buildings', buildings);
+
+  console.log('\n🏬 Seeding floors...');
+  // floors use (building_id, label) as unique constraint
+  for (const floor of floors) {
+    const { error } = await supabase
+      .from('floors')
+      .upsert(floor, { onConflict: 'building_id,label' });
+    if (error) {
+      console.error(`  ❌ Error upserting floor ${floor.building_id}/${floor.label}:`, error.message);
+    }
+  }
+  console.log(`  ✅ floors done (${floors.length} rows)`);
 
   console.log('\n🏪 Seeding stores...');
   await upsert('stores', stores);

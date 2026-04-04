@@ -92,6 +92,18 @@ create table if not exists buildings (
   updated_at timestamptz default now()
 );
 
+create table if not exists floors (
+  id uuid default uuid_generate_v4() primary key,
+  building_id text references buildings(id),
+  level integer not null,        -- -1=B1, 0=1F, 1=2F ...
+  label text not null,           -- "B1", "1F", "2F" ...
+  has_restroom boolean default false,
+  restroom_code text,
+  sort_order integer default 0,
+  updated_at timestamptz default now(),
+  unique (building_id, label)
+);
+
 create table if not exists stores (
   id text primary key,
   building_id text references buildings(id),
@@ -123,6 +135,7 @@ alter table pharmacies enable row level security;
 alter table emergency_rooms enable row level security;
 alter table news_articles enable row level security;
 alter table buildings enable row level security;
+alter table floors enable row level security;
 alter table stores enable row level security;
 alter table bus_stops enable row level security;
 
@@ -133,5 +146,6 @@ create policy "Allow anon read" on pharmacies for select using (true);
 create policy "Allow anon read" on emergency_rooms for select using (true);
 create policy "Allow anon read" on news_articles for select using (true);
 create policy "Allow anon read" on buildings for select using (true);
+create policy "Allow anon read" on floors for select using (true);
 create policy "Allow anon read" on stores for select using (true);
 create policy "Allow anon read" on bus_stops for select using (true);
