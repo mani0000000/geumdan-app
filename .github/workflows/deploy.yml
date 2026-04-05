@@ -28,6 +28,7 @@ jobs:
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_BUS_API_KEY: ${{ secrets.NEXT_PUBLIC_BUS_API_KEY }}
 
       - name: Add .nojekyll (fix _next folder 404)
         run: touch ./out/.nojekyll
