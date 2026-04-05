@@ -8,8 +8,12 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { nearbyStops, subwayStations } from "@/lib/mockData";
-import { fetchBusStop, hasBusApiKey } from "@/lib/api/bus";
+import {
+  fetchBusStop, hasBusApiKey,
+  fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
+} from "@/lib/api/bus";
 import type { BusRoute } from "@/lib/types";
+import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
 
 type Tab = "버스" | "지하철" | "즐겨찾기";
 
@@ -81,18 +85,194 @@ function SkeletonStop() {
   );
 }
 
+// ─── 버스 상세 바텀 시트 ──────────────────────────────────────
+function BusDetailSheet({
+  arrival,
+  onClose,
+}: {
+  arrival: BusArrival;
+  onClose: () => void;
+}) {
+  const [detail, setDetail] = useState<RouteDetail | null>(null);
+  const [stations, setStations] = useState<RouteStation[]>([]);
+  const [locations, setLocations] = useState<BusLocation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dirTab, setDirTab] = useState<0 | 1>(0); // 0=상행, 1=하행
+
+  useEffect(() => {
+    if (!arrival.routeId) { setLoading(false); return; }
+    Promise.all([
+      fetchRouteDetail(arrival.routeId),
+      fetchStationsByRoute(arrival.routeId),
+      fetchBusLocations(arrival.routeId),
+    ]).then(([d, s, l]) => {
+      setDetail(d);
+      setStations(s);
+      setLocations(l);
+      setLoading(false);
+    });
+  }, [arrival.routeId]);
+
+  const upStations   = stations.filter(s => s.direction === 0);
+  const downStations = stations.filter(s => s.direction === 1);
+  const curStations  = dirTab === 0 ? upStations : downStations;
+  const busesOnDir   = locations.filter(l => l.direction === dirTab);
+  const busSeqs      = new Set(busesOnDir.map(b => b.stationSeq));
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
+      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
+        style={{ maxHeight: "86%", display: "flex", flexDirection: "column" }}>
+
+        {/* 헤더 */}
+        <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#F2F4F6]">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="bg-[#3182F6] rounded-xl px-3.5 py-1.5">
+                <span className="text-white text-[20px] font-black">{arrival.routeNo}</span>
+              </div>
+              {arrival.isExpress && (
+                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#FFF3E0] text-[#E65100] px-2 py-1 rounded-lg">
+                  <Zap size={10} />급행
+                </span>
+              )}
+              {arrival.isLowFloor && (
+                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-1 rounded-lg">
+                  <Accessibility size={10} />저상
+                </span>
+              )}
+            </div>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#F2F4F6] flex items-center justify-center active:opacity-60">
+              <span className="text-[#8B95A1] text-[16px] font-bold">✕</span>
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="space-y-2">
+              <div className="h-4 w-48 bg-[#F2F4F6] rounded animate-pulse" />
+              <div className="h-3 w-32 bg-[#F2F4F6] rounded animate-pulse" />
+            </div>
+          ) : detail ? (
+            <>
+              <p className="text-[13px] text-[#4E5968] font-medium">
+                {detail.startStation} ↔ {detail.endStation}
+              </p>
+              {/* 첫차/막차 */}
+              <div className="flex gap-3 mt-3">
+                <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
+                  <p className="text-[11px] text-[#8B95A1] font-medium mb-0.5">상행 첫차/막차</p>
+                  <p className="text-[13px] font-bold text-[#191F28]">
+                    {detail.upFirstTime || "-"} / {detail.upLastTime || "-"}
+                  </p>
+                </div>
+                <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
+                  <p className="text-[11px] text-[#8B95A1] font-medium mb-0.5">하행 첫차/막차</p>
+                  <p className="text-[13px] font-bold text-[#191F28]">
+                    {detail.downFirstTime || "-"} / {detail.downLastTime || "-"}
+                  </p>
+                </div>
+              </div>
+              {detail.interval > 0 && (
+                <p className="text-[12px] text-[#8B95A1] mt-2">배차 간격 약 {detail.interval}분</p>
+              )}
+            </>
+          ) : (
+            <p className="text-[13px] text-[#8B95A1]">{arrival.destination} 방면</p>
+          )}
+        </div>
+
+        {/* 상행/하행 탭 */}
+        {stations.length > 0 && (
+          <div className="shrink-0 flex border-b border-[#F2F4F6]">
+            {([0, 1] as const).map(dir => (
+              <button key={dir} onClick={() => setDirTab(dir)}
+                className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
+                  dirTab === dir ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
+                }`}>
+                {dir === 0 ? "⬆ 상행" : "⬇ 하행"}
+                {busesOnDir.length > 0 && dirTab === dir && (
+                  <span className="ml-1.5 text-[11px] font-black text-[#F04452]">
+                    🚌 {busesOnDir.length}대 운행중
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 정류장 목록 */}
+        <div className="overflow-y-auto flex-1 px-4 py-3">
+          {loading ? (
+            <div className="space-y-3">
+              {[1,2,3,4,5].map(i => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full bg-[#E5E8EB]" />
+                  <div className="h-4 flex-1 bg-[#F2F4F6] rounded animate-pulse" />
+                </div>
+              ))}
+            </div>
+          ) : curStations.length === 0 ? (
+            <div className="py-12 text-center">
+              <p className="text-[14px] text-[#8B95A1]">정류장 정보를 불러올 수 없습니다</p>
+            </div>
+          ) : (
+            <div className="relative">
+              {/* 수직선 */}
+              <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#E5E8EB]" />
+              <div className="space-y-0">
+                {curStations.map((st, idx) => {
+                  const hasBus = busSeqs.has(st.seq);
+                  const isFirst = idx === 0;
+                  const isLast = idx === curStations.length - 1;
+                  return (
+                    <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
+                      <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                        hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
+                        (isFirst || isLast) ? "bg-[#3182F6]" : "bg-white border-2 border-[#D1D5DB]"
+                      }`}>
+                        {hasBus && <span className="text-[8px]">🚌</span>}
+                      </div>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className={`text-[13px] ${
+                          hasBus ? "font-bold text-[#F04452]" :
+                          (isFirst || isLast) ? "font-bold text-[#3182F6]" : "text-[#4E5968]"
+                        }`}>
+                          {st.stationName}
+                        </span>
+                        {hasBus && (
+                          <span className="text-[11px] font-bold text-white bg-[#F04452] px-2 py-0.5 rounded-full">
+                            여기
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ─── 버스 노선 행 ─────────────────────────────────────────────
 function RouteRow({
   route,
   isFav,
   onToggleFav,
+  onSelect,
 }: {
   route: BusRoute;
   isFav: boolean;
   onToggleFav: () => void;
+  onSelect: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+    <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3"
+      onClick={onSelect}>
       <div className="flex items-center gap-2.5">
         <div className="bg-[#3182F6] rounded-lg px-2.5 py-1 min-w-[38px] text-center">
           <span className="text-white text-[14px] font-black">{route.routeNo}</span>
@@ -111,7 +291,7 @@ function RouteRow({
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <button onClick={onToggleFav} className="p-1 active:opacity-60">
+        <button onClick={e => { e.stopPropagation(); onToggleFav(); }} className="p-1 active:opacity-60">
           <Star size={15} className={isFav ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
         </button>
         <ArrivalBadge min={route.arrivalMin} />
@@ -129,6 +309,8 @@ export default function TransportPage() {
   const [favRoutes, setFavRoutes] = useState<Set<string>>(new Set()); // "stopId::routeId"
   const [favSubways, setFavSubways] = useState<Set<string>>(new Set());
   const [liveRoutes, setLiveRoutes] = useState<Record<string, BusRoute[]>>({});
+  const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
+  const [liveArrivals, setLiveArrivals] = useState<Record<string, BusArrival[]>>({}); // stopId → arrivals
   const [lastUpdated, setLastUpdated] = useState("");
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
@@ -152,17 +334,18 @@ export default function TransportPage() {
       const results = await Promise.all(
         nearbyStops.map(async stop => {
           const arrivals = await fetchBusStop(stop.name);
-          if (!arrivals.length) return [stop.id, stop.routes] as const;
+          if (!arrivals.length) return { id: stop.id, routes: stop.routes, arrivals: [] };
           const routes: BusRoute[] = arrivals.map((a, i) => ({
             id: `live-${stop.id}-${i}`,
             routeNo: a.routeNo, destination: a.destination,
             arrivalMin: a.arrivalMin, remainingStops: a.remainingStops,
             isLowFloor: a.isLowFloor, isExpress: a.isExpress,
           }));
-          return [stop.id, routes] as const;
+          return { id: stop.id, routes, arrivals };
         })
       );
-      setLiveRoutes(Object.fromEntries(results));
+      setLiveRoutes(Object.fromEntries(results.map(r => [r.id, r.routes])));
+      setLiveArrivals(Object.fromEntries(results.map(r => [r.id, r.arrivals])));
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     } catch { /* fallback */ }
     setLoading(false);
@@ -230,6 +413,14 @@ export default function TransportPage() {
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
       <Header title="교통 정보" />
+
+      {/* 버스 상세 바텀 시트 */}
+      {selectedArrival && (
+        <BusDetailSheet
+          arrival={selectedArrival}
+          onClose={() => setSelectedArrival(null)}
+        />
+      )}
 
       {/* 탭 */}
       <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6] flex">
@@ -306,12 +497,16 @@ export default function TransportPage() {
                     </div>
                   </button>
                   <div className="px-4 pb-4 space-y-2">
-                    {routes.map(r => (
+                    {routes.map((r, i) => (
                       <RouteRow
                         key={r.id}
                         route={r}
                         isFav={favRoutes.has(`${stop.id}::${r.id}`)}
                         onToggleFav={() => toggleRoute(`${stop.id}::${r.id}`)}
+                        onSelect={() => {
+                          const arr = liveArrivals[stop.id]?.[i];
+                          if (arr) setSelectedArrival(arr);
+                        }}
                       />
                     ))}
                     {!open && stop.routes.length > 2 && (
