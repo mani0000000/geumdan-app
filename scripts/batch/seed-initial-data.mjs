@@ -388,23 +388,20 @@ console.log('🌱 Starting initial data seed...\n');
 try {
   console.log('📦 Seeding apartments...');
   await upsert('apartments', apartments);
-  await upsert('apartment_sizes', apartmentSizes, 'apt_id');
-  // Price history doesn't have a unique business key — use apt_id+pyeong+deal_date combo
-  // We'll delete existing and re-insert to avoid duplicates
+
+  // apartment_sizes: no single unique column — delete + insert
+  console.log('  Clearing existing apartment_sizes...');
+  await supabase.from('apartment_sizes').delete().in('apt_id', apartments.map(a => a.id));
+  const { error: sizesError } = await supabase.from('apartment_sizes').insert(apartmentSizes);
+  if (sizesError) console.error('  ❌ Error inserting apartment_sizes:', sizesError.message);
+  else console.log(`  ✅ apartment_sizes done (${apartmentSizes.length} rows)`);
+
+  // Price history: delete + insert
   console.log('  Clearing existing price history...');
-  const { error: delError } = await supabase
-    .from('apartment_price_history')
-    .delete()
-    .in('apt_id', apartments.map(a => a.id));
-  if (delError) console.warn('  ⚠️  Could not clear price history:', delError.message);
-  const { error: insertError } = await supabase
-    .from('apartment_price_history')
-    .insert(apartmentPriceHistory);
-  if (insertError) {
-    console.error('  ❌ Error inserting price history:', insertError.message);
-  } else {
-    console.log(`  ✅ apartment_price_history done (${apartmentPriceHistory.length} rows)`);
-  }
+  await supabase.from('apartment_price_history').delete().in('apt_id', apartments.map(a => a.id));
+  const { error: insertError } = await supabase.from('apartment_price_history').insert(apartmentPriceHistory);
+  if (insertError) console.error('  ❌ Error inserting price history:', insertError.message);
+  else console.log(`  ✅ apartment_price_history done (${apartmentPriceHistory.length} rows)`);
 
   console.log('\n🏥 Seeding pharmacies...');
   await upsert('pharmacies', pharmacies);
