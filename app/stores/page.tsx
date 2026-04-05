@@ -11,7 +11,8 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import { buildings, coupons, newStoreOpenings, storeDetails } from "@/lib/mockData";
-import type { Store, StoreCategory, Floor } from "@/lib/types";
+import { fetchBuildingWithFloors } from "@/lib/db/buildings";
+import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 
 const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
@@ -29,14 +30,14 @@ const catBg: Record<StoreCategory, string> = {
 
 // 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
 const NEARBY_BUILDINGS = [
-  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true,  categories: ["카페","음식점","병원/약국","미용","기타"] as StoreCategory[] },
-  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: false, categories: ["카페","음식점","편의점","마트"] as StoreCategory[] },
-  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: false, categories: ["음식점","편의점","기타"] as StoreCategory[] },
-  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: false, categories: ["음식점","병원/약국","기타"] as StoreCategory[] },
-  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: false, categories: ["음식점","편의점","병원/약국"] as StoreCategory[] },
-  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: false, categories: ["카페","음식점","미용","학원"] as StoreCategory[] },
-  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: false, categories: ["음식점","마트","기타"] as StoreCategory[] },
-  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: false, categories: ["카페","음식점","마트","미용"] as StoreCategory[] },
+  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true,  image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","병원/약국","미용","기타"] as StoreCategory[] },
+  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: true, image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","편의점","마트"] as StoreCategory[] },
+  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: true, image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","기타"] as StoreCategory[] },
+  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: true, image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=280&fit=crop&auto=format", categories: ["음식점","병원/약국","기타"] as StoreCategory[] },
+  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: true, image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","병원/약국"] as StoreCategory[] },
+  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: true, image: "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","미용","학원"] as StoreCategory[] },
+  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: true, image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=280&fit=crop&auto=format", categories: ["음식점","마트","기타"] as StoreCategory[] },
+  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: true, image: "https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","마트","미용"] as StoreCategory[] },
 ];
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
@@ -968,6 +969,7 @@ export default function StoresPage() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
+  const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
 
   // 위치 권한 요청
@@ -991,6 +993,11 @@ export default function StoresPage() {
   useEffect(() => {
     requestLocation();
   }, []);
+
+  useEffect(() => {
+    if (!selectedBuildingId) { setSelectedBuildingData(null); return; }
+    fetchBuildingWithFloors(selectedBuildingId).then(data => setSelectedBuildingData(data));
+  }, [selectedBuildingId]);
 
   // 검색 결과
   const searchResults = useMemo<SearchResult[]>(() => {
@@ -1024,7 +1031,6 @@ export default function StoresPage() {
   const selectedNearby = selectedBuildingId
     ? nearbyWithDist.find(n => n.id === selectedBuildingId) ?? null
     : null;
-  const selectedBuildingData = selectedBuildingId === "b1" ? buildings[0] : null;
 
   // 지도 필터: 선택 업종이 없는 건물 ID set
   const dimmedIds = useMemo(() => {

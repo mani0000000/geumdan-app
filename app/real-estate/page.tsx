@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TrendingUp, TrendingDown, MapPin, Search,
   Plus, X, Phone, ChevronUp, ChevronDown, Star,
@@ -12,7 +12,8 @@ import {
 } from "recharts";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import { apartments, listings, myHomes as initialMyHomes } from "@/lib/mockData";
+import { apartments as mockApartments, listings, myHomes as initialMyHomes } from "@/lib/mockData";
+import { fetchApartments } from "@/lib/db/apartments";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
@@ -81,10 +82,12 @@ function AddHomeModal({
   onClose,
   onAdd,
   existing,
+  apartments,
 }: {
   onClose: () => void;
   onAdd: (home: MyHome) => void;
   existing: string[];
+  apartments: Apartment[];
 }) {
   const [step, setStep] = useState<"select" | "detail">("select");
   const [selectedApt, setSelectedApt] = useState<Apartment | null>(null);
@@ -366,6 +369,7 @@ function ListingCard({ listing, onCall }: { listing: Listing; onCall: () => void
 
 // ---------- Main Page ----------
 export default function RealEstatePage() {
+  const [apartments, setApartments] = useState<Apartment[]>(mockApartments);
   const [myHomes, setMyHomes] = useState<MyHome[]>(initialMyHomes);
   const [showAddModal, setShowAddModal] = useState(false);
   const [mainTab, setMainTab] = useState<MainTab>("실거래");
@@ -373,6 +377,8 @@ export default function RealEstatePage() {
   const [activeDong, setActiveDong] = useState("전체");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApt, setSelectedApt] = useState<string | null>(null);
+
+  useEffect(() => { fetchApartments().then(setApartments); }, []);
 
   const filteredApts = apartments.filter((a) => {
     if (activeDong !== "전체" && a.dong !== activeDong) return false;
@@ -595,6 +601,7 @@ export default function RealEstatePage() {
           onClose={() => setShowAddModal(false)}
           onAdd={(home) => setMyHomes((prev) => [...prev, home])}
           existing={myHomes.map((h) => h.aptId)}
+          apartments={apartments}
         />
       )}
     </div>

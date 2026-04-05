@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
+import { fetchNewsArticles } from "@/lib/db/news";
 import type { NewsType } from "@/lib/types";
 
 const tabs: NewsType[] = ["뉴스", "유튜브", "인스타"];
@@ -172,16 +173,21 @@ function NewsListItem({ item }: { item: CardItem }) {
 export default function NewsPage() {
   const [active, setActive] = useState<NewsType>("뉴스");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [dbItems, setDbItems] = useState(newsItems);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
 
   const loadNews = async () => {
     setLoading(true);
-    const articles = await fetchGeumdanNews();
+    const [articles, dbNews] = await Promise.all([
+      fetchGeumdanNews(),
+      fetchNewsArticles(undefined, 50),
+    ]);
     if (articles.length > 0) {
       setRealNews(articles);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
+    if (dbNews.length > 0) setDbItems(dbNews);
     setLoading(false);
   };
 
@@ -190,9 +196,9 @@ export default function NewsPage() {
   const newsSource: CardItem[] = active === "뉴스"
     ? (realNews.length > 0
         ? realNews.map(n => ({ ...n, summary: n.summary }))
-        : newsItems.filter(n => n.type === "뉴스").map(n => ({ ...n, summary: n.summary, thumbnail: n.thumbnail }))
+        : dbItems.filter(n => n.type === "뉴스").map(n => ({ ...n, summary: n.summary, thumbnail: n.thumbnail }))
       )
-    : newsItems.filter(n => n.type === active).map(n => ({ ...n, thumbnail: n.thumbnail }));
+    : dbItems.filter(n => n.type === active).map(n => ({ ...n, thumbnail: n.thumbnail }));
 
   const featured = newsSource.slice(0, 8);
   const rest = newsSource.slice(8);

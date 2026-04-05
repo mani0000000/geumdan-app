@@ -12,8 +12,9 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
+import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 
@@ -767,6 +768,13 @@ function PharmacySection() {
   const [mainType, setMainType] = useState<EmergencyType>("약국");
   const [filter, setFilter] = useState<PharmacyFilter>("전체");
   const [showAll, setShowAll] = useState(false);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
+  const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
+
+  useEffect(() => {
+    fetchNightPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
+    fetchEmergencyRooms("all").then(data => { if (data.length > 0) setErData(data); });
+  }, []);
 
   const now = new Date();
   const isWeekend = now.getDay() === 0 || now.getDay() === 6;
@@ -783,7 +791,7 @@ function PharmacySection() {
 
   const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
 
-  const erList = emergencyRooms.filter(e =>
+  const erList = erData.filter(e =>
     mainType === "소아응급실" ? e.isPediatric : true
   );
 
