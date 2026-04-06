@@ -12,8 +12,9 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
+import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 
@@ -158,7 +159,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
         {/* 확장 영역 */}
         {expanded && (
           <div className="px-4 pb-4 border-t border-white/20">
-            <div className="flex items-center gap-4 py-2.5 mb-2">
+            <div className="flex items-center gap-4 py-2.5 mb-2 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <Droplets size={12} className="text-white/70" />
                 <span className="text-[13px] text-white/80">습도 {weather.humidity}%</span>
@@ -168,6 +169,26 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
                 <span className="text-[13px] text-white/80">바람 {weather.windSpeed}m/s</span>
               </div>
               <span className="text-[13px] text-white/60 ml-auto">체감 {weather.feelsLike}°</span>
+              {weather.pm10 != null && (
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
+                  weather.pm10Label === "좋음" ? "bg-blue-300/30 text-blue-100"
+                  : weather.pm10Label === "보통" ? "bg-green-300/30 text-green-100"
+                  : weather.pm10Label === "나쁨" ? "bg-orange-300/30 text-orange-100"
+                  : "bg-red-400/30 text-red-100"
+                }`}>
+                  미세 {weather.pm10}㎍ {weather.pm10Label}
+                </span>
+              )}
+              {weather.pm25 != null && (
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
+                  weather.pm25Label === "좋음" ? "bg-blue-300/30 text-blue-100"
+                  : weather.pm25Label === "보통" ? "bg-green-300/30 text-green-100"
+                  : weather.pm25Label === "나쁨" ? "bg-orange-300/30 text-orange-100"
+                  : "bg-red-400/30 text-red-100"
+                }`}>
+                  초미세 {weather.pm25}㎍ {weather.pm25Label}
+                </span>
+              )}
             </div>
             {weather.hourly.length > 0 && (
               <div className="flex gap-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
@@ -767,6 +788,13 @@ function PharmacySection() {
   const [mainType, setMainType] = useState<EmergencyType>("약국");
   const [filter, setFilter] = useState<PharmacyFilter>("전체");
   const [showAll, setShowAll] = useState(false);
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
+  const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
+
+  useEffect(() => {
+    fetchNightPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
+    fetchEmergencyRooms("all").then(data => { if (data.length > 0) setErData(data); });
+  }, []);
 
   const now = new Date();
   const isWeekend = now.getDay() === 0 || now.getDay() === 6;
@@ -783,7 +811,7 @@ function PharmacySection() {
 
   const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
 
-  const erList = emergencyRooms.filter(e =>
+  const erList = erData.filter(e =>
     mainType === "소아응급실" ? e.isPediatric : true
   );
 

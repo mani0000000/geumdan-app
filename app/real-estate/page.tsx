@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   TrendingUp, TrendingDown, MapPin, Search,
   Plus, X, Phone, ChevronUp, ChevronDown, Star,
@@ -12,7 +12,9 @@ import {
 } from "recharts";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import { apartments, listings, myHomes as initialMyHomes } from "@/lib/mockData";
+import { apartments as mockApartments, listings, myHomes as initialMyHomes } from "@/lib/mockData";
+import { fetchApartments } from "@/lib/db/apartments";
+import { fetchRecentTransactions, type AptTransaction } from "@/lib/api/realEstate";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
@@ -81,10 +83,12 @@ function AddHomeModal({
   onClose,
   onAdd,
   existing,
+  apartments,
 }: {
   onClose: () => void;
   onAdd: (home: MyHome) => void;
   existing: string[];
+  apartments: Apartment[];
 }) {
   const [step, setStep] = useState<"select" | "detail">("select");
   const [selectedApt, setSelectedApt] = useState<Apartment | null>(null);
@@ -366,6 +370,8 @@ function ListingCard({ listing, onCall }: { listing: Listing; onCall: () => void
 
 // ---------- Main Page ----------
 export default function RealEstatePage() {
+  const [apartments, setApartments] = useState<Apartment[]>(mockApartments);
+  const [recentTx, setRecentTx] = useState<AptTransaction[]>([]);
   const [myHomes, setMyHomes] = useState<MyHome[]>(initialMyHomes);
   const [showAddModal, setShowAddModal] = useState(false);
   const [mainTab, setMainTab] = useState<MainTab>("실거래");
@@ -373,6 +379,11 @@ export default function RealEstatePage() {
   const [activeDong, setActiveDong] = useState("전체");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApt, setSelectedApt] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchApartments().then(setApartments);
+    fetchRecentTransactions().then(setRecentTx);
+  }, []);
 
   const filteredApts = apartments.filter((a) => {
     if (activeDong !== "전체" && a.dong !== activeDong) return false;
@@ -556,6 +567,26 @@ export default function RealEstatePage() {
                 <p className="text-gray-500 text-sm">검색된 단지가 없습니다</p>
               </div>
             )}
+            {recentTx.length > 0 && (
+              <div className="bg-white rounded-2xl overflow-hidden mt-1">
+                <div className="px-4 pt-4 pb-2 flex items-center gap-2">
+                  <TrendingUp size={15} className="text-emerald-600" />
+                  <p className="text-[15px] font-bold text-gray-900">이번 달 실거래</p>
+                  <span className="ml-auto text-[12px] text-gray-400">국토교통부</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {recentTx.map((tx, i) => (
+                    <div key={i} className="px-4 py-3 flex items-center justify-between">
+                      <div>
+                        <p className="text-[14px] font-semibold text-gray-900">{tx.aptName}</p>
+                        <p className="text-[12px] text-gray-400 mt-0.5">{tx.dong} · {tx.pyeong}평 · {tx.floor}층 · {tx.dealDate}</p>
+                      </div>
+                      <p className="text-[14px] font-bold text-emerald-600">{formatPrice(tx.price)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -595,6 +626,7 @@ export default function RealEstatePage() {
           onClose={() => setShowAddModal(false)}
           onAdd={(home) => setMyHomes((prev) => [...prev, home])}
           existing={myHomes.map((h) => h.aptId)}
+          apartments={apartments}
         />
       )}
     </div>

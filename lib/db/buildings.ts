@@ -136,8 +136,8 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
       id: bRow.id as string,
       name: bRow.name as string,
       address: (bRow.address as string) ?? '',
-      parkingInfo: (bRow.parking_info as string | undefined) ?? undefined,
-      openTime: (bRow.open_time as string | undefined) ?? undefined,
+      parkingInfo: (bRow.parking_info as string) ?? '',
+      openTime: (bRow.open_time as string) ?? '',
       floors,
     };
   } catch (err) {
