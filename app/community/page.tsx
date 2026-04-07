@@ -10,7 +10,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import type { CommunityCategory, NewsType } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -92,30 +92,77 @@ function CommunityTab() {
   );
 }
 
+// ─── YouTube 임베드 모달 ────────────────────────────────────────
+function YouTubeModal({ video, onClose }: { video: YouTubeVideo; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[300] bg-black flex flex-col" onClick={onClose}>
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="active:opacity-60">
+          <X size={20} className="text-white" />
+        </button>
+        <p className="flex-1 text-[14px] font-semibold text-white line-clamp-1">{video.title}</p>
+        <a href={video.url} target="_blank" rel="noopener noreferrer"
+          className="active:opacity-60" onClick={e => e.stopPropagation()}>
+          <ExternalLink size={18} className="text-white/70" />
+        </a>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-black" onClick={e => e.stopPropagation()}>
+        <div className="w-full" style={{ position: "relative", paddingBottom: "56.25%" }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
+            title={video.title}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+      <div className="px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
+        <p className="text-[13px] text-white/60">{video.channelName}</p>
+      </div>
+    </div>
+  );
+}
+
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [ytLoading, setYtLoading] = useState(true);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
 
   const refresh = async () => {
     setLoading(true);
     const articles = await fetchGeumdanNews();
     if (articles.length > 0) {
-      setRealNews(articles);
+      const sorted = [...articles].sort(
+        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
+      setRealNews(sorted);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     setLoading(false);
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    setYtLoading(true);
+    fetchYouTubeVideos("검단신도시").then(videos => {
+      setYtVideos(videos);
+      setYtLoading(false);
+    });
+  }, []);
 
-  const youtubeItems = newsItems.filter(n => n.type === "유튜브");
-  const instaItems   = newsItems.filter(n => n.type === "인스타");
-  const newsSource   = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
+  const instaItems = newsItems.filter(n => n.type === "인스타");
+  const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
   return (
     <div className="pb-6">
+
+      {/* ── YouTube 모달 ── */}
+      {selectedVideo && <YouTubeModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
 
       {/* ── 유튜브 ── */}
       <div className="pt-4">
@@ -127,29 +174,41 @@ function NewsTab() {
           <span className="text-[12px] text-[#8B95A1]">검단 관련 영상</span>
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          {youtubeItems.map(item => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
-              {/* 썸네일 */}
-              <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                  <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
-                    <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
-                  </div>
+          {ytLoading ? (
+            [0,1,2].map(i => (
+              <div key={i} className="shrink-0 w-[220px] rounded-2xl overflow-hidden animate-pulse">
+                <div className="w-full bg-[#E5E8EB]" style={{ aspectRatio: "16/9" }} />
+                <div className="bg-white px-3 py-2.5 space-y-1.5">
+                  <div className="h-3 bg-[#E5E8EB] rounded w-full" />
+                  <div className="h-3 bg-[#E5E8EB] rounded w-2/3" />
                 </div>
-                {item.viewCount && (
-                  <span className="absolute bottom-1.5 right-2 text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">
-                    {(item.viewCount / 1000).toFixed(1)}K
+              </div>
+            ))
+          ) : ytVideos.length > 0 ? (
+            ytVideos.map(video => (
+              <button key={video.id} onClick={() => setSelectedVideo(video)}
+                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left">
+                <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+                    }} />
+                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                      <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
+                    </div>
+                  </div>
+                  <span className="absolute bottom-1.5 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    YouTube
                   </span>
-                )}
-              </div>
-              <div className="px-3 pt-2.5 pb-3">
-                <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                <p className="text-[11px] text-[#8B95A1] mt-1.5">{formatRelativeTime(item.publishedAt)}</p>
-              </div>
-            </a>
-          ))}
+                </div>
+                <div className="px-3 pt-2.5 pb-3">
+                  <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{video.title}</p>
+                  <p className="text-[11px] text-[#8B95A1] mt-1.5">{video.channelName}</p>
+                </div>
+              </button>
+            ))
+          ) : null}
           <div className="shrink-0 w-2" />
         </div>
       </div>
@@ -177,25 +236,33 @@ function NewsTab() {
               <div key={i} className="bg-white rounded-2xl h-[76px] animate-pulse" />
             ))
           ) : (
-            newsSource.map(item => (
-              <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
-                {item.thumbnail && (
-                  <div className="shrink-0 w-[88px] h-[72px]">
-                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            newsSource.map((item, idx) => {
+              const colors = ["#3182F6","#00C471","#7C3AED","#F59E0B","#F04452","#0891B2"];
+              const bg = colors[idx % colors.length];
+              const initial = (item.source || "뉴").slice(0, 1);
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
+                  <div className="shrink-0 w-[88px] h-[76px] flex items-center justify-center"
+                    style={{ background: item.thumbnail ? undefined : bg }}>
+                    {item.thumbnail ? (
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-[22px] font-bold">{initial}</span>
+                    )}
                   </div>
-                )}
-                <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
-                  <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
-                    <span className="text-[11px] text-[#B0B8C1]">·</span>
-                    <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
-                    <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                  <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
+                    <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
+                      <span className="text-[11px] text-[#B0B8C1]">·</span>
+                      <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                      <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                    </div>
                   </div>
-                </div>
-              </a>
-            ))
+                </a>
+              );
+            })
           )}
         </div>
       </div>
