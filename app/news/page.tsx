@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { ExternalLink, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, RefreshCw, ChevronLeft, ChevronRight, X, Play } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
 import type { NewsType } from "@/lib/types";
 
@@ -74,6 +74,115 @@ function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index:
         </div>
       </div>
     </a>
+  );
+}
+
+// ── YouTube 임베드 모달 ────────────────────────────────────
+function YouTubeModal({ video, onClose }: { video: YouTubeVideo; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[300] bg-black flex flex-col" onClick={onClose}>
+      <div
+        className="flex items-center gap-3 px-4 py-3 bg-[#0F0F0F]"
+        onClick={e => e.stopPropagation()}
+      >
+        <button onClick={onClose} className="active:opacity-60">
+          <X size={20} className="text-white" />
+        </button>
+        <p className="flex-1 text-[14px] font-semibold text-white line-clamp-1">{video.title}</p>
+        <a href={video.url} target="_blank" rel="noopener noreferrer"
+          className="active:opacity-60" onClick={e => e.stopPropagation()}>
+          <ExternalLink size={18} className="text-white/70" />
+        </a>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-black"
+        onClick={e => e.stopPropagation()}>
+        <div className="w-full" style={{ position: "relative", paddingBottom: "56.25%" }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
+            title={video.title}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+      <div className="px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
+        <p className="text-[13px] text-white/60">{video.channelName}</p>
+      </div>
+    </div>
+  );
+}
+
+// ── YouTube 썸네일 그리드 ─────────────────────────────────
+function YouTubeGrid({ videos, loading, onSelect }: {
+  videos: YouTubeVideo[];
+  loading: boolean;
+  onSelect: (v: YouTubeVideo) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="px-4 grid grid-cols-2 gap-3 mt-2">
+        {[0,1,2,3].map(i => (
+          <div key={i} className="rounded-2xl overflow-hidden animate-pulse">
+            <div className="w-full bg-[#E5E8EB]" style={{ aspectRatio: "16/9" }} />
+            <div className="bg-white px-3 py-2.5 space-y-1.5">
+              <div className="h-3 bg-[#E5E8EB] rounded w-full" />
+              <div className="h-3 bg-[#E5E8EB] rounded w-2/3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (videos.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center pt-20 text-center px-8">
+        <span className="text-5xl mb-4">📹</span>
+        <p className="text-[17px] font-bold text-[#191F28]">영상을 불러오는 중이에요</p>
+        <p className="text-[14px] text-[#8B95A1] mt-2">잠시 후 다시 확인해보세요</p>
+      </div>
+    );
+  }
+  return (
+    <div className="px-4 grid grid-cols-2 gap-3 mt-2">
+      {videos.map(video => (
+        <button
+          key={video.id}
+          onClick={() => onSelect(video)}
+          className="rounded-2xl overflow-hidden bg-white text-left active:opacity-75 shadow-sm"
+        >
+          {/* 썸네일 */}
+          <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+            <img
+              src={video.thumbnail}
+              alt={video.title}
+              className="w-full h-full object-cover"
+              onError={e => {
+                (e.target as HTMLImageElement).src =
+                  `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+              }}
+            />
+            {/* 플레이 버튼 */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm">
+                <Play size={16} className="text-white fill-white ml-0.5" />
+              </div>
+            </div>
+            {/* YouTube 배지 */}
+            <span className="absolute bottom-2 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+              YouTube
+            </span>
+          </div>
+          {/* 제목 */}
+          <div className="px-2.5 py-2">
+            <p className="text-[13px] font-semibold text-[#191F28] line-clamp-2 leading-snug">
+              {video.title}
+            </p>
+            <p className="text-[11px] text-[#8B95A1] mt-1 truncate">{video.channelName}</p>
+          </div>
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -174,7 +283,10 @@ export default function NewsPage() {
   const [active, setActive] = useState<NewsType>("뉴스");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [dbItems, setDbItems] = useState(newsItems);
+  const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ytLoading, setYtLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
 
   const loadNews = async () => {
@@ -191,7 +303,20 @@ export default function NewsPage() {
     setLoading(false);
   };
 
+  const loadYouTube = async () => {
+    if (ytVideos.length > 0) return; // 이미 로딩됨
+    setYtLoading(true);
+    const videos = await fetchYouTubeVideos("검단신도시");
+    setYtVideos(videos);
+    setYtLoading(false);
+  };
+
   useEffect(() => { loadNews(); }, []);
+
+  // 유튜브 탭 선택 시 자동 로드
+  useEffect(() => {
+    if (active === "유튜브") loadYouTube();
+  }, [active]);
 
   const newsSource: CardItem[] = active === "뉴스"
     ? (realNews.length > 0
@@ -218,27 +343,47 @@ export default function NewsPage() {
       </div>
 
       {/* Status */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        {realNews.length > 0 && active === "뉴스"
-          ? <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
-              <span className="text-[13px] text-[#4E5968]">실시간 검단 뉴스 {realNews.length}건</span>
-            </div>
-          : <span className="text-[13px] text-[#8B95A1]">검단 신도시 소식</span>
-        }
-        <button onClick={loadNews} className="flex items-center gap-1 active:opacity-60">
-          <RefreshCw size={12} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
-          {lastUpdated && <span className="text-[12px] text-[#B0B8C1]">{lastUpdated}</span>}
-        </button>
-      </div>
+      {active !== "유튜브" && (
+        <div className="flex items-center justify-between px-4 py-2.5">
+          {realNews.length > 0 && active === "뉴스"
+            ? <div className="flex items-center gap-1.5">
+                <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
+                <span className="text-[13px] text-[#4E5968]">실시간 검단 뉴스 {realNews.length}건</span>
+              </div>
+            : <span className="text-[13px] text-[#8B95A1]">검단 신도시 소식</span>
+          }
+          <button onClick={loadNews} className="flex items-center gap-1 active:opacity-60">
+            <RefreshCw size={12} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
+            {lastUpdated && <span className="text-[12px] text-[#B0B8C1]">{lastUpdated}</span>}
+          </button>
+        </div>
+      )}
 
-      {/* Card news row */}
-      <div className="mb-4">
-        <CardNewsRow items={featured} loading={loading && active === "뉴스"} />
-      </div>
+      {/* 유튜브 탭 */}
+      {active === "유튜브" && (
+        <>
+          <div className="flex items-center justify-between px-4 py-2.5">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#FF0000] animate-pulse" />
+              <span className="text-[13px] text-[#4E5968]">검단신도시 유튜브 영상</span>
+            </div>
+            <button onClick={() => { setYtVideos([]); loadYouTube(); }} className="active:opacity-60">
+              <RefreshCw size={12} className={`text-[#8B95A1] ${ytLoading ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+          <YouTubeGrid videos={ytVideos} loading={ytLoading} onSelect={setSelectedVideo} />
+        </>
+      )}
+
+      {/* 뉴스/인스타 탭: Card news row */}
+      {active !== "유튜브" && (
+        <div className="mb-4">
+          <CardNewsRow items={featured} loading={loading && active === "뉴스"} />
+        </div>
+      )}
 
       {/* Rest as list */}
-      {rest.length > 0 && (
+      {active !== "유튜브" && rest.length > 0 && (
         <div className="px-4 space-y-2">
           <p className="text-[14px] font-bold text-[#8B95A1] mb-1">더 보기</p>
           {rest.map(item => (
@@ -256,6 +401,11 @@ export default function NewsPage() {
       )}
 
       <BottomNav />
+
+      {/* 유튜브 임베드 모달 */}
+      {selectedVideo && (
+        <YouTubeModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />
+      )}
     </div>
   );
 }

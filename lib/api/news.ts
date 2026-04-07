@@ -14,6 +14,15 @@ export interface NewsArticle {
   type: "뉴스";
 }
 
+export interface YouTubeVideo {
+  id: string;
+  videoId: string;
+  title: string;
+  channelName: string;
+  thumbnail: string;
+  url: string;
+}
+
 const NAVER_ID = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID ?? "";
 const NAVER_SECRET = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
@@ -56,16 +65,13 @@ async function fetchGoogleRss(): Promise<NewsArticle[]> {
     const rssUrl = encodeURIComponent(
       "https://news.google.com/rss/search?q=검단신도시&hl=ko&gl=KR&ceid=KR:ko"
     );
-    const res = await fetch(`https://api.allorigins.win/get?url=${rssUrl}`, {
-      cache: "no-store",
-    });
+    const res = await fetch(`https://api.allorigins.win/get?url=${rssUrl}`, { cache: "no-store" });
     if (!res.ok) return [];
     const json = await res.json();
     const xml: string = json.contents ?? "";
     if (!xml.includes("<item>")) return [];
 
-    const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-    return items
+    return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
       .map((m, i) => {
         const raw = m[1];
         const title = stripXml(tagVal(raw, "title"));
@@ -74,14 +80,9 @@ async function fetchGoogleRss(): Promise<NewsArticle[]> {
         const pub   = tagVal(raw, "pubDate");
         const src   = tagVal(raw, "source") || extractSource(title);
         return {
-          id: `gr-${i}`,
-          title,
-          summary: desc,
-          source: src,
+          id: `gr-${i}`, title, summary: desc, source: src,
           publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
-          url: link || "#",
-          thumbnail: undefined,
-          type: "뉴스" as const,
+          url: link || "#", thumbnail: undefined, type: "뉴스" as const,
         };
       })
       .filter(n => n.title.length > 5)
@@ -102,17 +103,13 @@ async function fetchRss2json(): Promise<NewsArticle[]> {
     });
     if (!res.ok) return [];
     const json = await res.json();
-    const items: Record<string, string>[] = json.items ?? [];
-    return items
+    return (json.items as Record<string, string>[] ?? [])
       .map((item, i) => ({
-        id: `rj-${i}`,
-        title: strip(item.title ?? ""),
+        id: `rj-${i}`, title: strip(item.title ?? ""),
         summary: strip(item.description ?? "").slice(0, 120),
         source: item.author || extractSource(item.title ?? ""),
         publishedAt: item.pubDate ?? new Date().toISOString(),
-        url: item.link || "#",
-        thumbnail: undefined,
-        type: "뉴스" as const,
+        url: item.link || "#", thumbnail: undefined, type: "뉴스" as const,
       }))
       .filter(n => n.title.length > 5);
   } catch {
@@ -120,13 +117,90 @@ async function fetchRss2json(): Promise<NewsArticle[]> {
   }
 }
 
+// ── 유튜브: allorigins → YouTube 검색 HTML 파싱 ──────────
+export async function fetchYouTubeVideos(query = "검단신도시"): Promise<YouTubeVideo[]> {
+  try {
+    const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+    const res = await fetch(
+      `https://api.allorigins.win/get?url=${encodeURIComponent(searchUrl)}`,
+      { cache: "no-store" }
+    );
+    if (!res.ok) return extractVideoIdsOnly("", query);
+    const { contents } = await res.json();
+    if (!contents) return [];
+
+    // ytInitialData JSON 파싱 시도
+    const match = contents.match(/var ytInitialData\s*=\s*(\{[\s\S]+?\});\s*(?:var |<\/script>)/);
+    if (match) {
+      try {
+        const ytData = JSON.parse(match[1]);
+        const sections =
+          ytData?.contents?.twoColumnSearchResultsRenderer
+            ?.primaryContents?.sectionListRenderer?.contents ?? [];
+        const videos: YouTubeVideo[] = [];
+        for (const section of sections) {
+          for (const item of (section?.itemSectionRenderer?.contents ?? [])) {
+            const vr = item?.videoRenderer;
+            if (!vr?.videoId) continue;
+            const videoId: string = vr.videoId;
+            videos.push({
+              id: `yt-${videos.length}`,
+              videoId,
+              title: vr.title?.runs?.[0]?.text ?? `${query} 영상 ${videos.length + 1}`,
+              channelName: vr.ownerText?.runs?.[0]?.text ?? "YouTube",
+              thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+              url: `https://www.youtube.com/watch?v=${videoId}`,
+            });
+            if (videos.length >= 12) break;
+          }
+          if (videos.length >= 12) break;
+        }
+        if (videos.length > 0) return videos;
+      } catch { /* fall through to regex */ }
+    }
+
+    // 파싱 실패 → regex로 video ID만 추출
+    return extractVideoIdsOnly(contents, query);
+  } catch {
+    return [];
+  }
+}
+
+function extractVideoIdsOnly(html: string, query = "검단신도시"): YouTubeVideo[] {
+  const seen = new Set<string>();
+  const videos: YouTubeVideo[] = [];
+  const re = /"videoId":"([a-zA-Z0-9_-]{11})"/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const videoId = m[1];
+    if (!seen.has(videoId)) {
+      seen.add(videoId);
+      videos.push({
+        id: `yt-${videos.length}`, videoId,
+        title: `${query} 영상 ${videos.length + 1}`,
+        channelName: "YouTube",
+        thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
+        url: `https://www.youtube.com/watch?v=${videoId}`,
+      });
+      if (videos.length >= 12) break;
+    }
+  }
+  return videos;
+}
+
 // ── helpers ───────────────────────────────────────────────
 function tagVal(xml: string, tag: string): string {
-  const m = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`));
+  const m = xml.match(new RegExp(
+    `<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`
+  ));
   return m ? (m[1] ?? m[2] ?? "").trim() : "";
 }
 function strip(s: string)    { return s.replace(/<[^>]+>/g, "").trim(); }
-function stripXml(s: string) { return s.replace(/<[^>]+>/g, "").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/&amp;/g,"&").replace(/&quot;/g,'"').trim(); }
+function stripXml(s: string) {
+  return s.replace(/<[^>]+>/g, "")
+    .replace(/&lt;/g,"<").replace(/&gt;/g,">")
+    .replace(/&amp;/g,"&").replace(/&quot;/g,'"').trim();
+}
 function extractDomain(url: string): string {
   try { return new URL(url).hostname.replace("www.", ""); } catch { return "뉴스"; }
 }
@@ -137,13 +211,7 @@ function extractSource(title: string): string {
 
 // ── 메인 export ───────────────────────────────────────────
 export async function fetchGeumdanNews(): Promise<NewsArticle[]> {
-  // 네이버 + allorigins 병렬 시도
-  const [naver, google] = await Promise.all([
-    fetchNaverNews(),
-    fetchGoogleRss(),
-  ]);
-
-  // 네이버 결과 우선, 없으면 Google RSS, 그것도 없으면 rss2json
+  const [naver, google] = await Promise.all([fetchNaverNews(), fetchGoogleRss()]);
   if (naver.length > 0) return naver;
   if (google.length > 0) return google;
   return fetchRss2json();
