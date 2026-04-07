@@ -1,7 +1,40 @@
 // 뉴스 수집 전략:
+// 0순위: GitHub Actions가 3시간마다 pre-fetch한 static JSON 캐시 (가장 빠름, CORS 없음)
 // 1순위: 네이버 뉴스 검색 API (키 있을 때)
 // 2순위: allorigins.win → Google News RSS XML 직접 파싱 (키 불필요, 안정적)
 // 3순위: rss2json 프록시 fallback
+
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4시간 (3시간 갱신 주기 + 여유)
+
+function isFresh(fetchedAt: string): boolean {
+  try { return Date.now() - new Date(fetchedAt).getTime() < CACHE_TTL_MS; }
+  catch { return false; }
+}
+
+export async function fetchCachedNews(): Promise<NewsArticle[]> {
+  try {
+    const res = await fetch(`${BASE_PATH}/cache/news.json`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (Array.isArray(data.articles) && data.articles.length > 0 && isFresh(data.fetchedAt)) {
+      return data.articles as NewsArticle[];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+export async function fetchCachedYouTube(): Promise<YouTubeVideo[]> {
+  try {
+    const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (Array.isArray(data.videos) && data.videos.length > 0 && isFresh(data.fetchedAt)) {
+      return data.videos as YouTubeVideo[];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
 
 export interface NewsArticle {
   id: string;
@@ -119,6 +152,12 @@ async function fetchRss2json(): Promise<NewsArticle[]> {
 
 // ── 유튜브: allorigins → YouTube 검색 HTML 파싱 ──────────
 export async function fetchYouTubeVideos(query = "검단신도시"): Promise<YouTubeVideo[]> {
+  // 0. Static cache (pre-fetched by GitHub Actions — instant, no CORS)
+  if (query === "검단신도시") {
+    const cached = await fetchCachedYouTube();
+    if (cached.length > 0) return cached;
+  }
+
   try {
     const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
     const res = await fetch(
@@ -211,6 +250,11 @@ function extractSource(title: string): string {
 
 // ── 메인 export ───────────────────────────────────────────
 export async function fetchGeumdanNews(): Promise<NewsArticle[]> {
+  // 0. Static cache (pre-fetched by GitHub Actions — instant, no CORS)
+  const cached = await fetchCachedNews();
+  if (cached.length > 0) return cached;
+
+  // 1–3. Live fallbacks
   const [naver, google] = await Promise.all([fetchNaverNews(), fetchGoogleRss()]);
   if (naver.length > 0) return naver;
   if (google.length > 0) return google;

@@ -787,7 +787,13 @@ const mainTabs: SoikTab[] = ["커뮤니티", "뉴스", "시세"];
 
 function SoikContent() {
   const router = useRouter();
-  const [tab, setTab] = useState<SoikTab>("커뮤니티");
+  const [tab, setTab] = useState<SoikTab>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("tab");
+      if (p === "뉴스" || p === "시세") return p as SoikTab;
+    }
+    return "커뮤니티";
+  });
 
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">

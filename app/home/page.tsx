@@ -13,6 +13,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts, currentUser } from "@/lib/mockData";
+import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
@@ -430,8 +431,16 @@ type SosikTab = "커뮤니티" | "뉴스" | "시세";
 function SosikSection() {
   const router = useRouter();
   const [tab, setTab] = useState<SosikTab>("커뮤니티");
+  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
-  const topNews = newsItems.slice(0, 4);
+
+  useEffect(() => {
+    fetchGeumdanNews().then(articles => {
+      if (articles.length > 0) setRealNews(articles.slice(0, 4));
+    });
+  }, []);
+
+  const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
 
   return (
     <section className="mx-4 mb-1">
@@ -489,12 +498,12 @@ function SosikSection() {
           <div>
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <span className="text-[14px] font-bold text-[#191F28]">검단 최신 뉴스</span>
-              <Link href="/news/" className="text-[13px] text-[#3182F6]">전체보기</Link>
+              <Link href="/community/?tab=뉴스" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
             <div className="divide-y divide-[#F2F4F6]">
               {topNews.map(item => (
-                <button key={item.id}
-                  onClick={() => router.push("/news/")}
+                <a key={item.id}
+                  href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
                   className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
                   <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">📰</div>
                   <div className="flex-1 min-w-0">
@@ -504,11 +513,11 @@ function SosikSection() {
                       <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
                     </div>
                   </div>
-                </button>
+                </a>
               ))}
             </div>
             <div className="px-4 py-3">
-              <Link href="/news/"
+              <Link href="/community/?tab=뉴스"
                 className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
                 뉴스 전체 보기 →
               </Link>
