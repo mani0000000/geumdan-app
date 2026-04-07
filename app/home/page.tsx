@@ -435,8 +435,8 @@ function SosikSection() {
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
 
   useEffect(() => {
-    fetchGeumdanNews().then(articles => {
-      if (articles.length > 0) setRealNews(articles.slice(0, 4));
+    fetchGeumdanNews().then(result => {
+      if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
     });
   }, []);
 

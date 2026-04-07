@@ -127,20 +127,26 @@ function YouTubeModal({ video, onClose }: { video: YouTubeVideo; onClose: () => 
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [newsSource2, setNewsSource2] = useState("");
+  const [newsMs, setNewsMs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
   const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [ytSource, setYtSource] = useState("");
+  const [ytMs, setYtMs] = useState(0);
   const [ytLoading, setYtLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
 
   const refresh = async () => {
     setLoading(true);
-    const articles = await fetchGeumdanNews();
-    if (articles.length > 0) {
-      const sorted = [...articles].sort(
+    const result = await fetchGeumdanNews();
+    if (result.articles.length > 0) {
+      const sorted = [...result.articles].sort(
         (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
       );
       setRealNews(sorted);
+      setNewsSource2(result.source);
+      setNewsMs(result.ms);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     setLoading(false);
@@ -149,8 +155,10 @@ function NewsTab() {
   useEffect(() => {
     refresh();
     setYtLoading(true);
-    fetchYouTubeVideos("검단신도시").then(videos => {
-      setYtVideos(videos);
+    fetchYouTubeVideos("검단신도시").then(result => {
+      setYtVideos(result.videos);
+      setYtSource(result.source);
+      setYtMs(result.ms);
       setYtLoading(false);
     });
   }, []);
@@ -172,6 +180,11 @@ function NewsTab() {
           </div>
           <span className="text-[15px] font-bold text-[#191F28]">유튜브</span>
           <span className="text-[12px] text-[#8B95A1]">검단 관련 영상</span>
+          {!ytLoading && ytMs > 0 && (
+            <span className="ml-auto text-[10px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded-full">
+              {ytSource} {ytMs < 1000 ? `${ytMs}ms` : `${(ytMs/1000).toFixed(1)}s`}
+            </span>
+          )}
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
           {ytLoading ? (
@@ -223,6 +236,11 @@ function NewsTab() {
                 <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
                 <span className="text-[12px] text-[#4E5968]">실시간 {realNews.length}건</span>
               </div>
+            )}
+            {!loading && newsMs > 0 && (
+              <span className="text-[10px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded-full">
+                {newsSource2} {newsMs < 1000 ? `${newsMs}ms` : `${(newsMs/1000).toFixed(1)}s`}
+              </span>
             )}
           </div>
           <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">

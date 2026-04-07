@@ -291,12 +291,12 @@ export default function NewsPage() {
 
   const loadNews = async () => {
     setLoading(true);
-    const [articles, dbNews] = await Promise.all([
+    const [result, dbNews] = await Promise.all([
       fetchGeumdanNews(),
       fetchNewsArticles(undefined, 50),
     ]);
-    if (articles.length > 0) {
-      setRealNews(articles);
+    if (result.articles.length > 0) {
+      setRealNews(result.articles);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     if (dbNews.length > 0) setDbItems(dbNews);
@@ -304,10 +304,10 @@ export default function NewsPage() {
   };
 
   const loadYouTube = async () => {
-    if (ytVideos.length > 0) return; // 이미 로딩됨
+    if (ytVideos.length > 0) return;
     setYtLoading(true);
-    const videos = await fetchYouTubeVideos("검단신도시");
-    setYtVideos(videos);
+    const result = await fetchYouTubeVideos("검단신도시");
+    setYtVideos(result.videos);
     setYtLoading(false);
   };
 
