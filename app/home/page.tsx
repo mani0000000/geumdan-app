@@ -959,6 +959,27 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
+// ─── 인사 배너 ──────────────────────────────────────────────
+function GreetingBanner() {
+  const hour = new Date().getHours();
+  const greeting =
+    hour < 6  ? "늦은 밤에도 검단과 함께" :
+    hour < 12 ? "좋은 아침이에요 ☀️" :
+    hour < 18 ? "안녕하세요 👋" :
+    hour < 22 ? "편안한 저녁이에요 🌙" :
+                "늦은 밤에도 검단과 함께 🌟";
+
+  return (
+    <div className="mx-4 mt-4 mb-1">
+      <p className="text-[13px] font-semibold text-[#6B7684] mb-0.5">{greeting}</p>
+      <h1 className="text-[24px] font-black text-[#191F28] leading-tight">
+        검단 신도시의 모든 것,<br />
+        <span className="text-[#3182F6]">한 곳에서</span> 확인하세요
+      </h1>
+    </div>
+  );
+}
+
 // ─── 메인 ────────────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
@@ -975,6 +996,9 @@ export default function HomePage() {
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
       <Header showLocation />
+
+      {/* ── 인사 배너 ── */}
+      <GreetingBanner />
 
       {/* ── 날씨 ── */}
       <WeatherWidget weather={weather} loading={weatherLoading} />
