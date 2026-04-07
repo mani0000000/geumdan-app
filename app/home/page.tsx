@@ -12,7 +12,7 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts, currentUser } from "@/lib/mockData";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
@@ -960,22 +960,54 @@ function SectionLabel({ label }: { label: string }) {
 }
 
 // ─── 인사 배너 ──────────────────────────────────────────────
-function GreetingBanner() {
+function getPersonalizedMessage(name: string, weather: WeatherData | null): { sub: string; main: string } {
   const hour = new Date().getHours();
-  const greeting =
-    hour < 6  ? "늦은 밤에도 검단과 함께" :
-    hour < 12 ? "좋은 아침이에요 ☀️" :
-    hour < 18 ? "안녕하세요 👋" :
-    hour < 22 ? "편안한 저녁이에요 🌙" :
-                "늦은 밤에도 검단과 함께 🌟";
+  const temp = weather?.temp;
+  const code = weather?.weatherCode ?? -1;
+  const pm10 = weather?.pm10;
 
+  // 날씨 상황별
+  if (weather) {
+    if (pm10 != null && pm10 > 80)
+      return { sub: `${name}님, 오늘 미세먼지가 심해요 😷`, main: "외출 시 마스크 꼭 챙기세요" };
+    if (code >= 95)
+      return { sub: `${name}님, 지금 뇌우가 치고 있어요 ⛈️`, main: "외출은 잠시 미뤄보세요" };
+    if (code >= 71 && code <= 77)
+      return { sub: `${name}님, 오늘 눈이 내려요 ❄️`, main: "도로가 미끄러우니 조심하세요" };
+    if (code >= 61 && code <= 67)
+      return { sub: `${name}님, 오늘 비가 와요 🌧️`, main: "우산 챙기는 거 잊지 마세요" };
+    if (temp != null && temp <= 0)
+      return { sub: `${name}님, 오늘 날씨가 영하예요 🥶`, main: "두꺼운 옷 챙기고 따뜻하게 다니세요" };
+    if (temp != null && temp <= 8)
+      return { sub: `${name}님, 오늘은 날씨가 쌀쌀해요 🧥`, main: "따뜻하게 입고 나가세요" };
+    if (temp != null && temp >= 33)
+      return { sub: `${name}님, 오늘 폭염이에요 🔥`, main: "수분 보충 자주 해주세요" };
+    if (temp != null && temp >= 28)
+      return { sub: `${name}님, 오늘 많이 덥네요 ☀️`, main: "시원한 곳에서 더위 피하세요" };
+    if (code === 0 || code === 1) {
+      if (hour >= 6 && hour < 9)
+        return { sub: `${name}님, 맑은 아침이에요 ☀️`, main: "상쾌한 하루 시작하세요" };
+      if (hour >= 18)
+        return { sub: `${name}님, 오늘 저녁 하늘이 맑아요 🌆`, main: "산책하기 좋은 날씨예요" };
+    }
+  }
+
+  // 시간대별 fallback
+  if (hour < 6)  return { sub: `${name}님, 늦은 밤이에요 🌙`, main: "오늘도 고생 많으셨어요" };
+  if (hour < 9)  return { sub: `${name}님, 좋은 아침이에요 ☀️`, main: "오늘 하루도 활기차게 시작해요" };
+  if (hour < 12) return { sub: `${name}님, 오전을 달리는 중이에요 💪`, main: "검단의 소식 확인해보세요" };
+  if (hour < 14) return { sub: `${name}님, 점심 맛있게 드셨나요? 🍱`, main: "근처 맛집 둘러볼까요" };
+  if (hour < 18) return { sub: `${name}님, 오후도 힘내세요 😊`, main: "검단의 새 소식을 확인하세요" };
+  if (hour < 21) return { sub: `${name}님, 편안한 저녁이에요 🌆`, main: "오늘 하루도 수고하셨어요" };
+  return { sub: `${name}님, 오늘도 고생하셨어요 🌙`, main: "편안한 밤 되세요" };
+}
+
+function GreetingBanner({ weather }: { weather: WeatherData | null }) {
+  const { sub, main } = getPersonalizedMessage(currentUser.nickname, weather);
   return (
     <div className="mx-4 mt-4 mb-1">
-      <p className="text-[13px] font-semibold text-[#6B7684] mb-0.5">{greeting}</p>
-      <h1 className="text-[24px] font-black text-[#191F28] leading-tight">
-        검단 신도시의 모든 것,<br />
-        <span className="text-[#3182F6]">한 곳에서</span> 확인하세요
-      </h1>
+      <p className="text-[13px] font-semibold text-[#6B7684] mb-1">{sub}</p>
+      <h1 className="text-[22px] font-black text-[#191F28] leading-snug">{main}</h1>
     </div>
   );
 }
@@ -998,7 +1030,7 @@ export default function HomePage() {
       <Header showLocation />
 
       {/* ── 인사 배너 ── */}
-      <GreetingBanner />
+      <GreetingBanner weather={weather} />
 
       {/* ── 날씨 ── */}
       <WeatherWidget weather={weather} loading={weatherLoading} />
