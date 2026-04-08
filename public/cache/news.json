@@ -1,26 +1,5 @@
 {
-  "fetchedAt": "2026-04-08T14:00:00Z",
-  "count": 20,
-  "articles": [
-    {"id":"n-0","title":"검단호수공원역 파라곤 1순위 청약 마감…전용 84㎡ 평균 42대 1 기록","summary":"검단신도시 파라곤 AA36BL이 1순위 청약을 마감했다. 전용 84㎡ 기준 평균 42대 1의 경쟁률을 기록하며 높은 관심을 보였다.","source":"연합뉴스","publishedAt":"2026-04-08T06:00:00Z","url":"https://www.yna.co.kr/search/index?query=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-1","title":"인천 검단~드림로 전면 개통…장제로 교통혼잡 완화 기대","summary":"인천 서구 검단과 드림로를 연결하는 왕복 4차로 도로가 8일부터 전면 개통된다. 기존 장제로 구간 혼잡이 완화될 전망이다.","source":"인천일보","publishedAt":"2026-04-08T03:00:00Z","url":"https://www.incheonilbo.com/news/articleList.html?sc_word=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-2","title":"검단신도시 분구 앞두고 의료·교통·교육 현안 해결 '산적'","summary":"검단신도시 분구를 앞두고 종합병원 유치, 5호선 연장, 학교 신설 등 현안 해결이 시급하다는 지적이 잇따르고 있다.","source":"경인일보","publishedAt":"2026-04-07T20:00:00Z","url":"https://www.kyeongin.com/main/view.php?key=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-3","title":"5호선 연장 예비타당성 통과…검단신도시 추가역 신설 논란 재점화","summary":"서울 지하철 5호선 검단 연장선이 예비타당성 조사를 통과하면서 추가 역사 신설을 놓고 지역 주민들 간 의견이 엇갈리고 있다.","source":"한국경제","publishedAt":"2026-04-07T15:00:00Z","url":"https://www.hankyung.com/estate","thumbnail":"","type":"뉴스"},
-    {"id":"n-4","title":"검단신도시 AA31블록 DL이앤씨 컨소 수주…5월 분양 단지도 윤곽","summary":"검단신도시 AA31블록 시공사로 DL이앤씨 컨소시엄이 선정됐다. AB22·23BL 포스코 더샵은 5월 분양을 앞두고 있다.","source":"매일경제","publishedAt":"2026-04-07T11:00:00Z","url":"https://www.mk.co.kr/news/realestate","thumbnail":"","type":"뉴스"},
-    {"id":"n-5","title":"인천 서구, 검단신도시 공공도서관 2027년 착공 확정","summary":"인천 서구가 검단신도시 내 공공도서관 건립 예산을 확보, 2027년 착공을 확정했다. 연면적 3,000㎡ 규모로 조성될 예정이다.","source":"인천일보","publishedAt":"2026-04-06T18:00:00Z","url":"https://www.incheonilbo.com/news/articleList.html?sc_word=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-6","title":"검단신도시 GTX-D 노선 반영 촉구…주민 1만여명 서명 동참","summary":"검단신도시 주민들이 GTX-D 노선에 검단역 반영을 요구하는 서명운동을 전개, 1만여 명이 동참했다.","source":"경인일보","publishedAt":"2026-04-06T13:00:00Z","url":"https://www.kyeongin.com/main/view.php?key=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-7","title":"검단신도시 자이 더 스카이 5월 분양…3.3㎡당 1,920만원","summary":"인천 서구 검단신도시에 공급되는 자이 더 스카이 아파트가 5월 분양을 확정했다. 분양가는 3.3㎡당 1,920만원으로 책정됐다.","source":"뉴시스","publishedAt":"2026-04-06T09:00:00Z","url":"https://www.newsis.com/view/?id=NISX_검단","thumbnail":"","type":"뉴스"},
-    {"id":"n-8","title":"검단신도시 초등학교 2곳 신설 추진…과밀 해소 나선다","summary":"인천 서구가 검단신도시 초등학교 과밀 해소를 위해 신설 학교 2곳 부지 확보에 나섰다. 이르면 2028년 개교를 목표로 한다.","source":"인천시교육청","publishedAt":"2026-04-05T20:00:00Z","url":"https://www.ice.go.kr","thumbnail":"","type":"뉴스"},
-    {"id":"n-9","title":"검단~김포 도시철도 연결 논의 재점화…양 도시 실무 협의 재개","summary":"검단신도시와 김포 골드라인을 연결하는 도시철도 계획이 수면 위로 올랐다. 인천시와 김포시 간 실무 협의가 재개된 것으로 확인됐다.","source":"경인아라뉴스","publishedAt":"2026-04-05T15:00:00Z","url":"https://www.kyeongin.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-10","title":"검단신도시 광역버스 신설…서울 강남·광화문 직통 운행","summary":"인천 서구 검단신도시와 서울 강남·광화문을 잇는 광역버스 노선 2개가 하반기 신설된다. 출·퇴근 시간 집중 배차 예정이다.","source":"인천교통공사","publishedAt":"2026-04-05T10:00:00Z","url":"https://www.incheonbus.or.kr","thumbnail":"","type":"뉴스"},
-    {"id":"n-11","title":"검단신도시 2026년 입주 예정 4,800가구…이사 수요 급증 전망","summary":"2026년 검단신도시 내 총 4,800가구가 입주 예정이다. 이사 업체와 인근 주거 인프라 수요가 급증할 것으로 보인다.","source":"부동산114","publishedAt":"2026-04-04T19:00:00Z","url":"https://www.r114.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-12","title":"인천 서구 검단지구 대형 쇼핑몰 유치 본격 논의","summary":"검단신도시 상업용지에 대형 쇼핑몰 유치를 위한 구체적인 논의가 시작됐다. 인천 서구와 관련 기업 간 접촉이 이뤄진 것으로 알려졌다.","source":"연합뉴스","publishedAt":"2026-04-04T14:00:00Z","url":"https://www.yna.co.kr/search/index?query=검단신도시","thumbnail":"","type":"뉴스"},
-    {"id":"n-13","title":"검단신도시 종합병원 유치 촉구…주민 단체 집중 요청","summary":"검단신도시 인구가 급격히 늘면서 종합병원 부재에 대한 주민들의 불만이 높아지고 있다. 주민 단체가 인천시에 공식 요청서를 제출했다.","source":"경인일보","publishedAt":"2026-04-04T09:00:00Z","url":"https://www.kyeongin.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-14","title":"검단신도시 호수공원 2단계 상반기 개방…수변 상권 활성화 기대","summary":"검단신도시 호수공원 2단계 구역이 올 상반기 중 시민에게 개방된다. 수변 산책로와 쉼터가 조성된다.","source":"인천일보","publishedAt":"2026-04-03T18:00:00Z","url":"https://www.incheonilbo.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-15","title":"인천 서구 검단 아라뱃길 수변 공원 개발 착수","summary":"인천 서구가 아라뱃길 인근 검단 수변 공원 조성 사업에 착수했다. 2027년 완공 목표로 레저·문화 공간이 들어선다.","source":"인천시","publishedAt":"2026-04-03T12:00:00Z","url":"https://www.incheon.go.kr","thumbnail":"","type":"뉴스"},
-    {"id":"n-16","title":"검단신도시 아파트값 1분기 평균 4.2% 상승…인천 1위","summary":"2026년 1분기 검단신도시 아파트 평균 매매가가 전 분기 대비 4.2% 상승했다. 인천 전 지역 중 상승률 1위를 기록했다.","source":"한국부동산원","publishedAt":"2026-04-02T16:00:00Z","url":"https://www.reb.or.kr","thumbnail":"","type":"뉴스"},
-    {"id":"n-17","title":"검단신도시 신규 학원가 형성…교육 인프라 빠르게 성장","summary":"검단신도시 상업지구를 중심으로 학원가가 빠르게 형성되고 있다. 수학·영어·과학 등 주요 과목 학원들이 잇달아 입점하는 추세다.","source":"뉴시스","publishedAt":"2026-04-02T11:00:00Z","url":"https://www.newsis.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-18","title":"인천 검단 AA36 파라곤, 분양가 상한제 적용 최종 확정","summary":"검단신도시 AA36블록 파라곤 아파트에 분양가 상한제가 적용됐다. 이에 따라 인근 시세보다 낮은 가격에 공급돼 청약 경쟁이 치열할 전망이다.","source":"조선비즈","publishedAt":"2026-04-01T20:00:00Z","url":"https://biz.chosun.com","thumbnail":"","type":"뉴스"},
-    {"id":"n-19","title":"검단신도시 U공원 봄 축제 개최…꽃 산책로·체험 행사 풍성","summary":"검단신도시 U공원에서 봄 축제가 열린다. 벚꽃 및 튤립 산책로, 플리마켓, 어린이 체험 행사 등이 마련된다.","source":"인천서구청","publishedAt":"2026-04-01T10:00:00Z","url":"https://www.seo.incheon.kr","thumbnail":"","type":"뉴스"}
-  ]
+  "fetchedAt": "2020-01-01T00:00:00Z",
+  "count": 0,
+  "articles": []
 }
