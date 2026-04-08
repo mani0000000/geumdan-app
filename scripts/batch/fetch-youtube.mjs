@@ -88,22 +88,28 @@ async function fetchYouTubeInnertube(query = '검단신도시') {
   return videos;
 }
 
-// 다양한 카테고리 쿼리로 풍부한 검단 콘텐츠 수집
+// 다양한 카테고리 쿼리로 풍부한 검단 콘텐츠 수집 (라운드로빈 교차 정렬)
 async function fetchAllQueries() {
   const queries = [
-    '검단신도시 맛집 카페',      // 맛집/카페
-    '검단신도시 공원 볼거리',    // 공원/볼거리
-    '검단신도시 브이로그 일상',  // 생활/브이로그
-    '검단신도시',               // 최신 소식
-    '인천 검단 생활',           // 생활 정보
+    '검단신도시 맛집',
+    '검단신도시 카페',
+    '검단신도시 공원 볼거리',
+    '검단신도시 브이로그 일상',
+    '검단신도시 소식 뉴스',
   ];
   const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
 
+  // 카테고리별 버킷에 담기
+  const buckets = results.map(r => (r.status === 'fulfilled' ? r.value : []));
+
+  // 라운드로빈: 각 카테고리에서 1개씩 교차 → 주제 균형 보장
   const seen = new Set();
   const all = [];
-  for (const r of results) {
-    if (r.status !== 'fulfilled') continue;
-    for (const v of r.value) {
+  const maxRounds = 6;
+  for (let round = 0; round < maxRounds; round++) {
+    for (const bucket of buckets) {
+      const v = bucket[round];
+      if (!v) continue;
       if (!seen.has(v.video_id)) {
         seen.add(v.video_id);
         all.push(v);

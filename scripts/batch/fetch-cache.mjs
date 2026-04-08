@@ -208,21 +208,24 @@ async function fetchAllYouTube() {
   const apiVideos = await fetchYouTubeAPI();
   if (apiVideos.length > 0) return apiVideos;
 
-  // 2. innertube API — 여러 쿼리 병렬, 중복 제거
+  // 2. innertube API — 카테고리별 병렬, 라운드로빈 교차 정렬
   const queries = [
-    '검단신도시 맛집 카페',
+    '검단신도시 맛집',
+    '검단신도시 카페',
     '검단신도시 공원 볼거리',
     '검단신도시 브이로그 일상',
-    '검단신도시',
-    '인천 검단 생활',
+    '검단신도시 소식 뉴스',
   ];
   const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
+  const buckets = results.map(r => (r.status === 'fulfilled' ? r.value : []));
   const seen = new Set();
   const merged = [];
-  for (const r of results) {
-    if (r.status !== 'fulfilled') continue;
-    for (const v of r.value) {
-      if (!seen.has(v.videoId)) { seen.add(v.videoId); merged.push(v); }
+  for (let round = 0; round < 5; round++) {
+    for (const bucket of buckets) {
+      const v = bucket[round];
+      if (!v || seen.has(v.videoId)) continue;
+      seen.add(v.videoId);
+      merged.push(v);
     }
   }
   if (merged.length > 0) return merged.slice(0, 20);
