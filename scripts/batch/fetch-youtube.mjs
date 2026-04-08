@@ -88,9 +88,15 @@ async function fetchYouTubeInnertube(query = '검단신도시') {
   return videos;
 }
 
-// 여러 쿼리로 다양한 검단 영상 수집
+// 다양한 카테고리 쿼리로 풍부한 검단 콘텐츠 수집
 async function fetchAllQueries() {
-  const queries = ['검단신도시', '검단 아파트', '인천 검단'];
+  const queries = [
+    '검단신도시 맛집 카페',      // 맛집/카페
+    '검단신도시 공원 볼거리',    // 공원/볼거리
+    '검단신도시 브이로그 일상',  // 생활/브이로그
+    '검단신도시',               // 최신 소식
+    '인천 검단 생활',           // 생활 정보
+  ];
   const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
 
   const seen = new Set();

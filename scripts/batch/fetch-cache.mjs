@@ -209,7 +209,13 @@ async function fetchAllYouTube() {
   if (apiVideos.length > 0) return apiVideos;
 
   // 2. innertube API — 여러 쿼리 병렬, 중복 제거
-  const queries = ['검단신도시', '검단 아파트', '인천 검단'];
+  const queries = [
+    '검단신도시 맛집 카페',
+    '검단신도시 공원 볼거리',
+    '검단신도시 브이로그 일상',
+    '검단신도시',
+    '인천 검단 생활',
+  ];
   const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
   const seen = new Set();
   const merged = [];
