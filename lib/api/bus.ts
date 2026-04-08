@@ -56,17 +56,43 @@ function qs(params: Record<string, string>) {
   return new URLSearchParams({ serviceKey: API_KEY, _type: "json", ...params }).toString();
 }
 
+function parseItems<T>(json: unknown): T[] {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const item = (json as any)?.response?.body?.items?.item;
+  if (!item) return [];
+  return Array.isArray(item) ? (item as T[]) : [item as T];
+}
+
+// apis.data.go.kr does not send CORS headers → use proxy race (same pattern as news.ts)
 async function apiFetch<T>(path: string, params: Record<string, string>): Promise<T[]> {
   if (!API_KEY) return [];
+  const targetUrl = `${BASE}${path}?${qs(params)}`;
+
+  // 1. Try direct fetch first (works if server adds CORS headers in future)
   try {
-    const res = await fetch(`${BASE}${path}?${qs(params)}`);
-    if (!res.ok) return [];
-    const json = await res.json();
-    const items = json?.response?.body?.items?.item ?? [];
-    return Array.isArray(items) ? items : items ? [items] : [];
-  } catch {
-    return [];
-  }
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 4000);
+    const res = await fetch(targetUrl, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (res.ok) return parseItems<T>(await res.json());
+  } catch { /* CORS blocked → fall through to proxy */ }
+
+  // 2. CORS proxy race — allorigins.win vs corsproxy.io
+  try {
+    return await Promise.any([
+      (async () => {
+        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error(`allorigins ${res.status}`);
+        const j = await res.json();
+        return parseItems<T>(JSON.parse(j.contents as string));
+      })(),
+      (async () => {
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error(`corsproxy ${res.status}`);
+        return parseItems<T>(await res.json());
+      })(),
+    ]);
+  } catch { return []; }
 }
 
 // ─── 버스 도착정보 ────────────────────────────────────────────
