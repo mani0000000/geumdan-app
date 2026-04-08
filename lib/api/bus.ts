@@ -180,4 +180,47 @@ export async function fetchBusStop(stationName: string): Promise<BusArrival[]> {
   return fetchArrivals(id);
 }
 
+// ─── 위치 기반 주변 정류장 조회 ────────────────────────────────
+export interface NearbyStop {
+  stationId: string;
+  stationName: string;
+  lat: number;
+  lng: number;
+  distanceM: number;
+}
+
+/**
+ * 현재 GPS 좌표 기반 주변 정류장 목록 조회
+ * radiusType: 1=100m 2=200m 3=300m 4=500m 5=1000m
+ */
+export async function fetchNearbyStops(
+  lat: number,
+  lng: number,
+  radiusType: "1" | "2" | "3" | "4" | "5" = "4"
+): Promise<NearbyStop[]> {
+  const items = await apiFetch<Record<string, string>>(
+    "/busStopInfoService/getBusStopAroundList",
+    {
+      currentlatitude: String(lat),
+      currentlongitude: String(lng),
+      distancetype: radiusType,
+    }
+  );
+  return items
+    .map(item => ({
+      stationId: String(item.STATION_ID ?? item.stationId ?? ""),
+      stationName: String(item.STATION_NM ?? item.stationNm ?? ""),
+      lat: Number(item.GPS_LATI ?? item.gpsLati ?? lat),
+      lng: Number(item.GPS_LONG ?? item.gpsLong ?? lng),
+      distanceM: Number(item.DISTANCE ?? item.distance ?? 0),
+    }))
+    .filter(s => s.stationId && s.stationName)
+    .sort((a, b) => a.distanceM - b.distanceM);
+}
+
+// stationId 직접 도착 정보 조회 (외부 노출용)
+export async function fetchArrivalsByStationId(stationId: string): Promise<BusArrival[]> {
+  return fetchArrivals(stationId);
+}
+
 export const hasBusApiKey = () => Boolean(API_KEY);
