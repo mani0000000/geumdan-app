@@ -93,38 +93,6 @@ function CommunityTab() {
   );
 }
 
-// ─── YouTube 임베드 모달 ────────────────────────────────────────
-function YouTubeModal({ video, onClose }: { video: YouTubeVideo; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[300] bg-black flex flex-col" onClick={onClose}>
-      <div className="flex items-center gap-3 px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="active:opacity-60">
-          <X size={20} className="text-white" />
-        </button>
-        <p className="flex-1 text-[14px] font-semibold text-white line-clamp-1">{video.title}</p>
-        <a href={video.url} target="_blank" rel="noopener noreferrer"
-          className="active:opacity-60" onClick={e => e.stopPropagation()}>
-          <ExternalLink size={18} className="text-white/70" />
-        </a>
-      </div>
-      <div className="flex-1 flex items-center justify-center bg-black" onClick={e => e.stopPropagation()}>
-        <div className="w-full" style={{ position: "relative", paddingBottom: "56.25%" }}>
-          <iframe
-            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
-            title={video.title}
-            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-          />
-        </div>
-      </div>
-      <div className="px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
-        <p className="text-[13px] text-white/60">{video.channelName}</p>
-      </div>
-    </div>
-  );
-}
-
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
@@ -136,7 +104,6 @@ function NewsTab() {
   const [ytSource, setYtSource] = useState("");
   const [ytMs, setYtMs] = useState(0);
   const [ytLoading, setYtLoading] = useState(true);
-  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [newsLimit, setNewsLimit] = useState(10);
 
   const refresh = async () => {
@@ -171,9 +138,6 @@ function NewsTab() {
   return (
     <div className="pb-6">
 
-      {/* ── YouTube 모달 ── */}
-      {selectedVideo && <YouTubeModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
-
       {/* ── 유튜브 ── */}
       <div className="pt-4">
         <div className="flex items-center gap-2 px-4 mb-3">
@@ -201,8 +165,8 @@ function NewsTab() {
             ))
           ) : ytVideos.length > 0 ? (
             ytVideos.map(video => (
-              <button key={video.id} onClick={() => setSelectedVideo(video)}
-                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left">
+              <a key={video.id} href={video.url} target="_blank" rel="noopener noreferrer"
+                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
                 <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
                   <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
                     onError={e => {
@@ -221,7 +185,7 @@ function NewsTab() {
                   <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{video.title}</p>
                   <p className="text-[11px] text-[#8B95A1] mt-1.5">{video.channelName}</p>
                 </div>
-              </button>
+              </a>
             ))
           ) : null}
           <div className="shrink-0 w-2" />
