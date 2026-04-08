@@ -155,103 +155,72 @@ async function fetchYouTubeAPI() {
   } catch (e) { console.error('  YT API error:', e.message); return []; }
 }
 
-// ── 유튜브: Invidious API ───────────────────────────────────
-const INVIDIOUS_INSTANCES = [
-  'https://inv.nadeko.net',
-  'https://invidious.privacydev.net',
-  'https://yt.artemislena.eu',
-  'https://invidious.nerdvpn.de',
-];
+// ── 유튜브: innertube API (키 불필요, 가장 안정적) ──────────
+const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 
-async function fetchYouTubeInvidious() {
-  console.log('▶️  Invidious API...');
-  for (const base of INVIDIOUS_INSTANCES) {
-    try {
-      const url = `${base}/api/v1/search?q=${encodeURIComponent('검단신도시')}&type=video&fields=videoId,title,author,videoThumbnails`;
-      const res = await withTimeout(fetch(url), 10000, `invidious-${base}`);
-      if (!res.ok) continue;
-      const items = await res.json();
-      if (!Array.isArray(items) || items.length === 0) continue;
-      const videos = items.slice(0, 15).map((v, i) => {
-        const videoId = v.videoId ?? '';
-        const thumbs  = v.videoThumbnails ?? [];
-        const thumb   = thumbs.find(t => t.quality === 'medium')?.url
-          ?? thumbs.find(t => t.quality === 'high')?.url
-          ?? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
-        return {
-          id: `iv-${i}`, videoId,
-          title: v.title ?? `검단 영상 ${i+1}`,
-          channelName: v.author ?? 'YouTube',
-          thumbnail: thumb.startsWith('http') ? thumb : `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
-          url: `https://www.youtube.com/watch?v=${videoId}`,
-        };
-      }).filter(v => v.videoId?.length === 11);
-      console.log(`  ✓ Invidious (${base}): ${videos.length}개`);
-      return videos;
-    } catch (e) { console.log(`  ✗ ${base}: ${e.message}`); }
-  }
-  return [];
-}
-
-// ── 유튜브: HTML 파싱 fallback ──────────────────────────────
-async function fetchYouTubeHTML() {
-  console.log('▶️  YouTube HTML parsing...');
+async function fetchYouTubeInnertube(query = '검단신도시') {
+  console.log(`▶️  YouTube innertube API (${query})...`);
   try {
     const res = await withTimeout(
-      fetch(`https://www.youtube.com/results?search_query=${encodeURIComponent('검단신도시')}`, {
+      fetch(`https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}`, {
+        method: 'POST',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0.0.0 Safari/537.36',
-          'Accept-Language': 'ko-KR,ko;q=0.9',
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         },
+        body: JSON.stringify({
+          context: {
+            client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'ko', gl: 'KR' },
+          },
+          query,
+        }),
       }),
-      15000, 'yt-html'
+      15000, `innertube-${query}`
     );
-    const html = await res.text();
-    const match = html.match(/var ytInitialData\s*=\s*(\{[\s\S]+?\});\s*(?:var |<\/script>)/);
-    if (match) {
-      try {
-        const ytData = JSON.parse(match[1]);
-        const sections = ytData?.contents?.twoColumnSearchResultsRenderer?.primaryContents?.sectionListRenderer?.contents ?? [];
-        const videos = [];
-        for (const section of sections) {
-          for (const item of (section?.itemSectionRenderer?.contents ?? [])) {
-            const vr = item?.videoRenderer;
-            if (!vr?.videoId) continue;
-            videos.push({
-              id: `ythtml-${videos.length}`, videoId: vr.videoId,
-              title: vr.title?.runs?.[0]?.text ?? '검단 영상',
-              channelName: vr.ownerText?.runs?.[0]?.text ?? 'YouTube',
-              thumbnail: `https://img.youtube.com/vi/${vr.videoId}/mqdefault.jpg`,
-              url: `https://www.youtube.com/watch?v=${vr.videoId}`,
-            });
-            if (videos.length >= 15) break;
-          }
-          if (videos.length >= 15) break;
-        }
-        if (videos.length > 0) { console.log(`  ✓ HTML ytInitialData: ${videos.length}개`); return videos; }
-      } catch {}
-    }
-    // regex fallback
-    const seen = new Set(); const videos = [];
-    for (const m of html.matchAll(/"videoId":"([a-zA-Z0-9_-]{11})"/g)) {
-      if (!seen.has(m[1])) {
-        seen.add(m[1]);
-        videos.push({ id: `ythtml-${videos.length}`, videoId: m[1], title: `검단신도시 영상 ${videos.length+1}`, channelName: 'YouTube',
-          thumbnail: `https://img.youtube.com/vi/${m[1]}/mqdefault.jpg`, url: `https://www.youtube.com/watch?v=${m[1]}` });
-        if (videos.length >= 15) break;
+    if (!res.ok) return [];
+    const data = await res.json();
+    const contents =
+      data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
+        ?.sectionListRenderer?.contents ?? [];
+    const videos = [];
+    for (const section of contents) {
+      for (const item of (section?.itemSectionRenderer?.contents ?? [])) {
+        const vr = item?.videoRenderer;
+        if (!vr?.videoId) continue;
+        videos.push({
+          id: `yt-${videos.length}`, videoId: vr.videoId,
+          title: vr.title?.runs?.[0]?.text ?? '검단 영상',
+          channelName: vr.ownerText?.runs?.[0]?.text ?? 'YouTube',
+          thumbnail: `https://img.youtube.com/vi/${vr.videoId}/mqdefault.jpg`,
+          url: `https://www.youtube.com/watch?v=${vr.videoId}`,
+        });
+        if (videos.length >= 20) break;
       }
+      if (videos.length >= 20) break;
     }
-    console.log(`  ✓ HTML regex: ${videos.length}개`);
+    console.log(`  ✓ innertube (${query}): ${videos.length}개`);
     return videos;
-  } catch (e) { console.error('  HTML error:', e.message); return []; }
+  } catch (e) { console.error(`  innertube error (${query}):`, e.message); return []; }
 }
 
 async function fetchAllYouTube() {
+  // 1. YouTube Data API v3 (공식 키 있으면 우선 사용)
   const apiVideos = await fetchYouTubeAPI();
   if (apiVideos.length > 0) return apiVideos;
-  const invVideos = await fetchYouTubeInvidious();
-  if (invVideos.length > 0) return invVideos;
-  return fetchYouTubeHTML();
+
+  // 2. innertube API — 여러 쿼리 병렬, 중복 제거
+  const queries = ['검단신도시', '검단 아파트', '인천 검단'];
+  const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
+  const seen = new Set();
+  const merged = [];
+  for (const r of results) {
+    if (r.status !== 'fulfilled') continue;
+    for (const v of r.value) {
+      if (!seen.has(v.videoId)) { seen.add(v.videoId); merged.push(v); }
+    }
+  }
+  if (merged.length > 0) return merged.slice(0, 20);
+  return [];
 }
 
 // ── 실행 ──────────────────────────────────────────────────

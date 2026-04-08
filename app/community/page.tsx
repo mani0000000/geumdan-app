@@ -10,7 +10,8 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import type { CommunityCategory, NewsType } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -155,7 +156,7 @@ function NewsTab() {
   useEffect(() => {
     refresh();
     setYtLoading(true);
-    fetchYouTubeVideos("검단신도시").then(result => {
+    fetchYouTubeVideosFromDB(20).then(result => {
       setYtVideos(result.videos);
       setYtSource(result.source);
       setYtMs(result.ms);
