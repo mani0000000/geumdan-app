@@ -12,6 +12,7 @@ import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
+import { fetchNewsFromDB } from "@/lib/db/news";
 import type { CommunityCategory, NewsType } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -108,6 +109,17 @@ function NewsTab() {
 
   const refresh = async () => {
     setLoading(true);
+    // 1. Supabase DB 우선 (실제 기사 URL 보장)
+    const dbResult = await fetchNewsFromDB(30);
+    if (dbResult.articles.length > 0) {
+      setRealNews(dbResult.articles);
+      setNewsSource2(dbResult.source);
+      setNewsMs(dbResult.ms);
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      setLoading(false);
+      return;
+    }
+    // 2. Supabase 없으면 캐시/라이브 API fallback
     const result = await fetchGeumdanNews();
     if (result.articles.length > 0) {
       const sorted = [...result.articles].sort(
