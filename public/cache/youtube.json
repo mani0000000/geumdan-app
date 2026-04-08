@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-08T19:00:54.120Z",
+  "fetchedAt": "2026-04-08T21:33:17.760Z",
   "count": 20,
   "videos": [
     {
@@ -36,19 +36,19 @@
     },
     {
       "id": "yt-4",
-      "videoId": "_3ADO624vH4",
-      "title": "검단신도시, 결국 오를 수밖에 없는 이유",
-      "channelName": "부동산은 땅땅무슨땅",
-      "thumbnail": "https://img.youtube.com/vi/_3ADO624vH4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=_3ADO624vH4"
-    },
-    {
-      "id": "yt-5",
       "videoId": "cKTzW5EXex8",
       "title": "[도로투데이] 인천 검단~드림로 8일 전면개통 장제로 교통혼잡 완화 기대",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/cKTzW5EXex8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=cKTzW5EXex8"
+    },
+    {
+      "id": "yt-5",
+      "videoId": "_3ADO624vH4",
+      "title": "검단신도시, 결국 오를 수밖에 없는 이유",
+      "channelName": "부동산은 땅땅무슨땅",
+      "thumbnail": "https://img.youtube.com/vi/_3ADO624vH4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=_3ADO624vH4"
     },
     {
       "id": "yt-6",
@@ -68,22 +68,6 @@
     },
     {
       "id": "yt-8",
-      "videoId": "VLXd65RR7Rg",
-      "title": "검단신도시 집중 탐구",
-      "channelName": "부동산 시민교수 - 부티인",
-      "thumbnail": "https://img.youtube.com/vi/VLXd65RR7Rg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=VLXd65RR7Rg"
-    },
-    {
-      "id": "yt-9",
-      "videoId": "UVOdna5B1KU",
-      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
-    },
-    {
-      "id": "yt-10",
       "videoId": "j7ymUXzJGsc",
       "title": "인천에서 여기를 사야 26년 돈 벌 수 있습니다(검단신도시 전망) | 언제 살지, 언제 팔지, 어디를 살지까지 완벽 정리",
       "channelName": "임장여지도 : 부동산으로 자본주의 살아남기",
@@ -91,7 +75,7 @@
       "url": "https://www.youtube.com/watch?v=j7ymUXzJGsc"
     },
     {
-      "id": "yt-11",
+      "id": "yt-9",
       "videoId": "zmDgmDX20XU",
       "title": "검단신도시 임장 끝내기 👌 입지, 대장 아파트, 교통호재 총정리!",
       "channelName": "부동산 마스터_박소장의 내집마련 끝내기",
@@ -99,55 +83,39 @@
       "url": "https://www.youtube.com/watch?v=zmDgmDX20XU"
     },
     {
+      "id": "yt-10",
+      "videoId": "VLXd65RR7Rg",
+      "title": "검단신도시 집중 탐구",
+      "channelName": "부동산 시민교수 - 부티인",
+      "thumbnail": "https://img.youtube.com/vi/VLXd65RR7Rg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=VLXd65RR7Rg"
+    },
+    {
+      "id": "yt-11",
+      "videoId": "UVOdna5B1KU",
+      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
+    },
+    {
       "id": "yt-12",
-      "videoId": "AUBLAgtcrlA",
-      "title": "분구 앞둔 검단…현안 해결 과제 '산적' [인천]",
-      "channelName": "B tv 뉴스",
-      "thumbnail": "https://img.youtube.com/vi/AUBLAgtcrlA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=AUBLAgtcrlA"
+      "videoId": "gXVTiJALPr4",
+      "title": "\"인천 검단신도시\" 호재와 대장 아파트&알아야 할 정보들 [부룡X부읽남 사이버 임장기]",
+      "channelName": "부읽남TV_내집마련부터건물주까지",
+      "thumbnail": "https://img.youtube.com/vi/gXVTiJALPr4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=gXVTiJALPr4"
     },
     {
       "id": "yt-13",
-      "videoId": "LDwAqc7QoiM",
-      "title": "검단 호수공원역 제일풍경채 3차, 왜 선택 기준에 따라 결과가 달라질까?",
-      "channelName": "검단신도시 이재홍부동산",
-      "thumbnail": "https://img.youtube.com/vi/LDwAqc7QoiM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=LDwAqc7QoiM"
+      "videoId": "t1wCzwVUlG4",
+      "title": "검단신도시, 지금 시점에서 투자해도 되는지 제대로 따져봤습니다",
+      "channelName": "부동산은 땅땅무슨땅",
+      "thumbnail": "https://img.youtube.com/vi/t1wCzwVUlG4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=t1wCzwVUlG4"
     },
     {
       "id": "yt-14",
-      "videoId": "Lqt1boVC1io",
-      "title": "인천 검단경찰서 신축 공사현장 [ 드론항공촬영 ] ( 촬영 2026년 4월 6일 오후 5시경 )",
-      "channelName": "청산 이호우  ",
-      "thumbnail": "https://img.youtube.com/vi/Lqt1boVC1io/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Lqt1boVC1io"
-    },
-    {
-      "id": "yt-15",
-      "videoId": "zp66YAf-8tg",
-      "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
-      "channelName": "마청플",
-      "thumbnail": "https://img.youtube.com/vi/zp66YAf-8tg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=zp66YAf-8tg"
-    },
-    {
-      "id": "yt-16",
-      "videoId": "Uj7z60aeBpI",
-      "title": "검단신도시 파라곤 경쟁률 ! , 검단신도시 분양 일정 AA18 파라곤 초역세권, 당선작 !",
-      "channelName": "검단신도시 이야기",
-      "thumbnail": "https://img.youtube.com/vi/Uj7z60aeBpI/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Uj7z60aeBpI"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "IVZDsucxyms",
-      "title": "마곡 전세보다 싸다구? 검단신도시 하반기 폭등시그널. 이걸 보면 알수 있다!!",
-      "channelName": "둥이아빠부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/IVZDsucxyms/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=IVZDsucxyms"
-    },
-    {
-      "id": "yt-18",
       "videoId": "rlZwVZ27et8",
       "title": "⟪검단호수공원역 파라곤⟫ 완벽분석~!🤩 (feat. 이제 6억대 34평 분양은 없다)",
       "channelName": "돈근육허벅지",
@@ -155,7 +123,39 @@
       "url": "https://www.youtube.com/watch?v=rlZwVZ27et8"
     },
     {
-      "id": "yt-0",
+      "id": "yt-15",
+      "videoId": "2g4MIAK0UlY",
+      "title": "검단신도시 2026년 27년 입주단지 아라역 신검단중앙역 호수공원역 어디로 이사할까?",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/2g4MIAK0UlY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=2g4MIAK0UlY"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "EveUgMUAuLo",
+      "title": "일촉즉발, 검단신도시 3대 상권 비교분석",
+      "channelName": "부동산 시민교수 - 부티인",
+      "thumbnail": "https://img.youtube.com/vi/EveUgMUAuLo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=EveUgMUAuLo"
+    },
+    {
+      "id": "yt-17",
+      "videoId": "zp66YAf-8tg",
+      "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
+      "channelName": "마청플",
+      "thumbnail": "https://img.youtube.com/vi/zp66YAf-8tg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=zp66YAf-8tg"
+    },
+    {
+      "id": "yt-18",
+      "videoId": "IVZDsucxyms",
+      "title": "마곡 전세보다 싸다구? 검단신도시 하반기 폭등시그널. 이걸 보면 알수 있다!!",
+      "channelName": "둥이아빠부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/IVZDsucxyms/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=IVZDsucxyms"
+    },
+    {
+      "id": "yt-2",
       "videoId": "zFwzp05HmyQ",
       "title": "엘리프 검단 포레듀 98타입 40평형 반값아파트, 서울 바로 옆 비규제지역 인천! 분상제아파트 4억대 부터 시작. 초품아와 수변공원을 바로 앞에서 누리는 라이프 (No.6637)",
       "channelName": "내집한채TV",
