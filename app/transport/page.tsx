@@ -44,7 +44,14 @@ function distLabel(m: number) {
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
-function ArrivalBadge({ min }: { min: number }) {
+function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
+  if (!live) {
+    return (
+      <div className="bg-[#E5E8EB] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
+        <span className="text-[#8B95A1] text-[14px] font-bold">--</span>
+      </div>
+    );
+  }
   const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]";
   return (
     <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
@@ -262,11 +269,13 @@ function BusDetailSheet({
 function RouteRow({
   route,
   isFav,
+  live,
   onToggleFav,
   onSelect,
 }: {
   route: BusRoute;
   isFav: boolean;
+  live: boolean;
   onToggleFav: () => void;
   onSelect: () => void;
 }) {
@@ -287,14 +296,16 @@ function RouteRow({
             )}
             {route.isLowFloor && <Accessibility size={12} className="text-[#3182F6]" />}
           </div>
-          <p className="text-[12px] text-[#8B95A1]">{route.remainingStops}정류장 전</p>
+          <p className="text-[12px] text-[#8B95A1]">
+            {live ? `${route.remainingStops}정류장 전` : "실시간 연동 필요"}
+          </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
         <button onClick={e => { e.stopPropagation(); onToggleFav(); }} className="p-1 active:opacity-60">
           <Star size={15} className={isFav ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
         </button>
-        <ArrivalBadge min={route.arrivalMin} />
+        <ArrivalBadge min={route.arrivalMin} live={live} />
       </div>
     </div>
   );
@@ -501,6 +512,7 @@ export default function TransportPage() {
                       <RouteRow
                         key={r.id}
                         route={r}
+                        live={isLive}
                         isFav={favRoutes.has(`${stop.id}::${r.id}`)}
                         onToggleFav={() => toggleRoute(`${stop.id}::${r.id}`)}
                         onSelect={() => {
@@ -521,22 +533,25 @@ export default function TransportPage() {
             })
           )}
 
-          {/* 범례 */}
-          <div className="bg-white rounded-2xl px-4 py-3 flex gap-4">
-            {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#3182F6]", "8분 이상"]].map(([c, l]) => (
-              <div key={l} className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${c}`} />
-                <span className="text-[12px] text-[#8B95A1]">{l}</span>
-              </div>
-            ))}
-          </div>
+          {/* 범례 — 실시간 연동 시에만 의미 있음 */}
+          {isLive && (
+            <div className="bg-white rounded-2xl px-4 py-3 flex gap-4">
+              {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#3182F6]", "8분 이상"]].map(([c, l]) => (
+                <div key={l} className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${c}`} />
+                  <span className="text-[12px] text-[#8B95A1]">{l}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {!isLive && (
-            <div className="bg-[#FFFDE7] rounded-2xl px-4 py-3">
-              <p className="text-[13px] font-bold text-[#F57F17]">💡 실시간 버스 연동</p>
-              <p className="text-[12px] text-[#F57F17]/80 mt-1 leading-relaxed">
-                공공데이터포털에서 인천버스 API 키를 발급받아{" "}
-                <code className="font-mono bg-[#FFF9C4] px-1 rounded">NEXT_PUBLIC_BUS_API_KEY</code> 설정 시 실시간 도착 정보가 표시됩니다.
+            <div className="bg-[#FFFDE7] rounded-2xl px-4 py-3 space-y-1">
+              <p className="text-[13px] font-bold text-[#F57F17]">⚠️ 실시간 연동 미설정</p>
+              <p className="text-[12px] text-[#F57F17]/80 leading-relaxed">
+                현재 노선 정보만 표시됩니다. 실시간 도착 정보를 보려면 공공데이터포털에서{" "}
+                <strong>인천광역시 버스도착정보 API 키</strong>를 발급받아 GitHub 시크릿{" "}
+                <code className="font-mono bg-[#FFF9C4] px-1 rounded">NEXT_PUBLIC_BUS_API_KEY</code>에 설정 후 재배포하세요.
               </p>
             </div>
           )}
@@ -583,7 +598,7 @@ export default function TransportPage() {
                       <p className="text-[14px] font-semibold text-[#191F28]">{a.direction}</p>
                       <p className="text-[12px] text-[#8B95A1]">열차 {a.trainNo}</p>
                     </div>
-                    <ArrivalBadge min={a.arrivalMin} />
+                    <ArrivalBadge min={a.arrivalMin} live={false} />
                   </div>
                 ))}
               </div>
@@ -642,7 +657,7 @@ export default function TransportPage() {
                                 <p className="text-[11px] text-[#8B95A1]">{r.remainingStops}정류장 전</p>
                               </div>
                             </div>
-                            <ArrivalBadge min={r.arrivalMin} />
+                            <ArrivalBadge min={r.arrivalMin} live={isLive} />
                           </div>
                         ))}
                       </div>
@@ -670,7 +685,7 @@ export default function TransportPage() {
                             <p className="text-[12px] text-[#8B95A1]">{r.stopName}</p>
                           </div>
                         </div>
-                        <ArrivalBadge min={r.arrivalMin} />
+                        <ArrivalBadge min={r.arrivalMin} live={isLive} />
                       </div>
                     ))}
                   </div>
@@ -707,7 +722,7 @@ export default function TransportPage() {
                               <p className="text-[13px] font-semibold text-[#191F28]">{a.direction}</p>
                               <p className="text-[11px] text-[#8B95A1]">열차 {a.trainNo}</p>
                             </div>
-                            <ArrivalBadge min={a.arrivalMin} />
+                            <ArrivalBadge min={a.arrivalMin} live={false} />
                           </div>
                         ))}
                       </div>
