@@ -4,13 +4,13 @@ import { useRouter } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
-  ChevronRight, ChevronUp, ChevronDown, Play,
+  ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import type { CommunityCategory, NewsType } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -92,30 +92,85 @@ function CommunityTab() {
   );
 }
 
+// ─── YouTube 임베드 모달 ────────────────────────────────────────
+function YouTubeModal({ video, onClose }: { video: YouTubeVideo; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[300] bg-black flex flex-col" onClick={onClose}>
+      <div className="flex items-center gap-3 px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="active:opacity-60">
+          <X size={20} className="text-white" />
+        </button>
+        <p className="flex-1 text-[14px] font-semibold text-white line-clamp-1">{video.title}</p>
+        <a href={video.url} target="_blank" rel="noopener noreferrer"
+          className="active:opacity-60" onClick={e => e.stopPropagation()}>
+          <ExternalLink size={18} className="text-white/70" />
+        </a>
+      </div>
+      <div className="flex-1 flex items-center justify-center bg-black" onClick={e => e.stopPropagation()}>
+        <div className="w-full" style={{ position: "relative", paddingBottom: "56.25%" }}>
+          <iframe
+            src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0`}
+            title={video.title}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      </div>
+      <div className="px-4 py-3 bg-[#0F0F0F]" onClick={e => e.stopPropagation()}>
+        <p className="text-[13px] text-white/60">{video.channelName}</p>
+      </div>
+    </div>
+  );
+}
+
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [newsSource2, setNewsSource2] = useState("");
+  const [newsMs, setNewsMs] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState("");
+  const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [ytSource, setYtSource] = useState("");
+  const [ytMs, setYtMs] = useState(0);
+  const [ytLoading, setYtLoading] = useState(true);
+  const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
 
   const refresh = async () => {
     setLoading(true);
-    const articles = await fetchGeumdanNews();
-    if (articles.length > 0) {
-      setRealNews(articles);
+    const result = await fetchGeumdanNews();
+    if (result.articles.length > 0) {
+      const sorted = [...result.articles].sort(
+        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
+      setRealNews(sorted);
+      setNewsSource2(result.source);
+      setNewsMs(result.ms);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     setLoading(false);
   };
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    setYtLoading(true);
+    fetchYouTubeVideos("검단신도시").then(result => {
+      setYtVideos(result.videos);
+      setYtSource(result.source);
+      setYtMs(result.ms);
+      setYtLoading(false);
+    });
+  }, []);
 
-  const youtubeItems = newsItems.filter(n => n.type === "유튜브");
-  const instaItems   = newsItems.filter(n => n.type === "인스타");
-  const newsSource   = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
+  const instaItems = newsItems.filter(n => n.type === "인스타");
+  const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
   return (
     <div className="pb-6">
+
+      {/* ── YouTube 모달 ── */}
+      {selectedVideo && <YouTubeModal video={selectedVideo} onClose={() => setSelectedVideo(null)} />}
 
       {/* ── 유튜브 ── */}
       <div className="pt-4">
@@ -125,31 +180,48 @@ function NewsTab() {
           </div>
           <span className="text-[15px] font-bold text-[#191F28]">유튜브</span>
           <span className="text-[12px] text-[#8B95A1]">검단 관련 영상</span>
+          {!ytLoading && ytMs > 0 && (
+            <span className="ml-auto text-[10px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded-full">
+              {ytSource} {ytMs < 1000 ? `${ytMs}ms` : `${(ytMs/1000).toFixed(1)}s`}
+            </span>
+          )}
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          {youtubeItems.map(item => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
-              {/* 썸네일 */}
-              <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-                <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                  <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
-                    <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
-                  </div>
+          {ytLoading ? (
+            [0,1,2].map(i => (
+              <div key={i} className="shrink-0 w-[220px] rounded-2xl overflow-hidden animate-pulse">
+                <div className="w-full bg-[#E5E8EB]" style={{ aspectRatio: "16/9" }} />
+                <div className="bg-white px-3 py-2.5 space-y-1.5">
+                  <div className="h-3 bg-[#E5E8EB] rounded w-full" />
+                  <div className="h-3 bg-[#E5E8EB] rounded w-2/3" />
                 </div>
-                {item.viewCount && (
-                  <span className="absolute bottom-1.5 right-2 text-[10px] font-bold text-white bg-black/50 px-1.5 py-0.5 rounded">
-                    {(item.viewCount / 1000).toFixed(1)}K
+              </div>
+            ))
+          ) : ytVideos.length > 0 ? (
+            ytVideos.map(video => (
+              <button key={video.id} onClick={() => setSelectedVideo(video)}
+                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left">
+                <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+                    }} />
+                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                      <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
+                    </div>
+                  </div>
+                  <span className="absolute bottom-1.5 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    YouTube
                   </span>
-                )}
-              </div>
-              <div className="px-3 pt-2.5 pb-3">
-                <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                <p className="text-[11px] text-[#8B95A1] mt-1.5">{formatRelativeTime(item.publishedAt)}</p>
-              </div>
-            </a>
-          ))}
+                </div>
+                <div className="px-3 pt-2.5 pb-3">
+                  <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{video.title}</p>
+                  <p className="text-[11px] text-[#8B95A1] mt-1.5">{video.channelName}</p>
+                </div>
+              </button>
+            ))
+          ) : null}
           <div className="shrink-0 w-2" />
         </div>
       </div>
@@ -165,6 +237,11 @@ function NewsTab() {
                 <span className="text-[12px] text-[#4E5968]">실시간 {realNews.length}건</span>
               </div>
             )}
+            {!loading && newsMs > 0 && (
+              <span className="text-[10px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded-full">
+                {newsSource2} {newsMs < 1000 ? `${newsMs}ms` : `${(newsMs/1000).toFixed(1)}s`}
+              </span>
+            )}
           </div>
           <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
             <RefreshCw size={13} className={`text-[#8B95A1] ${loading ? "animate-spin" : ""}`} />
@@ -177,25 +254,33 @@ function NewsTab() {
               <div key={i} className="bg-white rounded-2xl h-[76px] animate-pulse" />
             ))
           ) : (
-            newsSource.map(item => (
-              <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
-                {item.thumbnail && (
-                  <div className="shrink-0 w-[88px] h-[72px]">
-                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            newsSource.map((item, idx) => {
+              const colors = ["#3182F6","#00C471","#7C3AED","#F59E0B","#F04452","#0891B2"];
+              const bg = colors[idx % colors.length];
+              const initial = (item.source || "뉴").slice(0, 1);
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
+                  <div className="shrink-0 w-[88px] h-[76px] flex items-center justify-center"
+                    style={{ background: item.thumbnail ? undefined : bg }}>
+                    {item.thumbnail ? (
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white text-[22px] font-bold">{initial}</span>
+                    )}
                   </div>
-                )}
-                <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
-                  <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
-                    <span className="text-[11px] text-[#B0B8C1]">·</span>
-                    <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
-                    <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                  <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
+                    <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
+                      <span className="text-[11px] text-[#B0B8C1]">·</span>
+                      <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                      <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                    </div>
                   </div>
-                </div>
-              </a>
-            ))
+                </a>
+              );
+            })
           )}
         </div>
       </div>
@@ -259,10 +344,76 @@ function PriceTag({ curr, prev }: { curr: number; prev: number }) {
     : <span className="flex items-center gap-0.5 text-[12px] font-semibold text-[#3182F6]"><TrendingDown size={10} />-{pct}%</span>;
 }
 
+// ── SVG 라인 차트 ──────────────────────────────────────────────
+function LineChart({
+  data, color = "#3182F6", height = 72, showLabels = false, showDots = true,
+}: {
+  data: { date: string; price: number }[];
+  color?: string;
+  height?: number;
+  showLabels?: boolean;
+  showDots?: boolean;
+}) {
+  if (data.length < 2) return null;
+  const W = 300; const plotH = showLabels ? height - 22 : height;
+  const prices = data.map(d => d.price);
+  const minP = Math.min(...prices); const maxP = Math.max(...prices);
+  const range = maxP - minP || 1;
+  const pad = 6;
+
+  const pts = data.map((d, i) => {
+    const x = pad + (i / (data.length - 1)) * (W - pad * 2);
+    const y = pad + (1 - (d.price - minP) / range) * (plotH - pad * 2);
+    return { x, y, ...d };
+  });
+
+  const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const fillD = `${pathD} L${pts[pts.length-1].x.toFixed(1)},${plotH} L${pts[0].x.toFixed(1)},${plotH} Z`;
+  const fillId = `grad-${color.replace("#","")}`;
+  const last = pts[pts.length - 1];
+
+  return (
+    <svg viewBox={`0 0 ${W} ${height}`} className="w-full" style={{ height }} preserveAspectRatio="none">
+      <defs>
+        <linearGradient id={fillId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+      <path d={fillD} fill={`url(#${fillId})`} />
+      <path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {showDots && pts.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={i === pts.length-1 ? 4 : 2.5}
+          fill={i === pts.length-1 ? color : "white"} stroke={color} strokeWidth="1.5" />
+      ))}
+      {/* 최신 가격 라벨 */}
+      <text x={last.x} y={last.y - 8} textAnchor="middle" fontSize="9" fontWeight="700" fill={color}>
+        {(last.price / 10000).toFixed(1)}억
+      </text>
+      {showLabels && pts.filter((_, i) => i % 2 === 0 || i === pts.length-1).map((p, i) => (
+        <text key={i} x={p.x} y={height - 4} textAnchor="middle" fontSize="8" fill="#8B95A1">
+          {p.date.slice(2).replace("-",".")}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
+type SortKey = "recent" | "priceHigh" | "priceLow" | "households";
+const SORT_LABELS: Record<SortKey, string> = {
+  recent: "최근 거래순", priceHigh: "높은 가격순", priceLow: "낮은 가격순", households: "세대수순",
+};
+
 function SiseTab() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
-  const avgPrice = Math.round(apartments.reduce((s, a) => s + (a.recentDeal?.price ?? 0), 0) / apartments.length);
+  const [selectedSzIdx, setSelectedSzIdx] = useState<Record<string, number>>({});
+  const [search, setSearch] = useState("");
+  const [pyeongFilter, setPyeongFilter] = useState<number | null>(null);
+  const [sortBy, setSortBy] = useState<SortKey>("recent");
+  const [showSort, setShowSort] = useState(false);
+  const [myChartOpen, setMyChartOpen] = useState(false);
+  const [avgChartOpen, setAvgChartOpen] = useState(false);
 
   // 내 집 시세
   const [myAptId, setMyAptId] = useState<string | null>(() =>
@@ -288,13 +439,49 @@ function SiseTab() {
   const myDiff = myCurr - myPrev;
   const myPct = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
 
+  // 평균 실거래가
+  const avgPrice = Math.round(apartments.reduce((s, a) => s + (a.recentDeal?.price ?? 0), 0) / apartments.length);
+
+  // 검단 신도시 월별 평균 추세 계산
+  const avgTrend = (() => {
+    const months = apartments[0].sizes[0].priceHistory.map(p => p.date);
+    return months.map(month => {
+      let total = 0; let count = 0;
+      apartments.forEach(apt => apt.sizes.forEach(sz => {
+        const entry = sz.priceHistory.find(p => p.date === month);
+        if (entry) { total += entry.price; count++; }
+      }));
+      return { date: month, price: Math.round(total / count) };
+    });
+  })();
+  const avgPrev = avgTrend[avgTrend.length - 2]?.price ?? avgPrice;
+  const avgPct = avgPrev ? (((avgPrice - avgPrev) / avgPrev) * 100).toFixed(1) : "0.0";
+
+  // 전체 평수 목록
+  const allPyeong = Array.from(new Set(apartments.flatMap(a => a.sizes.map(s => s.pyeong)))).sort((a, b) => a - b);
+
+  // 필터 + 정렬
+  const filtered = apartments
+    .filter(apt => {
+      if (search && !apt.name.includes(search) && !apt.dong.includes(search)) return false;
+      if (pyeongFilter && !apt.sizes.some(s => s.pyeong === pyeongFilter)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "recent") return new Date(b.recentDeal?.date ?? "").getTime() - new Date(a.recentDeal?.date ?? "").getTime();
+      if (sortBy === "priceHigh") return (b.recentDeal?.price ?? 0) - (a.recentDeal?.price ?? 0);
+      if (sortBy === "priceLow") return (a.recentDeal?.price ?? 0) - (b.recentDeal?.price ?? 0);
+      return b.households - a.households;
+    });
+
   return (
     <div className="pb-4">
       {/* ── 최상단: 내 집 시세 + 평균 실거래가 ── */}
       <div className="mx-4 mt-3 mb-3 rounded-2xl overflow-hidden shadow-sm">
-        {/* 내 집 시세 */}
-        <div className="bg-white px-4 pt-3.5 pb-3 border border-[#E5E8EB] rounded-t-2xl border-b-0">
-          <div className="flex items-center justify-between mb-2">
+        {/* 내 집 시세 — 탭하면 차트 펼침 */}
+        <div className="bg-white border border-[#E5E8EB] rounded-t-2xl border-b-0 overflow-hidden">
+          {/* 헤더 행 — 항상 노출 */}
+          <div className="flex items-center justify-between px-4 pt-3.5 pb-3">
             <div className="flex items-center gap-1.5">
               <span className="text-[13px]">🏠</span>
               <span className="text-[13px] font-bold text-[#191F28]">내 집 시세</span>
@@ -306,51 +493,164 @@ function SiseTab() {
           </div>
 
           {myApt ? (
-            <div className="flex items-center justify-between">
-              <div className="min-w-0 flex-1 pr-2">
-                <p className="text-[15px] font-bold text-[#191F28] truncate">{myApt.name}</p>
-                <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {myApt.recentDeal?.pyeong}평</p>
-              </div>
-              <div className="text-right shrink-0">
-                <p className="text-[18px] font-black text-[#191F28]">{formatPrice(myCurr)}</p>
-                <div className="flex items-center justify-end gap-0.5 mt-0.5">
-                  {myDiff === 0
-                    ? <span className="text-[12px] text-[#8B95A1]">보합</span>
-                    : myDiff > 0
-                      ? <><TrendingUp size={11} className="text-[#F04452]" /><span className="text-[12px] font-semibold text-[#F04452]">+{myPct}%</span></>
-                      : <><TrendingDown size={11} className="text-[#3182F6]" /><span className="text-[12px] font-semibold text-[#3182F6]">-{myPct}%</span></>
-                  }
+            /* 탭 가능한 요약 + 펼침 */
+            <button className="w-full px-4 pb-3 text-left active:bg-[#F8FAFB]"
+              onClick={() => setMyChartOpen(v => !v)}>
+              {/* 요약 지표 */}
+              <div className="flex items-center justify-between">
+                <div className="min-w-0 flex-1 pr-2">
+                  <p className="text-[15px] font-bold text-[#191F28] truncate">{myApt.name}</p>
+                  <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {myApt.recentDeal?.pyeong}평</p>
+                </div>
+                <div className="text-right shrink-0 flex items-center gap-2">
+                  <div>
+                    <p className="text-[18px] font-black text-[#191F28]">{formatPrice(myCurr)}</p>
+                    <div className="flex items-center justify-end gap-0.5 mt-0.5">
+                      {myDiff === 0 ? <span className="text-[12px] text-[#8B95A1]">보합</span>
+                        : myDiff > 0
+                          ? <><TrendingUp size={11} className="text-[#F04452]" /><span className="text-[12px] font-semibold text-[#F04452]">+{myPct}%</span></>
+                          : <><TrendingDown size={11} className="text-[#3182F6]" /><span className="text-[12px] font-semibold text-[#3182F6]">-{myPct}%</span></>}
+                    </div>
+                  </div>
+                  {myChartOpen ? <ChevronUp size={15} className="text-[#B0B8C1] shrink-0" /> : <ChevronDown size={15} className="text-[#B0B8C1] shrink-0" />}
                 </div>
               </div>
-            </div>
+
+              {/* 접힌 상태: 미니 지표 요약 */}
+              {!myChartOpen && (
+                <div className="flex gap-2 mt-2.5">
+                  {myH.slice(-3).map((p, i) => (
+                    <div key={i} className="flex-1 bg-[#F2F4F6] rounded-xl px-2.5 py-1.5 text-center">
+                      <p className="text-[10px] text-[#8B95A1]">{p.date.slice(2).replace("-",".")}</p>
+                      <p className="text-[12px] font-bold text-[#191F28]">{(p.price/10000).toFixed(1)}억</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* 펼쳐진 상태: 라인 차트 */}
+              {myChartOpen && (
+                <div className="mt-2">
+                  <LineChart data={myH} color="#3182F6" height={80} showLabels showDots />
+                </div>
+              )}
+            </button>
           ) : (
-            <button onClick={() => setShowPicker(true)}
-              className="w-full border-2 border-dashed border-[#E5E8EB] rounded-xl py-3 flex items-center justify-center gap-2 active:bg-[#F2F4F6]">
-              <span className="text-[13px] text-[#8B95A1]">내 아파트를 등록하면 시세를 바로 확인해요</span>
+            <button onClick={() => setShowPicker(true)} className="w-full px-4 pb-3">
+              <div className="border-2 border-dashed border-[#E5E8EB] rounded-xl py-3 flex items-center justify-center active:bg-[#F2F4F6]">
+                <span className="text-[13px] text-[#8B95A1]">내 아파트를 등록하면 시세를 바로 확인해요</span>
+              </div>
             </button>
           )}
         </div>
 
-        {/* 평균 실거래가 배너 */}
-        <div className="bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3.5 pb-4">
-          <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
-          <div className="flex items-end justify-between mt-1">
+        {/* 평균 실거래가 배너 — 탭하면 차트 인라인 펼침 */}
+        <button className="w-full bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3 pb-3 text-left active:opacity-90"
+          onClick={() => setAvgChartOpen(v => !v)}>
+          <div className="flex items-center justify-between">
+            <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
+            {avgChartOpen ? <ChevronUp size={14} className="text-emerald-300" /> : <ChevronDown size={14} className="text-emerald-300" />}
+          </div>
+          <div className="flex items-end justify-between mt-0.5">
             <p className="text-white text-[24px] font-black">{formatPrice(avgPrice)}</p>
             <div className="flex items-center gap-1 pb-0.5">
               <TrendingUp size={13} className="text-emerald-300" />
-              <span className="text-emerald-200 text-[12px]">전월 대비 +1.2%</span>
+              <span className="text-emerald-200 text-[12px]">전월 대비 +{avgPct}%</span>
             </div>
           </div>
+
+          {/* 접힌 상태: 3개월 요약 지표 */}
+          {!avgChartOpen && (
+            <div className="flex gap-2 mt-2">
+              {avgTrend.slice(-3).map((p, i) => (
+                <div key={i} className="flex-1 bg-emerald-700/50 rounded-xl px-2.5 py-1.5 text-center">
+                  <p className="text-[10px] text-emerald-200">{p.date.slice(2).replace("-",".")}</p>
+                  <p className="text-[12px] font-bold text-white">{(p.price/10000).toFixed(1)}억</p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 펼쳐진 상태: 라인 차트 + 월별 리스트 */}
+          {avgChartOpen && (
+            <div>
+              <div className="mt-2 bg-emerald-700/30 rounded-xl p-2">
+                <LineChart data={avgTrend} color="#6EE7B7" height={90} showLabels showDots />
+              </div>
+              <div className="mt-2 space-y-0">
+                {avgTrend.slice(-5).reverse().map((p, i, arr) => {
+                  const prevP = arr[i + 1]?.price;
+                  const chg = prevP ? p.price - prevP : 0;
+                  return (
+                    <div key={i} className="flex items-center justify-between py-1.5 border-b border-emerald-500/30 last:border-0">
+                      <span className="text-[11px] text-emerald-200">{p.date.replace("-","년 ")}월</span>
+                      <div className="flex items-center gap-2">
+                        {chg !== 0 && <span className={`text-[10px] font-bold ${chg > 0 ? "text-red-300" : "text-blue-300"}`}>{chg > 0 ? "▲" : "▼"}{Math.abs(chg).toLocaleString()}</span>}
+                        <span className="text-[12px] font-bold text-white">{formatPrice(p.price)}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </button>
+      </div>
+
+      {/* ── 검색 + 필터 바 ── */}
+      <div className="px-4 mb-3 space-y-2">
+        {/* 검색 */}
+        <div className="flex items-center gap-2 bg-white rounded-xl px-3.5 h-10 border border-[#E5E8EB]">
+          <Search size={15} className="text-[#B0B8C1] shrink-0" />
+          <input value={search} onChange={e => setSearch(e.target.value)}
+            placeholder="단지명, 동으로 검색"
+            className="flex-1 text-[14px] bg-transparent focus:outline-none text-[#191F28] placeholder:text-[#B0B8C1]" />
+          {search && <button onClick={() => setSearch("")}><X size={14} className="text-[#B0B8C1]" /></button>}
+        </div>
+
+        {/* 평수 필터 + 정렬 */}
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <button onClick={() => setPyeongFilter(null)}
+              className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors ${!pyeongFilter ? "bg-[#191F28] text-white border-transparent" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
+              전체
+            </button>
+            {allPyeong.map(p => (
+              <button key={p} onClick={() => setPyeongFilter(pyeongFilter === p ? null : p)}
+                className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors ${pyeongFilter === p ? "bg-[#3182F6] text-white border-transparent" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
+                {p}평
+              </button>
+            ))}
+          </div>
+          {/* 정렬 버튼 */}
+          <button onClick={() => setShowSort(true)}
+            className="shrink-0 h-8 px-3 rounded-full text-[12px] font-semibold border bg-white text-[#4E5968] border-[#E5E8EB] flex items-center gap-1 active:bg-[#F2F4F6]">
+            <SlidersHorizontal size={12} className="text-[#8B95A1]" />
+            {SORT_LABELS[sortBy].split("순")[0]}
+          </button>
         </div>
       </div>
 
-      {/* Apt list */}
+      {/* ── 결과 수 ── */}
+      <p className="px-4 text-[12px] text-[#8B95A1] mb-2">
+        {filtered.length}개 단지{search ? ` · "${search}" 검색 결과` : ""}
+      </p>
+
+      {/* ── 아파트 리스트 ── */}
       <div className="px-4 space-y-3">
-        {apartments.map(apt => {
-          const h = apt.sizes[0].priceHistory;
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-2xl py-12 flex flex-col items-center gap-2">
+            <span className="text-3xl">🔍</span>
+            <p className="text-[14px] text-[#8B95A1]">검색 결과가 없어요</p>
+          </div>
+        ) : filtered.map(apt => {
+          const szIdx = selectedSzIdx[apt.id] ?? 0;
+          const sz = apt.sizes[szIdx] ?? apt.sizes[0];
+          const h = sz.priceHistory;
           const curr = h[h.length - 1].price;
           const prev = h[h.length - 2]?.price ?? curr;
           const isOpen = selected === apt.id;
+
           return (
             <div key={apt.id}
               className={`bg-white rounded-2xl overflow-hidden shadow-sm transition-all ${isOpen ? "ring-2 ring-[#3182F6]" : ""}`}>
@@ -360,49 +660,70 @@ function SiseTab() {
                     <p className="text-[16px] font-bold text-[#191F28]">{apt.name}</p>
                     <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <MapPin size={11} className="text-[#8B95A1] shrink-0" />
-                      <span className="text-[13px] text-[#8B95A1]">{apt.dong}</span>
+                      <span className="text-[12px] text-[#8B95A1]">{apt.dong}</span>
                       <span className="text-[#E5E8EB]">·</span>
-                      <span className="text-[13px] text-[#8B95A1]">{apt.built}년</span>
+                      <span className="text-[12px] text-[#8B95A1]">{apt.built}년</span>
                       <span className="text-[#E5E8EB]">·</span>
-                      <span className="text-[13px] text-[#8B95A1]">{apt.households.toLocaleString()}세대</span>
+                      <span className="text-[12px] text-[#8B95A1]">{apt.households.toLocaleString()}세대</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[17px] font-black text-emerald-600">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-                    <p className="text-[12px] text-[#8B95A1]">{apt.recentDeal?.pyeong}평 실거래</p>
+                    <p className="text-[11px] text-[#8B95A1]">{apt.recentDeal?.pyeong}평 실거래</p>
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-3">
-                  {apt.sizes.map((sz, i) => (
-                    <div key={i} className="bg-[#F2F4F6] rounded-xl px-3 py-2 text-center">
-                      <p className="text-[13px] font-semibold text-[#4E5968]">{sz.pyeong}평</p>
-                      <p className="text-[12px] text-emerald-600 font-bold">{formatPrice(sz.avgPrice)}</p>
-                    </div>
+                {/* 평수 선택 탭 */}
+                <div className="flex gap-1.5 mt-3">
+                  {apt.sizes.map((s, i) => (
+                    <button key={i}
+                      onClick={e => { e.stopPropagation(); setSelectedSzIdx(prev => ({ ...prev, [apt.id]: i })); }}
+                      className={`rounded-xl px-3 py-2 text-center transition-colors ${szIdx === i ? "bg-[#3182F6]" : "bg-[#F2F4F6]"}`}>
+                      <p className={`text-[12px] font-semibold ${szIdx === i ? "text-white" : "text-[#4E5968]"}`}>{s.pyeong}평</p>
+                      <p className={`text-[11px] font-bold ${szIdx === i ? "text-blue-100" : "text-emerald-600"}`}>{formatPrice(s.avgPrice)}</p>
+                    </button>
                   ))}
                 </div>
 
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-[#F2F4F6]">
+                <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-[#F2F4F6]">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[13px] text-[#8B95A1]">전월 대비</span>
+                    <span className="text-[12px] text-[#8B95A1]">전월 대비</span>
                     <PriceTag curr={curr} prev={prev} />
                   </div>
-                  <div className="flex items-center gap-1 text-[13px] text-[#8B95A1]">
-                    {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                    <span>추이</span>
+                  <div className="flex items-center gap-1 text-[12px] text-[#8B95A1]">
+                    {isOpen ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                    <span>추이 그래프</span>
                   </div>
                 </div>
               </button>
 
               {isOpen && (
                 <div className="border-t border-[#F2F4F6] px-4 py-3 bg-[#F8FAFB]">
-                  <div className="space-y-1.5">
-                    {apt.sizes[0].priceHistory.slice(-6).map((p, i) => (
-                      <div key={i} className="flex items-center justify-between">
-                        <span className="text-[13px] text-[#8B95A1]">{p.date}</span>
-                        <span className="text-[14px] font-semibold text-[#191F28]">{formatPrice(p.price)}</span>
-                      </div>
-                    ))}
+                  {/* 추세 그래프 */}
+                  <p className="text-[11px] font-bold text-[#8B95A1] mb-2">{sz.pyeong}평 실거래 추이</p>
+                  <div className="bg-white rounded-xl p-2 mb-3">
+                    <LineChart data={h} color="#10B981" height={88} showLabels showDots />
+                  </div>
+                  {/* 월별 거래 리스트 */}
+                  <p className="text-[11px] font-bold text-[#8B95A1] mb-1.5">월별 거래</p>
+                  <div className="space-y-1">
+                    {h.slice(-6).reverse().map((p, i) => {
+                      const prevP = h[h.length - 6 + (5 - i) - 1]?.price;
+                      const chg = prevP ? p.price - prevP : 0;
+                      return (
+                        <div key={i} className="flex items-center justify-between py-1.5 border-b border-[#F2F4F6] last:border-0">
+                          <span className="text-[12px] text-[#8B95A1]">{p.date.replace("-", "년 ")}월</span>
+                          <div className="flex items-center gap-2">
+                            {chg !== 0 && (
+                              <span className={`text-[10px] font-semibold ${chg > 0 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
+                                {chg > 0 ? "▲" : "▼"}{Math.abs(chg).toLocaleString()}
+                              </span>
+                            )}
+                            <span className="text-[13px] font-bold text-[#191F28]">{formatPrice(p.price)}</span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -411,7 +732,7 @@ function SiseTab() {
         })}
       </div>
 
-      {/* Link to full real-estate page */}
+      {/* 매물 보기 링크 */}
       <button onClick={() => router.push("/real-estate/")}
         className="mx-4 mt-4 w-[calc(100%-32px)] bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between active:bg-[#F2F4F6]">
         <div>
@@ -421,21 +742,35 @@ function SiseTab() {
         <ChevronRight size={18} className="text-[#B0B8C1]" />
       </button>
 
-      {/* 아파트 선택 모달 */}
+      {/* ── 정렬 선택 바텀 시트 ── */}
+      {showSort && (
+        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowSort(false)}>
+          <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
+            onClick={e => e.stopPropagation()}>
+            <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
+            <p className="text-[16px] font-bold text-[#191F28] px-5 pt-2 pb-3">정렬 기준</p>
+            {(Object.entries(SORT_LABELS) as [SortKey, string][]).map(([key, label]) => (
+              <button key={key} onClick={() => { setSortBy(key); setShowSort(false); }}
+                className={`w-full px-5 py-4 flex items-center justify-between border-t border-[#F2F4F6] active:bg-[#F2F4F6] ${sortBy === key ? "bg-[#EBF3FE]" : ""}`}>
+                <span className={`text-[15px] font-semibold ${sortBy === key ? "text-[#3182F6]" : "text-[#191F28]"}`}>{label}</span>
+                {sortBy === key && <span className="text-[#3182F6] text-[13px] font-bold">✓</span>}
+              </button>
+            ))}
+            <div className="h-5" />
+          </div>
+          <div className="absolute inset-0 bg-black/40 z-0" />
+        </div>
+      )}
+
+      {/* ── 아파트 선택 모달 ── */}
       {showPicker && (
-        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowPicker(false)}>
+        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowPicker(false)}>
           <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[70vh] flex flex-col"
             onClick={e => e.stopPropagation()}>
-            <div className="flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
-            </div>
+            <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
             <div className="flex items-center justify-between px-4 pt-2 pb-3 border-b border-[#F2F4F6]">
               <h3 className="text-[17px] font-bold text-[#191F28]">내 집 선택</h3>
-              {myApt && (
-                <button onClick={clearApt} className="text-[13px] text-[#F04452] font-medium active:opacity-70">
-                  등록 해제
-                </button>
-              )}
+              {myApt && <button onClick={clearApt} className="text-[13px] text-[#F04452] font-medium active:opacity-70">등록 해제</button>}
             </div>
             <div className="overflow-y-auto flex-1">
               {apartments.map(apt => {
@@ -452,12 +787,13 @@ function SiseTab() {
                       </div>
                       <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대</p>
                     </div>
-                    <p className="text-[16px] font-black text-emerald-600 shrink-0">{formatPrice(curr)}</p>
+                    <p className="text-[15px] font-black text-emerald-600 shrink-0">{formatPrice(curr)}</p>
                   </button>
                 );
               })}
             </div>
           </div>
+          <div className="absolute inset-0 bg-black/40 z-0" />
         </div>
       )}
     </div>
@@ -469,7 +805,13 @@ const mainTabs: SoikTab[] = ["커뮤니티", "뉴스", "시세"];
 
 function SoikContent() {
   const router = useRouter();
-  const [tab, setTab] = useState<SoikTab>("커뮤니티");
+  const [tab, setTab] = useState<SoikTab>(() => {
+    if (typeof window !== "undefined") {
+      const p = new URLSearchParams(window.location.search).get("tab");
+      if (p === "뉴스" || p === "시세") return p as SoikTab;
+    }
+    return "커뮤니티";
+  });
 
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">

@@ -12,7 +12,8 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts, currentUser } from "@/lib/mockData";
+import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
@@ -45,7 +46,7 @@ function WeeklyModal({ weekly, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
         onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3 pb-1">
@@ -87,7 +88,7 @@ function WeeklyModal({ weekly, onClose }: {
           ))}
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }
@@ -310,7 +311,7 @@ function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0
     ? Math.ceil((new Date(b.validUntil).getTime() - Date.now()) / 86400000)
     : null;
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
         {/* 헤더 */}
@@ -365,7 +366,7 @@ function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0
           </button>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 -z-10" />
+      <div className="absolute inset-0 bg-black/40 z-0" />
     </div>
   );
 }
@@ -430,8 +431,16 @@ type SosikTab = "커뮤니티" | "뉴스" | "시세";
 function SosikSection() {
   const router = useRouter();
   const [tab, setTab] = useState<SosikTab>("커뮤니티");
+  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
-  const topNews = newsItems.slice(0, 4);
+
+  useEffect(() => {
+    fetchGeumdanNews().then(result => {
+      if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
+    });
+  }, []);
+
+  const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
 
   return (
     <section className="mx-4 mb-1">
@@ -489,12 +498,12 @@ function SosikSection() {
           <div>
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <span className="text-[14px] font-bold text-[#191F28]">검단 최신 뉴스</span>
-              <Link href="/news/" className="text-[13px] text-[#3182F6]">전체보기</Link>
+              <Link href="/community/?tab=뉴스" className="text-[13px] text-[#3182F6]">전체보기</Link>
             </div>
             <div className="divide-y divide-[#F2F4F6]">
               {topNews.map(item => (
-                <button key={item.id}
-                  onClick={() => router.push("/news/")}
+                <a key={item.id}
+                  href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
                   className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
                   <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">📰</div>
                   <div className="flex-1 min-w-0">
@@ -504,11 +513,11 @@ function SosikSection() {
                       <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
                     </div>
                   </div>
-                </button>
+                </a>
               ))}
             </div>
             <div className="px-4 py-3">
-              <Link href="/news/"
+              <Link href="/community/?tab=뉴스"
                 className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
                 뉴스 전체 보기 →
               </Link>
@@ -959,6 +968,59 @@ function SectionLabel({ label }: { label: string }) {
   );
 }
 
+// ─── 인사 배너 ──────────────────────────────────────────────
+function getPersonalizedMessage(name: string, weather: WeatherData | null): { sub: string; main: string } {
+  const hour = new Date().getHours();
+  const temp = weather?.temp;
+  const code = weather?.weatherCode ?? -1;
+  const pm10 = weather?.pm10;
+
+  // 날씨 상황별
+  if (weather) {
+    if (pm10 != null && pm10 > 80)
+      return { sub: `${name}님, 오늘 미세먼지가 심해요 😷`, main: "외출 시 마스크 꼭 챙기세요" };
+    if (code >= 95)
+      return { sub: `${name}님, 지금 뇌우가 치고 있어요 ⛈️`, main: "외출은 잠시 미뤄보세요" };
+    if (code >= 71 && code <= 77)
+      return { sub: `${name}님, 오늘 눈이 내려요 ❄️`, main: "도로가 미끄러우니 조심하세요" };
+    if (code >= 61 && code <= 67)
+      return { sub: `${name}님, 오늘 비가 와요 🌧️`, main: "우산 챙기는 거 잊지 마세요" };
+    if (temp != null && temp <= 0)
+      return { sub: `${name}님, 오늘 날씨가 영하예요 🥶`, main: "두꺼운 옷 챙기고 따뜻하게 다니세요" };
+    if (temp != null && temp <= 8)
+      return { sub: `${name}님, 오늘은 날씨가 쌀쌀해요 🧥`, main: "따뜻하게 입고 나가세요" };
+    if (temp != null && temp >= 33)
+      return { sub: `${name}님, 오늘 폭염이에요 🔥`, main: "수분 보충 자주 해주세요" };
+    if (temp != null && temp >= 28)
+      return { sub: `${name}님, 오늘 많이 덥네요 ☀️`, main: "시원한 곳에서 더위 피하세요" };
+    if (code === 0 || code === 1) {
+      if (hour >= 6 && hour < 9)
+        return { sub: `${name}님, 맑은 아침이에요 ☀️`, main: "상쾌한 하루 시작하세요" };
+      if (hour >= 18)
+        return { sub: `${name}님, 오늘 저녁 하늘이 맑아요 🌆`, main: "산책하기 좋은 날씨예요" };
+    }
+  }
+
+  // 시간대별 fallback
+  if (hour < 6)  return { sub: `${name}님, 늦은 밤이에요 🌙`, main: "오늘도 고생 많으셨어요" };
+  if (hour < 9)  return { sub: `${name}님, 좋은 아침이에요 ☀️`, main: "오늘 하루도 활기차게 시작해요" };
+  if (hour < 12) return { sub: `${name}님, 오전을 달리는 중이에요 💪`, main: "검단의 소식 확인해보세요" };
+  if (hour < 14) return { sub: `${name}님, 점심 맛있게 드셨나요? 🍱`, main: "근처 맛집 둘러볼까요" };
+  if (hour < 18) return { sub: `${name}님, 오후도 힘내세요 😊`, main: "검단의 새 소식을 확인하세요" };
+  if (hour < 21) return { sub: `${name}님, 편안한 저녁이에요 🌆`, main: "오늘 하루도 수고하셨어요" };
+  return { sub: `${name}님, 오늘도 고생하셨어요 🌙`, main: "편안한 밤 되세요" };
+}
+
+function GreetingBanner({ weather }: { weather: WeatherData | null }) {
+  const { sub, main } = getPersonalizedMessage(currentUser.nickname, weather);
+  return (
+    <div className="mx-4 mt-4 mb-1">
+      <p className="text-[13px] font-semibold text-[#6B7684] mb-1">{sub}</p>
+      <h1 className="text-[22px] font-black text-[#191F28] leading-snug">{main}</h1>
+    </div>
+  );
+}
+
 // ─── 메인 ────────────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
@@ -975,6 +1037,9 @@ export default function HomePage() {
   return (
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
       <Header showLocation />
+
+      {/* ── 인사 배너 ── */}
+      <GreetingBanner weather={weather} />
 
       {/* ── 날씨 ── */}
       <WeatherWidget weather={weather} loading={weatherLoading} />

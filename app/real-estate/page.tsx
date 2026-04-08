@@ -115,7 +115,7 @@ function AddHomeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
+    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full bg-white rounded-t-3xl px-5 py-6 pb-10" onClick={(e) => e.stopPropagation()}>
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
         {step === "select" ? (
