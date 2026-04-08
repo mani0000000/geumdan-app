@@ -137,6 +137,7 @@ function NewsTab() {
   const [ytMs, setYtMs] = useState(0);
   const [ytLoading, setYtLoading] = useState(true);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
+  const [newsLimit, setNewsLimit] = useState(10);
 
   const refresh = async () => {
     setLoading(true);
@@ -249,39 +250,36 @@ function NewsTab() {
             {lastUpdated && <span className="text-[11px] text-[#B0B8C1] ml-0.5">{lastUpdated}</span>}
           </button>
         </div>
-        <div className="px-4 space-y-2.5">
+        <div className="px-4 space-y-2">
           {loading ? (
             [0, 1, 2].map(i => (
-              <div key={i} className="bg-white rounded-2xl h-[76px] animate-pulse" />
+              <div key={i} className="bg-white rounded-2xl px-4 py-3.5 animate-pulse space-y-2">
+                <div className="h-3.5 bg-[#E5E8EB] rounded w-full" />
+                <div className="h-3.5 bg-[#E5E8EB] rounded w-4/5" />
+                <div className="h-3 bg-[#E5E8EB] rounded w-1/3" />
+              </div>
             ))
           ) : (
-            newsSource.map((item, idx) => {
-              const colors = ["#3182F6","#00C471","#7C3AED","#F59E0B","#F04452","#0891B2"];
-              const bg = colors[idx % colors.length];
-              const initial = (item.source || "뉴").slice(0, 1);
-              return (
-                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                  className="bg-white rounded-2xl overflow-hidden flex active:opacity-80 shadow-sm">
-                  <div className="shrink-0 w-[88px] h-[76px] flex items-center justify-center"
-                    style={{ background: item.thumbnail ? undefined : bg }}>
-                    {item.thumbnail ? (
-                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white text-[22px] font-bold">{initial}</span>
-                    )}
-                  </div>
-                  <div className="flex-1 px-3 py-2.5 min-w-0 flex flex-col justify-between">
-                    <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
-                    <div className="flex items-center gap-1.5 mt-1">
-                      <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
-                      <span className="text-[11px] text-[#B0B8C1]">·</span>
-                      <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
-                      <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
-                    </div>
-                  </div>
-                </a>
-              );
-            })
+            newsSource.slice(0, newsLimit).map((item) => (
+              <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                className="bg-white rounded-2xl px-4 py-3.5 flex flex-col gap-1.5 active:opacity-80 shadow-sm">
+                <p className="text-[13px] font-semibold text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[11px] font-medium text-[#3182F6]">{item.source}</span>
+                  <span className="text-[11px] text-[#B0B8C1]">·</span>
+                  <span className="text-[11px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                  <ExternalLink size={10} className="text-[#B0B8C1] ml-auto shrink-0" />
+                </div>
+              </a>
+            ))
+          )}
+          {!loading && newsSource.length > newsLimit && newsLimit < 30 && (
+            <button
+              onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
+              className="w-full py-3 rounded-2xl bg-white text-[13px] font-medium text-[#4E5968] shadow-sm active:opacity-70 flex items-center justify-center gap-1">
+              <ChevronDown size={15} className="text-[#8B95A1]" />
+              더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
+            </button>
           )}
         </div>
       </div>
