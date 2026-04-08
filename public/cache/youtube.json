@@ -1,9 +1,17 @@
 {
-  "fetchedAt": "2026-04-08T09:57:46.226Z",
+  "fetchedAt": "2026-04-08T12:54:24.162Z",
   "count": 15,
   "videos": [
     {
       "id": "ythtml-0",
+      "videoId": "lVGqbUeWrOU",
+      "title": "아라계양로 개통 경축!!! 드라이브 함께하시죠!!",
+      "channelName": "부테크랩",
+      "thumbnail": "https://img.youtube.com/vi/lVGqbUeWrOU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=lVGqbUeWrOU"
+    },
+    {
+      "id": "ythtml-1",
       "videoId": "JaXOBRDwTQs",
       "title": "검단호수공원역 파라곤 일반공급 경쟁률 ! , 102역 힐스 실거래 떳네요 ! , 검단신도시 U 공원의 봄 ! , 검단신도시 열요금 인하 조정 !",
       "channelName": "검단신도시 이야기",
@@ -11,20 +19,12 @@
       "url": "https://www.youtube.com/watch?v=JaXOBRDwTQs"
     },
     {
-      "id": "ythtml-1",
-      "videoId": "krDQtxvAsR4",
-      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
-      "channelName": "실거주부동산",
-      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4"
-    },
-    {
       "id": "ythtml-2",
-      "videoId": "cKTzW5EXex8",
-      "title": "[도로투데이] 인천 검단~드림로 8일 전면개통 장제로 교통혼잡 완화 기대",
-      "channelName": "인투TV",
-      "thumbnail": "https://img.youtube.com/vi/cKTzW5EXex8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=cKTzW5EXex8"
+      "videoId": "Mdki5SUyNQc",
+      "title": "경축 아라-계양로 개통 / 26년 4월8일 오후2시 /  타보니 신세계!!!",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/Mdki5SUyNQc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Mdki5SUyNQc"
     },
     {
       "id": "ythtml-3",
@@ -36,6 +36,22 @@
     },
     {
       "id": "ythtml-4",
+      "videoId": "krDQtxvAsR4",
+      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
+      "channelName": "실거주부동산",
+      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4"
+    },
+    {
+      "id": "ythtml-5",
+      "videoId": "cKTzW5EXex8",
+      "title": "[도로투데이] 인천 검단~드림로 8일 전면개통 장제로 교통혼잡 완화 기대",
+      "channelName": "인투TV",
+      "thumbnail": "https://img.youtube.com/vi/cKTzW5EXex8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=cKTzW5EXex8"
+    },
+    {
+      "id": "ythtml-6",
       "videoId": "_3ADO624vH4",
       "title": "검단신도시, 결국 오를 수밖에 없는 이유",
       "channelName": "부동산은 땅땅무슨땅",
@@ -43,7 +59,7 @@
       "url": "https://www.youtube.com/watch?v=_3ADO624vH4"
     },
     {
-      "id": "ythtml-5",
+      "id": "ythtml-7",
       "videoId": "AUBLAgtcrlA",
       "title": "분구 앞둔 검단…현안 해결 과제 '산적' [인천]",
       "channelName": "B tv 뉴스",
@@ -51,7 +67,7 @@
       "url": "https://www.youtube.com/watch?v=AUBLAgtcrlA"
     },
     {
-      "id": "ythtml-6",
+      "id": "ythtml-8",
       "videoId": "qf7xMb4hLCQ",
       "title": "검단신도시 난리난 이유… 5호선 확정되면 이렇게 됩니다",
       "channelName": "부동산은 땅땅무슨땅",
@@ -59,28 +75,12 @@
       "url": "https://www.youtube.com/watch?v=qf7xMb4hLCQ"
     },
     {
-      "id": "ythtml-7",
-      "videoId": "2mq12PRp76M",
-      "title": "[속보] 검단호수공원역 파라곤(AA36BL) 1순위 청약 경쟁률 결과 + 특별공급 경쟁률 + 분양 가격 + 인천 아파트 + 인천 부동산",
-      "channelName": "베테랑부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/2mq12PRp76M/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=2mq12PRp76M"
-    },
-    {
-      "id": "ythtml-8",
+      "id": "ythtml-9",
       "videoId": "zmDgmDX20XU",
       "title": "검단신도시 임장 끝내기 👌 입지, 대장 아파트, 교통호재 총정리!",
       "channelName": "부동산 마스터_박소장의 내집마련 끝내기",
       "thumbnail": "https://img.youtube.com/vi/zmDgmDX20XU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=zmDgmDX20XU"
-    },
-    {
-      "id": "ythtml-9",
-      "videoId": "VLXd65RR7Rg",
-      "title": "검단신도시 집중 탐구",
-      "channelName": "부동산 시민교수 - 부티인",
-      "thumbnail": "https://img.youtube.com/vi/VLXd65RR7Rg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=VLXd65RR7Rg"
     },
     {
       "id": "ythtml-10",
@@ -92,6 +92,14 @@
     },
     {
       "id": "ythtml-11",
+      "videoId": "VLXd65RR7Rg",
+      "title": "검단신도시 집중 탐구",
+      "channelName": "부동산 시민교수 - 부티인",
+      "thumbnail": "https://img.youtube.com/vi/VLXd65RR7Rg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=VLXd65RR7Rg"
+    },
+    {
+      "id": "ythtml-12",
       "videoId": "UVOdna5B1KU",
       "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
       "channelName": "여가여행자",
@@ -99,7 +107,7 @@
       "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
     },
     {
-      "id": "ythtml-12",
+      "id": "ythtml-13",
       "videoId": "rlZwVZ27et8",
       "title": "⟪검단호수공원역 파라곤⟫ 완벽분석~!🤩 (feat. 이제 6억대 34평 분양은 없다)",
       "channelName": "돈근육허벅지",
@@ -107,20 +115,12 @@
       "url": "https://www.youtube.com/watch?v=rlZwVZ27et8"
     },
     {
-      "id": "ythtml-13",
-      "videoId": "drgWeCNOwnI",
-      "title": "검단 AA31 DL이앤씨 컨소 수주 ! , 검단신도시 최대 단지 AB22, 23BL 포스코 더샵 5월 분양 공지떴어요 !",
-      "channelName": "검단신도시 이야기",
-      "thumbnail": "https://img.youtube.com/vi/drgWeCNOwnI/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=drgWeCNOwnI"
-    },
-    {
       "id": "ythtml-14",
-      "videoId": "zp66YAf-8tg",
-      "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
-      "channelName": "마청플",
-      "thumbnail": "https://img.youtube.com/vi/zp66YAf-8tg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=zp66YAf-8tg"
+      "videoId": "2g4MIAK0UlY",
+      "title": "검단신도시 2026년 27년 입주단지 아라역 신검단중앙역 호수공원역 어디로 이사할까?",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/2g4MIAK0UlY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=2g4MIAK0UlY"
     }
   ]
 }
