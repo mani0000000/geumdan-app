@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-08T01:17:41.004Z",
+  "fetchedAt": "2026-04-08T05:04:16.183Z",
   "count": 15,
   "videos": [
     {
@@ -12,11 +12,11 @@
     },
     {
       "id": "ythtml-1",
-      "videoId": "2mq12PRp76M",
-      "title": "[속보] 검단호수공원역 파라곤(AA36BL) 1순위 청약 경쟁률 결과 + 특별공급 경쟁률 + 분양 가격 + 인천 아파트 + 인천 부동산",
-      "channelName": "베테랑부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/2mq12PRp76M/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=2mq12PRp76M"
+      "videoId": "krDQtxvAsR4",
+      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
+      "channelName": "실거주부동산",
+      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4"
     },
     {
       "id": "ythtml-2",
@@ -28,19 +28,19 @@
     },
     {
       "id": "ythtml-3",
-      "videoId": "krDQtxvAsR4",
-      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
-      "channelName": "실거주부동산",
-      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4"
-    },
-    {
-      "id": "ythtml-4",
       "videoId": "cKTzW5EXex8",
       "title": "[도로투데이] 인천 검단~드림로 8일 전면개통 장제로 교통혼잡 완화 기대",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/cKTzW5EXex8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=cKTzW5EXex8"
+    },
+    {
+      "id": "ythtml-4",
+      "videoId": "2mq12PRp76M",
+      "title": "[속보] 검단호수공원역 파라곤(AA36BL) 1순위 청약 경쟁률 결과 + 특별공급 경쟁률 + 분양 가격 + 인천 아파트 + 인천 부동산",
+      "channelName": "베테랑부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/2mq12PRp76M/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=2mq12PRp76M"
     },
     {
       "id": "ythtml-5",
@@ -92,14 +92,6 @@
     },
     {
       "id": "ythtml-11",
-      "videoId": "bJeJ3THrH3I",
-      "title": "⟪검단호수공원역 파라곤⟫ 특별공급 경쟁률 ~! 😎 (feat.기다린다고??)",
-      "channelName": "돈근육허벅지",
-      "thumbnail": "https://img.youtube.com/vi/bJeJ3THrH3I/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=bJeJ3THrH3I"
-    },
-    {
-      "id": "ythtml-12",
       "videoId": "rlZwVZ27et8",
       "title": "⟪검단호수공원역 파라곤⟫ 완벽분석~!🤩 (feat. 이제 6억대 34평 분양은 없다)",
       "channelName": "돈근육허벅지",
@@ -107,7 +99,7 @@
       "url": "https://www.youtube.com/watch?v=rlZwVZ27et8"
     },
     {
-      "id": "ythtml-13",
+      "id": "ythtml-12",
       "videoId": "zp66YAf-8tg",
       "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
       "channelName": "마청플",
@@ -115,12 +107,20 @@
       "url": "https://www.youtube.com/watch?v=zp66YAf-8tg"
     },
     {
+      "id": "ythtml-13",
+      "videoId": "SMb-cjpjJYo",
+      "title": "\"공급 폭탄 vs 인천의 강남\"..관짝 열고 나와 인천의 대장 노리는 \"검단신도시\"",
+      "channelName": "지식세포",
+      "thumbnail": "https://img.youtube.com/vi/SMb-cjpjJYo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=SMb-cjpjJYo"
+    },
+    {
       "id": "ythtml-14",
-      "videoId": "IVZDsucxyms",
-      "title": "마곡 전세보다 싸다구? 검단신도시 하반기 폭등시그널. 이걸 보면 알수 있다!!",
-      "channelName": "둥이아빠부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/IVZDsucxyms/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=IVZDsucxyms"
+      "videoId": "J0cv0EuhgIo",
+      "title": "신검단중앙역 주변 단지, 상권과 비교, 검단호수공원역 파라곤 청약할까? 말까?",
+      "channelName": "뚜벅이홈즈 힐러",
+      "thumbnail": "https://img.youtube.com/vi/J0cv0EuhgIo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=J0cv0EuhgIo"
     }
   ]
 }
