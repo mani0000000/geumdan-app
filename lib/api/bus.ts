@@ -20,11 +20,11 @@ export interface BusStopInfo {
 
 export interface BusLocation {
   plateNo: string;
-  stationSeq: number;    // 현재 위치 정류장 순번
+  stationSeq: number;
   stationId: string;
   stationName: string;
   isLowFloor: boolean;
-  direction: 0 | 1;      // 0=상행, 1=하행
+  direction: 0 | 1;
 }
 
 export interface RouteStation {
@@ -40,13 +40,13 @@ export interface RouteDetail {
   routeName: string;
   startStation: string;
   endStation: string;
-  firstTime: string;   // "05:30"
-  lastTime: string;    // "23:00"
+  firstTime: string;
+  lastTime: string;
   upFirstTime: string;
   upLastTime: string;
   downFirstTime: string;
   downLastTime: string;
-  interval: number;    // 배차 간격(분)
+  interval: number;
 }
 
 const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
@@ -63,29 +63,34 @@ function parseItems<T>(json: unknown): T[] {
   return Array.isArray(item) ? (item as T[]) : [item as T];
 }
 
-// apis.data.go.kr does not send CORS headers → use proxy race (same pattern as news.ts)
+// apis.data.go.kr는 CORS 헤더 미지원 → 3-way 병렬 레이스 (직접+프록시2개)
+// 직접 시도는 1.5s 타임아웃으로 CORS가 되는 환경이면 가장 빠르게 응답
 async function apiFetch<T>(path: string, params: Record<string, string>): Promise<T[]> {
   if (!API_KEY) return [];
   const targetUrl = `${BASE}${path}?${qs(params)}`;
 
-  // 1. Try direct fetch first (works if server adds CORS headers in future)
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), 4000);
-    const res = await fetch(targetUrl, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (res.ok) return parseItems<T>(await res.json());
-  } catch { /* CORS blocked → fall through to proxy */ }
-
-  // 2. CORS proxy race — allorigins.win vs corsproxy.io
   try {
     return await Promise.any([
+      // 1. 직접 (CORS 허용 환경 / 서버사이드용, 1.5s 타임아웃)
+      (async () => {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 1500);
+        try {
+          const res = await fetch(targetUrl, { signal: ctrl.signal });
+          if (!res.ok) throw new Error("not ok");
+          const data = parseItems<T>(await res.json());
+          clearTimeout(tid);
+          return data;
+        } catch { clearTimeout(tid); throw new Error("direct failed"); }
+      })(),
+      // 2. allorigins.win 프록시
       (async () => {
         const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
         if (!res.ok) throw new Error(`allorigins ${res.status}`);
         const j = await res.json();
         return parseItems<T>(JSON.parse(j.contents as string));
       })(),
+      // 3. corsproxy.io 프록시
       (async () => {
         const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
         if (!res.ok) throw new Error(`corsproxy ${res.status}`);
@@ -129,7 +134,7 @@ export async function fetchBusLocations(routeId: string): Promise<BusLocation[]>
   }));
 }
 
-// ─── 노선 상세정보 (첫차/막차/배차간격) ─────────────────────────
+// ─── 노선 상세정보 ────────────────────────────────────────────
 export async function fetchRouteDetail(routeId: string): Promise<RouteDetail | null> {
   const items = await apiFetch<Record<string, string | number>>(
     "/routeInfoService/getRouteInfo",
@@ -180,7 +185,20 @@ export async function fetchBusStop(stationName: string): Promise<BusArrival[]> {
   return fetchArrivals(id);
 }
 
-// ─── 위치 기반 주변 정류장 조회 ────────────────────────────────
+// ─── Haversine 거리 계산 (미터) ──────────────────────────────
+export function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ─── 위치 기반 주변 정류장 조회 ──────────────────────────────
 export interface NearbyStop {
   stationId: string;
   stationName: string;
@@ -190,13 +208,12 @@ export interface NearbyStop {
 }
 
 /**
- * 현재 GPS 좌표 기반 주변 정류장 목록 조회
- * radiusType: 1=100m 2=200m 3=300m 4=500m 5=1000m
+ * 주변 정류장 단일 쿼리 (distancetype: 5=1km)
  */
 export async function fetchNearbyStops(
   lat: number,
   lng: number,
-  radiusType: "1" | "2" | "3" | "4" | "5" = "4"
+  radiusType: "1" | "2" | "3" | "4" | "5" = "5"
 ): Promise<NearbyStop[]> {
   const items = await apiFetch<Record<string, string>>(
     "/busStopInfoService/getBusStopAroundList",
@@ -215,6 +232,48 @@ export async function fetchNearbyStops(
       distanceM: Number(item.DISTANCE ?? item.distance ?? 0),
     }))
     .filter(s => s.stationId && s.stationName)
+    .sort((a, b) => a.distanceM - b.distanceM);
+}
+
+/**
+ * 3km 반경 주변 정류장 조회
+ * 중심 + 4방향(1.5km 오프셋)으로 5방향 병렬 쿼리 후 중복 제거
+ * 각 방향에서 1km 반경 쿼리 → 합쳐서 약 3km 커버
+ */
+export async function fetchNearbyStopsWide(
+  lat: number,
+  lng: number,
+): Promise<NearbyStop[]> {
+  // 1.5km 오프셋 (위도 1° ≈ 111km, 경도 1° ≈ 88km @37.5°N)
+  const LAT_OFF = 0.0135; // ~1.5km
+  const LNG_OFF = 0.0170; // ~1.5km
+  const points: [number, number][] = [
+    [lat, lng],
+    [lat + LAT_OFF, lng],
+    [lat - LAT_OFF, lng],
+    [lat, lng + LNG_OFF],
+    [lat, lng - LNG_OFF],
+  ];
+
+  const results = await Promise.all(
+    points.map(([la, lo]) => fetchNearbyStops(la, lo, "5"))
+  );
+
+  // 중복 제거: 실제 거리 기준으로 stationId 별 최소 거리 유지
+  const map = new Map<string, NearbyStop>();
+  for (const stops of results) {
+    for (const stop of stops) {
+      const realDist = haversineM(lat, lng, stop.lat, stop.lng);
+      const withRealDist = { ...stop, distanceM: Math.round(realDist) };
+      const existing = map.get(stop.stationId);
+      if (!existing || withRealDist.distanceM < existing.distanceM) {
+        map.set(stop.stationId, withRealDist);
+      }
+    }
+  }
+
+  return Array.from(map.values())
+    .filter(s => s.distanceM <= 3000)
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 

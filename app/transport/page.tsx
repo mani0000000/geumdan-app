@@ -10,7 +10,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { nearbyStops, subwayStations } from "@/lib/mockData";
 import {
   hasBusApiKey,
-  fetchNearbyStops, fetchArrivalsByStationId,
+  haversineM,
+  fetchNearbyStopsWide, fetchArrivalsByStationId,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
 import type { BusRoute } from "@/lib/types";
@@ -35,19 +36,16 @@ const STATION_COORDS: Record<string, [number, number]> = {
   sw2: [37.5443, 126.7201],
 };
 
-function haversineM(lat1: number, lng1: number, lat2: number, lng2: number) {
-  const R = 6371000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 function distLabel(m: number) {
   return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+}
+
+// localStorage helpers for favorites persistence
+function loadFavSet(key: string): Set<string> {
+  try { return new Set(JSON.parse(localStorage.getItem(key) ?? "[]")); } catch { return new Set(); }
+}
+function saveFavSet(key: string, set: Set<string>) {
+  try { localStorage.setItem(key, JSON.stringify([...set])); } catch { /* ignore */ }
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
@@ -322,10 +320,10 @@ export default function TransportPage() {
   const [tab, setTab] = useState<Tab>("버스");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [favStops, setFavStops] = useState<Set<string>>(new Set());
-  const [favRoutes, setFavRoutes] = useState<Set<string>>(new Set());
-  const [favSubways, setFavSubways] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(false);
+  const [favStops, setFavStops] = useState<Set<string>>(() => loadFavSet("favStops"));
+  const [favRoutes, setFavRoutes] = useState<Set<string>>(() => loadFavSet("favRoutes"));
+  const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -335,24 +333,36 @@ export default function TransportPage() {
   const isLive = hasBusApiKey();
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // ── GPS 기반 버스 데이터 로드 ─────────────────────────────────
+  // ── GPS 기반 버스 데이터 로드 (3km, progressive) ─────────────
   const loadBusData = useCallback(async (lat: number, lng: number) => {
-    if (!isLive) { setLoading(false); return; }
+    if (!isLive) { return; }
     try {
-      // 1. 주변 정류장 조회 (500m → 없으면 1000m)
-      let nearby = await fetchNearbyStops(lat, lng, "4");
-      if (nearby.length === 0) nearby = await fetchNearbyStops(lat, lng, "5");
+      // 1. 3km 이내 주변 정류장 조회 (5방향 병렬)
+      const nearby = await fetchNearbyStopsWide(lat, lng);
 
       if (nearby.length === 0) {
         setApiStops([]);
-        setLoading(false);
         return;
       }
 
-      // 2. 상위 7개 정류장의 도착 정보 병렬 조회
-      const top = nearby.slice(0, 7);
-      const results = await Promise.all(
-        top.map(async (stop, idx) => {
+      // 2. 최대 12개 정류장을 즉시 노출 (도착정보 로딩 전에 정류장명 먼저 표시)
+      const top = nearby.slice(0, 12);
+      const initialStops: DisplayStop[] = top.map(stop => ({
+        id: stop.stationId,
+        name: stop.stationName,
+        stopNo: "",
+        distM: stop.distanceM,
+        routes: [],
+        arrivals: [],
+        lat: stop.lat,
+        lng: stop.lng,
+      }));
+      setApiStops(initialStops);
+      if (initialStops.length > 0 && !expanded) setExpanded(initialStops[0].id);
+
+      // 3. 도착정보 병렬 조회 후 정류장별로 순차 업데이트
+      await Promise.allSettled(
+        top.map(async stop => {
           const arrivals = await fetchArrivalsByStationId(stop.stationId);
           const routes: BusRoute[] = arrivals.map((a, i) => ({
             id: `live-${stop.stationId}-${i}`,
@@ -363,26 +373,16 @@ export default function TransportPage() {
             isLowFloor: a.isLowFloor,
             isExpress: a.isExpress,
           }));
-          return {
-            id: stop.stationId,
-            name: stop.stationName,
-            stopNo: "",          // API에서 정류소 번호 별도 미제공
-            distM: stop.distanceM,
-            routes,
-            arrivals,
-            lat: stop.lat,
-            lng: stop.lng,
-            _idx: idx,
-          };
+          setApiStops(prev =>
+            prev ? prev.map(s =>
+              s.id === stop.stationId ? { ...s, routes, arrivals } : s
+            ) : prev
+          );
         })
       );
 
-      const stops = results.sort((a, b) => a.distM - b.distM);
-      setApiStops(stops);
-      if (stops.length > 0 && !expanded) setExpanded(stops[0].id);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     } catch { setApiStops(null); }
-    setLoading(false);
   }, [isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── GPS 취득 → loadBusData 호출 ──────────────────────────────
@@ -410,7 +410,7 @@ export default function TransportPage() {
         setLocState("denied");
         loadBusData(DEFAULT.lat, DEFAULT.lng);
       },
-      { timeout: 8000 }
+      { timeout: 5000, maximumAge: 30000, enableHighAccuracy: false }
     );
   }, [loadBusData]);
 
@@ -454,13 +454,13 @@ export default function TransportPage() {
   );
 
   function toggleStop(id: string) {
-    setFavStops(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setFavStops(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); saveFavSet("favStops", n); return n; });
   }
   function toggleRoute(key: string) {
-    setFavRoutes(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); return n; });
+    setFavRoutes(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); saveFavSet("favRoutes", n); return n; });
   }
   function toggleSubway(id: string) {
-    setFavSubways(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
+    setFavSubways(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); saveFavSet("favSubways", n); return n; });
   }
 
   const totalFavs = favStops.size + favRoutes.size + favSubways.size;
@@ -516,6 +516,72 @@ export default function TransportPage() {
         ))}
       </div>
 
+      {/* ══ 즐겨찾기 위젯 (favorites 있을 때만) ══════════════════ */}
+      {totalFavs > 0 && (
+        <div className="bg-white border-b border-[#F2F4F6]">
+          <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
+            <div className="flex items-center gap-1.5">
+              <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
+              <span className="text-[12px] font-bold text-[#4E5968]">즐겨찾기</span>
+            </div>
+            <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
+              <RefreshCw size={11} className={`text-[#8B95A1] ${refreshing ? "animate-spin" : ""}`} />
+              <span className="text-[11px] text-[#8B95A1]">{lastUpdated || "새로고침"}</span>
+            </button>
+          </div>
+          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
+            {/* 즐겨찾기 노선 카드 */}
+            {favRouteList.map(r => (
+              <div key={`${r.stopId}::${r.id}`}
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <div className="bg-[#3182F6] rounded-lg px-2 py-0.5">
+                    <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
+                  </div>
+                  {r.isExpress && <Zap size={9} className="text-[#E65100]" />}
+                </div>
+                <p className="text-[10px] text-[#8B95A1] truncate mb-2">{r.stopName}</p>
+                <ArrivalBadge min={r.arrivalMin} live={isLive} />
+              </div>
+            ))}
+            {/* 즐겨찾기 정류장 카드 */}
+            {favStopList.map(stop => (
+              <div key={stop.id}
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                <div className="flex items-center gap-1 mb-1">
+                  <MapPin size={10} className="text-[#3182F6] shrink-0" />
+                  <span className="text-[11px] font-bold text-[#191F28] truncate">{stop.name}</span>
+                </div>
+                <p className="text-[10px] text-[#B0B8C1] mb-2">{distLabel(stop.distM)}</p>
+                <div className="flex flex-wrap gap-1">
+                  {stop.routes.slice(0, 4).map(r => (
+                    <div key={r.id} className="bg-[#3182F6] rounded px-1.5 py-0.5">
+                      <span className="text-white text-[10px] font-bold">{r.routeNo}</span>
+                    </div>
+                  ))}
+                  {stop.routes.length === 0 && (
+                    <span className="text-[10px] text-[#B0B8C1]">조회 중...</span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {/* 즐겨찾기 지하철 카드 */}
+            {favSubwayList.map(st => (
+              <div key={st.id}
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                <div className="flex items-center gap-1 mb-1">
+                  <Train size={10} style={{ color: st.lineColor }} className="shrink-0" />
+                  <span className="text-[11px] font-bold text-[#191F28] truncate">{st.name}</span>
+                </div>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
+                  style={{ background: st.lineColor }}>{st.line}</span>
+                <p className="text-[10px] text-[#3182F6] font-semibold">{distLabel(st.distM)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* 위치 상태 바 */}
       <div className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-2">
@@ -532,7 +598,7 @@ export default function TransportPage() {
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
         <div className="px-4 space-y-3">
-          {loading || locState === "loading" ? (
+          {refreshing && !apiStops ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
           ) : isLive && apiStops?.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-8 text-center">
