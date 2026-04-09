@@ -159,7 +159,7 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
   const [locating, setLocating] = useState(false);
   const [flyTo,    setFlyTo]    = useState<[number, number] | null>(null);
 
-  const center: [number, number] = [37.5448, 126.6863];
+  const center: [number, number] = [37.593, 126.710];
 
   function locate() {
     if (!navigator.geolocation) return;
