@@ -1,10 +1,19 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, X, ChevronDown } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
+import { createPost } from "@/lib/db/posts";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
+
+// 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
+function saveMyPostId(id: string) {
+  try {
+    const stored = JSON.parse(localStorage.getItem("myPostIds") ?? "[]") as string[];
+    localStorage.setItem("myPostIds", JSON.stringify([...stored, id]));
+  } catch { /* ignore */ }
+}
 
 export default function WritePage() {
   const router = useRouter();
@@ -13,14 +22,36 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
+  const [nickname, setNickname] = useState("검단주민");
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
   const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
   const submit = async () => {
+    if (!canSubmit) return;
     setSubmitting(true);
-    await new Promise(r => setTimeout(r, 800));
-    router.push("/community/");
+    setError("");
+    try {
+      const post = await createPost({
+        category: category as CommunityCategory,
+        title: title.trim(),
+        content: content.trim(),
+        author: nickname.trim() || "검단주민",
+        authorDong: "검단",
+        isAnonymous: anonymous,
+      });
+      if (post) {
+        saveMyPostId(post.id);
+        router.push(`/community/detail/?id=${post.id}`);
+      } else {
+        // Supabase 미설정 시 목록으로 이동
+        router.push("/community/");
+      }
+    } catch {
+      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -50,18 +81,14 @@ export default function WritePage() {
         </span>
         <ChevronDown size={18} className={`text-[#B0B8C1] transition-transform ${showCatPicker ? "rotate-180" : ""}`} />
       </button>
-
       {showCatPicker && (
         <div className="border-b border-[#F2F4F6] bg-[#F9FAFB]">
           <div className="flex flex-wrap gap-2 p-4">
             {categories.map(c => (
-              <button
-                key={c}
-                onClick={() => { setCategory(c); setShowCatPicker(false); }}
+              <button key={c} onClick={() => { setCategory(c); setShowCatPicker(false); }}
                 className={`h-8 px-4 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
                   category === c ? "bg-[#3182F6] text-white" : "bg-white text-[#4E5968] border border-[#E5E8EB]"
-                }`}
-              >
+                }`}>
                 {c}
               </button>
             ))}
@@ -72,13 +99,9 @@ export default function WritePage() {
       <div className="flex-1 flex flex-col">
         {/* Title */}
         <div className="border-b border-[#F2F4F6]">
-          <input
-            value={title}
-            onChange={e => setTitle(e.target.value)}
-            placeholder="제목을 입력해주세요"
-            maxLength={50}
-            className="w-full px-5 py-4 text-[18px] font-medium text-[#191F28] placeholder:text-[#B0B8C1] outline-none"
-          />
+          <input value={title} onChange={e => setTitle(e.target.value)}
+            placeholder="제목을 입력해주세요" maxLength={50}
+            className="w-full px-5 py-4 text-[18px] font-medium text-[#191F28] placeholder:text-[#B0B8C1] outline-none" />
           <div className="px-5 pb-2 text-right">
             <span className="text-[13px] text-[#B0B8C1]">{title.length}/50</span>
           </div>
@@ -86,12 +109,9 @@ export default function WritePage() {
 
         {/* Content */}
         <div className="flex-1 border-b border-[#F2F4F6]">
-          <textarea
-            value={content}
-            onChange={e => setContent(e.target.value)}
+          <textarea value={content} onChange={e => setContent(e.target.value)}
             placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
-            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none resize-none leading-relaxed"
-          />
+            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none resize-none leading-relaxed" />
         </div>
 
         {/* Bottom toolbar */}
@@ -100,14 +120,16 @@ export default function WritePage() {
             <button className="w-9 h-9 rounded-xl bg-[#F2F4F6] flex items-center justify-center active:opacity-60">
               <ImageIcon size={18} className="text-[#8B95A1]" />
             </button>
-            <span className="text-[13px] text-[#B0B8C1]">사진 첨부</span>
+            {!anonymous && (
+              <input value={nickname} onChange={e => setNickname(e.target.value)}
+                placeholder="닉네임" maxLength={12}
+                className="h-9 px-3 bg-[#F2F4F6] rounded-xl text-[14px] text-[#191F28] outline-none w-28" />
+            )}
           </div>
-          <button
-            onClick={() => setAnonymous(!anonymous)}
+          <button onClick={() => setAnonymous(!anonymous)}
             className={`flex items-center gap-2 h-8 px-3 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
               anonymous ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"
-            }`}
-          >
+            }`}>
             <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${anonymous ? "border-white" : "border-[#B0B8C1]"}`}>
               {anonymous && <div className="w-2 h-2 rounded-full bg-white" />}
             </div>
@@ -115,12 +137,15 @@ export default function WritePage() {
           </button>
         </div>
 
+        {error && (
+          <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
+        )}
+
         {/* Tips */}
         <div className="mx-4 mb-4 bg-[#EBF3FE] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#3182F6] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#3182F6]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·혐오 표현,
-            개인정보 노출, 불법 정보 공유
+            광고·홍보 목적 게시글, 타인 비방·혐오 표현, 개인정보 노출, 불법 정보 공유
           </p>
         </div>
       </div>
