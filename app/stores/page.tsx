@@ -10,9 +10,10 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { buildings, coupons, newStoreOpenings, storeDetails } from "@/lib/mockData";
-import { fetchBuildingWithFloors } from "@/lib/db/buildings";
+import { coupons, newStoreOpenings, storeDetails } from "@/lib/mockData";
+import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
+import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
 const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
@@ -28,17 +29,37 @@ const catBg: Record<StoreCategory, string> = {
   마트:"bg-[#D1FAE5] text-[#065F46]", 기타:"bg-[#F3F4F6] text-[#374151]",
 };
 
-// 주변 상가건물 목 데이터 (내 위치 기반 거리 계산용)
-const NEARBY_BUILDINGS = [
-  { id: "b1",  name: "검단 센트럴 타워",       address: "인천 서구 당하로 123",      lat: 37.5448, lng: 126.6863, floors: 5, stores: 18, hasData: true,  image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","병원/약국","미용","기타"] as StoreCategory[] },
-  { id: "nb2", name: "당하 스퀘어몰",           address: "인천 서구 당하동 456",      lat: 37.5462, lng: 126.6878, floors: 4, stores: 12, hasData: true, image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","편의점","마트"] as StoreCategory[] },
-  { id: "nb3", name: "검단 플리마켓 타운",      address: "인천 서구 불로동 789",      lat: 37.5435, lng: 126.6844, floors: 2, stores: 24, hasData: true, image: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","기타"] as StoreCategory[] },
-  { id: "nb4", name: "불로대곡 상가단지 A동",   address: "인천 서구 대곡동 321",      lat: 37.5421, lng: 126.6831, floors: 3, stores: 9,  hasData: true, image: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=280&fit=crop&auto=format", categories: ["음식점","병원/약국","기타"] as StoreCategory[] },
-  { id: "nb5", name: "마전 주민센터 상가",      address: "인천 서구 마전로 654",      lat: 37.5470, lng: 126.6901, floors: 2, stores: 6,  hasData: true, image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=280&fit=crop&auto=format", categories: ["음식점","편의점","병원/약국"] as StoreCategory[] },
-  { id: "nb6", name: "원당 금곡 상권 A",        address: "인천 서구 금곡대로 100",    lat: 37.5535, lng: 126.6730, floors: 3, stores: 11, hasData: true, image: "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","미용","학원"] as StoreCategory[] },
-  { id: "nb7", name: "오류왕길 근린상가",       address: "인천 서구 오류동 200",      lat: 37.5500, lng: 126.6940, floors: 2, stores: 8,  hasData: true, image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=280&fit=crop&auto=format", categories: ["음식점","마트","기타"] as StoreCategory[] },
-  { id: "nb8", name: "백석 아라 타운",          address: "인천 서구 백석동 300",      lat: 37.5360, lng: 126.6800, floors: 4, stores: 14, hasData: true, image: "https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?w=600&h=280&fit=crop&auto=format", categories: ["카페","음식점","마트","미용"] as StoreCategory[] },
-];
+// 건물 이미지 매핑 (Unsplash 무료 이미지)
+const BUILDING_IMAGES: Record<string, string> = {
+  "b_jk":     "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format",
+  "b_metro2": "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format",
+  "b_aplus":  "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=280&fit=crop&auto=format",
+  "b_syace2": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=280&fit=crop&auto=format",
+  "b_sung":   "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=280&fit=crop&auto=format",
+  "b_covent": "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=600&h=280&fit=crop&auto=format",
+  "b_sinahn": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=280&fit=crop&auto=format",
+  "b_daseung":"https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?w=600&h=280&fit=crop&auto=format",
+};
+const DEFAULT_IMG = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format";
+
+// DB BuildingRow를 화면용 building 객체로 변환
+type NearbyBuilding = {
+  id: string; name: string; address: string;
+  lat: number; lng: number; floors: number; stores: number;
+  hasData: boolean; image: string; categories: StoreCategory[]; km: number;
+};
+
+function rowToNearby(row: BuildingRow, userLat: number, userLng: number): NearbyBuilding {
+  return {
+    id: row.id, name: row.name, address: row.address,
+    lat: row.lat ?? 37.586, lng: row.lng ?? 126.706,
+    floors: row.floors ?? 1, stores: row.total_stores ?? 0,
+    hasData: row.has_data,
+    image: BUILDING_IMAGES[row.id] ?? DEFAULT_IMG,
+    categories: (row.categories ?? []) as StoreCategory[],
+    km: haversineKm(userLat, userLng, row.lat ?? 37.586, row.lng ?? 126.706),
+  };
+}
 
 function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const R = 6371;
@@ -410,22 +431,19 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
 const ALL_CATS = Object.keys(catDot) as StoreCategory[];
 
-function StoreListView() {
+function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] }) {
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
+  const [dbStores, setDbStores] = useState<FlatStore[]>([]);
 
-  // 모든 건물의 매장을 flatten
-  const allStores = useMemo<EnrichedStore[]>(() => {
-    const list: EnrichedStore[] = [];
-    buildings.forEach(b => {
-      b.floors.forEach(f => {
-        f.stores.forEach(s => {
-          if (s.name !== "공실") list.push({ ...s, floorLabel: f.label, buildingName: b.name });
-        });
-      });
-    });
-    return list;
+  useEffect(() => {
+    fetchAllStoresFlat().then(setDbStores);
   }, []);
+
+  const allStores = useMemo<EnrichedStore[]>(() =>
+    dbStores.map(s => ({ ...s, floorLabel: s.floorLabel, buildingName: s.buildingName })),
+    [dbStores]
+  );
 
   const filtered = useMemo(() =>
     catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter),
@@ -494,10 +512,10 @@ function StoreListView() {
       <div className="pt-4 pb-2">
         <div className="flex items-center justify-between px-4 mb-2.5">
           <span className="text-[14px] font-bold text-[#191F28]">주변 상가건물</span>
-          <span className="text-[11px] text-[#8B95A1]">{NEARBY_BUILDINGS.length}개</span>
+          <span className="text-[11px] text-[#8B95A1]">{nearbyBuildings.length}개</span>
         </div>
         <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          {NEARBY_BUILDINGS.map(b => (
+          {nearbyBuildings.map(b => (
             <div key={b.id} className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-white shadow-sm">
               <div className="relative" style={{ height: 90 }}>
                 <img src={b.image} alt={b.name}
@@ -729,8 +747,8 @@ function MapBuildingSheet({
   onSelectStore,
   hideBackdrop,
 }: {
-  nearbyInfo: typeof NEARBY_BUILDINGS[0];
-  buildingData: typeof buildings[0] | null;
+  nearbyInfo: NearbyBuilding;
+  buildingData: Building | null;
   onClose: () => void;
   onSelectStore: (store: EnrichedStore) => void;
   hideBackdrop?: boolean;
@@ -849,8 +867,8 @@ function BuildingDetail({
   nearbyInfo,
   onBack,
 }: {
-  buildingData: typeof buildings[0] | null;
-  nearbyInfo: typeof NEARBY_BUILDINGS[0];
+  buildingData: Building | null;
+  nearbyInfo: NearbyBuilding;
   onBack: () => void;
 }) {
   const [tab, setTab] = useState<"층별" | "업종별">("층별");
@@ -1021,6 +1039,14 @@ export default function StoresPage() {
   const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
   const [mapDetailStore, setMapDetailStore] = useState<EnrichedStore | null>(null);
+  const [dbBuildings, setDbBuildings] = useState<BuildingRow[]>([]);
+  const [allDbStores, setAllDbStores] = useState<FlatStore[]>([]);
+
+  // DB 데이터 로드
+  useEffect(() => {
+    fetchBuildings().then(setDbBuildings);
+    fetchAllStoresFlat().then(setAllDbStores);
+  }, []);
 
   // 위치 권한 요청
   function requestLocation() {
@@ -1032,8 +1058,8 @@ export default function StoresPage() {
         setLocationLoading(false);
       },
       () => {
-        // 위치 거부 시 검단신도시 기본 좌표
-        setUserPos({ lat: 37.5446, lng: 126.6861 });
+        // 위치 거부 시 검단신도시 실제 좌표
+        setUserPos({ lat: 37.586, lng: 126.706 });
         setLocationLoading(false);
       },
       { timeout: 8000 }
@@ -1053,27 +1079,18 @@ export default function StoresPage() {
   const searchResults = useMemo<SearchResult[]>(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    const results: SearchResult[] = [];
-    buildings.forEach(building => {
-      building.floors.forEach(f => {
-        f.stores.forEach(s => {
-          if (s.name === "공실") return;
-          if (s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q)) {
-            results.push({ store: s, floorLabel: f.label, buildingName: building.name });
-          }
-        });
-      });
-    });
-    return results;
-  }, [searchQuery]);
+    return allDbStores
+      .filter(s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
+      .map(s => ({ store: s, floorLabel: s.floorLabel, buildingName: s.buildingName }));
+  }, [searchQuery, allDbStores]);
 
   // 주변 건물 거리 계산
-  const nearbyWithDist = useMemo(() => {
-    const base = userPos ?? { lat: 37.5446, lng: 126.6861 };
-    return NEARBY_BUILDINGS
-      .map(b => ({ ...b, km: haversineKm(base.lat, base.lng, b.lat, b.lng) }))
+  const nearbyWithDist = useMemo<NearbyBuilding[]>(() => {
+    const base = userPos ?? { lat: 37.586, lng: 126.706 };
+    return dbBuildings
+      .map(row => rowToNearby(row, base.lat, base.lng))
       .sort((a, b) => a.km - b.km);
-  }, [userPos]);
+  }, [userPos, dbBuildings]);
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -1169,7 +1186,7 @@ export default function StoresPage() {
         </>
       ) : (
         /* ─── 리스트 모드 ─── */
-        <StoreListView />
+        <StoreListView nearbyBuildings={nearbyWithDist} />
       )}
 
       {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}
