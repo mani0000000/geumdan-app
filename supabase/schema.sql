@@ -149,3 +149,51 @@ create policy "Allow anon read" on buildings for select using (true);
 create policy "Allow anon read" on floors for select using (true);
 create policy "Allow anon read" on stores for select using (true);
 create policy "Allow anon read" on bus_stops for select using (true);
+
+-- Community posts (커뮤니티 게시글)
+create table if not exists community_posts (
+  id          text primary key default gen_random_uuid()::text,
+  category    text not null,
+  title       text not null,
+  content     text not null,
+  author      text not null default '익명',
+  author_dong text not null default '검단',
+  is_anonymous boolean default false,
+  view_count   integer default 0,
+  like_count   integer default 0,
+  comment_count integer default 0,
+  is_pinned   boolean default false,
+  is_hot      boolean default false,
+  created_at  timestamptz default now(),
+  updated_at  timestamptz default now()
+);
+
+alter table community_posts enable row level security;
+create policy "public read"   on community_posts for select using (true);
+create policy "public write"  on community_posts for insert with check (true);
+create policy "public update" on community_posts for update using (true);
+create policy "public delete" on community_posts for delete using (true);
+
+create index if not exists idx_posts_created_at on community_posts(created_at desc);
+create index if not exists idx_posts_category   on community_posts(category);
+
+-- Community comments (커뮤니티 댓글)
+create table if not exists community_comments (
+  id          text primary key default gen_random_uuid()::text,
+  post_id     text not null,
+  author      text not null default '익명',
+  author_dong text not null default '검단',
+  content     text not null,
+  like_count  integer default 0,
+  is_anonymous boolean default false,
+  created_at  timestamptz default now()
+);
+
+alter table community_comments enable row level security;
+create policy "public read"   on community_comments for select using (true);
+create policy "public write"  on community_comments for insert with check (true);
+create policy "public update" on community_comments for update using (true);
+create policy "public delete" on community_comments for delete using (true);
+
+create index if not exists idx_comments_post_id    on community_comments(post_id);
+create index if not exists idx_comments_created_at on community_comments(created_at asc);
