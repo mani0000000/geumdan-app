@@ -10,6 +10,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
+import { fetchDBPosts } from "@/lib/db/posts";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
@@ -35,7 +36,24 @@ const catColor: Record<CommunityCategory, string> = {
 function CommunityTab() {
   const router = useRouter();
   const [active, setActive] = useState<CommunityCategory>("전체");
-  const filtered = active === "전체" ? posts : posts.filter(p => p.category === active);
+  const [dbPosts, setDbPosts] = useState<typeof posts>([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    fetchDBPosts(undefined, 50).then(data => {
+      setDbPosts(data);
+      setLoadingPosts(false);
+    });
+  }, []);
+
+  // DB 포스트 최신순 + 목업 포스트 (고정/HOT 우선)
+  const allPosts = [
+    ...dbPosts,
+    ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
+  ];
+  const filtered = active === "전체"
+    ? allPosts
+    : allPosts.filter(p => p.category === active);
 
   return (
     <div className="pb-4">
@@ -53,42 +71,52 @@ function CommunityTab() {
 
       {/* Posts */}
       <div className="px-4 pt-3 space-y-2">
-        {filtered.map(post => (
-          <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#F2F4F6] transition-colors">
-            <div className="flex items-center gap-2 mb-2">
-              {post.isPinned && <Pin size={12} className="text-[#3182F6]" />}
-              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                {post.category}
-              </span>
-              {post.isHot && (
-                <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                  <Flame size={10} /> HOT
-                </span>
-              )}
+        {loadingPosts ? (
+          [1,2,3].map(i => (
+            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
+              <div className="h-3 w-16 bg-[#F2F4F6] rounded-full" />
+              <div className="h-4 w-3/4 bg-[#F2F4F6] rounded" />
+              <div className="h-3 w-1/2 bg-[#F2F4F6] rounded" />
             </div>
-            <p className="text-[16px] font-medium text-[#191F28] leading-snug">{post.title}</p>
-            <p className="text-[14px] text-[#8B95A1] mt-1 line-clamp-1">{post.content}</p>
-            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#F2F4F6]">
-              <span className="text-[13px] text-[#8B95A1]">{post.author} · {post.authorDong}</span>
-              <span className="text-[13px] text-[#B0B8C1]">{formatRelativeTime(post.createdAt)}</span>
-              <div className="flex items-center gap-3 ml-auto">
-                <div className="flex items-center gap-1">
-                  <ThumbsUp size={12} className="text-[#B0B8C1]" />
-                  <span className="text-[13px] text-[#B0B8C1]">{post.likeCount}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <MessageSquare size={12} className="text-[#B0B8C1]" />
-                  <span className="text-[13px] text-[#B0B8C1]">{post.commentCount}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Eye size={12} className="text-[#B0B8C1]" />
-                  <span className="text-[13px] text-[#B0B8C1]">{post.viewCount.toLocaleString()}</span>
+          ))
+        ) : (
+          filtered.map(post => (
+            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#F2F4F6] transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                {post.isPinned && <Pin size={12} className="text-[#3182F6]" />}
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                  {post.category}
+                </span>
+                {post.isHot && (
+                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                    <Flame size={10} /> HOT
+                  </span>
+                )}
+              </div>
+              <p className="text-[16px] font-medium text-[#191F28] leading-snug">{post.title}</p>
+              <p className="text-[14px] text-[#8B95A1] mt-1 line-clamp-1">{post.content}</p>
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#F2F4F6]">
+                <span className="text-[13px] text-[#8B95A1]">{post.author} · {post.authorDong}</span>
+                <span className="text-[13px] text-[#B0B8C1]">{formatRelativeTime(post.createdAt)}</span>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp size={12} className="text-[#B0B8C1]" />
+                    <span className="text-[13px] text-[#B0B8C1]">{post.likeCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare size={12} className="text-[#B0B8C1]" />
+                    <span className="text-[13px] text-[#B0B8C1]">{post.commentCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} className="text-[#B0B8C1]" />
+                    <span className="text-[13px] text-[#B0B8C1]">{post.viewCount.toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
