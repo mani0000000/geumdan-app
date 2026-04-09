@@ -1,18 +1,63 @@
 {
-  "fetchedAt": "2026-04-09T07:09:14.371Z",
+  "fetchedAt": "2026-04-09T10:01:58.598Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-2",
-      "title": "인천 서구, 검단구 출범 대비 '예산 로드맵' 가동 - 뉴시스",
+      "id": "gr3-0",
+      "title": "서원선 인천 검단구청장 예비후보…“35년 검단주민 불편에 보답할 것” - 경기일보",
       "summary": "",
-      "source": "뉴시스",
-      "publishedAt": "2026-04-09T06:45:45.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFA0eDB3YXpyWUI3dTR6X0s5ZGxuY3dDbFJTdERxLURhUExqR3RreWljc0gxYjd5eGd5Z1dyTVNtT3Z5d2YxUFZMTW9FMmszdFhxYlRVT0wzbkJCN1V0VW55VdIBeEFVX3lxTE5MU1RjbkFwQ3p0aUNuWktwSnMzWjU0dURfQkRVdTEyX2pyWGEtWW1JWmtOcVdPVWt4SlFGWEJjaXdxMGdZemRCc1FnYnB5TEN6SVVfRzktSllWTngweUxZUVlJRmFRYXRLa2tEMmZGRFlpT0JMcGJTaA?oc=5",
+      "source": "경기일보",
+      "publishedAt": "2026-04-09T09:16:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE9wU2x2SWdFeFRkV0ZmUk5YY3FWWmhCSFRxWTZ5R2tBS3FrYnNxVmpxRFhtZWpkbjBmdU8yUWM5NGx5cGItUENTLWpNTGFHTHNSSWx3WkhkRklPNzA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-5",
+      "title": "인천 서구, 검단구 출범 대비 본예산 편성 교육 실시 - gukjenews.com",
+      "summary": "",
+      "source": "gukjenews.com",
+      "publishedAt": "2026-04-09T08:58:29.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9LQVhpMklYQ3BzdHVhQ3EwNGdkVTFxd1VQRzkxZ1BjWEpkZ0VDeFlBeFluTkpNemo2c0NqdUFpNmNYc0FKNGY5T2R0eU4zWmhfWE1XYjdmbVBDUzBHREJfWDdWOXR4eGkxM1NaTlZ3?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-6",
+      "title": "김진규 인천 검단구청장 예비후보…“베드타운 이미지 벗고 AI 기반 자족도시 만들 것” - 경기일보",
+      "summary": "",
+      "source": "경기일보",
+      "publishedAt": "2026-04-09T07:17:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1GY1Q3eE9yWTV2LV84bF8zdEZvMWdvVmZTX0Vkd3NubDNzeF8zM3lRQ0g3eFNyTXk2WWpYWXYtVlVUZ3dvd0wxTmstajhqR2Nza1pITEVjWmo5MUk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-1",
+      "title": "검단신도시 청약 흥행 속 1군 브랜드+대단지 ‘더샵검단레이크파크’ 5월 분양 예정 - dt.co.kr",
+      "summary": "",
+      "source": "dt.co.kr",
+      "publishedAt": "2026-04-09T07:04:12.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE84dnhPREp6YzBfb3ZqbkNpRFI3R19JNHk1T1YyTHNKQ19lYlp0aDhuc0Jjc2pjZkROU1RlaE8xSDJOWWZzV2RjNlBTZDhYdw?oc=5",
       "type": "뉴스"
     },
     {
       "id": "gr2-1",
+      "title": "인천 서구, 검단구 출범 본예산 편성 교육 - B world",
+      "summary": "",
+      "source": "B world",
+      "publishedAt": "2026-04-09T07:04:11.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBEajJKR29wcURIWG1TX2U2RlVES3ktbnhRLTBvSHVmb0h0SXE3UkdOejhPaGhIcVJjN3Q1NGZBSldJYU82MC1lUXAwbWZuRlNHbUpwSVhzMzQ2RWpDUjRkeS0yLXlTcWtyaHlzWWhtTGk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-0",
+      "title": "인천 서구, 검단구 출범 대비 '예산 로드맵' 가동 - 뉴시스",
+      "summary": "",
+      "source": "뉴시스",
+      "publishedAt": "2026-04-09T06:45:45.000Z",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5MU1RjbkFwQ3p0aUNuWktwSnMzWjU0dURfQkRVdTEyX2pyWGEtWW1JWmtOcVdPVWt4SlFGWEJjaXdxMGdZemRCc1FnYnB5TEN6SVVfRzktSllWTngweUxZUVlJRmFRYXRLa2tEMmZGRFlpT0JMcGJTaNIBeEFVX3lxTE5MU1RjbkFwQ3p0aUNuWktwSnMzWjU0dURfQkRVdTEyX2pyWGEtWW1JWmtOcVdPVWt4SlFGWEJjaXdxMGdZemRCc1FnYnB5TEN6SVVfRzktSllWTngweUxZUVlJRmFRYXRLa2tEMmZGRFlpT0JMcGJTaA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-4",
       "title": "인천 서구, 검단구 출범 대비 예산 체계 구축 본격화 - 경인매일",
       "summary": "",
       "source": "경인매일",
@@ -21,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-7",
       "title": "인천 서구, 검단구 출범 준비 본격화…본예산 편성 교육 실시 - 메트로신문",
       "summary": "",
       "source": "메트로신문",
@@ -30,7 +75,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
+      "id": "gr2-2",
+      "title": "인천 서구, 검단구 출범 대비 ‘예산 로드맵’ 본격 가동 - 로컬세계",
+      "summary": "",
+      "source": "로컬세계",
+      "publishedAt": "2026-04-09T05:19:03.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE8zandrS1oyQXJXTG8tSDBSZ3ZLcURKRzBoaHQ5TXByczFCemdtY1R3VnkxNHlINEwxSl9FMWItQzN1R1lvN1JMWjNCdEx1ZkZScUVicGNsSklZem95SGRxRtIBWEFVX3lxTE5BQk9PY3F5ZE00Zld5SHVzREExdVRNNWhnZ3BJQ2R1RjZoSzF3M0VQVTktWUVQSjNlc0pwV256eEN0RGhlandCZHN0bXJMbndycTB6YVRVNEk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-3",
       "title": "인천 서구, ‘검단구 출범’ 대비 본예산 편성 교육 실시 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -39,16 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
-      "title": "인천 서구, 행정체제개편 ‘예산 로드맵’ 가동... 검단구 출범 대비 본예산 편성 교육 실시 - sejungfocus.com",
-      "summary": "",
-      "source": "sejungfocus.com",
-      "publishedAt": "2026-04-09T04:09:15.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBMTEFUQ1JiZmloTE9ZQTJ1MUJrQlJUUDVIVU1Lc0N0S0VPWkRJcGJKWExJMWlXcml1Nmg1a21KeTlWVmhtdGhZWkVRM19nTGJmTXdZM1h4ZnNFSWRJN0RhLU5aR0dNYjlFRTMzTQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-5",
+      "id": "gr2-8",
       "title": "인천 서구, 검단구 출범 앞두고 본예산 편성 교육 실시…재정 운용 준비 본격화 - 여성종합뉴스",
       "summary": "",
       "source": "여성종합뉴스",
@@ -66,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-27",
       "title": "신설 영종·검단구서 문예회관 실종 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -75,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "포스코이앤씨, 인천 검단신도시 ‘더샵 검단레이크파크’ 5월 분양 - 동아일보",
       "summary": "",
       "source": "동아일보",
@@ -84,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-15",
+      "id": "gr2-19",
       "title": "인천 서구의회, 검단 분구 앞두고 재정지원 이행 촉구 - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -93,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-39",
+      "id": "gr2-42",
       "title": "검단호수공원역 파라곤, 청약 평균 경쟁률 31대 1 '대흥행' - 땅집고",
       "summary": "",
       "source": "땅집고",
@@ -102,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-10",
+      "id": "gr1-5",
       "title": "검단서 입증된 ‘파라곤’… 공급 앞둔 ‘동탄 파라곤 3차’ 분양 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -111,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-30",
+      "id": "gr2-33",
       "title": "송승환 인천 서구의회 의장, LH·주민대표와 아라계양로 합동 점검 - 중부일보",
       "summary": "",
       "source": "중부일보",
@@ -120,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "‘검단호수공원역 파라곤’ 1순위 평균 청약경쟁률 31.26대 1 기록 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -129,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-10",
       "title": "검단 ‘파라곤’ 1순위 완판… ‘가격·입지’ 통했다 - 나눔경제뉴스",
       "summary": "",
       "source": "나눔경제뉴스",
@@ -138,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-8",
       "title": "‘검단호수공원역 파라곤’ 1순위 청약경쟁률 평균 31.26대 1…전 타입 마감 - 핀포인트뉴스",
       "summary": "",
       "source": "핀포인트뉴스",
@@ -147,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-26",
       "title": "'검단호수공원역 파라곤’...1순위서 31.26대 1 경쟁률 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -156,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-60",
+      "id": "gr2-63",
       "title": "검단호수공원역 파라곤 1순위 31.26대 1 경쟁률로 마감 - 서울경제",
       "summary": "",
       "source": "서울경제",
@@ -165,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-9",
       "title": "인천 서구의회 “인천시, 검단 분구 재정지원 약속 이행해야” - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -183,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-41",
+      "id": "gr2-44",
       "title": "인천 서구의회, “분구 전 약속했던 50% 재정지원 어디 갔나” - 수도권지역뉴스",
       "summary": "",
       "source": "수도권지역뉴스",
@@ -192,25 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-7",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 76㎡ 6억1000만원에 거래 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-07T09:13:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9uc0NFelVvaEM5bmI4RU1zZVlBVG9maEYtSURHSkhYbmNaVUdUeWREajQzdE9kRDVIRmczeTVGNzdBWlUydjNlRlVTak1fd0wyQUVn?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-5",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 76㎡ 6억1000만원에 거래 - 조선비즈 - Chosunbiz",
-      "summary": "",
-      "source": "Chosunbiz",
-      "publishedAt": "2026-04-07T09:10:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPZzJoeHZQRWRQVXpUUFdvczhmR2l4dHd0RllBUlNuSC1DYnh4S1RhazJoSWdzc3JfNmRPZGYzbERJSkRTZ3VWYlVxOE9HbkxMYjBIOGlXODVwaFl5SE52U0dIY0pQdWY0ZGRRMGU3Wms3UGFVQ2xhOXRSWGdpYUQ4Nnk1Sm9NbGhIN0k1ckpjSzh5LXl5c0JwLTNVMNIBmwFBVV95cUxPZzJoeHZQRWRQVXpUUFdvczhmR2l4dHd0RllBUlNuSC1DYnh4S1RhazJoSWdzc3JfNmRPZGYzbERJSkRTZ3VWYlVxOE9HbkxMYjBIOGlXODVwaFl5SE52U0dIY0pQdWY0ZGRRMGU3Wms3UGFVQ2xhOXRSWGdpYUQ4Nnk1Sm9NbGhIN0k1ckpjSzh5LXl5c0JwLTNVMA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-21",
+      "id": "gr2-23",
       "title": "인천 서구, 검단구 분구 대비 현수막 게시대 확충 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -219,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-31",
+      "id": "gr2-34",
       "title": "서구의회, 인천시 검단 분구 재정지원 약속 이행 촉구 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -228,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-18",
       "title": "인천 서구의회 “검단 분구 재정지원 약속 이행하라” 촉구 - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -237,16 +264,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-11",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억2200만원에 거래 - 조선비즈 - Chosunbiz",
+      "id": "gr0-9",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 98㎡ 6억4900만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
-      "publishedAt": "2026-04-07T08:01:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQeVVCem44Xy1maDFWSkMwX1h2YkN1d1FzME81RnVTR2YtV0dHSVRTQ1ZEU1ZGclhmVnNqTjhOQkFJODE5blgzdm9DNVlLbjZOUGJBUjNqUENfV2VaVHFXOF9PUUZFT2JuS1o0bHoxLVdIYnNNclRPN3BHRk5STUMwSTBoeEdFcW14MVpqMTBEdEF2eC1HRmFad1JJONIBmwFBVV95cUxQeVVCem44Xy1maDFWSkMwX1h2YkN1d1FzME81RnVTR2YtV0dHSVRTQ1ZEU1ZGclhmVnNqTjhOQkFJODE5blgzdm9DNVlLbjZOUGJBUjNqUENfV2VaVHFXOF9PUUZFT2JuS1o0bHoxLVdIYnNNclRPN3BHRk5STUMwSTBoeEdFcW14MVpqMTBEdEF2eC1HRmFad1JJOA?oc=5",
+      "publishedAt": "2026-04-07T08:05:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxNcC1lYzI0WlkxcFZuVkY0V19PVGx6eUIySWY4RmdzemdZb3lUeXQwaTFELWpnZlBUN1M4N2hkZnNucnBneW5BRDBUeVAzLVFhQ2w4RTlNS1NUM2FuNlV4V1F0OHI5Snk0TWxuMElZdW9VWk5RdVNnZTMzcW9Dc1NDVy13azNraHlFbWNWSlh1S19jSkxENTBidjEwMNIBmwFBVV95cUxNcC1lYzI0WlkxcFZuVkY0V19PVGx6eUIySWY4RmdzemdZb3lUeXQwaTFELWpnZlBUN1M4N2hkZnNucnBneW5BRDBUeVAzLVFhQ2w4RTlNS1NUM2FuNlV4V1F0OHI5Snk0TWxuMElZdW9VWk5RdVNnZTMzcW9Dc1NDVy13azNraHlFbWNWSlh1S19jSkxENTBidjEwMA?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr3-5",
+      "id": "gr3-3",
       "title": "\"검단은 인천인데 인천 같지 않았다\"…최정규가 말한 1호선 연장 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -255,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-3",
+      "id": "gr0-11",
       "title": "인천시 검단 금성백조 아파트, 하자 대응 갈등 소송전으로 격화 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -264,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-12",
       "title": "인천 서구, 검단지역 현수막 지정 게시대 확충 - B world",
       "summary": "",
       "source": "B world",
@@ -273,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-17",
+      "id": "gr2-15",
       "title": "인천 서구 의회, \"서구-검단구 실질적 예산 지원 촉구\" - B world",
       "summary": "",
       "source": "B world",
@@ -282,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-32",
+      "id": "gr2-35",
       "title": "분구 앞둔 인천 서구… 현수막 지정게시대 확대 추진 - 뉴스클레임",
       "summary": "",
       "source": "뉴스클레임",
@@ -291,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-17",
       "title": "인천 서구, 검단구 분구 앞두고 현수막 지정게시대 확충 추진... 2024년부터 신규 게시대 6기 설치 예정 - 24news.kr",
       "summary": "",
       "source": "24news.kr",
@@ -300,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-11",
+      "id": "gr2-14",
       "title": "인천 서구, 검단구 분구 대비 ‘현수막 지정게시대 확충’… 쾌적한 도시환경 조성 - 로컬세계",
       "summary": "",
       "source": "로컬세계",
@@ -309,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-0",
+      "id": "gr3-12",
       "title": "인천교통공사, 일일 수송 80만 시대 진입...검단연장선 개통·인구 증가 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -318,48 +345,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-10",
       "title": "인천 서구, 현수막 지정게시대 확충…“검단구 분구 대비” - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
       "publishedAt": "2026-04-07T05:53:49.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5SNUoyUEFPb29VSm1ac0JVempmc21Pc0JUQXIzR2xWcUdweDI3dFFZN1JkN1ZmcUd2T2FVMkNqWWpfRjR2MEtSVHlMUEtYMVE?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTFB5ODVkZEE4eUJJSWVyZVVjd2hqdFJlWkRpSVREdGhBcElTa21mYmhIdjJvRmZoaVQteTJ3aUVJZ21SR1ZZUUE?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-21",
       "title": "인천서구의회, “검단 분구 전 약속한 50% 재정지원 어디로 갔나”… 인천시 불이행 질타 - 로컬세계",
       "summary": "",
       "source": "로컬세계",
       "publishedAt": "2026-04-07T05:47:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBqTTNSVXljVExrd0VMQnV6R1V2QlBNQ29sZ05NcDRDbDhxbm1oUXdKUFI4YkRRaUpiWVpON1RnbG1KSnVQV0p5eWdKZUJnOFpVR1lBLWMwZEsweDJJdjc2btIBWEFVX3lxTE91Um5yMXVoYTEzdVBiX1F6MzVwRjg2Tnh6QVo1WnlKMmVfNXV4RklxYlRKdk85Q2NINHAxN0hTbEtaaDlrdzZ1djcyZlI3ZHdqd2JVQWhpTkY?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-45",
-      "title": "송승환 인천 서구의회 의장, 아라계양로 개통 앞두고 LH·주민대표와 합동 점검 실시 - 인천뉴스",
-      "summary": "",
-      "source": "인천뉴스",
-      "publishedAt": "2026-04-07T05:43:24.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5oeXJBVzYxeF9BR3BseHdkWUx1UmM2bW1iOWJZelNTOFFDNWNiQUh1M3NiNmhhVmVvTVJETVRiX1RrZTNGNUkyMlVESjBaNnRjOUYwMWRMcWI2amZvY192T3dLMXp1WThaQ2JVVW1mOA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-50",
-      "title": "[6.3 여론조사] 인천 서구(서해구) 구청장 후보, 강범석 1위지만 ‘혼전’ - 글로벌이코노믹",
-      "summary": "",
-      "source": "글로벌이코노믹",
-      "publishedAt": "2026-04-07T05:43:02.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxNc0dpWl9HbTZhTF8xYUJPS0pkQXVGLW9TbnNGcGtrbTdHdjJTSFllWm9KZTJQYVVIWjBpcmVoVk1QMDNhVlFtUkZwc2pYQTVOVUVmMkprQnU1Z21rMmQ0ODFGX0wxeFdBdFJjaG01bC02ZzZmaE9UcjcybjFJNTFFT1JnOUZsR1NVcWc0?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-26",
-      "title": "인천 서구, 현수막 지정게시대 확충…검단구 분구 대비 광고 인프라 강화 - 연합시민의소리",
-      "summary": "",
-      "source": "연합시민의소리",
-      "publishedAt": "2026-04-07T05:37:32.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE56UGQ5a29hUjZyNDI1U1F6WjJHa19Zd0hIcV9BajJST3h2LU5mT2VCeW1FTHdiN2NVYjBNTUE3RnQ3OGpRaVN6RFh5OWZjeTJERExReTBOQVZ4RmVpVTE2djNQZUd1V3VqQXZV?oc=5",
       "type": "뉴스"
     }
   ]
