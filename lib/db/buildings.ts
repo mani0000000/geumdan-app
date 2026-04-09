@@ -146,6 +146,78 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
   }
 }
 
+// ─── 전체 매장 flat 목록 (검색 / 리스트뷰용) ──────────────────
+export interface FlatStore extends Store {
+  floorLabel: string;
+  buildingId: string;
+  buildingName: string;
+}
+
+export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
+  if (!isSupabaseConfigured()) {
+    return mockBuildings.flatMap(b =>
+      b.floors.flatMap(f =>
+        f.stores.filter(s => s.name !== '공실').map(s => ({
+          ...s, floorLabel: f.label, buildingId: b.id, buildingName: b.name,
+        }))
+      )
+    );
+  }
+
+  try {
+    const [storesRes, buildingsRes] = await Promise.all([
+      supabase.from('stores').select('*'),
+      supabase.from('buildings').select('id, name'),
+    ]);
+
+    if (storesRes.error) throw storesRes.error;
+
+    const buildingNames: Record<string, string> = {};
+    (buildingsRes.data ?? []).forEach((b: { id: string; name: string }) => {
+      buildingNames[b.id] = b.name;
+    });
+
+    const rows = storesRes.data ?? [];
+    if (rows.length === 0) {
+      return mockBuildings.flatMap(b =>
+        b.floors.flatMap(f =>
+          f.stores.filter(s => s.name !== '공실').map(s => ({
+            ...s, floorLabel: f.label, buildingId: b.id, buildingName: b.name,
+          }))
+        )
+      );
+    }
+
+    return rows
+      .filter((row) => row.name !== '공실')
+      .map((row) => ({
+        id: row.id as string,
+        name: row.name as string,
+        category: (row.category as Store['category']) ?? '기타',
+        phone: (row.phone as string | undefined) ?? undefined,
+        hours: (row.hours as string | undefined) ?? undefined,
+        x: (row.x as number) ?? 0,
+        y: (row.y as number) ?? 0,
+        w: (row.w as number) ?? 10,
+        h: (row.h as number) ?? 10,
+        isOpen: (row.is_open as boolean | undefined) ?? undefined,
+        isPremium: (row.is_premium as boolean | undefined) ?? false,
+        floorLabel: (row.floor_label as string) ?? '',
+        buildingId: (row.building_id as string) ?? '',
+        buildingName: buildingNames[(row.building_id as string) ?? ''] ?? '',
+      }));
+  } catch (err) {
+    console.error('[buildings] fetchAllStoresFlat error, falling back to mock:', err);
+    return mockBuildings.flatMap(b =>
+      b.floors.flatMap(f =>
+        f.stores.filter(s => s.name !== '공실').map(s => ({
+          ...s, floorLabel: f.label, buildingId: b.id, buildingName: b.name,
+        }))
+      )
+    );
+  }
+}
+
 export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]> {
   if (!isSupabaseConfigured()) {
     const building = mockBuildings.find((b) => b.id === buildingId);
