@@ -113,12 +113,32 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
   );
 }
 
+// ─── 바텀시트 공통 래퍼 ──────────────────────────────────────
+function SheetBackdrop({ zIndex, onClose, children }: { zIndex: number; onClose: () => void; children: React.ReactNode }) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+  return (
+    <div className="fixed inset-0" style={{ zIndex }}>
+      {/* backdrop — 먼저 DOM에 → sheet보다 z 낮음, 클릭 시 닫기 */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} style={{ zIndex: 1 }} />
+      {/* sheet panel — 나중에 DOM에 → z:2 로 backdrop 위 */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]" style={{ zIndex: 2 }}
+        onClick={e => e.stopPropagation()}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
 // ─── 매장 바텀시트 ────────────────────────────────────────────
 function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
   const [sent, setSent] = useState(false);
   return (
-    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
+    <SheetBackdrop zIndex={300} onClose={onClose}>
+      <div className="bg-white rounded-t-3xl overflow-hidden">
         <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
         <div className="px-5 pt-4 pb-10">
           <div className="flex items-start justify-between mb-4">
@@ -168,8 +188,7 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 z-0" />
-    </div>
+    </SheetBackdrop>
   );
 }
 
@@ -199,9 +218,8 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
   const heroImg = catHeroImage[store.category];
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[90dvh] flex flex-col"
-        onClick={e => e.stopPropagation()}>
+    <SheetBackdrop zIndex={300} onClose={onClose}>
+      <div className="bg-white rounded-t-3xl overflow-hidden max-h-[90dvh] flex flex-col">
 
         {/* ── 대표 이미지 헤더 ── */}
         <div className="relative shrink-0" style={{ height: 220 }}>
@@ -423,8 +441,7 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
           </div>
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 z-0" />
-    </div>
+    </SheetBackdrop>
   );
 }
 
@@ -753,16 +770,20 @@ function MapBuildingSheet({
   buildingData,
   onClose,
   onSelectStore,
-  hideBackdrop,
 }: {
   nearbyInfo: NearbyBuilding;
   buildingData: Building | null;
   onClose: () => void;
   onSelectStore: (store: EnrichedStore) => void;
-  hideBackdrop?: boolean;
 }) {
   const [floorIdx, setFloorIdx] = useState<number>(-1);
   const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
   const allStores: { store: Store; floorLabel: string }[] = buildingData
     ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
@@ -773,15 +794,13 @@ function MapBuildingSheet({
     : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
 
   return (
-    <>
-      {/* 반투명 배경 — 매장 상세가 열려 있으면 숨겨서 이중 딤 방지 */}
-      {!hideBackdrop && (
-        <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
-      )}
+    <div className="fixed inset-0" style={{ zIndex: 200 }}>
+      {/* backdrop */}
+      <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
       {/* 시트 */}
       <div
-        className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
-        style={{ maxHeight: "82%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl"
+        style={{ zIndex: 2, maxHeight: "82%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
       >
         {/* 건물 이미지 헤더 */}
         <div className="relative shrink-0" style={{ height: 160 }}>
@@ -865,7 +884,7 @@ function MapBuildingSheet({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 
@@ -1182,13 +1201,12 @@ export default function StoresPage() {
           </div>
 
           {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
-          {selectedBuildingId && selectedNearby && (
+          {selectedBuildingId && selectedNearby && !mapDetailStore && (
             <MapBuildingSheet
               nearbyInfo={selectedNearby}
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
               onSelectStore={setMapDetailStore}
-              hideBackdrop={!!mapDetailStore}
             />
           )}
         </>
