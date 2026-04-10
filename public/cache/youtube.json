@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-09T21:37:28.605Z",
+  "fetchedAt": "2026-04-10T01:18:30.393Z",
   "count": 20,
   "videos": [
     {
@@ -28,11 +28,11 @@
     },
     {
       "id": "yt-0",
-      "videoId": "Tl1ci6g-59A",
-      "title": "검단신도시에서 마곡역까지 정말 20분 밖에 안걸릴까? | 아라계양로 개통! | 무편집 드라이브",
-      "channelName": "검단대장",
-      "thumbnail": "https://img.youtube.com/vi/Tl1ci6g-59A/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Tl1ci6g-59A"
+      "videoId": "UVOdna5B1KU",
+      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
     },
     {
       "id": "yt-0",
@@ -60,14 +60,6 @@
     },
     {
       "id": "yt-1",
-      "videoId": "UVOdna5B1KU",
-      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
-    },
-    {
-      "id": "yt-1",
       "videoId": "30svggHOYek",
       "title": "검단신도시 4단계 사업 올해 말 준공 8조 4천억 원 투입..2028년 완공 예정",
       "channelName": "OBS뉴스",
@@ -76,11 +68,19 @@
     },
     {
       "id": "yt-2",
-      "videoId": "tqRdYmgZjUE",
-      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
-      "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
+      "videoId": "1SWlkGa6T0A",
+      "title": "검단신도시 한식뷔페!!",
+      "channelName": "독거또랭이",
+      "thumbnail": "https://img.youtube.com/vi/1SWlkGa6T0A/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=1SWlkGa6T0A"
+    },
+    {
+      "id": "yt-2",
+      "videoId": "CMQ5gR8ZIuQ",
+      "title": "[VLOG] 검단신도시대형카페/힐링카페/아라뱃길카페/카페브이로그",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/CMQ5gR8ZIuQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=CMQ5gR8ZIuQ"
     },
     {
       "id": "yt-2",
@@ -92,6 +92,14 @@
     },
     {
       "id": "yt-2",
+      "videoId": "YsJVNrTuODY",
+      "title": "지축동에서 검단신도시로 이사브이로그",
+      "channelName": "삼동이네",
+      "thumbnail": "https://img.youtube.com/vi/YsJVNrTuODY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=YsJVNrTuODY"
+    },
+    {
+      "id": "yt-2",
       "videoId": "_U7shUKA7os",
       "title": "검단신도시 개발 순항…올해 5단계 준공 예정 [인천]",
       "channelName": "B tv 뉴스",
@@ -100,19 +108,19 @@
     },
     {
       "id": "yt-3",
-      "videoId": "3TAIXUazVc0",
-      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
+      "videoId": "tqRdYmgZjUE",
+      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
       "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0"
+      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
     },
     {
       "id": "yt-3",
-      "videoId": "CMQ5gR8ZIuQ",
-      "title": "[VLOG] 검단신도시대형카페/힐링카페/아라뱃길카페/카페브이로그",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/CMQ5gR8ZIuQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=CMQ5gR8ZIuQ"
+      "videoId": "o0vWUmDqjBA",
+      "title": "검단 초초초신상 카페 따뜻한 느낌 감성카페",
+      "channelName": "여행 결이",
+      "thumbnail": "https://img.youtube.com/vi/o0vWUmDqjBA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=o0vWUmDqjBA"
     },
     {
       "id": "yt-3",
@@ -124,11 +132,11 @@
     },
     {
       "id": "yt-3",
-      "videoId": "DmLQKHcq5H0",
-      "title": "[VLOG]  🏠신축아파트 사전점검 브이로그ㅣ입주 박람회 구경하고 롯데캐슬 42평 사전점검 하는 일상 🌸",
-      "channelName": "MISORO 미소로",
-      "thumbnail": "https://img.youtube.com/vi/DmLQKHcq5H0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=DmLQKHcq5H0"
+      "videoId": "Wj0GaaXDbWw",
+      "title": "신축 입주 쉽지않다..ㅣ입주 첫날 현실 브이로그🏠ㅣ검단신도시ㅣ38평 신축아파트",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/Wj0GaaXDbWw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Wj0GaaXDbWw"
     },
     {
       "id": "yt-3",
@@ -140,27 +148,19 @@
     },
     {
       "id": "yt-4",
-      "videoId": "UEpoaomFNDY",
-      "title": "검단신도시 맛집 간석멸치국수",
-      "channelName": "까니로그",
-      "thumbnail": "https://img.youtube.com/vi/UEpoaomFNDY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UEpoaomFNDY"
+      "videoId": "3TAIXUazVc0",
+      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0"
     },
     {
       "id": "yt-4",
-      "videoId": "Je3gyiFDewk",
-      "title": "신축 아파트 부엌 조명 쇼핑 여행_검단신도시 근처 조명, 맛집, 카페 소개",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/Je3gyiFDewk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Je3gyiFDewk"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "qWx0pIfSi-0",
-      "title": "검단신도시 신검단중앙역 호수공원역 드론 영상으로 샅샅이 알아보자",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/qWx0pIfSi-0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=qWx0pIfSi-0"
+      "videoId": "ASnlOFdLdK8",
+      "title": "인천 검단대형카페 서원안길 #cafe #검단신도시카페",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/ASnlOFdLdK8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ASnlOFdLdK8"
     }
   ]
 }
