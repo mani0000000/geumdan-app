@@ -35,10 +35,10 @@ const BUILDING_IMAGES: Record<string, string> = {
   "b_metro2": "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format",
   "b_aplus":  "https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=600&h=280&fit=crop&auto=format",
   "b_syace2": "https://images.unsplash.com/photo-1497366811353-6870744d04b2?w=600&h=280&fit=crop&auto=format",
-  "b_sung":   "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=600&h=280&fit=crop&auto=format",
+  "b_sung":   "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=280&fit=crop&auto=format",
   "b_covent": "https://images.unsplash.com/photo-1464938050520-ef2270bb8ce8?w=600&h=280&fit=crop&auto=format",
   "b_sinahn": "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&h=280&fit=crop&auto=format",
-  "b_daseung":"https://images.unsplash.com/photo-1462396881884-de2c07cb95ed?w=600&h=280&fit=crop&auto=format",
+  "b_daseung":"https://images.unsplash.com/photo-1582139329536-e7284fece509?w=600&h=280&fit=crop&auto=format",
 };
 const DEFAULT_IMG = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format";
 
@@ -582,53 +582,61 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         </div>
       )}
 
-      {/* ── 이번 주 쿠폰 ── */}
-      <div className="pt-2 pb-2">
-        <div className="flex items-center gap-1.5 px-4 mb-2.5">
-          <span className="text-[14px] font-bold text-[#191F28]">이번 주 쿠폰</span>
-          <span className="text-[11px] text-[#8B95A1]">{coupons.length}장</span>
-        </div>
-        <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          {coupons.map(c => {
-            const done = dlState.has(c.id);
-            const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
-            const urgent = dDay <= 3;
-            return (
-              <div key={c.id} className="shrink-0 w-[200px] rounded-2xl overflow-hidden shadow-sm"
-                style={{ border: `1.5px solid ${c.color}22` }}>
-                <div className="px-3.5 pt-3 pb-2.5" style={{ background: `${c.color}14` }}>
-                  <div className="flex items-center gap-2 mb-1">
-                    <StoreLogo name={c.storeName} category={c.category} size={28} rounded="rounded-lg" />
-                    <p className="text-[13px] font-extrabold text-[#191F28] truncate">{c.storeName}</p>
+      {/* ── 이번 주 쿠폰 (유효한 것만 표시) ── */}
+      {(() => {
+        const validCoupons = coupons.filter(c =>
+          Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
+        );
+        if (validCoupons.length === 0) return null;
+        return (
+          <div className="pt-2 pb-2">
+            <div className="flex items-center gap-1.5 px-4 mb-2.5">
+              <span className="text-[14px] font-bold text-[#191F28]">이번 주 쿠폰</span>
+              <span className="text-[11px] text-[#8B95A1]">{validCoupons.length}장</span>
+            </div>
+            <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+              {validCoupons.map(c => {
+                const done = dlState.has(c.id);
+                const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
+                const urgent = dDay <= 3;
+                return (
+                  <div key={c.id} className="shrink-0 w-[200px] rounded-2xl overflow-hidden shadow-sm"
+                    style={{ border: `1.5px solid ${c.color}22` }}>
+                    <div className="px-3.5 pt-3 pb-2.5" style={{ background: `${c.color}14` }}>
+                      <div className="flex items-center gap-2 mb-1">
+                        <StoreLogo name={c.storeName} category={c.category} size={28} rounded="rounded-lg" />
+                        <p className="text-[13px] font-extrabold text-[#191F28] truncate">{c.storeName}</p>
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-[22px] font-black" style={{ color: c.color }}>{c.discount}</span>
+                        <span className="text-[11px] text-[#8B95A1]">할인</span>
+                      </div>
+                    </div>
+                    <div className="relative flex items-center" style={{ height: "12px" }}>
+                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ borderTop: `2px dashed ${c.color}44` }} />
+                      <div className="absolute -left-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
+                      <div className="absolute -right-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
+                    </div>
+                    <div className="px-3.5 pt-1.5 pb-3 bg-white">
+                      <p className="text-[11px] text-[#4E5968] line-clamp-2 mb-2">{c.title}</p>
+                      <div className="flex items-center justify-between">
+                        <span className={`text-[10px] font-bold ${urgent ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
+                          {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
+                        </span>
+                        <button onClick={() => setDlState(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
+                          className="h-6 px-2.5 rounded-lg text-[11px] font-extrabold active:opacity-70 text-white"
+                          style={{ background: done ? "#B0B8C1" : c.color }}>
+                          {done ? "✓ 완료" : "받기"}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[22px] font-black" style={{ color: c.color }}>{c.discount}</span>
-                    <span className="text-[11px] text-[#8B95A1]">할인</span>
-                  </div>
-                </div>
-                <div className="relative flex items-center" style={{ height: "12px" }}>
-                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ borderTop: `2px dashed ${c.color}44` }} />
-                  <div className="absolute -left-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
-                  <div className="absolute -right-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
-                </div>
-                <div className="px-3.5 pt-1.5 pb-3 bg-white">
-                  <p className="text-[11px] text-[#4E5968] line-clamp-2 mb-2">{c.title}</p>
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[10px] font-bold ${urgent ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
-                      {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
-                    </span>
-                    <button onClick={() => setDlState(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                      className="h-6 px-2.5 rounded-lg text-[11px] font-extrabold active:opacity-70 text-white"
-                      style={{ background: done ? "#B0B8C1" : c.color }}>
-                      {done ? "✓ 완료" : "받기"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── 업종 필터 ── */}
       <div className="pt-2 pb-1">
