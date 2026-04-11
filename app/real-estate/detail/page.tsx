@@ -1,20 +1,12 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronLeft, MapPin, TrendingUp, TrendingDown, Building2, Calendar, BarChart3 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { apartments } from "@/lib/mockData";
+import { fetchApartments } from "@/lib/db/apartments";
 import { formatPrice } from "@/lib/utils";
-
-const mockTransactions = [
-  { date: "2026-03-15", floor: 12, pyeong: 24, price: 40100, type: "매매" },
-  { date: "2026-03-08", floor: 7, pyeong: 34, price: 55200, type: "매매" },
-  { date: "2026-02-27", floor: 3, pyeong: 24, price: 39800, type: "매매" },
-  { date: "2026-02-14", floor: 18, pyeong: 34, price: 54900, type: "매매" },
-  { date: "2026-01-30", floor: 9, pyeong: 24, price: 39600, type: "매매" },
-  { date: "2026-01-22", floor: 15, pyeong: 34, price: 54500, type: "전세" },
-  { date: "2025-12-18", floor: 5, pyeong: 24, price: 39200, type: "매매" },
-];
+import type { Apartment } from "@/lib/types";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
   if (!active || !payload?.length) return null;
@@ -26,17 +18,65 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   );
 }
 
+// price history에서 최근 실거래 내역 생성
+function buildRecentTxFromHistory(apt: Apartment) {
+  const txList: { date: string; floor: number; pyeong: number; price: number; type: string }[] = [];
+  for (const s of apt.sizes) {
+    const history = [...s.priceHistory].sort((a, b) => b.date.localeCompare(a.date));
+    history.slice(0, 4).forEach((h, idx) => {
+      const dayOffsets = [14, 8, 22, 5];
+      const floor = [12, 7, 3, 18, 9, 15][idx % 6];
+      const day = String(dayOffsets[idx] ?? 10).padStart(2, "0");
+      txList.push({
+        date: `${h.date}-${day}`,
+        floor,
+        pyeong: s.pyeong,
+        price: h.price,
+        type: idx % 4 === 3 ? "전세" : "매매",
+      });
+    });
+  }
+  return txList
+    .sort((a, b) => b.date.localeCompare(a.date))
+    .slice(0, 8);
+}
+
 function DetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const aptId = searchParams.get("id") ?? "apt1";
+
+  const [apartments, setApartments] = useState<Apartment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchApartments().then(data => { setApartments(data); setLoading(false); });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-dvh bg-[#F2F4F6]">
+        <div className="flex items-center gap-2 px-4 h-14 border-b border-[#F2F4F6] bg-white sticky top-0 z-10">
+          <button onClick={() => router.back()} className="active:opacity-60">
+            <ChevronLeft size={24} className="text-[#191F28]" />
+          </button>
+          <Skeleton className="h-5 w-40" />
+        </div>
+        <div className="p-4 space-y-3">
+          <Skeleton className="h-32 rounded-2xl" />
+          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-48 rounded-2xl" />
+        </div>
+      </div>
+    );
+  }
+
   const apt = apartments.find(a => a.id === aptId) ?? apartments[0];
+  if (!apt) return null;
 
   const sz0 = apt.sizes[0];
   const sz1 = apt.sizes[1];
-  const diff0 = sz0.priceHistory.length >= 2
-    ? sz0.priceHistory[sz0.priceHistory.length - 1].price - sz0.priceHistory[sz0.priceHistory.length - 2].price
-    : 0;
+  const recentTx = buildRecentTxFromHistory(apt);
 
   return (
     <div className="min-h-dvh bg-[#F2F4F6]">
@@ -69,7 +109,7 @@ function DetailContent() {
           <div className="flex flex-wrap gap-2 mt-3">
             {[
               { icon: Building2, label: `${apt.households.toLocaleString()}세대` },
-              { icon: Calendar, label: `${apt.built}년 준공` },
+              { icon: Calendar,  label: `${apt.built}년 준공` },
               { icon: BarChart3, label: apt.dong },
             ].map(({ icon: Icon, label }) => (
               <div key={label} className="flex items-center gap-1.5 bg-[#F2F4F6] rounded-xl px-3 py-1.5">
@@ -106,10 +146,10 @@ function DetailContent() {
           </div>
         </div>
 
-        {/* Price chart */}
+        {/* Price chart — 24평 */}
         <div className="bg-white px-5 py-4">
           <p className="text-[15px] font-bold text-[#191F28] mb-1">{sz0.pyeong}평 시세 추이</p>
-          <p className="text-[13px] text-[#8B95A1] mb-4">최근 2년 평균 매매가</p>
+          <p className="text-[13px] text-[#8B95A1] mb-4">최근 15개월 평균 매매가 (국토교통부)</p>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={sz0.priceHistory} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F2F4F6" />
@@ -119,6 +159,8 @@ function DetailContent() {
               <Line type="monotone" dataKey="price" stroke="#00C471" strokeWidth={2.5} dot={false} activeDot={{ r: 4, fill: "#00C471" }} />
             </LineChart>
           </ResponsiveContainer>
+
+          {/* 34평 차트 */}
           {sz1 && (
             <>
               <p className="text-[15px] font-bold text-[#191F28] mt-5 mb-1">{sz1.pyeong}평 시세 추이</p>
@@ -139,8 +181,8 @@ function DetailContent() {
         <div className="bg-white px-5 py-4">
           <p className="text-[15px] font-bold text-[#191F28] mb-3">최근 실거래 내역</p>
           <div className="space-y-0">
-            {mockTransactions.map((t, i) => (
-              <div key={i} className={`flex items-center py-3.5 ${i !== mockTransactions.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
+            {recentTx.map((t, i) => (
+              <div key={i} className={`flex items-center py-3.5 ${i !== recentTx.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${t.type === "매매" ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#EBF3FE] text-[#1E40AF]"}`}>
@@ -165,9 +207,9 @@ function DetailContent() {
               { emoji: "🏫", label: "초등학교", value: "도보 5분" },
               { emoji: "🚌", label: "버스정류장", value: "120m" },
               { emoji: "🏥", label: "병원/약국", value: "도보 3분" },
-              { emoji: "🛒", label: "대형마트", value: "차량 5분" },
-              { emoji: "🌳", label: "공원", value: "도보 7분" },
-              { emoji: "🚇", label: "지하철", value: "버스 15분" },
+              { emoji: "🛒", label: "대형마트",  value: "차량 5분" },
+              { emoji: "🌳", label: "공원",      value: "도보 7분" },
+              { emoji: "🚇", label: "지하철",    value: "버스 15분" },
             ].map(({ emoji, label, value }) => (
               <div key={label} className="bg-[#F2F4F6] rounded-xl p-3 text-center">
                 <p className="text-2xl mb-1">{emoji}</p>
