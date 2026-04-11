@@ -31,7 +31,8 @@ if (!API_KEY || !SB_URL || !SB_KEY) {
 const supabase  = createClient(SB_URL, SB_KEY);
 const LAWD_CD   = '28260';   // 인천광역시 서구
 const API_BASE  = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade';
-const GEUMDAN_DONGS = ['당하', '불로', '마전', '왕길', '대곡'];
+// 검단신도시(신도심) 법정동만 — 구도심(검단동·오류동·금곡동) 제외
+const GEUMDAN_SINDOSI_DONGS = ['당하', '불로', '마전', '왕길', '대곡'];
 
 // ── 파라미터 파싱 ──────────────────────────────────────────────
 const args     = process.argv.slice(2);
@@ -89,11 +90,10 @@ function findAptId(rawName) {
   return null;
 }
 
-function isGeumdanDeal(item) {
-  const aptName = String(item['아파트'] ?? item.aptNm ?? '');
-  const dong    = String(item['법정동'] ?? item.umdNm ?? '');
-  if (aptName.includes('검단')) return true;
-  return GEUMDAN_DONGS.some(d => dong.includes(d));
+// 법정동 기준으로만 필터링 (신도심 전용)
+function isGeumdanSindosi(item) {
+  const dong = String(item['법정동'] ?? item.umdNm ?? '');
+  return GEUMDAN_SINDOSI_DONGS.some(d => dong.includes(d));
 }
 
 function getYearMonths(count) {
@@ -159,7 +159,7 @@ try {
   for (const ym of yearMonths) {
     try {
       const deals  = await fetchDeals(ym);
-      const filtered = deals.filter(isGeumdanDeal);
+      const filtered = deals.filter(isGeumdanSindosi);
       console.log(`  ${ym}: 전체 ${deals.length}건 → 검단 ${filtered.length}건`);
       allDeals.push(...filtered);
       await new Promise(r => setTimeout(r, 300)); // API 과부하 방지

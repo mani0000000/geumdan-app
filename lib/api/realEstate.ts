@@ -5,8 +5,8 @@
 const API_KEY = process.env.NEXT_PUBLIC_MOLIT_API_KEY ?? "";
 const BASE = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade";
 
-// 검단신도시 법정동
-const GEUMDAN_DONGS = ["당하", "불로", "마전", "왕길", "대곡"];
+// 검단신도시(신도심) 법정동만 포함 — 구도심(검단동·오류동·금곡동) 제외
+const GEUMDAN_SINDOSI_DONGS = ["당하", "불로", "마전", "왕길", "대곡"];
 
 export interface AptTransaction {
   aptName: string;
@@ -26,11 +26,11 @@ function parseItems(json: unknown): Record<string, string>[] {
   return Array.isArray(item) ? item : [item];
 }
 
-function isGeumdanItem(item: Record<string, string>): boolean {
-  const name = String(item["아파트"] ?? item.aptNm ?? "");
+// 법정동 기준으로만 필터링 (신도심 전용)
+// aptName의 "검단" 여부는 구도심도 포함되므로 사용하지 않음
+function isGeumdanSindosi(item: Record<string, string>): boolean {
   const dong = String(item["법정동"] ?? item.umdNm ?? "");
-  if (name.includes("검단")) return true;
-  return GEUMDAN_DONGS.some((d) => dong.includes(d));
+  return GEUMDAN_SINDOSI_DONGS.some((d) => dong.includes(d));
 }
 
 function rowToTransaction(item: Record<string, string>): AptTransaction {
@@ -103,7 +103,7 @@ export async function fetchRecentTransactions(yyyyMM?: string): Promise<AptTrans
   try {
     const items = await apiFetch(dealYmd);
     return items
-      .filter((item) => isGeumdanItem(item) && parseInt(String(item["거래금액"] ?? "0").replace(/,/g, ""), 10) > 0)
+      .filter((item) => isGeumdanSindosi(item) && parseInt(String(item["거래금액"] ?? "0").replace(/,/g, ""), 10) > 0)
       .map(rowToTransaction)
       .sort((a, b) => b.dealDate.localeCompare(a.dealDate))
       .slice(0, 30);
