@@ -174,9 +174,18 @@ export async function fetchStationsByRoute(routeId: string): Promise<RouteStatio
 
 // ─── 정류장명으로 도착정보 조회 ──────────────────────────────
 export const BUS_STATION_IDS: Record<string, string> = {
-  "당하지구 검단사거리": "34000248",
-  "당하동 주민센터":     "34000312",
-  "불로지구 입구":       "34001102",
+  // 검단신도시 핵심 정류장
+  "당하지구 검단사거리":   "34000248",
+  "당하동 주민센터":       "34000312",
+  "불로지구 입구":         "34001102",
+  // 검단신도시 추가 정류장
+  "검단사거리":            "34000250",
+  "검단신도시입구":        "34001200",
+  "당하동.검단신도시":     "34000310",
+  "검단오류역":            "34001300",
+  "서구청.검단":           "34000400",
+  "불로동":                "34001100",
+  "원당동":                "34000500",
 };
 
 export async function fetchBusStop(stationName: string): Promise<BusArrival[]> {

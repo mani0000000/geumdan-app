@@ -32,8 +32,8 @@ type DisplayStop = {
 };
 
 const STATION_COORDS: Record<string, [number, number]> = {
-  sw1: [37.5642, 126.6578],
-  sw2: [37.5443, 126.7201],
+  sw1: [37.5575, 126.6721],   // 검암역 (공항철도)
+  sw2: [37.5655, 126.7294],   // 계양역 (인천1호선)
 };
 
 function distLabel(m: number) {
@@ -46,6 +46,25 @@ function loadFavSet(key: string): Set<string> {
 }
 function saveFavSet(key: string, set: Set<string>) {
   try { localStorage.setItem(key, JSON.stringify([...set])); } catch { /* ignore */ }
+}
+
+// localStorage cache for API stops (stale-while-revalidate)
+const STOPS_CACHE_KEY = "transport_stops_v2";
+const STOPS_CACHE_TTL = 5 * 60 * 1000; // 5분
+
+function loadCachedStops(): DisplayStop[] | null {
+  try {
+    const raw = localStorage.getItem(STOPS_CACHE_KEY);
+    if (!raw) return null;
+    const { ts, data } = JSON.parse(raw) as { ts: number; data: DisplayStop[] };
+    if (Date.now() - ts > STOPS_CACHE_TTL) return null;
+    return data;
+  } catch { return null; }
+}
+function saveCachedStops(stops: DisplayStop[]) {
+  try {
+    localStorage.setItem(STOPS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: stops }));
+  } catch { /* ignore */ }
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
@@ -336,12 +355,14 @@ export default function TransportPage() {
   // ── GPS 기반 버스 데이터 로드 (3km, progressive) ─────────────
   const loadBusData = useCallback(async (lat: number, lng: number) => {
     if (!isLive) { return; }
+    setLoading(true);
     try {
       // 1. 3km 이내 주변 정류장 조회 (5방향 병렬)
       const nearby = await fetchNearbyStopsWide(lat, lng);
 
       if (nearby.length === 0) {
         setApiStops([]);
+        setLoading(false);
         return;
       }
 
@@ -358,11 +379,13 @@ export default function TransportPage() {
         lng: stop.lng,
       }));
       setApiStops(initialStops);
+      setLoading(false);
       if (initialStops.length > 0 && !expanded) setExpanded(initialStops[0].id);
 
       // 3. 도착정보 병렬 조회 후 정류장별로 순차 업데이트
+      const finalStops = [...initialStops];
       await Promise.allSettled(
-        top.map(async stop => {
+        top.map(async (stop, idx) => {
           const arrivals = await fetchArrivalsByStationId(stop.stationId);
           const routes: BusRoute[] = arrivals.map((a, i) => ({
             id: `live-${stop.stationId}-${i}`,
@@ -373,6 +396,7 @@ export default function TransportPage() {
             isLowFloor: a.isLowFloor,
             isExpress: a.isExpress,
           }));
+          finalStops[idx] = { ...finalStops[idx], routes, arrivals };
           setApiStops(prev =>
             prev ? prev.map(s =>
               s.id === stop.stationId ? { ...s, routes, arrivals } : s
@@ -381,13 +405,24 @@ export default function TransportPage() {
         })
       );
 
+      // 캐시에 저장 (다음 방문 시 즉시 표시)
+      saveCachedStops(finalStops);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-    } catch { setApiStops(null); }
+    } catch {
+      setLoading(false);
+      setApiStops(prev => prev ?? null);
+    }
   }, [isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── GPS 취득 → loadBusData 호출 ──────────────────────────────
   useEffect(() => {
-    const DEFAULT = { lat: 37.5446, lng: 126.6861 }; // 검단신도시 중심
+    // 캐시된 정류장 즉시 표시 (stale-while-revalidate)
+    if (isLive) {
+      const cached = loadCachedStops();
+      if (cached && cached.length > 0) setApiStops(cached);
+    }
+
+    const DEFAULT = { lat: 37.594, lng: 126.710 }; // 검단신도시 중심
     if (!navigator.geolocation) {
       posRef.current = DEFAULT;
       setUserPos(DEFAULT);
@@ -412,10 +447,10 @@ export default function TransportPage() {
       },
       { timeout: 5000, maximumAge: 30000, enableHighAccuracy: false }
     );
-  }, [loadBusData]);
+  }, [loadBusData, isLive]);
 
   const refresh = async () => {
-    const p = posRef.current ?? { lat: 37.5446, lng: 126.6861 };
+    const p = posRef.current ?? { lat: 37.594, lng: 126.710 };
     setRefreshing(true);
     await loadBusData(p.lat, p.lng);
     setRefreshing(false);
@@ -423,15 +458,15 @@ export default function TransportPage() {
 
   // ── 표시할 정류장 목록 결정 ───────────────────────────────────
   // isLive + API 조회 성공 → API 정류장 / 그 외 → 목업 정류장
-  const base = userPos ?? { lat: 37.5446, lng: 126.6861 };
+  const base = userPos ?? { lat: 37.594, lng: 126.710 };
 
   const mockDisplayStops: DisplayStop[] = nearbyStops.map(stop => ({
     id: stop.id,
     name: stop.name,
     stopNo: stop.stopNo,
     distM: haversineM(base.lat, base.lng,
-      stop.id === "bs1" ? 37.5448 : stop.id === "bs2" ? 37.5452 : 37.5431,
-      stop.id === "bs1" ? 126.6875 : stop.id === "bs2" ? 126.6842 : 126.6817),
+      stop.id === "bs1" ? 37.5930 : stop.id === "bs2" ? 37.5917 : 37.5870,
+      stop.id === "bs1" ? 126.7095 : stop.id === "bs2" ? 126.7071 : 126.7025),
     routes: stop.routes,
     arrivals: [],
   })).sort((a, b) => a.distM - b.distM);
@@ -598,7 +633,7 @@ export default function TransportPage() {
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
         <div className="px-4 space-y-3">
-          {refreshing && !apiStops ? (
+          {(loading || refreshing) && !apiStops ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
           ) : isLive && apiStops?.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-8 text-center">
