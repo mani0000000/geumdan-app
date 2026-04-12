@@ -407,6 +407,21 @@ const SORT_LABELS: Record<SortKey, string> = {
   recent: "최근 거래순", priceHigh: "높은 가격순", priceLow: "낮은 가격순", households: "세대수순",
 };
 
+/** 30평대(30~39평) 우선, 없으면 마지막 인덱스 */
+function est30sIdx(sizes: Apartment["sizes"]): number {
+  const idx = sizes.findIndex(s => s.pyeong >= 30 && s.pyeong < 40);
+  return idx >= 0 ? idx : sizes.length - 1;
+}
+/** 전세 추정 = 매매가 × 60% */
+function estJeonse(avgPrice: number) { return Math.round(avgPrice * 0.60); }
+/** 월세 추정: 보증금 5,000만 + 월(연 6.5%) */
+function estWolse(avgPrice: number) {
+  const jeonse = estJeonse(avgPrice);
+  const deposit = 5000;
+  const monthly = Math.max(30, Math.round((jeonse - deposit) * 0.065 / 12));
+  return { deposit, monthly };
+}
+
 function SiseTab() {
   const router = useRouter();
   const [selected, setSelected] = useState<string | null>(null);
@@ -417,6 +432,7 @@ function SiseTab() {
   const [showSort, setShowSort] = useState(false);
   const [myChartOpen, setMyChartOpen] = useState(false);
   const [avgChartOpen, setAvgChartOpen] = useState(false);
+  const [siseSubTab, setSiseSubTab] = useState<"매매" | "전월세">("매매");
 
   // 내 집 시세
   const [myAptId, setMyAptId] = useState<string | null>(() =>
@@ -600,6 +616,18 @@ function SiseTab() {
         </button>
       </div>
 
+      {/* ── 매매 / 전월세 서브탭 ── */}
+      <div className="px-4 mb-3">
+        <div className="flex bg-[#F2F4F6] rounded-xl p-1 gap-1">
+          {(["매매", "전월세"] as const).map(t => (
+            <button key={t} onClick={() => setSiseSubTab(t)}
+              className={`flex-1 h-9 rounded-lg text-[14px] font-semibold transition-all ${siseSubTab === t ? "bg-white text-[#191F28] shadow-sm" : "text-[#8B95A1]"}`}>
+              {t}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* ── 검색 + 필터 바 ── */}
       <div className="px-4 mb-3 space-y-2">
         {/* 검색 */}
@@ -647,21 +675,26 @@ function SiseTab() {
             <p className="text-[14px] text-[#8B95A1]">검색 결과가 없어요</p>
           </div>
         ) : filtered.map(apt => {
-          const szIdx = selectedSzIdx[apt.id] ?? 0;
+          // 30평대 기본 선택
+          const szIdx = selectedSzIdx[apt.id] ?? est30sIdx(apt.sizes);
           const sz = apt.sizes[szIdx] ?? apt.sizes[0];
           const h = sz.priceHistory;
           const curr = h[h.length - 1].price;
           const prev = h[h.length - 2]?.price ?? curr;
           const isOpen = selected === apt.id;
+          const jeonse = estJeonse(sz.avgPrice);
+          const wolse = estWolse(sz.avgPrice);
+          const jeonseHistory = h.map(p => ({ ...p, price: estJeonse(p.price) }));
 
           return (
             <div key={apt.id}
               className={`bg-white rounded-2xl overflow-hidden shadow-sm transition-all ${isOpen ? "ring-2 ring-[#3182F6]" : ""}`}>
               <button className="w-full px-4 py-4 text-left" onClick={() => setSelected(isOpen ? null : apt.id)}>
+                {/* 헤더 */}
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0 pr-2">
-                    <p className="text-[16px] font-bold text-[#191F28]">{apt.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                    <p className="text-[15px] font-bold text-[#191F28] leading-snug">{apt.name}</p>
+                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                       <MapPin size={11} className="text-[#8B95A1] shrink-0" />
                       <span className="text-[12px] text-[#8B95A1]">{apt.dong}</span>
                       <span className="text-[#E5E8EB]">·</span>
@@ -671,21 +704,63 @@ function SiseTab() {
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-[17px] font-black text-emerald-600">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-                    <p className="text-[11px] text-[#8B95A1]">{apt.recentDeal?.pyeong}평 실거래</p>
+                    {siseSubTab === "매매" ? (
+                      <>
+                        <p className="text-[17px] font-black text-emerald-600">{formatPrice(sz.avgPrice)}</p>
+                        <p className="text-[11px] text-[#8B95A1]">{sz.pyeong}평 매매</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-[17px] font-black text-[#3182F6]">{formatPrice(jeonse)}</p>
+                        <p className="text-[11px] text-[#8B95A1]">{sz.pyeong}평 전세</p>
+                      </>
+                    )}
                   </div>
                 </div>
 
-                {/* 평수 선택 탭 */}
-                <div className="flex gap-1.5 mt-3">
-                  {apt.sizes.map((s, i) => (
-                    <button key={i}
-                      onClick={e => { e.stopPropagation(); setSelectedSzIdx(prev => ({ ...prev, [apt.id]: i })); }}
-                      className={`rounded-xl px-3 py-2 text-center transition-colors ${szIdx === i ? "bg-[#3182F6]" : "bg-[#F2F4F6]"}`}>
-                      <p className={`text-[12px] font-semibold ${szIdx === i ? "text-white" : "text-[#4E5968]"}`}>{s.pyeong}평</p>
-                      <p className={`text-[11px] font-bold ${szIdx === i ? "text-blue-100" : "text-emerald-600"}`}>{formatPrice(s.avgPrice)}</p>
-                    </button>
-                  ))}
+                {/* 평수 선택 칩 */}
+                <div className="flex gap-1.5 mt-3" onClick={e => e.stopPropagation()}>
+                  {apt.sizes.map((s, i) => {
+                    const isActive = szIdx === i;
+                    const displayPrice = siseSubTab === "매매" ? s.avgPrice : estJeonse(s.avgPrice);
+                    return (
+                      <button key={i}
+                        onClick={e => { e.stopPropagation(); setSelectedSzIdx(p => ({ ...p, [apt.id]: i })); }}
+                        className={`rounded-xl px-3 py-2 text-center transition-colors ${isActive ? "bg-[#3182F6]" : "bg-[#F2F4F6]"}`}>
+                        <p className={`text-[12px] font-semibold ${isActive ? "text-white" : "text-[#4E5968]"}`}>{s.pyeong}평</p>
+                        <p className={`text-[11px] font-bold ${isActive ? "text-blue-100" : siseSubTab === "매매" ? "text-emerald-600" : "text-[#3182F6]"}`}>
+                          {formatPrice(displayPrice)}
+                        </p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 매매/전세 2열 요약 */}
+                <div className="grid grid-cols-2 gap-2 mt-3">
+                  {siseSubTab === "매매" ? (
+                    <>
+                      <div className="bg-emerald-50 rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-emerald-600 font-medium">매매 시세</p>
+                        <p className="text-[13px] font-black text-emerald-700">{formatPrice(sz.avgPrice)}</p>
+                      </div>
+                      <div className="bg-blue-50 rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#3182F6] font-medium">전세 (추정)</p>
+                        <p className="text-[13px] font-black text-[#3182F6]">{formatPrice(jeonse)}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-blue-50 rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#3182F6] font-medium">전세 시세</p>
+                        <p className="text-[13px] font-black text-[#3182F6]">{formatPrice(jeonse)}</p>
+                      </div>
+                      <div className="bg-purple-50 rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-purple-500 font-medium">월세 (추정)</p>
+                        <p className="text-[12px] font-black text-purple-700">{wolse.deposit.toLocaleString()} / {wolse.monthly}만</p>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-[#F2F4F6]">
@@ -702,16 +777,22 @@ function SiseTab() {
 
               {isOpen && (
                 <div className="border-t border-[#F2F4F6] px-4 py-3 bg-[#F8FAFB]">
-                  {/* 추세 그래프 */}
-                  <p className="text-[11px] font-bold text-[#8B95A1] mb-2">{sz.pyeong}평 실거래 추이</p>
+                  <p className="text-[11px] font-bold text-[#8B95A1] mb-2">
+                    {sz.pyeong}평 {siseSubTab === "매매" ? "매매" : "전세"} 시세 추이
+                  </p>
                   <div className="bg-white rounded-xl p-2 mb-3">
-                    <LineChart data={h} color="#10B981" height={88} showLabels showDots />
+                    <LineChart
+                      data={siseSubTab === "매매" ? h : jeonseHistory}
+                      color={siseSubTab === "매매" ? "#10B981" : "#3182F6"}
+                      height={88} showLabels showDots
+                    />
                   </div>
-                  {/* 월별 거래 리스트 */}
-                  <p className="text-[11px] font-bold text-[#8B95A1] mb-1.5">월별 거래</p>
+                  <p className="text-[11px] font-bold text-[#8B95A1] mb-1.5">
+                    월별 {siseSubTab === "매매" ? "거래" : "전세 시세"}
+                  </p>
                   <div className="space-y-1">
-                    {h.slice(-6).reverse().map((p, i) => {
-                      const prevP = h[h.length - 6 + (5 - i) - 1]?.price;
+                    {(siseSubTab === "매매" ? h : jeonseHistory).slice(-6).reverse().map((p, i, arr) => {
+                      const prevP = arr[i + 1]?.price;
                       const chg = prevP ? p.price - prevP : 0;
                       return (
                         <div key={i} className="flex items-center justify-between py-1.5 border-b border-[#F2F4F6] last:border-0">
