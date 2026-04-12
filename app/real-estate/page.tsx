@@ -15,6 +15,8 @@ import BottomNav from "@/components/layout/BottomNav";
 import { apartments as mockApartments, listings, myHomes as initialMyHomes } from "@/lib/mockData";
 import { fetchApartments } from "@/lib/db/apartments";
 import { fetchRecentTransactions, type AptTransaction } from "@/lib/api/realEstate";
+import { fetchRebWeeklyStats, type RebWeeklyStats } from "@/lib/api/rebApi";
+import { fetchLatestPriceIndex, type PriceIndexRow } from "@/lib/db/priceIndex";
 import { formatPrice } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
@@ -379,10 +381,14 @@ export default function RealEstatePage() {
   const [activeDong, setActiveDong] = useState("전체");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedApt, setSelectedApt] = useState<string | null>(null);
+  const [rebStats, setRebStats] = useState<RebWeeklyStats | null>(null);
+  const [kbIndex, setKbIndex] = useState<PriceIndexRow | null>(null);
 
   useEffect(() => {
     fetchApartments().then(setApartments);
     fetchRecentTransactions().then(setRecentTx);
+    fetchRebWeeklyStats().then(setRebStats);
+    fetchLatestPriceIndex("kb").then(setKbIndex);
   }, []);
 
   const filteredApts = apartments.filter((a) => {
@@ -406,6 +412,31 @@ export default function RealEstatePage() {
   const avgPrice = Math.round(
     apartments.reduce((sum, a) => sum + (a.recentDeal?.price ?? 0), 0) / apartments.length
   );
+
+  // 전월 대비 평균 변동률 — KB 지수 → R-ONE → 자체 계산 순 우선순위
+  const priceChangePct: number = (() => {
+    if (kbIndex?.change_rate != null) return kbIndex.change_rate;
+    if (rebStats?.changeRate != null) return rebStats.changeRate;
+    // 자체 계산: 아파트별 최근 2개월 비교 평균
+    const diffs: number[] = [];
+    for (const apt of apartments) {
+      for (const sz of apt.sizes) {
+        const h = sz.priceHistory;
+        if (h.length < 2) continue;
+        const curr = h[h.length - 1].price;
+        const prev = h[h.length - 2].price;
+        if (prev > 0) diffs.push(((curr - prev) / prev) * 100);
+      }
+    }
+    if (!diffs.length) return 0;
+    return diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  })();
+
+  const priceChangeLabel = (() => {
+    if (kbIndex?.change_rate != null) return `KB부동산 ${kbIndex.period.slice(0, 4)}.${kbIndex.period.slice(4, 6)}`;
+    if (rebStats?.changeRate != null) return "한국부동산원 주간";
+    return "전월 대비 평균";
+  })();
 
   function handleCall(phone: string) {
     window.location.href = `tel:${phone}`;
@@ -464,8 +495,13 @@ export default function RealEstatePage() {
         <p className="text-emerald-100 text-[13px] font-medium">검단 신도시 평균 실거래가</p>
         <p className="text-white text-[25px] font-black mt-1">{formatPrice(avgPrice)}</p>
         <div className="flex items-center gap-1.5 mt-2">
-          <TrendingUp size={14} className="text-emerald-300" />
-          <span className="text-emerald-200 text-[13px]">전월 대비 평균 +1.2% 상승</span>
+          {priceChangePct >= 0
+            ? <TrendingUp size={14} className="text-emerald-300" />
+            : <TrendingDown size={14} className="text-red-300" />}
+          <span className="text-emerald-200 text-[13px]">
+            {priceChangeLabel} {priceChangePct >= 0 ? "+" : ""}{priceChangePct.toFixed(2)}%{" "}
+            {priceChangePct >= 0 ? "상승" : "하락"}
+          </span>
         </div>
         <div className="mt-3 flex gap-4">
           <div>
@@ -474,13 +510,20 @@ export default function RealEstatePage() {
           </div>
           <div>
             <p className="text-emerald-200 text-[12px]">최근 거래</p>
-            <p className="text-white text-[15px] font-bold">이번 주 12건</p>
+            <p className="text-white text-[15px] font-bold">
+              {recentTx.length > 0 ? `이번 달 ${recentTx.length}건` : "집계 중"}
+            </p>
           </div>
           <div>
             <p className="text-emerald-200 text-[12px]">매물 수</p>
             <p className="text-white text-[15px] font-bold">총 {listings.length}건</p>
           </div>
         </div>
+        {(kbIndex || rebStats) && (
+          <p className="text-emerald-300/70 text-[11px] mt-2">
+            출처: {kbIndex ? "KB부동산" : "한국부동산원"}
+          </p>
+        )}
       </div>
 
       {/* Main Tab + Dong filter (sticky) */}
