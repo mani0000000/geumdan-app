@@ -28,6 +28,94 @@ const DONG_LABEL: Record<string, string> = { "백석동": "아라동(백석)" };
 type MainTab = "실거래" | "매물" | "전월세";
 type RentSubTab = "전체" | "전세" | "월세";
 
+// ---------- MOLIT 아파트명 → apt ID 매핑 (실거래 데이터 병합용) ----------
+const APT_NAME_MAP: Record<string, string> = {
+  검단푸르지오더퍼스트: "apt1",
+  검단SK뷰센트럴: "apt2",
+  검단SK뷰: "apt2",
+  검단한신더휴: "apt3",
+  검단아이파크2단지: "apt4",
+  검단아이파크: "apt4",
+  검단롯데캐슬넥스티엘: "apt5",
+  검단롯데캐슬: "apt5",
+  검단e편한세상: "apt6",
+  검단이편한세상: "apt6",
+  검단파크자이1단지: "apt7",
+  검단파크자이: "apt7",
+  검단우미린에코뷰: "apt8",
+  검단우미린: "apt8",
+  검단신도시푸르지오더베뉴: "apt9",
+  푸르지오더베뉴: "apt9",
+  검단금호어울림센트럴: "apt10",
+  금호어울림센트럴: "apt10",
+  검암역로열파크씨티푸르지오1단지: "apt11",
+  로열파크씨티푸르지오1단지: "apt11",
+  검암역로열파크씨티푸르지오2단지: "apt12",
+  로열파크씨티푸르지오2단지: "apt12",
+  검단호반써밋1차: "apt13",
+  검단호반써밋: "apt13",
+  호반써밋검단: "apt13",
+  검단신도시디에트르더힐: "apt14",
+  디에트르더힐: "apt14",
+  검단신도시예미지트리플에듀: "apt15",
+  예미지트리플에듀: "apt15",
+  검단한신더휴어반파크: "apt16",
+  한신더휴어반파크: "apt16",
+  제일풍경채검단1차: "apt17",
+  풍경채검단: "apt17",
+  왕길역로열파크씨티푸르지오: "apt18",
+  왕길역로열파크씨티: "apt18",
+};
+
+function normalizeAptName(name: string) {
+  return name.replace(/\s+/g, "").replace(/[·]/g, "").replace(/[()（）]/g, "");
+}
+
+function findAptId(rawName: string): string | null {
+  const n = normalizeAptName(rawName);
+  for (const [key, id] of Object.entries(APT_NAME_MAP)) {
+    if (n.includes(key) || key.includes(n)) return id;
+  }
+  return null;
+}
+
+/** 실거래 내역으로 avgPrice·recentDeal을 덮어씌운 apartment 배열 반환 */
+function mergeTxIntoApartments(
+  apts: Apartment[],
+  txs: AptTransaction[]
+): Apartment[] {
+  if (!txs.length) return apts;
+
+  // aptId:pyeong → prices[]
+  const priceMap = new Map<string, number[]>();
+  // aptId → latest tx
+  const latestTxMap = new Map<string, AptTransaction>();
+
+  for (const tx of txs) {
+    const id = findAptId(tx.aptName);
+    if (!id || !tx.price) continue;
+    const key = `${id}:${tx.pyeong}`;
+    if (!priceMap.has(key)) priceMap.set(key, []);
+    priceMap.get(key)!.push(tx.price);
+    const prev = latestTxMap.get(id);
+    if (!prev || tx.dealDate > prev.dealDate) latestTxMap.set(id, tx);
+  }
+
+  return apts.map((apt) => {
+    const sizes = apt.sizes.map((sz) => {
+      const prices = priceMap.get(`${apt.id}:${sz.pyeong}`);
+      if (!prices?.length) return sz;
+      const avg = Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
+      return { ...sz, avgPrice: avg };
+    });
+    const latestTx = latestTxMap.get(apt.id);
+    const recentDeal = latestTx
+      ? { price: latestTx.price, date: latestTx.dealDate, floor: latestTx.floor, pyeong: latestTx.pyeong }
+      : apt.recentDeal;
+    return { ...apt, sizes, recentDeal };
+  });
+}
+
 // ---------- Price Change Tag ----------
 function PriceChangeTag({ curr, prev }: { curr: number; prev: number }) {
   const diff = curr - prev;
@@ -234,8 +322,8 @@ function AddHomeModal({
 }
 
 // ---------- Apartment Card (실거래 tab) ----------
-function ApartmentCard({ apt, isSelected, onClick }: {
-  apt: Apartment; isSelected: boolean; onClick: () => void;
+function ApartmentCard({ apt, isSelected, onClick, txLoaded }: {
+  apt: Apartment; isSelected: boolean; onClick: () => void; txLoaded: boolean;
 }) {
   const mainSize = apt.sizes[0];
   const history = mainSize.priceHistory;
@@ -271,10 +359,15 @@ function ApartmentCard({ apt, isSelected, onClick }: {
           </div>
         </div>
 
-        <div className="flex gap-2 mt-3">
+        <div className="flex gap-2 mt-3 flex-wrap">
           {apt.sizes.map((sz, i) => (
-            <div key={i} className="bg-gray-50 rounded-xl px-3 py-2 text-center">
-              <p className="text-[13px] font-semibold text-gray-700">{sz.pyeong}평</p>
+            <div key={i} className="bg-gray-50 rounded-xl px-3 py-2 text-center min-w-[72px]">
+              <div className="flex items-center justify-center gap-1">
+                <p className="text-[13px] font-semibold text-gray-700">{sz.pyeong}평</p>
+                {txLoaded && (
+                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-blue-100 text-blue-600 leading-none">KB시세</span>
+                )}
+              </div>
               <p className="text-[12px] text-emerald-600 font-bold">{formatPrice(sz.avgPrice)}</p>
             </div>
           ))}
@@ -394,6 +487,7 @@ function ListingCard({ listing, onCall }: { listing: Listing; onCall: () => void
 export default function RealEstatePage() {
   const [apartments, setApartments] = useState<Apartment[]>(mockApartments);
   const [recentTx, setRecentTx] = useState<AptTransaction[]>([]);
+  const [txPricesLoaded, setTxPricesLoaded] = useState(false);
   const [myHomes, setMyHomes] = useState<MyHome[]>(initialMyHomes);
   const [showAddModal, setShowAddModal] = useState(false);
   const [mainTab, setMainTab] = useState<MainTab>("실거래");
@@ -405,8 +499,16 @@ export default function RealEstatePage() {
   const [kbIndex, setKbIndex] = useState<PriceIndexRow | null>(null);
 
   useEffect(() => {
-    fetchApartments().then(setApartments);
-    fetchRecentTransactions().then(setRecentTx);
+    // 아파트 목록 + 실거래 데이터를 동시에 로드 후 병합
+    Promise.all([
+      fetchApartments(),
+      fetchRecentTransactions(),
+    ]).then(([apts, txs]) => {
+      const merged = mergeTxIntoApartments(apts, txs);
+      setApartments(merged);
+      setRecentTx(txs);
+      setTxPricesLoaded(txs.length > 0);
+    });
     fetchRebWeeklyStats().then(setRebStats);
     fetchLatestPriceIndex("kb").then(setKbIndex);
   }, []);
@@ -518,7 +620,12 @@ export default function RealEstatePage() {
 
       {/* Summary Banner */}
       <div className="mx-4 mt-4 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-2xl p-4 mb-3">
-        <p className="text-emerald-100 text-[13px] font-medium">검단 신도시 평균 실거래가</p>
+        <div className="flex items-center gap-2">
+          <p className="text-emerald-100 text-[13px] font-medium">검단 신도시 평균 시세</p>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-white/20 text-white">
+            {txPricesLoaded ? "실거래 기준" : kbIndex ? "KB부동산" : "참고값"}
+          </span>
+        </div>
         <p className="text-white text-[25px] font-black mt-1">{formatPrice(avgPrice)}</p>
         <div className="flex items-center gap-1.5 mt-2">
           {priceChangePct >= 0
@@ -545,11 +652,13 @@ export default function RealEstatePage() {
             <p className="text-white text-[15px] font-bold">총 {listings.length}건</p>
           </div>
         </div>
-        {(kbIndex || rebStats) && (
-          <p className="text-emerald-300/70 text-[11px] mt-2">
-            출처: {kbIndex ? "KB부동산" : "한국부동산원"}
-          </p>
-        )}
+        <p className="text-emerald-300/70 text-[11px] mt-2">
+          {kbIndex
+            ? `KB부동산 ${kbIndex.period.slice(0, 4)}.${kbIndex.period.slice(4, 6)} 지수 기준`
+            : txPricesLoaded
+              ? "국토교통부 실거래가 기반"
+              : "시세는 참고용이며 실제와 다를 수 있습니다"}
+        </p>
       </div>
 
       {/* Main Tab + Dong filter (sticky) */}
@@ -628,6 +737,7 @@ export default function RealEstatePage() {
                 apt={apt}
                 isSelected={selectedApt === apt.id}
                 onClick={() => setSelectedApt(selectedApt === apt.id ? null : apt.id)}
+                txLoaded={txPricesLoaded}
               />
             ))}
             {filteredApts.length === 0 && (
