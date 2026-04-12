@@ -5,8 +5,9 @@
 const API_KEY = process.env.NEXT_PUBLIC_MOLIT_API_KEY ?? "";
 const BASE = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade";
 
-// 검단신도시(신도심) 법정동만 포함 — 구도심(검단동·오류동·금곡동) 제외
-const GEUMDAN_SINDOSI_DONGS = ["당하", "불로", "마전", "왕길", "대곡"];
+// 검단신도시 법정동 — 1지구(당하·불로·마전·왕길·대곡) + 원당지구 + 아라지구(백석)
+// 구도심(검단동·오류동·금곡동) 제외
+const GEUMDAN_SINDOSI_DONGS = ["당하", "불로", "마전", "왕길", "대곡", "원당", "백석"];
 
 export interface AptTransaction {
   aptName: string;

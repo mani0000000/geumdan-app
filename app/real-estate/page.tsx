@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp, TrendingDown, MapPin, Search,
   Plus, X, Phone, ChevronUp, ChevronDown, Star,
@@ -22,7 +22,9 @@ import { cn } from "@/lib/utils";
 import type { Apartment, MyHome, Listing, ListingType } from "@/lib/types";
 
 import { LEGAL_DONGS } from "@/lib/geumdan";
-const dongs = ["전체", ...LEGAL_DONGS];
+
+// 백석동 = 아라지구 (아라1동/아라2동 행정동 지역)
+const DONG_LABEL: Record<string, string> = { "백석동": "아라동(백석)" };
 type MainTab = "실거래" | "매물" | "전월세";
 type RentSubTab = "전체" | "전세" | "월세";
 
@@ -117,9 +119,25 @@ function AddHomeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
-      <div className="w-full bg-white rounded-t-3xl px-5 py-6 pb-10" onClick={(e) => e.stopPropagation()}>
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-5" />
+    <div
+      className="fixed inset-0 z-[300] flex items-end bg-black/40"
+      onPointerDown={onClose}
+    >
+      <div
+        className="w-full bg-white rounded-t-3xl px-5 py-6 pb-10"
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        {/* 핸들 + 닫기 */}
+        <div className="flex items-center justify-between mb-5">
+          <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto absolute left-1/2 -translate-x-1/2" />
+          <div className="w-10" />
+          <button
+            onPointerDown={(e) => { e.stopPropagation(); onClose(); }}
+            className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"
+          >
+            <X size={15} className="text-gray-500" />
+          </button>
+        </div>
         {step === "select" ? (
           <>
             <p className="text-[17px] font-bold text-gray-900 mb-4">단지 선택</p>
@@ -137,7 +155,9 @@ function AddHomeModal({
                   disabled={existing.includes(apt.id)}
                 >
                   <p className="text-[15px] font-semibold text-gray-900">{apt.name}</p>
-                  <p className="text-[13px] text-gray-400 mt-0.5">{apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대</p>
+                  <p className="text-[13px] text-gray-400 mt-0.5">
+                    {DONG_LABEL[apt.dong] ?? apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대
+                  </p>
                   {existing.includes(apt.id) && <span className="text-[12px] text-gray-400">이미 추가됨</span>}
                 </button>
               ))}
@@ -391,6 +411,12 @@ export default function RealEstatePage() {
     fetchLatestPriceIndex("kb").then(setKbIndex);
   }, []);
 
+  // 실제 아파트 데이터가 있는 동만 필터 탭에 노출 (동적 필터)
+  const availableDongs = useMemo(() => {
+    const dongsWithData = new Set(apartments.map((a) => a.dong));
+    return ["전체", ...LEGAL_DONGS.filter((d) => dongsWithData.has(d))];
+  }, [apartments]);
+
   const filteredApts = apartments.filter((a) => {
     if (activeDong !== "전체" && a.dong !== activeDong) return false;
     if (searchQuery && !a.name.includes(searchQuery) && !a.dong.includes(searchQuery)) return false;
@@ -562,9 +588,9 @@ export default function RealEstatePage() {
           </div>
         )}
 
-        {/* Dong filter */}
+        {/* Dong filter — 아파트 데이터가 있는 동만 표시 */}
         <div className="px-4 py-2 flex gap-2 overflow-x-auto scrollbar-hide">
-          {dongs.map((dong) => (
+          {availableDongs.map((dong) => (
             <button
               key={dong}
               onClick={() => setActiveDong(dong)}
@@ -573,7 +599,7 @@ export default function RealEstatePage() {
                 activeDong === dong ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"
               )}
             >
-              {dong}
+              {DONG_LABEL[dong] ?? dong}
             </button>
           ))}
         </div>

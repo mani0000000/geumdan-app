@@ -31,8 +31,8 @@ if (!API_KEY || !SB_URL || !SB_KEY) {
 const supabase  = createClient(SB_URL, SB_KEY);
 const LAWD_CD   = '28260';   // 인천광역시 서구
 const API_BASE  = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade';
-// 검단신도시(신도심) 법정동만 — 구도심(검단동·오류동·금곡동) 제외
-const GEUMDAN_SINDOSI_DONGS = ['당하', '불로', '마전', '왕길', '대곡'];
+// 검단신도시 법정동 — 1지구 + 원당지구 + 아라지구(백석) / 구도심(검단동·오류동·금곡동) 제외
+const GEUMDAN_SINDOSI_DONGS = ['당하', '불로', '마전', '왕길', '대곡', '원당', '백석'];
 
 // ── 파라미터 파싱 ──────────────────────────────────────────────
 const args     = process.argv.slice(2);
@@ -56,7 +56,17 @@ const APT_MASTER = [
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 33, sqm: 108 }] },
   { id: 'apt7', name: '검단파크자이 1단지',        dong: '마전동', households: 1237, built: 2021,
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 33, sqm: 108 }] },
-  { id: 'apt8', name: '검단 우미린 에코뷰',        dong: '당하동', households:  748, built: 2022,
+  { id: 'apt8',  name: '검단 우미린 에코뷰',        dong: '당하동', households:  748, built: 2022,
+    sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
+  // ── 원당지구 ───────────────────────────────────────────────────
+  { id: 'apt9',  name: '검단원당 서해그랑블',        dong: '원당동', households:  730, built: 2024,
+    sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
+  { id: 'apt10', name: '검단원당 중흥S클래스',        dong: '원당동', households: 1250, built: 2023,
+    sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
+  // ── 아라지구 (백석동) ──────────────────────────────────────────
+  { id: 'apt11', name: '검단아라 이편한세상',         dong: '백석동', households: 1080, built: 2023,
+    sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 33, sqm: 108 }] },
+  { id: 'apt12', name: '검단아라 파크자이',           dong: '백석동', households:  960, built: 2022,
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
 ];
 
@@ -76,6 +86,17 @@ const APT_NAME_MAP = {
   '검단파크자이':          'apt7',
   '검단우미린에코뷰':      'apt8',
   '검단우미린':            'apt8',
+  // 원당지구
+  '검단원당서해그랑블':    'apt9',
+  '서해그랑블검단원당':    'apt9',
+  '검단원당중흥S클래스':   'apt10',
+  '검단원당중흥':          'apt10',
+  '중흥S클래스검단원당':   'apt10',
+  // 아라지구 (백석동)
+  '검단아라이편한세상':    'apt11',
+  '이편한세상검단아라':    'apt11',
+  '검단아라파크자이':      'apt12',
+  '파크자이검단아라':      'apt12',
 };
 
 function normalizeAptName(name) {
