@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-12T07:02:05.943Z",
+  "fetchedAt": "2026-04-12T09:35:54.986Z",
   "count": 40,
   "articles": [
     {
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-15",
+      "id": "gr1-16",
       "title": "내 집 앞 역 유치 전쟁…5호선 김포·검단 연장 ‘추가 역사’ 쟁탈전 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -93,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-28",
+      "id": "gr2-34",
       "title": "김진규 검단구청장 예비후보, 인천 서구 당하동 싱크홀 현장 안전 점검 실시 - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -102,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-22",
+      "id": "gr3-21",
       "title": "인천 검단·옹진·강화 교통지형 개편…2.5조 투입 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-11",
       "title": "검단 아라역 ‘막힌 길’ 뚫는다...인천서구의회 현장 대응 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -138,16 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-5",
-      "title": "인천시, 교통 소외 지역 '검단·강화·옹진' 도로망 대대적 확충 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-04-10T04:08:25.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE1Pak5RdWgxVV96ZWRpb2R5dVRaNlZFbnhUdVFSVU84ak5Tdi1mZFZ1TXpfOGlFMnN6T28zdnhOcy1UZGpGZG9iRjZ0aTJZQi16ZnZLVg?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-22",
+      "id": "gr2-26",
       "title": "인천서구의회, 검단 교통난 해법 찾기…아라역 현장 점검 - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -165,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-12",
+      "id": "gr1-14",
       "title": "인천 서북부 교통지형 ‘대전환’…검단·강화·옹진 도로망에 2.5조 투입 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -174,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-65",
+      "id": "gr2-74",
       "title": "인천시, 올해부터 검단·옹진·강화 23개 도로 순차 개통 - 이데일리",
       "summary": "",
       "source": "이데일리",
@@ -183,16 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-16",
-      "title": "김진규 검단구청장 예비후보, ‘검단e음’ 공약··· “지역 내 소비 살린다” - 인천투데이",
-      "summary": "",
-      "source": "인천투데이",
-      "publishedAt": "2026-04-10T02:22:47.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBKMktNeVdqcGNybjA1QmdLamVnRWowU283S0E4QVo1REVadlV3dktZLUdXZU52VWlTYjlDRFd2VWpQZ2VhVWJ5RldrZ000eU81eDVWZWxLS0VCVEhxaklRVDJhbnV3TlAwQWZ1eUFCdWo?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-17",
+      "id": "gr3-14",
       "title": "인천시, 2조 5000억 투입해 서북부 도로망 대개편…검단·강화·옹진 교통지형 바뀐다 - 아주경제",
       "summary": "",
       "source": "아주경제",
@@ -219,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-34",
+      "id": "gr2-39",
       "title": "인천 서북부와 강화·옹진 도로망 확충…2조5000억원 투입 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -237,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-19",
+      "id": "gr3-18",
       "title": "인천 서북부·도서지역 도로망 대전환…2조5천억 투입 ‘교통지도 바뀐다’ - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -264,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-43",
+      "id": "gr2-48",
       "title": "인천 검단, 강화·옹진 교통 지형 확 바뀐다 - 데일리안",
       "summary": "",
       "source": "데일리안",
@@ -282,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-3",
+      "id": "gr3-4",
       "title": "인천 서북부 도로망 대전환…검단·강화·옹진 ‘교통지도’ 바뀐다 - 영종뉴스",
       "summary": "",
       "source": "영종뉴스",
@@ -291,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-6",
+      "id": "gr1-12",
       "title": "인천시, 검단·강화·옹진 도로망 확충…2조5천억원 투입 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -300,12 +282,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "인천 서구, 검단구 출범 대비 본예산 편성 교육 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
       "publishedAt": "2026-04-09T14:12:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5pTkVTcUFKQS1hTGtWUWp4em1wdzFCVmdZZlFwV3VVeThHRXZPQnBmVFhoUjJhTkc0NkY0eTJnNVJmTEh6RUVoOXNuN3FpdzA5NzJfX3FVZFJCeVl2YnF0aGpHakkxMW1mOXNR?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-3",
+      "title": "신설 검단구 '지역자원시설세' 혜택 받는다 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-09T11:20:04.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE81ei0zbGQ5UkNJaHl3LTN2OW1fT1Y5OHNCQ19IcDZMV3dwOXVuX2RCUUh4a3J6aVhQcllKMi12ZldVY2RCNFdZRXpfV1hQOHY3Vmw3Yw?oc=5",
       "type": "뉴스"
     },
     {
@@ -318,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-20",
+      "id": "gr2-25",
       "title": "인천 서구, 검단구 출범 대비 본예산 편성 교육 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -327,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-24",
       "title": "서구, 7월 검단구 출범 앞두고 '예산 로드맵' 본격 가동 - 포커스인천",
       "summary": "",
       "source": "포커스인천",
@@ -336,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-21",
+      "id": "gr2-12",
       "title": "김진규 인천 검단구청장 예비후보…“베드타운 이미지 벗고 AI 기반 자족도시 만들 것” - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -360,6 +351,15 @@
       "source": "B world",
       "publishedAt": "2026-04-09T07:04:11.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBEajJKR29wcURIWG1TX2U2RlVES3ktbnhRLTBvSHVmb0h0SXE3UkdOejhPaGhIcVJjN3Q1NGZBSldJYU82MC1lUXAwbWZuRlNHbUpwSVhzMzQ2RWpDUjRkeS0yLXlTcWtyaHlzWWhtTGk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-8",
+      "title": "인천 서구, 검단구 출범 대비 '예산 로드맵' 가동 - 뉴시스",
+      "summary": "",
+      "source": "뉴시스",
+      "publishedAt": "2026-04-09T06:45:45.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFA0eDB3YXpyWUI3dTR6X0s5ZGxuY3dDbFJTdERxLURhUExqR3RreWljc0gxYjd5eGd5Z1dyTVNtT3Z5d2YxUFZMTW9FMmszdFhxYlRVT0wzbkJCN1V0VW55VdIBeEFVX3lxTE5MU1RjbkFwQ3p0aUNuWktwSnMzWjU0dURfQkRVdTEyX2pyWGEtWW1JWmtOcVdPVWt4SlFGWEJjaXdxMGdZemRCc1FnYnB5TEN6SVVfRzktSllWTngweUxZUVlJRmFRYXRLa2tEMmZGRFlpT0JMcGJTaA?oc=5",
       "type": "뉴스"
     }
   ]
