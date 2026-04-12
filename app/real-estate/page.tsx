@@ -25,8 +25,24 @@ import { LEGAL_DONGS } from "@/lib/geumdan";
 
 // 백석동 = 아라지구 (아라1동/아라2동 행정동 지역)
 const DONG_LABEL: Record<string, string> = { "백석동": "아라동(백석)" };
-type MainTab = "실거래" | "매물" | "전월세";
+type MainTab = "매매" | "전월세";
 type RentSubTab = "전체" | "전세" | "월세";
+
+/** 30평대(30~39평) 우선, 없으면 마지막 사이즈 */
+function getDefault30s(sizes: Apartment["sizes"]) {
+  return sizes.find((s) => s.pyeong >= 30 && s.pyeong < 40) ?? sizes[sizes.length - 1];
+}
+/** 전세 시세 추정 (매매가 × 전세가율 60%) */
+function estJeonse(avgPrice: number) {
+  return Math.round(avgPrice * 0.60);
+}
+/** 월세 추정: 보증금 5,000만 + 월 (전세-5000) × 연6.5% / 12 */
+function estWolse(avgPrice: number) {
+  const jeonse = estJeonse(avgPrice);
+  const deposit = 5000;
+  const monthly = Math.max(30, Math.round((jeonse - deposit) * 0.065 / 12));
+  return { deposit, monthly };
+}
 
 // ---------- MOLIT 아파트명 → apt ID 매핑 (실거래 데이터 병합용) ----------
 const APT_NAME_MAP: Record<string, string> = {
@@ -321,14 +337,18 @@ function AddHomeModal({
   );
 }
 
-// ---------- Apartment Card (실거래 tab) ----------
-function ApartmentCard({ apt, isSelected, onClick, txLoaded }: {
-  apt: Apartment; isSelected: boolean; onClick: () => void; txLoaded: boolean;
+// ---------- Apartment Card ----------
+function ApartmentCard({ apt, isSelected, onToggle, txLoaded, tab }: {
+  apt: Apartment; isSelected: boolean; onToggle: () => void; txLoaded: boolean; tab: MainTab;
 }) {
-  const mainSize = apt.sizes[0];
-  const history = mainSize.priceHistory;
+  const [activePyeong, setActivePyeong] = useState(() => getDefault30s(apt.sizes).pyeong);
+
+  const sz = apt.sizes.find((s) => s.pyeong === activePyeong) ?? apt.sizes[0];
+  const history = sz.priceHistory;
   const prev = history[history.length - 2]?.price ?? history[history.length - 1].price;
   const curr = history[history.length - 1].price;
+  const jeonse = estJeonse(sz.avgPrice);
+  const wolse = estWolse(sz.avgPrice);
 
   return (
     <div
@@ -336,65 +356,137 @@ function ApartmentCard({ apt, isSelected, onClick, txLoaded }: {
         "bg-white rounded-2xl overflow-hidden transition-all shadow-sm",
         isSelected && "ring-2 ring-blue-500"
       )}
-      onClick={onClick}
     >
-      <div className="px-4 py-4">
+      <div className="px-4 py-4" onClick={onToggle}>
+        {/* 헤더: 단지명 + 대표 시세 */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0 pr-2">
-            <p className="text-[16px] font-bold text-gray-900">{apt.name}</p>
-            <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-              <MapPin size={12} className="text-gray-400 shrink-0" />
-              <span className="text-[13px] text-gray-400">{apt.dong}</span>
+            <p className="text-[15px] font-bold text-gray-900 leading-snug">{apt.name}</p>
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              <MapPin size={11} className="text-gray-400 shrink-0" />
+              <span className="text-[12px] text-gray-400">{apt.dong}</span>
               <span className="text-gray-200">·</span>
-              <span className="text-[13px] text-gray-400">{apt.built}년</span>
+              <span className="text-[12px] text-gray-400">{apt.built}년</span>
               <span className="text-gray-200">·</span>
-              <span className="text-[13px] text-gray-400">{apt.households.toLocaleString()}세대</span>
+              <span className="text-[12px] text-gray-400">{apt.households.toLocaleString()}세대</span>
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-[17px] font-black text-emerald-600">
-              {formatPrice(apt.recentDeal?.price ?? 0)}
-            </p>
-            <p className="text-[12px] text-gray-400">{apt.recentDeal?.pyeong}평 실거래</p>
+            {tab === "매매" ? (
+              <>
+                <p className="text-[18px] font-black text-emerald-600">{formatPrice(sz.avgPrice)}</p>
+                <p className="text-[11px] text-gray-400">
+                  {activePyeong}평 {txLoaded ? "실거래 기준" : "참고 시세"}
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-[18px] font-black text-blue-600">{formatPrice(jeonse)}</p>
+                <p className="text-[11px] text-gray-400">{activePyeong}평 전세 추정</p>
+              </>
+            )}
           </div>
         </div>
 
-        <div className="flex gap-2 mt-3 flex-wrap">
-          {apt.sizes.map((sz, i) => (
-            <div key={i} className="bg-gray-50 rounded-xl px-3 py-2 text-center min-w-[72px]">
-              <div className="flex items-center justify-center gap-1">
-                <p className="text-[13px] font-semibold text-gray-700">{sz.pyeong}평</p>
-                {txLoaded && (
-                  <span className="text-[9px] font-bold px-1 py-0.5 rounded bg-blue-100 text-blue-600 leading-none">KB시세</span>
-                )}
-              </div>
-              <p className="text-[12px] text-emerald-600 font-bold">{formatPrice(sz.avgPrice)}</p>
-            </div>
+        {/* 평형 선택 칩 */}
+        <div className="flex gap-1.5 mt-3" onClick={(e) => e.stopPropagation()}>
+          {apt.sizes.map((s) => (
+            <button
+              key={s.pyeong}
+              onClick={() => setActivePyeong(s.pyeong)}
+              className={cn(
+                "h-7 px-3 rounded-full text-[12px] font-semibold transition-colors",
+                activePyeong === s.pyeong
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-100 text-gray-600"
+              )}
+            >
+              {s.pyeong}평
+            </button>
           ))}
+          {txLoaded && (
+            <span className="ml-1 self-center text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-600">
+              실거래
+            </span>
+          )}
         </div>
 
+        {/* 시세 정보 행 */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          {tab === "매매" ? (
+            <>
+              <div className="bg-emerald-50 rounded-xl px-3 py-2">
+                <p className="text-[11px] text-emerald-600 font-medium">매매 시세</p>
+                <p className="text-[14px] font-black text-emerald-700 mt-0.5">{formatPrice(sz.avgPrice)}</p>
+              </div>
+              <div className="bg-blue-50 rounded-xl px-3 py-2">
+                <p className="text-[11px] text-blue-500 font-medium">전세 (추정)</p>
+                <p className="text-[14px] font-black text-blue-700 mt-0.5">{formatPrice(jeonse)}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="bg-blue-50 rounded-xl px-3 py-2">
+                <p className="text-[11px] text-blue-500 font-medium">전세 시세</p>
+                <p className="text-[14px] font-black text-blue-700 mt-0.5">{formatPrice(jeonse)}</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl px-3 py-2">
+                <p className="text-[11px] text-purple-500 font-medium">월세 (추정)</p>
+                <p className="text-[13px] font-black text-purple-700 mt-0.5">
+                  {wolse.deposit.toLocaleString()} / 월 {wolse.monthly}만
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* 실거래 최근 건 */}
+        {apt.recentDeal && (
+          <div className="mt-2.5 flex items-center gap-1.5 text-[12px] text-gray-400">
+            <span className="text-gray-300">│</span>
+            <span>최근거래</span>
+            <span className="font-semibold text-gray-700">{formatPrice(apt.recentDeal.price)}</span>
+            <span>{apt.recentDeal.pyeong}평 {apt.recentDeal.floor}층 · {apt.recentDeal.date}</span>
+          </div>
+        )}
+
+        {/* 하단 변동률 + 차트 토글 */}
         <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
           <div className="flex items-center gap-1.5">
-            <span className="text-[13px] text-gray-500">전월 대비</span>
+            <span className="text-[12px] text-gray-400">전월 대비</span>
             <PriceChangeTag curr={curr} prev={prev} />
           </div>
-          <div className="flex items-center gap-1 text-[13px] text-gray-400">
-            {isSelected ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          <div className="flex items-center gap-1 text-[12px] text-gray-400">
+            {isSelected ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
             <span>시세 추이</span>
           </div>
         </div>
       </div>
 
+      {/* 시세 추이 차트 */}
       {isSelected && (
         <div className="border-t border-gray-100 px-2 pt-2 pb-3">
-          <p className="text-[13px] font-semibold text-gray-600 px-2 mb-2">시세 추이 ({mainSize.pyeong}평)</p>
+          <p className="text-[13px] font-semibold text-gray-600 px-2 mb-1">
+            {activePyeong}평 {tab === "매매" ? "매매" : "전세"} 시세 추이
+          </p>
           <ResponsiveContainer width="100%" height={120}>
-            <LineChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+            <LineChart
+              data={tab === "매매"
+                ? history
+                : history.map((h) => ({ ...h, price: estJeonse(h.price) }))
+              }
+              margin={{ top: 5, right: 10, left: -20, bottom: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
               <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#9CA3AF" }} tickFormatter={(v) => v.slice(2)} />
               <YAxis tick={{ fontSize: 10, fill: "#9CA3AF" }} tickFormatter={(v) => `${(v / 10000).toFixed(0)}억`} />
               <Tooltip content={<CustomTooltip />} />
-              <Line type="monotone" dataKey="price" stroke="#10B981" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#10B981" }} />
+              <Line
+                type="monotone" dataKey="price"
+                stroke={tab === "매매" ? "#10B981" : "#3B82F6"}
+                strokeWidth={2} dot={false}
+                activeDot={{ r: 4, fill: tab === "매매" ? "#10B981" : "#3B82F6" }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -490,7 +582,7 @@ export default function RealEstatePage() {
   const [txPricesLoaded, setTxPricesLoaded] = useState(false);
   const [myHomes, setMyHomes] = useState<MyHome[]>(initialMyHomes);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [mainTab, setMainTab] = useState<MainTab>("실거래");
+  const [mainTab, setMainTab] = useState<MainTab>("매매");
   const [rentSub, setRentSub] = useState<RentSubTab>("전체");
   const [activeDong, setActiveDong] = useState("전체");
   const [searchQuery, setSearchQuery] = useState("");
@@ -528,7 +620,7 @@ export default function RealEstatePage() {
   const filteredListings = listings.filter((l) => {
     if (activeDong !== "전체" && l.dong !== activeDong) return false;
     if (searchQuery && !l.aptName.includes(searchQuery)) return false;
-    if (mainTab === "매물" && l.type !== "매매") return false;
+    if (mainTab === "매매" && l.type !== "매매") return false;
     if (mainTab === "전월세") {
       if (rentSub === "전세" && l.type !== "전세") return false;
       if (rentSub === "월세" && l.type !== "월세") return false;
@@ -665,7 +757,7 @@ export default function RealEstatePage() {
       <div className="bg-white sticky top-[56px] z-30 border-b border-gray-100">
         {/* Main tabs */}
         <div className="flex px-4 pt-3">
-          {(["실거래", "매물", "전월세"] as MainTab[]).map((tab) => (
+          {(["매매", "전월세"] as MainTab[]).map((tab) => (
             <button
               key={tab}
               onClick={() => setMainTab(tab)}
@@ -729,25 +821,29 @@ export default function RealEstatePage() {
 
       {/* Content */}
       <div className="px-4 pt-3 space-y-3">
-        {mainTab === "실거래" && (
+        {/* 단지 시세 카드 (매매·전월세 공통) */}
+        {filteredApts.map((apt) => (
+          <ApartmentCard
+            key={apt.id}
+            apt={apt}
+            isSelected={selectedApt === apt.id}
+            onToggle={() => setSelectedApt(selectedApt === apt.id ? null : apt.id)}
+            txLoaded={txPricesLoaded}
+            tab={mainTab}
+          />
+        ))}
+        {filteredApts.length === 0 && (
+          <div className="py-12 text-center">
+            <p className="text-2xl mb-2">🏠</p>
+            <p className="text-gray-500 text-sm">검색된 단지가 없습니다</p>
+          </div>
+        )}
+
+        {/* 매매 탭 전용: 이번달 실거래 + 매물 */}
+        {mainTab === "매매" && (
           <>
-            {filteredApts.map((apt) => (
-              <ApartmentCard
-                key={apt.id}
-                apt={apt}
-                isSelected={selectedApt === apt.id}
-                onClick={() => setSelectedApt(selectedApt === apt.id ? null : apt.id)}
-                txLoaded={txPricesLoaded}
-              />
-            ))}
-            {filteredApts.length === 0 && (
-              <div className="py-16 text-center">
-                <p className="text-2xl mb-2">🏠</p>
-                <p className="text-gray-500 text-sm">검색된 단지가 없습니다</p>
-              </div>
-            )}
             {recentTx.length > 0 && (
-              <div className="bg-white rounded-2xl overflow-hidden mt-1">
+              <div className="bg-white rounded-2xl overflow-hidden">
                 <div className="px-4 pt-4 pb-2 flex items-center gap-2">
                   <TrendingUp size={15} className="text-emerald-600" />
                   <p className="text-[15px] font-bold text-gray-900">이번 달 실거래</p>
@@ -758,7 +854,9 @@ export default function RealEstatePage() {
                     <div key={i} className="px-4 py-3 flex items-center justify-between">
                       <div>
                         <p className="text-[14px] font-semibold text-gray-900">{tx.aptName}</p>
-                        <p className="text-[12px] text-gray-400 mt-0.5">{tx.dong} · {tx.pyeong}평 · {tx.floor}층 · {tx.dealDate}</p>
+                        <p className="text-[12px] text-gray-400 mt-0.5">
+                          {tx.dong} · {tx.pyeong}평 · {tx.floor}층 · {tx.dealDate}
+                        </p>
                       </div>
                       <p className="text-[14px] font-bold text-emerald-600">{formatPrice(tx.price)}</p>
                     </div>
@@ -766,21 +864,47 @@ export default function RealEstatePage() {
                 </div>
               </div>
             )}
+
+            {/* 매매 매물 */}
+            {filteredListings.length > 0 && (
+              <div>
+                <p className="text-[13px] font-semibold text-gray-500 pt-1 pb-2">
+                  매매 매물 · 총 {filteredListings.length}건
+                </p>
+                <div className="space-y-3">
+                  {filteredListings.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onCall={() => handleCall(listing.agencyPhone)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
-        {(mainTab === "매물" || mainTab === "전월세") && (
+        {/* 전월세 탭 전용: 전월세 매물 */}
+        {mainTab === "전월세" && (
           <>
-            <p className="text-[13px] text-gray-400 pt-1">총 {filteredListings.length}건</p>
-            {filteredListings.map((listing) => (
-              <ListingCard
-                key={listing.id}
-                listing={listing}
-                onCall={() => handleCall(listing.agencyPhone)}
-              />
-            ))}
-            {filteredListings.length === 0 && (
-              <div className="py-16 text-center">
+            {filteredListings.length > 0 ? (
+              <div>
+                <p className="text-[13px] font-semibold text-gray-500 pt-1 pb-2">
+                  전월세 매물 · 총 {filteredListings.length}건
+                </p>
+                <div className="space-y-3">
+                  {filteredListings.map((listing) => (
+                    <ListingCard
+                      key={listing.id}
+                      listing={listing}
+                      onCall={() => handleCall(listing.agencyPhone)}
+                    />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="py-8 text-center">
                 <p className="text-2xl mb-2">🏘️</p>
                 <p className="text-gray-500 text-sm">등록된 매물이 없습니다</p>
               </div>
