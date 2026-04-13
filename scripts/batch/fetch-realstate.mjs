@@ -60,13 +60,13 @@ const APT_MASTER = [
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
   // ── 원당지구 ───────────────────────────────────────────────────
   { id: 'apt9',  name: '검단신도시 푸르지오 더 베뉴',  dong: '원당동', households: 1540, built: 2021,
-    sizes: [{ pyeong: 24, sqm: 84 }, { pyeong: 34, sqm: 114 }] },
+    sizes: [{ pyeong: 30, sqm: 99 }, { pyeong: 34, sqm: 110 }, { pyeong: 41, sqm: 136 }] },
   { id: 'apt10', name: '검단 금호어울림 센트럴',        dong: '원당동', households: 1452, built: 2021,
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 113 }] },
   { id: 'apt13', name: '검단 호반써밋 1차',             dong: '원당동', households: 1168, built: 2021,
     sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 114 }] },
   { id: 'apt14', name: '검단신도시 디에트르 더힐',      dong: '원당동', households: 1417, built: 2022,
-    sizes: [{ pyeong: 24, sqm: 79 }, { pyeong: 34, sqm: 113 }] },
+    sizes: [{ pyeong: 30, sqm: 99 }, { pyeong: 33, sqm: 109 }, { pyeong: 40, sqm: 132 }] },
   { id: 'apt15', name: '검단신도시 예미지 트리플에듀',  dong: '원당동', households: 1249, built: 2022,
     sizes: [{ pyeong: 24, sqm: 84 }, { pyeong: 33, sqm: 109 }] },
   // ── 아라지구 (백석동) ──────────────────────────────────────────
