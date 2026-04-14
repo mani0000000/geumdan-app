@@ -63,16 +63,24 @@ function parseItems<T>(json: unknown): T[] {
   return Array.isArray(item) ? (item as T[]) : [item as T];
 }
 
+// 타임아웃 래퍼 — ms 이내 응답 없으면 reject
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+  ]);
+}
+
 // apis.data.go.kr는 CORS 헤더 미지원 → 3-way 병렬 레이스 (직접+프록시2개)
-// 직접 시도는 1.5s 타임아웃으로 CORS가 되는 환경이면 가장 빠르게 응답
+// 모든 경로에 4s 타임아웃 적용
 async function apiFetch<T>(path: string, params: Record<string, string>): Promise<T[]> {
   if (!API_KEY) return [];
   const targetUrl = `${BASE}${path}?${qs(params)}`;
 
   try {
     return await Promise.any([
-      // 1. 직접 (CORS 허용 환경 / 서버사이드용, 1.5s 타임아웃)
-      (async () => {
+      // 1. 직접 (CORS 허용 환경, 1.5s)
+      withTimeout((async () => {
         const ctrl = new AbortController();
         const tid = setTimeout(() => ctrl.abort(), 1500);
         try {
@@ -82,20 +90,37 @@ async function apiFetch<T>(path: string, params: Record<string, string>): Promis
           clearTimeout(tid);
           return data;
         } catch { clearTimeout(tid); throw new Error("direct failed"); }
-      })(),
-      // 2. allorigins.win 프록시
-      (async () => {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-        if (!res.ok) throw new Error(`allorigins ${res.status}`);
-        const j = await res.json();
-        return parseItems<T>(JSON.parse(j.contents as string));
-      })(),
-      // 3. corsproxy.io 프록시
-      (async () => {
-        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
-        if (!res.ok) throw new Error(`corsproxy ${res.status}`);
-        return parseItems<T>(await res.json());
-      })(),
+      })(), 2000),
+      // 2. allorigins.win 프록시 (4s)
+      withTimeout((async () => {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        try {
+          const res = await fetch(
+            `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+            { signal: ctrl.signal }
+          );
+          if (!res.ok) throw new Error(`allorigins ${res.status}`);
+          const j = await res.json();
+          clearTimeout(tid);
+          return parseItems<T>(JSON.parse(j.contents as string));
+        } catch { clearTimeout(tid); throw new Error("allorigins failed"); }
+      })(), 5000),
+      // 3. corsproxy.io 프록시 (4s)
+      withTimeout((async () => {
+        const ctrl = new AbortController();
+        const tid = setTimeout(() => ctrl.abort(), 4000);
+        try {
+          const res = await fetch(
+            `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+            { signal: ctrl.signal }
+          );
+          if (!res.ok) throw new Error(`corsproxy ${res.status}`);
+          const data = parseItems<T>(await res.json());
+          clearTimeout(tid);
+          return data;
+        } catch { clearTimeout(tid); throw new Error("corsproxy failed"); }
+      })(), 5000),
     ]);
   } catch { return []; }
 }
@@ -245,44 +270,16 @@ export async function fetchNearbyStops(
 }
 
 /**
- * 3km 반경 주변 정류장 조회
- * 중심 + 4방향(1.5km 오프셋)으로 5방향 병렬 쿼리 후 중복 제거
- * 각 방향에서 1km 반경 쿼리 → 합쳐서 약 3km 커버
+ * 1km 반경 주변 정류장 조회 (단일 쿼리, 빠름)
  */
 export async function fetchNearbyStopsWide(
   lat: number,
   lng: number,
 ): Promise<NearbyStop[]> {
-  // 1.5km 오프셋 (위도 1° ≈ 111km, 경도 1° ≈ 88km @37.5°N)
-  const LAT_OFF = 0.0135; // ~1.5km
-  const LNG_OFF = 0.0170; // ~1.5km
-  const points: [number, number][] = [
-    [lat, lng],
-    [lat + LAT_OFF, lng],
-    [lat - LAT_OFF, lng],
-    [lat, lng + LNG_OFF],
-    [lat, lng - LNG_OFF],
-  ];
-
-  const results = await Promise.all(
-    points.map(([la, lo]) => fetchNearbyStops(la, lo, "5"))
-  );
-
-  // 중복 제거: 실제 거리 기준으로 stationId 별 최소 거리 유지
-  const map = new Map<string, NearbyStop>();
-  for (const stops of results) {
-    for (const stop of stops) {
-      const realDist = haversineM(lat, lng, stop.lat, stop.lng);
-      const withRealDist = { ...stop, distanceM: Math.round(realDist) };
-      const existing = map.get(stop.stationId);
-      if (!existing || withRealDist.distanceM < existing.distanceM) {
-        map.set(stop.stationId, withRealDist);
-      }
-    }
-  }
-
-  return Array.from(map.values())
-    .filter(s => s.distanceM <= 3000)
+  const stops = await fetchNearbyStops(lat, lng, "5");
+  return stops
+    .map(s => ({ ...s, distanceM: Math.round(haversineM(lat, lng, s.lat, s.lng)) }))
+    .filter(s => s.distanceM <= 1500)
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 

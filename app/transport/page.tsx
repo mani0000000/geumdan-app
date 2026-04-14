@@ -17,7 +17,7 @@ import {
 import type { BusRoute } from "@/lib/types";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
 
-type Tab = "버스" | "지하철" | "즐겨찾기";
+type Tab = "버스" | "지하철";
 
 // 실시간 또는 목업 정류장을 통합하는 디스플레이 타입
 type DisplayStop = {
@@ -361,7 +361,8 @@ export default function TransportPage() {
       const nearby = await fetchNearbyStopsWide(lat, lng);
 
       if (nearby.length === 0) {
-        setApiStops([]);
+        // API 결과 없으면 목업 데이터 유지 (null = 목업 폴백)
+        setApiStops(null);
         setLoading(false);
         return;
       }
@@ -498,9 +499,6 @@ export default function TransportPage() {
     setFavSubways(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); saveFavSet("favSubways", n); return n; });
   }
 
-  const totalFavs = favStops.size + favRoutes.size + favSubways.size;
-
-  // ─── 즐겨찾기 탭 데이터 ─────────────────────────────────────
   const favStopList = stopsWithRoutes.filter(s => favStops.has(s.id));
   const favRouteList = stopsWithRoutes.flatMap(stop =>
     stop.routes
@@ -536,23 +534,18 @@ export default function TransportPage() {
 
       {/* 탭 */}
       <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6] flex">
-        {(["버스", "지하철", "즐겨찾기"] as Tab[]).map(t => (
+        {(["버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-11 text-[14px] font-semibold border-b-2 transition-colors relative ${
+            className={`flex-1 h-11 text-[14px] font-semibold border-b-2 transition-colors ${
               t === tab ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
             }`}>
-            {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "⭐ 즐겨찾기"}
-            {t === "즐겨찾기" && totalFavs > 0 && (
-              <span className="absolute -top-0.5 right-3 text-[10px] font-black bg-[#F04452] text-white w-4 h-4 rounded-full flex items-center justify-center">
-                {totalFavs}
-              </span>
-            )}
+            {t === "버스" ? "🚌 버스" : "🚇 지하철"}
           </button>
         ))}
       </div>
 
-      {/* ══ 즐겨찾기 위젯 (favorites 있을 때만) ══════════════════ */}
-      {totalFavs > 0 && (
+      {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
+      {tab === "버스" && (favStopList.length > 0 || favRouteList.length > 0) && (
         <div className="bg-white border-b border-[#F2F4F6]">
           <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
             <div className="flex items-center gap-1.5">
@@ -565,7 +558,6 @@ export default function TransportPage() {
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
-            {/* 즐겨찾기 노선 카드 */}
             {favRouteList.map(r => (
               <div key={`${r.stopId}::${r.id}`}
                 className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
@@ -579,7 +571,6 @@ export default function TransportPage() {
                 <ArrivalBadge min={r.arrivalMin} live={isLive} />
               </div>
             ))}
-            {/* 즐겨찾기 정류장 카드 */}
             {favStopList.map(stop => (
               <div key={stop.id}
                 className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
@@ -594,23 +585,31 @@ export default function TransportPage() {
                       <span className="text-white text-[10px] font-bold">{r.routeNo}</span>
                     </div>
                   ))}
-                  {stop.routes.length === 0 && (
-                    <span className="text-[10px] text-[#B0B8C1]">조회 중...</span>
-                  )}
                 </div>
               </div>
             ))}
-            {/* 즐겨찾기 지하철 카드 */}
+          </div>
+        </div>
+      )}
+
+      {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
+      {tab === "지하철" && favSubwayList.length > 0 && (
+        <div className="bg-white border-b border-[#F2F4F6]">
+          <div className="flex items-center px-4 pt-3 pb-1.5 gap-1.5">
+            <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
+            <span className="text-[12px] font-bold text-[#4E5968]">즐겨찾기</span>
+          </div>
+          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favSubwayList.map(st => (
               <div key={st.id}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[140px] border border-[#F2F4F6]">
                 <div className="flex items-center gap-1 mb-1">
-                  <Train size={10} style={{ color: st.lineColor }} className="shrink-0" />
-                  <span className="text-[11px] font-bold text-[#191F28] truncate">{st.name}</span>
+                  <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
+                  <span className="text-[12px] font-bold text-[#191F28] truncate">{st.name}</span>
                 </div>
-                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-1.5"
                   style={{ background: st.lineColor }}>{st.line}</span>
-                <p className="text-[10px] text-[#3182F6] font-semibold">{distLabel(st.distM)}</p>
+                <p className="text-[11px] text-[#3182F6] font-semibold">{distLabel(st.distM)}</p>
               </div>
             ))}
           </div>
@@ -634,13 +633,7 @@ export default function TransportPage() {
       {tab === "버스" && (
         <div className="px-4 space-y-3">
           {(loading || refreshing) && !apiStops ? (
-            <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
-          ) : isLive && apiStops?.length === 0 ? (
-            <div className="bg-white rounded-2xl px-4 py-8 text-center">
-              <Bus size={32} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] font-bold text-[#8B95A1]">근처 정류장 없음</p>
-              <p className="text-[12px] text-[#B0B8C1] mt-1">1km 이내 버스 정류장을 찾지 못했습니다</p>
-            </div>
+            <><SkeletonStop /><SkeletonStop /></>
           ) : (
             stopsWithRoutes.map((stop, idx) => {
               const open = expanded === stop.id;
@@ -783,130 +776,6 @@ export default function TransportPage() {
             <p className="text-[14px] font-bold text-[#3182F6]">🚇 검단 2호선 연장 예정</p>
             <p className="text-[13px] text-[#3182F6]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
           </div>
-        </div>
-      )}
-
-      {/* ══ 즐겨찾기 탭 ══════════════════════════════════════ */}
-      {tab === "즐겨찾기" && (
-        <div className="px-4 space-y-3">
-          {totalFavs === 0 ? (
-            <div className="bg-white rounded-2xl py-16 flex flex-col items-center gap-3">
-              <Star size={32} className="text-[#E5E8EB]" />
-              <p className="text-[15px] font-medium text-[#8B95A1]">즐겨찾기가 없습니다</p>
-              <p className="text-[13px] text-[#B0B8C1] text-center leading-relaxed">
-                버스 탭에서 정류장/노선 ★ 버튼으로<br />즐겨찾기를 추가하세요
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* 즐겨찾기 정류장 */}
-              {favStopList.length > 0 && (
-                <div>
-                  <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide mb-2">📍 즐겨찾는 정류장</p>
-                  {favStopList.map(stop => (
-                    <div key={stop.id} className="bg-white rounded-2xl overflow-hidden mb-2.5">
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-[#F2F4F6]">
-                        <div className="flex items-center gap-2">
-                          <span className="text-[15px] font-bold text-[#191F28]">{stop.name}</span>
-                          <span className="text-[11px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <Navigation size={11} className="text-[#3182F6]" />
-                          <span className="text-[13px] font-semibold text-[#3182F6]">{distLabel(stop.distM)}</span>
-                          <button onClick={refresh}
-                            className="ml-1 bg-[#EBF3FE] rounded-lg px-2.5 py-1 active:opacity-60">
-                            <RefreshCw size={12} className={`text-[#3182F6] ${refreshing ? "animate-spin" : ""}`} />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-3 space-y-2">
-                        {stop.routes.slice(0, 3).map(r => (
-                          <div key={r.id} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-2.5">
-                            <div className="flex items-center gap-2">
-                              <div className="bg-[#3182F6] rounded-lg px-2 py-0.5 min-w-[34px] text-center">
-                                <span className="text-white text-[13px] font-black">{r.routeNo}</span>
-                              </div>
-                              <div>
-                                <span className="text-[13px] font-medium text-[#191F28]">{r.destination} 방면</span>
-                                {r.isExpress && <span className="ml-1.5 text-[11px] text-[#E65100] font-bold">급행</span>}
-                                <p className="text-[11px] text-[#8B95A1]">{r.remainingStops}정류장 전</p>
-                              </div>
-                            </div>
-                            <ArrivalBadge min={r.arrivalMin} live={isLive} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* 즐겨찾기 노선 */}
-              {favRouteList.length > 0 && (
-                <div>
-                  <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide mb-2">🚌 즐겨찾는 버스 노선</p>
-                  <div className="bg-white rounded-2xl p-3 space-y-2">
-                    {favRouteList.map(r => (
-                      <div key={`${r.stopId}::${r.id}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="bg-[#3182F6] rounded-lg px-2.5 py-1 min-w-[38px] text-center">
-                            <span className="text-white text-[14px] font-black">{r.routeNo}</span>
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-1">
-                              <p className="text-[14px] font-semibold text-[#191F28]">{r.destination} 방면</p>
-                              {r.isExpress && <span className="text-[11px] text-[#E65100] font-bold">급행</span>}
-                            </div>
-                            <p className="text-[12px] text-[#8B95A1]">{r.stopName}</p>
-                          </div>
-                        </div>
-                        <ArrivalBadge min={r.arrivalMin} live={isLive} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 즐겨찾기 지하철 */}
-              {favSubwayList.length > 0 && (
-                <div>
-                  <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide mb-2">🚇 즐겨찾는 지하철역</p>
-                  {favSubwayList.map(st => (
-                    <div key={st.id} className="bg-white rounded-2xl overflow-hidden mb-2.5">
-                      <div className="px-4 py-3 flex items-center gap-3 border-b border-[#F2F4F6]">
-                        <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                          style={{ background: st.lineColor + "20" }}>
-                          <Train size={16} style={{ color: st.lineColor }} />
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-[15px] font-bold text-[#191F28]">{st.name}</span>
-                            <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full text-white"
-                              style={{ background: st.lineColor }}>{st.line}</span>
-                          </div>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <Navigation size={10} className="text-[#3182F6]" />
-                            <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(st.distM)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="p-3 space-y-2">
-                        {st.arrivals.map((a, i) => (
-                          <div key={i} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-2.5">
-                            <div>
-                              <p className="text-[13px] font-semibold text-[#191F28]">{a.direction}</p>
-                              <p className="text-[11px] text-[#8B95A1]">열차 {a.trainNo}</p>
-                            </div>
-                            <ArrivalBadge min={a.arrivalMin} live={false} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
         </div>
       )}
 
