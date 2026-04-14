@@ -438,21 +438,40 @@ function SiseTab() {
   const [myAptId, setMyAptId] = useState<string | null>(() =>
     typeof window !== "undefined" ? localStorage.getItem("myAptId") : null
   );
+  const [myAptSzIdx, setMyAptSzIdx] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const v = localStorage.getItem("myAptSzIdx");
+      return v !== null ? parseInt(v, 10) : 0;
+    }
+    return 0;
+  });
   const [showPicker, setShowPicker] = useState(false);
+  const [pickerAptId, setPickerAptId] = useState<string | null>(null);
   const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+  const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
+  const mySz = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
 
-  function pickApt(id: string) {
+  function pickApt(id: string, szIdx: number) {
     setMyAptId(id);
-    if (typeof window !== "undefined") localStorage.setItem("myAptId", id);
+    setMyAptSzIdx(szIdx);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("myAptId", id);
+      localStorage.setItem("myAptSzIdx", String(szIdx));
+    }
     setShowPicker(false);
+    setPickerAptId(null);
   }
   function clearApt() {
     setMyAptId(null);
-    if (typeof window !== "undefined") localStorage.removeItem("myAptId");
+    setMyAptSzIdx(0);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("myAptId");
+      localStorage.removeItem("myAptSzIdx");
+    }
   }
 
   // 내 집 가격 변동
-  const myH = myApt?.sizes[0].priceHistory ?? [];
+  const myH = mySz?.priceHistory ?? [];
   const myCurr = myH[myH.length - 1]?.price ?? 0;
   const myPrev = myH[myH.length - 2]?.price ?? myCurr;
   const myDiff = myCurr - myPrev;
@@ -519,7 +538,7 @@ function SiseTab() {
               <div className="flex items-center justify-between">
                 <div className="min-w-0 flex-1 pr-2">
                   <p className="text-[15px] font-bold text-[#191F28] truncate">{myApt.name}</p>
-                  <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {myApt.recentDeal?.pyeong}평</p>
+                  <p className="text-[12px] text-[#8B95A1] mt-0.5">{myApt.dong} · {mySz?.pyeong}평</p>
                 </div>
                 <div className="text-right shrink-0 flex items-center gap-2">
                   <div>
@@ -848,7 +867,7 @@ function SiseTab() {
 
       {/* ── 아파트 선택 모달 ── */}
       {showPicker && (
-        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowPicker(false)}>
+        <div className="fixed inset-0 z-[300] flex items-end" onClick={() => { setShowPicker(false); setPickerAptId(null); }}>
           <div className="absolute inset-0 bg-black/40" />
           <div className="relative z-10 w-full max-w-[430px] mx-auto bg-white rounded-t-3xl max-h-[70vh] flex flex-col"
             onClick={e => e.stopPropagation()}>
@@ -859,21 +878,48 @@ function SiseTab() {
             </div>
             <div className="overflow-y-auto flex-1 overscroll-contain rounded-b-3xl">
               {apartments.map(apt => {
-                const h = apt.sizes[0].priceHistory;
-                const curr = h[h.length - 1]?.price ?? 0;
                 const isSelected = myAptId === apt.id;
+                const isExpanded = pickerAptId === apt.id;
+                const displaySzIdx = isSelected ? mySzIdx : est30sIdx(apt.sizes);
+                const displaySz = apt.sizes[displaySzIdx] ?? apt.sizes[0];
+                const curr = displaySz.priceHistory[displaySz.priceHistory.length - 1]?.price ?? 0;
                 return (
-                  <button key={apt.id} onClick={() => pickApt(apt.id)}
-                    className={`w-full px-4 py-3.5 flex items-center justify-between border-b border-[#F2F4F6] active:bg-[#F2F4F6] text-left ${isSelected ? "bg-[#EBF3FE]" : ""}`}>
-                    <div className="min-w-0 flex-1 pr-3">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[14px] font-semibold text-[#191F28] truncate">{apt.name}</p>
-                        {isSelected && <span className="shrink-0 text-[10px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">선택됨</span>}
+                  <div key={apt.id} className="border-b border-[#F2F4F6]">
+                    <button
+                      onClick={() => {
+                        if (apt.sizes.length === 1) { pickApt(apt.id, 0); return; }
+                        setPickerAptId(isExpanded ? null : apt.id);
+                      }}
+                      className={`w-full px-4 py-3.5 flex items-center justify-between text-left transition-colors ${isSelected ? "bg-[#EBF3FE]" : isExpanded ? "bg-[#F8FAFB]" : "active:bg-[#F2F4F6]"}`}>
+                      <div className="min-w-0 flex-1 pr-3">
+                        <div className="flex items-center gap-2">
+                          <p className="text-[14px] font-semibold text-[#191F28] truncate">{apt.name}</p>
+                          {isSelected && <span className="shrink-0 text-[10px] font-bold bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">{mySz?.pyeong}평</span>}
+                        </div>
+                        <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대</p>
                       </div>
-                      <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.built}년 · {apt.households.toLocaleString()}세대</p>
-                    </div>
-                    <p className="text-[15px] font-black text-emerald-600 shrink-0">{formatPrice(curr)}</p>
-                  </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <p className="text-[15px] font-black text-emerald-600">{formatPrice(curr)}</p>
+                        <ChevronDown size={14} className={`text-[#B0B8C1] transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="px-4 pb-3.5 pt-1 bg-[#F8FAFB] flex gap-2 flex-wrap">
+                        {apt.sizes.map((sz, i) => {
+                          const szCurr = sz.priceHistory[sz.priceHistory.length - 1]?.price ?? 0;
+                          const isActiveSz = isSelected && mySzIdx === i;
+                          return (
+                            <button key={i} onClick={() => pickApt(apt.id, i)}
+                              className={`flex flex-col items-center px-3.5 py-2 rounded-2xl border-2 transition-colors active:opacity-75 ${isActiveSz ? "border-[#3182F6] bg-[#EBF3FE]" : "border-[#E5E8EB] bg-white"}`}>
+                              <span className={`text-[13px] font-bold ${isActiveSz ? "text-[#3182F6]" : "text-[#191F28]"}`}>{sz.pyeong}평</span>
+                              <span className={`text-[11px] font-medium mt-0.5 ${isActiveSz ? "text-[#3182F6]" : "text-[#8B95A1]"}`}>{sz.sqm}㎡</span>
+                              <span className={`text-[12px] font-black mt-0.5 ${isActiveSz ? "text-[#3182F6]" : "text-emerald-600"}`}>{formatPrice(szCurr)}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
               <div className="h-6" />
