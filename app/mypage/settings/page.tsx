@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getUserSettings, updateUserSettings } from "@/lib/db/userdata";
 
 function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
@@ -24,6 +25,21 @@ export default function SettingsPage() {
   const [locationOn, setLocationOn] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
+  useEffect(() => {
+    getUserSettings().then(s => {
+      setPushAll(s.push_all);
+      setPushComment(s.push_comment);
+      setPushLike(s.push_like);
+      setPushNotice(s.push_notice);
+      setPushMarketing(s.push_marketing);
+      setLocationOn(s.location_on);
+    });
+  }, []);
+
+  function toggle(key: "push_all" | "push_comment" | "push_like" | "push_notice" | "push_marketing" | "location_on", value: boolean) {
+    updateUserSettings({ [key]: value });
+  }
+
   return (
     <div className="min-h-dvh bg-[#F2F4F6]">
       {/* Header */}
@@ -39,18 +55,33 @@ export default function SettingsPage() {
         <div className="bg-white">
           <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#8B95A1]">알림 설정</p>
           {[
-            { label: "전체 알림", sub: "모든 알림 on/off", value: pushAll, set: setPushAll },
-            { label: "댓글·답글 알림", sub: "내 글/댓글에 새 반응", value: pushComment, set: setPushComment },
-            { label: "좋아요 알림", sub: "내 글·댓글 좋아요", value: pushLike, set: setPushLike },
-            { label: "공지사항 알림", sub: "검단 라이프 공지", value: pushNotice, set: setPushNotice },
-            { label: "마케팅 알림", sub: "이벤트 및 혜택 소식", value: pushMarketing, set: setPushMarketing },
-          ].map(({ label, sub, value, set }, i, arr) => (
+            {
+              label: "전체 알림", sub: "모든 알림 on/off", value: pushAll,
+              onToggle: () => { const v = !pushAll; setPushAll(v); toggle("push_all", v); },
+            },
+            {
+              label: "댓글·답글 알림", sub: "내 글/댓글에 새 반응", value: pushComment,
+              onToggle: () => { const v = !pushComment; setPushComment(v); toggle("push_comment", v); },
+            },
+            {
+              label: "좋아요 알림", sub: "내 글·댓글 좋아요", value: pushLike,
+              onToggle: () => { const v = !pushLike; setPushLike(v); toggle("push_like", v); },
+            },
+            {
+              label: "공지사항 알림", sub: "검단 라이프 공지", value: pushNotice,
+              onToggle: () => { const v = !pushNotice; setPushNotice(v); toggle("push_notice", v); },
+            },
+            {
+              label: "마케팅 알림", sub: "이벤트 및 혜택 소식", value: pushMarketing,
+              onToggle: () => { const v = !pushMarketing; setPushMarketing(v); toggle("push_marketing", v); },
+            },
+          ].map(({ label, sub, value, onToggle }, i, arr) => (
             <div key={label} className={`flex items-center px-4 py-4 ${i !== arr.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
               <div className="flex-1">
                 <p className="text-[15px] text-[#191F28] font-medium">{label}</p>
                 <p className="text-[13px] text-[#8B95A1] mt-0.5">{sub}</p>
               </div>
-              <Toggle on={value} onToggle={() => set(!value)} />
+              <Toggle on={value} onToggle={onToggle} />
             </div>
           ))}
         </div>
@@ -63,7 +94,7 @@ export default function SettingsPage() {
               <p className="text-[15px] text-[#191F28] font-medium">위치 정보 사용</p>
               <p className="text-[13px] text-[#8B95A1] mt-0.5">버스·상가 내 위치 기반 서비스</p>
             </div>
-            <Toggle on={locationOn} onToggle={() => setLocationOn(!locationOn)} />
+            <Toggle on={locationOn} onToggle={() => { const v = !locationOn; setLocationOn(v); toggle("location_on", v); }} />
           </div>
           {[
             { label: "개인정보 처리방침", href: "#" },

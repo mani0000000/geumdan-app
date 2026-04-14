@@ -1,22 +1,31 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera } from "lucide-react";
-import { currentUser } from "@/lib/mockData";
+import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
 
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;
 
 export default function EditProfilePage() {
   const router = useRouter();
-  const [nickname, setNickname] = useState(currentUser.nickname);
-  const [dong, setDong] = useState(currentUser.dong);
+  const [nickname, setNickname] = useState("검단주민");
+  const [dong, setDong] = useState("당하동");
   const [intro, setIntro] = useState("검단에서 살고 있는 주민이에요 🏡");
+  const [level, setLevel] = useState("새싹");
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setNickname(p.nickname);
+      setDong(p.dong);
+      setLevel(p.level);
+    });
+  }, []);
 
   const save = async () => {
     setSaving(true);
-    await new Promise(r => setTimeout(r, 800));
+    await updateUserProfile({ nickname: nickname.trim(), dong });
     router.back();
   };
 
@@ -99,7 +108,7 @@ export default function EditProfilePage() {
           <div className="bg-[#EBF3FE] rounded-2xl px-4 py-4">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[14px] font-bold text-[#3182F6]">현재 레벨</p>
-              <span className="text-[13px] font-bold bg-[#3182F6] text-white px-2.5 py-0.5 rounded-full">{currentUser.level}</span>
+              <span className="text-[13px] font-bold bg-[#3182F6] text-white px-2.5 py-0.5 rounded-full">{level}</span>
             </div>
             <p className="text-[13px] text-[#3182F6]/80 leading-relaxed">
               글 작성, 댓글, 좋아요 활동으로 레벨이 올라가요.
