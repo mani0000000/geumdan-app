@@ -1,2 +1,2 @@
 :HL["/geumdan-app/_next/static/chunks/028sd59wqg_1_.css","style"]
-0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"mypage","param":null,"prefetchHints":0,"slots":{"children":{"name":"edit","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"1tW9OI1JL3ZnInGSKr6iX"}
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"mypage","param":null,"prefetchHints":0,"slots":{"children":{"name":"edit","param":null,"prefetchHints":0,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}}}}}},"staleTime":300,"buildId":"qkm7n8Oz_PdC6U4yQ29sL"}
