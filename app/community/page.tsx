@@ -432,6 +432,7 @@ function SiseTab() {
   const [showSort, setShowSort] = useState(false);
   const [myChartOpen, setMyChartOpen] = useState(false);
   const [avgChartOpen, setAvgChartOpen] = useState(false);
+  const [avgPyeongTier, setAvgPyeongTier] = useState<"전체" | "20평대" | "30평대" | "40평대">("30평대");
   const [siseSubTab, setSiseSubTab] = useState<"매매" | "전월세">("매매");
 
   // 내 집 시세
@@ -477,23 +478,29 @@ function SiseTab() {
   const myDiff = myCurr - myPrev;
   const myPct = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
 
-  // 평균 실거래가
-  const avgPrice = Math.round(apartments.reduce((s, a) => s + (a.recentDeal?.price ?? 0), 0) / apartments.length);
-
-  // 검단 신도시 월별 평균 추세 계산
+  // 검단 신도시 월별 평균 추세 — 평수 티어 필터 적용
   const avgTrend = (() => {
+    const tierOk = (pyeong: number) => {
+      if (avgPyeongTier === "20평대") return pyeong >= 20 && pyeong < 30;
+      if (avgPyeongTier === "30평대") return pyeong >= 30 && pyeong < 40;
+      if (avgPyeongTier === "40평대") return pyeong >= 40;
+      return true; // 전체
+    };
     const months = apartments[0].sizes[0].priceHistory.map(p => p.date);
     return months.map(month => {
       let total = 0; let count = 0;
       apartments.forEach(apt => apt.sizes.forEach(sz => {
+        if (!tierOk(sz.pyeong)) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
       }));
-      return { date: month, price: Math.round(total / count) };
+      return { date: month, price: count ? Math.round(total / count) : 0 };
     });
   })();
+  const avgPrice = avgTrend[avgTrend.length - 1]?.price ?? 0;
   const avgPrev = avgTrend[avgTrend.length - 2]?.price ?? avgPrice;
-  const avgPct = avgPrev ? (((avgPrice - avgPrev) / avgPrev) * 100).toFixed(1) : "0.0";
+  const avgDiff = avgPrice - avgPrev;
+  const avgPct = avgPrev ? (Math.abs(avgDiff) / avgPrev * 100).toFixed(1) : "0.0";
 
   // 전체 평수 목록
   const allPyeong = Array.from(new Set(apartments.flatMap(a => a.sizes.map(s => s.pyeong)))).sort((a, b) => a - b);
@@ -582,22 +589,39 @@ function SiseTab() {
           )}
         </div>
 
-        {/* 평균 실거래가 배너 — 탭하면 차트 인라인 펼침 */}
-        <button className="w-full bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3 pb-3 text-left active:opacity-90"
-          onClick={() => setAvgChartOpen(v => !v)}>
-          <div className="flex items-center justify-between">
+        {/* 평균 실거래가 배너 */}
+        <div className="w-full bg-gradient-to-br from-emerald-600 to-teal-600 rounded-b-2xl px-4 pt-3 pb-3">
+          {/* 헤더 — 탭하면 차트 펼침 */}
+          <button className="w-full flex items-center justify-between active:opacity-70" onClick={() => setAvgChartOpen(v => !v)}>
             <p className="text-emerald-100 text-[12px] font-medium">검단 신도시 평균 실거래가</p>
             {avgChartOpen ? <ChevronUp size={14} className="text-emerald-300" /> : <ChevronDown size={14} className="text-emerald-300" />}
-          </div>
-          <div className="flex items-end justify-between mt-0.5">
+          </button>
+
+          {/* 가격 + 등락 */}
+          <div className="flex items-end justify-between mt-1">
             <p className="text-white text-[24px] font-black">{formatPrice(avgPrice)}</p>
             <div className="flex items-center gap-1 pb-0.5">
-              <TrendingUp size={13} className="text-emerald-300" />
-              <span className="text-emerald-200 text-[12px]">전월 대비 +{avgPct}%</span>
+              {avgDiff === 0
+                ? <span className="text-emerald-200 text-[12px]">보합</span>
+                : avgDiff > 0
+                  ? <><TrendingUp size={13} className="text-red-300" /><span className="text-red-300 text-[12px]">+{avgPct}%</span></>
+                  : <><TrendingDown size={13} className="text-blue-300" /><span className="text-blue-300 text-[12px]">-{avgPct}%</span></>}
             </div>
           </div>
 
-          {/* 접힌 상태: 3개월 요약 지표 */}
+          {/* 평수 티어 필터 */}
+          <div className="flex gap-1.5 mt-2.5">
+            {(["전체", "20평대", "30평대", "40평대"] as const).map(tier => (
+              <button key={tier} onClick={() => setAvgPyeongTier(tier)}
+                className={`h-7 px-3 rounded-full text-[11px] font-semibold transition-colors ${
+                  avgPyeongTier === tier ? "bg-white text-emerald-700" : "bg-emerald-700/40 text-emerald-200 active:bg-emerald-700/60"
+                }`}>
+                {tier}
+              </button>
+            ))}
+          </div>
+
+          {/* 접힌 상태: 3개월 요약 */}
           {!avgChartOpen && (
             <div className="flex gap-2 mt-2">
               {avgTrend.slice(-3).map((p, i) => (
@@ -632,7 +656,7 @@ function SiseTab() {
               </div>
             </div>
           )}
-        </button>
+        </div>
       </div>
 
       {/* ── 매매 / 전월세 서브탭 ── */}
