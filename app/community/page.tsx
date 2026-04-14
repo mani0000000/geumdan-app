@@ -829,7 +829,8 @@ function SiseTab() {
       {/* ── 정렬 선택 바텀 시트 ── */}
       {showSort && (
         <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowSort(false)}>
-          <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
             <p className="text-[16px] font-bold text-[#191F28] px-5 pt-2 pb-3">정렬 기준</p>
@@ -842,21 +843,21 @@ function SiseTab() {
             ))}
             <div className="h-5" />
           </div>
-          <div className="absolute inset-0 bg-black/40 z-0" />
         </div>
       )}
 
       {/* ── 아파트 선택 모달 ── */}
       {showPicker && (
         <div className="fixed inset-0 z-[300] flex items-end" onClick={() => setShowPicker(false)}>
-          <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden max-h-[70vh] flex flex-col"
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative z-10 w-full max-w-[430px] mx-auto bg-white rounded-t-3xl max-h-[70vh] flex flex-col"
             onClick={e => e.stopPropagation()}>
             <div className="flex justify-center pt-3 pb-1"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
             <div className="flex items-center justify-between px-4 pt-2 pb-3 border-b border-[#F2F4F6]">
               <h3 className="text-[17px] font-bold text-[#191F28]">내 집 선택</h3>
               {myApt && <button onClick={clearApt} className="text-[13px] text-[#F04452] font-medium active:opacity-70">등록 해제</button>}
             </div>
-            <div className="overflow-y-auto flex-1">
+            <div className="overflow-y-auto flex-1 overscroll-contain rounded-b-3xl">
               {apartments.map(apt => {
                 const h = apt.sizes[0].priceHistory;
                 const curr = h[h.length - 1]?.price ?? 0;
@@ -875,9 +876,9 @@ function SiseTab() {
                   </button>
                 );
               })}
+              <div className="h-6" />
             </div>
           </div>
-          <div className="absolute inset-0 bg-black/40 z-0" />
         </div>
       )}
     </div>
