@@ -525,6 +525,16 @@ export default function TransportPage() {
     <div className="min-h-dvh bg-[#F2F4F6] pb-20">
       <Header title="교통 정보" />
 
+      {/* 플로팅 새로고침 버튼 (헤더 우측 상단) */}
+      <button
+        onClick={refresh}
+        disabled={refreshing}
+        className="fixed top-[10px] right-4 z-50 w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        aria-label="새로고침"
+      >
+        <RefreshCw size={16} className={`text-[#3182F6] ${refreshing ? "animate-spin" : ""}`} />
+      </button>
+
       {/* 버스 상세 바텀 시트 */}
       {selectedArrival && (
         <BusDetailSheet
@@ -833,42 +843,64 @@ export default function TransportPage() {
                       </div>
                     ) : st.arrivals.length === 0 ? (
                       <div className="bg-[#F2F4F6] rounded-xl px-3 py-3 text-center">
-                        <p className="text-[13px] text-[#8B95A1]">운행 정보 없음</p>
+                        <p className="text-[13px] text-[#8B95A1]">운행 정보 없음 (운행 종료 또는 API 미응답)</p>
                       </div>
                     ) : (
                       <>
-                        {/* 상행 */}
-                        {upArrivals.slice(0, 1).map((a, i) => (
-                          <div key={`up-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold bg-[#E5E8EB] text-[#4E5968] px-1.5 py-0.5 rounded">상행</span>
-                                <p className="text-[14px] font-semibold text-[#191F28]">{a.terminalStation} 방면</p>
-                                {a.isExpress && <span className="text-[11px] font-bold text-[#E65100]">급행</span>}
-                              </div>
-                              <p className="text-[12px] text-[#8B95A1] mt-0.5">
-                                {a.currentStation ? `${a.currentStation} 출발` : `열차 ${a.trainNo}`}
-                              </p>
-                            </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
+                        {/* 상행 — 최대 2편 */}
+                        {upArrivals.length === 0 ? (
+                          <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3 py-2.5">
+                            <span className="text-[10px] font-bold bg-[#E5E8EB] text-[#4E5968] px-1.5 py-0.5 rounded shrink-0">상행</span>
+                            <p className="text-[13px] text-[#8B95A1]">운행 정보 없음</p>
                           </div>
-                        ))}
-                        {/* 하행 */}
-                        {downArrivals.slice(0, 1).map((a, i) => (
-                          <div key={`down-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
-                            <div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold bg-[#EBF3FE] text-[#3182F6] px-1.5 py-0.5 rounded">하행</span>
-                                <p className="text-[14px] font-semibold text-[#191F28]">{a.terminalStation} 방면</p>
-                                {a.isExpress && <span className="text-[11px] font-bold text-[#E65100]">급행</span>}
+                        ) : (
+                          upArrivals.slice(0, 2).map((a, i) => (
+                            <div key={`up-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+                              <div className="flex-1 min-w-0 mr-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-bold bg-[#E5E8EB] text-[#4E5968] px-1.5 py-0.5 rounded shrink-0">
+                                    {i === 0 ? "상행 1번째" : "상행 2번째"}
+                                  </span>
+                                  <p className="text-[13px] font-semibold text-[#191F28] truncate">{a.terminalStation} 방면</p>
+                                  {a.isExpress && (
+                                    <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-[#8B95A1] mt-0.5">
+                                  {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
+                                </p>
                               </div>
-                              <p className="text-[12px] text-[#8B95A1] mt-0.5">
-                                {a.currentStation ? `${a.currentStation} 출발` : `열차 ${a.trainNo}`}
-                              </p>
+                              <ArrivalBadge min={a.arrivalMin} live />
                             </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
+                          ))
+                        )}
+                        {/* 하행 — 최대 2편 */}
+                        {downArrivals.length === 0 ? (
+                          <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3 py-2.5">
+                            <span className="text-[10px] font-bold bg-[#EBF3FE] text-[#3182F6] px-1.5 py-0.5 rounded shrink-0">하행</span>
+                            <p className="text-[13px] text-[#8B95A1]">운행 정보 없음</p>
                           </div>
-                        ))}
+                        ) : (
+                          downArrivals.slice(0, 2).map((a, i) => (
+                            <div key={`down-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+                              <div className="flex-1 min-w-0 mr-2">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-bold bg-[#EBF3FE] text-[#3182F6] px-1.5 py-0.5 rounded shrink-0">
+                                    {i === 0 ? "하행 1번째" : "하행 2번째"}
+                                  </span>
+                                  <p className="text-[13px] font-semibold text-[#191F28] truncate">{a.terminalStation} 방면</p>
+                                  {a.isExpress && (
+                                    <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-[#8B95A1] mt-0.5">
+                                  {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
+                                </p>
+                              </div>
+                              <ArrivalBadge min={a.arrivalMin} live />
+                            </div>
+                          ))
+                        )}
                       </>
                     )}
 
