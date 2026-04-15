@@ -438,22 +438,22 @@ export default function TransportPage() {
     }
   }, []);
 
-  // ── GPS 취득 → loadBusData + loadSubwayData 호출 ──────────────
+  // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
-    // 캐시된 정류장 즉시 표시 (stale-while-revalidate)
+    const DEFAULT = { lat: 37.594, lng: 126.710 }; // 검단신도시 중심
+
+    // 1) 기본 위치로 즉시 로드 — GPS 응답 기다리지 않음
+    posRef.current = DEFAULT;
+    setUserPos(DEFAULT);
+    loadSubwayData(DEFAULT.lat, DEFAULT.lng);
     if (isLive) {
       const cached = loadCachedStops();
-      if (cached && cached.length > 0) setApiStops(cached);
+      if (cached?.length) setApiStops(cached);
+      loadBusData(DEFAULT.lat, DEFAULT.lng);
     }
 
-    const DEFAULT = { lat: 37.594, lng: 126.710 }; // 검단신도시 중심
-    if (!navigator.geolocation) {
-      posRef.current = DEFAULT;
-      setUserPos(DEFAULT);
-      setLocState("denied");
-      loadBusData(DEFAULT.lat, DEFAULT.lng);
-      return;
-    }
+    // 2) GPS 취득되면 위치 갱신 (3s 타임아웃, 캐시 5분 허용)
+    if (!navigator.geolocation) { setLocState("denied"); return; }
     setLocState("loading");
     navigator.geolocation.getCurrentPosition(
       pos => {
@@ -461,19 +461,16 @@ export default function TransportPage() {
         posRef.current = p;
         setUserPos(p);
         setLocState("ok");
-        loadBusData(p.lat, p.lng);
-        loadSubwayData(p.lat, p.lng);
+        // 기본 위치와 300m 이상 차이날 때만 재조회
+        if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
+          loadSubwayData(p.lat, p.lng);
+          if (isLive) loadBusData(p.lat, p.lng);
+        }
       },
-      () => {
-        posRef.current = DEFAULT;
-        setUserPos(DEFAULT);
-        setLocState("denied");
-        loadBusData(DEFAULT.lat, DEFAULT.lng);
-        loadSubwayData(DEFAULT.lat, DEFAULT.lng);
-      },
-      { timeout: 5000, maximumAge: 30000, enableHighAccuracy: false }
+      () => setLocState("denied"),
+      { timeout: 3000, maximumAge: 300000, enableHighAccuracy: false }
     );
-  }, [loadBusData, loadSubwayData, isLive]);
+  }, [loadBusData, loadSubwayData, isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refresh = async () => {
     const p = posRef.current ?? { lat: 37.594, lng: 126.710 };
