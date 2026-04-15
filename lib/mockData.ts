@@ -1507,47 +1507,75 @@ export const couponDetails: Record<string, CouponDetail> = {
 };
 
 // ---------- New Store Openings ----------
+// openDate 기준으로 금주/이번달 자동 분류 (isNew 필드는 하위 호환용 유지)
 export const newStoreOpenings: NewStoreOpening[] = [
   {
     id: "ns1", storeId: "s_3f_1", storeName: "더본코리아 (백종원)", category: "음식점", floor: "3F",
-    openDate: "2026-03-25", emoji: "🍽️", isNew: true,
+    openDate: "2026-04-14", emoji: "🍽️", isNew: true,
     openBenefit: {
       summary: "오픈 기념 전 메뉴 20% 할인 + 음료 1잔 무료",
       details: [
-        "전 메뉴 20% 할인 (4/6까지)",
+        "전 메뉴 20% 할인 (4/30까지)",
         "1인 1음료 무료 제공 (테이크아웃 포함)",
         "앱 첫 주문 시 추가 10% 즉시 할인",
         "SNS 리뷰 작성 고객 디저트 1종 증정",
       ],
-      validUntil: "2026-04-06",
+      validUntil: "2026-04-30",
     },
   },
   {
     id: "ns2", storeId: "s_2f_4", storeName: "헬스앤뷰티", category: "미용", floor: "2F",
-    openDate: "2026-03-22", emoji: "💄", isNew: true,
+    openDate: "2026-04-15", emoji: "💄", isNew: true,
     openBenefit: {
       summary: "오픈 특가 전품목 30% OFF + 회원 가입 시 5,000원 적립",
       details: [
-        "오픈 기념 전품목 30% 할인 (3/31까지)",
+        "오픈 기념 전품목 30% 할인 (4/30까지)",
         "신규 회원 가입 시 5,000 포인트 즉시 적립",
         "3만원 이상 구매 시 샘플 키트 증정",
         "SNS 팔로우 + 태그 시 추첨 경품 이벤트",
       ],
-      validUntil: "2026-03-31",
+      validUntil: "2026-04-30",
     },
   },
   {
     id: "ns3", storeId: "s_4f_3", storeName: "헤어살롱 모이", category: "미용", floor: "4F",
-    openDate: "2026-03-20", emoji: "💇", isNew: false,
+    openDate: "2026-04-07", emoji: "💇", isNew: false,
     openBenefit: {
       summary: "오픈 한 달 커트 10,000원 고정 + 첫 방문 드라이 무료",
       details: [
-        "오픈 기념 커트 10,000원 고정가 (4/20까지)",
+        "오픈 기념 커트 10,000원 고정가 (5/7까지)",
         "첫 방문 드라이 무료 서비스",
         "펌·염색 예약 시 트리트먼트 무료 업그레이드",
         "인스타 후기 작성 시 다음 방문 20% 할인 쿠폰 증정",
       ],
-      validUntil: "2026-04-20",
+      validUntil: "2026-05-07",
+    },
+  },
+  {
+    id: "ns4", storeId: "s_1f_2", storeName: "스타벅스 검단점", category: "카페", floor: "1F",
+    openDate: "2026-04-03", emoji: "☕", isNew: false,
+    openBenefit: {
+      summary: "리유저블 컵 증정 + 사이즈업 무료",
+      details: [
+        "음료 2잔 이상 구매 시 리유저블 컵 증정",
+        "그란데 이상 주문 시 벤티 사이즈업 무료 (4/30까지)",
+        "첫 방문 쿠폰 발급 시 아메리카노 1잔 무료",
+      ],
+      validUntil: "2026-04-30",
+    },
+  },
+  {
+    id: "ns5", storeId: "s_5f_1", storeName: "필라테스 스튜디오 온", category: "기타", floor: "5F",
+    openDate: "2026-04-10", emoji: "🧘", isNew: false,
+    openBenefit: {
+      summary: "1개월 무제한 오픈 특가 + 첫 달 PT 2회 무료",
+      details: [
+        "오픈 기념 1개월 무제한 50% 할인",
+        "신규 등록 회원 PT 2회 무료 제공",
+        "친구 추천 시 양측 1주 이용권 증정",
+        "이달 등록 시 운동복 세트 증정",
+      ],
+      validUntil: "2026-04-30",
     },
   },
 ];

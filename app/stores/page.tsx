@@ -204,6 +204,142 @@ const catHeroImage: Record<StoreCategory, string> = {
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
 
+// ─── 상가 건물 바텀시트 (리스트뷰용) ─────────────────────────
+function BuildingBottomSheet({
+  nearbyInfo, buildingData, loading, onClose, onSelectStore,
+}: {
+  nearbyInfo: NearbyBuilding;
+  buildingData: Building | null;
+  loading: boolean;
+  onClose: () => void;
+  onSelectStore: (s: EnrichedStore) => void;
+}) {
+  const [floorIdx, setFloorIdx] = useState(-1);
+  const [imgFailed, setImgFailed] = useState(false);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const allStores: { store: Store; floorLabel: string }[] = buildingData
+    ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
+    : [];
+  const visible = floorIdx === -1
+    ? allStores
+    : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
+
+  return (
+    <div className="fixed inset-0" style={{ zIndex: 300 }}>
+      <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl"
+        style={{ zIndex: 2, maxHeight: "86%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+
+        {/* 건물 이미지 헤더 */}
+        <div className="relative shrink-0" style={{ height: 160 }}>
+          {!imgFailed && nearbyInfo.image ? (
+            <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
+              className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center">
+              <Building2 size={40} className="text-white/60" />
+            </div>
+          )}
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.6) 100%)" }} />
+          <div className="absolute top-2 left-1/2 -translate-x-1/2">
+            <div className="w-10 h-1 rounded-full bg-white/50" />
+          </div>
+          <button onClick={onClose}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+            <X size={14} className="text-white" />
+          </button>
+          <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
+            <p className="text-[18px] font-bold text-white leading-tight drop-shadow">{nearbyInfo.name}</p>
+            <p className="text-[11px] text-white/75 mt-0.5">
+              {nearbyInfo.floors}층 · {nearbyInfo.stores}개 매장
+              {nearbyInfo.km > 0 && ` · ${distLabel(nearbyInfo.km)}`}
+            </p>
+          </div>
+        </div>
+
+        {/* 로딩 */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center flex-1 py-12 gap-3">
+            <div className="w-8 h-8 border-[3px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[13px] text-[#8B95A1]">매장 정보 불러오는 중...</p>
+          </div>
+        )}
+
+        {/* 데이터 없음 */}
+        {!loading && !buildingData && (
+          <div className="flex flex-col items-center justify-center flex-1 pb-10 px-8">
+            <span className="text-5xl mb-3">🏗️</span>
+            <p className="text-[16px] font-bold text-[#191F28]">정보 준비 중</p>
+            <p className="text-[13px] text-[#8B95A1] mt-1 text-center leading-relaxed">
+              이 건물의 상세 정보는 곧 업데이트돼요
+            </p>
+            <div className="mt-4 bg-[#F2F4F6] rounded-2xl px-5 py-4 w-full">
+              <p className="text-[13px] text-[#4E5968]">{nearbyInfo.address}</p>
+              <p className="text-[13px] text-[#8B95A1] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
+            </div>
+          </div>
+        )}
+
+        {/* 매장 목록 */}
+        {!loading && buildingData && (
+          <>
+            {/* 층 탭 */}
+            <div className="flex gap-2 px-4 py-2.5 border-b border-[#F2F4F6] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
+              <button onClick={() => setFloorIdx(-1)}
+                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                전체 {allStores.length}개
+              </button>
+              {buildingData.floors.map((f, i) => (
+                <button key={f.label} onClick={() => setFloorIdx(i)}
+                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+            {/* 매장 리스트 */}
+            <div className="overflow-y-auto flex-1">
+              {visible.length === 0 ? (
+                <div className="flex items-center justify-center py-10 text-[13px] text-[#B0B8C1]">입점 매장 없음</div>
+              ) : (
+                visible.map(({ store: s, floorLabel }) => (
+                  <button key={s.id}
+                    onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
+                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#F2F4F6] border-b border-[#F2F4F6] text-left">
+                    <StoreLogo name={s.name} category={s.category} size={44} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-[15px] font-semibold text-[#191F28]">{s.name}</p>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catBg[s.category]}`}>
+                          {catEmoji[s.category]} {s.category}
+                        </span>
+                      </div>
+                      <p className="text-[12px] text-[#8B95A1] mt-0.5">
+                        {floorIdx === -1 ? `${floorLabel} · ` : ""}{s.hours ?? "영업시간 미등록"}
+                      </p>
+                    </div>
+                    <div className="shrink-0 flex flex-col items-end gap-1">
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+                        {s.isOpen !== false ? "영업 중" : "영업 종료"}
+                      </span>
+                      <ChevronRight size={13} className="text-[#B0B8C1]" />
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── 매장 리스트 상세 시트 ──────────────────────────────────
 type EnrichedStore = Store & { floorLabel: string; buildingName: string };
 
@@ -445,6 +581,24 @@ function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClos
   );
 }
 
+// ─── 신규오픈 날짜 헬퍼 ─────────────────────────────────────
+function getWeekBounds() {
+  const now = new Date();
+  const day = now.getDay(); // 0=일, 1=월
+  const diffToMon = day === 0 ? -6 : 1 - day;
+  const mon = new Date(now); mon.setDate(now.getDate() + diffToMon); mon.setHours(0,0,0,0);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  return { mon, sun };
+}
+function classifyOpening(openDate: string): "week" | "month" | "none" {
+  const d = new Date(openDate);
+  const now = new Date();
+  const { mon, sun } = getWeekBounds();
+  if (d >= mon && d <= sun) return "week";
+  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) return "month";
+  return "none";
+}
+
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
 const ALL_CATS = Object.keys(catDot) as StoreCategory[];
 
@@ -452,10 +606,26 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
+  // 상가 바텀시트
+  const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
+  const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
+  const [buildingLoading, setBuildingLoading] = useState(false);
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
   }, []);
+
+  // 상가 카드 클릭 → 건물 상세 조회 후 시트 열기
+  async function openBuildingSheet(b: NearbyBuilding) {
+    setSelectedBuilding(b);
+    setBuildingDetail(null);
+    if (b.hasData) {
+      setBuildingLoading(true);
+      const data = await fetchBuildingWithFloors(b.id);
+      setBuildingDetail(data);
+      setBuildingLoading(false);
+    }
+  }
 
   const allStores = useMemo<EnrichedStore[]>(() =>
     dbStores.map(s => ({ ...s, floorLabel: s.floorLabel, buildingName: s.buildingName })),
@@ -533,7 +703,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         </div>
         <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           {nearbyBuildings.map(b => (
-            <div key={b.id} className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-white shadow-sm">
+            <button key={b.id} onClick={() => openBuildingSheet(b)}
+              className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-white shadow-sm active:opacity-80 text-left">
               <div className="relative" style={{ height: 90 }}>
                 <img src={b.image} alt={b.name}
                   className="w-full h-full object-cover"
@@ -559,45 +730,75 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
                   ))}
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
 
-      {/* ── 신규 오픈 ── */}
-      {newStoreOpenings.some(o => o.isNew) && (
-        <div className="pt-4 pb-2">
-          <div className="flex items-center gap-1.5 px-4 mb-2.5">
-            <span className="text-[14px] font-bold text-[#191F28]">이번 주 신규 오픈</span>
-            <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
+      {/* ── 신규 오픈 (금주 / 이번달) ── */}
+      {(() => {
+        const weekOpenings  = newStoreOpenings.filter(o => classifyOpening(o.openDate) === "week");
+        const monthOpenings = newStoreOpenings.filter(o => classifyOpening(o.openDate) === "month");
+        if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
+
+        function OpeningCard({ o, badge }: { o: typeof newStoreOpenings[0]; badge: "NEW" | "이번달" }) {
+          const store = allStores.find(s => s.id === o.storeId);
+          const badgeCls = badge === "NEW"
+            ? "bg-[#F04452] text-white"
+            : "bg-[#FF9500] text-white";
+          return (
+            <button key={o.id}
+              onClick={() => store && setSelectedStore(store)}
+              className="w-full bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left flex items-center gap-3 px-3 py-3">
+              <div className="shrink-0">
+                <StoreLogo name={o.storeName} category={o.category} size={44} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <p className="text-[14px] font-bold text-[#191F28] truncate">{o.storeName}</p>
+                  <span className={`shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full ${badgeCls}`}>{badge}</span>
+                </div>
+                <p className="text-[12px] text-[#8B95A1] mb-1">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                {o.openBenefit && (
+                  <p className="text-[12px] text-[#F04452] font-medium leading-snug line-clamp-1">
+                    🎁 {o.openBenefit.summary}
+                  </p>
+                )}
+              </div>
+              <ChevronRight size={14} className="shrink-0 text-[#B0B8C1]" />
+            </button>
+          );
+        }
+
+        return (
+          <div className="pt-4 pb-2 space-y-4">
+            {weekOpenings.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 px-4 mb-2.5">
+                  <span className="text-[14px] font-bold text-[#191F28]">금주 신규 오픈</span>
+                  <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
+                  <span className="text-[11px] text-[#8B95A1]">{weekOpenings.length}개</span>
+                </div>
+                <div className="px-4 space-y-2">
+                  {weekOpenings.map(o => <OpeningCard key={o.id} o={o} badge="NEW" />)}
+                </div>
+              </div>
+            )}
+            {monthOpenings.length > 0 && (
+              <div>
+                <div className="flex items-center gap-1.5 px-4 mb-2.5">
+                  <span className="text-[14px] font-bold text-[#191F28]">이번달 오픈</span>
+                  <span className="text-[10px] font-black bg-[#FF9500] text-white px-1.5 py-0.5 rounded-full">이달</span>
+                  <span className="text-[11px] text-[#8B95A1]">{monthOpenings.length}개</span>
+                </div>
+                <div className="px-4 space-y-2">
+                  {monthOpenings.map(o => <OpeningCard key={o.id} o={o} badge="이번달" />)}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="px-4 space-y-2">
-            {newStoreOpenings.filter(o => o.isNew).map(o => {
-              const store = allStores.find(s => s.id === o.storeId);
-              return (
-                <button key={o.id}
-                  onClick={() => store && setSelectedStore(store)}
-                  className="w-full bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left flex items-center gap-3 px-3 py-3">
-                  <div className="shrink-0">
-                    <StoreLogo name={o.storeName} category={o.category} size={40} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <p className="text-[14px] font-bold text-[#191F28] truncate">{o.storeName}</p>
-                      <span className="shrink-0 text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
-                    </div>
-                    <p className="text-[12px] text-[#8B95A1] mb-1">{o.floor} · {o.openDate.slice(5)} 오픈</p>
-                    {o.openBenefit && (
-                      <p className="text-[12px] text-[#F04452] font-medium leading-snug line-clamp-1">{o.openBenefit.summary}</p>
-                    )}
-                  </div>
-                  <span className="shrink-0 text-[#B0B8C1] text-lg">›</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── 이번 주 쿠폰 (유효한 것만 표시) ── */}
       {(() => {
@@ -706,6 +907,17 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
       {selectedStore && (
         <StoreListDetailSheet store={selectedStore} onClose={() => setSelectedStore(null)} />
+      )}
+
+      {/* ── 상가 바텀시트 ── */}
+      {selectedBuilding && (
+        <BuildingBottomSheet
+          nearbyInfo={selectedBuilding}
+          buildingData={buildingDetail}
+          loading={buildingLoading}
+          onClose={() => { setSelectedBuilding(null); setBuildingDetail(null); }}
+          onSelectStore={s => { setSelectedBuilding(null); setBuildingDetail(null); setSelectedStore(s); }}
+        />
       )}
     </div>
   );
