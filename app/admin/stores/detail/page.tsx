@@ -1,0 +1,529 @@
+"use client";
+import { Suspense, useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Plus, Pencil, Trash2, ChevronLeft, RefreshCw, Check, X } from "lucide-react";
+import {
+  adminFetchBuildings, adminUpdateBuilding,
+  adminFetchFloors, adminCreateFloor, adminUpdateFloor, adminDeleteFloor,
+  adminFetchStores, adminCreateStore, adminUpdateStore, adminDeleteStore,
+  type AdminBuilding, type AdminFloor, type AdminStore,
+} from "@/lib/db/admin-stores";
+import type { StoreCategory } from "@/lib/types";
+
+// ─── 상수 ────────────────────────────────────────────────────
+const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "기타"];
+const CAT_COLOR: Record<StoreCategory, string> = {
+  카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
+  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6", 마트: "#10B981", 기타: "#9CA3AF",
+};
+const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
+const SELECT = INPUT + " bg-white";
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[11px] font-semibold text-[#8B95A1] mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+// ─── 층 추가 모달 ─────────────────────────────────────────────
+function FloorModal({ buildingId, onSave, onClose }: {
+  buildingId: string;
+  onSave: () => void;
+  onClose: () => void;
+}) {
+  const [label, setLabel] = useState("1F");
+  const [level, setLevel] = useState(0);
+  const [hasRestroom, setHasRestroom] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!label.trim()) { setErr("층 이름을 입력하세요."); return; }
+    setSaving(true);
+    try {
+      await adminCreateFloor({
+        building_id: buildingId,
+        label: label.trim(),
+        level,
+        has_restroom: hasRestroom,
+        restroom_code: null,
+        sort_order: level + 10,
+      });
+      onSave();
+      onClose();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "저장 실패");
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+        <div className="px-5 py-4 border-b flex items-center justify-between">
+          <h2 className="text-[15px] font-bold">층 추가</h2>
+          <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
+        </div>
+        <form onSubmit={submit} className="px-5 py-4 space-y-3">
+          <Field label="층 레이블 (표시명) *">
+            <input className={INPUT} value={label} onChange={e => setLabel(e.target.value)}
+              placeholder="B1, 1F, 2F ..." />
+          </Field>
+          <Field label="층 순서 (level: B1=-1, 1F=0, 2F=1 ...)">
+            <input className={INPUT} type="number" value={level}
+              onChange={e => setLevel(Number(e.target.value))} />
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={hasRestroom} onChange={e => setHasRestroom(e.target.checked)} className="w-4 h-4" />
+            <span className="text-[13px] text-[#4E5968]">화장실 있음</span>
+          </label>
+          {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose}
+              className="flex-1 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#4E5968]">취소</button>
+            <button type="submit" disabled={saving}
+              className="flex-1 py-2 bg-[#3182F6] text-white rounded-xl text-[13px] font-bold disabled:opacity-50">
+              {saving ? "저장 중..." : "추가"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── 매장 추가/수정 모달 ──────────────────────────────────────
+const STORE_EMPTY: Omit<AdminStore, "id" | "building_id"> = {
+  floor_label: "", name: "", category: "기타",
+  phone: null, hours: null, is_open: true, is_premium: false,
+  x: 0, y: 0, w: 10, h: 10,
+};
+
+function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
+  buildingId: string;
+  floors: AdminFloor[];
+  initial: AdminStore | null;
+  onSave: () => void;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState<Omit<AdminStore, "id" | "building_id">>(
+    initial
+      ? { floor_label: initial.floor_label, name: initial.name, category: initial.category,
+          phone: initial.phone, hours: initial.hours, is_open: initial.is_open,
+          is_premium: initial.is_premium, x: initial.x, y: initial.y, w: initial.w, h: initial.h }
+      : { ...STORE_EMPTY, floor_label: floors[0]?.label ?? "" }
+  );
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
+    setForm(f => ({ ...f, [k]: v }));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!form.name.trim()) { setErr("매장명을 입력하세요."); return; }
+    if (!form.floor_label) { setErr("층을 선택하세요."); return; }
+    setSaving(true);
+    try {
+      if (initial) {
+        await adminUpdateStore(initial.id, { ...form, building_id: buildingId });
+      } else {
+        await adminCreateStore({ ...form, building_id: buildingId });
+      }
+      onSave();
+      onClose();
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : "저장 실패");
+    } finally { setSaving(false); }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+        <div className="px-6 py-4 border-b flex items-center justify-between">
+          <h2 className="text-[15px] font-bold">{initial ? "매장 수정" : "매장 추가"}</h2>
+          <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
+        </div>
+        <form onSubmit={submit} className="overflow-y-auto max-h-[75vh]">
+          <div className="px-6 py-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="층 *">
+                <select className={SELECT} value={form.floor_label}
+                  onChange={e => set("floor_label", e.target.value)}>
+                  {floors.map(f => <option key={f.id} value={f.label}>{f.label}</option>)}
+                </select>
+              </Field>
+              <Field label="업종 *">
+                <select className={SELECT} value={form.category}
+                  onChange={e => set("category", e.target.value as StoreCategory)}>
+                  {CATS.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </Field>
+            </div>
+            <Field label="매장명 *">
+              <input className={INPUT} value={form.name} onChange={e => set("name", e.target.value)}
+                placeholder="예: 파리바게뜨" />
+            </Field>
+            <Field label="전화번호">
+              <input className={INPUT} value={form.phone ?? ""}
+                onChange={e => set("phone", e.target.value || null)} placeholder="032-000-0000" />
+            </Field>
+            <Field label="영업시간">
+              <input className={INPUT} value={form.hours ?? ""}
+                onChange={e => set("hours", e.target.value || null)} placeholder="10:00~22:00" />
+            </Field>
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_open} onChange={e => set("is_open", e.target.checked)} className="w-4 h-4" />
+                <span className="text-[13px] text-[#4E5968]">영업 중</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" checked={form.is_premium} onChange={e => set("is_premium", e.target.checked)} className="w-4 h-4" />
+                <span className="text-[13px] text-[#4E5968]">프리미엄</span>
+              </label>
+            </div>
+
+            {/* SVG 좌표 (선택사항) */}
+            <details className="border border-[#E5E8EB] rounded-xl overflow-hidden">
+              <summary className="px-3 py-2.5 text-[12px] font-semibold text-[#8B95A1] cursor-pointer hover:bg-[#F8F9FB]">
+                SVG 맵 좌표 (선택사항)
+              </summary>
+              <div className="px-3 py-3 grid grid-cols-4 gap-2">
+                {(["x", "y", "w", "h"] as const).map(k => (
+                  <Field key={k} label={k.toUpperCase()}>
+                    <input className={INPUT} type="number" value={form[k]}
+                      onChange={e => set(k, Number(e.target.value))} />
+                  </Field>
+                ))}
+              </div>
+            </details>
+
+            {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
+          </div>
+          <div className="px-6 py-4 border-t flex gap-2 justify-end">
+            <button type="button" onClick={onClose}
+              className="px-4 py-2 rounded-xl text-[13px] border border-[#E5E8EB] text-[#4E5968]">취소</button>
+            <button type="submit" disabled={saving}
+              className="px-5 py-2 rounded-xl text-[13px] font-bold bg-[#3182F6] text-white disabled:opacity-50">
+              {saving ? "저장 중..." : "저장"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── 인라인 영업중 토글 ───────────────────────────────────────
+function OpenToggle({ store, onToggled }: { store: AdminStore; onToggled: () => void }) {
+  const [loading, setLoading] = useState(false);
+  async function toggle() {
+    setLoading(true);
+    try { await adminUpdateStore(store.id, { is_open: !store.is_open }); onToggled(); }
+    finally { setLoading(false); }
+  }
+  return (
+    <button onClick={toggle} disabled={loading}
+      className={`w-8 h-5 rounded-full transition-colors ${store.is_open ? "bg-[#00C471]" : "bg-[#E5E8EB]"} disabled:opacity-50`}>
+      <span className={`block w-4 h-4 rounded-full bg-white shadow transition-transform mx-0.5 ${store.is_open ? "translate-x-3" : "translate-x-0"}`} />
+    </button>
+  );
+}
+
+// ─── 건물 기본정보 탭 ─────────────────────────────────────────
+function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSaved: () => void }) {
+  const [form, setForm] = useState({ ...building });
+  const [saving, setSaving] = useState(false);
+  const [ok, setOk] = useState(false);
+
+  function set<K extends keyof AdminBuilding>(k: K, v: AdminBuilding[K]) {
+    setForm(f => ({ ...f, [k]: v })); setOk(false);
+  }
+
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await adminUpdateBuilding(building.id, form);
+      setOk(true);
+      onSaved();
+    } catch (e) { alert((e as Error).message); }
+    finally { setSaving(false); }
+  }
+
+  return (
+    <form onSubmit={save} className="space-y-4 max-w-lg">
+      <Field label="건물명 *">
+        <input className={INPUT} value={form.name} onChange={e => set("name", e.target.value)} />
+      </Field>
+      <Field label="주소">
+        <input className={INPUT} value={form.address ?? ""} onChange={e => set("address", e.target.value)} />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="위도(lat)">
+          <input className={INPUT} type="number" step="0.000001"
+            value={form.lat ?? ""} onChange={e => set("lat", e.target.value ? Number(e.target.value) : null)} />
+        </Field>
+        <Field label="경도(lng)">
+          <input className={INPUT} type="number" step="0.000001"
+            value={form.lng ?? ""} onChange={e => set("lng", e.target.value ? Number(e.target.value) : null)} />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="층 수">
+          <input className={INPUT} type="number" value={form.floors ?? ""}
+            onChange={e => set("floors", e.target.value ? Number(e.target.value) : null)} />
+        </Field>
+        <Field label="총 매장수">
+          <input className={INPUT} type="number" value={form.total_stores ?? ""}
+            onChange={e => set("total_stores", e.target.value ? Number(e.target.value) : null)} />
+        </Field>
+      </div>
+      <Field label="주차 안내">
+        <input className={INPUT} value={form.parking_info ?? ""}
+          onChange={e => set("parking_info", e.target.value || null)} />
+      </Field>
+      <Field label="영업시간">
+        <input className={INPUT} value={form.open_time ?? ""}
+          onChange={e => set("open_time", e.target.value || null)} />
+      </Field>
+      <Field label="이미지 URL">
+        <input className={INPUT} value={form.image_url ?? ""}
+          onChange={e => set("image_url", e.target.value || null)} />
+      </Field>
+      <label className="flex items-center gap-2">
+        <input type="checkbox" checked={form.has_data} onChange={e => set("has_data", e.target.checked)} className="w-4 h-4" />
+        <span className="text-[13px] text-[#4E5968]">상세 데이터 있음 (has_data)</span>
+      </label>
+      <button type="submit" disabled={saving}
+        className="flex items-center gap-2 px-5 py-2.5 bg-[#3182F6] text-white rounded-xl text-[13px] font-bold disabled:opacity-50 hover:bg-[#2563EB]">
+        {saving ? <RefreshCw size={14} className="animate-spin" /> : ok ? <Check size={14} /> : null}
+        {saving ? "저장 중..." : ok ? "저장됨" : "저장"}
+      </button>
+    </form>
+  );
+}
+
+// ─── 층/매장 탭 ───────────────────────────────────────────────
+function FloorsTab({ building }: { building: AdminBuilding }) {
+  const [floors, setFloors] = useState<AdminFloor[]>([]);
+  const [stores, setStores] = useState<AdminStore[]>([]);
+  const [selFloor, setSelFloor] = useState<string | null>(null);
+  const [floorModal, setFloorModal] = useState(false);
+  const [storeModal, setStoreModal] = useState<"add" | AdminStore | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    const [f, s] = await Promise.all([
+      adminFetchFloors(building.id),
+      adminFetchStores(building.id),
+    ]);
+    setFloors(f);
+    setStores(s);
+    if (!selFloor && f.length > 0) setSelFloor(f[0].label);
+    setLoading(false);
+  }, [building.id, selFloor]);
+
+  useEffect(() => { loadData(); }, [building.id]); // eslint-disable-line
+
+  async function deleteFloor(floor: AdminFloor) {
+    if (!confirm(`'${floor.label}' 층을 삭제할까요? 해당 층 매장도 함께 삭제됩니다.`)) return;
+    await adminDeleteFloor(floor.id);
+    setSelFloor(null);
+    loadData();
+  }
+
+  async function deleteStore(store: AdminStore) {
+    if (!confirm(`'${store.name}'을 삭제할까요?`)) return;
+    await adminDeleteStore(store.id);
+    loadData();
+  }
+
+  const floorStores = stores.filter(s => s.floor_label === selFloor);
+
+  return (
+    <div>
+      {/* 층 탭 바 */}
+      <div className="flex items-center gap-2 mb-4 flex-wrap">
+        {floors.map(f => (
+          <div key={f.id} className="flex items-center">
+            <button
+              onClick={() => setSelFloor(f.label)}
+              className={`px-3 py-1.5 rounded-l-xl text-[13px] font-semibold transition-all border ${
+                selFloor === f.label
+                  ? "bg-[#3182F6] text-white border-[#3182F6]"
+                  : "bg-white text-[#4E5968] border-[#E5E8EB] hover:border-[#3182F6]"
+              }`}>
+              {f.label}
+              <span className="ml-1 text-[11px] opacity-70">
+                ({stores.filter(s => s.floor_label === f.label).length})
+              </span>
+            </button>
+            <button
+              onClick={() => deleteFloor(f)}
+              className="px-1.5 py-1.5 rounded-r-xl border border-l-0 border-[#E5E8EB] text-[#F04452] hover:bg-[#FFF0F0]">
+              <X size={12} />
+            </button>
+          </div>
+        ))}
+        <button onClick={() => setFloorModal(true)}
+          className="flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#B0B8C1] rounded-xl text-[13px] text-[#8B95A1] hover:border-[#3182F6] hover:text-[#3182F6]">
+          <Plus size={13} /> 층 추가
+        </button>
+      </div>
+
+      {/* 선택된 층의 매장 목록 */}
+      {selFloor && (
+        <div className="bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#F2F4F6]">
+            <span className="text-[14px] font-bold text-[#191F28]">
+              {selFloor} 매장 <span className="text-[#B0B8C1] font-normal">({floorStores.length}개)</span>
+            </span>
+            <button onClick={() => setStoreModal("add")}
+              className="flex items-center gap-1 px-3 py-1.5 bg-[#3182F6] text-white rounded-xl text-[12px] font-bold hover:bg-[#2563EB]">
+              <Plus size={13} /> 매장 추가
+            </button>
+          </div>
+
+          {loading ? (
+            <div className="py-8 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
+          ) : floorStores.length === 0 ? (
+            <div className="py-8 text-center text-[#B0B8C1] text-[13px]">매장 없음</div>
+          ) : (
+            <table className="w-full text-[13px]">
+              <thead className="bg-[#F8F9FB]">
+                <tr>
+                  {["매장명", "업종", "전화", "영업시간", "영업중", "프리미엄", "수정/삭제"].map(h => (
+                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-bold text-[#8B95A1]">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F2F4F6]">
+                {floorStores.map(s => (
+                  <tr key={s.id} className="hover:bg-[#F8F9FB]">
+                    <td className="px-4 py-3 font-semibold text-[#191F28]">
+                      {s.name}
+                      {s.is_premium && <span className="ml-1.5 text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: CAT_COLOR[s.category] }}>
+                        {s.category}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[#4E5968]">{s.phone ?? "—"}</td>
+                    <td className="px-4 py-3 text-[#4E5968]">{s.hours ?? "—"}</td>
+                    <td className="px-4 py-3">
+                      <OpenToggle store={s} onToggled={loadData} />
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.is_premium
+                        ? <Check size={14} className="text-[#F59E0B]" />
+                        : <span className="text-[#E5E8EB]">—</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setStoreModal(s)}
+                          className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#3182F6]">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => deleteStore(s)}
+                          className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452]">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {floorModal && (
+        <FloorModal buildingId={building.id} onSave={loadData} onClose={() => setFloorModal(false)} />
+      )}
+      {storeModal && (
+        <StoreModal
+          buildingId={building.id}
+          floors={floors}
+          initial={storeModal === "add" ? null : storeModal as AdminStore}
+          onSave={loadData}
+          onClose={() => setStoreModal(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ─── 메인 (Suspense 래핑 필요) ────────────────────────────────
+function DetailContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+  const id = params.get("id") ?? "";
+
+  const [building, setBuilding] = useState<AdminBuilding | null>(null);
+  const [tab, setTab] = useState<"info" | "floors">("floors");
+  const [loading, setLoading] = useState(true);
+
+  const loadBuilding = useCallback(async () => {
+    if (!id) return;
+    const all = await adminFetchBuildings();
+    setBuilding(all.find(b => b.id === id) ?? null);
+    setLoading(false);
+  }, [id]);
+
+  useEffect(() => { loadBuilding(); }, [loadBuilding]);
+
+  if (loading) {
+    return <div className="p-8 text-center text-[#B0B8C1]">로딩 중...</div>;
+  }
+  if (!building) {
+    return <div className="p-8 text-center text-[#F04452]">건물을 찾을 수 없습니다.</div>;
+  }
+
+  return (
+    <div className="p-6">
+      {/* 헤더 */}
+      <div className="flex items-center gap-3 mb-5">
+        <button onClick={() => router.push("/admin/stores")}
+          className="p-2 rounded-xl border border-[#E5E8EB] hover:bg-[#F2F4F6]">
+          <ChevronLeft size={16} className="text-[#4E5968]" />
+        </button>
+        <div>
+          <h1 className="text-[20px] font-extrabold text-[#191F28]">{building.name}</h1>
+          <p className="text-[12px] text-[#8B95A1]">ID: {building.id} · {building.address}</p>
+        </div>
+      </div>
+
+      {/* 탭 */}
+      <div className="flex gap-1 mb-5 bg-[#F2F4F6] rounded-xl p-1 w-fit">
+        {(["floors", "info"] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`px-4 py-2 rounded-lg text-[13px] font-semibold transition-all ${
+              tab === t ? "bg-white shadow-sm text-[#191F28]" : "text-[#8B95A1] hover:text-[#191F28]"
+            }`}>
+            {t === "floors" ? "층 · 매장 관리" : "건물 기본정보"}
+          </button>
+        ))}
+      </div>
+
+      {tab === "info" && <BuildingInfoTab building={building} onSaved={loadBuilding} />}
+      {tab === "floors" && <FloorsTab building={building} />}
+    </div>
+  );
+}
+
+export default function AdminStoreDetailPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-[#B0B8C1]">로딩 중...</div>}>
+      <DetailContent />
+    </Suspense>
+  );
+}

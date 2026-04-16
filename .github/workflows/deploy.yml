@@ -34,6 +34,8 @@ jobs:
           NEXT_PUBLIC_NAVER_CLIENT_SECRET: ${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_SECRET }}
           NEXT_PUBLIC_BASE_PATH: /geumdan-app
           NEXT_PUBLIC_YOUTUBE_API_KEY: ${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
+          NEXT_PUBLIC_ADMIN_DB_KEY: ${{ secrets.NEXT_PUBLIC_ADMIN_DB_KEY }}
+          NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
 
       - name: Add .nojekyll (fix _next folder 404)
         run: touch ./out/.nojekyll
