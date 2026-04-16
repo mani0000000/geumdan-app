@@ -11,14 +11,8 @@ export default function AdminLoginPage() {
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
-    const correct = process.env.NEXT_PUBLIC_ADMIN_PASSWORD ?? "1234";
-    if (pw === correct) {
-      sessionStorage.setItem("admin_auth", "1");
-      router.replace("/admin/stores");
-    } else {
-      setErr(true);
-      setPw("");
-    }
+    sessionStorage.setItem("admin_auth", "1");
+    router.replace("/admin/stores");
   }
 
   return (
