@@ -10,8 +10,8 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { coupons, newStoreOpenings, storeDetails } from "@/lib/mockData";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
+import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
@@ -343,12 +343,23 @@ function BuildingBottomSheet({
 // ─── 매장 리스트 상세 시트 ──────────────────────────────────
 type EnrichedStore = Store & { floorLabel: string; buildingName: string };
 
-function StoreListDetailSheet({ store, onClose }: { store: EnrichedStore; onClose: () => void }) {
+function StoreListDetailSheet({
+  store, onClose, allCoupons, allOpenings,
+}: {
+  store: EnrichedStore;
+  onClose: () => void;
+  allCoupons: import("@/lib/types").Coupon[];
+  allOpenings: import("@/lib/types").NewStoreOpening[];
+}) {
   const [sent, setSent] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
-  const detail = storeDetails[store.id];
-  const coupon = coupons.find(c => c.storeId === store.id);
-  const opening = newStoreOpenings.find(o => o.storeId === store.id);
+  const [detail, setDetail] = useState<StoreDetail | null>(null);
+  const coupon = allCoupons.find(c => c.storeId === store.id);
+  const opening = allOpenings.find(o => o.storeId === store.id);
+
+  useEffect(() => {
+    fetchStoreDetail(store.id).then(setDetail);
+  }, [store.id]);
   const color = catDot[store.category];
   const dDay = coupon ? Math.ceil((new Date(coupon.expiry).getTime() - Date.now()) / 86400000) : null;
   const heroImg = catHeroImage[store.category];
@@ -606,6 +617,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
+  const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
+  const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
   // 상가 바텀시트
   const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
   const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
@@ -613,6 +626,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
+    fetchActiveCoupons().then(setDbCoupons);
+    fetchActiveOpenings().then(setDbOpenings);
   }, []);
 
   // 상가 카드 클릭 → 건물 상세 조회 후 시트 열기
@@ -648,11 +663,9 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
     return map;
   }, [allStores, catFilter]);
 
-  const newOpeningIds = new Set(newStoreOpenings.map(o => o.storeId));
-  const couponStoreIds = new Set(coupons.map(c => c.storeId));
-  const [dlState, setDlState] = useState<Set<string>>(
-    new Set(coupons.filter(c => c.downloaded).map(c => c.id))
-  );
+  const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
+  const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
+  const [dlState, setDlState] = useState<Set<string>>(new Set());
 
   function StoreCard({ store }: { store: EnrichedStore }) {
     const hasNew = newOpeningIds.has(store.id);
@@ -737,11 +750,11 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
       {/* ── 신규 오픈 (금주 / 이번달) ── */}
       {(() => {
-        const weekOpenings  = newStoreOpenings.filter(o => classifyOpening(o.openDate) === "week");
-        const monthOpenings = newStoreOpenings.filter(o => classifyOpening(o.openDate) === "month");
+        const weekOpenings  = dbOpenings.filter(o => classifyOpening(o.openDate) === "week");
+        const monthOpenings = dbOpenings.filter(o => classifyOpening(o.openDate) === "month");
         if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
 
-        function OpeningCard({ o, badge }: { o: typeof newStoreOpenings[0]; badge: "NEW" | "이번달" }) {
+        function OpeningCard({ o, badge }: { o: import("@/lib/types").NewStoreOpening; badge: "NEW" | "이번달" }) {
           const store = allStores.find(s => s.id === o.storeId);
           const badgeCls = badge === "NEW"
             ? "bg-[#F04452] text-white"
@@ -802,7 +815,7 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
       {/* ── 이번 주 쿠폰 (유효한 것만 표시) ── */}
       {(() => {
-        const validCoupons = coupons.filter(c =>
+        const validCoupons = dbCoupons.filter(c =>
           Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
         );
         if (validCoupons.length === 0) return null;
@@ -906,7 +919,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
       </div>
 
       {selectedStore && (
-        <StoreListDetailSheet store={selectedStore} onClose={() => setSelectedStore(null)} />
+        <StoreListDetailSheet
+          store={selectedStore}
+          onClose={() => setSelectedStore(null)}
+          allCoupons={dbCoupons}
+          allOpenings={dbOpenings}
+        />
       )}
 
       {/* ── 상가 바텀시트 ── */}
@@ -1280,11 +1298,15 @@ export default function StoresPage() {
   const [mapDetailStore, setMapDetailStore] = useState<EnrichedStore | null>(null);
   const [dbBuildings, setDbBuildings] = useState<BuildingRow[]>([]);
   const [allDbStores, setAllDbStores] = useState<FlatStore[]>([]);
+  const [mapCoupons, setMapCoupons] = useState<import("@/lib/types").Coupon[]>([]);
+  const [mapOpenings, setMapOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
 
   // DB 데이터 로드
   useEffect(() => {
     fetchBuildings().then(setDbBuildings);
     fetchAllStoresFlat().then(setAllDbStores);
+    fetchActiveCoupons().then(setMapCoupons);
+    fetchActiveOpenings().then(setMapOpenings);
   }, []);
 
   // 위치 권한 요청
@@ -1429,7 +1451,12 @@ export default function StoresPage() {
 
       {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}
       {mapDetailStore && (
-        <StoreListDetailSheet store={mapDetailStore} onClose={() => setMapDetailStore(null)} />
+        <StoreListDetailSheet
+          store={mapDetailStore}
+          onClose={() => setMapDetailStore(null)}
+          allCoupons={mapCoupons}
+          allOpenings={mapOpenings}
+        />
       )}
 
       {selected && selected.name !== "공실" && (
