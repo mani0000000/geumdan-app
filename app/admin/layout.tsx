@@ -21,21 +21,23 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [authed, setAuthed] = useState<boolean | null>(null);
 
+  const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
+
   useEffect(() => {
     const ok = sessionStorage.getItem("admin_auth") === "1";
-    if (!ok && pathname !== "/admin/login") {
+    if (!ok && !isLoginPage) {
       router.replace("/admin/login");
     } else {
       setAuthed(ok);
     }
-  }, [pathname, router]);
+  }, [pathname, router, isLoginPage]);
 
   function logout() {
     sessionStorage.removeItem("admin_auth");
     router.replace("/admin/login");
   }
 
-  if (pathname === "/admin/login") return <>{children}</>;
+  if (isLoginPage) return <>{children}</>;
   if (!authed) return null;
 
   return (
