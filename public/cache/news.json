@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-17T07:17:27.595Z",
+  "fetchedAt": "2026-04-17T10:03:56.189Z",
   "count": 40,
   "articles": [
     {
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-10",
       "title": "“낳아도 맡길 데가 없어요”…신도시 번지는 ‘0세 고시’ - 서울경제",
       "summary": "",
       "source": "서울경제",
@@ -156,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-10",
       "title": "인천 서구 검단구 출범 대비 예산 로드맵 가동 본예산 편성 교육 실시 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
@@ -174,12 +174,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-4",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 네이트",
+      "id": "gr1-12",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-14T09:32:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBQczF0NnlSYnJlUGRlRlhBOThrNjdHWVYyWHZGTk9CaVkzdzdFTjlfMWdGRFNCTndORThnSEgwR1doZkVtS0VqTFVxVTdOQzMzN0xF?oc=5",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-04-14T09:31:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQNkRpbHpNdWRiME5qTEVDQUJtbTRSeDAyNjQySkpjSFlIT0o1NkdDYUJiUU5QSXBVNVB1TnBRdlQycUxjQWVzSVRLTjhBekkyNllYcW56ZzdvaEY3d0M4NV9IRnlhVUxNNjVFdy1aX3A0Q2h5aGR6aTl0N3o0UlNtb0lOaGVDSmfSAZsBQVVfeXFMTjlCUWtfdGZyY1M2LWtsNTBoejFVQmVtNzg0YzlkbVpqbE9XVE1PZW1KYThzM0o0dVdDb0N2QWpNRVJ5U1ZlZlRaeHlIa20tcmhuWUIzek5nZXFEamI2MzJJSGF1Yld4RUNPY3RfR0tQZjV4cnRqQ1FmY2VDN2tIV05wTTJiajJoX1NTcHg0YlJlLWZNWlEtcE5hWms?oc=5",
       "type": "뉴스"
     },
     {
@@ -228,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-27",
+      "id": "gr0-29",
       "title": "양인모 인천시의원 예비후보 “검단구 출범, 예산·교통·교육 대전환 이끌겠다” - 내외뉴스통신",
       "summary": "",
       "source": "내외뉴스통신",
@@ -237,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-7",
       "title": "청라·검단 잇는 핵심 축 ‘검암역세권’, 인천 서구 부동산 지형 바꾸나? - 로이슈",
       "summary": "",
       "source": "로이슈",
@@ -264,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-17",
+      "id": "gr2-16",
       "title": "인천 서구 한들구역 한중로 개통 지연 교통 정체 심화··· 정치권 현장 점검 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -282,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-44",
+      "id": "gr2-56",
       "title": "강남규, 민주당 인천 서구 기초단체장 본경선 진출…“결과로 증명하겠다” - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -291,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-40",
+      "id": "gr2-49",
       "title": "민주당 인천 기초단체장 연수·부평·강화·서구 후보 확정 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -318,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-20",
       "title": "‘걷는 길’을 ‘차 다니는 길’로... 검단 아라역 상습 정체 해법 찾나? - 투어코리아",
       "summary": "",
       "source": "투어코리아",
@@ -327,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-26",
+      "id": "gr3-28",
       "title": "인천 서구의회, 검단신도시 아라역 교통정체 해소 현장점검 - 경기도민일보 미디어",
       "summary": "",
       "source": "경기도민일보 미디어",
@@ -336,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-29",
+      "id": "gr3-30",
       "title": "송승환 서구의장·모경종 국회의원, 검단 아라역 상습 정체 해소 현장 점검 - 포커스인천",
       "summary": "",
       "source": "포커스인천",
@@ -354,7 +354,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-5",
+      "id": "gr1-4",
       "title": "검단소방서, 노후 아파트 주택용 소방시설 보급 확대 - 소방방재신문",
       "summary": "",
       "source": "소방방재신문",
