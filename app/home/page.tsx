@@ -46,8 +46,10 @@ function WeeklyModal({ weekly, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden"
+    <div className="fixed inset-0 z-[300]" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 flex items-end pointer-events-none">
+      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden pointer-events-auto relative"
         onClick={e => e.stopPropagation()}>
         <div className="flex justify-center pt-3 pb-1">
           <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
@@ -88,7 +90,7 @@ function WeeklyModal({ weekly, onClose }: {
           ))}
         </div>
       </div>
-      <div className="absolute inset-0 bg-black/40 z-0" />
+      </div>
     </div>
   );
 }
