@@ -48,8 +48,8 @@ function BuildingModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:px-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <h2 className="text-[16px] font-bold text-[#191F28]">
             {initial ? "건물 수정" : "건물 추가"}
@@ -174,11 +174,11 @@ export default function AdminStoresPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* 헤더 */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[20px] font-extrabold text-[#191F28]">상가건물 관리</h1>
+          <h1 className="text-[16px] md:text-[20px] font-extrabold text-[#191F28]">상가건물 관리</h1>
           <p className="text-[13px] text-[#8B95A1] mt-0.5">DB: buildings 테이블 · {buildings.length}개 건물</p>
         </div>
         <div className="flex items-center gap-2">
@@ -202,8 +202,8 @@ export default function AdminStoresPage() {
         />
       </div>
 
-      {/* 테이블 */}
-      <div className="bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
+      {/* 데스크톱 테이블 */}
+      <div className="hidden md:block bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
         <table className="w-full text-[13px]">
           <thead className="bg-[#F8F9FB] border-b border-[#E5E8EB]">
             <tr>
@@ -252,6 +252,48 @@ export default function AdminStoresPage() {
             ))}
           </tbody>
         </table>
+      </div>
+
+      {/* 모바일 카드 목록 */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
+        ) : filtered.length === 0 ? (
+          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">건물 없음</div>
+        ) : filtered.map(b => (
+          <div key={b.id} className="bg-white rounded-2xl border border-[#E5E8EB] p-4">
+            <div className="flex items-start justify-between mb-2">
+              <div className="flex-1 min-w-0 pr-2">
+                <p className="font-bold text-[14px] text-[#191F28] truncate">{b.name}</p>
+                <p className="text-[12px] text-[#8B95A1] truncate mt-0.5">{b.address ?? "주소 없음"}</p>
+              </div>
+              <span className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                b.has_data ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
+              }`}>{b.has_data ? "있음" : "없음"}</span>
+            </div>
+            <div className="flex items-center gap-3 text-[12px] text-[#4E5968] mb-3">
+              <span>{b.floors ?? "—"}층</span>
+              <span className="text-[#E5E8EB]">|</span>
+              <span>{b.total_stores ?? "—"}개 매장</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href={`/admin/stores/detail?id=${b.id}`}
+                className="flex-1 flex items-center justify-center gap-1 py-2 bg-[#EFF6FF] text-[#3182F6] rounded-xl text-[13px] font-semibold">
+                층·매장 관리 <ChevronRight size={13} />
+              </Link>
+              <button onClick={() => setModal(b)}
+                className="p-2 rounded-xl border border-[#E5E8EB] text-[#3182F6] hover:bg-[#EFF6FF]">
+                <Pencil size={15} />
+              </button>
+              <button
+                onClick={() => handleDelete(b.id)}
+                disabled={deleting === b.id}
+                className="p-2 rounded-xl border border-[#E5E8EB] text-[#F04452] hover:bg-[#FFF0F0] disabled:opacity-40">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* 모달 */}

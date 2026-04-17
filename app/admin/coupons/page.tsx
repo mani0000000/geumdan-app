@@ -59,8 +59,8 @@ function CouponModal({ initial, onSave, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:px-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <h2 className="text-[15px] font-bold">{initial ? "쿠폰 수정" : "쿠폰 추가"}</h2>
           <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
@@ -162,10 +162,10 @@ export default function AdminCouponsPage() {
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h1 className="text-[20px] font-extrabold text-[#191F28]">쿠폰 관리</h1>
+          <h1 className="text-[16px] md:text-[20px] font-extrabold text-[#191F28]">쿠폰 관리</h1>
           <p className="text-[13px] text-[#8B95A1] mt-0.5">DB: store_coupons 테이블 · {coupons.length}개</p>
         </div>
         <div className="flex gap-2">
@@ -179,7 +179,8 @@ export default function AdminCouponsPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
+      {/* 데스크톱 테이블 */}
+      <div className="hidden md:block bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
         <table className="w-full text-[13px]">
           <thead className="bg-[#F8F9FB] border-b border-[#E5E8EB]">
             <tr>
@@ -229,6 +230,52 @@ export default function AdminCouponsPage() {
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* 모바일 카드 목록 */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
+        ) : coupons.length === 0 ? (
+          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">쿠폰 없음</div>
+        ) : coupons.map(c => {
+          const expired = c.expiry < today;
+          const urgent = !expired && c.expiry <= new Date(Date.now() + 3 * 86400000).toISOString().slice(0, 10);
+          return (
+            <div key={c.id} className={`bg-white rounded-2xl border border-[#E5E8EB] p-4 ${expired ? "opacity-50" : ""}`}>
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
+                  <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.color }} />
+                  <div className="min-w-0">
+                    <p className="font-bold text-[14px] text-[#191F28] truncate">{c.store_name}</p>
+                    <p className="text-[12px] text-[#8B95A1] truncate">{c.building_name}</p>
+                  </div>
+                </div>
+                <span className={`shrink-0 text-[11px] font-bold px-2 py-0.5 rounded-full ${c.active ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"}`}>
+                  {c.active ? "활성" : "비활성"}
+                </span>
+              </div>
+              <p className="text-[13px] text-[#4E5968] mb-2 truncate">{c.title}</p>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#F2F4F6] text-[#4E5968]">{c.category}</span>
+                <span className="font-bold text-[13px]" style={{ color: c.color }}>{c.discount}</span>
+                <span className={`text-[12px] font-semibold ${expired ? "text-[#9CA3AF]" : urgent ? "text-[#F04452]" : "text-[#4E5968]"}`}>
+                  {expired ? "⚠ 만료" : urgent ? `⏰ D-${Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000)}` : c.expiry}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setModal(c)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#3182F6] hover:bg-[#EFF6FF]">
+                  <Pencil size={13} /> 수정
+                </button>
+                <button onClick={() => handleDelete(c.id, c.store_name)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#F04452] hover:bg-[#FFF0F0]">
+                  <Trash2 size={13} /> 삭제
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {modal && (
