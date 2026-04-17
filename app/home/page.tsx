@@ -46,50 +46,51 @@ function WeeklyModal({ weekly, onClose }: {
   onClose: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-[300]" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40" />
-      <div className="absolute inset-0 flex items-end pointer-events-none">
-      <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden pointer-events-auto relative"
-        onClick={e => e.stopPropagation()}>
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
-        </div>
-        <div className="flex items-center justify-between px-5 py-3 border-b border-[#F2F4F6]">
-          <div className="flex items-center gap-2">
-            <Calendar size={16} className="text-[#3182F6]" />
-            <span className="text-[17px] font-bold text-[#191F28]">주간 날씨</span>
+    <div className="fixed inset-0 z-[300]">
+      {/* 배경 클릭 시 닫기 */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      {/* 시트 */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
+        <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
           </div>
-          <button onClick={onClose} className="active:opacity-60">
-            <X size={20} className="text-[#8B95A1]" />
-          </button>
-        </div>
-        <div className="px-4 py-3 pb-10 space-y-1">
-          {weekly.map((day, i) => (
-            <div key={i}
-              className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
-                day.isToday ? "bg-[#EBF3FE]" : "hover:bg-[#F2F4F6]"
-              }`}>
-              <div className="w-14 shrink-0">
-                <p className={`text-[14px] font-bold ${day.isToday ? "text-[#3182F6]" : "text-[#4E5968]"}`}>
-                  {day.isToday ? "오늘" : day.dayLabel}
-                </p>
-                <p className="text-[12px] text-[#B0B8C1]">{day.date}</p>
-              </div>
-              <span className="text-[25px] w-8 shrink-0">{day.emoji}</span>
-              <div className="flex-1">
-                {day.precipitation > 0 && (
-                  <p className="text-[12px] text-[#3182F6]">💧 {day.precipitation}mm</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="text-[15px] font-bold text-[#F04452]">{day.high}°</span>
-                <span className="text-[13px] text-[#B0B8C1]">/</span>
-                <span className="text-[15px] font-semibold text-[#3182F6]">{day.low}°</span>
-              </div>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#F2F4F6]">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-[#3182F6]" />
+              <span className="text-[17px] font-bold text-[#191F28]">주간 날씨</span>
             </div>
-          ))}
+            <button onClick={onClose} className="active:opacity-60">
+              <X size={20} className="text-[#8B95A1]" />
+            </button>
+          </div>
+          <div className="px-4 py-3 pb-10 space-y-1">
+            {weekly.map((day, i) => (
+              <div key={i}
+                className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
+                  day.isToday ? "bg-[#EBF3FE]" : "hover:bg-[#F2F4F6]"
+                }`}>
+                <div className="w-14 shrink-0">
+                  <p className={`text-[14px] font-bold ${day.isToday ? "text-[#3182F6]" : "text-[#4E5968]"}`}>
+                    {day.isToday ? "오늘" : day.dayLabel}
+                  </p>
+                  <p className="text-[12px] text-[#B0B8C1]">{day.date}</p>
+                </div>
+                <span className="text-[25px] w-8 shrink-0">{day.emoji}</span>
+                <div className="flex-1">
+                  {day.precipitation > 0 && (
+                    <p className="text-[12px] text-[#3182F6]">💧 {day.precipitation}mm</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[15px] font-bold text-[#F04452]">{day.high}°</span>
+                  <span className="text-[13px] text-[#B0B8C1]">/</span>
+                  <span className="text-[15px] font-semibold text-[#3182F6]">{day.low}°</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );
