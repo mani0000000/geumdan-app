@@ -61,8 +61,8 @@ function FloorModal({ buildingId, onSave, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-sm shadow-xl">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:px-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-sm shadow-xl">
         <div className="px-5 py-4 border-b flex items-center justify-between">
           <h2 className="text-[15px] font-bold">층 추가</h2>
           <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
@@ -142,8 +142,8 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:px-4">
+      <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
         <div className="px-6 py-4 border-b flex items-center justify-between">
           <h2 className="text-[15px] font-bold">{initial ? "매장 수정" : "매장 추가"}</h2>
           <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
@@ -256,7 +256,7 @@ function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSav
   }
 
   return (
-    <form onSubmit={save} className="space-y-4 max-w-lg">
+    <form onSubmit={save} className="space-y-4 max-w-full">
       <Field label="건물명 *">
         <input className={INPUT} value={form.name} onChange={e => set("name", e.target.value)} />
       </Field>
@@ -348,33 +348,35 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
 
   return (
     <div>
-      {/* 층 탭 바 */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        {floors.map(f => (
-          <div key={f.id} className="flex items-center">
-            <button
-              onClick={() => setSelFloor(f.label)}
-              className={`px-3 py-1.5 rounded-l-xl text-[13px] font-semibold transition-all border ${
-                selFloor === f.label
-                  ? "bg-[#3182F6] text-white border-[#3182F6]"
-                  : "bg-white text-[#4E5968] border-[#E5E8EB] hover:border-[#3182F6]"
-              }`}>
-              {f.label}
-              <span className="ml-1 text-[11px] opacity-70">
-                ({stores.filter(s => s.floor_label === f.label).length})
-              </span>
-            </button>
-            <button
-              onClick={() => deleteFloor(f)}
-              className="px-1.5 py-1.5 rounded-r-xl border border-l-0 border-[#E5E8EB] text-[#F04452] hover:bg-[#FFF0F0]">
-              <X size={12} />
-            </button>
-          </div>
-        ))}
-        <button onClick={() => setFloorModal(true)}
-          className="flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#B0B8C1] rounded-xl text-[13px] text-[#8B95A1] hover:border-[#3182F6] hover:text-[#3182F6]">
-          <Plus size={13} /> 층 추가
-        </button>
+      {/* 층 탭 바 - 모바일에서 가로 스크롤 */}
+      <div className="overflow-x-auto mb-4">
+        <div className="flex items-center gap-2 whitespace-nowrap pb-1">
+          {floors.map(f => (
+            <div key={f.id} className="flex items-center shrink-0">
+              <button
+                onClick={() => setSelFloor(f.label)}
+                className={`px-3 py-1.5 rounded-l-xl text-[13px] font-semibold transition-all border ${
+                  selFloor === f.label
+                    ? "bg-[#3182F6] text-white border-[#3182F6]"
+                    : "bg-white text-[#4E5968] border-[#E5E8EB] hover:border-[#3182F6]"
+                }`}>
+                {f.label}
+                <span className="ml-1 text-[11px] opacity-70">
+                  ({stores.filter(s => s.floor_label === f.label).length})
+                </span>
+              </button>
+              <button
+                onClick={() => deleteFloor(f)}
+                className="px-1.5 py-1.5 rounded-r-xl border border-l-0 border-[#E5E8EB] text-[#F04452] hover:bg-[#FFF0F0]">
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+          <button onClick={() => setFloorModal(true)}
+            className="flex items-center gap-1 px-3 py-1.5 border border-dashed border-[#B0B8C1] rounded-xl text-[13px] text-[#8B95A1] hover:border-[#3182F6] hover:text-[#3182F6] shrink-0">
+            <Plus size={13} /> 층 추가
+          </button>
+        </div>
       </div>
 
       {/* 선택된 층의 매장 목록 */}
@@ -395,53 +397,93 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
           ) : floorStores.length === 0 ? (
             <div className="py-8 text-center text-[#B0B8C1] text-[13px]">매장 없음</div>
           ) : (
-            <table className="w-full text-[13px]">
-              <thead className="bg-[#F8F9FB]">
-                <tr>
-                  {["매장명", "업종", "전화", "영업시간", "영업중", "프리미엄", "수정/삭제"].map(h => (
-                    <th key={h} className="text-left px-4 py-2.5 text-[11px] font-bold text-[#8B95A1]">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#F2F4F6]">
-                {floorStores.map(s => (
-                  <tr key={s.id} className="hover:bg-[#F8F9FB]">
-                    <td className="px-4 py-3 font-semibold text-[#191F28]">
-                      {s.name}
-                      {s.is_premium && <span className="ml-1.5 text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                        style={{ background: CAT_COLOR[s.category] }}>
-                        {s.category}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[#4E5968]">{s.phone ?? "—"}</td>
-                    <td className="px-4 py-3 text-[#4E5968]">{s.hours ?? "—"}</td>
-                    <td className="px-4 py-3">
-                      <OpenToggle store={s} onToggled={loadData} />
-                    </td>
-                    <td className="px-4 py-3">
-                      {s.is_premium
-                        ? <Check size={14} className="text-[#F59E0B]" />
-                        : <span className="text-[#E5E8EB]">—</span>}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1.5">
-                        <button onClick={() => setStoreModal(s)}
-                          className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#3182F6]">
-                          <Pencil size={13} />
-                        </button>
-                        <button onClick={() => deleteStore(s)}
-                          className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452]">
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </td>
+            <>
+              {/* 데스크톱 테이블 */}
+              <table className="hidden md:table w-full text-[13px]">
+                <thead className="bg-[#F8F9FB]">
+                  <tr>
+                    {["매장명", "업종", "전화", "영업시간", "영업중", "프리미엄", "수정/삭제"].map(h => (
+                      <th key={h} className="text-left px-4 py-2.5 text-[11px] font-bold text-[#8B95A1]">{h}</th>
+                    ))}
                   </tr>
+                </thead>
+                <tbody className="divide-y divide-[#F2F4F6]">
+                  {floorStores.map(s => (
+                    <tr key={s.id} className="hover:bg-[#F8F9FB]">
+                      <td className="px-4 py-3 font-semibold text-[#191F28]">
+                        {s.name}
+                        {s.is_premium && <span className="ml-1.5 text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ background: CAT_COLOR[s.category] }}>
+                          {s.category}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-[#4E5968]">{s.phone ?? "—"}</td>
+                      <td className="px-4 py-3 text-[#4E5968]">{s.hours ?? "—"}</td>
+                      <td className="px-4 py-3">
+                        <OpenToggle store={s} onToggled={loadData} />
+                      </td>
+                      <td className="px-4 py-3">
+                        {s.is_premium
+                          ? <Check size={14} className="text-[#F59E0B]" />
+                          : <span className="text-[#E5E8EB]">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1.5">
+                          <button onClick={() => setStoreModal(s)}
+                            className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#3182F6]">
+                            <Pencil size={13} />
+                          </button>
+                          <button onClick={() => deleteStore(s)}
+                            className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452]">
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* 모바일 카드 목록 */}
+              <div className="md:hidden divide-y divide-[#F2F4F6]">
+                {floorStores.map(s => (
+                  <div key={s.id} className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0 pr-2">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                          <p className="font-bold text-[14px] text-[#191F28]">{s.name}</p>
+                          {s.is_premium && (
+                            <span className="text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★ 프리미엄</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                            style={{ background: CAT_COLOR[s.category] }}>
+                            {s.category}
+                          </span>
+                          {s.phone && <span className="text-[12px] text-[#4E5968]">{s.phone}</span>}
+                          {s.hours && <span className="text-[12px] text-[#8B95A1]">{s.hours}</span>}
+                        </div>
+                      </div>
+                      <OpenToggle store={s} onToggled={loadData} />
+                    </div>
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => setStoreModal(s)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#3182F6] hover:bg-[#EFF6FF]">
+                        <Pencil size={13} /> 수정
+                      </button>
+                      <button onClick={() => deleteStore(s)}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#F04452] hover:bg-[#FFF0F0]">
+                        <Trash2 size={13} /> 삭제
+                      </button>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -489,7 +531,7 @@ function DetailContent() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-4 md:p-6">
       {/* 헤더 */}
       <div className="flex items-center gap-3 mb-5">
         <button onClick={() => router.push("/admin/stores")}
@@ -497,7 +539,7 @@ function DetailContent() {
           <ChevronLeft size={16} className="text-[#4E5968]" />
         </button>
         <div>
-          <h1 className="text-[20px] font-extrabold text-[#191F28]">{building.name}</h1>
+          <h1 className="text-[16px] md:text-[20px] font-extrabold text-[#191F28]">{building.name}</h1>
           <p className="text-[12px] text-[#8B95A1]">ID: {building.id} · {building.address}</p>
         </div>
       </div>
