@@ -3,14 +3,15 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp,
 } from "lucide-react";
 
 const NAV = [
-  { href: "/admin/stores",    icon: Building2,      label: "상가건물 관리" },
-  { href: "/admin/coupons",   icon: Tag,            label: "쿠폰 관리"    },
-  { href: "/admin/openings",  icon: Store,          label: "신규오픈 관리" },
-  { href: "/admin/community", icon: MessageSquare,  label: "커뮤니티 관리" },
+  { href: "/admin/stores",     icon: Building2,     label: "상가건물 관리" },
+  { href: "/admin/coupons",    icon: Tag,           label: "쿠폰 관리"    },
+  { href: "/admin/openings",   icon: Store,         label: "신규오픈 관리" },
+  { href: "/admin/community",  icon: MessageSquare, label: "커뮤니티 관리" },
+  { href: "/admin/realestate", icon: TrendingUp,    label: "부동산 시세"   },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
