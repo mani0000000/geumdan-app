@@ -40,7 +40,7 @@ jobs:
           NEXT_PUBLIC_NAVER_CLIENT_SECRET: ${{ secrets.NEXT_PUBLIC_NAVER_CLIENT_SECRET }}
           NEXT_PUBLIC_BASE_PATH: /geumdan-app
           NEXT_PUBLIC_YOUTUBE_API_KEY: ${{ secrets.NEXT_PUBLIC_YOUTUBE_API_KEY }}
-          NEXT_PUBLIC_ADMIN_DB_KEY: ${{ secrets.NEXT_PUBLIC_ADMIN_DB_KEY }}
+          NEXT_PUBLIC_ADMIN_DB_KEY: sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk
           NEXT_PUBLIC_ADMIN_PASSWORD: ${{ secrets.NEXT_PUBLIC_ADMIN_PASSWORD }}
 
       - name: Add .nojekyll
