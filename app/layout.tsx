@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import RootWrapper from "./RootWrapper";
 
 export const metadata: Metadata = {
   title: "검단 라이프 - 검단 신도시 슈퍼앱",
@@ -23,9 +24,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full">
       <body className="min-h-full bg-gray-100">
-        <div className="max-w-[430px] mx-auto min-h-dvh bg-gray-100 relative overflow-x-hidden">
-          {children}
-        </div>
+        <RootWrapper>{children}</RootWrapper>
       </body>
     </html>
   );
