@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,6 +18,7 @@ import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
+import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -1029,25 +1030,21 @@ export default function HomePage() {
   const router = useRouter();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
+  const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[] | null>(null);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
+    fetchWidgetConfig().then(setWidgetConfig);
   }, []);
 
   const stop = nearbyStops[0];
   const bus = stop?.routes[0];
 
-  return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
-      <Header showLocation />
-
-      {/* ── 인사 배너 ── */}
-      <GreetingBanner weather={weather} />
-
-      {/* ── 날씨 ── */}
-      <WeatherWidget weather={weather} loading={weatherLoading} />
-
-      {/* ── 퀵 메뉴 ── */}
+  // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
+  const widgetRenderers: Record<string, () => React.ReactNode> = {
+    greeting: () => <GreetingBanner weather={weather} />,
+    weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
+    quickmenu: () => (
       <div className="bg-white mx-4 mt-2 rounded-2xl px-2 py-3.5 mb-1">
         <div className="flex gap-0.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {quickMenus.map(({ icon: Icon, label, href, color, bg }) => (
@@ -1062,25 +1059,29 @@ export default function HomePage() {
           ))}
         </div>
       </div>
-
-      {/* ── 쿠폰 ── */}
-      <SectionLabel label="이번 주 혜택" />
-      <CouponSection />
-
-      {/* ── 신규 오픈 ── */}
-      <SectionLabel label="신규 오픈" />
-      <NewOpeningsSection />
-
-      {/* ── 주변 마트 (주말만 표시) ── */}
-      <MartSection />
-
-      {/* ── 약국 ── */}
-      <SectionLabel label="주말·심야 약국" />
-      <PharmacySection />
-
-      {/* ── 교통 ── */}
-      <SectionLabel label="교통" />
-      {stop && bus && (
+    ),
+    coupons: () => (
+      <>
+        <SectionLabel label="이번 주 혜택" />
+        <CouponSection />
+      </>
+    ),
+    openings: () => (
+      <>
+        <SectionLabel label="신규 오픈" />
+        <NewOpeningsSection />
+      </>
+    ),
+    mart: () => <MartSection />,
+    pharmacy: () => (
+      <>
+        <SectionLabel label="주말·심야 약국" />
+        <PharmacySection />
+      </>
+    ),
+    transport: () => stop && bus ? (
+      <>
+        <SectionLabel label="교통" />
         <section className="mx-4 mb-1">
           <button onClick={() => router.push("/transport/")}
             className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between active:bg-[#F2F4F6]">
@@ -1110,16 +1111,35 @@ export default function HomePage() {
             </div>
           </button>
         </section>
-      )}
-
-      {/* ── 소식 ── */}
-      <div className="flex items-center justify-between px-4 mt-3 mb-1.5">
-        <div className="flex items-center gap-1.5">
-          <MapPin size={13} className="text-[#3182F6]" />
-          <span className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide">검단 소식</span>
+      </>
+    ) : null,
+    sosik: () => (
+      <>
+        <div className="flex items-center justify-between px-4 mt-3 mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <MapPin size={13} className="text-[#3182F6]" />
+            <span className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide">검단 소식</span>
+          </div>
         </div>
-      </div>
-      <SosikSection />
+        <SosikSection />
+      </>
+    ),
+  };
+
+  // config 로드 전에는 기본 순서로 렌더링
+  const activeWidgets = widgetConfig
+    ? widgetConfig.filter(w => w.enabled)
+    : Object.keys(widgetRenderers).map((id, i) => ({ id, enabled: true, sort_order: i + 1, label: id }));
+
+  return (
+    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
+      <Header showLocation />
+
+      {activeWidgets.map(w => {
+        const render = widgetRenderers[w.id];
+        if (!render) return null;
+        return <React.Fragment key={w.id}>{render()}</React.Fragment>;
+      })}
 
       <div className="h-4" />
       <BottomNav />
