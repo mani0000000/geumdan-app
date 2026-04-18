@@ -130,39 +130,36 @@ const STATION_DB: SubwayStationEntry[] = [
     timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6 },
   },
 
-  // 개통 예정 (검단선 계획)
+  // 검단선 (운영 중)
   {
-    id: "plan-singeumdan",
+    id: "gd-singeumdan",
     displayName: "신검단중앙역",
-    line: "검단선 (계획)",
-    lineColor: "#9CA3AF",
+    line: "검단선",
+    lineColor: "#00A550",
     lat: 37.5930, lng: 126.7095,
-    apiType: "planned",
-    stationCode: "",
-    planned: true,
-    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+    apiType: "ic1",
+    stationCode: "I050",
+    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6 },
   },
   {
-    id: "plan-gdlake",
+    id: "gd-gdlake",
     displayName: "검단호수역",
-    line: "검단선 (계획)",
-    lineColor: "#9CA3AF",
+    line: "검단선",
+    lineColor: "#00A550",
     lat: 37.5870, lng: 126.7025,
-    apiType: "planned",
-    stationCode: "",
-    planned: true,
-    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+    apiType: "ic1",
+    stationCode: "I051",
+    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "05:33", downLast: "23:48", intervalMin: 6 },
   },
   {
-    id: "plan-ara",
+    id: "gd-ara",
     displayName: "아라역",
-    line: "검단선 (계획)",
-    lineColor: "#9CA3AF",
+    line: "검단선",
+    lineColor: "#00A550",
     lat: 37.5778, lng: 126.6932,
-    apiType: "planned",
-    stationCode: "",
-    planned: true,
-    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+    apiType: "ic1",
+    stationCode: "I052",
+    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6 },
   },
 ];
 
@@ -281,5 +278,49 @@ export async function fetchSubwayArrivals(
   if (station.apiType === "ic1")    return fetchIc1Arrivals(station.stationCode);
   if (station.apiType === "arex")   return fetchArexArrivals(station.stationCode);
   if (station.apiType === "seoul9") return fetchSeoul9Arrivals(station.stationCode);
-  return []; // planned
+  return [];
+}
+
+// ── 시간표 기반 다음 열차 추정 (실시간 API 미설정 시 폴백) ────
+export function estimateNextArrivals(
+  timetable: SubwayStationEntry["timetable"],
+): SubwayArrival[] {
+  if (!timetable.intervalMin || timetable.upFirst === "-") return [];
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  const calc = (first: string, last: string, direction: "상행" | "하행"): SubwayArrival | null => {
+    if (!first || first === "-") return null;
+    const [fH, fM] = first.split(":").map(Number);
+    const [lH, lM] = last.split(":").map(Number);
+    const firstMin = fH * 60 + fM;
+    let lastMin = lH * 60 + lM;
+    if (lastMin < firstMin) lastMin += 1440; // 자정 넘어가는 경우
+
+    let nowAdj = nowMin;
+    if (nowAdj + 1440 < firstMin) nowAdj += 1440; // 자정 이전 조정
+
+    if (nowAdj < firstMin) {
+      if (firstMin - nowAdj > 120) return null; // 2시간 이상 남으면 표시 안 함
+      return { direction, terminalStation: `${direction} 방면`, arrivalMin: firstMin - nowAdj, trainNo: "", currentStation: "시간표", isExpress: false };
+    }
+    if (nowAdj > lastMin) return null; // 운행 종료
+
+    const nextOffset = timetable.intervalMin - ((nowAdj - firstMin) % timetable.intervalMin);
+    return {
+      direction,
+      terminalStation: `${direction} 방면`,
+      arrivalMin: nextOffset >= timetable.intervalMin ? 0 : nextOffset,
+      trainNo: "",
+      currentStation: "시간표",
+      isExpress: false,
+    };
+  };
+
+  const results: SubwayArrival[] = [];
+  const up   = calc(timetable.upFirst,   timetable.upLast,   "상행");
+  const down = calc(timetable.downFirst, timetable.downLast, "하행");
+  if (up)   results.push(up);
+  if (down) results.push(down);
+  return results;
 }

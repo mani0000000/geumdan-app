@@ -16,6 +16,7 @@ import {
 } from "@/lib/api/bus";
 import {
   findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  estimateNextArrivals,
   type SubwayStationWithDist, type SubwayArrival,
 } from "@/lib/api/subway";
 import type { BusRoute } from "@/lib/types";
@@ -832,12 +833,7 @@ export default function TransportPage() {
 
                   {/* 상하행 도착정보 */}
                   <div className="px-4 pb-4 space-y-2">
-                    {st.planned ? (
-                      <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                        <p className="text-[13px] font-semibold text-[#6e6e73]">🚧 개통 예정 노선</p>
-                        <p className="text-[12px] text-[#86868b] mt-0.5">운행 시간표 미정</p>
-                      </div>
-                    ) : st.loadingArrivals ? (
+                    {st.loadingArrivals ? (
                       [0, 1].map(i => (
                         <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
                           <div className="space-y-1.5">
@@ -847,81 +843,70 @@ export default function TransportPage() {
                           <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
                         </div>
                       ))
-                    ) : !hasSubwayKey() ? (
-                      <div className="flex items-center gap-2 bg-[#FFFDE7] rounded-xl px-3 py-3">
-                        <AlertCircle size={14} className="text-[#F57F17] shrink-0" />
-                        <div>
-                          <p className="text-[12px] font-bold text-[#F57F17]">실시간 정보 미설정</p>
-                          <p className="text-[11px] text-[#F57F17]/80">
-                            첫차 상행 {st.timetable.upFirst} · 막차 {st.timetable.upLast}
-                          </p>
-                        </div>
-                      </div>
-                    ) : st.arrivals.length === 0 ? (
-                      <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                        <p className="text-[13px] text-[#6e6e73]">운행 정보 없음 (운행 종료 또는 API 미응답)</p>
-                      </div>
-                    ) : (
-                      <>
-                        {/* 상행 — 최대 2편 */}
-                        {upArrivals.length === 0 ? (
-                          <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-                            <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
-                            <p className="text-[13px] text-[#6e6e73]">운행 정보 없음</p>
-                          </div>
-                        ) : (
-                          upArrivals.slice(0, 2).map((a, i) => (
-                            <div key={`up-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                              <div className="flex-1 min-w-0 mr-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">
-                                    {i === 0 ? "상행 1번째" : "상행 2번째"}
-                                  </span>
-                                  <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
-                                  {a.isExpress && (
-                                    <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                                  {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
-                                </p>
-                              </div>
-                              <ArrivalBadge min={a.arrivalMin} live />
-                            </div>
-                          ))
-                        )}
-                        {/* 하행 — 최대 2편 */}
-                        {downArrivals.length === 0 ? (
-                          <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-                            <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
-                            <p className="text-[13px] text-[#6e6e73]">운행 정보 없음</p>
-                          </div>
-                        ) : (
-                          downArrivals.slice(0, 2).map((a, i) => (
-                            <div key={`down-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                              <div className="flex-1 min-w-0 mr-2">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">
-                                    {i === 0 ? "하행 1번째" : "하행 2번째"}
-                                  </span>
-                                  <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
-                                  {a.isExpress && (
-                                    <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
-                                  )}
-                                </div>
-                                <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                                  {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
-                                </p>
-                              </div>
-                              <ArrivalBadge min={a.arrivalMin} live />
-                            </div>
-                          ))
-                        )}
-                      </>
-                    )}
+                    ) : (() => {
+                      // 실시간 있으면 실시간, 없으면 시간표 계산으로 대체
+                      const displayArrivals = st.arrivals.length > 0
+                        ? st.arrivals
+                        : estimateNextArrivals(st.timetable);
+                      const isEstimated = st.arrivals.length === 0;
+                      const upArrivals   = displayArrivals.filter(a => a.direction === "상행");
+                      const downArrivals = displayArrivals.filter(a => a.direction === "하행");
 
-                    {/* 첫차/막차 (개통예정역 제외) */}
-                    {!st.planned && (
+                      if (displayArrivals.length === 0) return (
+                        <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
+                          <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
+                        </div>
+                      );
+
+                      return (
+                      <>
+                        {isEstimated && (
+                          <div className="flex items-center gap-1.5 px-1 pb-1">
+                            <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준 추정 도착</span>
+                          </div>
+                        )}
+                        {/* 상행 */}
+                        {upArrivals.slice(0, 2).map((a, i) => (
+                          <div key={`up-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                            <div className="flex-1 min-w-0 mr-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
+                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation}</p>
+                                {a.isExpress && (
+                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-[#6e6e73] mt-0.5">
+                                {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
+                              </p>
+                            </div>
+                            <ArrivalBadge min={a.arrivalMin} live />
+                          </div>
+                        ))}
+                        {/* 하행 */}
+                        {downArrivals.slice(0, 2).map((a, i) => (
+                          <div key={`down-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                            <div className="flex-1 min-w-0 mr-2">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
+                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation}</p>
+                                {a.isExpress && (
+                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                )}
+                              </div>
+                              <p className="text-[11px] text-[#6e6e73] mt-0.5">
+                                {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
+                              </p>
+                            </div>
+                            <ArrivalBadge min={a.arrivalMin} live />
+                          </div>
+                        ))}
+                      </>
+                      );
+                    })()}
+
+                    {/* 첫차/막차 */}
+                    {st.timetable.upFirst !== "-" && (
                       <div className="flex gap-2 pt-1">
                         <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
                           <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
