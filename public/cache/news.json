@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-18T18:31:50.237Z",
+  "fetchedAt": "2026-04-18T21:23:47.025Z",
   "count": 40,
   "articles": [
     {
@@ -12,7 +12,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-5",
       "title": "인천 서구, 행정은 나뉘어도 교육은 잇는다 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-19",
       "title": "“지도는 갈라져도 교육은 하나”... 인천 서구, 분구 전 마지막 ‘마을학교’ 통합 워크숍 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-2",
       "title": "인천 서구·검단구, 마을학교 통합 워크숍 개최…분구 앞두고 교육협력 강화 - 여성종합뉴스",
       "summary": "",
       "source": "여성종합뉴스",
@@ -111,15 +111,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-11",
-      "title": "김진규 검단구청장 예비후보, 아라계양로 ‘혼잡 경고등’…대책 촉구 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-04-16T02:26:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFByUnRwOGlWRHBMVHFTeDVkNDJFTHBrTk5HMXdYSGNEaHZHd083akJTcE9waWNiQUVHOElXRDRrclcxS1JyT3FBcEYxM0FxYVpNcXlNWklWTmVqNlBzY0Y4aXNMYW4wYlk1M00tME5NQQ?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr3-0",
       "title": "강남규 검단구청장 예비후보, 국토부 장관 만나 검단 교통 문제 관련 정책제안서 전달 - 기호일보",
       "summary": "",
@@ -147,6 +138,24 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-12",
+      "title": "인천 서구 검단구 출범 대비 예산 로드맵 가동 본예산 편성 교육 실시 > 뉴스 - 더코리아",
+      "summary": "",
+      "source": "더코리아",
+      "publishedAt": "2026-04-14T14:24:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBFQnMxT24xWDRkQjBDSnhLalFJZGVCbTVrTkIwdzVuUEZWMFozV0VqX05XV3UzNkhYVHdBdTc2M2ZWbms?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-7",
+      "title": "송승환 인천서구의장 '검단의 더 큰 도약을 위해 끝까지 뛰겠다' - 경인종합일보",
+      "summary": "",
+      "source": "경인종합일보",
+      "publishedAt": "2026-04-14T12:26:38.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE81QjlOMGJUdmxpNTZ1Wm9qNU9teE11MDlRMHl6bDd0d1ZsTHkzaXIxcjZTejF2YktiLVoxMGRuajVBdWJiV1VwVHFHdFVpNjZackhxTTNfOUpmMjRFdlZwWG9lWkRHdlIxU29qVS1R0gFyQVVfeXFMTmJNUXUxM2puTUxzQ2xDWnVEdHRaTTJnVGRpTmI4ekdrcGVGUVBoMFdKRllxVmtWRU9aZjdOWUh3cmVzbW9DOVBxTTM1MlZpbGdsa3NnX2lxNnBUT0czVVVMMDlReHdXTmtEdllLTENDeFBR?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr0-3",
       "title": "수도권 역세권 신축 브랜드 대단지 ‘초강세‘…‘검단신도시 롯데캐슬 넥스티엘’ 입주 앞둬 - 뷰어스",
       "summary": "",
@@ -165,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-4",
       "title": "인천 서구청장 민주당·국민의힘 후보 확정··· 탈환 구재용 VS 3선 강범석 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -174,21 +183,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-26",
+      "id": "gr2-35",
       "title": "“현장서 배우는 예방 수칙”...인천 서구, 어르신 건강교육 강화 - 경인매일",
       "summary": "",
       "source": "경인매일",
       "publishedAt": "2026-04-13T06:38:47.000Z",
       "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBTTEt2eTBfVnFScTlGRmZaUWliUER0aTVkOUp0RFRXN0FSMjh3c1FIdG02bzJuTEhvaEtfekh5SW1FYzVWSGtkaHZsdEtvRUNsT003NTRLQ2xYWVNRcFk3M24wbFF0S1Zh?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-10",
-      "title": "양인모 인천시의원 예비후보 “검단구 출범, 예산·교통·교육 대전환 이끌겠다” - 내외뉴스통신",
-      "summary": "",
-      "source": "내외뉴스통신",
-      "publishedAt": "2026-04-13T06:11:40.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5ncXdsRTJ4Wi1vaWZkTnFFRDRnakZvU3ZFdmFjX3JBaHNCZFRfM3dfNVI4SVlqNnRfaV9abkZLX1VhMHBBdkxwUTd5dVNrSWJHZDgtbFlBZUhvMHZkRTUzRm1ESlNKOEE3cUwzd9IBcEFVX3lxTE9EaDl5Y0xvOXJhWnpITXZ5S0Eyd1RLTmRMdTJ6V2IzN2tyVzJMNXllU1FxX3FaZHo3S2pMYUZjV1VCcHo4ak40cUdQdHNCRzI0SHl4MDhaVUd1anRDOWZyaW9zRmJyWjhuT1JVa3J3Y0E?oc=5",
       "type": "뉴스"
     },
     {
@@ -201,16 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-6",
-      "title": "인천 검단·강화·옹진 도로망 대대적 확충 - 정보통신신문",
-      "summary": "",
-      "source": "정보통신신문",
-      "publishedAt": "2026-04-13T05:25:53.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1TdktaRGJVV3VpQmdJQnlOOTVKVkdHSGw5ci1pYWdLdjdNRnZsZVcwQ09WRXUzQW1VYlpDT1dxc2g5bWk5alBjN3hLbUNsTlNpY2hwYUhJSlhueXpxWWVISTNtT0Jtbk1a0gFsQVVfeXFMTTBmRUEtT21VLXJRMWFaMFR0Um5waEtjTzFLbVRCZXd2VmhTTGpvWkRSRmRmV3V0TTJWWjZRYm5JdV9Fa1RIaDk5TDVmdER4S2ZrX3JDWVNOWFRvNGpiMWhvSnNOYnE2enR4TFZG?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-9",
+      "id": "gr3-8",
       "title": "검단 아라역 ‘상습 정체’ 풀리나…서구의회·국회의원 현장 점검 - 글로벌경제신문",
       "summary": "",
       "source": "글로벌경제신문",
@@ -219,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-34",
+      "id": "gr2-43",
       "title": "민주당 인천 기초단체장 연수·부평·강화·서구 후보 확정 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -228,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-25",
       "title": "인천 서구, 소프트파워·교통 인프라 확대…“새로운 도시 거듭날 것” - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -237,16 +228,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-24",
-      "title": "인천 서구의회, 검단신도시 아라역 교통정체 해소 현장점검 - 경기도민일보 미디어",
+      "id": "gr1-12",
+      "title": "내 집 앞 역 유치 전쟁…5호선 김포·검단 연장 ‘추가 역사’ 쟁탈전 - v.daum.net",
       "summary": "",
-      "source": "경기도민일보 미디어",
-      "publishedAt": "2026-04-10T11:30:32.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBQaW9jRW51Z0c3U1ZtVW5TS21qNWtvM1FFcmhLWl9jc200dkxFb1pRaXlrbHFfdU1nMDg0dGJVRndMZ05xWGxzV003TExza2ZuVG1HQ045NVR1TUVCUVJVM3dDRW8xSGQ4SlE?oc=5",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-10T20:03:16.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE92dFRRb3huRVZlWm1mN3ZuTVpSVWhVd1NpbXFhQjFuQ2w1b29CMVBTTmZzSVZNWktwZmVsZmxGYXJEREJWVjUxYkZIWmcwbGM?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr3-16",
+      "id": "gr3-13",
       "title": "인천 검단·강화·옹진 교통지형 확 바뀐다 - 현대일보",
       "summary": "",
       "source": "현대일보",
@@ -255,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-14",
+      "id": "gr3-11",
       "title": "[도로투데이] 인천시, '교통 소외지' 검단·강화·옹진 도로망 확충 2.5조 투입 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -264,16 +255,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-23",
-      "title": "인천시, 검단·강화·옹진 2.5조 투입 교통망 재개편 - 기호일보",
+      "id": "gr3-10",
+      "title": "인천 서북부 교통지형 ‘대전환’…검단·강화·옹진 도로망에 2.5조 투입 - v.daum.net",
       "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-04-10T06:40:47.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9WVGM5WGtJdmhialNCN09KUUZKTWgxWTFTRnlQQk42b245YWs0UTBfY3VjQ0RxSk1zUFp5Mi14Y1BkbmZESzVCaF9MUk45SkxVSDRJUkpiX0FqdWd1M3A0X3NRZTJteEJkU0JnTWl4aw?oc=5",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-10T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFAxUXVaNHBrU3hMNzNNOU03VWpVQ0ZoeXFCRjA1RU55dVVBN0hjbTRZV1JmTUlMZnlRdVo5WG9mM180R2RPcDFleVcyeHlOUUU?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr3-17",
+      "id": "gr3-14",
       "title": "인천 ‘교통 소외’ 검단·강화·옹진에 2.5조 쏟아 도로 뚫는다 - 일간경기",
       "summary": "",
       "source": "일간경기",
@@ -291,7 +282,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-19",
+      "id": "gr3-26",
+      "title": "인천 검단·옹진·강화 교통지형 개편…2.5조 투입 - 서울Pn",
+      "summary": "",
+      "source": "서울Pn",
+      "publishedAt": "2026-04-10T05:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBrNWhxMHFPb3E2Nnk4NUkxNDlaLUM3SF9KMGVfbU1XRVFMV0szUjVWVTFVUjlGdThoSEwyOXNFcVpzQndqVFNvbVRhWFhGUEtOVnI4VXkzb2ZCNGVJRHBvQ0g1RlJWeHJjdkE?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr3-16",
       "title": "인천서구의회, 검단 아라역 교통정체 해소 현장 점검 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -300,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-13",
+      "id": "gr3-6",
       "title": "인천시, 교통 소외 지역 '검단·강화·옹진' 도로망 대대적 확충 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -309,16 +309,25 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-7",
-      "title": "인천 서북부 교통지형 ‘대전환’…검단·강화·옹진 도로망에 2.5조 투입 - v.daum.net",
+      "id": "gr3-24",
+      "title": "인천시, 2조 5000억 투입해 서북부 도로망 대개편…검단·강화·옹진 교통지형 바뀐다 - 아주경제",
       "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-04-10T02:45:25.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFAxUXVaNHBrU3hMNzNNOU03VWpVQ0ZoeXFCRjA1RU55dVVBN0hjbTRZV1JmTUlMZnlRdVo5WG9mM180R2RPcDFleVcyeHlOUUU?oc=5",
+      "source": "아주경제",
+      "publishedAt": "2026-04-10T02:12:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1YeHQ2YUxtb05qbW5PZWVqSnc5bDM2SUdaZ2Z5N3BrZkVQN2JWb0IwX0sxUC1HVTZQT1hSMnI5WDlsbnZCdTZTQ1MxUHhFQ1JNRlhiTjdRdE1XUdIBWEFVX3lxTE1uNGVULUJ6cE9XSE9iNzdIZGpKN2FZSXBtOVlKalp4MWlLN2lrUkhxYk5sZmtHR0J3d0hrUDJrRWdwYjJfQzgwSmEyc1JuVW00dnlYUGtkNU4?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr3-28",
+      "title": "인천 서북부·도서지역 도로망 대전환…2조5천억 투입 ‘교통지도 바뀐다’ - livesnews.com",
+      "summary": "",
+      "source": "livesnews.com",
+      "publishedAt": "2026-04-10T00:41:58.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5JdlNFTFFVclIydFZBWEM3djlkdXB6RjFNZE1oSkpKZVNfLTBscFhXaWJMMEFNcmh4N1ducjlmVjNEYTBUdVZ0SlRISEVEZVZhVWlTMDg0YTNzamhXbGNYRWx2LWk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-14",
       "title": "지역 시장 견인하는 브랜드 상징성… 검단 첫 롯데캐슬 ‘검단신도시 롯데캐슬 넥스티엘’ 선봬 - dt.co.kr",
       "summary": "",
       "source": "dt.co.kr",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-12",
+      "id": "gr3-9",
       "title": "인천시, '교통 소외지' 검단·강화·옹진 도로망 확충 2.5조 투입 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -336,30 +345,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-28",
+      "id": "gr2-21",
+      "title": "인천 서구, 검단구 출범 대비 본예산 편성 교육 - 일간투데이",
+      "summary": "",
+      "source": "일간투데이",
+      "publishedAt": "2026-04-09T14:12:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5pTkVTcUFKQS1hTGtWUWp4em1wdzFCVmdZZlFwV3VVeThHRXZPQnBmVFhoUjJhTkc0NkY0eTJnNVJmTEh6RUVoOXNuN3FpdzA5NzJfX3FVZFJCeVl2YnF0aGpHakkxMW1mOXNR?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-37",
       "title": "인천 서구, 검단구 출범 대비 본예산 편성 교육 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
       "publishedAt": "2026-04-09T08:58:29.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9LQVhpMklYQ3BzdHVhQ3EwNGdkVTFxd1VQRzkxZ1BjWEpkZ0VDeFlBeFluTkpNemo2c0NqdUFpNmNYc0FKNGY5T2R0eU4zWmhfWE1XYjdmbVBDUzBHREJfWDdWOXR4eGkxM1NaTlZ3?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-18",
-      "title": "검단신도시 청약 흥행 속 1군 브랜드+대단지 ‘더샵검단레이크파크’ 5월 분양 예정 - dt.co.kr",
-      "summary": "",
-      "source": "dt.co.kr",
-      "publishedAt": "2026-04-09T07:04:12.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiTkFVX3lxTE84dnhPREp6YzBfb3ZqbkNpRFI3R19JNHk1T1YyTHNKQ19lYlp0aDhuc0Jjc2pjZkROU1RlaE8xSDJOWWZzV2RjNlBTZDhYdw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-10",
-      "title": "인천 서구, 검단구 출범 본예산 편성 교육 - B world",
-      "summary": "",
-      "source": "B world",
-      "publishedAt": "2026-04-09T07:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBEajJKR29wcURIWG1TX2U2RlVES3ktbnhRLTBvSHVmb0h0SXE3UkdOejhPaGhIcVJjN3Q1NGZBSldJYU82MC1lUXAwbWZuRlNHbUpwSVhzMzQ2RWpDUjRkeS0yLXlTcWtyaHlzWWhtTGk?oc=5",
       "type": "뉴스"
     }
   ]
