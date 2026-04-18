@@ -45,6 +45,8 @@ export interface SubwayStationEntry {
     upFirst: string; upLast: string;
     downFirst: string; downLast: string;
     intervalMin: number;
+    upDirection: string;   // 상행 종착역 이름 (예: "서울역")
+    downDirection: string; // 하행 종착역 이름 (예: "인천공항")
   };
 }
 
@@ -63,7 +65,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5575, lng: 126.6721,
     apiType: "arex",
     stationCode: "검암",
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 30 },
+    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -73,7 +75,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30 },
+    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
   // 서울 9호선
@@ -85,7 +87,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5625, lng: 126.8013,
     apiType: "seoul9",
     stationCode: "김포공항",
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50", intervalMin: 9 },
+    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50", intervalMin: 9, upDirection: "중앙보훈병원", downDirection: "개화" },
   },
 
   // 인천1호선
@@ -97,7 +99,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
     stationCode: "I023",
-    timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6 },
+    timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
   {
     id: "ic1-bakchon",
@@ -107,7 +109,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5513, lng: 126.7432,
     apiType: "ic1",
     stationCode: "I024",
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:25", downLast: "23:45", intervalMin: 6 },
+    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:25", downLast: "23:45", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
   {
     id: "ic1-imhak",
@@ -117,7 +119,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5441, lng: 126.7380,
     apiType: "ic1",
     stationCode: "I025",
-    timetable: { upFirst: "05:39", upLast: "23:59", downFirst: "05:23", downLast: "23:43", intervalMin: 6 },
+    timetable: { upFirst: "05:39", upLast: "23:59", downFirst: "05:23", downLast: "23:43", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
   {
     id: "ic1-gyesan",
@@ -127,7 +129,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5389, lng: 126.7285,
     apiType: "ic1",
     stationCode: "I026",
-    timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6 },
+    timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
 
   // 검단선 (운영 중)
@@ -139,7 +141,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5930, lng: 126.7095,
     apiType: "ic1",
     stationCode: "I050",
-    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6 },
+    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
   },
   {
     id: "gd-gdlake",
@@ -149,7 +151,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5870, lng: 126.7025,
     apiType: "ic1",
     stationCode: "I051",
-    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "05:33", downLast: "23:48", intervalMin: 6 },
+    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "05:33", downLast: "23:48", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
   },
   {
     id: "gd-ara",
@@ -159,7 +161,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5778, lng: 126.6932,
     apiType: "ic1",
     stationCode: "I052",
-    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6 },
+    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
   },
 ];
 
@@ -294,27 +296,27 @@ export function estimateNextArrivals(
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const calc = (first: string, last: string, direction: "상행" | "하행"): SubwayArrival | null => {
+  const calc = (first: string, last: string, direction: "상행" | "하행", destName: string): SubwayArrival | null => {
     if (!first || first === "-") return null;
     const [fH, fM] = first.split(":").map(Number);
     const [lH, lM] = last.split(":").map(Number);
     const firstMin = fH * 60 + fM;
     let lastMin = lH * 60 + lM;
-    if (lastMin < firstMin) lastMin += 1440; // 자정 넘어가는 경우
+    if (lastMin < firstMin) lastMin += 1440;
 
     let nowAdj = nowMin;
-    if (nowAdj + 1440 < firstMin) nowAdj += 1440; // 자정 이전 조정
+    if (nowAdj + 1440 < firstMin) nowAdj += 1440;
 
     if (nowAdj < firstMin) {
-      if (firstMin - nowAdj > 120) return null; // 2시간 이상 남으면 표시 안 함
-      return { direction, terminalStation: `${direction} 방면`, arrivalMin: firstMin - nowAdj, trainNo: "", currentStation: "시간표", isExpress: false };
+      if (firstMin - nowAdj > 120) return null;
+      return { direction, terminalStation: destName, arrivalMin: firstMin - nowAdj, trainNo: "", currentStation: "시간표", isExpress: false };
     }
-    if (nowAdj > lastMin) return null; // 운행 종료
+    if (nowAdj > lastMin) return null;
 
     const nextOffset = timetable.intervalMin - ((nowAdj - firstMin) % timetable.intervalMin);
     return {
       direction,
-      terminalStation: `${direction} 방면`,
+      terminalStation: destName,
       arrivalMin: nextOffset >= timetable.intervalMin ? 0 : nextOffset,
       trainNo: "",
       currentStation: "시간표",
@@ -323,8 +325,8 @@ export function estimateNextArrivals(
   };
 
   const results: SubwayArrival[] = [];
-  const up   = calc(timetable.upFirst,   timetable.upLast,   "상행");
-  const down = calc(timetable.downFirst, timetable.downLast, "하행");
+  const up   = calc(timetable.upFirst,   timetable.upLast,   "상행", timetable.upDirection);
+  const down = calc(timetable.downFirst, timetable.downLast, "하행", timetable.downDirection);
   if (up)   results.push(up);
   if (down) results.push(down);
   return results;
