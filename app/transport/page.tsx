@@ -345,6 +345,7 @@ export default function TransportPage() {
   const [favRoutes, setFavRoutes] = useState<Set<string>>(() => loadFavSet("favRoutes"));
   const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
+  const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
@@ -621,11 +622,13 @@ export default function TransportPage() {
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favSubwayList.map(st => {
-              const nextUp   = st.arrivals.find(a => a.direction === "상행");
-              const nextDown = st.arrivals.find(a => a.direction === "하행");
+              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+              const nextUp   = displayArrivals.find(a => a.direction === "상행");
+              const nextDown = displayArrivals.find(a => a.direction === "하행");
               return (
-                <div key={st.id}
-                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[155px] border border-[#f5f5f7]">
+                <button key={st.id}
+                  onClick={() => setSelectedSubway(st)}
+                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[160px] border border-[#f5f5f7] text-left active:opacity-70">
                   <div className="flex items-center gap-1 mb-0.5">
                     <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
                     <span className="text-[12px] font-bold text-[#1d1d1f] truncate">{st.displayName}</span>
@@ -633,31 +636,120 @@ export default function TransportPage() {
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
                     style={{ background: st.lineColor }}>{st.line}</span>
                   {st.loadingArrivals ? (
-                    <div className="h-8 bg-[#d2d2d7] rounded animate-pulse" />
-                  ) : nextUp || nextDown ? (
-                    <div className="space-y-1">
+                    <div className="h-10 bg-[#d2d2d7] rounded animate-pulse" />
+                  ) : (
+                    <div className="space-y-1.5">
                       {nextUp && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#6e6e73]">상행</span>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[10px] text-[#6e6e73] truncate">{nextUp.terminalStation}</span>
                           <ArrivalBadge min={nextUp.arrivalMin} live />
                         </div>
                       )}
                       {nextDown && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#6e6e73]">하행</span>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[10px] text-[#6e6e73] truncate">{nextDown.terminalStation}</span>
                           <ArrivalBadge min={nextDown.arrivalMin} live />
                         </div>
                       )}
                     </div>
-                  ) : (
-                    <p className="text-[10px] text-[#0071e3] font-semibold">{distLabel(st.distM)}</p>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
         </div>
       )}
+
+      {/* 지하철 즐겨찾기 상세 바텀 시트 */}
+      {selectedSubway && (() => {
+        const st = selectedSubway;
+        const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+        const isEst = st.arrivals.length === 0;
+        const upArr   = displayArrivals.filter(a => a.direction === "상행");
+        const downArr = displayArrivals.filter(a => a.direction === "하행");
+        return (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-[200]" onClick={() => setSelectedSubway(null)} />
+            <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250] max-h-[70%] overflow-y-auto">
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+              </div>
+              <div className="px-5 pt-3 pb-6">
+                {/* 헤더 */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: st.lineColor + "22" }}>
+                      <Train size={20} style={{ color: st.lineColor }} />
+                    </div>
+                    <div>
+                      <p className="text-[17px] font-bold text-[#1d1d1f]">{st.displayName}</p>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                        style={{ background: st.lineColor }}>{st.line}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setSelectedSubway(null)}
+                    className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+                    <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
+                  </button>
+                </div>
+
+                {isEst && (
+                  <p className="text-[11px] text-[#86868b] mb-3">⏱ 시간표 기준 추정 도착</p>
+                )}
+
+                <div className="space-y-2">
+                  {upArr.map((a, i) => (
+                    <div key={`u${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded">상행</span>
+                          <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
+                        </div>
+                        {!isEst && a.currentStation && (
+                          <p className="text-[11px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
+                        )}
+                      </div>
+                      <ArrivalBadge min={a.arrivalMin} live />
+                    </div>
+                  ))}
+                  {downArr.map((a, i) => (
+                    <div key={`d${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded">하행</span>
+                          <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
+                        </div>
+                        {!isEst && a.currentStation && (
+                          <p className="text-[11px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
+                        )}
+                      </div>
+                      <ArrivalBadge min={a.arrivalMin} live />
+                    </div>
+                  ))}
+                  {displayArrivals.length === 0 && (
+                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-4 text-center">
+                      <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
+                    </div>
+                  )}
+                </div>
+
+                {st.timetable.upFirst !== "-" && (
+                  <div className="flex gap-2 mt-3">
+                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 첫차/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                    </div>
+                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 첫차/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       {/* 위치 상태 바 */}
       <div className="flex items-center justify-between px-4 py-2.5">
@@ -850,7 +942,7 @@ export default function TransportPage() {
                             <div className="flex-1 min-w-0 mr-2">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
-                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation}</p>
+                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                 {a.isExpress && (
                                   <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
                                 )}
@@ -868,7 +960,7 @@ export default function TransportPage() {
                             <div className="flex-1 min-w-0 mr-2">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
-                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation}</p>
+                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                 {a.isExpress && (
                                   <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
                                 )}
