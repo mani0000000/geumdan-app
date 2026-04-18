@@ -163,6 +163,11 @@ const STATION_DB: SubwayStationEntry[] = [
   },
 ];
 
+// ── 전체 역 목록 (위치 무관, 항상 표시) ──────────────────────
+export function getAllSubwayStations(): SubwayStationWithDist[] {
+  return STATION_DB.map(st => ({ ...st, distM: 0 }));
+}
+
 // ── GPS 기반 인근 역 탐색 ─────────────────────────────────────
 export function findNearbySubwayStations(
   lat: number,
