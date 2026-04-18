@@ -15,7 +15,7 @@ import {
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
 import {
-  findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
   estimateNextArrivals,
   type SubwayStationWithDist, type SubwayArrival,
 } from "@/lib/api/subway";
@@ -429,35 +429,33 @@ export default function TransportPage() {
     }).catch(() => {});
   }, [isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── 지하철 도착정보 로드 ──────────────────────────────────────
-  const loadSubwayData = useCallback(async (lat: number, lng: number) => {
+  // ── 지하철 도착정보 로드 (위치 무관, 전체 역 표시) ──────────
+  const loadSubwayData = useCallback(async () => {
     setSubwayLoading(true);
-    const nearby = findNearbySubwayStations(lat, lng);
-    setSubwayList(nearby.map(st => ({ ...st, arrivals: [], loadingArrivals: true })));
+    const all = getAllSubwayStations();
+    setSubwayList(all.map(st => ({ ...st, arrivals: [], loadingArrivals: true })));
     setSubwayLoading(false);
 
-    if (hasSubwayKey()) {
-      await Promise.allSettled(
-        nearby.map(async st => {
-          const arrivals = await fetchSubwayArrivals(st);
-          setSubwayList(prev =>
-            prev.map(s => s.id === st.id ? { ...s, arrivals, loadingArrivals: false } : s)
-          );
-        })
-      );
-    } else {
-      setSubwayList(prev => prev.map(s => ({ ...s, loadingArrivals: false })));
-    }
+    await Promise.allSettled(
+      all.map(async st => {
+        const arrivals = hasSubwayKey()
+          ? await fetchSubwayArrivals(st)
+          : [];
+        setSubwayList(prev =>
+          prev.map(s => s.id === st.id ? { ...s, arrivals, loadingArrivals: false } : s)
+        );
+      })
+    );
   }, []);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
     const DEFAULT = { lat: 37.594, lng: 126.710 }; // 검단신도시 중심
 
-    // 1) 기본 위치로 즉시 로드 — GPS 응답 기다리지 않음
+    // 1) 지하철은 위치 무관 즉시 로드, 버스는 기본 위치로 로드
     posRef.current = DEFAULT;
     setUserPos(DEFAULT);
-    loadSubwayData(DEFAULT.lat, DEFAULT.lng);
+    loadSubwayData();
     if (isLive) {
       const cached = loadCachedStops();
       if (cached?.length) setApiStops(cached);
@@ -473,9 +471,8 @@ export default function TransportPage() {
         posRef.current = p;
         setUserPos(p);
         setLocState("ok");
-        // 기본 위치와 300m 이상 차이날 때만 재조회
+        // 기본 위치와 300m 이상 차이날 때만 버스 재조회 (지하철은 위치 무관)
         if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
-          loadSubwayData(p.lat, p.lng);
           if (isLive) loadBusData(p.lat, p.lng);
         }
       },
@@ -489,7 +486,7 @@ export default function TransportPage() {
     setRefreshing(true);
     await Promise.all([
       loadBusData(p.lat, p.lng),
-      loadSubwayData(p.lat, p.lng),
+      loadSubwayData(),
     ]);
     setRefreshing(false);
   };
@@ -791,16 +788,9 @@ export default function TransportPage() {
                 <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
                   {/* 역 헤더 */}
                   <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-                    <div className="relative">
-                      <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ background: st.lineColor + "22" }}>
-                        <Train size={20} style={{ color: st.lineColor }} />
-                      </div>
-                      {idx === 0 && (
-                        <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
-                          최근접
-                        </span>
-                      )}
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ background: st.lineColor + "22" }}>
+                      <Train size={20} style={{ color: st.lineColor }} />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
@@ -808,20 +798,9 @@ export default function TransportPage() {
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
                           style={{ background: st.lineColor }}>{st.line}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <Navigation size={10} className="text-[#0071e3]" />
-                        <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(st.distM)}</span>
-                        {!st.planned && st.timetable.intervalMin > 0 && (
-                          <span className="text-[11px] text-[#86868b]">
-                            배차 {st.timetable.intervalMin}분
-                          </span>
-                        )}
-                        {st.planned && (
-                          <span className="text-[11px] font-bold text-[#9CA3AF] bg-[#f5f5f7] px-1.5 py-0.5 rounded">
-                            개통예정
-                          </span>
-                        )}
-                      </div>
+                      {st.timetable.intervalMin > 0 && (
+                        <p className="text-[12px] text-[#86868b] mt-0.5">배차 {st.timetable.intervalMin}분</p>
+                      )}
                     </div>
                     {!st.planned && (
                       <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60">
