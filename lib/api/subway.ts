@@ -132,36 +132,36 @@ const STATION_DB: SubwayStationEntry[] = [
     timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
 
-  // 검단선 (운영 중)
+  // 인천1호선 연장 (신검단 구간)
   {
     id: "gd-singeumdan",
     displayName: "신검단중앙역",
-    line: "검단선",
-    lineColor: "#00A550",
+    line: "인천1호선",
+    lineColor: "#759CCE",
     lat: 37.5930, lng: 126.7095,
     apiType: "ic1",
     stationCode: "I050",
-    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
+    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
   {
     id: "gd-gdlake",
     displayName: "검단호수역",
-    line: "검단선",
-    lineColor: "#00A550",
+    line: "인천1호선",
+    lineColor: "#759CCE",
     lat: 37.5870, lng: 126.7025,
     apiType: "ic1",
     stationCode: "I051",
-    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "05:33", downLast: "23:48", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
+    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "05:33", downLast: "23:48", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
   {
     id: "gd-ara",
     displayName: "아라역",
-    line: "검단선",
-    lineColor: "#00A550",
+    line: "인천1호선",
+    lineColor: "#759CCE",
     lat: 37.5778, lng: 126.6932,
     apiType: "ic1",
     stationCode: "I052",
-    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "김포공항", downDirection: "검단오류" },
+    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
 ];
 
