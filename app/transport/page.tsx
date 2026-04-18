@@ -581,8 +581,12 @@ export default function TransportPage() {
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favRouteList.map(r => (
               <div key={`${r.stopId}::${r.id}`}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7]">
-                <div className="flex items-center gap-1.5 mb-1">
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
+                <button onClick={() => toggleRoute(`${r.stopId}::${r.id}`)}
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
+                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
+                </button>
+                <div className="flex items-center gap-1.5 mb-1 pr-5">
                   <div className="bg-[#0071e3] rounded-lg px-2 py-0.5">
                     <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
                   </div>
@@ -594,8 +598,12 @@ export default function TransportPage() {
             ))}
             {favStopList.map(stop => (
               <div key={stop.id}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7]">
-                <div className="flex items-center gap-1 mb-1">
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
+                <button onClick={() => toggleStop(stop.id)}
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
+                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
+                </button>
+                <div className="flex items-center gap-1 mb-1 pr-5">
                   <MapPin size={10} className="text-[#0071e3] shrink-0" />
                   <span className="text-[11px] font-bold text-[#1d1d1f] truncate">{stop.name}</span>
                 </div>
@@ -626,10 +634,15 @@ export default function TransportPage() {
               const nextUp   = displayArrivals.find(a => a.direction === "상행");
               const nextDown = displayArrivals.find(a => a.direction === "하행");
               return (
-                <button key={st.id}
+                <div key={st.id} className="shrink-0 relative">
+                <button onClick={() => toggleSubway(st.id)}
+                  className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
+                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
+                </button>
+                <button
                   onClick={() => setSelectedSubway(st)}
                   className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[160px] border border-[#f5f5f7] text-left active:opacity-70">
-                  <div className="flex items-center gap-1 mb-0.5">
+                  <div className="flex items-center gap-1 mb-0.5 pr-5">
                     <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
                     <span className="text-[12px] font-bold text-[#1d1d1f] truncate">{st.displayName}</span>
                   </div>
@@ -654,6 +667,7 @@ export default function TransportPage() {
                     </div>
                   )}
                 </button>
+                </div>
               );
             })}
           </div>
