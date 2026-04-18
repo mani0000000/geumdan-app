@@ -1,9 +1,18 @@
 {
-  "fetchedAt": "2026-04-18T06:55:32.288Z",
+  "fetchedAt": "2026-04-18T09:37:26.464Z",
   "count": 40,
   "articles": [
     {
       "id": "gr2-0",
+      "title": "서인천 서구의회, 행정체제 개편 대비 조직정비… 검단구 분구 준비 본격화 - 천지일보",
+      "summary": "",
+      "source": "천지일보",
+      "publishedAt": "2026-04-18T09:19:38.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE1rWERLQjlhX2lUZFJYbHFFYWZmdTdTOTk5a1Y3S1ZuMXJhTGFTVzdlTmxDM2FlcndMMEJiT1ZLbHItTEFOb09Cc01qN2tkUmNYelBNZmtWM0tmaVFDMGNwYUVWYTFWMklCcWc?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-1",
       "title": "인천 서구, 행정은 나뉘어도 교육은 잇는다 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -12,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-12",
       "title": "“지도는 갈라져도 교육은 하나”... 인천 서구, 분구 전 마지막 ‘마을학교’ 통합 워크숍 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
@@ -21,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-3",
       "title": "[기획- 신생구 검단 2] “신도시는 커졌는데, 삶은 비좁다”… 검단구 출범 앞둔 ‘확장 도시의 딜레마’ - 인천게릴라뉴스",
       "summary": "",
       "source": "인천게릴라뉴스",
@@ -30,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-2",
       "title": "인천 서구·검단구, 마을학교 워크숍 개최 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -39,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-5",
       "title": "인천 서구·검단구, 마을학교 통합 워크숍 개최…분구 앞두고 교육협력 강화 - 여성종합뉴스",
       "summary": "",
       "source": "여성종합뉴스",
@@ -66,15 +75,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
-      "title": "[이슈추적] 인천 교육당국 수요 예측 실패, 뿔난 검단 학부모들 - 경인일보",
-      "summary": "",
-      "source": "경인일보",
-      "publishedAt": "2026-04-16T10:52:47.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE9JUWVpYmZWV1B5T1oyWFQxdG5Bd09kYmpnblhUaW5JZk50SWtWNzk5cXFZTG96Skx5bzM2OFEwV1J6MmlaUmY3MU5tX1ZmUVJFa1E?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr0-5",
       "title": "“낳아도 맡길 데가 없어요”…신도시 번지는 ‘0세 고시’ - 서울경제",
       "summary": "",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-7",
+      "id": "gr1-8",
       "title": "민주 인천시당 2차 경선 돌입…영종·검단 등 7곳 대진표 확정 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -165,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
       "title": "인천 검단신도시 '엘리프 검단 포레듀' 임의공급 청약 진행 - 한경매거진&북",
       "summary": "",
       "source": "한경매거진&북",
@@ -184,15 +184,15 @@
     },
     {
       "id": "gr1-2",
-      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 5억8700만원에 거래 - 네이트",
+      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 5억8700만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-14T09:37:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9JSm9DbTdnUDRJTkNFRzBFUWhacjNBaTg4akxNemRpNk5oSE40aUp6Q014M3Y1YXpvN014ZDhOR21KUzRpZ3REMG04dTQ0OWdZTmx2b05BRU42cWJGS05MbUpCNThwQjA4NHc?oc=5",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-04-14T09:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPMFhJeVBvMFhKRlN2S2hJU29GdE5GUGZSWEYxaFVXLXJhVHFBdjV0RDUtb1Vqa1l4UnlGTzVkb01mckI3WUoyZWhJUTBDM2lCbWpMUHlJR2JVeEJLVWdLWXJpbHVSNXhUcnMyYWxTR25SYkc2WTNja2Fhb0ozS3NJZnFZY04zNm_SAZsBQVVfeXFMTkZQZzBMZmVhcUZsUTM4VW9QSi1kZk5KMXZEYVdpbUZ6cjMyZWl4TERBVTE5OXhhX2R2RkEwQm1YNWhYY1ZLYkhFRll6bzdaLXlGRU5ua01KYjd4WUgzY1A3WXdVSTlzVWRpWVVXWE1rOFlieU4zYlpuc2E5Q0JNVzhlOEFUVHBRTXYtZmx0ODJUa212V2NyQnJBVGs?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr1-14",
+      "id": "gr1-12",
       "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -219,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "수도권 역세권 신축 브랜드 대단지 ‘초강세‘…‘검단신도시 롯데캐슬 넥스티엘’ 입주 앞둬 - 뷰어스",
       "summary": "",
       "source": "뷰어스",
@@ -237,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "인천 서구청장 민주당·국민의힘 후보 확정··· 탈환 구재용 VS 3선 강범석 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -246,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-36",
+      "id": "gr2-39",
       "title": "“현장서 배우는 예방 수칙”...인천 서구, 어르신 건강교육 강화 - 경인매일",
       "summary": "",
       "source": "경인매일",
@@ -300,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-54",
+      "id": "gr2-62",
       "title": "강남규, 민주당 인천 서구 기초단체장 본경선 진출…“결과로 증명하겠다” - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -309,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-53",
+      "id": "gr2-61",
       "title": "민주당 인천 기초단체장 연수·부평·강화·서구 후보 확정 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -336,6 +336,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr3-28",
+      "title": "인천 서구의회, 검단신도시 아라역 교통정체 해소 현장점검 - 경기도민일보 미디어",
+      "summary": "",
+      "source": "경기도민일보 미디어",
+      "publishedAt": "2026-04-10T11:30:32.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBQaW9jRW51Z0c3U1ZtVW5TS21qNWtvM1FFcmhLWl9jc200dkxFb1pRaXlrbHFfdU1nMDg0dGJVRndMZ05xWGxzV003TExza2ZuVG1HQ045NVR1TUVCUVJVM3dDRW8xSGQ4SlE?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr3-16",
       "title": "인천 검단·강화·옹진 교통지형 확 바뀐다 - 현대일보",
       "summary": "",
@@ -351,15 +360,6 @@
       "source": "소방방재신문",
       "publishedAt": "2026-04-10T08:45:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTE5oNUpLSU9QdjIyRUp1ZGtpX0l3Z2h6SXozWF8wenMwNHR0bXFkOGlTc29qQzhELUJxQXdFcG15dU5KbTd3QWc?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-14",
-      "title": "[도로투데이] 인천시, '교통 소외지' 검단·강화·옹진 도로망 확충 2.5조 투입 - 인천투데이",
-      "summary": "",
-      "source": "인천투데이",
-      "publishedAt": "2026-04-10T07:37:22.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE54NFhaLWZveVJpYU1SQ1lvQnVkTExjZFFiUTNHY2tTQmEzVm1HbHJFdTE0cWo0dWt4ckVvMHVsRG9idW1DRTZNclRuRFVCcUdpb0xhOFdkM1YzZGNBWnZNeDExVkwxbERRWkVMSXNhaEo?oc=5",
       "type": "뉴스"
     }
   ]
