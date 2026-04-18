@@ -1,18 +1,17 @@
 /**
  * lib/api/subway.ts
- * 인천1호선 + 공항철도 실시간 도착정보
+ * 인천1호선 + 공항철도 + 서울9호선 실시간 도착정보
  *
  * 환경변수:
- *   NEXT_PUBLIC_SUBWAY_API_KEY  — 인천교통공사 도시철도 (공공데이터포털 6280000)
- *   NEXT_PUBLIC_SEOUL_SUBWAY_KEY — 서울 열린데이터광장 (공항철도 AREX 도착정보)
+ *   NEXT_PUBLIC_SUBWAY_API_KEY   — 인천교통공사 도시철도 (공공데이터포털 6280000)
+ *   NEXT_PUBLIC_SEOUL_SUBWAY_KEY — 서울 열린데이터광장 (공항철도·9호선 도착정보)
  */
 
 import { haversineM } from "./bus";
 
-const IC_KEY   = process.env.NEXT_PUBLIC_SUBWAY_API_KEY  ?? "";
+const IC_KEY   = process.env.NEXT_PUBLIC_SUBWAY_API_KEY   ?? "";
 const AREX_KEY = process.env.NEXT_PUBLIC_SEOUL_SUBWAY_KEY ?? "";
 
-// ── 타임아웃 래퍼 ─────────────────────────────────────────────
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     p,
@@ -23,22 +22,25 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 // ── 타입 정의 ─────────────────────────────────────────────────
 export interface SubwayArrival {
   direction: "상행" | "하행";
-  terminalStation: string;  // 종착역
+  terminalStation: string;
   arrivalMin: number;
   trainNo: string;
-  currentStation: string;   // 현재 열차 위치
+  currentStation: string;
   isExpress: boolean;
 }
 
+export type SubwayApiType = "ic1" | "arex" | "seoul9" | "planned";
+
 export interface SubwayStationEntry {
   id: string;
-  displayName: string;   // "계양역(인천1호선)"
+  displayName: string;
   line: string;
   lineColor: string;
   lat: number;
   lng: number;
-  apiType: "ic1" | "arex";
-  stationCode: string;   // ic1: "I023" / arex: 역 이름
+  apiType: SubwayApiType;
+  stationCode: string;
+  planned?: boolean;
   timetable: {
     upFirst: string; upLast: string;
     downFirst: string; downLast: string;
@@ -50,8 +52,9 @@ export interface SubwayStationWithDist extends SubwayStationEntry {
   distM: number;
 }
 
-// ── 역 데이터베이스 (검단신도시 인근) ───────────────────────────
+// ── 역 데이터베이스 ───────────────────────────────────────────
 const STATION_DB: SubwayStationEntry[] = [
+  // 공항철도 (AREX)
   {
     id: "arex-geomam",
     displayName: "검암역",
@@ -72,6 +75,20 @@ const STATION_DB: SubwayStationEntry[] = [
     stationCode: "계양",
     timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30 },
   },
+
+  // 서울 9호선
+  {
+    id: "seoul9-gimpo",
+    displayName: "김포공항역(9호선)",
+    line: "9호선",
+    lineColor: "#BDB048",
+    lat: 37.5625, lng: 126.8013,
+    apiType: "seoul9",
+    stationCode: "김포공항",
+    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50", intervalMin: 9 },
+  },
+
+  // 인천1호선
   {
     id: "ic1-gyeyang",
     displayName: "계양역(인천1호선)",
@@ -112,13 +129,48 @@ const STATION_DB: SubwayStationEntry[] = [
     stationCode: "I026",
     timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6 },
   },
+
+  // 개통 예정 (검단선 계획)
+  {
+    id: "plan-singeumdan",
+    displayName: "신검단중앙역",
+    line: "검단선 (계획)",
+    lineColor: "#9CA3AF",
+    lat: 37.5930, lng: 126.7095,
+    apiType: "planned",
+    stationCode: "",
+    planned: true,
+    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+  },
+  {
+    id: "plan-gdlake",
+    displayName: "검단호수역",
+    line: "검단선 (계획)",
+    lineColor: "#9CA3AF",
+    lat: 37.5870, lng: 126.7025,
+    apiType: "planned",
+    stationCode: "",
+    planned: true,
+    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+  },
+  {
+    id: "plan-ara",
+    displayName: "아라역",
+    line: "검단선 (계획)",
+    lineColor: "#9CA3AF",
+    lat: 37.5778, lng: 126.6932,
+    apiType: "planned",
+    stationCode: "",
+    planned: true,
+    timetable: { upFirst: "-", upLast: "-", downFirst: "-", downLast: "-", intervalMin: 0 },
+  },
 ];
 
 // ── GPS 기반 인근 역 탐색 ─────────────────────────────────────
 export function findNearbySubwayStations(
   lat: number,
   lng: number,
-  radiusM = 8000,
+  radiusM = 10000,
 ): SubwayStationWithDist[] {
   return STATION_DB
     .map(st => ({ ...st, distM: Math.round(haversineM(lat, lng, st.lat, st.lng)) }))
@@ -135,12 +187,8 @@ async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
     `https://apis.data.go.kr/6280000/IcSubwayInfoService/getIcSubwayArvlList` +
     `?serviceKey=${IC_KEY}&_type=json&stationId=${stationCode}&pageNo=1&numOfRows=10`;
 
-  const tryFetch = async (proxyUrl: string): Promise<SubwayArrival[]> => {
-    const res = await fetch(proxyUrl);
-    if (!res.ok) throw new Error(`${res.status}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json: any = await res.json();
-    // allorigins wraps in {contents:"..."}
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parse = (json: any): SubwayArrival[] => {
     const data = json?.contents ? JSON.parse(json.contents) : json;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw = data?.response?.body?.items?.item as any[] | undefined;
@@ -158,55 +206,80 @@ async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
 
   try {
     return await Promise.any([
-      withTimeout(tryFetch(url), 2000),
-      withTimeout(
-        tryFetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`),
-        5000,
-      ),
-      withTimeout(
-        tryFetch(`https://corsproxy.io/?${encodeURIComponent(url)}`),
-        5000,
-      ),
+      withTimeout((async () => { const r = await fetch(url); return parse(await r.json()); })(), 2000),
+      withTimeout((async () => {
+        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+        return parse(await r.json());
+      })(), 5000),
+      withTimeout((async () => {
+        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+        return parse(await r.json());
+      })(), 5000),
     ]);
-  } catch {
-    return [];
-  }
+  } catch { return []; }
 }
 
-// ── 공항철도(AREX) 도착정보 — 서울 열린데이터광장 ─────────────
-async function fetchArexArrivals(stationName: string): Promise<SubwayArrival[]> {
+// ── 서울 열린데이터 지하철 공통 ───────────────────────────────
+async function fetchSeoulSubwayArrivals(
+  stationName: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lineFilter: (item: any) => boolean,
+): Promise<SubwayArrival[]> {
   if (!AREX_KEY) return [];
-  const url =
-    `http://swopenapi.seoul.go.kr/api/subway/${AREX_KEY}/json/realtimeStationArrival/0/10/${encodeURIComponent(stationName)}`;
+  const targetUrl =
+    `http://swopenapi.seoul.go.kr/api/subway/${AREX_KEY}/json/realtimeStationArrival/0/20/${encodeURIComponent(stationName)}`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const parse = (data: any): SubwayArrival[] => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list: any[] = data?.realtimeArrivalList ?? [];
+    return list.filter(lineFilter).map(item => ({
+      direction: String(item.updnLine ?? "").includes("상") ? "상행" : "하행",
+      terminalStation: String(item.bstatnNm ?? "종착"),
+      arrivalMin: Math.max(0, Math.round(Number(item.barvlDt ?? 0) / 60)),
+      trainNo: String(item.btrainNo ?? ""),
+      currentStation: String(item.arvlMsg3 ?? ""),
+      isExpress: String(item.btrainSttus ?? "").includes("급행"),
+    }));
+  };
+
+  const proxyUrls = [
+    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
+  ];
 
   try {
-    const res = await withTimeout(fetch(url), 5000);
-    if (!res.ok) throw new Error(`${res.status}`);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const json: any = await res.json();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const list: any[] = json?.realtimeArrivalList ?? [];
-    // 공항철도만 필터
-    return list
-      .filter(item => String(item.subwayId ?? "") === "9" || String(item.trainLineNm ?? "").includes("공항"))
-      .map(item => ({
-        direction: String(item.updnLine ?? "").includes("상") ? "상행" : "하행",
-        terminalStation: String(item.bstatnNm ?? "종착"),
-        arrivalMin: Math.max(0, Math.round(Number(item.barvlDt ?? 0) / 60)),
-        trainNo: String(item.btrainNo ?? ""),
-        currentStation: String(item.arvlMsg3 ?? ""),
-        isExpress: String(item.btrainSttus ?? "").includes("급행"),
-      }));
-  } catch {
-    return [];
-  }
+    return await Promise.any(
+      proxyUrls.map(pu => withTimeout((async () => {
+        const r = await fetch(pu);
+        if (!r.ok) throw new Error(`${r.status}`);
+        const j = await r.json();
+        return parse(j?.contents ? JSON.parse(j.contents) : j);
+      })(), 6000))
+    );
+  } catch { return []; }
+}
+
+async function fetchArexArrivals(stationName: string): Promise<SubwayArrival[]> {
+  return fetchSeoulSubwayArrivals(stationName, item =>
+    String(item.trainLineNm ?? "").includes("공항철도") ||
+    String(item.subwayId ?? "") === "1065"
+  );
+}
+
+async function fetchSeoul9Arrivals(stationName: string): Promise<SubwayArrival[]> {
+  return fetchSeoulSubwayArrivals(stationName, item =>
+    String(item.trainLineNm ?? "").includes("9호선") ||
+    String(item.subwayId ?? "") === "1009"
+  );
 }
 
 // ── 공통 도착정보 조회 ────────────────────────────────────────
 export async function fetchSubwayArrivals(
   station: SubwayStationWithDist,
 ): Promise<SubwayArrival[]> {
-  if (station.apiType === "ic1") return fetchIc1Arrivals(station.stationCode);
-  if (station.apiType === "arex") return fetchArexArrivals(station.stationCode);
-  return [];
+  if (station.apiType === "ic1")    return fetchIc1Arrivals(station.stationCode);
+  if (station.apiType === "arex")   return fetchArexArrivals(station.stationCode);
+  if (station.apiType === "seoul9") return fetchSeoul9Arrivals(station.stationCode);
+  return []; // planned
 }
