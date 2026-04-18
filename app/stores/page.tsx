@@ -24,7 +24,7 @@ const catEmoji: Record<StoreCategory, string> = {
 };
 const catBg: Record<StoreCategory, string> = {
   카페:"bg-[#FEF3C7] text-[#92400E]", 음식점:"bg-[#FEE2E2] text-[#991B1B]",
-  편의점:"bg-[#DBEAFE] text-[#1E40AF]", "병원/약국":"bg-[#FEE2E2] text-[#991B1B]",
+  편의점:"bg-[#e8f1fd] text-[#1E40AF]", "병원/약국":"bg-[#FEE2E2] text-[#991B1B]",
   미용:"bg-[#FCE7F3] text-[#9D174D]", 학원:"bg-[#EDE9FE] text-[#5B21B6]",
   마트:"bg-[#D1FAE5] text-[#065F46]", 기타:"bg-[#F3F4F6] text-[#374151]",
 };
@@ -79,10 +79,10 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
   return (
     <svg viewBox="0 0 100 100" className="w-full" style={{ aspectRatio: "1.5/1" }}>
       <rect width="100" height="100" fill="#F9FAFB" />
-      <rect x="2" y="2" width="96" height="96" rx="3" fill="#F9FAFB" stroke="#E5E8EB" strokeWidth="1" />
+      <rect x="2" y="2" width="96" height="96" rx="3" fill="#F9FAFB" stroke="#d2d2d7" strokeWidth="1" />
       {floor.hasRestroom && (
         <>
-          <rect x="44" y="44" width="12" height="12" rx="2" fill="#DBEAFE" stroke="#93C5FD" strokeWidth="0.5" />
+          <rect x="44" y="44" width="12" height="12" rx="2" fill="#e8f1fd" stroke="#93C5FD" strokeWidth="0.5" />
           <text x="50" y="52" textAnchor="middle" fontSize="5.5" fill="#2563EB" fontWeight="bold">WC</text>
         </>
       )}
@@ -92,7 +92,7 @@ function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: s
         return (
           <g key={s.id} onClick={() => !vacant && onSelect(s)} style={{ cursor: vacant ? "default" : "pointer" }}>
             <rect x={`${s.x}%`} y={`${s.y}%`} width={`${s.w}%`} height={`${s.h}%`} rx="3"
-              fill={sel ? "#EBF3FE" : "white"} stroke={sel ? "#3182F6" : "#E5E8EB"} strokeWidth={sel ? 1.5 : 0.8} />
+              fill={sel ? "#e8f1fd" : "white"} stroke={sel ? "#0071e3" : "#d2d2d7"} strokeWidth={sel ? 1.5 : 0.8} />
             {!vacant && (
               <rect x={`${s.x}%`} y={`${s.y}%`} width={`${s.w}%`} height="3%"
                 fill={catDot[s.category]} rx="3" opacity="0.9" />
@@ -139,46 +139,46 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
   return (
     <SheetBackdrop zIndex={300} onClose={onClose}>
       <div className="bg-white rounded-t-3xl overflow-hidden">
-        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
+        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#d2d2d7] rounded-full" /></div>
         <div className="px-5 pt-4 pb-10">
           <div className="flex items-start justify-between mb-4">
             <div>
               <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-              <h2 className="text-[21px] font-bold text-[#191F28] mt-1">{store.name}</h2>
+              <h2 className="text-[21px] font-bold text-[#1d1d1f] mt-1">{store.name}</h2>
               {store.isOpen !== undefined && (
                 <span className={`text-[13px] font-medium ${store.isOpen ? "text-[#00C471]" : "text-[#F04452]"}`}>
                   {store.isOpen ? "● 영업 중" : "● 영업 종료"}
                 </span>
               )}
             </div>
-            <button onClick={onClose} className="active:opacity-60"><X size={22} className="text-[#8B95A1]" /></button>
+            <button onClick={onClose} className="active:opacity-60"><X size={22} className="text-[#6e6e73]" /></button>
           </div>
           <div className="space-y-2.5">
             {store.hours && (
-              <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-3 py-3">
-                <Clock size={16} className="text-[#8B95A1] shrink-0" />
-                <div><p className="text-[12px] text-[#8B95A1]">영업시간</p><p className="text-[15px] font-medium text-[#191F28]">{store.hours}</p></div>
+              <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
+                <Clock size={16} className="text-[#6e6e73] shrink-0" />
+                <div><p className="text-[12px] text-[#6e6e73]">영업시간</p><p className="text-[15px] font-medium text-[#1d1d1f]">{store.hours}</p></div>
               </div>
             )}
             {store.phone && (
-              <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+              <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
                 <div className="flex items-center gap-3">
-                  <Phone size={16} className="text-[#8B95A1] shrink-0" />
-                  <div><p className="text-[12px] text-[#8B95A1]">전화번호</p><p className="text-[15px] font-medium text-[#191F28]">{store.phone}</p></div>
+                  <Phone size={16} className="text-[#6e6e73] shrink-0" />
+                  <div><p className="text-[12px] text-[#6e6e73]">전화번호</p><p className="text-[15px] font-medium text-[#1d1d1f]">{store.phone}</p></div>
                 </div>
-                <a href={`tel:${store.phone}`} className="h-9 px-4 bg-[#3182F6] rounded-xl text-white text-[14px] font-bold flex items-center active:opacity-80">전화</a>
+                <a href={`tel:${store.phone}`} className="h-9 px-4 bg-[#0071e3] rounded-xl text-white text-[14px] font-bold flex items-center active:opacity-80">전화</a>
               </div>
             )}
           </div>
           <div className="mt-4 space-y-2">
             <button onClick={onDetail}
-              className="w-full h-12 bg-[#3182F6] rounded-xl flex items-center justify-center gap-2 text-[15px] text-white font-bold active:bg-[#1B64DA]">
+              className="w-full h-12 bg-[#0071e3] rounded-xl flex items-center justify-center gap-2 text-[15px] text-white font-bold active:bg-[#0058b0]">
               매장 상세 정보 보기
             </button>
             {!sent
               ? <button onClick={() => setSent(true)}
-                  className="w-full h-11 border border-[#E5E8EB] rounded-xl flex items-center justify-center gap-2 text-[14px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
-                  <Pencil size={14} className="text-[#8B95A1]" />정보 수정 제안하기
+                  className="w-full h-11 border border-[#d2d2d7] rounded-xl flex items-center justify-center gap-2 text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7]">
+                  <Pencil size={14} className="text-[#6e6e73]" />정보 수정 제안하기
                 </button>
               : <div className="w-full h-11 bg-[#D1FAE5] rounded-xl flex items-center justify-center gap-2">
                   <CheckCircle2 size={16} className="text-[#00C471]" />
@@ -242,7 +242,7 @@ function BuildingBottomSheet({
             <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
               className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-[#0071e3] to-[#1849A3] flex items-center justify-center">
               <Building2 size={40} className="text-white/60" />
             </div>
           )}
@@ -266,8 +266,8 @@ function BuildingBottomSheet({
         {/* 로딩 */}
         {loading && (
           <div className="flex flex-col items-center justify-center flex-1 py-12 gap-3">
-            <div className="w-8 h-8 border-[3px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[13px] text-[#8B95A1]">매장 정보 불러오는 중...</p>
+            <div className="w-8 h-8 border-[3px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+            <p className="text-[13px] text-[#6e6e73]">매장 정보 불러오는 중...</p>
           </div>
         )}
 
@@ -275,13 +275,13 @@ function BuildingBottomSheet({
         {!loading && !buildingData && (
           <div className="flex flex-col items-center justify-center flex-1 pb-10 px-8">
             <span className="text-5xl mb-3">🏗️</span>
-            <p className="text-[16px] font-bold text-[#191F28]">정보 준비 중</p>
-            <p className="text-[13px] text-[#8B95A1] mt-1 text-center leading-relaxed">
+            <p className="text-[16px] font-bold text-[#1d1d1f]">정보 준비 중</p>
+            <p className="text-[13px] text-[#6e6e73] mt-1 text-center leading-relaxed">
               이 건물의 상세 정보는 곧 업데이트돼요
             </p>
-            <div className="mt-4 bg-[#F2F4F6] rounded-2xl px-5 py-4 w-full">
-              <p className="text-[13px] text-[#4E5968]">{nearbyInfo.address}</p>
-              <p className="text-[13px] text-[#8B95A1] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
+            <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-5 py-4 w-full">
+              <p className="text-[13px] text-[#424245]">{nearbyInfo.address}</p>
+              <p className="text-[13px] text-[#6e6e73] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
             </div>
           </div>
         )}
@@ -290,14 +290,14 @@ function BuildingBottomSheet({
         {!loading && buildingData && (
           <>
             {/* 층 탭 */}
-            <div className="flex gap-2 px-4 py-2.5 border-b border-[#F2F4F6] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-2 px-4 py-2.5 border-b border-[#f5f5f7] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
               <button onClick={() => setFloorIdx(-1)}
-                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                 전체 {allStores.length}개
               </button>
               {buildingData.floors.map((f, i) => (
                 <button key={f.label} onClick={() => setFloorIdx(i)}
-                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                   {f.label}
                 </button>
               ))}
@@ -305,21 +305,21 @@ function BuildingBottomSheet({
             {/* 매장 리스트 */}
             <div className="overflow-y-auto flex-1">
               {visible.length === 0 ? (
-                <div className="flex items-center justify-center py-10 text-[13px] text-[#B0B8C1]">입점 매장 없음</div>
+                <div className="flex items-center justify-center py-10 text-[13px] text-[#86868b]">입점 매장 없음</div>
               ) : (
                 visible.map(({ store: s, floorLabel }) => (
                   <button key={s.id}
                     onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
-                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#F2F4F6] border-b border-[#F2F4F6] text-left">
+                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] border-b border-[#f5f5f7] text-left">
                     <StoreLogo name={s.name} category={s.category} size={44} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-semibold text-[#191F28]">{s.name}</p>
+                        <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catBg[s.category]}`}>
                           {catEmoji[s.category]} {s.category}
                         </span>
                       </div>
-                      <p className="text-[12px] text-[#8B95A1] mt-0.5">
+                      <p className="text-[12px] text-[#6e6e73] mt-0.5">
                         {floorIdx === -1 ? `${floorLabel} · ` : ""}{s.hours ?? "영업시간 미등록"}
                       </p>
                     </div>
@@ -327,7 +327,7 @@ function BuildingBottomSheet({
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
                         {s.isOpen !== false ? "영업 중" : "영업 종료"}
                       </span>
-                      <ChevronRight size={13} className="text-[#B0B8C1]" />
+                      <ChevronRight size={13} className="text-[#86868b]" />
                     </div>
                   </button>
                 ))
@@ -438,20 +438,20 @@ function StoreListDetailSheet({
           <div className="space-y-2">
             {store.hours && (
               <div className="flex items-center gap-3 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
-                <Clock size={15} className="text-[#8B95A1] shrink-0" />
+                <Clock size={15} className="text-[#6e6e73] shrink-0" />
                 <div>
-                  <p className="text-[11px] text-[#B0B8C1]">영업시간</p>
-                  <p className="text-[14px] font-semibold text-[#191F28]">{store.hours}</p>
+                  <p className="text-[11px] text-[#86868b]">영업시간</p>
+                  <p className="text-[14px] font-semibold text-[#1d1d1f]">{store.hours}</p>
                 </div>
               </div>
             )}
             {store.phone && (
               <div className="flex items-center justify-between bg-[#F8F9FB] rounded-xl px-3.5 py-3">
                 <div className="flex items-center gap-3">
-                  <Phone size={15} className="text-[#8B95A1] shrink-0" />
+                  <Phone size={15} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[11px] text-[#B0B8C1]">전화번호</p>
-                    <p className="text-[14px] font-semibold text-[#191F28]">{store.phone}</p>
+                    <p className="text-[11px] text-[#86868b]">전화번호</p>
+                    <p className="text-[14px] font-semibold text-[#1d1d1f]">{store.phone}</p>
                   </div>
                 </div>
                 <a href={`tel:${store.phone}`} className="h-8 px-3.5 rounded-xl text-white text-[13px] font-bold flex items-center active:opacity-80"
@@ -462,8 +462,8 @@ function StoreListDetailSheet({
               <div className="flex items-center gap-3 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
                 <span className="text-[15px] shrink-0">💰</span>
                 <div>
-                  <p className="text-[11px] text-[#B0B8C1]">가격대</p>
-                  <p className="text-[14px] font-semibold text-[#191F28]">{detail.priceRange}</p>
+                  <p className="text-[11px] text-[#86868b]">가격대</p>
+                  <p className="text-[14px] font-semibold text-[#1d1d1f]">{detail.priceRange}</p>
                 </div>
               </div>
             )}
@@ -472,20 +472,20 @@ function StoreListDetailSheet({
           {/* 소개 */}
           {detail?.description && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">매장 소개</p>
-              <p className="text-[14px] text-[#4E5968] leading-relaxed bg-[#F8F9FB] rounded-xl px-3.5 py-3">{detail.description}</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">매장 소개</p>
+              <p className="text-[14px] text-[#424245] leading-relaxed bg-[#F8F9FB] rounded-xl px-3.5 py-3">{detail.description}</p>
             </div>
           )}
 
           {/* 하이라이트 태그 */}
           {detail?.tags && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">주요 특징</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">주요 특징</p>
               <div className="space-y-1.5">
                 {detail.tags.map((t, i) => (
                   <div key={i} className="flex items-center gap-2.5 bg-[#F8F9FB] rounded-xl px-3.5 py-2.5">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-                    <p className="text-[13px] text-[#4E5968]">{t}</p>
+                    <p className="text-[13px] text-[#424245]">{t}</p>
                   </div>
                 ))}
               </div>
@@ -495,15 +495,15 @@ function StoreListDetailSheet({
           {/* 메뉴 (카페/음식점/마트) */}
           {detail?.menu && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">대표 메뉴</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">대표 메뉴</p>
               <div className="space-y-1.5">
                 {detail.menu.map((m, i) => (
                   <div key={i} className="flex items-center justify-between bg-[#F8F9FB] rounded-xl px-3.5 py-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium text-[#191F28]">{m.name}</span>
+                      <span className="text-[14px] font-medium text-[#1d1d1f]">{m.name}</span>
                       {m.tag && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: color }}>{m.tag}</span>}
                     </div>
-                    <span className="text-[14px] font-bold text-[#191F28]">{m.price}</span>
+                    <span className="text-[14px] font-bold text-[#1d1d1f]">{m.price}</span>
                   </div>
                 ))}
               </div>
@@ -513,12 +513,12 @@ function StoreListDetailSheet({
           {/* 서비스 목록 (미용/병원/학원 등) */}
           {detail?.services && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">제공 서비스</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">제공 서비스</p>
               <div className="grid grid-cols-2 gap-1.5">
                 {detail.services.map((s, i) => (
                   <div key={i} className="bg-[#F8F9FB] rounded-xl px-3 py-2.5 flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-                    <span className="text-[12px] text-[#4E5968] leading-snug">{s}</span>
+                    <span className="text-[12px] text-[#424245] leading-snug">{s}</span>
                   </div>
                 ))}
               </div>
@@ -536,17 +536,17 @@ function StoreListDetailSheet({
           {/* 이번 주 쿠폰 */}
           {coupon && dDay !== null && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">이번 주 쿠폰</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">이번 주 쿠폰</p>
               <div className="rounded-2xl overflow-hidden" style={{ border: `1.5px solid ${coupon.color}33` }}>
                 <div className="px-4 pt-3 pb-2" style={{ background: `${coupon.color}14` }}>
                   <div className="flex items-baseline gap-1">
                     <span className="text-[26px] font-black" style={{ color: coupon.color }}>{coupon.discount}</span>
-                    <span className="text-[12px] font-bold text-[#8B95A1]">할인</span>
+                    <span className="text-[12px] font-bold text-[#6e6e73]">할인</span>
                   </div>
-                  <p className="text-[12px] text-[#4E5968] mt-0.5">{coupon.title}</p>
+                  <p className="text-[12px] text-[#424245] mt-0.5">{coupon.title}</p>
                 </div>
                 <div className="px-4 py-2.5 flex items-center justify-between bg-white">
-                  <span className={`text-[11px] font-bold ${dDay <= 3 ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
+                  <span className={`text-[11px] font-bold ${dDay <= 3 ? "text-[#F04452]" : "text-[#86868b]"}`}>
                     {dDay <= 3 ? `⏰ D-${dDay}` : `~${coupon.expiry.slice(5)}`}
                   </span>
                   <span className="text-[12px] font-bold text-white px-3 py-1 rounded-lg" style={{ background: coupon.color }}>쿠폰받기</span>
@@ -558,12 +558,12 @@ function StoreListDetailSheet({
           {/* 오픈 혜택 */}
           {opening?.openBenefit && (
             <div>
-              <p className="text-[13px] font-bold text-[#8B95A1] mb-2">오픈 혜택</p>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">오픈 혜택</p>
               <div className="bg-[#FFF0F0] rounded-xl px-3.5 py-3 space-y-1.5">
                 {opening.openBenefit.details.map((d, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-[11px] font-black text-white bg-[#F04452] rounded-full w-4 h-4 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                    <p className="text-[13px] text-[#4E5968]">{d}</p>
+                    <p className="text-[13px] text-[#424245]">{d}</p>
                   </div>
                 ))}
                 {opening.openBenefit.validUntil && (
@@ -577,8 +577,8 @@ function StoreListDetailSheet({
           <div className="pb-2">
             {!sent
               ? <button onClick={() => setSent(true)}
-                  className="w-full h-10 border border-[#E5E8EB] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
-                  <Pencil size={13} className="text-[#8B95A1]" />정보 수정 제안하기
+                  className="w-full h-10 border border-[#d2d2d7] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
+                  <Pencil size={13} className="text-[#6e6e73]" />정보 수정 제안하기
                 </button>
               : <div className="w-full h-10 bg-[#D1FAE5] rounded-xl flex items-center justify-center gap-2">
                   <CheckCircle2 size={15} className="text-[#00C471]" />
@@ -672,7 +672,7 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
     const hasCoupon = couponStoreIds.has(store.id);
     return (
       <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 active:bg-[#F2F4F6] text-left shadow-sm">
+        className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left shadow-sm">
         <div className="relative shrink-0">
           <StoreLogo name={store.name} category={store.category} size={44} />
           {hasNew && (
@@ -681,16 +681,16 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[15px] font-bold text-[#191F28] truncate">{store.name}</p>
+            <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
             {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1 py-0.5 rounded-full">★</span>}
           </div>
           <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-            <span className="text-[12px] text-[#8B95A1]">{store.buildingName}</span>
-            <span className="text-[12px] text-[#B0B8C1]">·</span>
+            <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
+            <span className="text-[12px] text-[#86868b]">·</span>
             <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
             {store.hours && <>
-              <span className="text-[12px] text-[#B0B8C1]">·</span>
-              <span className="text-[12px] text-[#8B95A1]">{store.hours}</span>
+              <span className="text-[12px] text-[#86868b]">·</span>
+              <span className="text-[12px] text-[#6e6e73]">{store.hours}</span>
             </>}
           </div>
           {hasCoupon && (
@@ -711,8 +711,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
       {/* ── 상가 건물 ── */}
       <div className="pt-4 pb-2">
         <div className="flex items-center justify-between px-4 mb-2.5">
-          <span className="text-[14px] font-bold text-[#191F28]">주변 상가건물</span>
-          <span className="text-[11px] text-[#8B95A1]">{nearbyBuildings.length}개</span>
+          <span className="text-[14px] font-bold text-[#1d1d1f]">주변 상가건물</span>
+          <span className="text-[11px] text-[#6e6e73]">{nearbyBuildings.length}개</span>
         </div>
         <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           {nearbyBuildings.map(b => (
@@ -728,12 +728,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
                 </div>
                 {b.hasData && (
                   <div className="absolute top-2 right-2">
-                    <span className="text-[9px] font-black bg-[#3182F6] text-white px-1.5 py-0.5 rounded-full">상세정보</span>
+                    <span className="text-[9px] font-black bg-[#0071e3] text-white px-1.5 py-0.5 rounded-full">상세정보</span>
                   </div>
                 )}
               </div>
               <div className="px-2.5 py-2">
-                <p className="text-[12px] font-bold text-[#191F28] leading-tight line-clamp-1">{b.name}</p>
+                <p className="text-[12px] font-bold text-[#1d1d1f] leading-tight line-clamp-1">{b.name}</p>
                 <div className="flex flex-wrap gap-0.5 mt-1">
                   {b.categories.slice(0, 3).map(c => (
                     <span key={c} className="text-[9px] font-semibold px-1 py-0.5 rounded-full"
@@ -768,17 +768,17 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5 mb-0.5">
-                  <p className="text-[14px] font-bold text-[#191F28] truncate">{o.storeName}</p>
+                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
                   <span className={`shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full ${badgeCls}`}>{badge}</span>
                 </div>
-                <p className="text-[12px] text-[#8B95A1] mb-1">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                <p className="text-[12px] text-[#6e6e73] mb-1">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
                 {o.openBenefit && (
                   <p className="text-[12px] text-[#F04452] font-medium leading-snug line-clamp-1">
                     🎁 {o.openBenefit.summary}
                   </p>
                 )}
               </div>
-              <ChevronRight size={14} className="shrink-0 text-[#B0B8C1]" />
+              <ChevronRight size={14} className="shrink-0 text-[#86868b]" />
             </button>
           );
         }
@@ -788,9 +788,9 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             {weekOpenings.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 px-4 mb-2.5">
-                  <span className="text-[14px] font-bold text-[#191F28]">금주 신규 오픈</span>
+                  <span className="text-[14px] font-bold text-[#1d1d1f]">금주 신규 오픈</span>
                   <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
-                  <span className="text-[11px] text-[#8B95A1]">{weekOpenings.length}개</span>
+                  <span className="text-[11px] text-[#6e6e73]">{weekOpenings.length}개</span>
                 </div>
                 <div className="px-4 space-y-2">
                   {weekOpenings.map(o => <OpeningCard key={o.id} o={o} badge="NEW" />)}
@@ -800,9 +800,9 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             {monthOpenings.length > 0 && (
               <div>
                 <div className="flex items-center gap-1.5 px-4 mb-2.5">
-                  <span className="text-[14px] font-bold text-[#191F28]">이번달 오픈</span>
+                  <span className="text-[14px] font-bold text-[#1d1d1f]">이번달 오픈</span>
                   <span className="text-[10px] font-black bg-[#FF9500] text-white px-1.5 py-0.5 rounded-full">이달</span>
-                  <span className="text-[11px] text-[#8B95A1]">{monthOpenings.length}개</span>
+                  <span className="text-[11px] text-[#6e6e73]">{monthOpenings.length}개</span>
                 </div>
                 <div className="px-4 space-y-2">
                   {monthOpenings.map(o => <OpeningCard key={o.id} o={o} badge="이번달" />)}
@@ -822,8 +822,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         return (
           <div className="pt-2 pb-2">
             <div className="flex items-center gap-1.5 px-4 mb-2.5">
-              <span className="text-[14px] font-bold text-[#191F28]">이번 주 쿠폰</span>
-              <span className="text-[11px] text-[#8B95A1]">{validCoupons.length}장</span>
+              <span className="text-[14px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
+              <span className="text-[11px] text-[#6e6e73]">{validCoupons.length}장</span>
             </div>
             <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
               {validCoupons.map(c => {
@@ -836,27 +836,27 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
                     <div className="px-3.5 pt-3 pb-2.5" style={{ background: `${c.color}14` }}>
                       <div className="flex items-center gap-2 mb-1">
                         <StoreLogo name={c.storeName} category={c.category} size={28} rounded="rounded-lg" />
-                        <p className="text-[13px] font-extrabold text-[#191F28] truncate">{c.storeName}</p>
+                        <p className="text-[13px] font-extrabold text-[#1d1d1f] truncate">{c.storeName}</p>
                       </div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-[22px] font-black" style={{ color: c.color }}>{c.discount}</span>
-                        <span className="text-[11px] text-[#8B95A1]">할인</span>
+                        <span className="text-[11px] text-[#6e6e73]">할인</span>
                       </div>
                     </div>
                     <div className="relative flex items-center" style={{ height: "12px" }}>
                       <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ borderTop: `2px dashed ${c.color}44` }} />
-                      <div className="absolute -left-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
-                      <div className="absolute -right-[5px] w-[10px] h-[10px] rounded-full bg-[#F2F4F6]" />
+                      <div className="absolute -left-[5px] w-[10px] h-[10px] rounded-full bg-[#f5f5f7]" />
+                      <div className="absolute -right-[5px] w-[10px] h-[10px] rounded-full bg-[#f5f5f7]" />
                     </div>
                     <div className="px-3.5 pt-1.5 pb-3 bg-white">
-                      <p className="text-[11px] text-[#4E5968] line-clamp-2 mb-2">{c.title}</p>
+                      <p className="text-[11px] text-[#424245] line-clamp-2 mb-2">{c.title}</p>
                       <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-bold ${urgent ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
+                        <span className={`text-[10px] font-bold ${urgent ? "text-[#F04452]" : "text-[#86868b]"}`}>
                           {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
                         </span>
                         <button onClick={() => setDlState(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
                           className="h-6 px-2.5 rounded-lg text-[11px] font-extrabold active:opacity-70 text-white"
-                          style={{ background: done ? "#B0B8C1" : c.color }}>
+                          style={{ background: done ? "#86868b" : c.color }}>
                           {done ? "✓ 완료" : "받기"}
                         </button>
                       </div>
@@ -881,12 +881,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             return (
               <button key={item.key} onClick={() => setCatFilter(item.key)}
                 className={`shrink-0 flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold transition-all border ${
-                  active ? "text-white border-transparent shadow-sm" : "bg-white text-[#4E5968] border-[#E5E8EB]"
+                  active ? "text-white border-transparent shadow-sm" : "bg-white text-[#424245] border-[#d2d2d7]"
                 }`}
-                style={active ? { background: item.key === "전체" ? "#191F28" : catDot[item.key as StoreCategory] } : {}}>
+                style={active ? { background: item.key === "전체" ? "#1d1d1f" : catDot[item.key as StoreCategory] } : {}}>
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
-                <span className={`text-[11px] font-black ${active ? "text-white/80" : "text-[#B0B8C1]"}`}>{count}</span>
+                <span className={`text-[11px] font-black ${active ? "text-white/80" : "text-[#86868b]"}`}>{count}</span>
               </button>
             );
           })}
@@ -901,8 +901,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             <div key={cat} className="mb-5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[16px]">{catEmoji[cat]}</span>
-                <span className="text-[14px] font-bold text-[#191F28]">{cat}</span>
-                <span className="text-[12px] text-[#B0B8C1]">{stores.length}개</span>
+                <span className="text-[14px] font-bold text-[#1d1d1f]">{cat}</span>
+                <span className="text-[12px] text-[#86868b]">{stores.length}개</span>
               </div>
               <div className="space-y-2">
                 {stores.map(s => <StoreCard key={s.id} store={s} />)}
@@ -912,7 +912,7 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         ) : (
           // 필터 모드: 단순 리스트
           <div className="space-y-2">
-            <p className="text-[13px] text-[#8B95A1] mb-1">총 {filtered.length}개 매장</p>
+            <p className="text-[13px] text-[#6e6e73] mb-1">총 {filtered.length}개 매장</p>
             {filtered.map(s => <StoreCard key={s.id} store={s} />)}
           </div>
         )}
@@ -949,21 +949,21 @@ function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelec
     return (
       <div className="flex flex-col items-center py-12 gap-2">
         <span className="text-3xl">🔍</span>
-        <p className="text-[15px] text-[#8B95A1]">검색 결과가 없습니다</p>
+        <p className="text-[15px] text-[#6e6e73]">검색 결과가 없습니다</p>
       </div>
     );
   }
   return (
     <div className="space-y-2 px-4 pt-2 pb-4">
-      <p className="text-[13px] text-[#8B95A1]">총 {results.length}건</p>
+      <p className="text-[13px] text-[#6e6e73]">총 {results.length}건</p>
       {results.map(({ store, floorLabel, buildingName }) => (
         <button key={store.id} onClick={() => onSelect(store)}
-          className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] text-left">
+          className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] text-left">
           <div className="flex items-center gap-3">
             <StoreLogo name={store.name} category={store.category} size={40} />
             <div>
-              <p className="text-[15px] font-semibold text-[#191F28]">{store.name}</p>
-              <p className="text-[13px] text-[#8B95A1]">{buildingName} · {floorLabel}</p>
+              <p className="text-[15px] font-semibold text-[#1d1d1f]">{store.name}</p>
+              <p className="text-[13px] text-[#6e6e73]">{buildingName} · {floorLabel}</p>
             </div>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -982,12 +982,12 @@ function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelec
 const StoreMapView = dynamic(() => import("./StoreMapView"), {
   ssr: false,
   loading: () => (
-    <div className="mx-4 mt-3 mb-3 rounded-2xl bg-[#F2F4F6] flex items-center justify-center border border-[#E5E8EB]"
+    <div className="mx-4 mt-3 mb-3 rounded-2xl bg-[#f5f5f7] flex items-center justify-center border border-[#d2d2d7]"
       style={{ height: 440 }}>
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-3 border-[#3182F6] border-t-transparent rounded-full animate-spin"
+        <div className="w-8 h-8 border-3 border-[#0071e3] border-t-transparent rounded-full animate-spin"
           style={{ borderWidth: 3 }} />
-        <p className="text-[13px] text-[#8B95A1]">지도 불러오는 중...</p>
+        <p className="text-[13px] text-[#6e6e73]">지도 불러오는 중...</p>
       </div>
     </div>
   ),
@@ -1038,7 +1038,7 @@ function MapBuildingSheet({
             <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
               className="w-full h-full object-cover" />
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center">
+            <div className="w-full h-full bg-gradient-to-br from-[#0071e3] to-[#1849A3] flex items-center justify-center">
               <Building2 size={36} className="text-white/70" />
             </div>
           )}
@@ -1062,14 +1062,14 @@ function MapBuildingSheet({
         {buildingData ? (
           <>
             {/* 층 탭 */}
-            <div className="flex gap-2 px-4 py-2 border-b border-[#F2F4F6] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-2 px-4 py-2 border-b border-[#f5f5f7] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
               <button onClick={() => setFloorIdx(-1)}
-                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                 전체
               </button>
               {buildingData.floors.map((f, i) => (
                 <button key={f.label} onClick={() => setFloorIdx(i)}
-                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                   {f.label}
                 </button>
               ))}
@@ -1077,16 +1077,16 @@ function MapBuildingSheet({
             {/* 매장 리스트 — 스크롤 가능 */}
             <div style={{ overflowY: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
               {visibleStores.length === 0 ? (
-                <div className="flex items-center justify-center py-10 text-[13px] text-[#B0B8C1]">입점 매장 없음</div>
+                <div className="flex items-center justify-center py-10 text-[13px] text-[#86868b]">입점 매장 없음</div>
               ) : (
                 visibleStores.map(({ store: s, floorLabel }) => (
                   <button key={s.id}
                     onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
-                    className="w-full px-4 py-3 flex items-center gap-3 active:bg-[#F2F4F6] border-b border-[#F2F4F6] text-left">
+                    className="w-full px-4 py-3 flex items-center gap-3 active:bg-[#f5f5f7] border-b border-[#f5f5f7] text-left">
                     <StoreLogo name={s.name} category={s.category} size={42} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-semibold text-[#191F28]">{s.name}</p>
-                      <p className="text-[12px] text-[#8B95A1] mt-0.5">
+                      <p className="text-[14px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                      <p className="text-[12px] text-[#6e6e73] mt-0.5">
                         {catEmoji[s.category]} {s.category}
                         {floorIdx === -1 ? ` · ${floorLabel}` : ""}
                         {s.hours ? ` · ${s.hours}` : ""}
@@ -1096,7 +1096,7 @@ function MapBuildingSheet({
                       <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
                         {s.isOpen !== false ? "영업 중" : "영업 종료"}
                       </span>
-                      <ChevronRight size={13} className="text-[#B0B8C1]" />
+                      <ChevronRight size={13} className="text-[#86868b]" />
                     </div>
                   </button>
                 ))
@@ -1106,10 +1106,10 @@ function MapBuildingSheet({
         ) : (
           <div className="flex flex-col items-center justify-center flex-1 pb-10 px-8">
             <span className="text-5xl mb-3">🏗️</span>
-            <p className="text-[16px] font-bold text-[#191F28]">정보 준비 중</p>
-            <p className="text-[13px] text-[#8B95A1] mt-1 text-center">이 건물의 상세 정보는 곧 업데이트돼요</p>
-            <div className="mt-4 bg-[#F2F4F6] rounded-2xl px-5 py-4 w-full">
-              <p className="text-[13px] text-[#4E5968]">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
+            <p className="text-[16px] font-bold text-[#1d1d1f]">정보 준비 중</p>
+            <p className="text-[13px] text-[#6e6e73] mt-1 text-center">이 건물의 상세 정보는 곧 업데이트돼요</p>
+            <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-5 py-4 w-full">
+              <p className="text-[13px] text-[#424245]">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
             </div>
           </div>
         )}
@@ -1138,19 +1138,19 @@ function BuildingDetail({
   if (!buildingData) {
     return (
       <div className="pb-20">
-        <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6] px-4 flex items-center h-12">
+        <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] px-4 flex items-center h-12">
           <button onClick={onBack} className="mr-3 active:opacity-60">
-            <ChevronLeft size={22} className="text-[#191F28]" />
+            <ChevronLeft size={22} className="text-[#1d1d1f]" />
           </button>
-          <p className="text-[16px] font-bold text-[#191F28]">{nearbyInfo.name}</p>
+          <p className="text-[16px] font-bold text-[#1d1d1f]">{nearbyInfo.name}</p>
         </div>
         <div className="flex flex-col items-center justify-center pt-24 text-center px-8">
           <span className="text-5xl mb-4">🏗️</span>
-          <p className="text-[17px] font-bold text-[#191F28]">정보 준비 중</p>
-          <p className="text-[14px] text-[#8B95A1] mt-2">이 건물의 상세 정보는 곧 업데이트될 예정이에요</p>
-          <div className="mt-4 bg-[#F2F4F6] rounded-xl px-4 py-3 text-left w-full">
-            <p className="text-[13px] text-[#4E5968]">{nearbyInfo.address}</p>
-            <p className="text-[13px] text-[#8B95A1] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
+          <p className="text-[17px] font-bold text-[#1d1d1f]">정보 준비 중</p>
+          <p className="text-[14px] text-[#6e6e73] mt-2">이 건물의 상세 정보는 곧 업데이트될 예정이에요</p>
+          <div className="mt-4 bg-[#f5f5f7] rounded-xl px-4 py-3 text-left w-full">
+            <p className="text-[13px] text-[#424245]">{nearbyInfo.address}</p>
+            <p className="text-[13px] text-[#6e6e73] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
           </div>
         </div>
       </div>
@@ -1167,17 +1167,17 @@ function BuildingDetail({
 
   return (
     <div className="pb-20">
-      <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6]">
+      <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7]">
         <div className="px-4 flex items-center h-12">
           <button onClick={onBack} className="mr-3 active:opacity-60">
-            <ChevronLeft size={22} className="text-[#191F28]" />
+            <ChevronLeft size={22} className="text-[#1d1d1f]" />
           </button>
-          <p className="text-[16px] font-bold text-[#191F28]">{buildingData.name}</p>
+          <p className="text-[16px] font-bold text-[#1d1d1f]">{buildingData.name}</p>
         </div>
-        <div className="flex border-t border-[#F2F4F6]">
+        <div className="flex border-t border-[#f5f5f7]">
           {(["층별", "업종별"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 h-10 text-[14px] font-semibold border-b-2 transition-colors ${tab === t ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"}`}>
+              className={`flex-1 h-10 text-[14px] font-semibold border-b-2 transition-colors ${tab === t ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"}`}>
               {t}
             </button>
           ))}
@@ -1189,50 +1189,50 @@ function BuildingDetail({
           <div className="bg-white rounded-2xl px-4 py-3 mb-3 flex items-center justify-between">
             <button onClick={() => { setFloorIdx(i => Math.max(0, i-1)); setSelectedStore(null); }}
               disabled={floorIdx === 0}
-              className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
-              <ChevronLeft size={18} className="text-[#191F28]" />
+              className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
+              <ChevronLeft size={18} className="text-[#1d1d1f]" />
             </button>
             <div className="flex items-center gap-2">
               {buildingData.floors.map((f, i) => (
                 <button key={f.label} onClick={() => { setFloorIdx(i); setSelectedStore(null); }}
-                  className={`w-10 h-10 rounded-xl text-[14px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  className={`w-10 h-10 rounded-xl text-[14px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                   {f.label}
                 </button>
               ))}
             </div>
             <button onClick={() => { setFloorIdx(i => Math.min(buildingData.floors.length-1, i+1)); setSelectedStore(null); }}
               disabled={floorIdx === buildingData.floors.length-1}
-              className="w-9 h-9 bg-[#F2F4F6] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
-              <ChevronRight size={18} className="text-[#191F28]" />
+              className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
+              <ChevronRight size={18} className="text-[#1d1d1f]" />
             </button>
           </div>
           <div className="bg-white rounded-2xl overflow-hidden mb-3">
             <div className="p-3">
               <FloorSVG floor={currentFloor} selectedId={selectedStore?.id ?? null} onSelect={setSelectedStore} />
             </div>
-            <div className="px-4 py-3 border-t border-[#F2F4F6] flex items-center gap-4">
+            <div className="px-4 py-3 border-t border-[#f5f5f7] flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${currentFloor.hasRestroom ? "bg-[#3182F6]" : "bg-[#E5E8EB]"}`} />
-                <span className="text-[13px] text-[#8B95A1]">화장실 {currentFloor.hasRestroom ? "있음" : "없음"}</span>
+                <div className={`w-2 h-2 rounded-full ${currentFloor.hasRestroom ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`} />
+                <span className="text-[13px] text-[#6e6e73]">화장실 {currentFloor.hasRestroom ? "있음" : "없음"}</span>
               </div>
               {currentFloor.hasRestroom && currentFloor.restroomCode && (
                 <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
-                  <Lock size={12} className="text-[#3182F6]" />
-                  <span className="text-[13px] text-[#3182F6] font-medium">{showCode ? `비번: ${currentFloor.restroomCode}` : "비번 보기"}</span>
+                  <Lock size={12} className="text-[#0071e3]" />
+                  <span className="text-[13px] text-[#0071e3] font-medium">{showCode ? `비번: ${currentFloor.restroomCode}` : "비번 보기"}</span>
                 </button>
               )}
             </div>
           </div>
-          <p className="text-[15px] font-bold text-[#191F28] mb-2.5">{currentFloor.label} 입점 매장</p>
+          <p className="text-[15px] font-bold text-[#1d1d1f] mb-2.5">{currentFloor.label} 입점 매장</p>
           <div className="space-y-2">
             {currentFloor.stores.filter(s => s.name !== "공실").map(s => (
               <button key={s.id} onClick={() => setSelectedStore(s)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] ${selectedStore?.id === s.id ? "ring-2 ring-[#3182F6]" : ""}`}>
+                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === s.id ? "ring-2 ring-[#0071e3]" : ""}`}>
                 <div className="flex items-center gap-3">
                   <StoreLogo name={s.name} category={s.category} size={40} />
                   <div className="text-left">
-                    <p className="text-[15px] font-medium text-[#191F28]">{s.name}</p>
-                    {s.hours && <p className="text-[13px] text-[#8B95A1]">{s.hours}</p>}
+                    <p className="text-[15px] font-medium text-[#1d1d1f]">{s.name}</p>
+                    {s.hours && <p className="text-[13px] text-[#6e6e73]">{s.hours}</p>}
                   </div>
                 </div>
                 <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
@@ -1247,21 +1247,21 @@ function BuildingDetail({
           <div className="flex gap-2 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
             {(["전체", ...categories] as (StoreCategory | "전체")[]).map(c => (
               <button key={c} onClick={() => setCatFilter(c)}
-                className={`shrink-0 px-3 h-8 rounded-full text-[13px] font-semibold transition-colors ${catFilter === c ? "bg-[#3182F6] text-white" : "bg-white text-[#4E5968]"}`}>
+                className={`shrink-0 px-3 h-8 rounded-full text-[13px] font-semibold transition-colors ${catFilter === c ? "bg-[#0071e3] text-white" : "bg-white text-[#424245]"}`}>
                 {c === "전체" ? "전체" : `${catEmoji[c as StoreCategory]} ${c}`}
               </button>
             ))}
           </div>
           <div className="px-4 space-y-2">
-            <p className="text-[13px] text-[#8B95A1]">총 {filteredStores.length}개 매장</p>
+            <p className="text-[13px] text-[#6e6e73]">총 {filteredStores.length}개 매장</p>
             {filteredStores.map(({ store, floorLabel }) => (
               <button key={store.id} onClick={() => setSelectedStore(store)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6] ${selectedStore?.id === store.id ? "ring-2 ring-[#3182F6]" : ""}`}>
+                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === store.id ? "ring-2 ring-[#0071e3]" : ""}`}>
                 <div className="flex items-center gap-3">
                   <StoreLogo name={store.name} category={store.category} size={40} />
                   <div className="text-left">
-                    <p className="text-[15px] font-medium text-[#191F28]">{store.name}</p>
-                    <p className="text-[13px] text-[#8B95A1]">{floorLabel}</p>
+                    <p className="text-[15px] font-medium text-[#1d1d1f]">{store.name}</p>
+                    <p className="text-[13px] text-[#6e6e73]">{floorLabel}</p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -1367,22 +1367,22 @@ export default function StoresPage() {
   }, [mapCatFilter, nearbyWithDist]);
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
       <Header title="상가" />
 
       {/* 검색바 + 토글 */}
-      <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#F2F4F6]">
-        <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3.5 h-11">
-          <Search size={16} className="text-[#8B95A1] shrink-0" />
+      <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
+        <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3.5 h-11">
+          <Search size={16} className="text-[#6e6e73] shrink-0" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="매장명 또는 카테고리 검색 (예: 카페, 스타벅스)"
-            className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#191F28] placeholder:text-[#B0B8C1]"
+            className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#1d1d1f] placeholder:text-[#86868b]"
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="active:opacity-60">
-              <X size={16} className="text-[#8B95A1]" />
+              <X size={16} className="text-[#6e6e73]" />
             </button>
           )}
         </div>
@@ -1390,7 +1390,7 @@ export default function StoresPage() {
           <div className="flex gap-2 mt-2.5">
             {(["리스트", "지도"] as const).map(mode => (
               <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
-                className={`flex-1 h-9 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${viewMode === mode ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                className={`flex-1 h-9 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${viewMode === mode ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                 {mode === "리스트" ? <List size={15} /> : <MapIcon size={15} />}
                 {mode === "리스트" ? "매장 리스트" : "상가 지도"}
               </button>
@@ -1418,7 +1418,7 @@ export default function StoresPage() {
               <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
                 {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
                   <button key={cat} onClick={() => setMapCatFilter(cat)}
-                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#3182F6] text-white border-transparent" : "bg-white text-[#4E5968] border-[#E5E8EB]"}`}>
+                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
                     {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
                   </button>
                 ))}

@@ -31,9 +31,9 @@ const catColor: Record<string, string> = {
   부동산: "bg-[#E8F5E9] text-[#2E7D32]",
   중고거래: "bg-[#FFFDE7] text-[#F57F17]",
   "분실/목격": "bg-[#FFEBEE] text-[#C62828]",
-  동네질문: "bg-[#EBF3FE] text-[#1565C0]",
+  동네질문: "bg-[#e8f1fd] text-[#1565C0]",
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
-  전체: "bg-[#EBF3FE] text-[#3182F6]",
+  전체: "bg-[#e8f1fd] text-[#0071e3]",
 };
 
 // localStorage 기반 소유권 확인
@@ -208,14 +208,14 @@ function DetailContent() {
   if (postLoading || !post) {
     return (
       <div className="min-h-dvh bg-white flex flex-col">
-        <div className="flex items-center px-4 h-14 border-b border-[#F2F4F6]">
-          <button onClick={() => router.back()}><ChevronLeft size={24} className="text-[#191F28]" /></button>
+        <div className="flex items-center px-4 h-14 border-b border-[#f5f5f7]">
+          <button onClick={() => router.back()}><ChevronLeft size={24} className="text-[#1d1d1f]" /></button>
         </div>
         <div className="px-5 py-5 space-y-3 animate-pulse">
-          <div className="h-3 w-16 bg-[#F2F4F6] rounded-full" />
-          <div className="h-6 w-3/4 bg-[#F2F4F6] rounded" />
-          <div className="h-4 w-1/3 bg-[#F2F4F6] rounded" />
-          {[1,2,3,4].map(i => <div key={i} className="h-4 bg-[#F2F4F6] rounded" />)}
+          <div className="h-3 w-16 bg-[#f5f5f7] rounded-full" />
+          <div className="h-6 w-3/4 bg-[#f5f5f7] rounded" />
+          <div className="h-4 w-1/3 bg-[#f5f5f7] rounded" />
+          {[1,2,3,4].map(i => <div key={i} className="h-4 bg-[#f5f5f7] rounded" />)}
         </div>
       </div>
     );
@@ -224,27 +224,27 @@ function DetailContent() {
   return (
     <div className="min-h-dvh bg-white flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-[#F2F4F6] sticky top-0 bg-white z-10">
+      <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] sticky top-0 bg-white z-10">
         <button onClick={() => router.back()} className="active:opacity-60">
-          <ChevronLeft size={24} className="text-[#191F28]" />
+          <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <div className="flex items-center gap-2">
           <button onClick={() => setBookmarked(!bookmarked)} className="active:opacity-60">
-            <Bookmark size={22} className={bookmarked ? "text-[#3182F6] fill-[#3182F6]" : "text-[#8B95A1]"} />
+            <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
           </button>
           <button className="active:opacity-60">
-            <Share2 size={20} className="text-[#8B95A1]" />
+            <Share2 size={20} className="text-[#6e6e73]" />
           </button>
           {isMyPost && (
             <div className="relative">
               <button onClick={() => setShowMenu(!showMenu)} className="active:opacity-60">
-                <MoreHorizontal size={22} className="text-[#8B95A1]" />
+                <MoreHorizontal size={22} className="text-[#6e6e73]" />
               </button>
               {showMenu && (
-                <div className="absolute right-0 top-8 bg-white border border-[#E5E8EB] rounded-xl shadow-lg z-20 min-w-[120px] overflow-hidden">
+                <div className="absolute right-0 top-8 bg-white border border-[#d2d2d7] rounded-xl shadow-lg z-20 min-w-[120px] overflow-hidden">
                   <button
                     onClick={() => { setEditTitle(post.title); setEditContent(post.content); setEditMode(true); setShowMenu(false); }}
-                    className="w-full flex items-center gap-2 px-4 py-3 text-[14px] text-[#191F28] hover:bg-[#F2F4F6] active:bg-[#F2F4F6]">
+                    className="w-full flex items-center gap-2 px-4 py-3 text-[14px] text-[#1d1d1f] hover:bg-[#f5f5f7] active:bg-[#f5f5f7]">
                     <Pencil size={14} />수정
                   </button>
                   <button
@@ -259,7 +259,7 @@ function DetailContent() {
           )}
           {!isMyPost && (
             <button className="active:opacity-60">
-              <MoreHorizontal size={22} className="text-[#8B95A1]" />
+              <MoreHorizontal size={22} className="text-[#6e6e73]" />
             </button>
           )}
         </div>
@@ -267,60 +267,60 @@ function DetailContent() {
 
       {/* Scrollable content */}
       <div className="flex-1 overflow-y-auto" onClick={() => setShowMenu(false)}>
-        <article className="px-5 py-5 border-b border-[#F2F4F6]">
+        <article className="px-5 py-5 border-b border-[#f5f5f7]">
           <div className="flex items-center gap-2 mb-3">
-            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#EBF3FE] text-[#3182F6]"}`}>
+            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#0071e3]"}`}>
               {post.category}
             </span>
-            {post.isPinned && <span className="text-[12px] text-[#3182F6] font-medium">📌 공지</span>}
+            {post.isPinned && <span className="text-[12px] text-[#0071e3] font-medium">📌 공지</span>}
           </div>
 
           {/* 수정 모드 */}
           {editMode ? (
             <div className="space-y-3">
               <input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={50}
-                className="w-full text-[20px] font-bold text-[#191F28] outline-none border-b border-[#3182F6] pb-1" />
+                className="w-full text-[20px] font-bold text-[#1d1d1f] outline-none border-b border-[#0071e3] pb-1" />
               <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
                 rows={6}
-                className="w-full text-[16px] text-[#191F28] outline-none border border-[#E5E8EB] rounded-xl p-3 resize-none leading-relaxed" />
+                className="w-full text-[16px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-3 resize-none leading-relaxed" />
               <div className="flex gap-2">
                 <button onClick={() => setEditMode(false)}
-                  className="flex-1 h-10 rounded-xl border border-[#E5E8EB] text-[14px] text-[#8B95A1] active:opacity-60">
+                  className="flex-1 h-10 rounded-xl border border-[#d2d2d7] text-[14px] text-[#6e6e73] active:opacity-60">
                   <X size={14} className="inline mr-1" />취소
                 </button>
                 <button onClick={saveEdit} disabled={savingEdit}
-                  className="flex-1 h-10 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
+                  className="flex-1 h-10 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
                   <Check size={14} className="inline mr-1" />{savingEdit ? "저장 중..." : "저장"}
                 </button>
               </div>
             </div>
           ) : (
             <>
-              <h1 className="text-[21px] font-bold text-[#191F28] leading-snug mb-4">{post.title}</h1>
+              <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full bg-[#EBF3FE] flex items-center justify-center text-base">👤</div>
+                <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
                 <div>
-                  <p className="text-[15px] font-semibold text-[#191F28]">{post.author}</p>
-                  <p className="text-[13px] text-[#8B95A1]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
+                  <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
+                  <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
                 </div>
               </div>
-              <p className="text-[16px] text-[#191F28] leading-relaxed whitespace-pre-line">{post.content}</p>
+              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
             </>
           )}
 
           {/* Reaction bar */}
           {!editMode && (
-            <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#F2F4F6]">
+            <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
               <button onClick={toggleLike}
-                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#EBF3FE] text-[#3182F6]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
-                <ThumbsUp size={15} className={liked ? "fill-[#3182F6]" : ""} />
+                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
+                <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
                 <span className="text-[14px] font-semibold">{likeCount}</span>
               </button>
-              <div className="flex items-center gap-1.5 text-[#8B95A1]">
+              <div className="flex items-center gap-1.5 text-[#6e6e73]">
                 <MessageSquare size={15} />
                 <span className="text-[14px]">{comments.length}</span>
               </div>
-              <button className="ml-auto flex items-center gap-1 text-[#8B95A1] active:opacity-60">
+              <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
                 <Flag size={14} />
                 <span className="text-[13px]">신고</span>
               </button>
@@ -330,30 +330,30 @@ function DetailContent() {
 
         {/* Comments */}
         <div className="px-5 py-4">
-          <p className="text-[15px] font-bold text-[#191F28] mb-4">
+          <p className="text-[15px] font-bold text-[#1d1d1f] mb-4">
             {commentsLoading ? "댓글 로딩 중..." : `댓글 ${comments.length}개`}
           </p>
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#F2F4F6] flex items-center justify-center text-sm shrink-0">👤</div>
+                <div className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-sm shrink-0">👤</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[14px] font-semibold text-[#191F28]">{c.author}</span>
-                    <span className="text-[12px] text-[#B0B8C1]">{c.authorDong}</span>
-                    <span className="text-[12px] text-[#B0B8C1] ml-auto">{formatRelativeTime(c.createdAt)}</span>
+                    <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
+                    <span className="text-[12px] text-[#86868b]">{c.authorDong}</span>
+                    <span className="text-[12px] text-[#86868b] ml-auto">{formatRelativeTime(c.createdAt)}</span>
                   </div>
-                  <p className="text-[15px] text-[#191F28] leading-relaxed">{c.content}</p>
+                  <p className="text-[15px] text-[#1d1d1f] leading-relaxed">{c.content}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <button onClick={() => handleCommentLike(c.id)} className="flex items-center gap-1 active:opacity-60">
-                      <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#3182F6] fill-[#3182F6]" : "text-[#B0B8C1]"} />
-                      <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
+                      <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#0071e3] fill-[#0071e3]" : "text-[#86868b]"} />
+                      <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
                         {c.likeCount}
                       </span>
                     </button>
                     {myCommentIds.has(c.id) && (
                       <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
-                        className="flex items-center gap-0.5 text-[#B0B8C1] active:opacity-60 disabled:opacity-40">
+                        className="flex items-center gap-0.5 text-[#86868b] active:opacity-60 disabled:opacity-40">
                         <Trash2 size={11} />
                         <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
                       </button>
@@ -368,21 +368,21 @@ function DetailContent() {
       </div>
 
       {/* Comment input */}
-      <div className="sticky bottom-0 bg-white border-t border-[#F2F4F6] px-4 py-3 space-y-2">
+      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#EBF3FE] flex items-center justify-center text-sm shrink-0">👤</div>
-          <div className="flex-1 flex items-center bg-[#F2F4F6] rounded-2xl px-3 py-2 gap-2">
+          <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
+          <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
               placeholder="따뜻한 댓글을 남겨보세요"
-              className="flex-1 bg-transparent text-[15px] text-[#191F28] placeholder:text-[#B0B8C1] outline-none" />
+              className="flex-1 bg-transparent text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none" />
             <button onClick={submitComment} disabled={!commentText.trim() || submittingComment}
               className="shrink-0 active:opacity-60 disabled:opacity-30">
-              <Send size={18} className="text-[#3182F6]" />
+              <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
           <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
+            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
             익명
           </button>
         </div>

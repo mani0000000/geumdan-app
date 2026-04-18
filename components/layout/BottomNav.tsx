@@ -14,7 +14,7 @@ const navItems = [
 export default function BottomNav() {
   const pathname = usePathname();
   return (
-    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-[#E5E8EB] z-50">
+    <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white border-t border-[#d2d2d7] z-50">
       <div className="flex h-[58px]">
         {navItems.map(({ href, label, icon: Icon, match }) => {
           const active = Array.isArray(match)
@@ -24,8 +24,8 @@ export default function BottomNav() {
             <Link key={href} href={href}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 active:opacity-60 transition-opacity">
               <Icon size={22} strokeWidth={active ? 2.5 : 1.8}
-                className={active ? "text-[#3182F6]" : "text-[#B0B8C1]"} />
-              <span className={`text-[11px] font-medium ${active ? "text-[#3182F6]" : "text-[#B0B8C1]"}`}>
+                className={active ? "text-[#0071e3]" : "text-[#86868b]"} />
+              <span className={`text-[11px] font-medium ${active ? "text-[#0071e3]" : "text-[#86868b]"}`}>
                 {label}
               </span>
             </Link>

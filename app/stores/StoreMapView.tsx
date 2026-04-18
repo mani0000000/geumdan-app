@@ -40,7 +40,7 @@ function building3DHTML(
   const bBR = [px + fw + ox, py + h - oy] as const;
 
   // 색상
-  const front = selected ? "#1B64DA" : hasData ? "#3182F6" : "#9CA3AF";
+  const front = selected ? "#0058b0" : hasData ? "#0071e3" : "#9CA3AF";
   const side  = selected ? "#103B7A" : hasData ? "#1849A3" : "#6B7280";
   const top   = selected ? "#93C5FD" : hasData ? "#BFDBFE" : "#E5E7EB";
   const winC  = "rgba(255,255,255,0.55)";
@@ -72,8 +72,8 @@ function building3DHTML(
 
   const opacity = dimmed ? 0.22 : 1;
   const shortName = name.length > 8 ? name.slice(0, 8) + "…" : name;
-  const labelBg = selected ? "#1B64DA" : "white";
-  const labelColor = selected ? "white" : "#191F28";
+  const labelBg = selected ? "#0058b0" : "white";
+  const labelColor = selected ? "white" : "#1d1d1f";
 
   return `
 <div style="display:inline-flex;flex-direction:column;align-items:center;opacity:${opacity};cursor:pointer">
@@ -93,7 +93,7 @@ function building3DHTML(
     <!-- 층수 표시 (전면 우상단) -->
     <text x="${(fTR[0] - 2).toFixed(1)}" y="${(fTL[1] + 11).toFixed(1)}" font-size="8" font-weight="800" fill="rgba(255,255,255,0.9)" text-anchor="end">${floors}F</text>
   </svg>
-  <div style="background:${labelBg};color:${labelColor};font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.22);white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis;text-align:center;margin-top:2px;border:${selected ? "none" : "1px solid #E5E8EB"}">${shortName}</div>
+  <div style="background:${labelBg};color:${labelColor};font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.22);white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis;text-align:center;margin-top:2px;border:${selected ? "none" : "1px solid #d2d2d7"}">${shortName}</div>
 </div>`;
 }
 
@@ -125,7 +125,7 @@ const myLocationIcon = L.divIcon({
   className:  "",
   iconSize:   [28, 28] as [number, number],
   iconAnchor: [14, 14] as [number, number],
-  html: `<div style="width:28px;height:28px;background:#3182F6;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(49,130,246,.2),0 2px 8px rgba(0,0,0,.3)"></div>`,
+  html: `<div style="width:28px;height:28px;background:#0071e3;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(49,130,246,.2),0 2px 8px rgba(0,0,0,.3)"></div>`,
 });
 
 // ── FlyTo ─────────────────────────────────────────────────────
@@ -223,7 +223,7 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
           width: 46,
           height: 46,
           background: "white",
-          border: myPos ? "2px solid #3182F6" : "1.5px solid #E5E8EB",
+          border: myPos ? "2px solid #0071e3" : "1.5px solid #d2d2d7",
           borderRadius: 14,
           boxShadow: "0 2px 10px rgba(0,0,0,.15)",
           display: "flex",
@@ -235,16 +235,16 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
         {locating ? (
           <div style={{
             width: 18, height: 18,
-            border: "2.5px solid #3182F6",
+            border: "2.5px solid #0071e3",
             borderTopColor: "transparent",
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }} />
         ) : (
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke={myPos ? "#3182F6" : "#8B95A1"} strokeWidth="2.2"
+            stroke={myPos ? "#0071e3" : "#6e6e73"} strokeWidth="2.2"
             strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" fill={myPos ? "#3182F6" : "none"} />
+            <circle cx="12" cy="12" r="3" fill={myPos ? "#0071e3" : "none"} />
             <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" />
             <circle cx="12" cy="12" r="7" strokeWidth="1.2" opacity=".35" />
           </svg>

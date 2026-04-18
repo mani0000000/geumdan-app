@@ -13,7 +13,7 @@ const catEmoji: Record<StoreCategory, string> = {
 const catBg: Record<StoreCategory, string> = {
   카페: "bg-[#FEF3C7] text-[#92400E]",
   음식점: "bg-[#FEE2E2] text-[#991B1B]",
-  편의점: "bg-[#DBEAFE] text-[#1E40AF]",
+  편의점: "bg-[#e8f1fd] text-[#1E40AF]",
   "병원/약국": "bg-[#FEE2E2] text-[#991B1B]",
   미용: "bg-[#FCE7F3] text-[#9D174D]",
   학원: "bg-[#EDE9FE] text-[#5B21B6]",
@@ -50,7 +50,7 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map(i => (
-        <Star key={i} size={13} className={i <= rating ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#E5E8EB]"} />
+        <Star key={i} size={13} className={i <= rating ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
       ))}
     </div>
   );
@@ -67,11 +67,11 @@ function DetailContent() {
 
   if (!result) {
     return (
-      <div className="min-h-dvh bg-[#F2F4F6] flex items-center justify-center">
+      <div className="min-h-dvh bg-[#f5f5f7] flex items-center justify-center">
         <div className="text-center px-8">
           <p className="text-4xl mb-3">🏢</p>
-          <p className="text-[17px] font-bold text-[#191F28]">매장을 찾을 수 없어요</p>
-          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold">
+          <p className="text-[17px] font-bold text-[#1d1d1f]">매장을 찾을 수 없어요</p>
+          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold">
             돌아가기
           </button>
         </div>
@@ -89,15 +89,15 @@ function DetailContent() {
   const nearbyStores = floor.stores.filter(s => s.id !== store.id && s.name !== "공실").slice(0, 4);
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6]">
+    <div className="min-h-dvh bg-[#f5f5f7]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 bg-white sticky top-0 z-10 border-b border-[#F2F4F6]">
+      <div className="flex items-center justify-between px-4 h-14 bg-white sticky top-0 z-10 border-b border-[#f5f5f7]">
         <button onClick={() => router.back()} className="active:opacity-60">
-          <ChevronLeft size={24} className="text-[#191F28]" />
+          <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
-        <h1 className="text-[18px] font-bold text-[#191F28] truncate mx-2">{store.name}</h1>
+        <h1 className="text-[18px] font-bold text-[#1d1d1f] truncate mx-2">{store.name}</h1>
         <button onClick={() => setFavorited(f => !f)} className="active:opacity-60">
-          <Star size={22} className={favorited ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#B0B8C1]"} />
+          <Star size={22} className={favorited ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#86868b]"} />
         </button>
       </div>
 
@@ -118,7 +118,7 @@ function DetailContent() {
                   <span className="text-[12px] font-bold bg-[#FEF3C7] text-[#92400E] px-2 py-0.5 rounded-full">⭐ 인기</span>
                 )}
               </div>
-              <h2 className="text-[23px] font-black text-[#191F28]">{store.name}</h2>
+              <h2 className="text-[23px] font-black text-[#1d1d1f]">{store.name}</h2>
               <div className="flex items-center gap-2 mt-1">
                 {store.isOpen !== undefined && (
                   <span className={`text-[14px] font-semibold ${store.isOpen ? "text-[#00C471]" : "text-[#F04452]"}`}>
@@ -126,7 +126,7 @@ function DetailContent() {
                   </span>
                 )}
                 {avgRating && (
-                  <span className="text-[14px] text-[#4E5968]">★ {avgRating} ({reviews.length})</span>
+                  <span className="text-[14px] text-[#424245]">★ {avgRating} ({reviews.length})</span>
                 )}
               </div>
             </div>
@@ -134,59 +134,59 @@ function DetailContent() {
 
           {/* Info rows */}
           <div className="space-y-2.5">
-            <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-4 py-3">
-              <MapPin size={16} className="text-[#8B95A1] shrink-0" />
+            <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+              <MapPin size={16} className="text-[#6e6e73] shrink-0" />
               <div>
-                <p className="text-[12px] text-[#8B95A1]">위치</p>
-                <p className="text-[15px] font-medium text-[#191F28]">{building.name} {floor.label}</p>
-                <p className="text-[13px] text-[#8B95A1]">{building.address}</p>
+                <p className="text-[12px] text-[#6e6e73]">위치</p>
+                <p className="text-[15px] font-medium text-[#1d1d1f]">{building.name} {floor.label}</p>
+                <p className="text-[13px] text-[#6e6e73]">{building.address}</p>
               </div>
             </div>
             {store.hours && (
-              <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-4 py-3">
-                <Clock size={16} className="text-[#8B95A1] shrink-0" />
+              <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+                <Clock size={16} className="text-[#6e6e73] shrink-0" />
                 <div>
-                  <p className="text-[12px] text-[#8B95A1]">영업시간</p>
-                  <p className="text-[15px] font-medium text-[#191F28]">{store.hours}</p>
+                  <p className="text-[12px] text-[#6e6e73]">영업시간</p>
+                  <p className="text-[15px] font-medium text-[#1d1d1f]">{store.hours}</p>
                 </div>
               </div>
             )}
             {store.phone && (
-              <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <Phone size={16} className="text-[#8B95A1] shrink-0" />
+                  <Phone size={16} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[12px] text-[#8B95A1]">전화번호</p>
-                    <p className="text-[15px] font-medium text-[#191F28]">{store.phone}</p>
+                    <p className="text-[12px] text-[#6e6e73]">전화번호</p>
+                    <p className="text-[15px] font-medium text-[#1d1d1f]">{store.phone}</p>
                   </div>
                 </div>
                 <a href={`tel:${store.phone}`}
-                  className="h-9 px-4 bg-[#3182F6] rounded-xl text-white text-[14px] font-bold flex items-center active:opacity-80">
+                  className="h-9 px-4 bg-[#0071e3] rounded-xl text-white text-[14px] font-bold flex items-center active:opacity-80">
                   전화
                 </a>
               </div>
             )}
-            <div className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-4 py-3">
-              <ParkingSquare size={16} className="text-[#3182F6] shrink-0" />
+            <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+              <ParkingSquare size={16} className="text-[#0071e3] shrink-0" />
               <div>
-                <p className="text-[12px] text-[#8B95A1]">주차</p>
-                <p className="text-[15px] font-medium text-[#191F28]">{building.parkingInfo}</p>
+                <p className="text-[12px] text-[#6e6e73]">주차</p>
+                <p className="text-[15px] font-medium text-[#1d1d1f]">{building.parkingInfo}</p>
               </div>
             </div>
             {floor.hasRestroom && (
-              <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-4 py-3">
+              <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <Lock size={16} className="text-[#8B95A1] shrink-0" />
+                  <Lock size={16} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[12px] text-[#8B95A1]">{floor.label} 화장실</p>
-                    <p className="text-[15px] font-medium text-[#191F28]">
+                    <p className="text-[12px] text-[#6e6e73]">{floor.label} 화장실</p>
+                    <p className="text-[15px] font-medium text-[#1d1d1f]">
                       {showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
                     </p>
                   </div>
                 </div>
                 {floor.restroomCode && (
                   <button onClick={() => setShowCode(s => !s)}
-                    className="h-9 px-4 bg-[#EBF3FE] rounded-xl text-[#3182F6] text-[14px] font-bold flex items-center active:opacity-80">
+                    className="h-9 px-4 bg-[#e8f1fd] rounded-xl text-[#0071e3] text-[14px] font-bold flex items-center active:opacity-80">
                     {showCode ? "숨기기" : "보기"}
                   </button>
                 )}
@@ -198,43 +198,43 @@ function DetailContent() {
         {/* Reviews */}
         <div className="bg-white px-5 py-4">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-[16px] font-bold text-[#191F28]">방문 후기</p>
+            <p className="text-[16px] font-bold text-[#1d1d1f]">방문 후기</p>
             {avgRating && (
               <div className="flex items-center gap-2">
                 <StarRating rating={Math.round(avgRating)} />
-                <span className="text-[15px] font-bold text-[#191F28]">{avgRating}</span>
-                <span className="text-[13px] text-[#8B95A1]">({reviews.length})</span>
+                <span className="text-[15px] font-bold text-[#1d1d1f]">{avgRating}</span>
+                <span className="text-[13px] text-[#6e6e73]">({reviews.length})</span>
               </div>
             )}
           </div>
           {reviews.length > 0 ? (
             <div className="space-y-3">
               {reviews.map((r, i) => (
-                <div key={i} className={`pb-3 ${i < reviews.length - 1 ? "border-b border-[#F2F4F6]" : ""}`}>
+                <div key={i} className={`pb-3 ${i < reviews.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-[#EBF3FE] flex items-center justify-center text-sm">
+                      <div className="w-7 h-7 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm">
                         {r.author[0]}
                       </div>
-                      <span className="text-[14px] font-medium text-[#191F28]">{r.author}</span>
+                      <span className="text-[14px] font-medium text-[#1d1d1f]">{r.author}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <StarRating rating={r.rating} />
-                      <span className="text-[12px] text-[#B0B8C1]">{r.date}</span>
+                      <span className="text-[12px] text-[#86868b]">{r.date}</span>
                     </div>
                   </div>
-                  <p className="text-[14px] text-[#4E5968] leading-relaxed pl-9">{r.text}</p>
+                  <p className="text-[14px] text-[#424245] leading-relaxed pl-9">{r.text}</p>
                 </div>
               ))}
             </div>
           ) : (
             <div className="py-6 text-center">
               <p className="text-3xl mb-2">💬</p>
-              <p className="text-[15px] font-medium text-[#191F28]">아직 후기가 없어요</p>
-              <p className="text-[14px] text-[#8B95A1] mt-1">첫 번째 후기를 남겨보세요</p>
+              <p className="text-[15px] font-medium text-[#1d1d1f]">아직 후기가 없어요</p>
+              <p className="text-[14px] text-[#6e6e73] mt-1">첫 번째 후기를 남겨보세요</p>
             </div>
           )}
-          <button className="mt-3 w-full h-11 border border-[#E5E8EB] rounded-xl text-[14px] text-[#4E5968] font-medium active:bg-[#F2F4F6] flex items-center justify-center gap-1.5">
+          <button className="mt-3 w-full h-11 border border-[#d2d2d7] rounded-xl text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7] flex items-center justify-center gap-1.5">
             <Star size={14} className="text-[#FFBB00]" /> 후기 작성하기
           </button>
         </div>
@@ -243,8 +243,8 @@ function DetailContent() {
         {nearbyStores.length > 0 && (
           <div className="bg-white px-5 py-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[16px] font-bold text-[#191F28]">{floor.label} 다른 매장</p>
-              <button onClick={() => router.push("/stores/")} className="flex items-center gap-0.5 text-[14px] text-[#3182F6] font-medium active:opacity-60">
+              <p className="text-[16px] font-bold text-[#1d1d1f]">{floor.label} 다른 매장</p>
+              <button onClick={() => router.push("/stores/")} className="flex items-center gap-0.5 text-[14px] text-[#0071e3] font-medium active:opacity-60">
                 지도 보기 <ChevronRight size={14} />
               </button>
             </div>
@@ -252,10 +252,10 @@ function DetailContent() {
               {nearbyStores.map(s => (
                 <button key={s.id}
                   onClick={() => router.push(`/stores/detail/?id=${s.id}`)}
-                  className="flex items-center gap-2.5 bg-[#F2F4F6] rounded-xl px-3 py-3 active:opacity-70 text-left">
+                  className="flex items-center gap-2.5 bg-[#f5f5f7] rounded-xl px-3 py-3 active:opacity-70 text-left">
                   <span className="text-xl shrink-0">{catEmoji[s.category]}</span>
                   <div className="min-w-0">
-                    <p className="text-[14px] font-medium text-[#191F28] truncate">{s.name}</p>
+                    <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{s.name}</p>
                     <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
                       {s.isOpen !== false ? "영업 중" : "영업 종료"}
                     </span>
@@ -270,8 +270,8 @@ function DetailContent() {
         <div className="mx-4">
           {!editSent ? (
             <button onClick={() => setEditSent(true)}
-              className="w-full h-12 border border-[#E5E8EB] bg-white rounded-2xl flex items-center justify-center gap-2 text-[14px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
-              <Pencil size={14} className="text-[#8B95A1]" /> 정보 수정 제안하기
+              className="w-full h-12 border border-[#d2d2d7] bg-white rounded-2xl flex items-center justify-center gap-2 text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7]">
+              <Pencil size={14} className="text-[#6e6e73]" /> 정보 수정 제안하기
             </button>
           ) : (
             <div className="w-full h-12 bg-[#D1FAE5] rounded-2xl flex items-center justify-center gap-2">
