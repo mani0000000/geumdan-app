@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import {
   hasBusApiKey,
   haversineM,
+  GEUMDAN_BUS_STATIONS,
   fetchNearbyStopsWide, fetchArrivalsByStationId,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
@@ -354,39 +355,56 @@ export default function TransportPage() {
   const isLive = hasBusApiKey();
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
 
-  // ── GPS 기반 버스 데이터 로드 (3km, progressive) ─────────────
+  // ── GPS 기반 버스 데이터 로드 ────────────────────────────────
   const loadBusData = useCallback(async (lat: number, lng: number) => {
-    if (!isLive) { return; }
-    setLoading(true);
-    try {
-      // 1. 3km 이내 주변 정류장 조회 (5방향 병렬)
-      const nearby = await fetchNearbyStopsWide(lat, lng);
+    if (!isLive) return;
 
-      if (nearby.length === 0) {
-        // API 결과 없으면 목업 데이터 유지 (null = 목업 폴백)
-        setApiStops(null);
-        setLoading(false);
-        return;
-      }
+    // 1. 검단 하드코딩 정류장을 거리 순으로 즉시 표시 (프록시 기다리지 않음)
+    const fallback: DisplayStop[] = GEUMDAN_BUS_STATIONS
+      .map(s => ({
+        id: s.stationId,
+        name: s.name,
+        stopNo: s.stationId,
+        distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+        routes: [], arrivals: [], lat: s.lat, lng: s.lng,
+      }))
+      .sort((a, b) => a.distM - b.distM);
 
-      // 2. 최대 12개 정류장을 즉시 노출 (도착정보 로딩 전에 정류장명 먼저 표시)
+    const cached = loadCachedStops();
+    setApiStops(cached?.length ? cached : fallback);
+    setLoading(false);
+
+    // 2. 하드코딩 정류장 arrivals 즉시 조회 (stationId 알고 있으므로 "nearby API" 불필요)
+    Promise.allSettled(
+      fallback.slice(0, 8).map(async stop => {
+        const arrivals = await fetchArrivalsByStationId(stop.id);
+        const routes: BusRoute[] = arrivals.map((a, i) => ({
+          id: `live-${stop.id}-${i}`,
+          routeNo: a.routeNo,
+          destination: a.destination,
+          arrivalMin: a.arrivalMin,
+          remainingStops: a.remainingStops,
+          isLowFloor: a.isLowFloor,
+          isExpress: a.isExpress,
+        }));
+        setApiStops(prev =>
+          prev ? prev.map(s => s.id === stop.id ? { ...s, routes, arrivals } : s) : prev
+        );
+      })
+    ).then(() => {
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    });
+
+    // 3. 백그라운드: GPS 기반 주변 정류장 검색 성공 시 추가 정류장으로 보완
+    fetchNearbyStopsWide(lat, lng).then(async nearby => {
+      if (nearby.length === 0) return;
       const top = nearby.slice(0, 12);
-      const initialStops: DisplayStop[] = top.map(stop => ({
-        id: stop.stationId,
-        name: stop.stationName,
-        stopNo: "",
-        distM: stop.distanceM,
-        routes: [],
-        arrivals: [],
-        lat: stop.lat,
-        lng: stop.lng,
+      const apiList: DisplayStop[] = top.map(s => ({
+        id: s.stationId, name: s.stationName, stopNo: "",
+        distM: s.distanceM, routes: [], arrivals: [], lat: s.lat, lng: s.lng,
       }));
-      setApiStops(initialStops);
-      setLoading(false);
-      if (initialStops.length > 0 && !expanded) setExpanded(initialStops[0].id);
-
-      // 3. 도착정보 병렬 조회 후 정류장별로 순차 업데이트
-      const finalStops = [...initialStops];
+      setApiStops(apiList);
+      const finalStops = [...apiList];
       await Promise.allSettled(
         top.map(async (stop, idx) => {
           const arrivals = await fetchArrivalsByStationId(stop.stationId);
@@ -401,20 +419,13 @@ export default function TransportPage() {
           }));
           finalStops[idx] = { ...finalStops[idx], routes, arrivals };
           setApiStops(prev =>
-            prev ? prev.map(s =>
-              s.id === stop.stationId ? { ...s, routes, arrivals } : s
-            ) : prev
+            prev ? prev.map(s => s.id === stop.stationId ? { ...s, routes, arrivals } : s) : prev
           );
         })
       );
-
-      // 캐시에 저장 (다음 방문 시 즉시 표시)
       saveCachedStops(finalStops);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-    } catch {
-      setLoading(false);
-      setApiStops(prev => prev ?? null);
-    }
+    }).catch(() => {});
   }, [isLive]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── 지하철 도착정보 로드 ──────────────────────────────────────
@@ -525,14 +536,14 @@ export default function TransportPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-20">
       <Header title="교통 정보" />
 
-      {/* 플로팅 새로고침 버튼 (헤더 우측 상단) */}
+      {/* 플로팅 새로고침 버튼 (하단) */}
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed top-[10px] right-4 z-50 w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[76px] right-4 z-50 w-11 h-11 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
-        <RefreshCw size={16} className={`text-[#0071e3] ${refreshing ? "animate-spin" : ""}`} />
+        <RefreshCw size={18} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
       </button>
 
       {/* 버스 상세 바텀 시트 */}
@@ -544,7 +555,7 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] flex">
+      <div className="bg-white sticky top-[52px] z-30 border-b border-[#f5f5f7] flex">
         {(["버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-11 text-[14px] font-semibold border-b-2 transition-colors ${
@@ -677,17 +688,8 @@ export default function TransportPage() {
                 </p>
               </div>
             </div>
-          ) : (loading || refreshing) && !apiStops ? (
+          ) : loading && !apiStops ? (
             <><SkeletonStop /><SkeletonStop /></>
-          ) : stopsWithRoutes.length === 0 ? (
-            <div className="bg-white rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
-              <Bus size={32} className="text-[#D1D5DB]" />
-              <p className="text-[14px] font-bold text-[#6e6e73]">주변 정류장을 찾는 중...</p>
-              <button onClick={refresh}
-                className="mt-2 h-9 px-4 bg-[#e8f1fd] rounded-xl text-[13px] font-bold text-[#0071e3] active:opacity-70">
-                다시 시도
-              </button>
-            </div>
           ) : (
             stopsWithRoutes.map((stop, idx) => {
               const open = expanded === stop.id;
@@ -808,20 +810,34 @@ export default function TransportPage() {
                       <div className="flex items-center gap-2 mt-0.5">
                         <Navigation size={10} className="text-[#0071e3]" />
                         <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(st.distM)}</span>
-                        <span className="text-[11px] text-[#86868b]">
-                          배차 {st.timetable.intervalMin}분
-                        </span>
+                        {!st.planned && st.timetable.intervalMin > 0 && (
+                          <span className="text-[11px] text-[#86868b]">
+                            배차 {st.timetable.intervalMin}분
+                          </span>
+                        )}
+                        {st.planned && (
+                          <span className="text-[11px] font-bold text-[#9CA3AF] bg-[#f5f5f7] px-1.5 py-0.5 rounded">
+                            개통예정
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60">
-                      <Star size={20}
-                        className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
-                    </button>
+                    {!st.planned && (
+                      <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60">
+                        <Star size={20}
+                          className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                      </button>
+                    )}
                   </div>
 
                   {/* 상하행 도착정보 */}
                   <div className="px-4 pb-4 space-y-2">
-                    {st.loadingArrivals ? (
+                    {st.planned ? (
+                      <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
+                        <p className="text-[13px] font-semibold text-[#6e6e73]">🚧 개통 예정 노선</p>
+                        <p className="text-[12px] text-[#86868b] mt-0.5">운행 시간표 미정</p>
+                      </div>
+                    ) : st.loadingArrivals ? (
                       [0, 1].map(i => (
                         <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
                           <div className="space-y-1.5">
@@ -904,21 +920,23 @@ export default function TransportPage() {
                       </>
                     )}
 
-                    {/* 첫차/막차 항상 표시 */}
-                    <div className="flex gap-2 pt-1">
-                      <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
-                        <p className="text-[12px] font-bold text-[#1d1d1f]">
-                          {st.timetable.upFirst} / {st.timetable.upLast}
-                        </p>
+                    {/* 첫차/막차 (개통예정역 제외) */}
+                    {!st.planned && (
+                      <div className="flex gap-2 pt-1">
+                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
+                          <p className="text-[12px] font-bold text-[#1d1d1f]">
+                            {st.timetable.upFirst} / {st.timetable.upLast}
+                          </p>
+                        </div>
+                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                          <p className="text-[10px] text-[#6e6e73] mb-0.5">하행 첫차/막차</p>
+                          <p className="text-[12px] font-bold text-[#1d1d1f]">
+                            {st.timetable.downFirst} / {st.timetable.downLast}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#6e6e73] mb-0.5">하행 첫차/막차</p>
-                        <p className="text-[12px] font-bold text-[#1d1d1f]">
-                          {st.timetable.downFirst} / {st.timetable.downLast}
-                        </p>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               );
