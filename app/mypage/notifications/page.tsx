@@ -81,7 +81,7 @@ const mockNotifs: Notif[] = [
 
 const iconMap: Record<NotifType, React.ReactNode> = {
   like: <ThumbsUp size={16} className="text-[#F04452]" />,
-  comment: <MessageSquare size={16} className="text-[#3182F6]" />,
+  comment: <MessageSquare size={16} className="text-[#0071e3]" />,
   notice: <Megaphone size={16} className="text-[#F59E0B]" />,
   system: <Star size={16} className="text-[#8B5CF6]" />,
   coupon: <Tag size={16} className="text-[#00C471]" />,
@@ -90,7 +90,7 @@ const iconMap: Record<NotifType, React.ReactNode> = {
 
 const bgMap: Record<NotifType, string> = {
   like: "bg-[#FFEBEE]",
-  comment: "bg-[#EBF3FE]",
+  comment: "bg-[#e8f1fd]",
   notice: "bg-[#FEF3C7]",
   system: "bg-[#EDE9FE]",
   coupon: "bg-[#D1FAE5]",
@@ -120,14 +120,14 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6]">
+    <div className="min-h-dvh bg-[#f5f5f7]">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 h-14 border-b border-[#F2F4F6] bg-white sticky top-0 z-10">
+      <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] bg-white sticky top-0 z-10">
         <button onClick={() => router.back()} className="active:opacity-60">
-          <ChevronLeft size={24} className="text-[#191F28]" />
+          <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <div className="flex items-center gap-2">
-          <h1 className="text-[18px] font-bold text-[#191F28]">알림</h1>
+          <h1 className="text-[18px] font-bold text-[#1d1d1f]">알림</h1>
           {unreadCount > 0 && (
             <span className="bg-[#F04452] text-white text-[12px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
               {unreadCount}
@@ -135,7 +135,7 @@ export default function NotificationsPage() {
           )}
         </div>
         {unreadCount > 0 ? (
-          <button onClick={markAllRead} className="text-[14px] text-[#3182F6] font-medium active:opacity-60">
+          <button onClick={markAllRead} className="text-[14px] text-[#0071e3] font-medium active:opacity-60">
             모두 읽음
           </button>
         ) : <div className="w-16" />}
@@ -152,11 +152,11 @@ export default function NotificationsPage() {
       )}
 
       {/* 필터 탭 */}
-      <div className="flex gap-2 px-4 py-3 overflow-x-auto bg-white border-b border-[#F2F4F6]" style={{ scrollbarWidth: "none" }}>
+      <div className="flex gap-2 px-4 py-3 overflow-x-auto bg-white border-b border-[#f5f5f7]" style={{ scrollbarWidth: "none" }}>
         {filterTypes.map(f => (
           <button key={f} onClick={() => setFilter(f)}
             className={`shrink-0 h-8 px-3 rounded-full text-[13px] font-bold transition-colors active:opacity-70 ${
-              filter === f ? "bg-[#191F28] text-white" : "bg-[#F2F4F6] text-[#4E5968]"
+              filter === f ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"
             }`}>
             {f === "전체" ? "전체" : typeLabel[f]}
           </button>
@@ -176,13 +176,13 @@ export default function NotificationsPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-[14px] font-bold text-[#191F28]">{n.title}</p>
-                {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-[#3182F6] shrink-0" />}
+                <p className="text-[14px] font-bold text-[#1d1d1f]">{n.title}</p>
+                {!n.read && <div className="w-1.5 h-1.5 rounded-full bg-[#0071e3] shrink-0" />}
               </div>
-              <p className="text-[14px] text-[#4E5968] leading-relaxed">{n.body}</p>
+              <p className="text-[14px] text-[#424245] leading-relaxed">{n.body}</p>
               <div className="flex items-center gap-2 mt-1">
-                <p className="text-[12px] text-[#B0B8C1]">{n.time}</p>
-                {n.href && <span className="text-[12px] text-[#3182F6]">바로가기 →</span>}
+                <p className="text-[12px] text-[#86868b]">{n.time}</p>
+                {n.href && <span className="text-[12px] text-[#0071e3]">바로가기 →</span>}
               </div>
             </div>
           </button>
@@ -191,9 +191,9 @@ export default function NotificationsPage() {
 
       {filtered.length === 0 && (
         <div className="flex flex-col items-center justify-center pt-24 text-center px-8">
-          <Bell size={48} className="text-[#E5E8EB] mb-4" />
-          <p className="text-[17px] font-bold text-[#191F28]">알림이 없어요</p>
-          <p className="text-[15px] text-[#8B95A1] mt-2">새로운 소식이 오면 알려드릴게요</p>
+          <Bell size={48} className="text-[#d2d2d7] mb-4" />
+          <p className="text-[17px] font-bold text-[#1d1d1f]">알림이 없어요</p>
+          <p className="text-[15px] text-[#6e6e73] mt-2">새로운 소식이 오면 알려드릴게요</p>
         </div>
       )}
     </div>

@@ -22,7 +22,7 @@ import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3182F6", bg: "#EBF3FE" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#0071e3", bg: "#e8f1fd" },
   { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", color: "#00C471", bg: "#D1FAE5" },
   { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#F04452", bg: "#FEE2E2" },
   { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#6366F1", bg: "#EDE9FE" },
@@ -54,39 +54,39 @@ function WeeklyModal({ weekly, onClose }: {
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
         <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
           <div className="flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 bg-[#E5E8EB] rounded-full" />
+            <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
           </div>
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[#F2F4F6]">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
             <div className="flex items-center gap-2">
-              <Calendar size={16} className="text-[#3182F6]" />
-              <span className="text-[17px] font-bold text-[#191F28]">주간 날씨</span>
+              <Calendar size={16} className="text-[#0071e3]" />
+              <span className="text-[17px] font-bold text-[#1d1d1f]">주간 날씨</span>
             </div>
             <button onClick={onClose} className="active:opacity-60">
-              <X size={20} className="text-[#8B95A1]" />
+              <X size={20} className="text-[#6e6e73]" />
             </button>
           </div>
           <div className="px-4 py-3 pb-10 space-y-1">
             {weekly.map((day, i) => (
               <div key={i}
                 className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
-                  day.isToday ? "bg-[#EBF3FE]" : "hover:bg-[#F2F4F6]"
+                  day.isToday ? "bg-[#e8f1fd]" : "hover:bg-[#f5f5f7]"
                 }`}>
                 <div className="w-14 shrink-0">
-                  <p className={`text-[14px] font-bold ${day.isToday ? "text-[#3182F6]" : "text-[#4E5968]"}`}>
+                  <p className={`text-[14px] font-bold ${day.isToday ? "text-[#0071e3]" : "text-[#424245]"}`}>
                     {day.isToday ? "오늘" : day.dayLabel}
                   </p>
-                  <p className="text-[12px] text-[#B0B8C1]">{day.date}</p>
+                  <p className="text-[12px] text-[#86868b]">{day.date}</p>
                 </div>
                 <span className="text-[25px] w-8 shrink-0">{day.emoji}</span>
                 <div className="flex-1">
                   {day.precipitation > 0 && (
-                    <p className="text-[12px] text-[#3182F6]">💧 {day.precipitation}mm</p>
+                    <p className="text-[12px] text-[#0071e3]">💧 {day.precipitation}mm</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <span className="text-[15px] font-bold text-[#F04452]">{day.high}°</span>
-                  <span className="text-[13px] text-[#B0B8C1]">/</span>
-                  <span className="text-[15px] font-semibold text-[#3182F6]">{day.low}°</span>
+                  <span className="text-[13px] text-[#86868b]">/</span>
+                  <span className="text-[15px] font-semibold text-[#0071e3]">{day.low}°</span>
                 </div>
               </div>
             ))}
@@ -104,7 +104,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
   if (loading) {
     return (
-      <div className="mx-4 mt-3 mb-1 bg-[#3182F6] rounded-2xl p-4 animate-pulse">
+      <div className="mx-4 mt-3 mb-1 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 bg-white/20 rounded-xl" />
           <div className="flex-1 space-y-2">
@@ -119,10 +119,10 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
   if (!weather) return null;
 
   const gradient =
-    weather.weatherCode <= 1 ? "from-[#3182F6] to-[#0EA5E9]"
-    : weather.weatherCode <= 3 ? "from-[#4E5968] to-[#6B7684]"
-    : weather.weatherCode >= 61 ? "from-[#1B64DA] to-[#3182F6]"
-    : "from-[#3182F6] to-[#6366F1]";
+    weather.weatherCode <= 1 ? "from-[#0071e3] to-[#0EA5E9]"
+    : weather.weatherCode <= 3 ? "from-[#424245] to-[#6B7684]"
+    : weather.weatherCode >= 61 ? "from-[#0058b0] to-[#0071e3]"
+    : "from-[#0071e3] to-[#6366F1]";
 
   // 어제 대비 온도 차이
   const tempDiff = weather.yesterdayTemp != null ? weather.temp - weather.yesterdayTemp : null;
@@ -230,9 +230,9 @@ function CouponSection() {
           <div className="w-5 h-5 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
             <Tag size={12} className="text-[#F59E0B]" />
           </div>
-          <span className="text-[15px] font-bold text-[#191F28]">이번 주 쿠폰</span>
+          <span className="text-[15px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
         </div>
-        <Link href="/coupons/" className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5">
+        <Link href="/coupons/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
           전체보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -253,8 +253,8 @@ function CouponSection() {
                   <div className="flex items-center gap-2.5">
                     <StoreLogo name={c.storeName} category={c.category} size={36} rounded="rounded-xl" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-extrabold text-[#191F28] truncate">{c.storeName}</p>
-                      <p className="text-[11px] text-[#8B95A1] truncate mt-0.5">{c.buildingName}</p>
+                      <p className="text-[14px] font-extrabold text-[#1d1d1f] truncate">{c.storeName}</p>
+                      <p className="text-[11px] text-[#6e6e73] truncate mt-0.5">{c.buildingName}</p>
                     </div>
                   </div>
                 </div>
@@ -265,10 +265,10 @@ function CouponSection() {
                   <div className="absolute inset-x-0 top-1/2 -translate-y-1/2"
                     style={{ borderTop: `2px dashed ${c.color}55` }} />
                   {/* 좌측 반원 */}
-                  <div className="absolute -left-[7px] w-[14px] h-[14px] rounded-full bg-[#F2F4F6] border-r-0"
+                  <div className="absolute -left-[7px] w-[14px] h-[14px] rounded-full bg-[#f5f5f7] border-r-0"
                     style={{ border: `1.5px solid ${c.color}22`, borderLeft: "none" }} />
                   {/* 우측 반원 */}
-                  <div className="absolute -right-[7px] w-[14px] h-[14px] rounded-full bg-[#F2F4F6] border-l-0"
+                  <div className="absolute -right-[7px] w-[14px] h-[14px] rounded-full bg-[#f5f5f7] border-l-0"
                     style={{ border: `1.5px solid ${c.color}22`, borderRight: "none" }} />
                 </div>
 
@@ -279,19 +279,19 @@ function CouponSection() {
                     <span className="text-[28px] font-black leading-none" style={{ color: c.color }}>
                       {c.discount}
                     </span>
-                    <span className="text-[12px] font-bold text-[#8B95A1]">할인</span>
+                    <span className="text-[12px] font-bold text-[#6e6e73]">할인</span>
                   </div>
                   {/* 쿠폰 제목 */}
-                  <p className="text-[12px] text-[#4E5968] leading-snug line-clamp-2 mb-2.5">{c.title}</p>
+                  <p className="text-[12px] text-[#424245] leading-snug line-clamp-2 mb-2.5">{c.title}</p>
                   {/* 하단: 만료일 + 받기 버튼 */}
                   <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-bold ${urgent ? "text-[#F04452]" : "text-[#B0B8C1]"}`}>
+                    <span className={`text-[11px] font-bold ${urgent ? "text-[#F04452]" : "text-[#86868b]"}`}>
                       {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
                     </span>
                     <button
                       onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
                       className={`h-7 px-3.5 rounded-lg text-[12px] font-extrabold active:opacity-70 transition-all ${
-                        done ? "bg-[#F2F4F6] text-[#B0B8C1]" : "text-white shadow-sm"
+                        done ? "bg-[#f5f5f7] text-[#86868b]" : "text-white shadow-sm"
                       }`}
                       style={done ? {} : { background: c.color }}>
                       {done ? "✓ 완료" : "쿠폰받기"}
@@ -317,55 +317,55 @@ function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0
   return (
     <div className="fixed inset-0 z-[300] flex items-end" onClick={onClose}>
       <div className="w-full max-w-[430px] mx-auto bg-white rounded-t-3xl overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#E5E8EB] rounded-full" /></div>
+        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#d2d2d7] rounded-full" /></div>
         {/* 헤더 */}
         <div className="px-5 pt-4 pb-3 flex items-start justify-between">
           <div className="flex items-center gap-2.5">
             <div className="w-10 h-10 rounded-xl bg-[#FFF0F0] flex items-center justify-center text-xl">{store.emoji}</div>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-[16px] font-bold text-[#191F28]">{store.storeName}</span>
+                <span className="text-[16px] font-bold text-[#1d1d1f]">{store.storeName}</span>
                 {store.isNew && <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>}
               </div>
-              <p className="text-[12px] text-[#8B95A1] mt-0.5">검단 센트럴 타워 {store.floor} · {store.category}</p>
+              <p className="text-[12px] text-[#6e6e73] mt-0.5">검단 센트럴 타워 {store.floor} · {store.category}</p>
             </div>
           </div>
           <button onClick={onClose} className="active:opacity-60 mt-0.5">
-            <X size={20} className="text-[#8B95A1]" />
+            <X size={20} className="text-[#6e6e73]" />
           </button>
         </div>
         {/* D-day 배너 */}
         {dDay !== null && (
-          <div className={`mx-5 mb-3 rounded-xl px-4 py-2.5 flex items-center justify-between ${dDay <= 3 ? "bg-[#FFF0F0]" : "bg-[#EBF3FE]"}`}>
-            <span className="text-[13px] font-semibold text-[#4E5968]">혜택 마감까지</span>
-            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
+          <div className={`mx-5 mb-3 rounded-xl px-4 py-2.5 flex items-center justify-between ${dDay <= 3 ? "bg-[#FFF0F0]" : "bg-[#e8f1fd]"}`}>
+            <span className="text-[13px] font-semibold text-[#424245]">혜택 마감까지</span>
+            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
               {dDay > 0 ? `D-${dDay}` : dDay === 0 ? "오늘 마감!" : "종료"}
             </span>
           </div>
         )}
         {/* 혜택 항목 */}
         <div className="px-5 pb-2">
-          <p className="text-[13px] font-bold text-[#8B95A1] mb-2.5">오픈 혜택 안내</p>
+          <p className="text-[13px] font-bold text-[#6e6e73] mb-2.5">오픈 혜택 안내</p>
           <div className="space-y-2">
             {b.details.map((d, i) => (
               <div key={i} className="flex items-start gap-2.5 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
-                <div className="w-5 h-5 rounded-full bg-[#3182F6] flex items-center justify-center shrink-0 mt-0.5">
+                <div className="w-5 h-5 rounded-full bg-[#0071e3] flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-[10px] font-black text-white">{i + 1}</span>
                 </div>
-                <p className="text-[14px] text-[#191F28] leading-snug">{d}</p>
+                <p className="text-[14px] text-[#1d1d1f] leading-snug">{d}</p>
               </div>
             ))}
           </div>
         </div>
         {/* 유효기간 */}
         {b.validUntil && (
-          <p className="text-[12px] text-[#B0B8C1] text-center pt-2 pb-2">
+          <p className="text-[12px] text-[#86868b] text-center pt-2 pb-2">
             혜택 기간: ~{b.validUntil.slice(5).replace("-", "/")}
           </p>
         )}
         <div className="px-5 pb-10 pt-1">
           <button onClick={onClose}
-            className="w-full h-12 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold active:bg-[#1B64DA]">
+            className="w-full h-12 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:bg-[#0058b0]">
             확인
           </button>
         </div>
@@ -383,32 +383,32 @@ function NewOpeningsSection() {
       <div className="bg-white rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 pt-3.5 pb-2.5">
           <div className="flex items-center gap-1.5">
-            <span className="text-[15px] font-bold text-[#191F28]">이번 주 신규 오픈</span>
+            <span className="text-[15px] font-bold text-[#1d1d1f]">이번 주 신규 오픈</span>
             <span className="text-[12px] font-bold bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
           </div>
-          <Link href="/stores/" className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5">
+          <Link href="/stores/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
             지도 보기 <ChevronRight size={13} />
           </Link>
         </div>
-        <div className="divide-y divide-[#F2F4F6]">
+        <div className="divide-y divide-[#f5f5f7]">
           {newStoreOpenings.map(s => (
             <button key={s.id}
               onClick={() => setSheetStore(s)}
-              className="w-full flex items-start gap-3 px-4 py-3 active:bg-[#F2F4F6] text-left">
+              className="w-full flex items-start gap-3 px-4 py-3 active:bg-[#f5f5f7] text-left">
               <StoreLogo name={s.storeName} category={s.category} size={40} />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="text-[15px] font-bold text-[#191F28] truncate">{s.storeName}</p>
+                  <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{s.storeName}</p>
                   {s.isNew && (
                     <span className="shrink-0 text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[12px] text-[#8B95A1]">검단 센트럴 타워</span>
-                  <span className="text-[12px] text-[#B0B8C1]">·</span>
-                  <span className="text-[12px] font-semibold text-[#3182F6]">{s.floor}</span>
-                  <span className="text-[12px] text-[#B0B8C1]">·</span>
-                  <span className="text-[12px] text-[#8B95A1]">{s.category}</span>
+                  <span className="text-[12px] text-[#6e6e73]">검단 센트럴 타워</span>
+                  <span className="text-[12px] text-[#86868b]">·</span>
+                  <span className="text-[12px] font-semibold text-[#0071e3]">{s.floor}</span>
+                  <span className="text-[12px] text-[#86868b]">·</span>
+                  <span className="text-[12px] text-[#6e6e73]">{s.category}</span>
                 </div>
                 {s.openBenefit && (
                   <div className="mt-1.5 flex items-center gap-1.5">
@@ -418,7 +418,7 @@ function NewOpeningsSection() {
                 )}
               </div>
               <div className="text-right shrink-0 pt-0.5">
-                <p className="text-[12px] text-[#B0B8C1]">{s.openDate.slice(5)} 오픈</p>
+                <p className="text-[12px] text-[#86868b]">{s.openDate.slice(5)} 오픈</p>
               </div>
             </button>
           ))}
@@ -449,11 +449,11 @@ function SosikSection() {
   return (
     <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
-        <div className="flex border-b border-[#F2F4F6]">
+        <div className="flex border-b border-[#f5f5f7]">
           {(["커뮤니티", "뉴스", "시세"] as SosikTab[]).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-3 text-[14px] font-semibold border-b-2 transition-colors ${
-                tab === t ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
+                tab === t ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
               }`}>
               {t}
             </button>
@@ -465,25 +465,25 @@ function SosikSection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <div className="flex items-center gap-1.5">
                 <Flame size={14} className="text-[#F04452]" />
-                <span className="text-[14px] font-bold text-[#191F28]">HOT 게시글</span>
+                <span className="text-[14px] font-bold text-[#1d1d1f]">HOT 게시글</span>
               </div>
-              <Link href="/community/" className="text-[13px] text-[#3182F6]">전체보기</Link>
+              <Link href="/community/" className="text-[13px] text-[#0071e3]">전체보기</Link>
             </div>
-            <div className="divide-y divide-[#F2F4F6]">
+            <div className="divide-y divide-[#f5f5f7]">
               {hotPosts.map(post => (
                 <button key={post.id}
                   onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-                  className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#F2F4F6] text-left">
-                  <span className="text-[12px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+                  className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#f5f5f7] text-left">
+                  <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
                     {post.category}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium text-[#191F28] truncate">{post.title}</p>
+                    <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{post.title}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[12px] text-[#8B95A1]">{post.authorDong}</span>
-                      <span className="text-[12px] text-[#B0B8C1]">·</span>
-                      <span className="text-[12px] text-[#8B95A1]">{formatRelativeTime(post.createdAt)}</span>
-                      <span className="text-[12px] text-[#B0B8C1] ml-auto">❤️ {post.likeCount}</span>
+                      <span className="text-[12px] text-[#6e6e73]">{post.authorDong}</span>
+                      <span className="text-[12px] text-[#86868b]">·</span>
+                      <span className="text-[12px] text-[#6e6e73]">{formatRelativeTime(post.createdAt)}</span>
+                      <span className="text-[12px] text-[#86868b] ml-auto">❤️ {post.likeCount}</span>
                     </div>
                   </div>
                 </button>
@@ -491,7 +491,7 @@ function SosikSection() {
             </div>
             <div className="px-4 py-3">
               <Link href="/community/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#f5f5f7] rounded-xl text-[14px] font-medium text-[#424245]">
                 커뮤니티 전체 보기 →
               </Link>
             </div>
@@ -501,20 +501,20 @@ function SosikSection() {
         {tab === "뉴스" && (
           <div>
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
-              <span className="text-[14px] font-bold text-[#191F28]">검단 최신 뉴스</span>
-              <Link href="/community/?tab=뉴스" className="text-[13px] text-[#3182F6]">전체보기</Link>
+              <span className="text-[14px] font-bold text-[#1d1d1f]">검단 최신 뉴스</span>
+              <Link href="/community/?tab=뉴스" className="text-[13px] text-[#0071e3]">전체보기</Link>
             </div>
-            <div className="divide-y divide-[#F2F4F6]">
+            <div className="divide-y divide-[#f5f5f7]">
               {topNews.map(item => (
                 <a key={item.id}
                   href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
-                  className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
-                  <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center text-xl shrink-0">📰</div>
+                  className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
+                  <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">📰</div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-medium text-[#191F28] leading-snug line-clamp-2">{item.title}</p>
+                    <p className="text-[14px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <span className="text-[12px] text-[#3182F6] font-medium">{item.source}</span>
-                      <span className="text-[12px] text-[#B0B8C1]">{formatRelativeTime(item.publishedAt)}</span>
+                      <span className="text-[12px] text-[#0071e3] font-medium">{item.source}</span>
+                      <span className="text-[12px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
                     </div>
                   </div>
                 </a>
@@ -522,7 +522,7 @@ function SosikSection() {
             </div>
             <div className="px-4 py-3">
               <Link href="/community/?tab=뉴스"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#f5f5f7] rounded-xl text-[14px] font-medium text-[#424245]">
                 뉴스 전체 보기 →
               </Link>
             </div>
@@ -534,29 +534,29 @@ function SosikSection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
               <div className="flex items-center gap-1.5">
                 <TrendingUp size={14} className="text-[#00C471]" />
-                <span className="text-[14px] font-bold text-[#191F28]">부동산 시세</span>
+                <span className="text-[14px] font-bold text-[#1d1d1f]">부동산 시세</span>
               </div>
-              <Link href="/real-estate/" className="text-[13px] text-[#3182F6]">전체보기</Link>
+              <Link href="/real-estate/" className="text-[13px] text-[#0071e3]">전체보기</Link>
             </div>
-            <div className="divide-y divide-[#F2F4F6]">
+            <div className="divide-y divide-[#f5f5f7]">
               {apartments.slice(0, 4).map(apt => (
                 <button key={apt.id}
                   onClick={() => router.push("/real-estate/")}
-                  className="w-full px-4 py-3 flex items-center justify-between active:bg-[#F2F4F6]">
+                  className="w-full px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
                   <div className="text-left min-w-0 flex-1 pr-2">
-                    <p className="text-[14px] font-medium text-[#191F28] truncate">{apt.name}</p>
-                    <p className="text-[12px] text-[#8B95A1] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
+                    <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{apt.name}</p>
+                    <p className="text-[12px] text-[#6e6e73] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className="text-[15px] font-bold text-[#00C471]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-                    <p className="text-[11px] text-[#8B95A1]">실거래</p>
+                    <p className="text-[11px] text-[#6e6e73]">실거래</p>
                   </div>
                 </button>
               ))}
             </div>
             <div className="px-4 py-3">
               <Link href="/real-estate/"
-                className="block w-full text-center py-2.5 bg-[#F2F4F6] rounded-xl text-[14px] font-medium text-[#4E5968]">
+                className="block w-full text-center py-2.5 bg-[#f5f5f7] rounded-xl text-[14px] font-medium text-[#424245]">
                 부동산 시세 전체 보기 →
               </Link>
             </div>
@@ -634,7 +634,7 @@ function MartSection() {
 
   return (
     <>
-      <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide px-4 mb-1.5 mt-3">주변 마트</p>
+      <p className="text-[13px] font-bold text-[#6e6e73] uppercase tracking-wide px-4 mb-1.5 mt-3">주변 마트</p>
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
@@ -662,7 +662,7 @@ function MartSection() {
         )}
 
         {/* 마트 목록 */}
-        <div className="divide-y divide-[#F2F4F6]">
+        <div className="divide-y divide-[#f5f5f7]">
           {nearbyMarts.map(mart => {
             const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
@@ -671,14 +671,14 @@ function MartSection() {
               <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
                 {/* 로고 */}
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                  todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#F2F4F6]"
+                  todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
-                  <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#8B95A1]"} />
+                  <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#191F28]">{mart.name}</span>
+                    <span className="text-[14px] font-bold text-[#1d1d1f]">{mart.name}</span>
                     <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
                       mart.type === "대형마트"
                         ? "bg-[#EDE9FE] text-[#6D28D9]"
@@ -702,15 +702,15 @@ function MartSection() {
 
                   {/* 의무휴업 안내 */}
                   {mart.notice && mart.type === "대형마트" && (
-                    <p className="text-[11px] text-[#B0B8C1] mt-0.5">{mart.notice}</p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5">{mart.notice}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[12px] text-[#8B95A1]">{mart.distance}</span>
+                  <span className="text-[12px] text-[#6e6e73]">{mart.distance}</span>
                   <a href={`tel:${mart.phone}`}
-                    className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
-                    <Phone size={14} className="text-[#3182F6]" />
+                    className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#e8f1fd]">
+                    <Phone size={14} className="text-[#0071e3]" />
                   </a>
                 </div>
               </div>
@@ -833,9 +833,9 @@ function PharmacySection() {
       <div className="bg-white rounded-2xl overflow-hidden">
         {/* 상태 배너 */}
         {(isWeekend || isNight) && mainType === "약국" && (
-          <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#EBF3FE]"}`}>
-            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#3182F6]"} />
-            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#3182F6]"}`}>
+          <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#e8f1fd]"}`}>
+            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#0071e3]"} />
+            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#0071e3]"}`}>
               {isNight ? "지금은 심야 시간이에요 — 운영 중인 약국을 확인하세요" : "오늘은 주말이에요 — 운영 약국을 확인하세요"}
             </span>
           </div>
@@ -850,14 +850,14 @@ function PharmacySection() {
         )}
 
         {/* 메인 타입 탭 */}
-        <div className="flex border-b border-[#F2F4F6]">
+        <div className="flex border-b border-[#f5f5f7]">
           {(["약국", "응급실", "소아응급실"] as EmergencyType[]).map(t => (
             <button key={t} onClick={() => { setMainType(t); setShowAll(false); }}
               className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${mainType === t
-                ? t === "약국" ? "text-[#3182F6] border-[#3182F6]"
+                ? t === "약국" ? "text-[#0071e3] border-[#0071e3]"
                   : t === "응급실" ? "text-[#F04452] border-[#F04452]"
                   : "text-[#F97316] border-[#F97316]"
-                : "text-[#B0B8C1] border-transparent"}`}>
+                : "text-[#86868b] border-transparent"}`}>
               {t === "약국" ? "💊 약국" : t === "응급실" ? "🚨 응급실" : "👶 소아응급실"}
             </button>
           ))}
@@ -869,48 +869,48 @@ function PharmacySection() {
             <div className="flex gap-2 px-4 pt-3 pb-2">
               {filterBtns.map(f => (
                 <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
-                  className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#3182F6] text-white" : "bg-[#F2F4F6] text-[#4E5968]"}`}>
+                  className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                   {f === "심야" ? "🌙 심야" : f === "주말" ? "📅 주말" : "전체"}
                 </button>
               ))}
             </div>
             {/* 약국 목록 */}
-            <div className="divide-y divide-[#F2F4F6]">
+            <div className="divide-y divide-[#f5f5f7]">
               {displayed.map(p => (
                 <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#F2F4F6]"}`}>
-                    <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#8B95A1]"} />
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
+                    <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#6e6e73]"} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] font-bold text-[#191F28]">{p.name}</span>
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F2F4F6] text-[#8B95A1]"}`}>
+                      <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
                         {p.isOpenNow ? "영업 중" : "영업 종료"}
                       </span>
                       {p.tags.includes("24시") && (
                         <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
                       )}
                     </div>
-                    <p className="text-[12px] text-[#8B95A1] mt-0.5">{p.address}</p>
+                    <p className="text-[12px] text-[#6e6e73] mt-0.5">{p.address}</p>
                     <div className="flex flex-col gap-0.5 mt-1.5">
                       {p.weekendHours && (
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-[#3182F6] w-6 shrink-0">주말</span>
-                          <span className="text-[12px] text-[#4E5968]">{p.weekendHours}</span>
+                          <span className="text-[11px] font-semibold text-[#0071e3] w-6 shrink-0">주말</span>
+                          <span className="text-[12px] text-[#424245]">{p.weekendHours}</span>
                         </div>
                       )}
                       {p.nightHours && (
                         <div className="flex items-center gap-1.5">
                           <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
-                          <span className="text-[12px] text-[#4E5968]">{p.nightHours}</span>
+                          <span className="text-[12px] text-[#424245]">{p.nightHours}</span>
                         </div>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    {p.distance && <span className="text-[12px] text-[#8B95A1]">{p.distance}</span>}
-                    <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#EBF3FE] rounded-xl flex items-center justify-center active:bg-[#DBEAFE]">
-                      <Phone size={14} className="text-[#3182F6]" />
+                    {p.distance && <span className="text-[12px] text-[#6e6e73]">{p.distance}</span>}
+                    <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#e8f1fd]">
+                      <Phone size={14} className="text-[#0071e3]" />
                     </a>
                   </div>
                 </div>
@@ -918,15 +918,15 @@ function PharmacySection() {
             </div>
             {filtered.length > 3 && (
               <button onClick={() => setShowAll(v => !v)}
-                className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#F2F4F6] active:bg-[#F2F4F6]">
-                <span className="text-[13px] font-semibold text-[#4E5968]">{showAll ? "접기" : `${filtered.length - 3}개 더 보기`}</span>
-                {showAll ? <ChevronUp size={14} className="text-[#8B95A1]" /> : <ChevronDown size={14} className="text-[#8B95A1]" />}
+                className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#f5f5f7] active:bg-[#f5f5f7]">
+                <span className="text-[13px] font-semibold text-[#424245]">{showAll ? "접기" : `${filtered.length - 3}개 더 보기`}</span>
+                {showAll ? <ChevronUp size={14} className="text-[#6e6e73]" /> : <ChevronDown size={14} className="text-[#6e6e73]" />}
               </button>
             )}
           </>
         ) : (
           /* 응급실 / 소아응급실 목록 */
-          <div className="divide-y divide-[#F2F4F6]">
+          <div className="divide-y divide-[#f5f5f7]">
             {erList.map(er => (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#FEE2E2]">
@@ -936,20 +936,20 @@ function PharmacySection() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#191F28]">{er.name}</span>
+                    <span className="text-[14px] font-bold text-[#1d1d1f]">{er.name}</span>
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">{er.level}</span>
                     {er.isPediatric && mainType === "응급실" && (
                       <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과</span>
                     )}
                   </div>
-                  <p className="text-[12px] text-[#8B95A1] mt-0.5">{er.address}</p>
+                  <p className="text-[12px] text-[#6e6e73] mt-0.5">{er.address}</p>
                   <div className="flex items-center gap-1.5 mt-1.5">
-                    <Clock size={11} className="text-[#8B95A1]" />
-                    <span className="text-[12px] text-[#4E5968]">{er.hours}</span>
+                    <Clock size={11} className="text-[#6e6e73]" />
+                    <span className="text-[12px] text-[#424245]">{er.hours}</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[12px] text-[#8B95A1]">{er.distance}</span>
+                  <span className="text-[12px] text-[#6e6e73]">{er.distance}</span>
                   <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
                     <Phone size={14} className="text-[#F04452]" />
                   </a>
@@ -966,7 +966,7 @@ function PharmacySection() {
 // ─── 섹션 헤더 ────────────────────────────────────────────────
 function SectionLabel({ label }: { label: string }) {
   return (
-    <p className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide px-4 mb-1.5 mt-3">
+    <p className="text-[13px] font-bold text-[#6e6e73] uppercase tracking-wide px-4 mb-1.5 mt-3">
       {label}
     </p>
   );
@@ -1020,7 +1020,7 @@ function GreetingBanner({ weather }: { weather: WeatherData | null }) {
   return (
     <div className="mx-4 mt-4 mb-1">
       <p className="text-[13px] font-semibold text-[#6B7684] mb-1">{sub}</p>
-      <h1 className="text-[22px] font-black text-[#191F28] leading-snug">{main}</h1>
+      <h1 className="text-[22px] font-black text-[#1d1d1f] leading-snug">{main}</h1>
     </div>
   );
 }
@@ -1054,7 +1054,7 @@ export default function HomePage() {
                 style={{ background: bg }}>
                 <Icon size={20} color={color} strokeWidth={2.2} />
               </div>
-              <span className="text-[11px] text-[#4E5968] font-semibold text-center leading-tight">{label}</span>
+              <span className="text-[11px] text-[#424245] font-semibold text-center leading-tight">{label}</span>
             </Link>
           ))}
         </div>
@@ -1084,16 +1084,16 @@ export default function HomePage() {
         <SectionLabel label="교통" />
         <section className="mx-4 mb-1">
           <button onClick={() => router.push("/transport/")}
-            className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between active:bg-[#F2F4F6]">
+            className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between active:bg-[#f5f5f7]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center">
-                <Bus size={20} className="text-[#3182F6]" />
+              <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                <Bus size={20} className="text-[#0071e3]" />
               </div>
               <div className="text-left">
-                <p className="text-[12px] text-[#8B95A1]">{stop.name}</p>
+                <p className="text-[12px] text-[#6e6e73]">{stop.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-[16px] font-black text-[#191F28]">{bus.routeNo}번</span>
-                  <span className="text-[13px] text-[#4E5968]">{bus.destination} 방면</span>
+                  <span className="text-[16px] font-black text-[#1d1d1f]">{bus.routeNo}번</span>
+                  <span className="text-[13px] text-[#424245]">{bus.destination} 방면</span>
                   {bus.isExpress && (
                     <span className="text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded">급행</span>
                   )}
@@ -1102,12 +1102,12 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2">
               <div className={`rounded-xl px-3 py-2 text-center min-w-[50px] ${
-                bus.arrivalMin <= 3 ? "bg-[#F04452]" : bus.arrivalMin <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]"
+                bus.arrivalMin <= 3 ? "bg-[#F04452]" : bus.arrivalMin <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]"
               }`}>
                 <span className="text-white text-[21px] font-black leading-none">{bus.arrivalMin}</span>
                 <span className="text-white/80 text-[11px] block leading-none">분 후</span>
               </div>
-              <ChevronRight size={16} className="text-[#B0B8C1]" />
+              <ChevronRight size={16} className="text-[#86868b]" />
             </div>
           </button>
         </section>
@@ -1117,8 +1117,8 @@ export default function HomePage() {
       <>
         <div className="flex items-center justify-between px-4 mt-3 mb-1.5">
           <div className="flex items-center gap-1.5">
-            <MapPin size={13} className="text-[#3182F6]" />
-            <span className="text-[13px] font-bold text-[#8B95A1] uppercase tracking-wide">검단 소식</span>
+            <MapPin size={13} className="text-[#0071e3]" />
+            <span className="text-[13px] font-bold text-[#6e6e73] uppercase tracking-wide">검단 소식</span>
           </div>
         </div>
         <SosikSection />
@@ -1132,7 +1132,7 @@ export default function HomePage() {
     : Object.keys(widgetRenderers).map((id, i) => ({ id, enabled: true, sort_order: i + 1, label: id }));
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
       <Header showLocation />
 
       {activeWidgets.map(w => {

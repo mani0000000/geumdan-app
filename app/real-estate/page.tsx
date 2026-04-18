@@ -663,7 +663,7 @@ export default function RealEstatePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-[70px]">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-[70px]">
       <Header title="부동산 시세" />
 
       {/* 내 집 시세 section */}

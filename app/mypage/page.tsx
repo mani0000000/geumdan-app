@@ -18,7 +18,7 @@ import {
 
 const levelBadge: Record<string, string> = {
   새싹: "bg-[#D1FAE5] text-[#065F46]",
-  주민: "bg-[#DBEAFE] text-[#1E40AF]",
+  주민: "bg-[#e8f1fd] text-[#1E40AF]",
   이웃: "bg-[#EDE9FE] text-[#5B21B6]",
   터줏대감: "bg-[#FEF3C7] text-[#92400E]",
 };
@@ -28,7 +28,7 @@ const monthlyLevelColor: Record<string, { from: string; to: string; badge: strin
   브론즈: { from: "#92400E", to: "#D97706", badge: "bg-[#FEF3C7] text-[#92400E]" },
   실버: { from: "#4B5563", to: "#9CA3AF", badge: "bg-[#F3F4F6] text-[#374151]" },
   골드: { from: "#B45309", to: "#FBBF24", badge: "bg-[#FEF9C3] text-[#854D0E]" },
-  플래티넘: { from: "#1E40AF", to: "#38BDF8", badge: "bg-[#DBEAFE] text-[#1E40AF]" },
+  플래티넘: { from: "#1E40AF", to: "#38BDF8", badge: "bg-[#e8f1fd] text-[#1E40AF]" },
 };
 
 export default function MyPage() {
@@ -72,7 +72,7 @@ export default function MyPage() {
     {
       title: "내 활동",
       items: [
-        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#3182F6]", href: "/community/" },
+        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
       ],
@@ -88,50 +88,50 @@ export default function MyPage() {
     {
       title: "설정",
       items: [
-        { icon: Bell, label: "알림 설정", badge: null, color: "text-[#8B95A1]", href: "/mypage/notifications/" },
-        { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#8B95A1]", href: "/mypage/settings/" },
-        { icon: Settings, label: "앱 설정", badge: null, color: "text-[#8B95A1]", href: "/mypage/settings/" },
-        { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#8B95A1]", href: null },
+        { icon: Bell, label: "알림 설정", badge: null, color: "text-[#6e6e73]", href: "/mypage/notifications/" },
+        { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
+        { icon: Settings, label: "앱 설정", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
+        { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#6e6e73]", href: null },
       ],
     },
   ];
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
       <Header title="마이페이지" />
 
       {/* 프로필 카드 */}
       <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="h-16 bg-[#3182F6]" />
+        <div className="h-16 bg-[#0071e3]" />
         <div className="px-4 pb-5">
           <div className="flex items-end justify-between -mt-8 mb-3">
-            <div className="w-16 h-16 rounded-full bg-[#EBF3FE] border-4 border-white flex items-center justify-center text-2xl">👤</div>
+            <div className="w-16 h-16 rounded-full bg-[#e8f1fd] border-4 border-white flex items-center justify-center text-2xl">👤</div>
             <button onClick={() => router.push("/mypage/edit/")}
-              className="h-8 px-3.5 border border-[#E5E8EB] rounded-xl text-[13px] text-[#4E5968] font-medium active:bg-[#F2F4F6]">
+              className="h-8 px-3.5 border border-[#d2d2d7] rounded-xl text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
               프로필 수정
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <h2 className="text-[19px] font-bold text-[#191F28]">{nickname}</h2>
+            <h2 className="text-[19px] font-bold text-[#1d1d1f]">{nickname}</h2>
             <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${levelBadge[level] ?? levelBadge["새싹"]}`}>
               {level}
             </span>
           </div>
-          <p className="text-[14px] text-[#8B95A1] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
+          <p className="text-[14px] text-[#6e6e73] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
           <div className="mt-3">
             <div className="flex justify-between mb-1">
-              <span className="text-[12px] text-[#8B95A1]">레벨 진행도</span>
-              <span className="text-[12px] font-bold text-[#3182F6]">{levelPct[level] ?? 15}%</span>
+              <span className="text-[12px] text-[#6e6e73]">레벨 진행도</span>
+              <span className="text-[12px] font-bold text-[#0071e3]">{levelPct[level] ?? 15}%</span>
             </div>
-            <div className="h-1.5 bg-[#F2F4F6] rounded-full overflow-hidden">
-              <div className="h-full bg-[#3182F6] rounded-full" style={{ width: `${levelPct[level] ?? 15}%` }} />
+            <div className="h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
+              <div className="h-full bg-[#0071e3] rounded-full" style={{ width: `${levelPct[level] ?? 15}%` }} />
             </div>
           </div>
-          <div className="flex mt-4 border border-[#F2F4F6] rounded-xl overflow-hidden">
+          <div className="flex mt-4 border border-[#f5f5f7] rounded-xl overflow-hidden">
             {([["작성 글", postCount], ["댓글", commentCount], ["받은 좋아요", 142]] as [string, number][]).map(([l, v], i, arr) => (
-              <div key={l} className={`flex-1 py-3 text-center ${i !== arr.length - 1 ? "border-r border-[#F2F4F6]" : ""}`}>
-                <p className="text-[21px] font-black text-[#191F28]">{v}</p>
-                <p className="text-[12px] text-[#8B95A1] mt-0.5">{l}</p>
+              <div key={l} className={`flex-1 py-3 text-center ${i !== arr.length - 1 ? "border-r border-[#f5f5f7]" : ""}`}>
+                <p className="text-[21px] font-black text-[#1d1d1f]">{v}</p>
+                <p className="text-[12px] text-[#6e6e73] mt-0.5">{l}</p>
               </div>
             ))}
           </div>
@@ -213,19 +213,19 @@ export default function MyPage() {
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-1.5">
             <Zap size={16} className="text-[#F59E0B]" />
-            <span className="text-[16px] font-bold text-[#191F28]">주간 미션</span>
+            <span className="text-[16px] font-bold text-[#1d1d1f]">주간 미션</span>
           </div>
-          <span className="text-[13px] text-[#8B95A1]">
+          <span className="text-[13px] text-[#6e6e73]">
             {g.missions.filter(m => m.done).length}/{g.missions.length} 완료
           </span>
         </div>
         <div className="px-4 pb-4 space-y-2">
           {g.missions.map(m => (
-            <div key={m.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${m.done ? "bg-[#F0FDF4]" : "bg-[#F2F4F6]"}`}>
+            <div key={m.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${m.done ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"}`}>
               <span className="text-xl">{m.icon}</span>
               <div className="flex-1 min-w-0">
-                <p className={`text-[14px] font-bold ${m.done ? "text-[#065F46]" : "text-[#191F28]"}`}>{m.title}</p>
-                <p className={`text-[12px] ${m.done ? "text-[#00C471]" : "text-[#8B95A1]"}`}>{m.desc}</p>
+                <p className={`text-[14px] font-bold ${m.done ? "text-[#065F46]" : "text-[#1d1d1f]"}`}>{m.title}</p>
+                <p className={`text-[12px] ${m.done ? "text-[#00C471]" : "text-[#6e6e73]"}`}>{m.desc}</p>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className={`text-[13px] font-bold ${m.done ? "text-[#00C471]" : "text-[#F59E0B]"}`}>+{m.reward}P</span>
@@ -240,23 +240,23 @@ export default function MyPage() {
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-1.5">
-            <Gift size={16} className="text-[#3182F6]" />
-            <span className="text-[16px] font-bold text-[#191F28]">포인트 교환</span>
+            <Gift size={16} className="text-[#0071e3]" />
+            <span className="text-[16px] font-bold text-[#1d1d1f]">포인트 교환</span>
           </div>
-          <span className="text-[13px] font-bold text-[#3182F6]">{g.points.toLocaleString()}P 보유</span>
+          <span className="text-[13px] font-bold text-[#0071e3]">{g.points.toLocaleString()}P 보유</span>
         </div>
         <div className="px-4 pb-4 space-y-2">
           {g.rewards.map(r => {
             const canRedeem = g.points >= r.cost && !redeemed.has(r.id);
             const done = redeemed.has(r.id);
             return (
-              <div key={r.id} className="flex items-center gap-3 bg-[#F2F4F6] rounded-xl px-3 py-3">
+              <div key={r.id} className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
                 <span className="text-2xl">{r.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-[#191F28] truncate">{r.title}</p>
+                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[13px] font-bold text-[#3182F6]">{r.cost}P</span>
-                    <span className="text-[12px] text-[#8B95A1]">잔여 {r.stock}개</span>
+                    <span className="text-[13px] font-bold text-[#0071e3]">{r.cost}P</span>
+                    <span className="text-[12px] text-[#6e6e73]">잔여 {r.stock}개</span>
                   </div>
                 </div>
                 {done ? (
@@ -267,16 +267,16 @@ export default function MyPage() {
                 ) : redeemTarget === r.id ? (
                   <div className="flex gap-1.5">
                     <button onClick={() => setRedeemTarget(null)}
-                      className="h-8 px-2.5 bg-[#E5E8EB] rounded-xl text-[12px] font-bold text-[#4E5968] active:opacity-70">취소</button>
+                      className="h-8 px-2.5 bg-[#d2d2d7] rounded-xl text-[12px] font-bold text-[#424245] active:opacity-70">취소</button>
                     <button onClick={() => { setRedeemed(s => new Set([...s, r.id])); setRedeemTarget(null); }}
-                      className="h-8 px-2.5 bg-[#3182F6] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
+                      className="h-8 px-2.5 bg-[#0071e3] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
                   </div>
                 ) : (
                   <button
                     onClick={() => canRedeem && setRedeemTarget(r.id)}
                     disabled={!canRedeem}
                     className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors ${
-                      canRedeem ? "bg-[#3182F6] text-white active:bg-[#1B64DA]" : "bg-[#E5E8EB] text-[#B0B8C1]"
+                      canRedeem ? "bg-[#0071e3] text-white active:bg-[#0058b0]" : "bg-[#d2d2d7] text-[#86868b]"
                     }`}>
                     교환
                   </button>
@@ -285,8 +285,8 @@ export default function MyPage() {
             );
           })}
         </div>
-        <div className="mx-4 mb-4 bg-[#EBF3FE] rounded-xl px-3 py-2.5">
-          <p className="text-[13px] text-[#3182F6] leading-relaxed">
+        <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-3 py-2.5">
+          <p className="text-[13px] text-[#0071e3] leading-relaxed">
             💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {g.weeklyLikesMax}회)
           </p>
         </div>
@@ -294,15 +294,15 @@ export default function MyPage() {
 
       {/* 최근 작성글 */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-[14px] font-bold text-[#8B95A1]">최근 작성글</p>
-        <div className="divide-y divide-[#F2F4F6]">
+        <p className="px-4 pt-4 pb-2 text-[14px] font-bold text-[#6e6e73]">최근 작성글</p>
+        <div className="divide-y divide-[#f5f5f7]">
           {posts.slice(0, 3).map(p => (
             <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
-              className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#F2F4F6] text-left">
-              <span className="text-[12px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
+              className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
+              <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-[#191F28] truncate">{p.title}</p>
-                <p className="text-[12px] text-[#B0B8C1] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
+                <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
+                <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
               </div>
             </button>
           ))}
@@ -312,17 +312,17 @@ export default function MyPage() {
       {/* 메뉴 */}
       {menuGroups.map(grp => (
         <div key={grp.title} className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-          <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#8B95A1]">{grp.title}</p>
-          <div className="divide-y divide-[#F2F4F6]">
+          <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#6e6e73]">{grp.title}</p>
+          <div className="divide-y divide-[#f5f5f7]">
             {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
               <button key={label} onClick={() => href && router.push(href)}
-                className="w-full flex items-center px-4 py-3.5 active:bg-[#F2F4F6] transition-colors">
+                className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
                 <Icon size={18} className={`${color} mr-3 shrink-0`} />
-                <span className="flex-1 text-[15px] text-[#191F28] text-left">{label}</span>
+                <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
                 {badge !== null && badge !== "0" && (
-                  <span className="bg-[#EBF3FE] text-[#3182F6] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
+                  <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
                 )}
-                <ChevronRight size={16} className="text-[#E5E8EB]" />
+                <ChevronRight size={16} className="text-[#d2d2d7]" />
               </button>
             ))}
           </div>
@@ -337,7 +337,7 @@ export default function MyPage() {
         </button>
       </div>
 
-      <p className="text-center text-[12px] text-[#B0B8C1] pb-4">검단 라이프 v1.1.0</p>
+      <p className="text-center text-[12px] text-[#86868b] pb-4">검단 라이프 v1.1.0</p>
       <BottomNav />
     </div>
   );

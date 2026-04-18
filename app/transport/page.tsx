@@ -70,12 +70,12 @@ function saveCachedStops(stops: DisplayStop[]) {
 function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
   if (!live) {
     return (
-      <div className="bg-[#E5E8EB] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
-        <span className="text-[#8B95A1] text-[14px] font-bold">--</span>
+      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
+        <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
       </div>
     );
   }
-  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]";
+  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
   return (
     <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
       {min <= 0
@@ -100,7 +100,7 @@ function SkeletonStop() {
         </div>
       </div>
       {[1, 2].map(i => (
-        <div key={i} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+        <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
           <div className="flex items-center gap-2.5">
             <Skeleton className="w-10 h-8 rounded-lg" />
             <div className="space-y-1.5">
@@ -156,10 +156,10 @@ function BusDetailSheet({
         style={{ maxHeight: "86%", display: "flex", flexDirection: "column" }}>
 
         {/* 헤더 */}
-        <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#F2F4F6]">
+        <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#f5f5f7]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="bg-[#3182F6] rounded-xl px-3.5 py-1.5">
+              <div className="bg-[#0071e3] rounded-xl px-3.5 py-1.5">
                 <span className="text-white text-[20px] font-black">{arrival.routeNo}</span>
               </div>
               {arrival.isExpress && (
@@ -168,57 +168,57 @@ function BusDetailSheet({
                 </span>
               )}
               {arrival.isLowFloor && (
-                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#EBF3FE] text-[#3182F6] px-2 py-1 rounded-lg">
+                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-1 rounded-lg">
                   <Accessibility size={10} />저상
                 </span>
               )}
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#F2F4F6] flex items-center justify-center active:opacity-60">
-              <span className="text-[#8B95A1] text-[16px] font-bold">✕</span>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+              <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
             </button>
           </div>
 
           {loading ? (
             <div className="space-y-2">
-              <div className="h-4 w-48 bg-[#F2F4F6] rounded animate-pulse" />
-              <div className="h-3 w-32 bg-[#F2F4F6] rounded animate-pulse" />
+              <div className="h-4 w-48 bg-[#f5f5f7] rounded animate-pulse" />
+              <div className="h-3 w-32 bg-[#f5f5f7] rounded animate-pulse" />
             </div>
           ) : detail ? (
             <>
-              <p className="text-[13px] text-[#4E5968] font-medium">
+              <p className="text-[13px] text-[#424245] font-medium">
                 {detail.startStation} ↔ {detail.endStation}
               </p>
               {/* 첫차/막차 */}
               <div className="flex gap-3 mt-3">
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
-                  <p className="text-[11px] text-[#8B95A1] font-medium mb-0.5">상행 첫차/막차</p>
-                  <p className="text-[13px] font-bold text-[#191F28]">
+                  <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">상행 첫차/막차</p>
+                  <p className="text-[13px] font-bold text-[#1d1d1f]">
                     {detail.upFirstTime || "-"} / {detail.upLastTime || "-"}
                   </p>
                 </div>
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
-                  <p className="text-[11px] text-[#8B95A1] font-medium mb-0.5">하행 첫차/막차</p>
-                  <p className="text-[13px] font-bold text-[#191F28]">
+                  <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">하행 첫차/막차</p>
+                  <p className="text-[13px] font-bold text-[#1d1d1f]">
                     {detail.downFirstTime || "-"} / {detail.downLastTime || "-"}
                   </p>
                 </div>
               </div>
               {detail.interval > 0 && (
-                <p className="text-[12px] text-[#8B95A1] mt-2">배차 간격 약 {detail.interval}분</p>
+                <p className="text-[12px] text-[#6e6e73] mt-2">배차 간격 약 {detail.interval}분</p>
               )}
             </>
           ) : (
-            <p className="text-[13px] text-[#8B95A1]">{arrival.destination} 방면</p>
+            <p className="text-[13px] text-[#6e6e73]">{arrival.destination} 방면</p>
           )}
         </div>
 
         {/* 상행/하행 탭 */}
         {stations.length > 0 && (
-          <div className="shrink-0 flex border-b border-[#F2F4F6]">
+          <div className="shrink-0 flex border-b border-[#f5f5f7]">
             {([0, 1] as const).map(dir => (
               <button key={dir} onClick={() => setDirTab(dir)}
                 className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
-                  dirTab === dir ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
+                  dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
                 }`}>
                 {dir === 0 ? "⬆ 상행" : "⬇ 하행"}
                 {busesOnDir.length > 0 && dirTab === dir && (
@@ -237,19 +237,19 @@ function BusDetailSheet({
             <div className="space-y-3">
               {[1,2,3,4,5].map(i => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-[#E5E8EB]" />
-                  <div className="h-4 flex-1 bg-[#F2F4F6] rounded animate-pulse" />
+                  <div className="w-2 h-2 rounded-full bg-[#d2d2d7]" />
+                  <div className="h-4 flex-1 bg-[#f5f5f7] rounded animate-pulse" />
                 </div>
               ))}
             </div>
           ) : curStations.length === 0 ? (
             <div className="py-12 text-center">
-              <p className="text-[14px] text-[#8B95A1]">정류장 정보를 불러올 수 없습니다</p>
+              <p className="text-[14px] text-[#6e6e73]">정류장 정보를 불러올 수 없습니다</p>
             </div>
           ) : (
             <div className="relative">
               {/* 수직선 */}
-              <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#E5E8EB]" />
+              <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#d2d2d7]" />
               <div className="space-y-0">
                 {curStations.map((st, idx) => {
                   const hasBus = busSeqs.has(st.seq);
@@ -259,14 +259,14 @@ function BusDetailSheet({
                     <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
                       <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                         hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
-                        (isFirst || isLast) ? "bg-[#3182F6]" : "bg-white border-2 border-[#D1D5DB]"
+                        (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
                       }`}>
                         {hasBus && <span className="text-[8px]">🚌</span>}
                       </div>
                       <div className="flex-1 flex items-center justify-between">
                         <span className={`text-[13px] ${
                           hasBus ? "font-bold text-[#F04452]" :
-                          (isFirst || isLast) ? "font-bold text-[#3182F6]" : "text-[#4E5968]"
+                          (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
                         }`}>
                           {st.stationName}
                         </span>
@@ -303,23 +303,23 @@ function RouteRow({
   onSelect: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3"
+    <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3"
       onClick={onSelect}>
       <div className="flex items-center gap-2.5">
-        <div className="bg-[#3182F6] rounded-lg px-2.5 py-1 min-w-[38px] text-center">
+        <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 min-w-[38px] text-center">
           <span className="text-white text-[14px] font-black">{route.routeNo}</span>
         </div>
         <div>
           <div className="flex items-center gap-1.5">
-            <p className="text-[14px] font-semibold text-[#191F28]">{route.destination} 방면</p>
+            <p className="text-[14px] font-semibold text-[#1d1d1f]">{route.destination} 방면</p>
             {route.isExpress && (
               <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded">
                 <Zap size={9} />급행
               </span>
             )}
-            {route.isLowFloor && <Accessibility size={12} className="text-[#3182F6]" />}
+            {route.isLowFloor && <Accessibility size={12} className="text-[#0071e3]" />}
           </div>
-          <p className="text-[12px] text-[#8B95A1]">
+          <p className="text-[12px] text-[#6e6e73]">
             {live ? `${route.remainingStops}정류장 전` : "실시간 연동 필요"}
           </p>
         </div>
@@ -511,18 +511,18 @@ export default function TransportPage() {
   // 위치 상태 뱃지
   function LocBadge() {
     if (locState === "loading")
-      return <span className="text-[12px] text-[#8B95A1] animate-pulse">위치 확인 중...</span>;
+      return <span className="text-[12px] text-[#6e6e73] animate-pulse">위치 확인 중...</span>;
     if (locState === "ok")
       return (
         <span className="flex items-center gap-1 text-[12px] font-bold bg-[#D1FAE5] text-[#065F46] px-2 py-0.5 rounded-full">
           <Navigation size={10} />내 위치
         </span>
       );
-    return <span className="text-[12px] text-[#B0B8C1]">검단신도시 기준</span>;
+    return <span className="text-[12px] text-[#86868b]">검단신도시 기준</span>;
   }
 
   return (
-    <div className="min-h-dvh bg-[#F2F4F6] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
       <Header title="교통 정보" />
 
       {/* 플로팅 새로고침 버튼 (헤더 우측 상단) */}
@@ -532,7 +532,7 @@ export default function TransportPage() {
         className="fixed top-[10px] right-4 z-50 w-9 h-9 bg-white rounded-full shadow-md flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
-        <RefreshCw size={16} className={`text-[#3182F6] ${refreshing ? "animate-spin" : ""}`} />
+        <RefreshCw size={16} className={`text-[#0071e3] ${refreshing ? "animate-spin" : ""}`} />
       </button>
 
       {/* 버스 상세 바텀 시트 */}
@@ -544,11 +544,11 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="bg-white sticky top-[56px] z-30 border-b border-[#F2F4F6] flex">
+      <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] flex">
         {(["버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-11 text-[14px] font-semibold border-b-2 transition-colors ${
-              t === tab ? "text-[#3182F6] border-[#3182F6]" : "text-[#B0B8C1] border-transparent"
+              t === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
             }`}>
             {t === "버스" ? "🚌 버스" : "🚇 지하철"}
           </button>
@@ -557,42 +557,42 @@ export default function TransportPage() {
 
       {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
       {tab === "버스" && (favStopList.length > 0 || favRouteList.length > 0) && (
-        <div className="bg-white border-b border-[#F2F4F6]">
+        <div className="bg-white border-b border-[#f5f5f7]">
           <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
             <div className="flex items-center gap-1.5">
               <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[12px] font-bold text-[#4E5968]">즐겨찾기</span>
+              <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
             </div>
             <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-              <RefreshCw size={11} className={`text-[#8B95A1] ${refreshing ? "animate-spin" : ""}`} />
-              <span className="text-[11px] text-[#8B95A1]">{lastUpdated || "새로고침"}</span>
+              <RefreshCw size={11} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+              <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favRouteList.map(r => (
               <div key={`${r.stopId}::${r.id}`}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7]">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <div className="bg-[#3182F6] rounded-lg px-2 py-0.5">
+                  <div className="bg-[#0071e3] rounded-lg px-2 py-0.5">
                     <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
                   </div>
                   {r.isExpress && <Zap size={9} className="text-[#E65100]" />}
                 </div>
-                <p className="text-[10px] text-[#8B95A1] truncate mb-2">{r.stopName}</p>
+                <p className="text-[10px] text-[#6e6e73] truncate mb-2">{r.stopName}</p>
                 <ArrivalBadge min={r.arrivalMin} live={isLive} />
               </div>
             ))}
             {favStopList.map(stop => (
               <div key={stop.id}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#F2F4F6]">
+                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7]">
                 <div className="flex items-center gap-1 mb-1">
-                  <MapPin size={10} className="text-[#3182F6] shrink-0" />
-                  <span className="text-[11px] font-bold text-[#191F28] truncate">{stop.name}</span>
+                  <MapPin size={10} className="text-[#0071e3] shrink-0" />
+                  <span className="text-[11px] font-bold text-[#1d1d1f] truncate">{stop.name}</span>
                 </div>
-                <p className="text-[10px] text-[#B0B8C1] mb-2">{distLabel(stop.distM)}</p>
+                <p className="text-[10px] text-[#86868b] mb-2">{distLabel(stop.distM)}</p>
                 <div className="flex flex-wrap gap-1">
                   {stop.routes.slice(0, 4).map(r => (
-                    <div key={r.id} className="bg-[#3182F6] rounded px-1.5 py-0.5">
+                    <div key={r.id} className="bg-[#0071e3] rounded px-1.5 py-0.5">
                       <span className="text-white text-[10px] font-bold">{r.routeNo}</span>
                     </div>
                   ))}
@@ -605,10 +605,10 @@ export default function TransportPage() {
 
       {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
       {tab === "지하철" && favSubwayList.length > 0 && (
-        <div className="bg-white border-b border-[#F2F4F6]">
+        <div className="bg-white border-b border-[#f5f5f7]">
           <div className="flex items-center px-4 pt-3 pb-1.5 gap-1.5">
             <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-            <span className="text-[12px] font-bold text-[#4E5968]">즐겨찾기</span>
+            <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favSubwayList.map(st => {
@@ -616,32 +616,32 @@ export default function TransportPage() {
               const nextDown = st.arrivals.find(a => a.direction === "하행");
               return (
                 <div key={st.id}
-                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[155px] border border-[#F2F4F6]">
+                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[155px] border border-[#f5f5f7]">
                   <div className="flex items-center gap-1 mb-0.5">
                     <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
-                    <span className="text-[12px] font-bold text-[#191F28] truncate">{st.displayName}</span>
+                    <span className="text-[12px] font-bold text-[#1d1d1f] truncate">{st.displayName}</span>
                   </div>
                   <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
                     style={{ background: st.lineColor }}>{st.line}</span>
                   {st.loadingArrivals ? (
-                    <div className="h-8 bg-[#E5E8EB] rounded animate-pulse" />
+                    <div className="h-8 bg-[#d2d2d7] rounded animate-pulse" />
                   ) : nextUp || nextDown ? (
                     <div className="space-y-1">
                       {nextUp && (
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#8B95A1]">상행</span>
+                          <span className="text-[10px] text-[#6e6e73]">상행</span>
                           <ArrivalBadge min={nextUp.arrivalMin} live />
                         </div>
                       )}
                       {nextDown && (
                         <div className="flex items-center justify-between">
-                          <span className="text-[10px] text-[#8B95A1]">하행</span>
+                          <span className="text-[10px] text-[#6e6e73]">하행</span>
                           <ArrivalBadge min={nextDown.arrivalMin} live />
                         </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-[10px] text-[#3182F6] font-semibold">{distLabel(st.distM)}</p>
+                    <p className="text-[10px] text-[#0071e3] font-semibold">{distLabel(st.distM)}</p>
                   )}
                 </div>
               );
@@ -653,13 +653,13 @@ export default function TransportPage() {
       {/* 위치 상태 바 */}
       <div className="flex items-center justify-between px-4 py-2.5">
         <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-[#3182F6]" />
-          <span className="text-[13px] text-[#4E5968] font-medium">가까운 순 정렬</span>
+          <MapPin size={13} className="text-[#0071e3]" />
+          <span className="text-[13px] text-[#424245] font-medium">가까운 순 정렬</span>
           <LocBadge />
         </div>
         <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-          <RefreshCw size={13} className={`text-[#8B95A1] ${refreshing ? "animate-spin" : ""}`} />
-          <span className="text-[12px] text-[#8B95A1]">{lastUpdated || "새로고침"}</span>
+          <RefreshCw size={13} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+          <span className="text-[12px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
         </button>
       </div>
 
@@ -682,9 +682,9 @@ export default function TransportPage() {
           ) : stopsWithRoutes.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 flex flex-col items-center gap-2">
               <Bus size={32} className="text-[#D1D5DB]" />
-              <p className="text-[14px] font-bold text-[#8B95A1]">주변 정류장을 찾는 중...</p>
+              <p className="text-[14px] font-bold text-[#6e6e73]">주변 정류장을 찾는 중...</p>
               <button onClick={refresh}
-                className="mt-2 h-9 px-4 bg-[#EBF3FE] rounded-xl text-[13px] font-bold text-[#3182F6] active:opacity-70">
+                className="mt-2 h-9 px-4 bg-[#e8f1fd] rounded-xl text-[13px] font-bold text-[#0071e3] active:opacity-70">
                 다시 시도
               </button>
             </div>
@@ -695,38 +695,38 @@ export default function TransportPage() {
               return (
                 <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
                   <button onClick={() => setExpanded(open ? null : stop.id)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#F2F4F6]">
+                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#f5f5f7]">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-xl bg-[#EBF3FE] flex items-center justify-center">
-                          <Bus size={18} className="text-[#3182F6]" />
+                        <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                          <Bus size={18} className="text-[#0071e3]" />
                         </div>
                         {idx === 0 && (
-                          <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#3182F6] text-white px-1 rounded-full leading-tight py-0.5">
+                          <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
                             최근접
                           </span>
                         )}
                       </div>
                       <div className="text-left">
                         <div className="flex items-center gap-2">
-                          <p className="text-[15px] font-bold text-[#191F28]">{stop.name}</p>
+                          <p className="text-[15px] font-bold text-[#1d1d1f]">{stop.name}</p>
                           {stop.stopNo && (
-                            <span className="text-[11px] text-[#B0B8C1] bg-[#F2F4F6] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
+                            <span className="text-[11px] text-[#86868b] bg-[#f5f5f7] px-1.5 py-0.5 rounded">{stop.stopNo}</span>
                           )}
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Navigation size={10} className="text-[#3182F6]" />
-                          <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(stop.distM)}</span>
-                          <span className="text-[12px] text-[#B0B8C1]">· 노선 {stop.routes.length}개</span>
+                          <Navigation size={10} className="text-[#0071e3]" />
+                          <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
+                          <span className="text-[12px] text-[#86868b]">· 노선 {stop.routes.length}개</span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button onClick={e => { e.stopPropagation(); toggleStop(stop.id); }}
                         className="p-1.5 active:opacity-60">
-                        <Star size={18} className={favStops.has(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#E5E8EB]"} />
+                        <Star size={18} className={favStops.has(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                       </button>
-                      {open ? <ChevronUp size={16} className="text-[#B0B8C1]" /> : <ChevronDown size={16} className="text-[#B0B8C1]" />}
+                      {open ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
                     </div>
                   </button>
                   <div className="px-4 pb-4 space-y-2">
@@ -745,7 +745,7 @@ export default function TransportPage() {
                     ))}
                     {!open && stop.routes.length > 2 && (
                       <button onClick={() => setExpanded(stop.id)}
-                        className="w-full text-[13px] text-[#3182F6] text-center py-1">
+                        className="w-full text-[13px] text-[#0071e3] text-center py-1">
                         {stop.routes.length - 2}개 노선 더 보기
                       </button>
                     )}
@@ -758,10 +758,10 @@ export default function TransportPage() {
           {/* 범례 — 실시간 연동 시에만 의미 있음 */}
           {isLive && (
             <div className="bg-white rounded-2xl px-4 py-3 flex gap-4">
-              {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#3182F6]", "8분 이상"]].map(([c, l]) => (
+              {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#0071e3]", "8분 이상"]].map(([c, l]) => (
                 <div key={l} className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${c}`} />
-                  <span className="text-[12px] text-[#8B95A1]">{l}</span>
+                  <span className="text-[12px] text-[#6e6e73]">{l}</span>
                 </div>
               ))}
             </div>
@@ -778,7 +778,7 @@ export default function TransportPage() {
           ) : subwayList.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
               <Train size={32} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] font-bold text-[#8B95A1]">위치를 확인하는 중입니다</p>
+              <p className="text-[14px] font-bold text-[#6e6e73]">위치를 확인하는 중입니다</p>
             </div>
           ) : (
             subwayList.map((st, idx) => {
@@ -794,28 +794,28 @@ export default function TransportPage() {
                         <Train size={20} style={{ color: st.lineColor }} />
                       </div>
                       {idx === 0 && (
-                        <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#3182F6] text-white px-1 rounded-full leading-tight py-0.5">
+                        <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
                           최근접
                         </span>
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <p className="text-[16px] font-bold text-[#191F28]">{st.displayName}</p>
+                        <p className="text-[16px] font-bold text-[#1d1d1f]">{st.displayName}</p>
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
                           style={{ background: st.lineColor }}>{st.line}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <Navigation size={10} className="text-[#3182F6]" />
-                        <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(st.distM)}</span>
-                        <span className="text-[11px] text-[#B0B8C1]">
+                        <Navigation size={10} className="text-[#0071e3]" />
+                        <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(st.distM)}</span>
+                        <span className="text-[11px] text-[#86868b]">
                           배차 {st.timetable.intervalMin}분
                         </span>
                       </div>
                     </div>
                     <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60">
                       <Star size={20}
-                        className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#E5E8EB]"} />
+                        className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                     </button>
                   </div>
 
@@ -823,12 +823,12 @@ export default function TransportPage() {
                   <div className="px-4 pb-4 space-y-2">
                     {st.loadingArrivals ? (
                       [0, 1].map(i => (
-                        <div key={i} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3 animate-pulse">
+                        <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
                           <div className="space-y-1.5">
-                            <div className="h-3.5 w-20 bg-[#E5E8EB] rounded" />
-                            <div className="h-3 w-14 bg-[#E5E8EB] rounded" />
+                            <div className="h-3.5 w-20 bg-[#d2d2d7] rounded" />
+                            <div className="h-3 w-14 bg-[#d2d2d7] rounded" />
                           </div>
-                          <div className="w-14 h-12 bg-[#E5E8EB] rounded-xl" />
+                          <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
                         </div>
                       ))
                     ) : !hasSubwayKey() ? (
@@ -842,31 +842,31 @@ export default function TransportPage() {
                         </div>
                       </div>
                     ) : st.arrivals.length === 0 ? (
-                      <div className="bg-[#F2F4F6] rounded-xl px-3 py-3 text-center">
-                        <p className="text-[13px] text-[#8B95A1]">운행 정보 없음 (운행 종료 또는 API 미응답)</p>
+                      <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
+                        <p className="text-[13px] text-[#6e6e73]">운행 정보 없음 (운행 종료 또는 API 미응답)</p>
                       </div>
                     ) : (
                       <>
                         {/* 상행 — 최대 2편 */}
                         {upArrivals.length === 0 ? (
-                          <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3 py-2.5">
-                            <span className="text-[10px] font-bold bg-[#E5E8EB] text-[#4E5968] px-1.5 py-0.5 rounded shrink-0">상행</span>
-                            <p className="text-[13px] text-[#8B95A1]">운행 정보 없음</p>
+                          <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+                            <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
+                            <p className="text-[13px] text-[#6e6e73]">운행 정보 없음</p>
                           </div>
                         ) : (
                           upArrivals.slice(0, 2).map((a, i) => (
-                            <div key={`up-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+                            <div key={`up-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
                               <div className="flex-1 min-w-0 mr-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-bold bg-[#E5E8EB] text-[#4E5968] px-1.5 py-0.5 rounded shrink-0">
+                                  <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">
                                     {i === 0 ? "상행 1번째" : "상행 2번째"}
                                   </span>
-                                  <p className="text-[13px] font-semibold text-[#191F28] truncate">{a.terminalStation} 방면</p>
+                                  <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                   {a.isExpress && (
                                     <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-[#8B95A1] mt-0.5">
+                                <p className="text-[11px] text-[#6e6e73] mt-0.5">
                                   {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
                                 </p>
                               </div>
@@ -876,24 +876,24 @@ export default function TransportPage() {
                         )}
                         {/* 하행 — 최대 2편 */}
                         {downArrivals.length === 0 ? (
-                          <div className="flex items-center gap-2 bg-[#F2F4F6] rounded-xl px-3 py-2.5">
-                            <span className="text-[10px] font-bold bg-[#EBF3FE] text-[#3182F6] px-1.5 py-0.5 rounded shrink-0">하행</span>
-                            <p className="text-[13px] text-[#8B95A1]">운행 정보 없음</p>
+                          <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+                            <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
+                            <p className="text-[13px] text-[#6e6e73]">운행 정보 없음</p>
                           </div>
                         ) : (
                           downArrivals.slice(0, 2).map((a, i) => (
-                            <div key={`down-${i}`} className="flex items-center justify-between bg-[#F2F4F6] rounded-xl px-3 py-3">
+                            <div key={`down-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
                               <div className="flex-1 min-w-0 mr-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="text-[10px] font-bold bg-[#EBF3FE] text-[#3182F6] px-1.5 py-0.5 rounded shrink-0">
+                                  <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">
                                     {i === 0 ? "하행 1번째" : "하행 2번째"}
                                   </span>
-                                  <p className="text-[13px] font-semibold text-[#191F28] truncate">{a.terminalStation} 방면</p>
+                                  <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                   {a.isExpress && (
                                     <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
                                   )}
                                 </div>
-                                <p className="text-[11px] text-[#8B95A1] mt-0.5">
+                                <p className="text-[11px] text-[#6e6e73] mt-0.5">
                                   {a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차번호 ${a.trainNo}` : "위치 정보 없음"}
                                 </p>
                               </div>
@@ -907,14 +907,14 @@ export default function TransportPage() {
                     {/* 첫차/막차 항상 표시 */}
                     <div className="flex gap-2 pt-1">
                       <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#8B95A1] mb-0.5">상행 첫차/막차</p>
-                        <p className="text-[12px] font-bold text-[#191F28]">
+                        <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">
                           {st.timetable.upFirst} / {st.timetable.upLast}
                         </p>
                       </div>
                       <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#8B95A1] mb-0.5">하행 첫차/막차</p>
-                        <p className="text-[12px] font-bold text-[#191F28]">
+                        <p className="text-[10px] text-[#6e6e73] mb-0.5">하행 첫차/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">
                           {st.timetable.downFirst} / {st.timetable.downLast}
                         </p>
                       </div>
@@ -926,9 +926,9 @@ export default function TransportPage() {
           )}
 
           {!subwayLoading && (
-            <div className="bg-[#EBF3FE] rounded-2xl px-4 py-3.5">
-              <p className="text-[14px] font-bold text-[#3182F6]">🚇 검단 2호선 연장 예정</p>
-              <p className="text-[13px] text-[#3182F6]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
+            <div className="bg-[#e8f1fd] rounded-2xl px-4 py-3.5">
+              <p className="text-[14px] font-bold text-[#0071e3]">🚇 검단 2호선 연장 예정</p>
+              <p className="text-[13px] text-[#0071e3]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
             </div>
           )}
         </div>

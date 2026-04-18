@@ -33,7 +33,7 @@ const BRANDS: Record<string, { bg: string; color: string; label: string; logo?: 
     logo: "https://logo.clearbit.com/theborn.co.kr",
   },
   "약국": {
-    bg: "#3182F6", color: "#fff", label: "약",
+    bg: "#0071e3", color: "#fff", label: "약",
   },
   "파리바게뜨": {
     bg: "#003087", color: "#fff", label: "P",
@@ -71,7 +71,7 @@ const BRANDS: Record<string, { bg: string; color: string; label: string; logo?: 
 const CAT_FALLBACK: Record<string, { bg: string; color: string }> = {
   "카페":      { bg: "#FEF3C7", color: "#92400E" },
   "음식점":    { bg: "#FEE2E2", color: "#991B1B" },
-  "편의점":    { bg: "#DBEAFE", color: "#1E40AF" },
+  "편의점":    { bg: "#e8f1fd", color: "#1E40AF" },
   "병원/약국": { bg: "#D1FAE5", color: "#065F46" },
   "미용":      { bg: "#FCE7F3", color: "#9D174D" },
   "학원":      { bg: "#EDE9FE", color: "#5B21B6" },
