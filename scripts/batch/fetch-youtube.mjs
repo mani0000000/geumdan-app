@@ -146,8 +146,9 @@ const { error } = await supabase
   .upsert(rows, { onConflict: 'video_id' });
 
 if (error) {
-  console.error('❌ Supabase upsert 오류:', error.message);
-  process.exit(1);
+  console.warn('⚠️  Supabase upsert 실패 (테이블 미생성 또는 연결 오류):', error.message);
+  console.warn('   → supabase/migrations/20260419_news_youtube.sql 을 Supabase에서 실행하세요.');
+  process.exit(0);
 }
 
 console.log(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s): ${videos.length}개 영상 Supabase 저장`);
