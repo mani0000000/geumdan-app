@@ -6,7 +6,7 @@ const BUS_BASE = "https://apis.data.go.kr/6280000";
 const PROXY = "https://api.codetabs.com/v1/proxy/?quest=";
 const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
 
-// ─── 공개 타입 ──────────────────────────────────────────────���─
+// ─── 공개 타입 ────────────────────────────────────────────────
 export interface BusArrival {
   routeNo: string;
   routeId: string;
@@ -51,8 +51,8 @@ export interface RouteDetail {
 }
 
 export interface NearbyStop {
-  stationId: string;    // OSM ref tag 또는 OSM node ID (string)
-  osmNodeId: number;    // OSM node ID (numeric, 내부용)
+  stationId: string;
+  osmNodeId: number;
   stationName: string;
   lat: number;
   lng: number;
@@ -143,11 +143,7 @@ out body;`;
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
-// ─── XML 파싱 헬퍼 ────────────────────────────────────────────
-function xmlVal(xml: string, tag: string): string {
-  return xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() ?? "";
-}
-
+// ─── XML 파싱 ─────────────────────────────────────────────────
 function parseXmlItems(xml: string): Record<string, string>[] {
   const items: Record<string, string>[] = [];
   const re = /<item>([\s\S]*?)<\/item>/gi;
@@ -173,7 +169,7 @@ async function apiFetch(path: string, params: Record<string, string>): Promise<R
     });
     if (!res.ok) return [];
     const xml = await res.text();
-    const code = xmlVal(xml, "resultCode");
+    const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
     if (code !== "0" && code !== "00") return [];
     return parseXmlItems(xml);
   } catch {
@@ -184,9 +180,7 @@ async function apiFetch(path: string, params: Record<string, string>): Promise<R
 // ─── 실시간 도착정보 ──────────────────────────────────────────
 export async function fetchArrivalsByStationId(stationId: string): Promise<BusArrival[]> {
   const items = await apiFetch("/busArrivalService/getBusArrivalList", {
-    stationId,
-    pageNo: "1",
-    numOfRows: "20",
+    stationId, pageNo: "1", numOfRows: "20",
   });
   return items.map(d => ({
     routeNo: d.ROUTE_NO ?? d.routeNo ?? "",
@@ -200,7 +194,7 @@ export async function fetchArrivalsByStationId(stationId: string): Promise<BusAr
   }));
 }
 
-// OSM 경유 노선을 BusArrival 형태로 변환 (실시간 없음)
+// OSM 경유 노선 → BusArrival 변환 (실시간 없음 표시용)
 export function osmRoutesToArrivals(routes: Array<{ routeNo: string; destination: string }>): BusArrival[] {
   return routes.map(r => ({
     routeNo: r.routeNo,
@@ -259,19 +253,18 @@ export async function fetchStationsByRoute(routeId: string): Promise<RouteStatio
   })).sort((a, b) => a.seq - b.seq);
 }
 
-// ─── 검단신도시 폴백 정류소 (OSM 기반 좌표/ref) ──────────────
-// 실시간 API 불가 시 위치 기반 정렬에 사용
+// ─── 검단신도시 폴백 정류소 (OSM ref 기반 실제 좌표) ─────────
 export const GEUMDAN_BUS_STATIONS = [
-  { id: "gd-1",  stationId: "89459", name: "금강펜테리움더시글로",         lat: 37.5920, lng: 126.7095 },
-  { id: "gd-2",  stationId: "42697", name: "아라역7번출구",                lat: 37.5923, lng: 126.7118 },
-  { id: "gd-3",  stationId: "42454", name: "아라역6번출구",                lat: 37.5919, lng: 126.7122 },
-  { id: "gd-4",  stationId: "42449", name: "서구영어마을",                  lat: 37.5921, lng: 126.7053 },
-  { id: "gd-5",  stationId: "89406", name: "아라센트럴파크",                lat: 37.5889, lng: 126.7101 },
-  { id: "gd-6",  stationId: "89405", name: "검단한신더휴캐널파크1103동",    lat: 37.5895, lng: 126.7075 },
-  { id: "gd-7",  stationId: "42447", name: "원당사거리.검단선사박물관",     lat: 37.5936, lng: 126.7000 },
-  { id: "gd-8",  stationId: "89393", name: "호반써밋1차 3101동",            lat: 37.5935, lng: 126.7079 },
-  { id: "gd-9",  stationId: "89432", name: "아라역8번출구",                lat: 37.5935, lng: 126.7129 },
-  { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",      lat: 37.5913, lng: 126.6987 },
+  { id: "gd-1",  stationId: "89459", name: "금강펜테리움더시글로",       lat: 37.5920, lng: 126.7095 },
+  { id: "gd-2",  stationId: "42697", name: "아라역7번출구",              lat: 37.5923, lng: 126.7118 },
+  { id: "gd-3",  stationId: "42454", name: "아라역6번출구",              lat: 37.5919, lng: 126.7122 },
+  { id: "gd-4",  stationId: "42449", name: "서구영어마을",               lat: 37.5921, lng: 126.7053 },
+  { id: "gd-5",  stationId: "89406", name: "아라센트럴파크",             lat: 37.5889, lng: 126.7101 },
+  { id: "gd-6",  stationId: "89405", name: "검단한신더휴캐널파크1103동", lat: 37.5895, lng: 126.7075 },
+  { id: "gd-7",  stationId: "42447", name: "원당사거리.검단선사박물관",  lat: 37.5936, lng: 126.7000 },
+  { id: "gd-8",  stationId: "89393", name: "호반써밋1차 3101동",         lat: 37.5935, lng: 126.7079 },
+  { id: "gd-9",  stationId: "89432", name: "아라역8번출구",              lat: 37.5935, lng: 126.7129 },
+  { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",   lat: 37.5913, lng: 126.6987 },
 ];
 
 export const hasBusApiKey = () => Boolean(API_KEY);
