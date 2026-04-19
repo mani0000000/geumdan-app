@@ -107,11 +107,11 @@ function BusDetailSheet({
   const [detail, setDetail] = useState<RouteDetail | null>(null);
   const [stations, setStations] = useState<RouteStation[]>([]);
   const [locations, setLocations] = useState<BusLocation[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [dirTab, setDirTab] = useState<0 | 1>(0); // 0=상행, 1=하행
+  const [loading, setLoading] = useState(() => Boolean(arrival.routeId));
+  const [dirTab, setDirTab] = useState<0 | 1>(0);
 
   useEffect(() => {
-    if (!arrival.routeId) { setLoading(false); return; }
+    if (!arrival.routeId) return;
     Promise.all([
       fetchRouteDetail(arrival.routeId),
       fetchStationsByRoute(arrival.routeId),
