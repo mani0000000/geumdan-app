@@ -1,21 +1,22 @@
-// 인천광역시 버스 서비스 (공공데이터포털 6280000)
-// 환경변수: NEXT_PUBLIC_BUS_API_KEY
+// 버스 API: OSM Overpass(정류소/노선 검색) + 인천광역시 공공API(실시간 도착)
+// 공공API는 CORS 제한 → codetabs 프록시 경유
 
+const OVERPASS = "https://overpass-api.de/api/interpreter";
+const BUS_BASE = "https://apis.data.go.kr/6280000";
+const PROXY = "https://api.codetabs.com/v1/proxy/?quest=";
+const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
+
+// ─── 공개 타입 ──────────────────────────────────────────────���─
 export interface BusArrival {
   routeNo: string;
   routeId: string;
   destination: string;
-  arrivalMin: number;
+  arrivalMin: number;      // -1 = 실시간 없음 (OSM 경유 노선)
   remainingStops: number;
   isLowFloor: boolean;
   isExpress: boolean;
   plateNo?: string;
-}
-
-export interface BusStopInfo {
-  stationId: string;
-  stationName: string;
-  arrivals: BusArrival[];
+  isScheduled?: boolean;   // OSM 기반 (실시간 아님)
 }
 
 export interface BusLocation {
@@ -49,150 +50,27 @@ export interface RouteDetail {
   interval: number;
 }
 
-const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
-const BASE = "https://apis.data.go.kr/6280000";
-
-function qs(params: Record<string, string>) {
-  return new URLSearchParams({ serviceKey: API_KEY, _type: "json", ...params }).toString();
+export interface NearbyStop {
+  stationId: string;    // OSM ref tag 또는 OSM node ID (string)
+  osmNodeId: number;    // OSM node ID (numeric, 내부용)
+  stationName: string;
+  lat: number;
+  lng: number;
+  distanceM: number;
+  osmRoutes: Array<{ routeNo: string; destination: string }>;
 }
 
-function parseItems<T>(json: unknown): T[] {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const item = (json as any)?.response?.body?.items?.item;
-  if (!item) return [];
-  return Array.isArray(item) ? (item as T[]) : [item as T];
+// ─── 내부 타입 ────────────────────────────────────────────────
+interface OSMElement {
+  type: "node" | "way" | "relation";
+  id: number;
+  lat?: number;
+  lon?: number;
+  tags?: Record<string, string>;
+  members?: Array<{ type: string; ref: number; role: string }>;
 }
 
-// apis.data.go.kr는 CORS 헤더 미지원 → 3-way 병렬 레이스 (직접+프록시2개)
-// 직접 시도는 1.5s 타임아웃으로 CORS가 되는 환경이면 가장 빠르게 응답
-async function apiFetch<T>(path: string, params: Record<string, string>): Promise<T[]> {
-  if (!API_KEY) return [];
-  const targetUrl = `${BASE}${path}?${qs(params)}`;
-
-  try {
-    return await Promise.any([
-      // 1. 직접 (CORS 허용 환경 / 서버사이드용, 1.5s 타임아웃)
-      (async () => {
-        const ctrl = new AbortController();
-        const tid = setTimeout(() => ctrl.abort(), 1500);
-        try {
-          const res = await fetch(targetUrl, { signal: ctrl.signal });
-          if (!res.ok) throw new Error("not ok");
-          const data = parseItems<T>(await res.json());
-          clearTimeout(tid);
-          return data;
-        } catch { clearTimeout(tid); throw new Error("direct failed"); }
-      })(),
-      // 2. allorigins.win 프록시
-      (async () => {
-        const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`);
-        if (!res.ok) throw new Error(`allorigins ${res.status}`);
-        const j = await res.json();
-        return parseItems<T>(JSON.parse(j.contents as string));
-      })(),
-      // 3. corsproxy.io 프록시
-      (async () => {
-        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`);
-        if (!res.ok) throw new Error(`corsproxy ${res.status}`);
-        return parseItems<T>(await res.json());
-      })(),
-    ]);
-  } catch { return []; }
-}
-
-// ─── 버스 도착정보 ────────────────────────────────────────────
-async function fetchArrivals(stationId: string): Promise<BusArrival[]> {
-  const items = await apiFetch<Record<string, string | number>>(
-    "/busArrivalService/getAllBusArrivalList",
-    { stationId, pageNo: "1", numOfRows: "20" }
-  );
-  return items.map(item => ({
-    routeNo: String(item.ROUTE_NO ?? ""),
-    routeId: String(item.ROUTE_ID ?? item.routeId ?? ""),
-    destination: String(item.DESTINATION ?? "종점"),
-    arrivalMin: Math.max(0, Math.round(Number(item.ARRIVALESTIMATETIME ?? 0) / 60)),
-    remainingStops: Number(item.REMAINSTOPCOUNT ?? 0),
-    isLowFloor: item.LOWPLATE === "1",
-    isExpress: String(item.ROUTETP ?? "").includes("급행"),
-    plateNo: String(item.PLATENO ?? ""),
-  }));
-}
-
-// ─── 버스 실시간 위치 ─────────────────────────────────────────
-export async function fetchBusLocations(routeId: string): Promise<BusLocation[]> {
-  const items = await apiFetch<Record<string, string | number>>(
-    "/busLocationInfoService/getBusLocationList",
-    { routeId }
-  );
-  return items.map(item => ({
-    plateNo: String(item.PLATE_NO ?? item.plateNo ?? ""),
-    stationSeq: Number(item.STATION_SEQ ?? item.stationSeq ?? 0),
-    stationId: String(item.STATION_ID ?? item.stationId ?? ""),
-    stationName: String(item.STATION_NM ?? item.stationName ?? ""),
-    isLowFloor: item.LOW_PLATE === "1" || item.lowPlate === "1",
-    direction: (Number(item.MOVE_DIR ?? item.moveDir ?? 0) === 1 ? 1 : 0) as 0 | 1,
-  }));
-}
-
-// ─── 노선 상세정보 ────────────────────────────────────────────
-export async function fetchRouteDetail(routeId: string): Promise<RouteDetail | null> {
-  const items = await apiFetch<Record<string, string | number>>(
-    "/routeInfoService/getRouteInfo",
-    { routeId }
-  );
-  if (!items.length) return null;
-  const d = items[0];
-  return {
-    routeId,
-    routeNo: String(d.ROUTE_NO ?? d.routeNo ?? ""),
-    routeName: String(d.ROUTE_NM ?? d.routeName ?? ""),
-    startStation: String(d.ST_STATION_NM ?? d.stStationNm ?? "기점"),
-    endStation: String(d.ED_STATION_NM ?? d.edStationNm ?? "종점"),
-    firstTime: String(d.UP_FIRST_TIME ?? d.upFirstTime ?? ""),
-    lastTime: String(d.DOWN_LAST_TIME ?? d.downLastTime ?? ""),
-    upFirstTime: String(d.UP_FIRST_TIME ?? d.upFirstTime ?? "-"),
-    upLastTime: String(d.UP_LAST_TIME ?? d.upLastTime ?? "-"),
-    downFirstTime: String(d.DOWN_FIRST_TIME ?? d.downFirstTime ?? "-"),
-    downLastTime: String(d.DOWN_LAST_TIME ?? d.downLastTime ?? "-"),
-    interval: Number(d.INTERVAL ?? d.interval ?? 0),
-  };
-}
-
-// ─── 노선별 정류장 목록 ───────────────────────────────────────
-export async function fetchStationsByRoute(routeId: string): Promise<RouteStation[]> {
-  const items = await apiFetch<Record<string, string | number>>(
-    "/routeInfoService/getStaionByRoute",
-    { routeId }
-  );
-  return items.map(item => ({
-    seq: Number(item.STATION_SEQ ?? item.stationSeq ?? 0),
-    stationId: String(item.STATION_ID ?? item.stationId ?? ""),
-    stationName: String(item.STATION_NM ?? item.stationNm ?? ""),
-    direction: (Number(item.MOVE_DIR ?? item.moveDir ?? 0) === 1 ? 1 : 0) as 0 | 1,
-  })).sort((a, b) => a.seq - b.seq);
-}
-
-// ─── 검단신도시 주요 정류장 (좌표 포함, 좌표검색 API 없이 직접 조회) ──
-export const GEUMDAN_BUS_STATIONS = [
-  { id: "gd-1",  stationId: "34000248", name: "당하지구 검단사거리", lat: 37.5930, lng: 126.7095 },
-  { id: "gd-2",  stationId: "34000312", name: "당하동 주민센터",     lat: 37.5917, lng: 126.7071 },
-  { id: "gd-3",  stationId: "34001102", name: "불로지구 입구",       lat: 37.5870, lng: 126.7025 },
-  { id: "gd-4",  stationId: "34000250", name: "검단사거리",          lat: 37.5922, lng: 126.7088 },
-  { id: "gd-5",  stationId: "34000310", name: "당하동.검단신도시",   lat: 37.5908, lng: 126.7062 },
-  { id: "gd-6",  stationId: "34001200", name: "검단신도시입구",      lat: 37.5882, lng: 126.7042 },
-  { id: "gd-7",  stationId: "34001300", name: "검단오류역",          lat: 37.5778, lng: 126.6932 },
-  { id: "gd-8",  stationId: "34000400", name: "서구청.검단",         lat: 37.5868, lng: 126.6990 },
-  { id: "gd-9",  stationId: "34001100", name: "불로동",              lat: 37.5852, lng: 126.7018 },
-  { id: "gd-10", stationId: "34000500", name: "원당동",              lat: 37.5838, lng: 126.6952 },
-];
-
-export async function fetchBusStop(stationName: string): Promise<BusArrival[]> {
-  const station = GEUMDAN_BUS_STATIONS.find(s => s.name === stationName);
-  if (!station) return [];
-  return fetchArrivals(station.stationId);
-}
-
-// ─── Haversine 거리 계산 (미터) ──────────────────────────────
+// ─── Haversine 거리 (미터) ────────────────────────────────────
 export function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371000;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -205,88 +83,195 @@ export function haversineM(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── 위치 기반 주변 정류장 조회 ──────────────────────────────
-export interface NearbyStop {
-  stationId: string;
-  stationName: string;
-  lat: number;
-  lng: number;
-  distanceM: number;
-}
+// ─── OSM Overpass: 주변 정류소 + 경유 노선 조회 ───────────────
+export async function fetchNearbyStopsWide(lat: number, lng: number): Promise<NearbyStop[]> {
+  const query = `[out:json][timeout:20];
+(
+  node["highway"="bus_stop"](around:900,${lat},${lng});
+)->.stops;
+rel["type"="route"]["route"="bus"](bn.stops);
+(.stops;._);
+out body;`;
 
-/**
- * 주변 정류장 단일 쿼리 (distancetype: 5=1km)
- */
-export async function fetchNearbyStops(
-  lat: number,
-  lng: number,
-  radiusType: "1" | "2" | "3" | "4" | "5" = "5"
-): Promise<NearbyStop[]> {
-  const items = await apiFetch<Record<string, string>>(
-    "/busStopInfoService/getBusStopAroundList",
-    {
-      currentlatitude: String(lat),
-      currentlongitude: String(lng),
-      distancetype: radiusType,
-    }
+  const res = await fetch(OVERPASS, {
+    method: "POST",
+    body: query,
+    signal: AbortSignal.timeout(18000),
+  });
+  if (!res.ok) throw new Error(`Overpass HTTP ${res.status}`);
+
+  const data: { elements: OSMElement[] } = await res.json();
+
+  const stopNodes = data.elements.filter(
+    e => e.type === "node" && e.tags?.highway === "bus_stop" && e.tags.name
   );
-  return items
-    .map(item => ({
-      stationId: String(item.STATION_ID ?? item.stationId ?? ""),
-      stationName: String(item.STATION_NM ?? item.stationNm ?? ""),
-      lat: Number(item.GPS_LATI ?? item.gpsLati ?? lat),
-      lng: Number(item.GPS_LONG ?? item.gpsLong ?? lng),
-      distanceM: Number(item.DISTANCE ?? item.distance ?? 0),
-    }))
-    .filter(s => s.stationId && s.stationName)
-    .sort((a, b) => a.distanceM - b.distanceM);
-}
+  const routeRels = data.elements.filter(e => e.type === "relation");
 
-/**
- * 3km 반경 주변 정류장 조회
- * 중심 + 4방향(1.5km 오프셋)으로 5방향 병렬 쿼리 후 중복 제거
- * 각 방향에서 1km 반경 쿼리 → 합쳐서 약 3km 커버
- */
-export async function fetchNearbyStopsWide(
-  lat: number,
-  lng: number,
-): Promise<NearbyStop[]> {
-  // 1.5km 오프셋 (위도 1° ≈ 111km, 경도 1° ≈ 88km @37.5°N)
-  const LAT_OFF = 0.0135; // ~1.5km
-  const LNG_OFF = 0.0170; // ~1.5km
-  const points: [number, number][] = [
-    [lat, lng],
-    [lat + LAT_OFF, lng],
-    [lat - LAT_OFF, lng],
-    [lat, lng + LNG_OFF],
-    [lat, lng - LNG_OFF],
-  ];
-
-  const results = await Promise.all(
-    points.map(([la, lo]) => fetchNearbyStops(la, lo, "5"))
-  );
-
-  // 중복 제거: 실제 거리 기준으로 stationId 별 최소 거리 유지
-  const map = new Map<string, NearbyStop>();
-  for (const stops of results) {
-    for (const stop of stops) {
-      const realDist = haversineM(lat, lng, stop.lat, stop.lng);
-      const withRealDist = { ...stop, distanceM: Math.round(realDist) };
-      const existing = map.get(stop.stationId);
-      if (!existing || withRealDist.distanceM < existing.distanceM) {
-        map.set(stop.stationId, withRealDist);
-      }
+  // 정류소별 경유 노선 맵 (OSM node ID → routes)
+  const stopRoutes = new Map<number, Array<{ routeNo: string; destination: string }>>();
+  for (const rel of routeRels) {
+    const routeNo = rel.tags?.ref ?? "";
+    if (!routeNo) continue;
+    const nameTag = rel.tags?.name ?? "";
+    const destination =
+      nameTag.includes("→") ? nameTag.split("→").pop()!.trim() :
+      nameTag.includes("->") ? nameTag.split("->").pop()!.trim() :
+      rel.tags?.to ?? "";
+    for (const m of (rel.members ?? [])) {
+      if (m.type !== "node") continue;
+      const list = stopRoutes.get(m.ref) ?? [];
+      if (!list.some(r => r.routeNo === routeNo)) list.push({ routeNo, destination });
+      stopRoutes.set(m.ref, list);
     }
   }
 
-  return Array.from(map.values())
-    .filter(s => s.distanceM <= 3000)
+  return stopNodes
+    .map(s => {
+      const dist = haversineM(lat, lng, s.lat!, s.lon!);
+      const routes = stopRoutes.get(s.id) ?? [];
+      return {
+        stationId: s.tags!.ref ?? String(s.id),
+        osmNodeId: s.id,
+        stationName: s.tags!.name!,
+        lat: s.lat!,
+        lng: s.lon!,
+        distanceM: Math.round(dist),
+        osmRoutes: routes.sort((a, b) => a.routeNo.localeCompare(b.routeNo, "ko")),
+      };
+    })
+    .filter(s => s.distanceM <= 1200)
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
-// stationId 직접 도착 정보 조회 (외부 노출용)
-export async function fetchArrivalsByStationId(stationId: string): Promise<BusArrival[]> {
-  return fetchArrivals(stationId);
+// ─── XML 파싱 헬퍼 ────────────────────────────────────────────
+function xmlVal(xml: string, tag: string): string {
+  return xml.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() ?? "";
 }
+
+function parseXmlItems(xml: string): Record<string, string>[] {
+  const items: Record<string, string>[] = [];
+  const re = /<item>([\s\S]*?)<\/item>/gi;
+  let m;
+  while ((m = re.exec(xml)) !== null) {
+    const obj: Record<string, string> = {};
+    const fr = /<([^\/>\s]+)>([^<]*)<\/\1>/gi;
+    let f;
+    while ((f = fr.exec(m[1])) !== null) obj[f[1]] = f[2].trim();
+    items.push(obj);
+  }
+  return items;
+}
+
+// ─── 공공API 호출 (codetabs 프록시, XML 응답) ─────────────────
+async function apiFetch(path: string, params: Record<string, string>): Promise<Record<string, string>[]> {
+  if (!API_KEY) return [];
+  const qs = new URLSearchParams({ serviceKey: API_KEY, ...params }).toString();
+  const target = `${BUS_BASE}${path}?${qs}`;
+  try {
+    const res = await fetch(`${PROXY}${encodeURIComponent(target)}`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const code = xmlVal(xml, "resultCode");
+    if (code !== "0" && code !== "00") return [];
+    return parseXmlItems(xml);
+  } catch {
+    return [];
+  }
+}
+
+// ─── 실시간 도착정보 ──────────────────────────────────────────
+export async function fetchArrivalsByStationId(stationId: string): Promise<BusArrival[]> {
+  const items = await apiFetch("/busArrivalService/getBusArrivalList", {
+    stationId,
+    pageNo: "1",
+    numOfRows: "20",
+  });
+  return items.map(d => ({
+    routeNo: d.ROUTE_NO ?? d.routeNo ?? "",
+    routeId: d.ROUTE_ID ?? d.routeId ?? "",
+    destination: d.DESTINATION ?? d.destination ?? "종점",
+    arrivalMin: Math.max(0, Math.round(Number(d.ARRIVALESTIMATETIME ?? d.arrivalEstimateTime ?? "0") / 60)),
+    remainingStops: Number(d.REMAINSTOPCOUNT ?? d.remainStopCount ?? "0"),
+    isLowFloor: d.LOWPLATE === "1" || d.lowPlate === "1",
+    isExpress: (d.ROUTETP ?? d.routeTp ?? "").includes("급행"),
+    plateNo: d.PLATENO ?? d.plateNo ?? "",
+  }));
+}
+
+// OSM 경유 노선을 BusArrival 형태로 변환 (실시간 없음)
+export function osmRoutesToArrivals(routes: Array<{ routeNo: string; destination: string }>): BusArrival[] {
+  return routes.map(r => ({
+    routeNo: r.routeNo,
+    routeId: "",
+    destination: r.destination || "방향 미상",
+    arrivalMin: -1,
+    remainingStops: 0,
+    isLowFloor: false,
+    isExpress: r.routeNo.startsWith("M") || r.routeNo.includes("급행"),
+    isScheduled: true,
+  }));
+}
+
+// ─── 버스 실시간 위치 ─────────────────────────────────────────
+export async function fetchBusLocations(routeId: string): Promise<BusLocation[]> {
+  const items = await apiFetch("/busLocationInfoService/getBusLocationList", { routeId });
+  return items.map(d => ({
+    plateNo: d.PLATE_NO ?? d.plateNo ?? "",
+    stationSeq: Number(d.STATION_SEQ ?? d.stationSeq ?? "0"),
+    stationId: d.STATION_ID ?? d.stationId ?? "",
+    stationName: d.STATION_NM ?? d.stationName ?? "",
+    isLowFloor: d.LOW_PLATE === "1" || d.lowPlate === "1",
+    direction: (Number(d.MOVE_DIR ?? d.moveDir ?? "0") === 1 ? 1 : 0) as 0 | 1,
+  }));
+}
+
+// ─── 노선 상세정보 ────────────────────────────────────────────
+export async function fetchRouteDetail(routeId: string): Promise<RouteDetail | null> {
+  const items = await apiFetch("/routeInfoService/getRouteInfo", { routeId });
+  if (!items.length) return null;
+  const d = items[0];
+  return {
+    routeId,
+    routeNo: d.ROUTE_NO ?? d.routeNo ?? "",
+    routeName: d.ROUTE_NM ?? d.routeName ?? "",
+    startStation: d.ST_STATION_NM ?? d.stStationNm ?? "기점",
+    endStation: d.ED_STATION_NM ?? d.edStationNm ?? "종점",
+    firstTime: d.UP_FIRST_TIME ?? d.upFirstTime ?? "",
+    lastTime: d.DOWN_LAST_TIME ?? d.downLastTime ?? "",
+    upFirstTime: d.UP_FIRST_TIME ?? d.upFirstTime ?? "-",
+    upLastTime: d.UP_LAST_TIME ?? d.upLastTime ?? "-",
+    downFirstTime: d.DOWN_FIRST_TIME ?? d.downFirstTime ?? "-",
+    downLastTime: d.DOWN_LAST_TIME ?? d.downLastTime ?? "-",
+    interval: Number(d.INTERVAL ?? d.interval ?? "0"),
+  };
+}
+
+// ─── 노선별 정류장 목록 ───────────────────────────────────────
+export async function fetchStationsByRoute(routeId: string): Promise<RouteStation[]> {
+  const items = await apiFetch("/routeInfoService/getStaionByRoute", { routeId });
+  return items.map(d => ({
+    seq: Number(d.STATION_SEQ ?? d.stationSeq ?? "0"),
+    stationId: d.STATION_ID ?? d.stationId ?? "",
+    stationName: d.STATION_NM ?? d.stationNm ?? "",
+    direction: (Number(d.MOVE_DIR ?? d.moveDir ?? "0") === 1 ? 1 : 0) as 0 | 1,
+  })).sort((a, b) => a.seq - b.seq);
+}
+
+// ─── 검단신도시 폴백 정류소 (OSM 기반 좌표/ref) ──────────────
+// 실시간 API 불가 시 위치 기반 정렬에 사용
+export const GEUMDAN_BUS_STATIONS = [
+  { id: "gd-1",  stationId: "89459", name: "금강펜테리움더시글로",         lat: 37.5920, lng: 126.7095 },
+  { id: "gd-2",  stationId: "42697", name: "아라역7번출구",                lat: 37.5923, lng: 126.7118 },
+  { id: "gd-3",  stationId: "42454", name: "아라역6번출구",                lat: 37.5919, lng: 126.7122 },
+  { id: "gd-4",  stationId: "42449", name: "서구영어마을",                  lat: 37.5921, lng: 126.7053 },
+  { id: "gd-5",  stationId: "89406", name: "아라센트럴파크",                lat: 37.5889, lng: 126.7101 },
+  { id: "gd-6",  stationId: "89405", name: "검단한신더휴캐널파크1103동",    lat: 37.5895, lng: 126.7075 },
+  { id: "gd-7",  stationId: "42447", name: "원당사거리.검단선사박물관",     lat: 37.5936, lng: 126.7000 },
+  { id: "gd-8",  stationId: "89393", name: "호반써밋1차 3101동",            lat: 37.5935, lng: 126.7079 },
+  { id: "gd-9",  stationId: "89432", name: "아라역8번출구",                lat: 37.5935, lng: 126.7129 },
+  { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",      lat: 37.5913, lng: 126.6987 },
+];
 
 export const hasBusApiKey = () => Boolean(API_KEY);

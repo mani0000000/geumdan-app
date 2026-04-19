@@ -11,7 +11,7 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
-  fetchNearbyStopsWide, fetchArrivalsByStationId,
+  fetchNearbyStopsWide, fetchArrivalsByStationId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
 import {
@@ -24,13 +24,14 @@ import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/a
 type Tab = "버스" | "지하철";
 
 type DisplayStop = {
-  id: string;          // stationId (API 내부 코드)
+  id: string;          // stationId (OSM ref 또는 node ID)
   name: string;
   distM: number;
   arrivals: BusArrival[];
   loadingArrivals: boolean;
   lat?: number;
   lng?: number;
+  osmRoutes?: Array<{ routeNo: string; destination: string }>; // OSM 경유 노선
 };
 
 
@@ -48,7 +49,7 @@ function saveFavSet(key: string, set: Set<string>) {
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
 function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
-  if (!live) {
+  if (!live || min === -1) {
     return (
       <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
         <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
@@ -297,16 +298,17 @@ export default function TransportPage() {
 
     let stops: DisplayStop[] = [];
     try {
-      // GPS 기반 주변 정류장 (6초 타임아웃)
+      // OSM Overpass: 주변 정류장 + 경유 노선 (18초 타임아웃)
       const nearby = await Promise.race([
         fetchNearbyStopsWide(lat, lng),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 6000)),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
       ]);
       if (nearby.length === 0) throw new Error("empty");
-      stops = nearby.slice(0, 12).map(s => ({
+      stops = nearby.slice(0, 14).map(s => ({
         id: s.stationId, name: s.stationName,
         distM: s.distanceM, arrivals: [], loadingArrivals: true,
         lat: s.lat, lng: s.lng,
+        osmRoutes: s.osmRoutes,
       }));
     } catch {
       // 폴백: 검단신도시 하드코딩 정류장
@@ -324,9 +326,13 @@ export default function TransportPage() {
     setLoading(false);
 
     // 각 정류장 실시간 도착정보 병렬 조회
+    // 실시간 없으면 OSM 경유 노선을 대체 표시
     await Promise.allSettled(
       stops.map(async stop => {
-        const arrivals = await fetchArrivalsByStationId(stop.id);
+        let arrivals = await fetchArrivalsByStationId(stop.id);
+        if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
+          arrivals = osmRoutesToArrivals(stop.osmRoutes);
+        }
         setApiStops(prev =>
           prev ? prev.map(s => s.id === stop.id
             ? { ...s, arrivals, loadingArrivals: false }
@@ -729,8 +735,13 @@ export default function TransportPage() {
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Navigation size={10} className="text-[#0071e3]" />
                           <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
-                          {!stop.loadingArrivals && (
-                            <span className="text-[12px] text-[#86868b]">· 노선 {stop.arrivals.length}개</span>
+                          {!stop.loadingArrivals && stop.arrivals.length > 0 && (
+                            <span className="text-[12px] text-[#86868b]">
+                              · 노선 {stop.arrivals.length}개
+                              {stop.arrivals.every(a => a.isScheduled) && (
+                                <span className="ml-1 text-[#FF9500]">경유</span>
+                              )}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -768,9 +779,9 @@ export default function TransportPage() {
                         {displayArrivals.map((a, i) => (
                           <div key={i}
                             className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
-                            onClick={() => setSelectedArrival(a)}>
+                            onClick={() => !a.isScheduled && setSelectedArrival(a)}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                              <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0">
+                              <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
                                 <span className="text-white text-[14px] font-black">{a.routeNo}</span>
                               </div>
                               <div className="min-w-0">
@@ -784,16 +795,18 @@ export default function TransportPage() {
                                   {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
                                 </div>
                                 <p className="text-[12px] text-[#6e6e73]">
-                                  {a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                                  {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-2">
-                              <button onClick={e => { e.stopPropagation(); toggleRoute(routeFavKey(stop.id, a)); }}
-                                className="p-1 active:opacity-60">
-                                <Star size={15} className={favRoutes.has(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
-                              </button>
-                              <ArrivalBadge min={a.arrivalMin} live />
+                              {!a.isScheduled && (
+                                <button onClick={e => { e.stopPropagation(); toggleRoute(routeFavKey(stop.id, a)); }}
+                                  className="p-1 active:opacity-60">
+                                  <Star size={15} className={favRoutes.has(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
+                                </button>
+                              )}
+                              <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
                             </div>
                           </div>
                         ))}
