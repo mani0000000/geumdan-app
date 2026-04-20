@@ -1,9 +1,18 @@
 {
-  "fetchedAt": "2026-04-20T13:02:41.141Z",
+  "fetchedAt": "2026-04-20T16:01:26.427Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-4",
+      "id": "gr2-5",
+      "title": "완정ˑ검단ˑ아라 건강생활지원센터, 지하철 역사 내 이동건강상담실 운영으로 지역주민 건강 챙겨 - 내외뉴스통신",
+      "summary": "",
+      "source": "내외뉴스통신",
+      "publishedAt": "2026-04-20T13:55:39.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE5BUWtfMHJGUG1uOFBNU1Q3enRpdFZZUWxvQkhUYkVnR3R0ajJBTlhSQXVYZmdfLU85b1NId1FPdUx3MkllaDZRaXppdHkwRkVfblZpQTJGc29aQ09sYkkyS2lEWnRwalFiQTZOS9IBcEFVX3lxTFB2RDd3X3duUUlWeWNYM0psZ1JLNFVCTnliX2U3V0xobjQ4TDE3TkdsS2pleDl0eWlGdUExSFNKNlJJalVock54aXpPbjd6TEpWWWFYYUlQb2hLVG1fQUJTWFNuVkh4alVqeUktQUloZVM?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-3",
       "title": "서구 건강생활지원센터, 지하철역 이동건강상담실 운영 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -57,16 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
-      "title": "서구, 완정ˑ검단ˑ아라 건강생활지원센터, 지하철 역사 내 이동건강상담실 운영으로 지역주민 건강 챙겨 - 한국미디어뉴스",
-      "summary": "",
-      "source": "한국미디어뉴스",
-      "publishedAt": "2026-04-20T03:31:14.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE1Ub0x1SGZNbEVhMVp3Y0dWX1hCNGlibzNza1FTdEVsd0g3bEs0T04yUnphaGVaYWNaMm14VWd6QmtmX3o1d1VMSXZIZ25hck9jb2o2ZGFESTZnMlpzSWtyd3U1WGk5UQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-5",
+      "id": "gr2-4",
       "title": "완정ˑ검단ˑ아라 건강생활지원센터, 지하철 역사 내 이동건강상담실 운영으로 지역주민 건강 챙겨 - 서프라이즈뉴스",
       "summary": "",
       "source": "서프라이즈뉴스",
@@ -93,16 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-0",
-      "title": "인천 5대 하천 생태복원 본격화…검단 나진포천 착수 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-04-19T07:27:52.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFAwS1Z0czZCdzhoZzZ4UmpkVkd1OElmMjZJeTdGaEZwbjN0Y2xSd0dSUm1ybm85NUxEXzlOQnlJbU1xV3hzZFl6czZBV1FXOEk?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-10",
+      "id": "gr0-9",
       "title": "[기자수첩] 아파트 하자, 집이 아니라 전쟁터가 됐다 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -111,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-11",
       "title": "서인천 서구의회, 행정체제 개편 대비 조직정비… 검단구 분구 준비 본격화 - 천지일보",
       "summary": "",
       "source": "천지일보",
@@ -120,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "[기획- 신생구 검단 2] “신도시는 커졌는데, 삶은 비좁다”… 검단구 출범 앞둔 ‘확장 도시의 딜레마’ - 인천게릴라뉴스",
       "summary": "",
       "source": "인천게릴라뉴스",
@@ -156,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-6",
       "title": "주거 수요 높은데 분양가는 고공행진…인천 ‘검단신도시 롯데캐슬 넥스티엘’ 입주 앞둬 - 골프타임즈",
       "summary": "",
       "source": "골프타임즈",
@@ -165,30 +156,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
-      "title": "계룡건설산업, 인천 검단신도시 '엘리프 검단 포레듀' 임의공급 청약 접수 진행 - 국토일보",
-      "summary": "",
-      "source": "국토일보",
-      "publishedAt": "2026-04-17T00:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE01N3pSYmZfWXZGUktJU2UyNXFtNlFFSlZKRl93eENJd1Z4Um1vZG9PS2F0eWJDanJyTDFkbFV5Zm1vQnhSdjJqd09ZLUZlRWU0bkVwaVlIVkswYmhDN2ZJMGM5dVo?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-4",
+      "id": "gr0-3",
       "title": "“낳아도 맡길 데가 없어요”…신도시 번지는 ‘0세 고시’ - 서울경제",
       "summary": "",
       "source": "서울경제",
       "publishedAt": "2026-04-16T08:53:31.000Z",
       "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE04aTMzOXN1dzZ2NFBhaVVRamR0STB0NjdfR0E3SzEyOXFTak9Md194TXBnbnR0N0NjZlBhOGtSVmtKdnpKQ1VLa09LUkh3TjJYWEHSAVNBVV95cUxNa3BKZnlYN2lyRVFGcmFtdE1xU3dtbWVlSUMwbTNybjRTVVR0d25HSzBHZ0RqMGlBR1V0R2xFaUtObVRkTXljVF9FSlFFQWtJR2o2QQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-23",
-      "title": "올해 서구 청소년동아리 활동 지원대상 선정! - 인천신문",
-      "summary": "",
-      "source": "인천신문",
-      "publishedAt": "2026-04-16T08:01:57.000Z",
-      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE92QkZNeE53a1Jwd0ZoNjRoOG85VkNpVk4xQ1JPSzdlYUo0N3hDTW5Zdi1kVTFuLUt4RDBaNnlxU19EMHd0TG1QZV82YlZvVFp0cVB0S1FRMlBWMHBka1NpanFNMFFTSFg2eEZDd0J3bXdwUkty0gF4QVVfeXFMT29idUY1QldQQVM0eVpvV1VOUVVFVUIwR2ZWMFlUQlRZaVI0VVRTNjRGSjhoamdlUHpvM2ZVY3BBQjM2NTBCMnRZNk5CSDB0Q0ZuRnJHQmhiNGoyRTJqdnBUVXY3cVd2WVNzbXhoczNtb241THNpMWFG?oc=5",
       "type": "뉴스"
     },
     {
@@ -201,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-7",
       "title": "수도권 수요 몰리는 검단신도시…대단지 '더샵 검단레이크파크' 5월 분양 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -228,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
       "title": "인천 검단신도시 '엘리프 검단 포레듀' 임의공급 청약 진행 - 한경매거진&북",
       "summary": "",
       "source": "한경매거진&북",
@@ -237,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-31",
+      "id": "gr2-29",
       "title": "인천 서구 검단구 출범 대비 예산 로드맵 가동 본예산 편성 교육 실시 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
@@ -246,7 +219,34 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr1-6",
+      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 5억8700만원에 거래 - 조선비즈 - Chosunbiz",
+      "summary": "",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-04-14T09:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxPMFhJeVBvMFhKRlN2S2hJU29GdE5GUGZSWEYxaFVXLXJhVHFBdjV0RDUtb1Vqa1l4UnlGTzVkb01mckI3WUoyZWhJUTBDM2lCbWpMUHlJR2JVeEJLVWdLWXJpbHVSNXhUcnMyYWxTR25SYkc2WTNja2Fhb0ozS3NJZnFZY04zNm_SAZsBQVVfeXFMTkZQZzBMZmVhcUZsUTM4VW9QSi1kZk5KMXZEYVdpbUZ6cjMyZWl4TERBVTE5OXhhX2R2RkEwQm1YNWhYY1ZLYkhFRll6bzdaLXlGRU5ua01KYjd4WUgzY1A3WXdVSTlzVWRpWVVXWE1rOFlieU4zYlpuc2E5Q0JNVzhlOEFUVHBRTXYtZmx0ODJUa212V2NyQnJBVGs?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-11",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-04-14T09:32:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBQczF0NnlSYnJlUGRlRlhBOThrNjdHWVYyWHZGTk9CaVkzdzdFTjlfMWdGRFNCTndORThnSEgwR1doZkVtS0VqTFVxVTdOQzMzN0xF?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-10",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 조선비즈 - Chosunbiz",
+      "summary": "",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-04-14T09:31:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQNkRpbHpNdWRiME5qTEVDQUJtbTRSeDAyNjQySkpjSFlIT0o1NkdDYUJiUU5QSXBVNVB1TnBRdlQycUxjQWVzSVRLTjhBekkyNllYcW56ZzdvaEY3d0M4NV9IRnlhVUxNNjVFdy1aX3A0Q2h5aGR6aTl0N3o0UlNtb0lOaGVDSmfSAZsBQVVfeXFMTjlCUWtfdGZyY1M2LWtsNTBoejFVQmVtNzg0YzlkbVpqbE9XVE1PZW1KYThzM0o0dVdDb0N2QWpNRVJ5U1ZlZlRaeHlIa20tcmhuWUIzek5nZXFEamI2MzJJSGF1Yld4RUNPY3RfR0tQZjV4cnRqQ1FmY2VDN2tIV05wTTJiajJoX1NTcHg0YlJlLWZNWlEtcE5hWms?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-5",
       "title": "수도권 역세권 신축 브랜드 대단지 ‘초강세‘…‘검단신도시 롯데캐슬 넥스티엘’ 입주 앞둬 - 뷰어스",
       "summary": "",
       "source": "뷰어스",
@@ -282,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-17",
+      "id": "gr0-14",
       "title": "청라·검단 잇는 핵심 축 ‘검암역세권’, 인천 서구 부동산 지형 바꾸나? - 로이슈",
       "summary": "",
       "source": "로이슈",
@@ -300,16 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-30",
-      "title": "인천 서구·연수구·강화군 등 3곳 여야 후보 확정 - 한겨레",
-      "summary": "",
-      "source": "한겨레",
-      "publishedAt": "2026-04-13T01:35:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE9LaHU3aDJvckNsZ2F3eEZWOUtTWDcwQ3c5OENFOGtkblo0Um52a2VaY1RpcnkxM1dyTnI1cXNQblJ1VFh3MWYyZ0pzWlJKNE83d3RNWnBidlhoNy0yWWNFNngyMA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-38",
+      "id": "gr2-36",
       "title": "인천 서구, 소프트파워·교통 인프라 확대…“새로운 도시 거듭날 것” - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -318,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-45",
+      "id": "gr3-21",
       "title": "인천 서구의회, 검단신도시 아라역 교통정체 해소 현장점검 - 경기도민일보 미디어",
       "summary": "",
       "source": "경기도민일보 미디어",
@@ -333,6 +324,15 @@
       "source": "현대일보",
       "publishedAt": "2026-04-10T09:12:09.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBrU1VfQnNEdlZMdGJ0blFfUnRlNTBOY3lsLUNsMUhJaDhQRGd6U09RclR1dVYtdnU0MDN6VEE3WUVKOHhCQW5od0lsVnNOZ1JLaE9OQ3BJdkNOdDdfMmdLWGl2WUFEZm00c1FRUUhR?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-0",
+      "title": "검단소방서, 노후 아파트 주택용 소방시설 보급 확대 - 소방방재신문",
+      "summary": "",
+      "source": "소방방재신문",
+      "publishedAt": "2026-04-10T08:45:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTE5oNUpLSU9QdjIyRUp1ZGtpX0l3Z2h6SXozWF8wenMwNHR0bXFkOGlTc29qQzhELUJxQXdFcG15dU5KbTd3QWc?oc=5",
       "type": "뉴스"
     },
     {
@@ -354,12 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-12",
-      "title": "인천 서북부 교통지형 ‘대전환’…검단·강화·옹진 도로망에 2.5조 투입 - v.daum.net",
+      "id": "gr3-13",
+      "title": "[도로투데이] 인천시, '교통 소외지' 검단·강화·옹진 도로망 확충 2.5조 투입 - 인천투데이",
       "summary": "",
-      "source": "v.daum.net",
+      "source": "인천투데이",
       "publishedAt": "2026-04-10T07:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFAxUXVaNHBrU3hMNzNNOU03VWpVQ0ZoeXFCRjA1RU55dVVBN0hjbTRZV1JmTUlMZnlRdVo5WG9mM180R2RPcDFleVcyeHlOUUU?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE54NFhaLWZveVJpYU1SQ1lvQnVkTExjZFFiUTNHY2tTQmEzVm1HbHJFdTE0cWo0dWt4ckVvMHVsRG9idW1DRTZNclRuRFVCcUdpb0xhOFdkM1YzZGNBWnZNeDExVkwxbERRWkVMSXNhaEo?oc=5",
       "type": "뉴스"
     }
   ]
