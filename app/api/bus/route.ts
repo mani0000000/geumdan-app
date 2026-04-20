@@ -14,7 +14,9 @@ const ACTIONS: Record<string, { path: string; required: string[] }> = {
 };
 
 export async function GET(request: NextRequest) {
-  const key = process.env.DATA_GO_KR_API_KEY;
+  const key = process.env.DATA_GO_KR_API_KEY
+    ?? process.env.NEXT_PUBLIC_BUS_API_KEY
+    ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
   if (!key) {
     return Response.json({ error: "api_key_not_configured" }, { status: 500 });
   }

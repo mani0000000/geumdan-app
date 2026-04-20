@@ -8,7 +8,9 @@ export async function GET(request: NextRequest) {
   const type = sp.get("type") ?? "";
 
   if (type === "ic1") {
-    const key = process.env.DATA_GO_KR_API_KEY;
+    const key = process.env.DATA_GO_KR_API_KEY
+      ?? process.env.NEXT_PUBLIC_BUS_API_KEY
+      ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
     if (!key) return Response.json({ error: "api_key_not_configured" }, { status: 500 });
     const stationId = sp.get("stationId");
     if (!stationId) return Response.json({ error: "missing_stationId" }, { status: 400 });
@@ -34,7 +36,9 @@ export async function GET(request: NextRequest) {
   }
 
   if (type === "seoul") {
-    const key = process.env.SEOUL_SUBWAY_KEY;
+    const key = process.env.SEOUL_SUBWAY_KEY
+      ?? process.env.NEXT_PUBLIC_SEOUL_SUBWAY_KEY
+      ?? "617a4341466d616e3133314941656442";
     if (!key) return Response.json({ error: "seoul_key_not_configured" }, { status: 500 });
     const stationName = sp.get("stationName");
     if (!stationName) return Response.json({ error: "missing_stationName" }, { status: 400 });
