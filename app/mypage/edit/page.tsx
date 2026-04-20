@@ -19,13 +19,14 @@ export default function EditProfilePage() {
     getUserProfile().then(p => {
       setNickname(p.nickname);
       setDong(p.dong);
+      setIntro(p.intro || intro);
       setLevel(p.level);
     });
   }, []);
 
   const save = async () => {
     setSaving(true);
-    await updateUserProfile({ nickname: nickname.trim(), dong });
+    await updateUserProfile({ nickname: nickname.trim(), dong, intro });
     router.back();
   };
 
