@@ -1,9 +1,8 @@
 // 버스 API: OSM Overpass(정류소/노선 검색) + 인천광역시 공공API(실시간 도착)
-// 공공API는 CORS 제한 → codetabs 프록시 경유
+// 실시간 API는 CORS 제한 → 다중 프록시 순차 시도
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 const BUS_BASE = "https://apis.data.go.kr/6280000";
-const PROXY = "https://api.codetabs.com/v1/proxy/?quest=";
 const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
 
 // ─── 공개 타입 ────────────────────────────────────────────────
@@ -158,23 +157,32 @@ function parseXmlItems(xml: string): Record<string, string>[] {
   return items;
 }
 
-// ─── 공공API 호출 (codetabs 프록시, XML 응답) ─────────────────
+// ─── 공공API 호출 (다중 프록시 순차 시도, XML 응답) ─────────────
 async function apiFetch(path: string, params: Record<string, string>): Promise<Record<string, string>[]> {
   if (!API_KEY) return [];
   const qs = new URLSearchParams({ serviceKey: API_KEY, ...params }).toString();
-  const target = `${BUS_BASE}${path}?${qs}`;
-  try {
-    const res = await fetch(`${PROXY}${encodeURIComponent(target)}`, {
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!res.ok) return [];
-    const xml = await res.text();
-    const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
-    if (code !== "0" && code !== "00") return [];
-    return parseXmlItems(xml);
-  } catch {
-    return [];
+  const url = `${BUS_BASE}${path}?${qs}`;
+
+  // 프록시 목록 순서대로 시도 (codetabs → corsproxy.io → allorigins)
+  const proxies: Array<(u: string) => string> = [
+    u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
+    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+    u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
+  ];
+
+  for (const makeProxy of proxies) {
+    try {
+      const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(8000) });
+      if (!res.ok) continue;
+      const text = await res.text();
+      // allorigins wraps response in JSON { contents: "..." }
+      const xml = text.trimStart().startsWith("{") ? (JSON.parse(text).contents ?? "") : text;
+      if (!xml) continue;
+      const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
+      if (code === "0" || code === "00") return parseXmlItems(xml);
+    } catch { /* try next proxy */ }
   }
+  return [];
 }
 
 // ─── 실시간 도착정보 ──────────────────────────────────────────

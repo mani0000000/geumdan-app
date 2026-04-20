@@ -132,7 +132,7 @@ const STATION_DB: SubwayStationEntry[] = [
     timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6, upDirection: "계양", downDirection: "국제업무지구" },
   },
 
-  // 인천1호선 연장 (신검단 구간)
+  // 인천1호선 검단 연장 구간 (2025년 개통)
   {
     id: "gd-singeumdan",
     displayName: "신검단중앙역",
@@ -145,7 +145,7 @@ const STATION_DB: SubwayStationEntry[] = [
   },
   {
     id: "gd-gdlake",
-    displayName: "검단호수역",
+    displayName: "검단호수공원역",
     line: "인천1호선",
     lineColor: "#759CCE",
     lat: 37.5870, lng: 126.7025,

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapPin, RefreshCw, ChevronDown, ChevronUp, Star,
-  Zap, Accessibility, Train, Navigation, Bus, AlertCircle,
+  Zap, Accessibility, Train, Navigation, Bus, Search,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -280,19 +280,45 @@ export default function TransportPage() {
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
   // GPS 기반으로 API에서 조회한 정류장 (null = 미조회)
   const [apiStops, setApiStops] = useState<DisplayStop[] | null>(null);
   // 지하철 역 + 실시간 도착정보
   const [subwayList, setSubwayList] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
   const [subwayLoading, setSubwayLoading] = useState(false);
+  const [busSearch, setBusSearch] = useState("");
   const isLive = hasBusApiKey();
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
+  const apiStopsRef = useRef<DisplayStop[] | null>(null);
+  const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
 
-  // ── 버스 데이터 로드: GPS 기반 주변 정류장 우선, 실패 시 검단 폴백 ──
+  // ref 동기화
+  useEffect(() => { apiStopsRef.current = apiStops; }, [apiStops]);
+  useEffect(() => { subwayListRef.current = subwayList; }, [subwayList]);
+
+  // ── 정류장별 실시간 도착 조회 + OSM 경유 노선 폴백 ──
+  const fetchArrivalsForStops = useCallback(async (stops: DisplayStop[]) => {
+    await Promise.allSettled(
+      stops.map(async stop => {
+        let arrivals: BusArrival[] = [];
+        if (isLive) arrivals = await fetchArrivalsByStationId(stop.id);
+        if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
+          arrivals = osmRoutesToArrivals(stop.osmRoutes);
+        }
+        setApiStops(prev =>
+          prev ? prev.map(s => s.id === stop.id
+            ? { ...s, arrivals, loadingArrivals: false }
+            : s)
+          : prev
+        );
+      })
+    );
+    setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+  }, [isLive]);
+
+  // ── 버스 데이터 전체 로드: GPS 기반 주변 정류장 + 도착정보 ──
   const loadBusData = useCallback(async (lat: number, lng: number) => {
-    if (!isLive) return;
     setLoading(true);
     setApiStops(null);
 
@@ -324,44 +350,31 @@ export default function TransportPage() {
 
     setApiStops(stops);
     setLoading(false);
+    await fetchArrivalsForStops(stops);
+  }, [fetchArrivalsForStops]);
 
-    // 각 정류장 실시간 도착정보 병렬 조회
-    // 실시간 없으면 OSM 경유 노선을 대체 표시
+  // ── 지하철 도착정보만 갱신 (역 목록 유지) ──────────────────
+  const refreshSubwayArrivals = useCallback(async (stations: typeof subwayList) => {
     await Promise.allSettled(
-      stops.map(async stop => {
-        let arrivals = await fetchArrivalsByStationId(stop.id);
-        if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
-          arrivals = osmRoutesToArrivals(stop.osmRoutes);
-        }
-        setApiStops(prev =>
-          prev ? prev.map(s => s.id === stop.id
-            ? { ...s, arrivals, loadingArrivals: false }
-            : s)
-          : prev
-        );
-      })
-    );
-    setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-  }, [isLive]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // ── 지하철 도착정보 로드 (위치 무관, 전체 역 표시) ──────────
-  const loadSubwayData = useCallback(async () => {
-    setSubwayLoading(true);
-    const all = getAllSubwayStations();
-    setSubwayList(all.map(st => ({ ...st, arrivals: [], loadingArrivals: true })));
-    setSubwayLoading(false);
-
-    await Promise.allSettled(
-      all.map(async st => {
-        const arrivals = hasSubwayKey()
-          ? await fetchSubwayArrivals(st)
-          : [];
+      stations.map(async st => {
+        const arrivals = hasSubwayKey() ? await fetchSubwayArrivals(st) : [];
         setSubwayList(prev =>
           prev.map(s => s.id === st.id ? { ...s, arrivals, loadingArrivals: false } : s)
         );
       })
     );
+    setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
   }, []);
+
+  // ── 지하철 데이터 로드 (위치 무관, 전체 역 표시) ────────────
+  const loadSubwayData = useCallback(async () => {
+    setSubwayLoading(true);
+    const all = getAllSubwayStations();
+    const initial = all.map(st => ({ ...st, arrivals: [], loadingArrivals: true }));
+    setSubwayList(initial);
+    setSubwayLoading(false);
+    await refreshSubwayArrivals(initial);
+  }, [refreshSubwayArrivals]);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
@@ -369,7 +382,7 @@ export default function TransportPage() {
     posRef.current = DEFAULT;
     setUserPos(DEFAULT);
     loadSubwayData();
-    if (isLive) loadBusData(DEFAULT.lat, DEFAULT.lng);
+    loadBusData(DEFAULT.lat, DEFAULT.lng);
 
     if (!navigator.geolocation) { setLocState("denied"); return; }
     setLocState("loading");
@@ -379,35 +392,71 @@ export default function TransportPage() {
         posRef.current = p;
         setUserPos(p);
         setLocState("ok");
-        if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300 && isLive) {
+        if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
           loadBusData(p.lat, p.lng);
         }
       },
       () => setLocState("denied"),
       { timeout: 3000, maximumAge: 300000, enableHighAccuracy: false }
     );
-  }, [loadBusData, loadSubwayData, isLive]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadBusData, loadSubwayData]);
+
+  // ── 30초 자동 갱신 (도착정보만, 정류장 목록은 재조회 안 함) ──
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.hidden) return;
+      if (tab === "버스" && apiStopsRef.current && apiStopsRef.current.length > 0) {
+        fetchArrivalsForStops(apiStopsRef.current);
+      } else if (tab === "지하철" && subwayListRef.current.length > 0) {
+        refreshSubwayArrivals(subwayListRef.current);
+      }
+    }, 30000);
+    return () => clearInterval(id);
+  }, [tab, fetchArrivalsForStops, refreshSubwayArrivals]);
 
   const refresh = async () => {
     const p = posRef.current ?? { lat: 37.594, lng: 126.710 };
     setRefreshing(true);
-    await Promise.all([
-      isLive ? loadBusData(p.lat, p.lng) : Promise.resolve(),
-      loadSubwayData(),
-    ]);
+    if (tab === "버스") {
+      await loadBusData(p.lat, p.lng);
+    } else {
+      await loadSubwayData();
+    }
     setRefreshing(false);
   };
 
   const stopsWithRoutes: DisplayStop[] = apiStops ?? [];
+  const q = busSearch.trim().toLowerCase();
+  const filteredStops = q
+    ? stopsWithRoutes.filter(s =>
+        s.name.toLowerCase().includes(q) ||
+        s.arrivals.some(a => a.routeNo.toLowerCase().includes(q))
+      )
+    : stopsWithRoutes;
 
   function toggleStop(id: string) {
-    setFavStops(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); saveFavSet("favStops", n); return n; });
+    setFavStops(p => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      saveFavSet("favStops", n);
+      return n;
+    });
   }
   function toggleRoute(key: string) {
-    setFavRoutes(p => { const n = new Set(p); n.has(key) ? n.delete(key) : n.add(key); saveFavSet("favRoutes", n); return n; });
+    setFavRoutes(p => {
+      const n = new Set(p);
+      if (n.has(key)) n.delete(key); else n.add(key);
+      saveFavSet("favRoutes", n);
+      return n;
+    });
   }
   function toggleSubway(id: string) {
-    setFavSubways(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); saveFavSet("favSubways", n); return n; });
+    setFavSubways(p => {
+      const n = new Set(p);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      saveFavSet("favSubways", n);
+      return n;
+    });
   }
 
   // 즐겨찾기 노선 키: `${stationId}::${routeId||routeNo}`
@@ -691,18 +740,23 @@ export default function TransportPage() {
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
         <div className="px-4 space-y-3">
-          {!isLive ? (
-            <div className="bg-[#FFFDE7] rounded-2xl px-4 py-5 flex items-start gap-3">
-              <AlertCircle size={18} className="text-[#F57F17] shrink-0 mt-0.5" />
-              <div>
-                <p className="text-[13px] font-bold text-[#F57F17]">버스 API 키 미설정</p>
-                <p className="text-[12px] text-[#F57F17]/80 mt-0.5 leading-relaxed">
-                  공공데이터포털에서 인천광역시 버스도착정보 API 키를 발급받아<br />
-                  <code className="font-mono bg-[#FFF9C4] px-1 rounded">NEXT_PUBLIC_BUS_API_KEY</code> 로 설정하세요.
-                </p>
-              </div>
-            </div>
-          ) : loading ? (
+          {/* 검색 바 */}
+          <div className="bg-white rounded-xl flex items-center gap-2 px-3 h-10">
+            <Search size={15} className="text-[#86868b]" />
+            <input
+              value={busSearch}
+              onChange={e => setBusSearch(e.target.value)}
+              placeholder="정류장 이름 · 노선 번호 검색"
+              className="flex-1 text-[14px] outline-none bg-transparent placeholder:text-[#86868b]"
+            />
+            {busSearch && (
+              <button onClick={() => setBusSearch("")} className="text-[#86868b] active:opacity-60">
+                <span className="text-[13px]">✕</span>
+              </button>
+            )}
+          </div>
+
+          {loading ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
           ) : stopsWithRoutes.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
@@ -710,8 +764,14 @@ export default function TransportPage() {
               <p className="text-[14px] font-bold text-[#6e6e73]">주변 버스 정류장을 찾을 수 없습니다</p>
               <p className="text-[12px] text-[#86868b] mt-1">위치 권한을 허용하거나 새로고침해 주세요</p>
             </div>
+          ) : filteredStops.length === 0 ? (
+            <div className="bg-white rounded-2xl px-4 py-10 text-center">
+              <Search size={28} className="mx-auto text-[#D1D5DB] mb-2" />
+              <p className="text-[14px] font-bold text-[#6e6e73]">검색 결과가 없습니다</p>
+              <p className="text-[12px] text-[#86868b] mt-1">다른 키워드로 검색해 보세요</p>
+            </div>
           ) : (
-            stopsWithRoutes.map((stop, idx) => {
+            filteredStops.map((stop, idx) => {
               const open = expanded === stop.id;
               const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
               return (
@@ -850,9 +910,7 @@ export default function TransportPage() {
               <p className="text-[14px] font-bold text-[#6e6e73]">위치를 확인하는 중입니다</p>
             </div>
           ) : (
-            subwayList.map((st, idx) => {
-              const upArrivals   = st.arrivals.filter(a => a.direction === "상행");
-              const downArrivals = st.arrivals.filter(a => a.direction === "하행");
+            subwayList.map((st) => {
               return (
                 <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
                   {/* 역 헤더 */}
