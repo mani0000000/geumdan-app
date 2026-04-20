@@ -1,9 +1,7 @@
 // 버스 API: OSM Overpass(정류소/노선 검색) + 인천광역시 공공API(실시간 도착)
-// 실시간 API는 CORS 제한 → 다중 프록시 순차 시도
+// 실시간 공공API는 CORS 문제로 서버 라우트 /api/bus 를 거쳐 호출한다
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
-const BUS_BASE = "https://apis.data.go.kr/6280000";
-const API_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
 
 // ─── 공개 타입 ────────────────────────────────────────────────
 export interface BusArrival {
@@ -157,37 +155,24 @@ function parseXmlItems(xml: string): Record<string, string>[] {
   return items;
 }
 
-// ─── 공공API 호출 (다중 프록시 순차 시도, XML 응답) ─────────────
-async function apiFetch(path: string, params: Record<string, string>): Promise<Record<string, string>[]> {
-  if (!API_KEY) return [];
-  const qs = new URLSearchParams({ serviceKey: API_KEY, ...params }).toString();
-  const url = `${BUS_BASE}${path}?${qs}`;
-
-  // 프록시 목록 순서대로 시도 (codetabs → corsproxy.io → allorigins)
-  const proxies: Array<(u: string) => string> = [
-    u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`,
-    u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
-    u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`,
-  ];
-
-  for (const makeProxy of proxies) {
-    try {
-      const res = await fetch(makeProxy(url), { signal: AbortSignal.timeout(8000) });
-      if (!res.ok) continue;
-      const text = await res.text();
-      // allorigins wraps response in JSON { contents: "..." }
-      const xml = text.trimStart().startsWith("{") ? (JSON.parse(text).contents ?? "") : text;
-      if (!xml) continue;
-      const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
-      if (code === "0" || code === "00") return parseXmlItems(xml);
-    } catch { /* try next proxy */ }
+// ─── 공공API 호출 (서버 라우트 /api/bus 경유, XML 응답) ─────────
+async function apiFetch(action: string, params: Record<string, string>): Promise<Record<string, string>[]> {
+  const qs = new URLSearchParams({ action, ...params }).toString();
+  try {
+    const res = await fetch(`/api/bus?${qs}`, { signal: AbortSignal.timeout(10000) });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
+    if (code !== "0" && code !== "00") return [];
+    return parseXmlItems(xml);
+  } catch {
+    return [];
   }
-  return [];
 }
 
 // ─── 실시간 도착정보 ──────────────────────────────────────────
 export async function fetchArrivalsByStationId(stationId: string): Promise<BusArrival[]> {
-  const items = await apiFetch("/busArrivalService/getBusArrivalList", {
+  const items = await apiFetch("arrivals", {
     stationId, pageNo: "1", numOfRows: "20",
   });
   return items.map(d => ({
@@ -218,7 +203,7 @@ export function osmRoutesToArrivals(routes: Array<{ routeNo: string; destination
 
 // ─── 버스 실시간 위치 ─────────────────────────────────────────
 export async function fetchBusLocations(routeId: string): Promise<BusLocation[]> {
-  const items = await apiFetch("/busLocationInfoService/getBusLocationList", { routeId });
+  const items = await apiFetch("locations", { routeId });
   return items.map(d => ({
     plateNo: d.PLATE_NO ?? d.plateNo ?? "",
     stationSeq: Number(d.STATION_SEQ ?? d.stationSeq ?? "0"),
@@ -231,7 +216,7 @@ export async function fetchBusLocations(routeId: string): Promise<BusLocation[]>
 
 // ─── 노선 상세정보 ────────────────────────────────────────────
 export async function fetchRouteDetail(routeId: string): Promise<RouteDetail | null> {
-  const items = await apiFetch("/routeInfoService/getRouteInfo", { routeId });
+  const items = await apiFetch("routeInfo", { routeId });
   if (!items.length) return null;
   const d = items[0];
   return {
@@ -252,7 +237,7 @@ export async function fetchRouteDetail(routeId: string): Promise<RouteDetail | n
 
 // ─── 노선별 정류장 목록 ───────────────────────────────────────
 export async function fetchStationsByRoute(routeId: string): Promise<RouteStation[]> {
-  const items = await apiFetch("/routeInfoService/getStaionByRoute", { routeId });
+  const items = await apiFetch("routeStations", { routeId });
   return items.map(d => ({
     seq: Number(d.STATION_SEQ ?? d.stationSeq ?? "0"),
     stationId: d.STATION_ID ?? d.stationId ?? "",
@@ -275,4 +260,5 @@ export const GEUMDAN_BUS_STATIONS = [
   { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",   lat: 37.5913, lng: 126.6987 },
 ];
 
-export const hasBusApiKey = () => Boolean(API_KEY);
+// 서버 라우트가 키를 관리하므로 클라이언트에서는 항상 활성으로 취급
+export const hasBusApiKey = () => true;

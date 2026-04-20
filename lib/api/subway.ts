@@ -2,22 +2,12 @@
  * lib/api/subway.ts
  * 인천1호선 + 공항철도 + 서울9호선 실시간 도착정보
  *
- * 환경변수:
- *   NEXT_PUBLIC_SUBWAY_API_KEY   — 인천교통공사 도시철도 (공공데이터포털 6280000)
- *   NEXT_PUBLIC_SEOUL_SUBWAY_KEY — 서울 열린데이터광장 (공항철도·9호선 도착정보)
+ * 서버 라우트 /api/subway 를 통해 공공API를 호출한다.
+ *   ic1   — 인천교통공사 도시철도 (공공데이터포털 6280000, DATA_GO_KR_API_KEY)
+ *   seoul — 서울 열린데이터광장 (공항철도·9호선 도착정보, SEOUL_SUBWAY_KEY)
  */
 
 import { haversineM } from "./bus";
-
-const IC_KEY   = process.env.NEXT_PUBLIC_SUBWAY_API_KEY   ?? "";
-const AREX_KEY = process.env.NEXT_PUBLIC_SEOUL_SUBWAY_KEY ?? "";
-
-function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
-  return Promise.race([
-    p,
-    new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
-  ]);
-}
 
 // ── 타입 정의 ─────────────────────────────────────────────────
 export interface SubwayArrival {
@@ -182,18 +172,18 @@ export function findNearbySubwayStations(
     .sort((a, b) => a.distM - b.distM);
 }
 
-export function hasSubwayKey() { return Boolean(IC_KEY || AREX_KEY); }
+// 서버 라우트가 키를 관리하므로 클라이언트는 항상 활성으로 취급
+export function hasSubwayKey() { return true; }
 
 // ── 인천1호선 도착정보 ────────────────────────────────────────
 async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
-  if (!IC_KEY) return [];
-  const url =
-    `https://apis.data.go.kr/6280000/IcSubwayInfoService/getIcSubwayArvlList` +
-    `?serviceKey=${IC_KEY}&_type=json&stationId=${stationCode}&pageNo=1&numOfRows=10`;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parse = (json: any): SubwayArrival[] => {
-    const data = json?.contents ? JSON.parse(json.contents) : json;
+  try {
+    const res = await fetch(
+      `/api/subway?type=ic1&stationId=${encodeURIComponent(stationCode)}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const raw = data?.response?.body?.items?.item as any[] | undefined;
     if (!raw) return [];
@@ -206,21 +196,9 @@ async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
       currentStation: String(item.CURRENT_STATION_NM ?? item.currentStationNm ?? ""),
       isExpress: String(item.TRAINTYPE ?? "").includes("급행"),
     }));
-  };
-
-  try {
-    return await Promise.any([
-      withTimeout((async () => { const r = await fetch(url); return parse(await r.json()); })(), 2000),
-      withTimeout((async () => {
-        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-        return parse(await r.json());
-      })(), 5000),
-      withTimeout((async () => {
-        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-        return parse(await r.json());
-      })(), 5000),
-    ]);
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 // ── 서울 열린데이터 지하철 공통 ───────────────────────────────
@@ -229,12 +207,13 @@ async function fetchSeoulSubwayArrivals(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   lineFilter: (item: any) => boolean,
 ): Promise<SubwayArrival[]> {
-  if (!AREX_KEY) return [];
-  const targetUrl =
-    `http://swopenapi.seoul.go.kr/api/subway/${AREX_KEY}/json/realtimeStationArrival/0/20/${encodeURIComponent(stationName)}`;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const parse = (data: any): SubwayArrival[] => {
+  try {
+    const res = await fetch(
+      `/api/subway?type=seoul&stationName=${encodeURIComponent(stationName)}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const list: any[] = data?.realtimeArrivalList ?? [];
     return list.filter(lineFilter).map(item => ({
@@ -245,23 +224,9 @@ async function fetchSeoulSubwayArrivals(
       currentStation: String(item.arvlMsg3 ?? ""),
       isExpress: String(item.btrainSttus ?? "").includes("급행"),
     }));
-  };
-
-  const proxyUrls = [
-    `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
-    `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`,
-  ];
-
-  try {
-    return await Promise.any(
-      proxyUrls.map(pu => withTimeout((async () => {
-        const r = await fetch(pu);
-        if (!r.ok) throw new Error(`${r.status}`);
-        const j = await r.json();
-        return parse(j?.contents ? JSON.parse(j.contents) : j);
-      })(), 6000))
-    );
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 async function fetchArexArrivals(stationName: string): Promise<SubwayArrival[]> {
