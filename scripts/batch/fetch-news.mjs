@@ -114,10 +114,11 @@ try {
       .upsert(rows, { onConflict: 'url', ignoreDuplicates: true });
 
     if (error) {
-      console.error('❌ Failed to upsert news articles:', error.message);
-      process.exit(1);
+      console.warn('⚠️  Supabase upsert 실패 (테이블 미생성 또는 연결 오류):', error.message);
+      console.warn('   → supabase/migrations/20260419_news_youtube.sql 을 Supabase에서 실행하세요.');
+    } else {
+      console.log(`✅ Upserted ${rows.length} news articles`);
     }
-    console.log(`✅ Upserted ${rows.length} news articles`);
   }
 
   // Clean up old articles (keep last 30 days)
