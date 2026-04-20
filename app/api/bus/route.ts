@@ -6,10 +6,11 @@ export const dynamic = "force-dynamic";
 const BUS_BASE = "https://apis.data.go.kr/6280000";
 
 const ACTIONS: Record<string, { path: string; required: string[] }> = {
-  arrivals:      { path: "/busArrivalService/getBusArrivalList",     required: ["stationId"] },
-  locations:     { path: "/busLocationInfoService/getBusLocationList", required: ["routeId"] },
-  routeInfo:     { path: "/routeInfoService/getRouteInfo",            required: ["routeId"] },
-  routeStations: { path: "/routeInfoService/getStaionByRoute",        required: ["routeId"] },
+  arrivals:       { path: "/busArrivalService/getBusArrivalList",            required: ["stationId"] },
+  locations:      { path: "/busLocationInfoService/getBusLocationList",       required: ["routeId"] },
+  routeInfo:      { path: "/routeInfoService/getRouteInfo",                   required: ["routeId"] },
+  routeStations:  { path: "/routeInfoService/getStaionByRoute",               required: ["routeId"] },
+  aroundStations: { path: "/busStationAroundInfoService/getBusStationAroundList", required: ["GPS_LATI", "GPS_LONG"] },
 };
 
 export async function GET(request: NextRequest) {

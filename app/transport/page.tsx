@@ -11,7 +11,8 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
-  fetchNearbyStopsWide, fetchArrivalsByStationId, osmRoutesToArrivals,
+  fetchNearbyStopsFromApi, fetchNearbyStopsWide,
+  fetchArrivalsByStationId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
 import {
@@ -324,28 +325,46 @@ export default function TransportPage() {
 
     let stops: DisplayStop[] = [];
     try {
-      // OSM Overpass: 주변 정류장 + 경유 노선 (18초 타임아웃)
-      const nearby = await Promise.race([
-        fetchNearbyStopsWide(lat, lng),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
+      // 1순위: 인천 공공API (stationId가 도착정보 API와 일치)
+      const apiNearby = await Promise.race([
+        fetchNearbyStopsFromApi(lat, lng),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
       ]);
-      if (nearby.length === 0) throw new Error("empty");
-      stops = nearby.slice(0, 14).map(s => ({
-        id: s.stationId, name: s.stationName,
-        distM: s.distanceM, arrivals: [], loadingArrivals: true,
-        lat: s.lat, lng: s.lng,
-        osmRoutes: s.osmRoutes,
-      }));
-    } catch {
-      // 폴백: 검단신도시 하드코딩 정류장
-      stops = GEUMDAN_BUS_STATIONS
-        .map(s => ({
-          id: s.stationId, name: s.name,
-          distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-          arrivals: [], loadingArrivals: true,
+      if (apiNearby.length > 0) {
+        stops = apiNearby.slice(0, 14).map(s => ({
+          id: s.stationId, name: s.stationName,
+          distM: s.distanceM, arrivals: [], loadingArrivals: true,
           lat: s.lat, lng: s.lng,
-        }))
-        .sort((a, b) => a.distM - b.distM);
+          osmRoutes: [],
+        }));
+      } else {
+        throw new Error("api_empty");
+      }
+    } catch {
+      // 2순위: OSM Overpass (경유 노선 정보 포함, stationId는 ref)
+      try {
+        const nearby = await Promise.race([
+          fetchNearbyStopsWide(lat, lng),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
+        ]);
+        if (nearby.length === 0) throw new Error("empty");
+        stops = nearby.slice(0, 14).map(s => ({
+          id: s.stationId, name: s.stationName,
+          distM: s.distanceM, arrivals: [], loadingArrivals: true,
+          lat: s.lat, lng: s.lng,
+          osmRoutes: s.osmRoutes,
+        }));
+      } catch {
+        // 3순위: 검단신도시 하드코딩 정류장
+        stops = GEUMDAN_BUS_STATIONS
+          .map(s => ({
+            id: s.stationId, name: s.name,
+            distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+            arrivals: [], loadingArrivals: true,
+            lat: s.lat, lng: s.lng,
+          }))
+          .sort((a, b) => a.distM - b.distM);
+      }
     }
 
     setApiStops(stops);

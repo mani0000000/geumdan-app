@@ -246,6 +246,32 @@ export async function fetchStationsByRoute(routeId: string): Promise<RouteStatio
   })).sort((a, b) => a.seq - b.seq);
 }
 
+// ─── 인천 공공API: GPS 기반 주변 정류소 조회 ────────────────────
+// OSM보다 우선 사용; 이 API의 stationId가 도착정보 API와 일치함
+export async function fetchNearbyStopsFromApi(lat: number, lng: number): Promise<NearbyStop[]> {
+  const items = await apiFetch("aroundStations", {
+    GPS_LATI: String(lat),
+    GPS_LONG: String(lng),
+    numOfRows: "20",
+  });
+  return items
+    .map(d => {
+      const sLat = Number(d.GPS_LATI ?? d.gpsLati ?? 0);
+      const sLng = Number(d.GPS_LONG ?? d.gpsLong ?? 0);
+      return {
+        stationId: d.STATION_ID ?? d.stationId ?? "",
+        osmNodeId: 0,
+        stationName: d.STATION_NM ?? d.stationNm ?? "",
+        lat: sLat,
+        lng: sLng,
+        distanceM: Math.round(haversineM(lat, lng, sLat, sLng)),
+        osmRoutes: [],
+      };
+    })
+    .filter(s => s.stationId && s.stationName)
+    .sort((a, b) => a.distanceM - b.distanceM);
+}
+
 // ─── 검단신도시 폴백 정류소 (OSM ref 기반 실제 좌표) ─────────
 export const GEUMDAN_BUS_STATIONS = [
   { id: "gd-1",  stationId: "89459", name: "금강펜테리움더시글로",       lat: 37.5920, lng: 126.7095 },
