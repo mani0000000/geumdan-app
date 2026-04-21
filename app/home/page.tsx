@@ -232,7 +232,7 @@ function CouponSection() {
           </div>
           <span className="text-[15px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
         </div>
-        <Link href="/coupons/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+        <Link href="/coupons" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
           전체보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -397,7 +397,7 @@ function NewOpeningsSection() {
           <span className="text-[16px] font-black text-[#1d1d1f]">신규 오픈</span>
           <span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>
         </div>
-        <Link href="/stores/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+        <Link href="/stores" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
           전체보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -523,7 +523,7 @@ function SosikSection() {
                 </div>
               </button>
             ))}
-            <Link href="/community/"
+            <Link href="/community"
               className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
               전체 보기 <ChevronRight size={13} />
             </Link>
@@ -565,7 +565,7 @@ function SosikSection() {
                 <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
               </a>
             ))}
-            <Link href="/news/"
+            <Link href="/news"
               className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
               뉴스 전체 보기 <ChevronRight size={13} />
             </Link>
@@ -582,7 +582,7 @@ function SosikSection() {
             <div className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[13px] font-bold text-white/80">검단신도시 실거래가</span>
-                <Link href="/real-estate/"
+                <Link href="/real-estate"
                   className="flex items-center gap-0.5 text-[12px] text-white/60">
                   전체보기 <ChevronRight size={11} />
                 </Link>
@@ -617,7 +617,7 @@ function SosikSection() {
                 </div>
               </button>
             ))}
-            <Link href="/real-estate/"
+            <Link href="/real-estate"
               className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
               시세 전체 보기 <ChevronRight size={13} />
             </Link>
