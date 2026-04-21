@@ -41,8 +41,10 @@ create table if not exists pharmacies (
   lat float,
   lng float,
   is_night_pharmacy boolean default false,
+  is_weekend_pharmacy boolean default false,
   weekday_hours text,
   weekend_hours text,
+  night_hours text,
   holiday_hours text,
   dong text,
   updated_at timestamptz default now()
