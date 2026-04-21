@@ -3,14 +3,20 @@ import type { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BUS_BASE = "https://apis.data.go.kr/6280000";
+const BUS_BASE  = "https://apis.data.go.kr/6280000";
+const TAGO_BASE = "https://apis.data.go.kr/1613000";
 
-const ACTIONS: Record<string, { path: string; required: string[] }> = {
-  arrivals:       { path: "/busArrivalService/getBusArrivalList",            required: ["stationId"] },
-  locations:      { path: "/busLocationInfoService/getBusLocationList",       required: ["routeId"] },
-  routeInfo:      { path: "/routeInfoService/getRouteInfo",                   required: ["routeId"] },
-  routeStations:  { path: "/routeInfoService/getStaionByRoute",               required: ["routeId"] },
-  aroundStations: { path: "/busStationAroundInfoService/getBusStationAroundList", required: ["GPS_LATI", "GPS_LONG"] },
+const ACTIONS: Record<string, { base: string; path: string; required: string[] }> = {
+  // 인천 전용 API
+  arrivals:       { base: BUS_BASE,  path: "/busArrivalService/getBusArrivalList",                         required: ["stationId"] },
+  locations:      { base: BUS_BASE,  path: "/busLocationInfoService/getBusLocationList",                    required: ["routeId"] },
+  routeInfo:      { base: BUS_BASE,  path: "/routeInfoService/getRouteInfo",                                required: ["routeId"] },
+  routeStations:  { base: BUS_BASE,  path: "/routeInfoService/getStaionByRoute",                            required: ["routeId"] },
+  aroundStations: { base: BUS_BASE,  path: "/busStationAroundInfoService/getBusStationAroundList",          required: ["GPS_LATI", "GPS_LONG"] },
+  // 국가대중교통 TAGO API (전국 공통 - cityCode=30 인천)
+  tagoStations:   { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
+  tagoArrivals:   { base: TAGO_BASE, path: "/BusArrivalService/getArrivalInfoList",                         required: ["cityCode", "nodeId"] },
+  tagoRoutes:     { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoList",                   required: ["cityCode", "routeNo"] },
 };
 
 export async function GET(request: NextRequest) {
@@ -34,10 +40,10 @@ export async function GET(request: NextRequest) {
 
   const params = new URLSearchParams({ serviceKey: key });
   sp.forEach((v, k) => { if (k !== "action") params.set(k, v); });
-  if (!params.has("pageNo")) params.set("pageNo", "1");
+  if (!params.has("pageNo"))    params.set("pageNo", "1");
   if (!params.has("numOfRows")) params.set("numOfRows", "20");
 
-  const upstream = `${BUS_BASE}${meta.path}?${params.toString()}`;
+  const upstream = `${meta.base}${meta.path}?${params.toString()}`;
 
   try {
     const res = await fetch(upstream, { signal: AbortSignal.timeout(8000) });

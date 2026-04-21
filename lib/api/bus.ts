@@ -246,8 +246,47 @@ export async function fetchStationsByRoute(routeId: string): Promise<RouteStatio
   })).sort((a, b) => a.seq - b.seq);
 }
 
-// ─── 인천 공공API: GPS 기반 주변 정류소 조회 ────────────────────
-// OSM보다 우선 사용; 이 API의 stationId가 도착정보 API와 일치함
+// ─── TAGO 국가대중교통 API: GPS 기반 주변 정류소 조회 (cityCode 30 = 인천) ──
+export async function fetchNearbyStopsFromTago(lat: number, lng: number): Promise<NearbyStop[]> {
+  const items = await apiFetch("tagoStations", {
+    gpsLati: String(lat),
+    gpsLong: String(lng),
+    numOfRows: "20",
+  });
+  return items
+    .map(d => {
+      const sLat = Number(d.gpslati ?? d.gpsLati ?? 0);
+      const sLng = Number(d.gpslong ?? d.gpsLong ?? 0);
+      return {
+        stationId: d.nodeid ?? d.nodeId ?? "",
+        osmNodeId: 0,
+        stationName: d.nodenm ?? d.nodeNm ?? "",
+        lat: sLat,
+        lng: sLng,
+        distanceM: Math.round(haversineM(lat, lng, sLat, sLng)),
+        osmRoutes: [],
+      };
+    })
+    .filter(s => s.stationId && s.stationName)
+    .sort((a, b) => a.distanceM - b.distanceM);
+}
+
+// ─── TAGO 실시간 도착정보 (인천 cityCode=30) ─────────────────────
+export async function fetchArrivalsByNodeId(nodeId: string): Promise<BusArrival[]> {
+  const items = await apiFetch("tagoArrivals", { cityCode: "30", nodeId });
+  return items.map(d => ({
+    routeNo: d.routeno ?? d.routeNo ?? "",
+    routeId: d.routeid ?? d.routeId ?? "",
+    destination: d.nodenm ?? d.nodeName ?? "종점",
+    arrivalMin: Math.max(0, Math.round(Number(d.arrtime ?? d.arrTime ?? "0") / 60)),
+    remainingStops: Number(d.arrprevstationcnt ?? d.arrPrevStationCnt ?? "0"),
+    isLowFloor: (d.routetp ?? d.routeTp ?? "").includes("저상"),
+    isExpress: (d.routetp ?? d.routeTp ?? "").includes("급행"),
+    plateNo: d.vehicleNo ?? "",
+  }));
+}
+
+// ─── 인천 공공API: GPS 기반 주변 정류소 조회 (TAGO 안 될 때 폴백) ──
 export async function fetchNearbyStopsFromApi(lat: number, lng: number): Promise<NearbyStop[]> {
   const items = await apiFetch("aroundStations", {
     GPS_LATI: String(lat),

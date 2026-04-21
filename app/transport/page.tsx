@@ -11,8 +11,8 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
-  fetchNearbyStopsFromApi, fetchNearbyStopsWide,
-  fetchArrivalsByStationId, osmRoutesToArrivals,
+  fetchNearbyStopsFromTago, fetchNearbyStopsFromApi, fetchNearbyStopsWide,
+  fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
 } from "@/lib/api/bus";
 import {
@@ -283,6 +283,8 @@ export default function TransportPage() {
   const [lastUpdated, setLastUpdated] = useState("");
   const [, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
+  // 버스 정류장 소스: "tago"=국가API실시간, "ic"=인천API실시간, "osm"=경유만, "fallback"=하드코딩
+  const [stopSource, setStopSource] = useState<"tago"|"ic"|"osm"|"fallback"|null>(null);
   // GPS 기반으로 API에서 조회한 정류장 (null = 미조회)
   const [apiStops, setApiStops] = useState<DisplayStop[] | null>(null);
   // 지하철 역 + 실시간 도착정보
@@ -298,12 +300,17 @@ export default function TransportPage() {
   useEffect(() => { apiStopsRef.current = apiStops; }, [apiStops]);
   useEffect(() => { subwayListRef.current = subwayList; }, [subwayList]);
 
-  // ── 정류장별 실시간 도착 조회 + OSM 경유 노선 폴백 ──
-  const fetchArrivalsForStops = useCallback(async (stops: DisplayStop[]) => {
+  // ── 정류장별 실시간 도착 조회 (소스별 API 분기) ──
+  const fetchArrivalsForStops = useCallback(async (stops: DisplayStop[], src?: "tago"|"ic"|"osm"|"fallback"|null) => {
+    const source = src ?? stopSource;
     await Promise.allSettled(
       stops.map(async stop => {
         let arrivals: BusArrival[] = [];
-        if (isLive) arrivals = await fetchArrivalsByStationId(stop.id);
+        if (source === "tago") {
+          arrivals = await fetchArrivalsByNodeId(stop.id);
+        } else if (source === "ic") {
+          arrivals = await fetchArrivalsByStationId(stop.id);
+        }
         if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
           arrivals = osmRoutesToArrivals(stop.osmRoutes);
         }
@@ -316,7 +323,7 @@ export default function TransportPage() {
       })
     );
     setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-  }, [isLive]);
+  }, [stopSource]);
 
   // ── 버스 데이터 전체 로드: GPS 기반 주변 정류장 + 도착정보 ──
   const loadBusData = useCallback(async (lat: number, lng: number) => {
@@ -324,52 +331,70 @@ export default function TransportPage() {
     setApiStops(null);
 
     let stops: DisplayStop[] = [];
+    let src: "tago"|"ic"|"osm"|"fallback" = "fallback";
+
     try {
-      // 1순위: 인천 공공API (stationId가 도착정보 API와 일치)
-      const apiNearby = await Promise.race([
-        fetchNearbyStopsFromApi(lat, lng),
+      // 1순위: TAGO 국가대중교통 API (전국 공통 stationId, 실시간 도착 연동)
+      const tagoNearby = await Promise.race([
+        fetchNearbyStopsFromTago(lat, lng),
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
       ]);
-      if (apiNearby.length > 0) {
-        stops = apiNearby.slice(0, 14).map(s => ({
+      if (tagoNearby.length > 0) {
+        src = "tago";
+        stops = tagoNearby.slice(0, 14).map(s => ({
           id: s.stationId, name: s.stationName,
           distM: s.distanceM, arrivals: [], loadingArrivals: true,
-          lat: s.lat, lng: s.lng,
-          osmRoutes: [],
+          lat: s.lat, lng: s.lng, osmRoutes: [],
         }));
-      } else {
-        throw new Error("api_empty");
-      }
+      } else throw new Error("tago_empty");
     } catch {
-      // 2순위: OSM Overpass (경유 노선 정보 포함, stationId는 ref)
       try {
-        const nearby = await Promise.race([
-          fetchNearbyStopsWide(lat, lng),
-          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
+        // 2순위: 인천 공공API (stationId가 도착정보 API와 일치)
+        const apiNearby = await Promise.race([
+          fetchNearbyStopsFromApi(lat, lng),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
         ]);
-        if (nearby.length === 0) throw new Error("empty");
-        stops = nearby.slice(0, 14).map(s => ({
-          id: s.stationId, name: s.stationName,
-          distM: s.distanceM, arrivals: [], loadingArrivals: true,
-          lat: s.lat, lng: s.lng,
-          osmRoutes: s.osmRoutes,
-        }));
+        if (apiNearby.length > 0) {
+          src = "ic";
+          stops = apiNearby.slice(0, 14).map(s => ({
+            id: s.stationId, name: s.stationName,
+            distM: s.distanceM, arrivals: [], loadingArrivals: true,
+            lat: s.lat, lng: s.lng, osmRoutes: [],
+          }));
+        } else throw new Error("api_empty");
       } catch {
-        // 3순위: 검단신도시 하드코딩 정류장
-        stops = GEUMDAN_BUS_STATIONS
-          .map(s => ({
-            id: s.stationId, name: s.name,
-            distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-            arrivals: [], loadingArrivals: true,
-            lat: s.lat, lng: s.lng,
-          }))
-          .sort((a, b) => a.distM - b.distM);
+        // 3순위: OSM Overpass (경유 노선 정보 포함)
+        try {
+          const nearby = await Promise.race([
+            fetchNearbyStopsWide(lat, lng),
+            new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
+          ]);
+          if (nearby.length === 0) throw new Error("empty");
+          src = "osm";
+          stops = nearby.slice(0, 14).map(s => ({
+            id: s.stationId, name: s.stationName,
+            distM: s.distanceM, arrivals: [], loadingArrivals: true,
+            lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
+          }));
+        } catch {
+          // 4순위: 검단신도시 하드코딩 정류장
+          src = "fallback";
+          stops = GEUMDAN_BUS_STATIONS
+            .map(s => ({
+              id: s.stationId, name: s.name,
+              distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+              arrivals: [], loadingArrivals: true,
+              lat: s.lat, lng: s.lng,
+            }))
+            .sort((a, b) => a.distM - b.distM);
+        }
       }
     }
 
+    setStopSource(src);
     setApiStops(stops);
     setLoading(false);
-    await fetchArrivalsForStops(stops);
+    await fetchArrivalsForStops(stops, src);
   }, [fetchArrivalsForStops]);
 
   // ── 지하철 도착정보만 갱신 (역 목록 유지) ──────────────────
