@@ -12,10 +12,11 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts, currentUser } from "@/lib/mockData";
+import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
-import { fetchNightPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
+import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
+import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
@@ -139,7 +140,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
               <span className="text-[29px] font-black text-white leading-none">{weather.temp}°</span>
               <span className="text-[14px] text-white/80">{weather.label}</span>
             </div>
-            <div className="flex items-center gap-2 mt-0.5">
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <span className="text-[13px] text-white/60">최고 {weather.high}° · 최저 {weather.low}°</span>
               {tempDiff !== null && (
                 <span className={`flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -150,6 +151,30 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
                 </span>
               )}
             </div>
+            {(weather.pm10 != null || weather.pm25 != null) && (
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                {weather.pm10 != null && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    weather.pm10Label === "좋음" ? "bg-blue-300/25 text-blue-100"
+                    : weather.pm10Label === "보통" ? "bg-white/20 text-white/75"
+                    : weather.pm10Label === "나쁨" ? "bg-orange-300/30 text-orange-200"
+                    : "bg-red-400/30 text-red-200"
+                  }`}>
+                    미세먼지 {weather.pm10Label}
+                  </span>
+                )}
+                {weather.pm25 != null && (
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                    weather.pm25Label === "좋음" ? "bg-blue-300/25 text-blue-100"
+                    : weather.pm25Label === "보통" ? "bg-white/20 text-white/75"
+                    : weather.pm25Label === "나쁨" ? "bg-orange-300/30 text-orange-200"
+                    : "bg-red-400/30 text-red-200"
+                  }`}>
+                    초미세먼지 {weather.pm25Label}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <button
             onClick={e => { e.stopPropagation(); setShowWeekly(true); }}
@@ -866,7 +891,7 @@ function PharmacySection() {
   const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
 
   useEffect(() => {
-    fetchNightPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
+    fetchAllPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
     fetchEmergencyRooms("all").then(data => { if (data.length > 0) setErData(data); });
   }, []);
 
@@ -1077,8 +1102,8 @@ function getPersonalizedMessage(name: string, weather: WeatherData | null): { su
   return { sub: `${name}님, 오늘도 고생하셨어요 🌙`, main: "편안한 밤 되세요" };
 }
 
-function GreetingBanner({ weather }: { weather: WeatherData | null }) {
-  const { sub, main } = getPersonalizedMessage(currentUser.nickname, weather);
+function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; nickname: string }) {
+  const { sub, main } = getPersonalizedMessage(nickname, weather);
   const now = new Date();
   const dateStr = now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
 
@@ -1098,10 +1123,12 @@ export default function HomePage() {
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[] | null>(null);
+  const [userNickname, setUserNickname] = useState("검단주민");
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     fetchWidgetConfig().then(setWidgetConfig);
+    getUserProfile().then(p => setUserNickname(p.nickname));
   }, []);
 
   const stop = nearbyStops[0];
@@ -1109,17 +1136,19 @@ export default function HomePage() {
 
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
-    greeting: () => <GreetingBanner weather={weather} />,
+    greeting: () => <GreetingBanner weather={weather} nickname={userNickname} />,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-4 mt-3 mb-1">
         <div className="grid grid-cols-4 gap-2.5">
-          {quickMenus.map(({ icon: Icon, label, href, from, to }) => (
+          {quickMenus.map(({ icon: Icon, label, href, from }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center justify-center gap-2 py-4 rounded-2xl active:scale-95 transition-transform shadow-sm"
-              style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
-              <Icon size={22} className="text-white" strokeWidth={2.5} />
-              <span className="text-[11px] font-black text-white tracking-tight">{label}</span>
+              className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-white active:scale-95 transition-transform shadow-sm">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `${from}1a` }}>
+                <Icon size={19} strokeWidth={2} style={{ color: from }} />
+              </div>
+              <span className="text-[11px] font-semibold text-[#1d1d1f]">{label}</span>
             </Link>
           ))}
         </div>
