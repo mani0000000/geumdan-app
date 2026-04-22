@@ -253,8 +253,8 @@ function CouponSection() {
 
   return (
     <section className="mb-1">
-      <WidgetHeader
-        title="이번 주 쿠폰"
+      <SectionLabel
+        label="이번 주 쿠폰"
         badge={<Tag size={14} className="text-[#F59E0B]" />}
         href="/coupons/"
       />
@@ -413,8 +413,8 @@ function NewOpeningsSection() {
 
   return (
     <section className="mb-1">
-      <WidgetHeader
-        title="신규 오픈"
+      <SectionLabel
+        label="신규 오픈"
         badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
         href="/stores/"
       />
@@ -1181,21 +1181,14 @@ function PharmacySection() {
   );
 }
 
-// ─── 섹션 헤더 ────────────────────────────────────────────────
-// 자체 타이틀 없는 위젯(약국·교통·소식) 앞에만 사용
-function SectionLabel({ label }: { label: string }) {
-  return (
-    <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest px-4 pt-5 pb-1.5">
-      {label}
-    </p>
-  );
-}
-
-// 자체 타이틀 있는 섹션(쿠폰·신규오픈)에서 사용
-function WidgetHeader({
-  title, badge, href, linkLabel = "전체보기",
+// ─── 섹션 헤더 (모든 위젯 공통) ──────────────────────────────
+function SectionLabel({
+  label,
+  badge,
+  href,
+  linkLabel = "전체보기",
 }: {
-  title: string;
+  label: string;
   badge?: React.ReactNode;
   href?: string;
   linkLabel?: string;
@@ -1203,7 +1196,7 @@ function WidgetHeader({
   return (
     <div className="flex items-center justify-between px-4 pt-5 pb-2.5">
       <div className="flex items-center gap-2">
-        <span className="text-[18px] font-extrabold text-[#1d1d1f]">{title}</span>
+        <span className="text-[16px] font-extrabold text-[#1d1d1f]">{label}</span>
         {badge}
       </div>
       {href && (
@@ -1441,19 +1434,19 @@ export default function HomePage() {
     mart: () => <MartSection />,
     pharmacy: () => (
       <>
-        <SectionLabel label="주말·심야 약국" />
+        <SectionLabel label="약국·응급실" />
         <PharmacySection />
       </>
     ),
     transport: () => (
       <>
-        <SectionLabel label="교통" />
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
         <HomeTransportWidget />
       </>
     ),
     sosik: () => (
       <>
-        <SectionLabel label="검단 소식" />
+        <SectionLabel label="검단 소식" href="/community/" />
         <SosikSection />
       </>
     ),
