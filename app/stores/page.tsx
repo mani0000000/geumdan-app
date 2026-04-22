@@ -672,36 +672,40 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
     const hasCoupon = couponStoreIds.has(store.id);
     return (
       <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left shadow-sm">
-        <div className="relative shrink-0">
-          <StoreLogo name={store.name} category={store.category} size={44} />
-          {hasNew && (
-            <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#F04452] text-white px-1 py-0.5 rounded-full leading-none">N</span>
-          )}
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-            {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1 py-0.5 rounded-full">★</span>}
+        className="w-full bg-white rounded-2xl overflow-hidden flex items-center gap-3 active:scale-[0.99] transition-transform text-left shadow-sm border border-[#f0f0f0]">
+        {/* 카테고리 컬러 사이드바 */}
+        <div className="w-1 self-stretch rounded-l-2xl shrink-0" style={{ background: catDot[store.category] }} />
+        <div className="py-3.5 pr-3.5 flex items-center gap-3 flex-1 min-w-0">
+          <div className="relative shrink-0">
+            <StoreLogo name={store.name} category={store.category} size={44} />
+            {hasNew && (
+              <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#F04452] text-white px-1 py-0.5 rounded-full leading-none">N</span>
+            )}
           </div>
-          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
-            <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
-            <span className="text-[12px] text-[#86868b]">·</span>
-            <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
-            {store.hours && <>
-              <span className="text-[12px] text-[#86868b]">·</span>
-              <span className="text-[12px] text-[#6e6e73]">{store.hours}</span>
-            </>}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
+              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">★ PREMIUM</span>}
+            </div>
+            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+              <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
+              <span className="text-[12px] text-[#d2d2d7]">·</span>
+              <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
+              {store.hours && <>
+                <span className="text-[12px] text-[#d2d2d7]">·</span>
+                <span className="text-[12px] text-[#6e6e73]">{store.hours}</span>
+              </>}
+            </div>
+            {hasCoupon && (
+              <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-[#F04452] bg-[#FFF0F0] px-2 py-0.5 rounded-full">
+                🏷️ 쿠폰 있음
+              </span>
+            )}
           </div>
-          {hasCoupon && (
-            <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">
-              🏷️ 쿠폰 있음
-            </span>
-          )}
+          <span className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full ${store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"}`}>
+            {store.isOpen !== false ? "영업 중" : "영업 종료"}
+          </span>
         </div>
-        <span className={`shrink-0 text-[11px] font-bold px-2 py-1 rounded-full ${store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"}`}>
-          {store.isOpen !== false ? "영업 중" : "영업 종료"}
-        </span>
       </button>
     );
   }
@@ -710,38 +714,37 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
     <div>
       {/* ── 상가 건물 ── */}
       <div className="pt-4 pb-2">
-        <div className="flex items-center justify-between px-4 mb-2.5">
-          <span className="text-[14px] font-bold text-[#1d1d1f]">주변 상가건물</span>
-          <span className="text-[11px] text-[#6e6e73]">{nearbyBuildings.length}개</span>
+        <div className="flex items-center gap-3 px-4 mb-3">
+          <span className="text-[16px] font-black text-[#1d1d1f]">주변 상가건물</span>
+          <span className="text-[11px] font-black bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{nearbyBuildings.length}개</span>
+          <div className="flex-1 h-px bg-[#e5e5ea]" />
         </div>
-        <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+        <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
           {nearbyBuildings.map(b => (
             <button key={b.id} onClick={() => openBuildingSheet(b)}
-              className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-white shadow-sm active:opacity-80 text-left">
-              <div className="relative" style={{ height: 90 }}>
+              className="shrink-0 w-[175px] rounded-2xl overflow-hidden bg-white shadow-sm active:scale-95 transition-transform text-left border border-[#f0f0f0]">
+              <div className="relative" style={{ height: 110 }}>
                 <img src={b.image} alt={b.name}
                   className="w-full h-full object-cover"
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,.6) 100%)" }} />
-                <div className="absolute bottom-2 left-2.5">
-                  <span className="text-[10px] font-bold text-white/90">{b.floors}F · {b.stores}개 매장</span>
-                </div>
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.65) 100%)" }} />
                 {b.hasData && (
-                  <div className="absolute top-2 right-2">
-                    <span className="text-[9px] font-black bg-[#0071e3] text-white px-1.5 py-0.5 rounded-full">상세정보</span>
+                  <div className="absolute top-2.5 right-2.5 bg-white/90 rounded-full px-1.5 py-0.5">
+                    <span className="text-[9px] font-black text-[#0071e3]">상세정보</span>
                   </div>
                 )}
-              </div>
-              <div className="px-2.5 py-2">
-                <p className="text-[12px] font-bold text-[#1d1d1f] leading-tight line-clamp-1">{b.name}</p>
-                <div className="flex flex-wrap gap-0.5 mt-1">
-                  {b.categories.slice(0, 3).map(c => (
-                    <span key={c} className="text-[9px] font-semibold px-1 py-0.5 rounded-full"
-                      style={{ background: catDot[c] + "20", color: catDot[c] }}>
-                      {catEmoji[c]}
-                    </span>
-                  ))}
+                <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5">
+                  <p className="text-[13px] font-bold text-white leading-tight line-clamp-1">{b.name}</p>
+                  <p className="text-[10px] text-white/75 mt-0.5">{b.floors}F · {b.stores}개 매장{b.km > 0 ? ` · ${distLabel(b.km)}` : ""}</p>
                 </div>
+              </div>
+              <div className="px-3 py-2.5 flex items-center gap-1 flex-wrap">
+                {b.categories.slice(0, 4).map(c => (
+                  <span key={c} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                    style={{ background: catDot[c] + "18", color: catDot[c] }}>
+                    {catEmoji[c]} {c}
+                  </span>
+                ))}
               </div>
             </button>
           ))}
@@ -754,61 +757,86 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         const monthOpenings = dbOpenings.filter(o => classifyOpening(o.openDate) === "month");
         if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
 
-        function OpeningCard({ o, badge }: { o: import("@/lib/types").NewStoreOpening; badge: "NEW" | "이번달" }) {
-          const store = allStores.find(s => s.id === o.storeId);
-          const badgeCls = badge === "NEW"
-            ? "bg-[#F04452] text-white"
-            : "bg-[#FF9500] text-white";
+        const catGrads: Partial<Record<import("@/lib/types").StoreCategory, [string, string]>> = {
+          카페:       ["#F59E0B", "#FB923C"],
+          음식점:     ["#EF4444", "#F97316"],
+          편의점:     ["#3B82F6", "#06B6D4"],
+          "병원/약국":["#EF4444", "#F472B6"],
+          미용:       ["#EC4899", "#C026D3"],
+          학원:       ["#8B5CF6", "#6366F1"],
+          마트:       ["#10B981", "#059669"],
+          기타:       ["#6B7280", "#4B5563"],
+        };
+
+        function OpeningGroup({ items, label, badge, color }: {
+          items: import("@/lib/types").NewStoreOpening[];
+          label: string; badge: string; color: string;
+        }) {
+          if (items.length === 0) return null;
+          const [featured, ...rest] = items;
+          const store = allStores.find(s => s.id === featured.storeId);
+          const [gFrom, gTo] = catGrads[featured.category] ?? ["#6B7280", "#4B5563"];
           return (
-            <button key={o.id}
-              onClick={() => store && setSelectedStore(store)}
-              className="w-full bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left flex items-center gap-3 px-3 py-3">
-              <div className="shrink-0">
-                <StoreLogo name={o.storeName} category={o.category} size={44} />
+            <div>
+              <div className="flex items-center gap-2.5 px-4 mb-3">
+                <span className="text-[16px] font-black text-[#1d1d1f]">{label}</span>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white" style={{ background: color }}>{badge}</span>
+                <span className="text-[11px] font-semibold text-[#86868b]">{items.length}개</span>
+                <div className="flex-1 h-px bg-[#e5e5ea]" />
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
-                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
-                  <span className={`shrink-0 text-[10px] font-black px-1.5 py-0.5 rounded-full ${badgeCls}`}>{badge}</span>
-                </div>
-                <p className="text-[12px] text-[#6e6e73] mb-1">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
-                {o.openBenefit && (
-                  <p className="text-[12px] text-[#F04452] font-medium leading-snug line-clamp-1">
-                    🎁 {o.openBenefit.summary}
-                  </p>
+              <div className="px-4 space-y-2">
+                {/* 피처드 카드 */}
+                <button onClick={() => store && setSelectedStore(store)}
+                  className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
+                  style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                        {featured.category}
+                      </span>
+                      <span className="text-[11px] font-black text-white/90 bg-black/20 px-2 py-0.5 rounded-full">{badge}</span>
+                    </div>
+                    <p className="text-[22px] font-black text-white leading-tight">{featured.storeName}</p>
+                    <p className="text-[13px] text-white/75 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
+                    {featured.openBenefit && (
+                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2 backdrop-blur-sm">
+                        <p className="text-[12px] text-white font-semibold">🎁 {featured.openBenefit.summary}</p>
+                      </div>
+                    )}
+                  </div>
+                </button>
+
+                {/* 나머지 리스트 */}
+                {rest.length > 0 && (
+                  <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+                    {rest.map(o => {
+                      const s = allStores.find(x => x.id === o.storeId);
+                      return (
+                        <button key={o.id} onClick={() => s && setSelectedStore(s)}
+                          className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
+                          <StoreLogo name={o.storeName} category={o.category} size={42} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
+                            <p className="text-[12px] text-[#6e6e73]">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                            {o.openBenefit && (
+                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">🎁 {o.openBenefit.summary}</p>
+                            )}
+                          </div>
+                          <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
               </div>
-              <ChevronRight size={14} className="shrink-0 text-[#86868b]" />
-            </button>
+            </div>
           );
         }
 
         return (
-          <div className="pt-4 pb-2 space-y-4">
-            {weekOpenings.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 px-4 mb-2.5">
-                  <span className="text-[14px] font-bold text-[#1d1d1f]">금주 신규 오픈</span>
-                  <span className="text-[10px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>
-                  <span className="text-[11px] text-[#6e6e73]">{weekOpenings.length}개</span>
-                </div>
-                <div className="px-4 space-y-2">
-                  {weekOpenings.map(o => <OpeningCard key={o.id} o={o} badge="NEW" />)}
-                </div>
-              </div>
-            )}
-            {monthOpenings.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 px-4 mb-2.5">
-                  <span className="text-[14px] font-bold text-[#1d1d1f]">이번달 오픈</span>
-                  <span className="text-[10px] font-black bg-[#FF9500] text-white px-1.5 py-0.5 rounded-full">이달</span>
-                  <span className="text-[11px] text-[#6e6e73]">{monthOpenings.length}개</span>
-                </div>
-                <div className="px-4 space-y-2">
-                  {monthOpenings.map(o => <OpeningCard key={o.id} o={o} badge="이번달" />)}
-                </div>
-              </div>
-            )}
+          <div className="pt-4 pb-2 space-y-5">
+            <OpeningGroup items={weekOpenings} label="금주 신규 오픈" badge="NEW" color="#F04452" />
+            <OpeningGroup items={monthOpenings} label="이번달 오픈" badge="이달" color="#FF9500" />
           </div>
         );
       })()}
@@ -870,7 +898,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
       })()}
 
       {/* ── 업종 필터 ── */}
-      <div className="pt-2 pb-1">
+      <div className="pt-3 pb-1">
+        <div className="flex items-center gap-3 px-4 mb-2.5">
+          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
+          <span className="text-[11px] font-black bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{allStores.length}개</span>
+          <div className="flex-1 h-px bg-[#e5e5ea]" />
+        </div>
         <div className="flex gap-2 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
           {([
             { key: "전체", label: "전체", icon: "🏪" },
@@ -880,13 +913,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             const active = catFilter === item.key;
             return (
               <button key={item.key} onClick={() => setCatFilter(item.key)}
-                className={`shrink-0 flex items-center gap-1.5 h-9 px-3.5 rounded-full text-[13px] font-semibold transition-all border ${
-                  active ? "text-white border-transparent shadow-sm" : "bg-white text-[#424245] border-[#d2d2d7]"
+                className={`shrink-0 flex items-center gap-1.5 h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+                  active ? "text-white" : "bg-white text-[#86868b]"
                 }`}
                 style={active ? { background: item.key === "전체" ? "#1d1d1f" : catDot[item.key as StoreCategory] } : {}}>
-                <span>{item.icon}</span>
+                <span className="text-[12px]">{item.icon}</span>
                 <span>{item.label}</span>
-                <span className={`text-[11px] font-black ${active ? "text-white/80" : "text-[#86868b]"}`}>{count}</span>
               </button>
             );
           })}
@@ -896,13 +928,16 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
       {/* ── 매장 목록 ── */}
       <div className="px-4 pt-2 pb-4">
         {grouped ? (
-          // 전체 모드: 업종별 그룹
           Array.from(grouped.entries()).map(([cat, stores]) => (
             <div key={cat} className="mb-5">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-[16px]">{catEmoji[cat]}</span>
-                <span className="text-[14px] font-bold text-[#1d1d1f]">{cat}</span>
-                <span className="text-[12px] text-[#86868b]">{stores.length}개</span>
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: catDot[cat] + "20" }}>
+                  <span className="text-[14px]">{catEmoji[cat]}</span>
+                </div>
+                <span className="text-[15px] font-bold text-[#1d1d1f]">{cat}</span>
+                <span className="text-[11px] font-semibold bg-[#f5f5f7] text-[#86868b] px-2 py-0.5 rounded-full">{stores.length}</span>
+                <div className="flex-1 h-px bg-[#e5e5ea]" />
               </div>
               <div className="space-y-2">
                 {stores.map(s => <StoreCard key={s.id} store={s} />)}
@@ -910,9 +945,8 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
             </div>
           ))
         ) : (
-          // 필터 모드: 단순 리스트
           <div className="space-y-2">
-            <p className="text-[13px] text-[#6e6e73] mb-1">총 {filtered.length}개 매장</p>
+            <p className="text-[12px] font-semibold text-[#86868b] mb-2">총 {filtered.length}개 매장</p>
             {filtered.map(s => <StoreCard key={s.id} store={s} />)}
           </div>
         )}
@@ -947,33 +981,34 @@ interface SearchResult { store: Store; floorLabel: string; buildingName: string;
 function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelect: (s: Store) => void }) {
   if (results.length === 0) {
     return (
-      <div className="flex flex-col items-center py-12 gap-2">
-        <span className="text-3xl">🔍</span>
-        <p className="text-[15px] text-[#6e6e73]">검색 결과가 없습니다</p>
+      <div className="flex flex-col items-center py-16 gap-3">
+        <span className="text-4xl">🔍</span>
+        <p className="text-[15px] font-semibold text-[#424245]">검색 결과가 없습니다</p>
+        <p className="text-[13px] text-[#86868b]">다른 키워드로 검색해 보세요</p>
       </div>
     );
   }
   return (
-    <div className="space-y-2 px-4 pt-2 pb-4">
-      <p className="text-[13px] text-[#6e6e73]">총 {results.length}건</p>
-      {results.map(({ store, floorLabel, buildingName }) => (
-        <button key={store.id} onClick={() => onSelect(store)}
-          className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] text-left">
-          <div className="flex items-center gap-3">
-            <StoreLogo name={store.name} category={store.category} size={40} />
-            <div>
-              <p className="text-[15px] font-semibold text-[#1d1d1f]">{store.name}</p>
-              <p className="text-[13px] text-[#6e6e73]">{buildingName} · {floorLabel}</p>
+    <div className="px-4 pt-3 pb-4">
+      <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">총 {results.length}건</p>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {results.map(({ store, floorLabel, buildingName }) => (
+          <button key={store.id} onClick={() => onSelect(store)}
+            className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
+            <StoreLogo name={store.name} category={store.category} size={42} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
+              <p className="text-[12px] text-[#6e6e73]">{buildingName} · {floorLabel}</p>
             </div>
-          </div>
-          <div className="flex flex-col items-end gap-1">
-            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-            <span className={`text-[11px] font-medium ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
-              {store.isOpen !== false ? "영업 중" : "영업 종료"}
-            </span>
-          </div>
-        </button>
-      ))}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
+              <span className={`text-[11px] font-bold ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
+                {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
+              </span>
+            </div>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1372,8 +1407,8 @@ export default function StoresPage() {
 
       {/* 검색바 + 토글 */}
       <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
-        <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-xl px-3.5 h-11">
-          <Search size={16} className="text-[#6e6e73] shrink-0" />
+        <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-2xl px-4 h-11">
+          <Search size={15} className="text-[#86868b] shrink-0" />
           <input
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
@@ -1382,16 +1417,18 @@ export default function StoresPage() {
           />
           {searchQuery && (
             <button onClick={() => setSearchQuery("")} className="active:opacity-60">
-              <X size={16} className="text-[#6e6e73]" />
+              <X size={15} className="text-[#86868b]" />
             </button>
           )}
         </div>
         {!isSearching && (
-          <div className="flex gap-2 mt-2.5">
+          <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
             {(["리스트", "지도"] as const).map(mode => (
               <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
-                className={`flex-1 h-9 rounded-xl text-[14px] font-semibold flex items-center justify-center gap-1.5 transition-colors ${viewMode === mode ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                {mode === "리스트" ? <List size={15} /> : <MapIcon size={15} />}
+                className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
+                }`}>
+                {mode === "리스트" ? <List size={14} /> : <MapIcon size={14} />}
                 {mode === "리스트" ? "매장 리스트" : "상가 지도"}
               </button>
             ))}
