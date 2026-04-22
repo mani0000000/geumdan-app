@@ -6,7 +6,7 @@ import {
   ChevronRight, Flame, TrendingUp, Droplets, Wind,
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
-  Star, Ticket, X, MapPin, Calendar,
+  Star, Ticket, X, MapPin, Calendar, Train,
   TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -20,6 +20,7 @@ import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
+import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
@@ -1270,9 +1271,25 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
 const STOP_NAME: Record<string, string> = Object.fromEntries(
   GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name])
 );
+const ALL_SUBWAY_STATIONS = getAllSubwayStations();
+
+function ArrivalTime({ min }: { min: number }) {
+  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
+  return (
+    <div className={`${bg} rounded-lg px-2.5 py-1 text-center min-w-[52px] shrink-0`}>
+      {min <= 0
+        ? <span className="text-white text-[11px] font-bold">곧도착</span>
+        : <><span className="text-white text-[16px] font-black leading-none block">{min}</span>
+            <span className="text-white/80 text-[10px] leading-none block">분 후</span></>
+      }
+    </div>
+  );
+}
 
 function HomeTransportWidget() {
   const router = useRouter();
+
+  // 버스 즐겨찾기
   const [favStops] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
     try { return new Set(JSON.parse(localStorage.getItem("favStops") ?? "[]")); } catch { return new Set(); }
@@ -1281,28 +1298,62 @@ function HomeTransportWidget() {
     if (typeof window === "undefined") return new Set();
     try { return new Set(JSON.parse(localStorage.getItem("favRoutes") ?? "[]")); } catch { return new Set(); }
   });
-  const [arrivals, setArrivals] = useState<Record<string, BusArrival[]>>({});
-  const [loading, setLoading] = useState<Set<string>>(new Set());
+  const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
+  const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
+
+  // 지하철 즐겨찾기
+  const [favSubways] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favSubways") ?? "[]")); } catch { return new Set(); }
+  });
+  const [subwayArrivals, setSubwayArrivals] = useState<Record<string, SubwayArrival[]>>({});
+  const [subwayLoading, setSubwayLoading] = useState<Set<string>>(new Set());
+
+  const [globalRefreshing, setGlobalRefreshing] = useState(false);
 
   const favStopIds = [...favStops];
+  const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
   const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
 
-  const refreshStop = useCallback(async (stopId: string) => {
-    setLoading(prev => new Set([...prev, stopId]));
+  const refreshBusStop = useCallback(async (stopId: string) => {
+    setBusLoading(prev => new Set([...prev, stopId]));
     try {
       const data = await fetchArrivalsByStationId(stopId);
-      setArrivals(prev => ({ ...prev, [stopId]: data }));
+      setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
-      setLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
+      setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
     }
   }, []);
 
+  const refreshSubwayStation = useCallback(async (station: SubwayStationWithDist) => {
+    setSubwayLoading(prev => new Set([...prev, station.id]));
+    try {
+      const data = await fetchSubwayArrivals(station);
+      setSubwayArrivals(prev => ({ ...prev, [station.id]: data }));
+    } catch { /* ignore */ } finally {
+      setSubwayLoading(prev => { const n = new Set(prev); n.delete(station.id); return n; });
+    }
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    setGlobalRefreshing(true);
+    await Promise.all([
+      ...favStopIds.map(id => refreshBusStop(id)),
+      ...favSubwayStations.map(st => refreshSubwayStation(st)),
+    ]);
+    setGlobalRefreshing(false);
+  }, [favStopIds, favSubwayStations, refreshBusStop, refreshSubwayStation]);
+
   useEffect(() => {
-    favStopIds.forEach(id => refreshStop(id));
+    favStopIds.forEach(id => refreshBusStop(id));
+    favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (favStops.size === 0) {
+  const hasBus    = favStops.size > 0;
+  const hasSubway = favSubwayStations.length > 0;
+
+  if (!hasBus && !hasSubway) {
     return (
       <section className="mx-4 mb-1">
         <button
@@ -1312,8 +1363,8 @@ function HomeTransportWidget() {
             <Bus size={18} className="text-[#0071e3]" />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 버스가 없어요</p>
-            <p className="text-[12px] text-[#6e6e73] mt-0.5">교통 탭에서 버스 노선을 즐겨찾기하면 여기 표시돼요</p>
+            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
+            <p className="text-[12px] text-[#6e6e73] mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기하면 여기 표시돼요</p>
           </div>
           <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
         </button>
@@ -1323,70 +1374,131 @@ function HomeTransportWidget() {
 
   return (
     <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden">
-        {favStopIds.map(stopId => {
-          const stopArrivals = arrivals[stopId] ?? [];
-          const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
-          const displayed = hasFavRoutes
-            ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
-            : stopArrivals.slice(0, 3);
-          const stopName = STOP_NAME[stopId] ?? "정류장";
-          const isLoading = loading.has(stopId);
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
 
-          return (
-            <div key={stopId} className="border-b border-[#f5f5f7] last:border-0">
-              <div className="px-4 pt-3 pb-1.5 flex items-center gap-2">
-                <MapPin size={12} className="text-[#0071e3] shrink-0" />
-                <span className="text-[12px] font-bold text-[#424245] flex-1 truncate">{stopName}</span>
-                <button
-                  onClick={() => refreshStop(stopId)}
-                  className="w-7 h-7 rounded-lg bg-[#f5f5f7] flex items-center justify-center active:opacity-70">
-                  <RefreshCw size={11} className={`text-[#0071e3] ${isLoading ? "animate-spin" : ""}`} />
-                </button>
-              </div>
-              {isLoading ? (
-                <div className="px-4 pb-3">
-                  <div className="h-4 w-40 bg-[#f5f5f7] rounded animate-pulse" />
-                </div>
-              ) : displayed.length === 0 ? (
-                <p className="px-4 pb-3 text-[12px] text-[#86868b]">도착 정보 없음</p>
-              ) : (
-                <div className="divide-y divide-[#f5f5f7]">
-                  {displayed.map((a, i) => (
-                    <div key={i} className="px-4 py-2.5 flex items-center gap-2.5">
-                      <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 shrink-0">
-                        <span className="text-white text-[13px] font-black leading-none">{a.routeNo}</span>
-                      </div>
-                      {a.isExpress && (
-                        <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded-md shrink-0">급행</span>
-                      )}
-                      <span className="text-[12px] text-[#424245] flex-1 truncate">{a.destination}</span>
-                      <div className={`rounded-lg px-2.5 py-1 text-center min-w-[52px] shrink-0 ${
-                        a.arrivalMin <= 3 ? "bg-[#F04452]"
-                        : a.arrivalMin <= 7 ? "bg-[#FF9500]"
-                        : "bg-[#0071e3]"
-                      }`}>
-                        {a.arrivalMin <= 0
-                          ? <span className="text-white text-[11px] font-bold">곧도착</span>
-                          : <>
-                              <span className="text-white text-[16px] font-black leading-none block">{a.arrivalMin}</span>
-                              <span className="text-white/80 text-[10px] leading-none block">분 후</span>
-                            </>
-                        }
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+        {/* ── 버스 섹션 ── */}
+        {hasBus && (
+          <>
+            <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+              <Bus size={12} className="text-[#0071e3]" />
+              <span className="text-[11px] font-bold text-[#0071e3] tracking-wide">버스</span>
             </div>
-          );
-        })}
-        <button
-          onClick={() => router.push("/transport/")}
-          className="w-full py-3 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
-          <span className="text-[13px] text-[#0071e3] font-semibold">실시간 교통 전체보기</span>
-          <ChevronRight size={13} className="text-[#0071e3]" />
-        </button>
+            {favStopIds.map(stopId => {
+              const stopArrivals = busArrivals[stopId] ?? [];
+              const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
+              const displayed = hasFavRoutes
+                ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
+                : stopArrivals.slice(0, 3);
+              const stopName = STOP_NAME[stopId] ?? "정류장";
+              const isLoading = busLoading.has(stopId);
+
+              return (
+                <div key={stopId} className="border-t border-[#f5f5f7]">
+                  <div className="px-4 pt-2.5 pb-1 flex items-center gap-2">
+                    <MapPin size={11} className="text-[#86868b] shrink-0" />
+                    <span className="text-[12px] font-bold text-[#424245] flex-1 truncate">{stopName}</span>
+                    <button onClick={() => refreshBusStop(stopId)}
+                      className="w-6 h-6 rounded-md bg-[#f5f5f7] flex items-center justify-center active:opacity-70">
+                      <RefreshCw size={10} className={`text-[#0071e3] ${isLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
+                  {isLoading ? (
+                    <div className="px-4 pb-3"><div className="h-4 w-40 bg-[#f5f5f7] rounded animate-pulse" /></div>
+                  ) : displayed.length === 0 ? (
+                    <p className="px-4 pb-3 text-[12px] text-[#86868b]">도착 정보 없음</p>
+                  ) : (
+                    <div className="divide-y divide-[#f5f5f7]">
+                      {displayed.map((a, i) => (
+                        <div key={i} className="px-4 py-2.5 flex items-center gap-2.5">
+                          <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 shrink-0">
+                            <span className="text-white text-[13px] font-black leading-none">{a.routeNo}</span>
+                          </div>
+                          {a.isExpress && (
+                            <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded-md shrink-0">급행</span>
+                          )}
+                          <span className="text-[12px] text-[#424245] flex-1 truncate">{a.destination}</span>
+                          <ArrivalTime min={a.arrivalMin} />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* ── 지하철 섹션 ── */}
+        {hasSubway && (
+          <>
+            <div className={`px-4 pb-1 flex items-center gap-1.5 ${hasBus ? "pt-3 border-t border-[#f0f0f5]" : "pt-3"}`}>
+              <Train size={12} className="text-[#6D28D9]" />
+              <span className="text-[11px] font-bold text-[#6D28D9] tracking-wide">지하철</span>
+            </div>
+            {favSubwayStations.map(st => {
+              const live = subwayArrivals[st.id];
+              const displayArrivals = live && live.length > 0 ? live : estimateNextArrivals(st.timetable);
+              const isEst = !live || live.length === 0;
+              const nextUp   = displayArrivals.find(a => a.direction === "상행");
+              const nextDown = displayArrivals.find(a => a.direction === "하행");
+              const isLoading = subwayLoading.has(st.id);
+
+              return (
+                <div key={st.id} className="border-t border-[#f5f5f7]">
+                  <div className="px-4 pt-2.5 pb-1 flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full shrink-0" style={{ background: st.lineColor }} />
+                    <span className="text-[12px] font-bold text-[#424245] flex-1 truncate">{st.displayName}</span>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
+                      style={{ background: st.lineColor }}>{st.line}</span>
+                    {isEst && !isLoading && (
+                      <span className="text-[9px] text-[#86868b] shrink-0">시간표</span>
+                    )}
+                    <button onClick={() => refreshSubwayStation(st)}
+                      className="w-6 h-6 rounded-md bg-[#f5f5f7] flex items-center justify-center active:opacity-70 ml-1">
+                      <RefreshCw size={10} className={`text-[#6D28D9] ${isLoading ? "animate-spin" : ""}`} />
+                    </button>
+                  </div>
+                  {isLoading ? (
+                    <div className="px-4 pb-3"><div className="h-4 w-40 bg-[#f5f5f7] rounded animate-pulse" /></div>
+                  ) : !nextUp && !nextDown ? (
+                    <p className="px-4 pb-3 text-[12px] text-[#86868b]">운행 종료 또는 정보 없음</p>
+                  ) : (
+                    <div className="divide-y divide-[#f5f5f7]">
+                      {nextUp && (
+                        <div className="px-4 py-2.5 flex items-center gap-2.5">
+                          <span className="text-[11px] font-bold text-[#424245] bg-[#f5f5f7] px-1.5 py-0.5 rounded shrink-0">상행</span>
+                          <span className="text-[12px] text-[#424245] flex-1 truncate">{nextUp.terminalStation}</span>
+                          <ArrivalTime min={nextUp.arrivalMin} />
+                        </div>
+                      )}
+                      {nextDown && (
+                        <div className="px-4 py-2.5 flex items-center gap-2.5">
+                          <span className="text-[11px] font-bold text-[#424245] bg-[#f5f5f7] px-1.5 py-0.5 rounded shrink-0">하행</span>
+                          <span className="text-[12px] text-[#424245] flex-1 truncate">{nextDown.terminalStation}</span>
+                          <ArrivalTime min={nextDown.arrivalMin} />
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+
+        {/* ── 하단 액션 바 ── */}
+        <div className="border-t border-[#f5f5f7] flex">
+          <button onClick={refreshAll} disabled={globalRefreshing}
+            className="flex items-center justify-center gap-1.5 py-3 px-4 active:bg-[#f5f5f7] disabled:opacity-50">
+            <RefreshCw size={13} className={`text-[#86868b] ${globalRefreshing ? "animate-spin" : ""}`} />
+            <span className="text-[12px] text-[#86868b]">새로고침</span>
+          </button>
+          <button onClick={() => router.push("/transport/")}
+            className="flex-1 py-3 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
+            <span className="text-[13px] text-[#0071e3] font-semibold">전체보기</span>
+            <ChevronRight size={13} className="text-[#0071e3]" />
+          </button>
+        </div>
       </div>
     </section>
   );
