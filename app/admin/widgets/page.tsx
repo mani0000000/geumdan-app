@@ -4,7 +4,7 @@ import {
   LayoutGrid, ChevronUp, ChevronDown, Save, RefreshCw,
   Eye, EyeOff, GripVertical, CheckCircle2, AlertCircle,
   Sun, Cloud, MenuSquare, Tag, Store, ShoppingBag, PillBottle, Bus, Newspaper,
-  Smile,
+  Smile, Image,
 } from "lucide-react";
 import {
   adminFetchWidgetConfig,
@@ -16,6 +16,7 @@ import {
 // 위젯별 아이콘 및 색상 메타데이터
 const WIDGET_META: Record<string, { icon: React.ElementType; color: string; bg: string; desc: string }> = {
   greeting:  { icon: Smile,       color: "#F59E0B", bg: "#FEF3C7", desc: "사용자 이름 + 날씨 기반 인사말" },
+  banners:   { icon: Image,       color: "#FF6B35", bg: "#FFF0E8", desc: "이번 주 행사·프로모션 배너 캐러셀" },
   weather:   { icon: Sun,         color: "#3182F6", bg: "#EBF3FE", desc: "현재 날씨 · 시간별 · 주간 예보" },
   quickmenu: { icon: MenuSquare,  color: "#6366F1", bg: "#EDE9FE", desc: "버스, 부동산, 뉴스 등 바로가기" },
   coupons:   { icon: Tag,         color: "#F97316", bg: "#FFF3E0", desc: "이번 주 쿠폰 가로 스크롤 목록" },

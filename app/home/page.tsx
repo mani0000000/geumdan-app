@@ -20,6 +20,8 @@ import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
+import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
+import BannerCarousel from "@/components/ui/BannerCarousel";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -1124,11 +1126,13 @@ export default function HomePage() {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[] | null>(null);
   const [userNickname, setUserNickname] = useState("검단주민");
+  const [homeBanners, setHomeBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     fetchWidgetConfig().then(setWidgetConfig);
     getUserProfile().then(p => setUserNickname(p.nickname));
+    fetchActiveBanners().then(setHomeBanners);
   }, []);
 
   const stop = nearbyStops[0];
@@ -1137,6 +1141,7 @@ export default function HomePage() {
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
     greeting: () => <GreetingBanner weather={weather} nickname={userNickname} />,
+    banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-4 mt-3 mb-1">
