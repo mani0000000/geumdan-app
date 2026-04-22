@@ -255,10 +255,15 @@ async function fetchSeoulSubwayArrivals(
 }
 
 async function fetchArexArrivals(stationName: string): Promise<SubwayArrival[]> {
-  return fetchSeoulSubwayArrivals(stationName, item =>
+  // 직통열차(급행)는 검암·계양 등 중간역에 정차하지 않으므로 필터링
+  const NON_STOP_STATIONS = new Set(["검암", "계양", "청라국제도시", "영종도", "영종"]);
+  const skipExpress = NON_STOP_STATIONS.has(stationName);
+
+  const arrivals = await fetchSeoulSubwayArrivals(stationName, item =>
     String(item.trainLineNm ?? "").includes("공항철도") ||
     String(item.subwayId ?? "") === "1065"
   );
+  return skipExpress ? arrivals.filter(a => !a.isExpress) : arrivals;
 }
 
 async function fetchSeoul9Arrivals(stationName: string): Promise<SubwayArrival[]> {
