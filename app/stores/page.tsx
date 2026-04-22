@@ -10,6 +10,7 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
+import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
@@ -623,6 +624,7 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
   const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
   const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
   const [buildingLoading, setBuildingLoading] = useState(false);
+  const [dlState, setDlState] = useState<Set<string>>(() => loadDownloaded());
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
@@ -665,8 +667,6 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
   const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
   const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
-  const [dlState, setDlState] = useState<Set<string>>(new Set());
-
   function StoreCard({ store }: { store: EnrichedStore }) {
     const hasNew = newOpeningIds.has(store.id);
     const hasCoupon = couponStoreIds.has(store.id);
@@ -847,51 +847,31 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
           Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
         );
         if (validCoupons.length === 0) return null;
+
+        function toggleCoupon(id: string) {
+          setDlState(prev => {
+            const n = new Set(prev);
+            n.has(id) ? n.delete(id) : n.add(id);
+            saveDownloaded(n);
+            return n;
+          });
+        }
+
         return (
           <div className="pt-2 pb-2">
             <div className="flex items-center gap-1.5 px-4 mb-2.5">
               <span className="text-[14px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
               <span className="text-[11px] text-[#6e6e73]">{validCoupons.length}장</span>
             </div>
-            <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-              {validCoupons.map(c => {
-                const done = dlState.has(c.id);
-                const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
-                const urgent = dDay <= 3;
-                return (
-                  <div key={c.id} className="shrink-0 w-[200px] rounded-2xl overflow-hidden shadow-sm"
-                    style={{ border: `1.5px solid ${c.color}22` }}>
-                    <div className="px-3.5 pt-3 pb-2.5" style={{ background: `${c.color}14` }}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <StoreLogo name={c.storeName} category={c.category} size={28} rounded="rounded-lg" />
-                        <p className="text-[13px] font-extrabold text-[#1d1d1f] truncate">{c.storeName}</p>
-                      </div>
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-[22px] font-black" style={{ color: c.color }}>{c.discount}</span>
-                        <span className="text-[11px] text-[#6e6e73]">할인</span>
-                      </div>
-                    </div>
-                    <div className="relative flex items-center" style={{ height: "12px" }}>
-                      <div className="absolute inset-x-0 top-1/2 -translate-y-1/2" style={{ borderTop: `2px dashed ${c.color}44` }} />
-                      <div className="absolute -left-[5px] w-[10px] h-[10px] rounded-full bg-[#f5f5f7]" />
-                      <div className="absolute -right-[5px] w-[10px] h-[10px] rounded-full bg-[#f5f5f7]" />
-                    </div>
-                    <div className="px-3.5 pt-1.5 pb-3 bg-white">
-                      <p className="text-[11px] text-[#424245] line-clamp-2 mb-2">{c.title}</p>
-                      <div className="flex items-center justify-between">
-                        <span className={`text-[10px] font-bold ${urgent ? "text-[#F04452]" : "text-[#86868b]"}`}>
-                          {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
-                        </span>
-                        <button onClick={() => setDlState(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                          className="h-6 px-2.5 rounded-lg text-[11px] font-extrabold active:opacity-70 text-white"
-                          style={{ background: done ? "#86868b" : c.color }}>
-                          {done ? "✓ 완료" : "받기"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
+              {validCoupons.map(c => (
+                <CouponCard
+                  key={c.id}
+                  coupon={c}
+                  downloaded={dlState.has(c.id)}
+                  onToggle={() => toggleCoupon(c.id)}
+                />
+              ))}
             </div>
           </div>
         );
