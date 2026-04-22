@@ -3,7 +3,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapPin, RefreshCw, ChevronDown, ChevronUp, Star,
   Zap, Accessibility, Train, Navigation, Bus, Search, Clock,
+  Car, Phone, Globe, ChevronRight, X,
 } from "lucide-react";
+import { fetchPublishedPlaces, CATEGORY_META, AREAS, type Place, type PlaceCategory, type PlaceArea } from "@/lib/db/places";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -23,7 +25,7 @@ import {
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
 
-type Tab = "버스" | "지하철";
+type Tab = "버스" | "지하철" | "가볼만한곳";
 
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
@@ -488,6 +490,13 @@ export default function TransportPage() {
   const [subwayLoading, setSubwayLoading] = useState(false);
   const [busSearch, setBusSearch] = useState("");
   const isLive = hasBusApiKey();
+
+  // 가볼만한곳 state
+  const [places, setPlaces] = useState<Place[]>([]);
+  const [placesLoading, setPlacesLoading] = useState(false);
+  const [placesCatFilter, setPlacesCatFilter] = useState<PlaceCategory | "all">("all");
+  const [placesAreaFilter, setPlacesAreaFilter] = useState<PlaceArea | "all">("all");
+  const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
   const apiStopsRef = useRef<DisplayStop[] | null>(null);
   const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
@@ -622,6 +631,16 @@ export default function TransportPage() {
     setSubwayLoading(false);
     await refreshSubwayArrivals(initial);
   }, [refreshSubwayArrivals]);
+
+  // ── 가볼만한곳 로드 ────────────────────────────────────────────
+  useEffect(() => {
+    if (tab !== "가볼만한곳" || places.length > 0) return;
+    setPlacesLoading(true);
+    fetchPublishedPlaces()
+      .then(setPlaces)
+      .catch(() => {})
+      .finally(() => setPlacesLoading(false));
+  }, [tab, places.length]);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
@@ -763,12 +782,12 @@ export default function TransportPage() {
 
       {/* 탭 */}
       <div className="bg-white sticky top-[52px] z-30 border-b border-[#f5f5f7] flex">
-        {(["버스", "지하철"] as Tab[]).map(t => (
+        {(["버스", "지하철", "가볼만한곳"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-11 text-[14px] font-semibold border-b-2 transition-colors ${
+            className={`flex-1 h-11 text-[13px] font-semibold border-b-2 transition-colors ${
               t === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
             }`}>
-            {t === "버스" ? "🚌 버스" : "🚇 지하철"}
+            {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "📍 가볼만한곳"}
           </button>
         ))}
       </div>
@@ -1309,6 +1328,245 @@ export default function TransportPage() {
           )}
         </div>
       )}
+
+      {/* ══ 가볼만한곳 탭 ══════════════════════════════════════ */}
+      {tab === "가볼만한곳" && (
+        <div className="px-4 pb-6 space-y-4">
+          {/* 필터 */}
+          <div className="space-y-2 pt-1">
+            {/* 카테고리 필터 */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {(["all", ...Object.keys(CATEGORY_META)] as (PlaceCategory | "all")[]).map(k => {
+                const meta = k === "all" ? null : CATEGORY_META[k];
+                const active = placesCatFilter === k;
+                return (
+                  <button key={k} onClick={() => setPlacesCatFilter(k)}
+                    className={`shrink-0 px-3 h-8 rounded-full text-[13px] font-semibold border transition-colors ${
+                      active
+                        ? "bg-[#0071e3] text-white border-[#0071e3]"
+                        : "bg-white text-[#424245] border-[#d2d2d7]"
+                    }`}>
+                    {k === "all" ? "전체" : meta!.label}
+                  </button>
+                );
+              })}
+            </div>
+            {/* 지역 필터 */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+              {(["all", ...AREAS] as (PlaceArea | "all")[]).map(a => (
+                <button key={a} onClick={() => setPlacesAreaFilter(a)}
+                  className={`shrink-0 px-3 h-7 rounded-full text-[12px] font-medium border transition-colors ${
+                    placesAreaFilter === a
+                      ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
+                      : "bg-white text-[#6e6e73] border-[#d2d2d7]"
+                  }`}>
+                  {a === "all" ? "전체 지역" : a}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 목록 */}
+          {placesLoading ? (
+            <>{[1,2,3].map(i => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-44 bg-[#f5f5f7]" />
+                <div className="px-4 py-3 space-y-2">
+                  <div className="h-4 w-24 bg-[#f5f5f7] rounded" />
+                  <div className="h-5 w-40 bg-[#f5f5f7] rounded" />
+                  <div className="h-4 w-full bg-[#f5f5f7] rounded" />
+                </div>
+              </div>
+            ))}</>
+          ) : (() => {
+            const filtered = places.filter(p =>
+              (placesCatFilter === "all" || p.category === placesCatFilter) &&
+              (placesAreaFilter === "all" || p.area === placesAreaFilter)
+            );
+            if (filtered.length === 0) return (
+              <div className="bg-white rounded-2xl px-4 py-12 text-center">
+                <p className="text-[14px] text-[#86868b]">해당 조건의 장소가 없습니다</p>
+              </div>
+            );
+            return (
+              <div className="space-y-3">
+                {filtered.map(place => {
+                  const cat = CATEGORY_META[place.category];
+                  return (
+                    <button key={place.id} onClick={() => setSelectedPlace(place)}
+                      className="w-full bg-white rounded-2xl overflow-hidden text-left active:opacity-80 shadow-sm">
+                      {/* 썸네일 */}
+                      <div className="relative h-44 bg-[#f5f5f7]">
+                        {place.thumbnail_url
+                          ? <img src={place.thumbnail_url} alt={place.name} className="w-full h-full object-cover" />
+                          : <div className="w-full h-full flex items-center justify-center">
+                              <MapPin size={40} className="text-[#d2d2d7]" />
+                            </div>
+                        }
+                        {/* 배지들 */}
+                        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                          <span className="text-[11px] font-bold px-2 py-1 rounded-full backdrop-blur-sm"
+                            style={{ color: cat.color, background: cat.bg + "ee" }}>
+                            {cat.label}
+                          </span>
+                          <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm">
+                            {place.area}
+                          </span>
+                        </div>
+                        {/* 거리 배지 */}
+                        {place.drive_min && (
+                          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 rounded-full px-2.5 py-1 backdrop-blur-sm">
+                            <Car size={11} className="text-white" />
+                            <span className="text-[11px] text-white font-semibold">{place.drive_min}분</span>
+                          </div>
+                        )}
+                      </div>
+                      {/* 정보 */}
+                      <div className="px-4 py-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[17px] font-bold text-[#1d1d1f]">{place.name}</p>
+                            <p className="text-[13px] text-[#6e6e73] mt-0.5 leading-snug">{place.short_desc}</p>
+                          </div>
+                          <ChevronRight size={18} className="text-[#d2d2d7] shrink-0 mt-1" />
+                        </div>
+                        {/* 태그 */}
+                        {place.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2.5">
+                            {place.tags.slice(0, 4).map(tag => (
+                              <span key={tag} className="text-[11px] text-[#6e6e73] bg-[#f5f5f7] px-2 py-0.5 rounded-full">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* 가볼만한곳 상세 바텀 시트 */}
+      {selectedPlace && (() => {
+        const p = selectedPlace;
+        const cat = CATEGORY_META[p.category];
+        return (
+          <>
+            <div className="fixed inset-0 bg-black/40 z-[200]" onClick={() => setSelectedPlace(null)} />
+            <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
+              style={{ maxHeight: "92%", display: "flex", flexDirection: "column" }}>
+              {/* 핸들 */}
+              <div className="shrink-0 flex justify-center pt-3">
+                <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+              </div>
+              {/* 닫기 버튼 */}
+              <button onClick={() => setSelectedPlace(null)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center z-10 active:opacity-60">
+                <X size={16} className="text-[#6e6e73]" />
+              </button>
+
+              <div className="overflow-y-auto flex-1">
+                {/* 썸네일 */}
+                <div className="relative h-52 bg-[#f5f5f7] mx-4 mt-4 rounded-2xl overflow-hidden">
+                  {p.thumbnail_url
+                    ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center">
+                        <MapPin size={48} className="text-[#d2d2d7]" />
+                      </div>
+                  }
+                  <div className="absolute top-3 left-3 flex gap-1.5">
+                    <span className="text-[11px] font-bold px-2 py-1 rounded-full"
+                      style={{ color: cat.color, background: cat.bg }}>{cat.label}</span>
+                    <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-[#1d1d1f]/70 text-white">{p.area}</span>
+                  </div>
+                </div>
+
+                <div className="px-5 pt-4 pb-8">
+                  {/* 제목 */}
+                  <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-tight">{p.name}</h2>
+                  <p className="text-[14px] text-[#6e6e73] mt-1">{p.short_desc}</p>
+
+                  {/* 거리 정보 */}
+                  {(p.distance_km || p.drive_min) && (
+                    <div className="flex items-center gap-1.5 mt-2">
+                      <Car size={14} className="text-[#86868b]" />
+                      <span className="text-[13px] text-[#86868b]">
+                        검단에서 {p.distance_km && `${p.distance_km}km`}{p.drive_min && ` · 차로 약 ${p.drive_min}분`}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 태그 */}
+                  {p.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-3">
+                      {p.tags.map(tag => (
+                        <span key={tag} className="text-[12px] text-[#6e6e73] bg-[#f5f5f7] px-2.5 py-1 rounded-full">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 본문 */}
+                  {p.description && (
+                    <div className="mt-4 pt-4 border-t border-[#f5f5f7]">
+                      <p className="text-[14px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{p.description}</p>
+                    </div>
+                  )}
+
+                  {/* 상세 정보 카드 */}
+                  {(p.operating_hours || p.admission_fee || p.address || p.phone || p.website) && (
+                    <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-4 py-3.5 space-y-2.5">
+                      {p.operating_hours && (
+                        <div className="flex items-start gap-2.5">
+                          <Clock size={14} className="text-[#86868b] mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">운영시간</p>
+                            <p className="text-[13px] text-[#1d1d1f]">{p.operating_hours}</p>
+                          </div>
+                        </div>
+                      )}
+                      {p.admission_fee && (
+                        <div className="flex items-start gap-2.5">
+                          <span className="text-[13px] text-[#86868b] mt-0.5 font-bold shrink-0">₩</span>
+                          <div>
+                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">입장료</p>
+                            <p className="text-[13px] text-[#1d1d1f]">{p.admission_fee}</p>
+                          </div>
+                        </div>
+                      )}
+                      {p.address && (
+                        <div className="flex items-start gap-2.5">
+                          <MapPin size={14} className="text-[#86868b] mt-0.5 shrink-0" />
+                          <div>
+                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">주소</p>
+                            <p className="text-[13px] text-[#1d1d1f]">{p.address}</p>
+                          </div>
+                        </div>
+                      )}
+                      {p.phone && (
+                        <div className="flex items-center gap-2.5">
+                          <Phone size={14} className="text-[#86868b] shrink-0" />
+                          <a href={`tel:${p.phone}`} className="text-[13px] text-[#0071e3]">{p.phone}</a>
+                        </div>
+                      )}
+                      {p.website && (
+                        <div className="flex items-center gap-2.5">
+                          <Globe size={14} className="text-[#86868b] shrink-0" />
+                          <a href={p.website} target="_blank" rel="noopener noreferrer"
+                            className="text-[13px] text-[#0071e3] truncate">{p.website.replace(/^https?:\/\//, "")}</a>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
 
       <BottomNav />
     </div>
