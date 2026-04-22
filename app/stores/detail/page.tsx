@@ -8,22 +8,22 @@ import type { StoreCategory } from "@/lib/types";
 
 const catEmoji: Record<StoreCategory, string> = {
   카페: "☕", 음식점: "🍽️", 편의점: "🏪", "병원/약국": "💊",
-  미용: "💇", 학원: "📚", 마트: "🛒", 기타: "🏢",
+  미용: "💇", 학원: "📚", 마트: "🛒", "헬스/운동": "💪",
+  반려동물: "🐾", 세탁: "👕", 기타: "🏢",
 };
 const catBg: Record<StoreCategory, string> = {
-  카페: "bg-[#FEF3C7] text-[#92400E]",
-  음식점: "bg-[#FEE2E2] text-[#991B1B]",
-  편의점: "bg-[#e8f1fd] text-[#1E40AF]",
-  "병원/약국": "bg-[#FEE2E2] text-[#991B1B]",
-  미용: "bg-[#FCE7F3] text-[#9D174D]",
-  학원: "bg-[#EDE9FE] text-[#5B21B6]",
-  마트: "bg-[#D1FAE5] text-[#065F46]",
+  카페: "bg-[#FEF3C7] text-[#92400E]", 음식점: "bg-[#FFF0E6] text-[#C2410C]",
+  편의점: "bg-[#e8f1fd] text-[#1E40AF]", "병원/약국": "bg-[#FEE2E2] text-[#991B1B]",
+  미용: "bg-[#FCE7F3] text-[#9D174D]", 학원: "bg-[#EDE9FE] text-[#5B21B6]",
+  마트: "bg-[#D1FAE5] text-[#065F46]", "헬스/운동": "bg-[#E0F2FE] text-[#0369A1]",
+  반려동물: "bg-[#FDF2F8] text-[#9D174D]", 세탁: "bg-[#EEF2FF] text-[#4338CA]",
   기타: "bg-[#F3F4F6] text-[#374151]",
 };
 const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
   "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
-  마트: "#10B981", 기타: "#9CA3AF",
+  마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
+  세탁: "#6366F1", 기타: "#9CA3AF",
 };
 
 // Mock reviews per store
