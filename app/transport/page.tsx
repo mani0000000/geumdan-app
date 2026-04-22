@@ -14,6 +14,7 @@ import {
   fetchNearbyStopsFromTago, fetchNearbyStopsFromApi, fetchNearbyStopsWide,
   fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
+  searchRouteByNo, fetchRouteDetailFromTago, fetchStationsByRouteTago,
 } from "@/lib/api/bus";
 import {
   getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
@@ -108,22 +109,51 @@ function BusDetailSheet({
   const [detail, setDetail] = useState<RouteDetail | null>(null);
   const [stations, setStations] = useState<RouteStation[]>([]);
   const [locations, setLocations] = useState<BusLocation[]>([]);
-  const [loading, setLoading] = useState(() => Boolean(arrival.routeId));
+  const [loading, setLoading] = useState(true);
+  const [noRouteData, setNoRouteData] = useState(false);
   const [dirTab, setDirTab] = useState<0 | 1>(0);
 
   useEffect(() => {
-    if (!arrival.routeId) return;
-    Promise.all([
-      fetchRouteDetail(arrival.routeId),
-      fetchStationsByRoute(arrival.routeId),
-      fetchBusLocations(arrival.routeId),
-    ]).then(([d, s, l]) => {
-      setDetail(d);
-      setStations(s);
-      setLocations(l);
-      setLoading(false);
-    });
-  }, [arrival.routeId]);
+    let cancelled = false;
+    setLoading(true);
+    setNoRouteData(false);
+
+    async function load() {
+      if (arrival.routeId) {
+        const [d, s, l] = await Promise.all([
+          fetchRouteDetail(arrival.routeId),
+          fetchStationsByRoute(arrival.routeId),
+          fetchBusLocations(arrival.routeId),
+        ]);
+        if (cancelled) return;
+        setDetail(d); setStations(s); setLocations(l);
+        setLoading(false);
+        if (!d && s.length === 0) setNoRouteData(true);
+      } else if (arrival.routeNo) {
+        const tagoRouteId = await searchRouteByNo(arrival.routeNo);
+        if (cancelled) return;
+        if (tagoRouteId) {
+          const [d, s] = await Promise.all([
+            fetchRouteDetailFromTago(tagoRouteId),
+            fetchStationsByRouteTago(tagoRouteId),
+          ]);
+          if (cancelled) return;
+          setDetail(d); setStations(s); setLocations([]);
+          setLoading(false);
+          if (!d && s.length === 0) setNoRouteData(true);
+        } else {
+          setLoading(false);
+          setNoRouteData(true);
+        }
+      } else {
+        setLoading(false);
+        setNoRouteData(true);
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, [arrival.routeId, arrival.routeNo]);
 
   const upStations   = stations.filter(s => s.direction === 0);
   const downStations = stations.filter(s => s.direction === 1);
@@ -224,6 +254,12 @@ function BusDetailSheet({
                 </div>
               ))}
             </div>
+          ) : noRouteData ? (
+            <div className="py-12 text-center">
+              <Bus size={28} className="mx-auto text-[#D1D5DB] mb-2" />
+              <p className="text-[14px] text-[#6e6e73]">노선 정보 없음</p>
+              <p className="text-[12px] text-[#86868b] mt-1">공공 API에서 해당 노선을 찾을 수 없습니다</p>
+            </div>
           ) : curStations.length === 0 ? (
             <div className="py-12 text-center">
               <p className="text-[14px] text-[#6e6e73]">정류장 정보를 불러올 수 없습니다</p>
@@ -310,6 +346,9 @@ export default function TransportPage() {
           arrivals = await fetchArrivalsByNodeId(stop.id);
         } else if (source === "ic") {
           arrivals = await fetchArrivalsByStationId(stop.id);
+        } else if (source === "fallback") {
+          arrivals = await fetchArrivalsByNodeId(stop.id);
+          if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
         }
         if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
           arrivals = osmRoutesToArrivals(stop.osmRoutes);
@@ -883,7 +922,7 @@ export default function TransportPage() {
                         {displayArrivals.map((a, i) => (
                           <div key={i}
                             className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
-                            onClick={() => !a.isScheduled && setSelectedArrival(a)}>
+                            onClick={() => setSelectedArrival(a)}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
                               <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
                                 <span className="text-white text-[14px] font-black">{a.routeNo}</span>
@@ -899,7 +938,7 @@ export default function TransportPage() {
                                   {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
                                 </div>
                                 <p className="text-[12px] text-[#6e6e73]">
-                                  {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                                  {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
                                 </p>
                               </div>
                             </div>

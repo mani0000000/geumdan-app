@@ -325,5 +325,45 @@ export const GEUMDAN_BUS_STATIONS = [
   { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",   lat: 37.5913, lng: 126.6987 },
 ];
 
+// ─── TAGO: 노선번호로 routeId 검색 ───────────────────────────
+export async function searchRouteByNo(routeNo: string, cityCode = "30"): Promise<string | null> {
+  const items = await apiFetch("tagoRoutes", { cityCode, routeNo });
+  return items[0]?.routeid ?? items[0]?.routeId ?? null;
+}
+
+// ─── TAGO: routeId로 노선 상세 조회 ─────────────────────────
+export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30"): Promise<RouteDetail | null> {
+  const items = await apiFetch("tagoRouteDetail", { cityCode, routeId });
+  if (!items.length) return null;
+  const d = items[0];
+  return {
+    routeId,
+    routeNo: d.routeno ?? d.routeNo ?? "",
+    routeName: d.routenm ?? d.routeName ?? "",
+    startStation: d.startnodenm ?? d.startNodeNm ?? "기점",
+    endStation: d.endnodenm ?? d.endNodeNm ?? "종점",
+    firstTime: "",
+    lastTime: "",
+    upFirstTime: d.upfirsttime ?? d.upFirstTime ?? "-",
+    upLastTime: d.uplasttime ?? d.upLastTime ?? "-",
+    downFirstTime: d.downfirsttime ?? d.downFirstTime ?? "-",
+    downLastTime: d.downlasttime ?? d.downLastTime ?? "-",
+    interval: Number(d.intervalgap ?? d.intervalGap ?? "0"),
+  };
+}
+
+// ─── TAGO: routeId로 전 정류장 목록 조회 ─────────────────────
+export async function fetchStationsByRouteTago(routeId: string, cityCode = "30"): Promise<RouteStation[]> {
+  const items = await apiFetch("tagoRouteStations", { cityCode, routeId, numOfRows: "100" });
+  return items
+    .map(d => ({
+      seq: Number(d.nodeord ?? d.nodeOrd ?? "0"),
+      stationId: d.nodeid ?? d.nodeId ?? "",
+      stationName: d.nodenm ?? d.nodeNm ?? "",
+      direction: (Number(d.updowncd ?? "0") === 1 ? 1 : 0) as 0 | 1,
+    }))
+    .sort((a, b) => a.seq - b.seq);
+}
+
 // 서버 라우트가 키를 관리하므로 클라이언트에서는 항상 활성으로 취급
 export const hasBusApiKey = () => true;
