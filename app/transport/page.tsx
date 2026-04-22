@@ -1331,119 +1331,186 @@ export default function TransportPage() {
 
       {/* ══ 가볼만한곳 탭 ══════════════════════════════════════ */}
       {tab === "가볼만한곳" && (
-        <div className="px-4 pb-6 space-y-4">
-          {/* 필터 */}
-          <div className="space-y-2 pt-1">
-            {/* 카테고리 필터 */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {(["all", ...Object.keys(CATEGORY_META)] as (PlaceCategory | "all")[]).map(k => {
-                const meta = k === "all" ? null : CATEGORY_META[k];
-                const active = placesCatFilter === k;
-                return (
-                  <button key={k} onClick={() => setPlacesCatFilter(k)}
-                    className={`shrink-0 px-3 h-8 rounded-full text-[13px] font-semibold border transition-colors ${
-                      active
-                        ? "bg-[#0071e3] text-white border-[#0071e3]"
-                        : "bg-white text-[#424245] border-[#d2d2d7]"
-                    }`}>
-                    {k === "all" ? "전체" : meta!.label}
-                  </button>
-                );
-              })}
-            </div>
-            {/* 지역 필터 */}
-            <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-              {(["all", ...AREAS] as (PlaceArea | "all")[]).map(a => (
-                <button key={a} onClick={() => setPlacesAreaFilter(a)}
-                  className={`shrink-0 px-3 h-7 rounded-full text-[12px] font-medium border transition-colors ${
-                    placesAreaFilter === a
-                      ? "bg-[#1d1d1f] text-white border-[#1d1d1f]"
-                      : "bg-white text-[#6e6e73] border-[#d2d2d7]"
+        <div className="pb-8">
+          {/* 카테고리 필터 (홈 스타일 pill) */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-2">
+            {(["all", ...Object.keys(CATEGORY_META)] as (PlaceCategory | "all")[]).map(k => {
+              const meta = k === "all" ? null : CATEGORY_META[k];
+              const active = placesCatFilter === k;
+              return (
+                <button key={k} onClick={() => setPlacesCatFilter(k)}
+                  className={`shrink-0 h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+                    active ? "bg-[#1d1d1f] text-white" : "bg-white text-[#86868b]"
                   }`}>
-                  {a === "all" ? "전체 지역" : a}
+                  {k === "all" ? "전체" : meta!.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
+          </div>
+          {/* 지역 필터 */}
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-3">
+            {(["all", ...AREAS] as (PlaceArea | "all")[]).map(a => (
+              <button key={a} onClick={() => setPlacesAreaFilter(a)}
+                className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-medium transition-all ${
+                  placesAreaFilter === a
+                    ? "bg-[#0071e3] text-white"
+                    : "bg-white text-[#6e6e73]"
+                }`}>
+                {a === "all" ? "전체 지역" : a}
+              </button>
+            ))}
           </div>
 
           {/* 목록 */}
           {placesLoading ? (
-            <>{[1,2,3].map(i => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
-                <div className="h-44 bg-[#f5f5f7]" />
-                <div className="px-4 py-3 space-y-2">
-                  <div className="h-4 w-24 bg-[#f5f5f7] rounded" />
-                  <div className="h-5 w-40 bg-[#f5f5f7] rounded" />
+            <div className="px-4 space-y-3">
+              <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
+                <div className="h-52 bg-[#e5e5ea]" />
+                <div className="px-4 py-4 space-y-2">
+                  <div className="h-3 w-20 bg-[#f5f5f7] rounded-full" />
+                  <div className="h-5 w-44 bg-[#f5f5f7] rounded" />
                   <div className="h-4 w-full bg-[#f5f5f7] rounded" />
                 </div>
               </div>
-            ))}</>
+              <div className="grid grid-cols-2 gap-3">
+                {[1,2,3,4].map(i => (
+                  <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse">
+                    <div className="h-32 bg-[#e5e5ea]" />
+                    <div className="px-3 py-2.5 space-y-1.5">
+                      <div className="h-3.5 w-20 bg-[#f5f5f7] rounded" />
+                      <div className="h-3 w-full bg-[#f5f5f7] rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : (() => {
             const filtered = places.filter(p =>
               (placesCatFilter === "all" || p.category === placesCatFilter) &&
               (placesAreaFilter === "all" || p.area === placesAreaFilter)
             );
             if (filtered.length === 0) return (
-              <div className="bg-white rounded-2xl px-4 py-12 text-center">
-                <p className="text-[14px] text-[#86868b]">해당 조건의 장소가 없습니다</p>
+              <div className="mx-4 bg-white rounded-2xl px-4 py-14 text-center">
+                <MapPin size={32} className="text-[#d2d2d7] mx-auto mb-3" />
+                <p className="text-[15px] font-semibold text-[#424245]">해당 장소가 없습니다</p>
+                <p className="text-[13px] text-[#86868b] mt-1">다른 카테고리나 지역을 선택해 보세요</p>
               </div>
             );
+
+            const [featured, ...rest] = filtered;
+            const featCat = CATEGORY_META[featured.category];
+            const catGrads: Record<PlaceCategory, [string, string]> = {
+              kids:    ["#0071e3", "#38BDF8"],
+              nature:  ["#2E7D32", "#4CAF50"],
+              culture: ["#6B21A8", "#9C27B0"],
+              travel:  ["#C2410C", "#F97316"],
+              food:    ["#9D5C00", "#F59E0B"],
+            };
+            const [gFrom, gTo] = catGrads[featured.category];
+
             return (
               <div className="space-y-3">
-                {filtered.map(place => {
-                  const cat = CATEGORY_META[place.category];
-                  return (
-                    <button key={place.id} onClick={() => setSelectedPlace(place)}
-                      className="w-full bg-white rounded-2xl overflow-hidden text-left active:opacity-80 shadow-sm">
-                      {/* 썸네일 */}
-                      <div className="relative h-44 bg-[#f5f5f7]">
-                        {place.thumbnail_url
-                          ? <img src={place.thumbnail_url} alt={place.name} className="w-full h-full object-cover" />
-                          : <div className="w-full h-full flex items-center justify-center">
-                              <MapPin size={40} className="text-[#d2d2d7]" />
+                {/* ── 피처드 히어로 카드 ── */}
+                <div className="px-4">
+                  <button onClick={() => setSelectedPlace(featured)}
+                    className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm">
+                    <div className="relative h-52"
+                      style={featured.thumbnail_url ? {} : { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
+                      {featured.thumbnail_url
+                        ? <>
+                            <img src={featured.thumbnail_url} alt={featured.name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0.1) 100%)" }} />
+                          </>
+                        : <div className="absolute inset-0 flex items-end justify-end p-4 opacity-20">
+                            <MapPin size={80} className="text-white" />
+                          </div>
+                      }
+                      {/* 상단 배지 */}
+                      <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                        <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                          {featCat.label}
+                        </span>
+                        <span className="text-[11px] font-semibold bg-black/30 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                          {featured.area}
+                        </span>
+                      </div>
+                      {/* PICK 배지 */}
+                      <div className="absolute top-3 right-3 bg-white/90 rounded-full px-2 py-0.5">
+                        <span className="text-[10px] font-black text-[#0071e3]">PICK</span>
+                      </div>
+                      {/* 하단 텍스트 오버레이 */}
+                      <div className="absolute bottom-0 left-0 right-0 p-4">
+                        <p className="text-[20px] font-black text-white leading-tight">{featured.name}</p>
+                        <p className="text-[13px] text-white/80 mt-1 line-clamp-1">{featured.short_desc}</p>
+                        {featured.drive_min && (
+                          <div className="flex items-center gap-1 mt-2">
+                            <Car size={11} className="text-white/70" />
+                            <span className="text-[11px] text-white/70 font-medium">검단에서 차로 {featured.drive_min}분</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* ── 나머지 카드 (2열 그리드) ── */}
+                {rest.length > 0 && (
+                  <div className="px-4">
+                    {/* 섹션 라벨 */}
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="text-[11px] font-black text-[#86868b] uppercase tracking-widest">
+                        {filtered.length - 1}곳 더 보기
+                      </span>
+                      <div className="flex-1 h-px bg-[#e5e5ea]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {rest.map(place => {
+                        const cat = CATEGORY_META[place.category];
+                        const [pFrom, pTo] = catGrads[place.category];
+                        return (
+                          <button key={place.id} onClick={() => setSelectedPlace(place)}
+                            className="bg-white rounded-2xl overflow-hidden text-left active:scale-95 transition-transform shadow-sm border border-[#f0f0f0]">
+                            {/* 이미지 / 그라디언트 */}
+                            <div className="relative h-[120px]"
+                              style={place.thumbnail_url ? {} : { background: `linear-gradient(135deg, ${pFrom}, ${pTo})` }}>
+                              {place.thumbnail_url
+                                ? <>
+                                    <img src={place.thumbnail_url} alt={place.name} className="w-full h-full object-cover" />
+                                    <div className="absolute inset-0 bg-black/20" />
+                                  </>
+                                : <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                                    <MapPin size={40} className="text-white" />
+                                  </div>
+                              }
+                              {/* 카테고리 배지 */}
+                              <div className="absolute top-2 left-2">
+                                <span className="text-[10px] font-bold bg-black/30 text-white px-2 py-0.5 rounded-full backdrop-blur-sm">
+                                  {cat.label}
+                                </span>
+                              </div>
+                              {/* 드라이브 배지 */}
+                              {place.drive_min && (
+                                <div className="absolute bottom-2 right-2 flex items-center gap-0.5 bg-black/40 rounded-full px-1.5 py-0.5 backdrop-blur-sm">
+                                  <Car size={9} className="text-white" />
+                                  <span className="text-[10px] text-white font-semibold">{place.drive_min}분</span>
+                                </div>
+                              )}
                             </div>
-                        }
-                        {/* 배지들 */}
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                          <span className="text-[11px] font-bold px-2 py-1 rounded-full backdrop-blur-sm"
-                            style={{ color: cat.color, background: cat.bg + "ee" }}>
-                            {cat.label}
-                          </span>
-                          <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-black/40 text-white backdrop-blur-sm">
-                            {place.area}
-                          </span>
-                        </div>
-                        {/* 거리 배지 */}
-                        {place.drive_min && (
-                          <div className="absolute bottom-3 right-3 flex items-center gap-1 bg-black/50 rounded-full px-2.5 py-1 backdrop-blur-sm">
-                            <Car size={11} className="text-white" />
-                            <span className="text-[11px] text-white font-semibold">{place.drive_min}분</span>
-                          </div>
-                        )}
-                      </div>
-                      {/* 정보 */}
-                      <div className="px-4 py-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[17px] font-bold text-[#1d1d1f]">{place.name}</p>
-                            <p className="text-[13px] text-[#6e6e73] mt-0.5 leading-snug">{place.short_desc}</p>
-                          </div>
-                          <ChevronRight size={18} className="text-[#d2d2d7] shrink-0 mt-1" />
-                        </div>
-                        {/* 태그 */}
-                        {place.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 mt-2.5">
-                            {place.tags.slice(0, 4).map(tag => (
-                              <span key={tag} className="text-[11px] text-[#6e6e73] bg-[#f5f5f7] px-2 py-0.5 rounded-full">
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
+                            {/* 텍스트 */}
+                            <div className="px-3 py-2.5">
+                              <p className="text-[13px] font-bold text-[#1d1d1f] leading-tight line-clamp-1">{place.name}</p>
+                              <p className="text-[11px] text-[#6e6e73] mt-0.5 line-clamp-2 leading-snug">{place.short_desc}</p>
+                              <div className="flex items-center gap-1 mt-1.5">
+                                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
+                                  style={{ color: cat.color, background: cat.bg }}>{place.area}</span>
+                              </div>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })()}
@@ -1454,113 +1521,144 @@ export default function TransportPage() {
       {selectedPlace && (() => {
         const p = selectedPlace;
         const cat = CATEGORY_META[p.category];
+        const catGrads: Record<PlaceCategory, [string, string]> = {
+          kids:    ["#0071e3", "#38BDF8"],
+          nature:  ["#2E7D32", "#4CAF50"],
+          culture: ["#6B21A8", "#9C27B0"],
+          travel:  ["#C2410C", "#F97316"],
+          food:    ["#9D5C00", "#F59E0B"],
+        };
+        const [gFrom, gTo] = catGrads[p.category];
         return (
           <>
-            <div className="fixed inset-0 bg-black/40 z-[200]" onClick={() => setSelectedPlace(null)} />
-            <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
-              style={{ maxHeight: "92%", display: "flex", flexDirection: "column" }}>
-              {/* 핸들 */}
-              <div className="shrink-0 flex justify-center pt-3">
-                <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
-              </div>
-              {/* 닫기 버튼 */}
-              <button onClick={() => setSelectedPlace(null)}
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center z-10 active:opacity-60">
-                <X size={16} className="text-[#6e6e73]" />
-              </button>
+            <div className="fixed inset-0 bg-black/50 z-[200]" onClick={() => setSelectedPlace(null)} />
+            <div className="fixed left-0 right-0 bottom-0 z-[250] flex justify-center">
+              <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden"
+                style={{ maxHeight: "92dvh", display: "flex", flexDirection: "column" }}>
 
-              <div className="overflow-y-auto flex-1">
-                {/* 썸네일 */}
-                <div className="relative h-52 bg-[#f5f5f7] mx-4 mt-4 rounded-2xl overflow-hidden">
+                {/* ── 그라디언트 헤더 이미지 ── */}
+                <div className="relative shrink-0 h-56"
+                  style={p.thumbnail_url ? {} : { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
                   {p.thumbnail_url
-                    ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center">
-                        <MapPin size={48} className="text-[#d2d2d7]" />
+                    ? <>
+                        <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.7) 50%, rgba(0,0,0,0.15) 100%)" }} />
+                      </>
+                    : <div className="absolute inset-0 flex items-end justify-end p-6 opacity-20">
+                        <MapPin size={96} className="text-white" />
                       </div>
                   }
-                  <div className="absolute top-3 left-3 flex gap-1.5">
-                    <span className="text-[11px] font-bold px-2 py-1 rounded-full"
-                      style={{ color: cat.color, background: cat.bg }}>{cat.label}</span>
-                    <span className="text-[11px] font-semibold px-2 py-1 rounded-full bg-[#1d1d1f]/70 text-white">{p.area}</span>
+                  {/* 핸들 바 */}
+                  <div className="absolute top-3 left-0 right-0 flex justify-center">
+                    <div className="w-10 h-1 bg-white/40 rounded-full" />
+                  </div>
+                  {/* 닫기 버튼 */}
+                  <button onClick={() => setSelectedPlace(null)}
+                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                    <X size={16} className="text-white" />
+                  </button>
+                  {/* 배지 */}
+                  <div className="absolute top-4 left-4 flex items-center gap-1.5">
+                    <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                      {cat.label}
+                    </span>
+                    <span className="text-[11px] font-semibold bg-black/30 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                      {p.area}
+                    </span>
+                  </div>
+                  {/* 하단 텍스트 */}
+                  <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
+                    <h2 className="text-[22px] font-black text-white leading-tight">{p.name}</h2>
+                    <p className="text-[13px] text-white/80 mt-1 line-clamp-1">{p.short_desc}</p>
                   </div>
                 </div>
 
-                <div className="px-5 pt-4 pb-8">
-                  {/* 제목 */}
-                  <h2 className="text-[22px] font-bold text-[#1d1d1f] leading-tight">{p.name}</h2>
-                  <p className="text-[14px] text-[#6e6e73] mt-1">{p.short_desc}</p>
+                <div className="overflow-y-auto flex-1">
+                  <div className="px-5 pt-4 pb-10">
+                    {/* 거리 정보 pill */}
+                    {(p.distance_km || p.drive_min) && (
+                      <div className="flex items-center gap-2 mb-4">
+                        <div className="flex items-center gap-1.5 bg-[#f5f5f7] rounded-full px-3 py-1.5">
+                          <Car size={13} className="text-[#424245]" />
+                          <span className="text-[12px] font-semibold text-[#424245]">
+                            검단에서 {p.distance_km && `${p.distance_km}km`}{p.drive_min && ` · 차로 약 ${p.drive_min}분`}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
-                  {/* 거리 정보 */}
-                  {(p.distance_km || p.drive_min) && (
-                    <div className="flex items-center gap-1.5 mt-2">
-                      <Car size={14} className="text-[#86868b]" />
-                      <span className="text-[13px] text-[#86868b]">
-                        검단에서 {p.distance_km && `${p.distance_km}km`}{p.drive_min && ` · 차로 약 ${p.drive_min}분`}
-                      </span>
-                    </div>
-                  )}
+                    {/* 태그 */}
+                    {p.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {p.tags.map(tag => (
+                          <span key={tag} className="text-[12px] text-[#6e6e73] bg-[#f5f5f7] px-2.5 py-1 rounded-full">{tag}</span>
+                        ))}
+                      </div>
+                    )}
 
-                  {/* 태그 */}
-                  {p.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {p.tags.map(tag => (
-                        <span key={tag} className="text-[12px] text-[#6e6e73] bg-[#f5f5f7] px-2.5 py-1 rounded-full">{tag}</span>
-                      ))}
-                    </div>
-                  )}
+                    {/* 본문 */}
+                    {p.description && (
+                      <div className="mb-4 pt-1">
+                        <p className="text-[14px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{p.description}</p>
+                      </div>
+                    )}
 
-                  {/* 본문 */}
-                  {p.description && (
-                    <div className="mt-4 pt-4 border-t border-[#f5f5f7]">
-                      <p className="text-[14px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{p.description}</p>
-                    </div>
-                  )}
-
-                  {/* 상세 정보 카드 */}
-                  {(p.operating_hours || p.admission_fee || p.address || p.phone || p.website) && (
-                    <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-4 py-3.5 space-y-2.5">
-                      {p.operating_hours && (
-                        <div className="flex items-start gap-2.5">
-                          <Clock size={14} className="text-[#86868b] mt-0.5 shrink-0" />
-                          <div>
-                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">운영시간</p>
-                            <p className="text-[13px] text-[#1d1d1f]">{p.operating_hours}</p>
+                    {/* 상세 정보 카드 */}
+                    {(p.operating_hours || p.admission_fee || p.address || p.phone || p.website) && (
+                      <div className="bg-[#f5f5f7] rounded-2xl px-4 py-4 space-y-3 divide-y divide-[#e5e5ea]">
+                        {p.operating_hours && (
+                          <div className="flex items-start gap-3 pt-0">
+                            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
+                              <Clock size={13} className="text-[#0071e3]" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-[#86868b] font-semibold mb-0.5">운영시간</p>
+                              <p className="text-[13px] text-[#1d1d1f] font-medium">{p.operating_hours}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {p.admission_fee && (
-                        <div className="flex items-start gap-2.5">
-                          <span className="text-[13px] text-[#86868b] mt-0.5 font-bold shrink-0">₩</span>
-                          <div>
-                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">입장료</p>
-                            <p className="text-[13px] text-[#1d1d1f]">{p.admission_fee}</p>
+                        )}
+                        {p.admission_fee && (
+                          <div className="flex items-start gap-3 pt-3">
+                            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
+                              <span className="text-[12px] font-black text-[#2E7D32]">₩</span>
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-[#86868b] font-semibold mb-0.5">입장료</p>
+                              <p className="text-[13px] text-[#1d1d1f] font-medium">{p.admission_fee}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {p.address && (
-                        <div className="flex items-start gap-2.5">
-                          <MapPin size={14} className="text-[#86868b] mt-0.5 shrink-0" />
-                          <div>
-                            <p className="text-[11px] text-[#86868b] font-medium mb-0.5">주소</p>
-                            <p className="text-[13px] text-[#1d1d1f]">{p.address}</p>
+                        )}
+                        {p.address && (
+                          <div className="flex items-start gap-3 pt-3">
+                            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
+                              <MapPin size={13} className="text-[#F04452]" />
+                            </div>
+                            <div>
+                              <p className="text-[11px] text-[#86868b] font-semibold mb-0.5">주소</p>
+                              <p className="text-[13px] text-[#1d1d1f] font-medium">{p.address}</p>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                      {p.phone && (
-                        <div className="flex items-center gap-2.5">
-                          <Phone size={14} className="text-[#86868b] shrink-0" />
-                          <a href={`tel:${p.phone}`} className="text-[13px] text-[#0071e3]">{p.phone}</a>
-                        </div>
-                      )}
-                      {p.website && (
-                        <div className="flex items-center gap-2.5">
-                          <Globe size={14} className="text-[#86868b] shrink-0" />
-                          <a href={p.website} target="_blank" rel="noopener noreferrer"
-                            className="text-[13px] text-[#0071e3] truncate">{p.website.replace(/^https?:\/\//, "")}</a>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                        {p.phone && (
+                          <div className="flex items-center gap-3 pt-3">
+                            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
+                              <Phone size={13} className="text-[#0071e3]" />
+                            </div>
+                            <a href={`tel:${p.phone}`} className="text-[13px] text-[#0071e3] font-semibold">{p.phone}</a>
+                          </div>
+                        )}
+                        {p.website && (
+                          <div className="flex items-center gap-3 pt-3">
+                            <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
+                              <Globe size={13} className="text-[#0071e3]" />
+                            </div>
+                            <a href={p.website} target="_blank" rel="noopener noreferrer"
+                              className="text-[13px] text-[#0071e3] font-semibold truncate">{p.website.replace(/^https?:\/\//, "")}</a>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
