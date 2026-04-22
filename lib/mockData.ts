@@ -1586,10 +1586,11 @@ export interface Pharmacy {
   name: string;
   address: string;
   phone: string;
-  weekendHours: string | null;   // null = 미운영
-  nightHours: string | null;     // null = 미운영
-  isOpenNow: boolean;
-  tags: string[];                // e.g. ["주말", "심야"]
+  weekdayHours: string | null;   // 평일 영업시간
+  weekendHours: string | null;   // 주말 영업시간 (null = 미운영)
+  nightHours: string | null;     // 심야 영업시간 (null = 미운영)
+  isOpenNow: boolean;            // 컴포넌트에서 재계산 권장
+  tags: string[];                // e.g. ["주말", "심야", "24시"]
   distance?: string;
 }
 
@@ -1693,6 +1694,7 @@ export const pharmacies: Pharmacy[] = [
     name: "가온약국",
     address: "인천 서구 봉오재 3로 90 (검단동)",
     phone: "032-567-0879",
+    weekdayHours: "09:00~21:00",
     weekendHours: "토·일 10:00~18:00",
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
@@ -1704,6 +1706,7 @@ export const pharmacies: Pharmacy[] = [
     name: "검단아라태평양약국",
     address: "인천 서구 이음대로 378 (원당동)",
     phone: "032-561-7768",
+    weekdayHours: "09:00~21:00",
     weekendHours: "토·일 10:00~18:00",
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
@@ -1715,6 +1718,7 @@ export const pharmacies: Pharmacy[] = [
     name: "레몬약국",
     address: "인천 서구 검단로 480 (왕길동)",
     phone: "032-562-1088",
+    weekdayHours: "09:00~21:00",
     weekendHours: "토·일 10:00~18:00",
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
@@ -1726,6 +1730,7 @@ export const pharmacies: Pharmacy[] = [
     name: "루원봄약국",
     address: "인천 서구 봉오대로 255 (가정동)",
     phone: "032-563-1486",
+    weekdayHours: "09:00~20:00",
     weekendHours: null,
     nightHours: "평일 22:00~01:00",
     isOpenNow: false,
@@ -1737,6 +1742,7 @@ export const pharmacies: Pharmacy[] = [
     name: "메디피아약국",
     address: "인천 서구 완정로 172 (마전동)",
     phone: "032-562-0258",
+    weekdayHours: "09:00~21:00",
     weekendHours: "토·일 10:00~18:00",
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
@@ -1748,6 +1754,7 @@ export const pharmacies: Pharmacy[] = [
     name: "옥신온누리약국",
     address: "인천 서구 고래울로 29 (가좌동)",
     phone: "032-578-1329",
+    weekdayHours: "09:00~21:00",
     weekendHours: "토·일 10:00~18:00",
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,

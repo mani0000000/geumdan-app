@@ -92,6 +92,7 @@ export async function fetchAllPharmacies(): Promise<Pharmacy[]> {
       name: row.name as string,
       address: (row.address as string) ?? '',
       phone: (row.phone as string) ?? '',
+      weekdayHours: (row.weekday_hours as string | null) ?? null,
       weekendHours: (row.weekend_hours as string | null) ?? null,
       nightHours: (row.night_hours as string | null) ?? null,
       isOpenNow: computeIsOpenNow({
@@ -139,6 +140,7 @@ export async function fetchNightPharmacies(): Promise<Pharmacy[]> {
       name: row.name as string,
       address: (row.address as string) ?? '',
       phone: (row.phone as string) ?? '',
+      weekdayHours: (row.weekday_hours as string | null) ?? null,
       weekendHours: (row.weekend_hours as string | null) ?? null,
       nightHours: (row.night_hours as string | null) ?? null,
       isOpenNow: computeIsOpenNow({

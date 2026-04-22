@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -7,18 +7,19 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar,
-  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle,
+  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, nearbyStops, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
+import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
@@ -156,23 +157,23 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
             {(weather.pm10 != null || weather.pm25 != null) && (
               <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                 {weather.pm10 != null && (
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                     weather.pm10Label === "좋음" ? "bg-blue-300/25 text-blue-100"
-                    : weather.pm10Label === "보통" ? "bg-white/20 text-white/75"
-                    : weather.pm10Label === "나쁨" ? "bg-orange-300/30 text-orange-200"
-                    : "bg-red-400/30 text-red-200"
+                    : weather.pm10Label === "보통" ? "bg-white/20 text-white/80"
+                    : weather.pm10Label === "나쁨" ? "bg-orange-300/35 text-orange-200"
+                    : "bg-red-400/40 text-red-200"
                   }`}>
-                    미세먼지 {weather.pm10Label}
+                    미세 {weather.pm10}㎍ · {weather.pm10Label}
                   </span>
                 )}
                 {weather.pm25 != null && (
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                     weather.pm25Label === "좋음" ? "bg-blue-300/25 text-blue-100"
-                    : weather.pm25Label === "보통" ? "bg-white/20 text-white/75"
-                    : weather.pm25Label === "나쁨" ? "bg-orange-300/30 text-orange-200"
-                    : "bg-red-400/30 text-red-200"
+                    : weather.pm25Label === "보통" ? "bg-white/20 text-white/80"
+                    : weather.pm25Label === "나쁨" ? "bg-orange-300/35 text-orange-200"
+                    : "bg-red-400/40 text-red-200"
                   }`}>
-                    초미세먼지 {weather.pm25Label}
+                    초미세 {weather.pm25}㎍ · {weather.pm25Label}
                   </span>
                 )}
               </div>
@@ -811,6 +812,88 @@ function MartSection() {
   );
 }
 
+// ─── 약국 영업 상태 계산 ──────────────────────────────────────
+function withinHoursStr(hoursStr: string, cur: number): boolean {
+  if (/24시간/.test(hoursStr)) return true;
+  for (const m of [...hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/g)]) {
+    const s = +m[1] * 60 + +m[2], e = +m[3] * 60 + +m[4];
+    if (e < s ? (cur >= s || cur < e) : (cur >= s && cur < e)) return true;
+  }
+  return false;
+}
+
+function getPharmacyStatus(p: Pharmacy, now: Date): {
+  isOpen: boolean;
+  todayHours: string | null;
+  todayLabel: string;
+} {
+  const day = now.getDay();
+  const isWeekend = day === 0 || day === 6;
+  const h = now.getHours();
+  const isNight = h >= 21 || h < 6;
+  const cur = h * 60 + now.getMinutes();
+
+  if (isNight && p.nightHours) {
+    return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
+  }
+  if (isWeekend) {
+    if (p.weekendHours) return { isOpen: withinHoursStr(p.weekendHours, cur), todayHours: p.weekendHours, todayLabel: "주말" };
+    return { isOpen: false, todayHours: null, todayLabel: "주말 미운영" };
+  }
+  if (p.weekdayHours) {
+    return { isOpen: withinHoursStr(p.weekdayHours, cur), todayHours: p.weekdayHours, todayLabel: "평일" };
+  }
+  return { isOpen: p.isOpenNow, todayHours: null, todayLabel: "" };
+}
+
+// ─── 지도 팝업 ────────────────────────────────────────────────
+function MapModal({ name, address, onClose }: { name: string; address: string; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[300]" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+          </div>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
+            <div className="flex-1 min-w-0">
+              <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{name}</p>
+              <p className="text-[12px] text-[#6e6e73] mt-0.5 line-clamp-1">{address}</p>
+            </div>
+            <button onClick={onClose} className="ml-3 shrink-0 active:opacity-60">
+              <X size={20} className="text-[#6e6e73]" />
+            </button>
+          </div>
+          <div style={{ height: 300 }}>
+            <iframe
+              src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed&hl=ko`}
+              width="100%"
+              height="300"
+              style={{ border: 0 }}
+              allowFullScreen
+              loading="lazy"
+              title={name}
+            />
+          </div>
+          <div className="px-5 pb-10 pt-3">
+            <a
+              href={`https://maps.google.com/maps?q=${encodeURIComponent(address)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-full h-11 bg-[#0071e3] rounded-xl flex items-center justify-center gap-2 text-white text-[14px] font-bold active:bg-[#0058b0]"
+              onClick={e => e.stopPropagation()}
+            >
+              <MapPin size={15} />
+              지도 앱으로 열기
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── 약국 위젯 ────────────────────────────────────────────────
 type PharmacyFilter = "전체" | "주말" | "심야";
 type EmergencyType = "약국" | "응급실" | "소아응급실";
@@ -891,6 +974,7 @@ function PharmacySection() {
   const [showAll, setShowAll] = useState(false);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
   const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
+  const [mapTarget, setMapTarget] = useState<{ name: string; address: string } | null>(null);
 
   useEffect(() => {
     fetchAllPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
@@ -964,45 +1048,79 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
-              {displayed.map(p => (
-                <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
-                    <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#6e6e73]"} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-                        {p.isOpenNow ? "영업 중" : "영업 종료"}
-                      </span>
-                      {p.tags.includes("24시") && (
-                        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
-                      )}
+              {displayed.map(p => {
+                const { isOpen, todayHours, todayLabel } = getPharmacyStatus(p, now);
+                return (
+                  <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
+                      <PillBottle size={18} className={isOpen ? "text-[#065F46]" : "text-[#86868b]"} />
                     </div>
-                    <p className="text-[12px] text-[#6e6e73] mt-0.5">{p.address}</p>
-                    <div className="flex flex-col gap-0.5 mt-1.5">
-                      {p.weekendHours && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-[#0071e3] w-6 shrink-0">주말</span>
-                          <span className="text-[12px] text-[#424245]">{p.weekendHours}</span>
+                    <div className="flex-1 min-w-0">
+                      {/* 이름 + 거리 */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
+                          {p.tags.includes("24시") && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
+                          )}
                         </div>
-                      )}
-                      {p.nightHours && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
-                          <span className="text-[12px] text-[#424245]">{p.nightHours}</span>
-                        </div>
-                      )}
+                        {p.distance && <span className="text-[12px] text-[#86868b] shrink-0">{p.distance}</span>}
+                      </div>
+                      {/* 주소 */}
+                      <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{p.address}</p>
+                      {/* 영업 상태 + 오늘 시간 */}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                          isOpen
+                            ? "bg-[#D1FAE5] text-[#065F46]"
+                            : todayLabel === "주말 미운영"
+                              ? "bg-[#f5f5f7] text-[#86868b]"
+                              : "bg-[#FEE2E2] text-[#C0392B]"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOpen ? "bg-[#059669]" : "bg-[#86868b]"}`} />
+                          {isOpen ? "영업 중" : todayLabel === "주말 미운영" ? "주말 미운영" : "영업 종료"}
+                        </span>
+                        {todayHours && (
+                          <span className="text-[12px] text-[#424245] font-semibold">
+                            {todayLabel && todayLabel !== "주말 미운영" ? `${todayLabel} · ` : ""}{todayHours.replace(/^(매일|평일|토·일)\s*/, "")}
+                          </span>
+                        )}
+                      </div>
+                      {/* 기타 운영 시간 */}
+                      <div className="flex gap-3 mt-1.5 flex-wrap">
+                        {p.weekdayHours && todayLabel !== "평일" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#424245]">평일</span> {p.weekdayHours}
+                          </span>
+                        )}
+                        {p.weekendHours && todayLabel !== "주말" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#0071e3]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
+                          </span>
+                        )}
+                        {p.nightHours && todayLabel !== "심야" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#6366F1]">심야</span> {p.nightHours.replace(/^(매일|평일)\s*/, "")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* 버튼 */}
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setMapTarget({ name: p.name, address: p.address })}
+                          className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
+                          <MapPin size={14} className="text-[#0071e3]" />
+                        </button>
+                        <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
+                          <Phone size={14} className="text-[#0071e3]" />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    {p.distance && <span className="text-[12px] text-[#6e6e73]">{p.distance}</span>}
-                    <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#e8f1fd]">
-                      <Phone size={14} className="text-[#0071e3]" />
-                    </a>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {filtered.length > 3 && (
               <button onClick={() => setShowAll(v => !v)}
@@ -1017,36 +1135,60 @@ function PharmacySection() {
           <div className="divide-y divide-[#f5f5f7]">
             {erList.map(er => (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#FEE2E2]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 bg-[#FEE2E2]">
                   {mainType === "소아응급실"
                     ? <span className="text-[18px]">👶</span>
                     : <AlertTriangle size={18} className="text-[#F04452]" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#1d1d1f]">{er.name}</span>
+                  {/* 이름 + 거리 */}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{er.name}</span>
+                    <span className="text-[12px] text-[#86868b] shrink-0">{er.distance}</span>
+                  </div>
+                  {/* 분류 + 소아과 뱃지 */}
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">{er.level}</span>
                     {er.isPediatric && mainType === "응급실" && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과 가능</span>
                     )}
                   </div>
-                  <p className="text-[12px] text-[#6e6e73] mt-0.5">{er.address}</p>
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <Clock size={11} className="text-[#6e6e73]" />
-                    <span className="text-[12px] text-[#424245]">{er.hours}</span>
+                  {/* 주소 */}
+                  <p className="text-[12px] text-[#6e6e73] mt-1 truncate">{er.address}</p>
+                  {/* 영업 상태 + 운영 시간 */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#D1FAE5] text-[#065F46]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#059669] shrink-0" />
+                      운영 중
+                    </span>
+                    <span className="text-[12px] text-[#424245] font-semibold">{er.hours}</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[12px] text-[#6e6e73]">{er.distance}</span>
-                  <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
-                    <Phone size={14} className="text-[#F04452]" />
-                  </a>
+                {/* 버튼 */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => setMapTarget({ name: er.name, address: er.address })}
+                      className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
+                      <MapPin size={14} className="text-[#F04452]" />
+                    </button>
+                    <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
+                      <Phone size={14} className="text-[#F04452]" />
+                    </a>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         )}
       </div>
+      {mapTarget && (
+        <MapModal
+          name={mapTarget.name}
+          address={mapTarget.address}
+          onClose={() => setMapTarget(null)}
+        />
+      )}
     </section>
   );
 }
@@ -1119,6 +1261,132 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
   );
 }
 
+// ─── 홈 교통 위젯 ─────────────────────────────────────────────
+const STOP_NAME: Record<string, string> = Object.fromEntries(
+  GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name])
+);
+
+function HomeTransportWidget() {
+  const router = useRouter();
+  const [favStops] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favStops") ?? "[]")); } catch { return new Set(); }
+  });
+  const [favRoutes] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favRoutes") ?? "[]")); } catch { return new Set(); }
+  });
+  const [arrivals, setArrivals] = useState<Record<string, BusArrival[]>>({});
+  const [loading, setLoading] = useState<Set<string>>(new Set());
+
+  const favStopIds = [...favStops];
+  const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
+
+  const refreshStop = useCallback(async (stopId: string) => {
+    setLoading(prev => new Set([...prev, stopId]));
+    try {
+      const data = await fetchArrivalsByStationId(stopId);
+      setArrivals(prev => ({ ...prev, [stopId]: data }));
+    } catch { /* ignore */ } finally {
+      setLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
+    }
+  }, []);
+
+  useEffect(() => {
+    favStopIds.forEach(id => refreshStop(id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (favStops.size === 0) {
+    return (
+      <section className="mx-4 mb-1">
+        <button
+          onClick={() => router.push("/transport/")}
+          className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:opacity-80 shadow-sm">
+          <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
+            <Bus size={18} className="text-[#0071e3]" />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 버스가 없어요</p>
+            <p className="text-[12px] text-[#6e6e73] mt-0.5">교통 탭에서 버스 노선을 즐겨찾기하면 여기 표시돼요</p>
+          </div>
+          <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
+        </button>
+      </section>
+    );
+  }
+
+  return (
+    <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden">
+        {favStopIds.map(stopId => {
+          const stopArrivals = arrivals[stopId] ?? [];
+          const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
+          const displayed = hasFavRoutes
+            ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
+            : stopArrivals.slice(0, 3);
+          const stopName = STOP_NAME[stopId] ?? "정류장";
+          const isLoading = loading.has(stopId);
+
+          return (
+            <div key={stopId} className="border-b border-[#f5f5f7] last:border-0">
+              <div className="px-4 pt-3 pb-1.5 flex items-center gap-2">
+                <MapPin size={12} className="text-[#0071e3] shrink-0" />
+                <span className="text-[12px] font-bold text-[#424245] flex-1 truncate">{stopName}</span>
+                <button
+                  onClick={() => refreshStop(stopId)}
+                  className="w-7 h-7 rounded-lg bg-[#f5f5f7] flex items-center justify-center active:opacity-70">
+                  <RefreshCw size={11} className={`text-[#0071e3] ${isLoading ? "animate-spin" : ""}`} />
+                </button>
+              </div>
+              {isLoading ? (
+                <div className="px-4 pb-3">
+                  <div className="h-4 w-40 bg-[#f5f5f7] rounded animate-pulse" />
+                </div>
+              ) : displayed.length === 0 ? (
+                <p className="px-4 pb-3 text-[12px] text-[#86868b]">도착 정보 없음</p>
+              ) : (
+                <div className="divide-y divide-[#f5f5f7]">
+                  {displayed.map((a, i) => (
+                    <div key={i} className="px-4 py-2.5 flex items-center gap-2.5">
+                      <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 shrink-0">
+                        <span className="text-white text-[13px] font-black leading-none">{a.routeNo}</span>
+                      </div>
+                      {a.isExpress && (
+                        <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded-md shrink-0">급행</span>
+                      )}
+                      <span className="text-[12px] text-[#424245] flex-1 truncate">{a.destination}</span>
+                      <div className={`rounded-lg px-2.5 py-1 text-center min-w-[52px] shrink-0 ${
+                        a.arrivalMin <= 3 ? "bg-[#F04452]"
+                        : a.arrivalMin <= 7 ? "bg-[#FF9500]"
+                        : "bg-[#0071e3]"
+                      }`}>
+                        {a.arrivalMin <= 0
+                          ? <span className="text-white text-[11px] font-bold">곧도착</span>
+                          : <>
+                              <span className="text-white text-[16px] font-black leading-none block">{a.arrivalMin}</span>
+                              <span className="text-white/80 text-[10px] leading-none block">분 후</span>
+                            </>
+                        }
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+        <button
+          onClick={() => router.push("/transport/")}
+          className="w-full py-3 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
+          <span className="text-[13px] text-[#0071e3] font-semibold">실시간 교통 전체보기</span>
+          <ChevronRight size={13} className="text-[#0071e3]" />
+        </button>
+      </div>
+    </section>
+  );
+}
+
 // ─── 메인 ────────────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
@@ -1134,9 +1402,6 @@ export default function HomePage() {
     getUserProfile().then(p => setUserNickname(p.nickname));
     fetchActiveBanners().then(setHomeBanners);
   }, []);
-
-  const stop = nearbyStops[0];
-  const bus = stop?.routes[0];
 
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
@@ -1178,48 +1443,12 @@ export default function HomePage() {
         <PharmacySection />
       </>
     ),
-    transport: () => stop && bus ? (
+    transport: () => (
       <>
         <SectionLabel label="교통" />
-        <section className="mx-4 mb-1">
-          <button onClick={() => router.push("/transport/")}
-            className="w-full rounded-2xl overflow-hidden active:opacity-90"
-            style={{ background: "linear-gradient(135deg, #0071e3, #0EA5E9)" }}>
-            <div className="px-4 pt-4 pb-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
-                      <Bus size={13} className="text-white" />
-                    </div>
-                    <span className="text-[12px] text-white/70">{stop.name}</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-[28px] font-black text-white leading-none">{bus.routeNo}번</span>
-                    <span className="text-[15px] text-white/80">{bus.destination} 방면</span>
-                  </div>
-                  {bus.isExpress && (
-                    <span className="inline-flex items-center gap-1 mt-1.5 bg-white/20 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">
-                      ⚡ 급행
-                    </span>
-                  )}
-                </div>
-                <div className="bg-white rounded-xl px-3.5 py-2.5 text-center min-w-[68px] shadow-md">
-                  <span className="text-[30px] font-black text-[#0071e3] leading-none block">
-                    {bus.arrivalMin}
-                  </span>
-                  <span className="text-[11px] text-[#0071e3]/70 font-semibold">분 후</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/20">
-              <span className="text-[12px] text-white/60">실시간 교통 전체 보기</span>
-              <ChevronRight size={14} className="text-white/50" />
-            </div>
-          </button>
-        </section>
+        <HomeTransportWidget />
       </>
-    ) : null,
+    ),
     sosik: () => (
       <>
         <SectionLabel label="검단 소식" />

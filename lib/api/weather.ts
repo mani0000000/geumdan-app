@@ -1,8 +1,7 @@
-// 날씨: Open-Meteo primary (무료·키없음·CORS OK) + 에어코리아 미세먼지
+// 날씨: Open-Meteo primary (무료·키없음·CORS OK)
+// 미세먼지: Open-Meteo air quality API (무료·키없음·CORS OK)
 // 기상청 단기예보는 CORS 제한으로 브라우저 직접 호출 불가 → Open-Meteo 사용
 // 검단신도시 좌표: 37.5446, 126.6861
-
-const AIR_KEY = process.env.NEXT_PUBLIC_BUS_API_KEY ?? "";
 
 const WMO: Record<number, { label: string; emoji: string }> = {
   0:  { label: "맑음",       emoji: "☀️" },
@@ -75,26 +74,15 @@ function pmLabel(v: number | null | undefined, type: "pm10" | "pm25"): string {
 }
 
 async function fetchAirQuality(): Promise<{ pm10: number | null; pm25: number | null }> {
-  if (!AIR_KEY) return { pm10: null, pm25: null };
   try {
-    const params = new URLSearchParams({
-      serviceKey: AIR_KEY, returnType: "json",
-      numOfRows: "20", pageNo: "1",
-      sidoName: "인천", ver: "1.0",
-    });
     const res = await fetch(
-      `https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty?${params}`,
+      "https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5446&longitude=126.6861&current=pm10,pm2_5",
       { cache: "no-store" }
     );
     if (!res.ok) return { pm10: null, pm25: null };
     const json = await res.json();
-    const items: Record<string, string>[] = json?.response?.body?.items ?? [];
-    const station = items.find(i =>
-      i.stationName?.includes("검단") || i.stationName?.includes("서구")
-    ) ?? items[0];
-    if (!station) return { pm10: null, pm25: null };
-    const pm10 = parseInt(station.pm10Value) || null;
-    const pm25 = parseInt(station.pm25Value) || null;
+    const pm10 = json?.current?.pm10 != null ? Math.round(json.current.pm10 as number) : null;
+    const pm25 = json?.current?.pm2_5 != null ? Math.round(json.current.pm2_5 as number) : null;
     return { pm10, pm25 };
   } catch { return { pm10: null, pm25: null }; }
 }
