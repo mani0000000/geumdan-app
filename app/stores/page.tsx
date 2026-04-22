@@ -12,6 +12,8 @@ import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
+import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
+import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
@@ -643,11 +645,13 @@ function StoreListView() {
   const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
   const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
   const [dlState, setDlState] = useState<Set<string>>(new Set());
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
     fetchActiveCoupons().then(setDbCoupons);
     fetchActiveOpenings().then(setDbOpenings);
+    fetchActiveBanners().then(setBanners);
   }, []);
 
   const allStores = useMemo<EnrichedStore[]>(() =>
@@ -746,6 +750,9 @@ function StoreListView() {
 
   return (
     <div>
+      {/* ── 이번 주 행사 배너 ── */}
+      {banners.length > 0 && <BannerCarousel banners={banners} />}
+
       {/* ── 신규 오픈 ── */}
       {(() => {
         const weekOpenings  = dbOpenings.filter(o => classifyOpening(o.openDate) === "week");
