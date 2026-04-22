@@ -56,7 +56,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5575, lng: 126.6721,
     apiType: "arex",
     stationCode: "검암",
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 20, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -66,7 +66,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 20, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
   // 서울 9호선

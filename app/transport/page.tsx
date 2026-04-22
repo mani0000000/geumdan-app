@@ -926,25 +926,23 @@ export default function TransportPage() {
                 )}
 
                 <div className="space-y-2">
-                  {upArr.map((a, i) => (
-                    <div key={`u${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                  {([
+                    ...upArr.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
+                    ...upArr.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
+                    ...downArr.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
+                    ...downArr.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
+                  ]).map(({ a, dir }, i) => (
+                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded">상행</span>
-                          <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
-                        </div>
-                        {!isEst && a.currentStation && (
-                          <p className="text-[11px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
-                        )}
-                      </div>
-                      <ArrivalBadge min={a.arrivalMin} live />
-                    </div>
-                  ))}
-                  {downArr.map((a, i) => (
-                    <div key={`d${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded">하행</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                            dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
+                          }`}>{dir}</span>
+                          {a.isExpress && (
+                            <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                              {a.trainTypeName ?? "급행"}
+                            </span>
+                          )}
                           <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
                         </div>
                         {!isEst && a.currentStation && (
@@ -1240,6 +1238,14 @@ export default function TransportPage() {
                         </div>
                       );
 
+                      // 방향 × 열차종류(일반/급행) 기준으로 행 목록 구성
+                      const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
+                        ...upArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
+                        ...upArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
+                        ...downArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
+                        ...downArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
+                      ];
+
                       return (
                       <>
                         {isEstimated && (
@@ -1247,34 +1253,19 @@ export default function TransportPage() {
                             <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준 추정 도착</span>
                           </div>
                         )}
-                        {/* 상행 */}
-                        {upArrivals.slice(0, 2).map((a, i) => (
-                          <div key={`up-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                        {rows.map(({ a, dir }, i) => (
+                          <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
                             <div className="flex-1 min-w-0 mr-2">
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
-                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
+                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                                  dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
+                                }`}>{dir}</span>
                                 {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">{a.trainTypeName ?? "급행"}</span>
+                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                                    {a.trainTypeName ?? "급행"}
+                                  </span>
                                 )}
-                              </div>
-                              <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                                {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
-                              </p>
-                            </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
-                          </div>
-                        ))}
-                        {/* 하행 */}
-                        {downArrivals.slice(0, 2).map((a, i) => (
-                          <div key={`down-${i}`} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                            <div className="flex-1 min-w-0 mr-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
                                 <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
-                                {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">{a.trainTypeName ?? "급행"}</span>
-                                )}
                               </div>
                               <p className="text-[11px] text-[#6e6e73] mt-0.5">
                                 {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
