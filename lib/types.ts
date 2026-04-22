@@ -240,4 +240,5 @@ export interface Store {
   h: number;
   isOpen?: boolean;
   isPremium?: boolean;
+  thumbnail_url?: string | null;
 }

@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -11,6 +11,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
+import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
@@ -675,10 +676,12 @@ function StoreListView() {
   function StoreCard({ store }: { store: EnrichedStore }) {
     const hasNew = newOpeningIds.has(store.id);
     const hasCoupon = couponStoreIds.has(store.id);
+    const [thumbFailed, setThumbFailed] = useState(false);
+    const hasThumb = !!store.thumbnail_url && !thumbFailed;
     return (
       <button onClick={() => setSelectedStore(store)}
         className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
-        <div className="w-[3px] shrink-0 rounded-l-2xl" style={{ background: catDot[store.category] }} />
+        <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
         <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
           <div className="relative shrink-0">
             <StoreLogo name={store.name} category={store.category} size={46} />
@@ -708,15 +711,35 @@ function StoreListView() {
               </div>
             )}
           </div>
-          <div className="shrink-0 flex flex-col items-end gap-2">
-            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-              store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
-            }`}>
-              {store.isOpen !== false ? "영업 중" : "영업 종료"}
-            </span>
-            <ChevronRight size={14} className="text-[#d2d2d7]" />
-          </div>
+          {!hasThumb && (
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
+              }`}>
+                {store.isOpen !== false ? "영업 중" : "영업 종료"}
+              </span>
+              <ChevronRight size={14} className="text-[#d2d2d7]" />
+            </div>
+          )}
         </div>
+        {hasThumb && (
+          <div className="shrink-0 relative" style={{ width: 88 }}>
+            <img
+              src={store.thumbnail_url!}
+              alt={store.name}
+              onError={() => setThumbFailed(true)}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
+            <div className="absolute top-2 right-2">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
+                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
+              }`}>
+                {store.isOpen !== false ? "영업" : "종료"}
+              </span>
+            </div>
+          </div>
+        )}
       </button>
     );
   }
@@ -1260,6 +1283,10 @@ export default function StoresPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<Store | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [recommendedKws, setRecommendedKws] = useState<string[]>([]);
+  const [popularKws, setPopularKws] = useState<string[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
@@ -1278,7 +1305,28 @@ export default function StoresPage() {
     fetchAllStoresFlat().then(setAllDbStores);
     fetchActiveCoupons().then(setMapCoupons);
     fetchActiveOpenings().then(setMapOpenings);
+    fetchRecommendedKeywords().then(setRecommendedKws);
+    fetchPopularKeywords().then(setPopularKws);
   }, []);
+
+  function handleSearchSelect(kw: string) {
+    setSearchQuery(kw);
+    setSearchFocused(false);
+    if (kw.trim().length >= 2) logSearch(kw.trim());
+    searchInputRef.current?.blur();
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && searchQuery.trim().length >= 2) {
+      logSearch(searchQuery.trim());
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+    if (e.key === "Escape") {
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+  }
 
   // 위치 권한 요청
   function requestLocation() {
@@ -1343,21 +1391,24 @@ export default function StoresPage() {
 
       {/* 검색바 + 토글 */}
       <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
-        <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-2xl px-4 h-11">
-          <Search size={15} className="text-[#86868b] shrink-0" />
+        <div className={`flex items-center gap-2.5 rounded-2xl px-4 h-12 transition-all ${searchFocused ? "bg-white ring-2 ring-[#0071e3] shadow-sm" : "bg-[#f5f5f7]"}`}>
+          <Search size={16} className={`shrink-0 transition-colors ${searchFocused ? "text-[#0071e3]" : "text-[#86868b]"}`} />
           <input
+            ref={searchInputRef}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="매장명 또는 카테고리 검색 (예: 카페, 스타벅스)"
+            onFocus={() => setSearchFocused(true)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="매장명, 업종 검색 (예: 카페, 스타벅스)"
             className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#1d1d1f] placeholder:text-[#86868b]"
           />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="active:opacity-60">
-              <X size={15} className="text-[#86868b]" />
+          {(searchQuery || searchFocused) && (
+            <button onMouseDown={e => e.preventDefault()} onClick={() => { setSearchQuery(""); setSearchFocused(false); searchInputRef.current?.blur(); }} className="active:opacity-60">
+              <X size={16} className="text-[#86868b]" />
             </button>
           )}
         </div>
-        {!isSearching && (
+        {!isSearching && !searchFocused && (
           <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
             {(["리스트", "지도"] as const).map(mode => (
               <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
@@ -1372,9 +1423,52 @@ export default function StoresPage() {
         )}
       </div>
 
+      {/* 키워드 검색 패널 */}
+      {searchFocused && !isSearching && (
+        <div className="bg-white min-h-[calc(100dvh-170px)]" onMouseDown={e => e.preventDefault()}>
+          {recommendedKws.length > 0 && (
+            <div className="px-4 pt-5 pb-4 border-b border-[#f5f5f7]">
+              <p className="text-[12px] font-bold text-[#86868b] mb-3 uppercase tracking-wide">추천 검색어</p>
+              <div className="flex flex-wrap gap-2">
+                {recommendedKws.map(kw => (
+                  <button key={kw} onClick={() => handleSearchSelect(kw)}
+                    className="h-9 px-4 bg-[#f5f5f7] rounded-full text-[14px] font-semibold text-[#1d1d1f] active:bg-[#e5e5ea] transition-colors">
+                    {kw}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {popularKws.length > 0 && (
+            <div className="px-4 pt-4 pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[12px] font-bold text-[#86868b] uppercase tracking-wide">실시간 인기 검색어</p>
+                <p className="text-[10px] text-[#86868b]">최근 7일 기준</p>
+              </div>
+              <div className="space-y-1">
+                {popularKws.map((kw, i) => (
+                  <button key={kw} onClick={() => handleSearchSelect(kw)}
+                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-[#f5f5f7] transition-colors text-left">
+                    <span className={`text-[13px] font-black w-5 text-center shrink-0 ${i < 3 ? "text-[#F04452]" : "text-[#86868b]"}`}>{i + 1}</span>
+                    <span className="text-[15px] text-[#1d1d1f] font-medium flex-1">{kw}</span>
+                    {i < 3 && <span className="text-[10px] font-bold text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full shrink-0">HOT</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {recommendedKws.length === 0 && popularKws.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 gap-2">
+              <Search size={32} className="text-[#d2d2d7]" />
+              <p className="text-[14px] text-[#86868b]">검색어를 입력해 보세요</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {isSearching ? (
-        <SearchResults results={searchResults} onSelect={(s) => setSelected(s)} />
-      ) : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
+        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+      ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
         /* ─── 건물 상세 뷰 (리스트 모드) ─── */
         <BuildingDetail
           buildingData={selectedBuildingData}
