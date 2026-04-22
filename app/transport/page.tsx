@@ -1080,7 +1080,7 @@ export default function TransportPage() {
                                 <span className="text-[10px] font-bold bg-[#d2d2d7] text-[#424245] px-1.5 py-0.5 rounded shrink-0">상행</span>
                                 <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                 {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">{a.trainTypeName ?? "급행"}</span>
                                 )}
                               </div>
                               <p className="text-[11px] text-[#6e6e73] mt-0.5">
@@ -1098,7 +1098,7 @@ export default function TransportPage() {
                                 <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded shrink-0">하행</span>
                                 <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                                 {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">급행</span>
+                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">{a.trainTypeName ?? "급행"}</span>
                                 )}
                               </div>
                               <p className="text-[11px] text-[#6e6e73] mt-0.5">

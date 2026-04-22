@@ -17,6 +17,7 @@ export interface SubwayArrival {
   trainNo: string;
   currentStation: string;
   isExpress: boolean;
+  trainTypeName?: string;  // "직통", "급행" 등
 }
 
 export type SubwayApiType = "ic1" | "arex" | "seoul9" | "planned";
@@ -55,7 +56,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5575, lng: 126.6721,
     apiType: "arex",
     stationCode: "검암",
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 20, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -65,7 +66,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 20, upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
   // 서울 9호선
@@ -175,6 +176,22 @@ export function findNearbySubwayStations(
 // 서버 라우트가 키를 관리하므로 클라이언트는 항상 활성으로 취급
 export function hasSubwayKey() { return true; }
 
+// 운행 시간 내인지 확인 (종료 후 스테일 데이터 방지)
+function isInServiceHours(timetable: SubwayStationEntry["timetable"]): boolean {
+  if (timetable.upFirst === "-") return true;
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const parse = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const firstMin = parse(timetable.upFirst);
+  let lastMin = parse(timetable.downLast);
+  if (lastMin < firstMin) lastMin += 1440;
+  // 첫차 20분 전 ~ 막차 30분 후 사이
+  const start = firstMin - 20;
+  const end = lastMin + 30;
+  const nowAdj = nowMin < start - 600 ? nowMin + 1440 : nowMin;
+  return nowAdj >= start && nowAdj <= end;
+}
+
 // ── 인천1호선 도착정보 ────────────────────────────────────────
 async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
   try {
@@ -216,14 +233,22 @@ async function fetchSeoulSubwayArrivals(
     const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const list: any[] = data?.realtimeArrivalList ?? [];
-    return list.filter(lineFilter).map(item => ({
-      direction: String(item.updnLine ?? "").includes("상") ? "상행" : "하행",
-      terminalStation: String(item.bstatnNm ?? "종착"),
-      arrivalMin: Math.max(0, Math.round(Number(item.barvlDt ?? 0) / 60)),
-      trainNo: String(item.btrainNo ?? ""),
-      currentStation: String(item.arvlMsg3 ?? ""),
-      isExpress: String(item.btrainSttus ?? "").includes("급행"),
-    }));
+    return list.filter(lineFilter).map(item => {
+      const typeStr = String(item.btrainSttus ?? "");
+      const isExpress = typeStr.includes("급행") || typeStr.includes("직통");
+      const trainTypeName = typeStr.includes("직통") ? "직통"
+        : typeStr.includes("급행") ? "급행"
+        : undefined;
+      return {
+        direction: String(item.updnLine ?? "").includes("상") ? "상행" as const : "하행" as const,
+        terminalStation: String(item.bstatnNm ?? "종착"),
+        arrivalMin: Math.max(0, Math.round(Number(item.barvlDt ?? 0) / 60)),
+        trainNo: String(item.btrainNo ?? ""),
+        currentStation: String(item.arvlMsg3 ?? ""),
+        isExpress,
+        trainTypeName,
+      };
+    });
   } catch {
     return [];
   }
@@ -247,6 +272,8 @@ async function fetchSeoul9Arrivals(stationName: string): Promise<SubwayArrival[]
 export async function fetchSubwayArrivals(
   station: SubwayStationWithDist,
 ): Promise<SubwayArrival[]> {
+  // 운행 시간 외 → 시간표 추정으로 폴백 (스테일 실시간 데이터 방지)
+  if (!isInServiceHours(station.timetable)) return [];
   if (station.apiType === "ic1")    return fetchIc1Arrivals(station.stationCode);
   if (station.apiType === "arex")   return fetchArexArrivals(station.stationCode);
   if (station.apiType === "seoul9") return fetchSeoul9Arrivals(station.stationCode);
