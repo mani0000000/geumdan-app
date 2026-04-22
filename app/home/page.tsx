@@ -810,6 +810,40 @@ function MartSection() {
   );
 }
 
+// ─── 약국 영업 상태 계산 ──────────────────────────────────────
+function withinHoursStr(hoursStr: string, cur: number): boolean {
+  if (/24시간/.test(hoursStr)) return true;
+  for (const m of [...hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/g)]) {
+    const s = +m[1] * 60 + +m[2], e = +m[3] * 60 + +m[4];
+    if (e < s ? (cur >= s || cur < e) : (cur >= s && cur < e)) return true;
+  }
+  return false;
+}
+
+function getPharmacyStatus(p: Pharmacy, now: Date): {
+  isOpen: boolean;
+  todayHours: string | null;
+  todayLabel: string;
+} {
+  const day = now.getDay();
+  const isWeekend = day === 0 || day === 6;
+  const h = now.getHours();
+  const isNight = h >= 21 || h < 6;
+  const cur = h * 60 + now.getMinutes();
+
+  if (isNight && p.nightHours) {
+    return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
+  }
+  if (isWeekend) {
+    if (p.weekendHours) return { isOpen: withinHoursStr(p.weekendHours, cur), todayHours: p.weekendHours, todayLabel: "주말" };
+    return { isOpen: false, todayHours: null, todayLabel: "주말 미운영" };
+  }
+  if (p.weekdayHours) {
+    return { isOpen: withinHoursStr(p.weekdayHours, cur), todayHours: p.weekdayHours, todayLabel: "평일" };
+  }
+  return { isOpen: p.isOpenNow, todayHours: null, todayLabel: "" };
+}
+
 // ─── 지도 팝업 ────────────────────────────────────────────────
 function MapModal({ name, address, onClose }: { name: string; address: string; onClose: () => void }) {
   return (
@@ -1012,52 +1046,79 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
-              {displayed.map(p => (
-                <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${p.isOpenNow ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
-                    <PillBottle size={18} className={p.isOpenNow ? "text-[#065F46]" : "text-[#6e6e73]"} />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${p.isOpenNow ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-                        {p.isOpenNow ? "영업 중" : "영업 종료"}
-                      </span>
-                      {p.tags.includes("24시") && (
-                        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309]">24시</span>
-                      )}
+              {displayed.map(p => {
+                const { isOpen, todayHours, todayLabel } = getPharmacyStatus(p, now);
+                return (
+                  <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
+                      <PillBottle size={18} className={isOpen ? "text-[#065F46]" : "text-[#86868b]"} />
                     </div>
-                    <p className="text-[12px] text-[#6e6e73] mt-0.5">{p.address}</p>
-                    <div className="flex flex-col gap-0.5 mt-1.5">
-                      {p.weekendHours && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-[#0071e3] w-6 shrink-0">주말</span>
-                          <span className="text-[12px] text-[#424245]">{p.weekendHours}</span>
+                    <div className="flex-1 min-w-0">
+                      {/* 이름 + 거리 */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap min-w-0">
+                          <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
+                          {p.tags.includes("24시") && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
+                          )}
                         </div>
-                      )}
-                      {p.nightHours && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-[#6366F1] w-6 shrink-0">심야</span>
-                          <span className="text-[12px] text-[#424245]">{p.nightHours}</span>
-                        </div>
-                      )}
+                        {p.distance && <span className="text-[12px] text-[#86868b] shrink-0">{p.distance}</span>}
+                      </div>
+                      {/* 주소 */}
+                      <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{p.address}</p>
+                      {/* 영업 상태 + 오늘 시간 */}
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                          isOpen
+                            ? "bg-[#D1FAE5] text-[#065F46]"
+                            : todayLabel === "주말 미운영"
+                              ? "bg-[#f5f5f7] text-[#86868b]"
+                              : "bg-[#FEE2E2] text-[#C0392B]"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${isOpen ? "bg-[#059669]" : "bg-[#86868b]"}`} />
+                          {isOpen ? "영업 중" : todayLabel === "주말 미운영" ? "주말 미운영" : "영업 종료"}
+                        </span>
+                        {todayHours && (
+                          <span className="text-[12px] text-[#424245] font-semibold">
+                            {todayLabel && todayLabel !== "주말 미운영" ? `${todayLabel} · ` : ""}{todayHours.replace(/^(매일|평일|토·일)\s*/, "")}
+                          </span>
+                        )}
+                      </div>
+                      {/* 기타 운영 시간 */}
+                      <div className="flex gap-3 mt-1.5 flex-wrap">
+                        {p.weekdayHours && todayLabel !== "평일" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#424245]">평일</span> {p.weekdayHours}
+                          </span>
+                        )}
+                        {p.weekendHours && todayLabel !== "주말" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#0071e3]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
+                          </span>
+                        )}
+                        {p.nightHours && todayLabel !== "심야" && (
+                          <span className="text-[11px] text-[#86868b]">
+                            <span className="font-semibold text-[#6366F1]">심야</span> {p.nightHours.replace(/^(매일|평일)\s*/, "")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* 버튼 */}
+                    <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setMapTarget({ name: p.name, address: p.address })}
+                          className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
+                          <MapPin size={14} className="text-[#0071e3]" />
+                        </button>
+                        <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
+                          <Phone size={14} className="text-[#0071e3]" />
+                        </a>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
-                    {p.distance && <span className="text-[12px] text-[#6e6e73]">{p.distance}</span>}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setMapTarget({ name: p.name, address: p.address })}
-                        className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                        <MapPin size={14} className="text-[#0071e3]" />
-                      </button>
-                      <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                        <Phone size={14} className="text-[#0071e3]" />
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             {filtered.length > 3 && (
               <button onClick={() => setShowAll(v => !v)}
@@ -1072,27 +1133,37 @@ function PharmacySection() {
           <div className="divide-y divide-[#f5f5f7]">
             {erList.map(er => (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#FEE2E2]">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 bg-[#FEE2E2]">
                   {mainType === "소아응급실"
                     ? <span className="text-[18px]">👶</span>
                     : <AlertTriangle size={18} className="text-[#F04452]" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#1d1d1f]">{er.name}</span>
+                  {/* 이름 + 거리 */}
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{er.name}</span>
+                    <span className="text-[12px] text-[#86868b] shrink-0">{er.distance}</span>
+                  </div>
+                  {/* 분류 + 소아과 뱃지 */}
+                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">{er.level}</span>
                     {er.isPediatric && mainType === "응급실" && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FFF7ED] text-[#F97316]">소아과 가능</span>
                     )}
                   </div>
-                  <p className="text-[12px] text-[#6e6e73] mt-0.5">{er.address}</p>
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <Clock size={11} className="text-[#6e6e73]" />
-                    <span className="text-[12px] text-[#424245]">{er.hours}</span>
+                  {/* 주소 */}
+                  <p className="text-[12px] text-[#6e6e73] mt-1 truncate">{er.address}</p>
+                  {/* 영업 상태 + 운영 시간 */}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#D1FAE5] text-[#065F46]">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#059669] shrink-0" />
+                      운영 중
+                    </span>
+                    <span className="text-[12px] text-[#424245] font-semibold">{er.hours}</span>
                   </div>
                 </div>
-                <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[12px] text-[#6e6e73]">{er.distance}</span>
+                {/* 버튼 */}
+                <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
                   <div className="flex items-center gap-1.5">
                     <button
                       onClick={() => setMapTarget({ name: er.name, address: er.address })}
