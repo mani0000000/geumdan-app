@@ -25,7 +25,7 @@ import {
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
 
-type Tab = "버스" | "지하철" | "가볼만한곳";
+type Tab = "가볼만한곳" | "버스" | "지하철";
 
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
@@ -468,7 +468,7 @@ function SubwayTimetableSheet({
 }
 
 export default function TransportPage() {
-  const [tab, setTab] = useState<Tab>("버스");
+  const [tab, setTab] = useState<Tab>("가볼만한곳");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -632,15 +632,16 @@ export default function TransportPage() {
     await refreshSubwayArrivals(initial);
   }, [refreshSubwayArrivals]);
 
-  // ── 가볼만한곳 로드 ────────────────────────────────────────────
+  // ── 가볼만한곳 로드 (첫 번째 탭이므로 마운트 시 즉시 로드) ───
   useEffect(() => {
-    if (tab !== "가볼만한곳" || places.length > 0) return;
+    if (places.length > 0) return;
     setPlacesLoading(true);
     fetchPublishedPlaces()
       .then(setPlaces)
       .catch(() => {})
       .finally(() => setPlacesLoading(false));
-  }, [tab, places.length]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
@@ -782,7 +783,7 @@ export default function TransportPage() {
 
       {/* 탭 */}
       <div className="bg-white sticky top-[52px] z-30 border-b border-[#f5f5f7] flex">
-        {(["버스", "지하철", "가볼만한곳"] as Tab[]).map(t => (
+        {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-11 text-[13px] font-semibold border-b-2 transition-colors ${
               t === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
