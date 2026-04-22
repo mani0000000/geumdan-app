@@ -8,15 +8,17 @@ const TAGO_BASE = "https://apis.data.go.kr/1613000";
 
 const ACTIONS: Record<string, { base: string; path: string; required: string[] }> = {
   // 인천 전용 API
-  arrivals:       { base: BUS_BASE,  path: "/busArrivalService/getBusArrivalList",                         required: ["stationId"] },
-  locations:      { base: BUS_BASE,  path: "/busLocationInfoService/getBusLocationList",                    required: ["routeId"] },
-  routeInfo:      { base: BUS_BASE,  path: "/routeInfoService/getRouteInfo",                                required: ["routeId"] },
-  routeStations:  { base: BUS_BASE,  path: "/routeInfoService/getStaionByRoute",                            required: ["routeId"] },
-  aroundStations: { base: BUS_BASE,  path: "/busStationAroundInfoService/getBusStationAroundList",          required: ["GPS_LATI", "GPS_LONG"] },
+  arrivals:          { base: BUS_BASE,  path: "/busArrivalService/getBusArrivalList",                         required: ["stationId"] },
+  locations:         { base: BUS_BASE,  path: "/busLocationInfoService/getBusLocationList",                    required: ["routeId"] },
+  routeInfo:         { base: BUS_BASE,  path: "/routeInfoService/getRouteInfo",                                required: ["routeId"] },
+  routeStations:     { base: BUS_BASE,  path: "/routeInfoService/getStaionByRoute",                            required: ["routeId"] },
+  aroundStations:    { base: BUS_BASE,  path: "/busStationAroundInfoService/getBusStationAroundList",          required: ["GPS_LATI", "GPS_LONG"] },
   // 국가대중교통 TAGO API (전국 공통 - cityCode=30 인천)
-  tagoStations:   { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
-  tagoArrivals:   { base: TAGO_BASE, path: "/BusArrivalService/getArrivalInfoList",                         required: ["cityCode", "nodeId"] },
-  tagoRoutes:     { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoList",                   required: ["cityCode", "routeNo"] },
+  tagoStations:      { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
+  tagoArrivals:      { base: TAGO_BASE, path: "/BusArrivalService/getArrivalInfoList",                         required: ["cityCode", "nodeId"] },
+  tagoRoutes:        { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoList",                   required: ["cityCode", "routeNo"] },
+  tagoRouteDetail:   { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoIem",                    required: ["cityCode", "routeId"] },
+  tagoRouteStations: { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteSttnList",                   required: ["cityCode", "routeId"] },
 };
 
 export async function GET(request: NextRequest) {
