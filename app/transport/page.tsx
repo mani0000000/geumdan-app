@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapPin, RefreshCw, ChevronDown, ChevronUp, Star,
-  Zap, Accessibility, Train, Navigation, Bus, Search,
+  Zap, Accessibility, Train, Navigation, Bus, Search, Clock,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -306,6 +306,165 @@ function BusDetailSheet({
   );
 }
 
+// ─── 지하철 전체 시간표 바텀 시트 ────────────────────────────
+function SubwayTimetableSheet({
+  station,
+  onClose,
+}: {
+  station: SubwayStationWithDist;
+  onClose: () => void;
+}) {
+  const [dirTab, setDirTab] = useState<"up" | "down">("up");
+
+  function generateTimes(first: string, last: string, interval: number): string[] {
+    if (!first || first === "-" || !interval) return [];
+    const parse = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+    const times: string[] = [];
+    let cur = parse(first);
+    let lastMin = parse(last);
+    if (lastMin < cur) lastMin += 1440;
+    while (cur <= lastMin) {
+      const h = Math.floor(cur / 60) % 24;
+      const m = cur % 60;
+      times.push(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
+      cur += interval;
+    }
+    return times;
+  }
+
+  const now = new Date();
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+
+  const upTimes   = generateTimes(station.timetable.upFirst,   station.timetable.upLast,   station.timetable.intervalMin);
+  const downTimes = generateTimes(station.timetable.downFirst, station.timetable.downLast, station.timetable.intervalMin);
+  const curTimes  = dirTab === "up" ? upTimes : downTimes;
+  const curDest   = dirTab === "up" ? station.timetable.upDirection : station.timetable.downDirection;
+
+  const isTimePast = (t: string) => {
+    const [h, m] = t.split(":").map(Number);
+    const tMin = h * 60 + m;
+    if (tMin < 300 && nowMin > 1200) return false; // 새벽 시간은 미래로 처리
+    return tMin < nowMin;
+  };
+
+  const nextIdx = curTimes.findIndex(t => !isTimePast(t));
+
+  return (
+    <>
+      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
+      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
+        style={{ maxHeight: "88%", display: "flex", flexDirection: "column" }}>
+
+        {/* 핸들 */}
+        <div className="shrink-0 flex justify-center pt-3 pb-0">
+          <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+        </div>
+
+        {/* 헤더 */}
+        <div className="shrink-0 px-5 pt-4 pb-4 border-b border-[#f5f5f7]">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: station.lineColor + "22" }}>
+                <Train size={20} style={{ color: station.lineColor }} />
+              </div>
+              <div>
+                <p className="text-[17px] font-bold text-[#1d1d1f]">{station.displayName}</p>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                  style={{ background: station.lineColor }}>{station.line}</span>
+              </div>
+            </div>
+            <button onClick={onClose}
+              className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+              <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
+            </button>
+          </div>
+          <p className="text-[11px] text-[#86868b] mt-2 flex items-center gap-1">
+            <Clock size={11} />
+            배차 간격 약 {station.timetable.intervalMin}분 기준 추정 시간표
+          </p>
+        </div>
+
+        {/* 방면 탭 */}
+        <div className="shrink-0 flex border-b border-[#f5f5f7]">
+          {(["up", "down"] as const).map(dir => (
+            <button key={dir} onClick={() => setDirTab(dir)}
+              className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
+                dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
+              }`}>
+              {dir === "up" ? `⬆ ${station.timetable.upDirection}` : `⬇ ${station.timetable.downDirection}`}
+            </button>
+          ))}
+        </div>
+
+        {/* 시간표 그리드 */}
+        <div className="overflow-y-auto flex-1 px-4 py-4">
+          {curTimes.length === 0 ? (
+            <p className="text-[13px] text-[#86868b] text-center py-10">시간표 정보 없음</p>
+          ) : (
+            <>
+              {/* 다음 열차 안내 */}
+              {nextIdx >= 0 && (
+                <div className="bg-[#e8f1fd] rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-[11px] text-[#0071e3] font-medium">다음 열차</p>
+                    <p className="text-[20px] font-black text-[#0071e3]">{curTimes[nextIdx]}</p>
+                    <p className="text-[11px] text-[#0071e3]/70">{curDest} 방면</p>
+                  </div>
+                  <div className="text-right">
+                    {(() => {
+                      const [h, m] = curTimes[nextIdx].split(":").map(Number);
+                      let diff = h * 60 + m - nowMin;
+                      if (diff < 0) diff += 1440;
+                      return diff === 0 ? (
+                        <span className="text-[22px] font-black text-[#F04452]">곧도착</span>
+                      ) : (
+                        <>
+                          <span className="text-[28px] font-black text-[#0071e3]">{diff}</span>
+                          <span className="text-[13px] text-[#0071e3]/70">분 후</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* 전체 시간 그리드 */}
+              <div className="grid grid-cols-4 gap-1.5">
+                {curTimes.map((t, idx) => {
+                  const isPast = isTimePast(t);
+                  const isNext = idx === nextIdx;
+                  return (
+                    <div key={t} className={`rounded-xl py-2.5 text-center transition-colors ${
+                      isNext ? "bg-[#0071e3] shadow-sm shadow-blue-200" :
+                      isPast ? "bg-[#f5f5f7]" : "bg-[#f5f5f7]"
+                    }`}>
+                      <span className={`text-[14px] font-bold ${
+                        isNext ? "text-white" : isPast ? "text-[#c7c7cc]" : "text-[#1d1d1f]"
+                      }`}>{t}</span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-3 mt-4 px-1">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-[#0071e3]" />
+                  <span className="text-[11px] text-[#6e6e73]">다음 열차</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-3 rounded bg-[#f5f5f7] border border-[#d2d2d7]" />
+                  <span className="text-[11px] text-[#c7c7cc]">지난 열차</span>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
 export default function TransportPage() {
   const [tab, setTab] = useState<Tab>("버스");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -316,6 +475,7 @@ export default function TransportPage() {
   const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
+  const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
   const [, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
@@ -590,6 +750,14 @@ export default function TransportPage() {
         <BusDetailSheet
           arrival={selectedArrival}
           onClose={() => setSelectedArrival(null)}
+        />
+      )}
+
+      {/* 지하철 시간표 바텀 시트 */}
+      {timetableStation && (
+        <SubwayTimetableSheet
+          station={timetableStation}
+          onClose={() => setTimetableStation(null)}
         />
       )}
 
@@ -1014,29 +1182,36 @@ export default function TransportPage() {
             subwayList.map((st) => {
               return (
                 <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
-                  {/* 역 헤더 */}
-                  <div className="px-4 pt-4 pb-3 flex items-center gap-3">
+                  {/* 역 헤더 — 탭하면 시간표 */}
+                  <button
+                    onClick={() => setTimetableStation(st)}
+                    className="w-full px-4 pt-4 pb-3 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                       style={{ background: st.lineColor + "22" }}>
                       <Train size={20} style={{ color: st.lineColor }} />
                     </div>
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <p className="text-[16px] font-bold text-[#1d1d1f]">{st.displayName}</p>
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
                           style={{ background: st.lineColor }}>{st.line}</span>
                       </div>
-                      {st.timetable.intervalMin > 0 && (
-                        <p className="text-[12px] text-[#86868b] mt-0.5">배차 {st.timetable.intervalMin}분</p>
-                      )}
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {st.timetable.intervalMin > 0 && (
+                          <p className="text-[12px] text-[#86868b]">배차 {st.timetable.intervalMin}분</p>
+                        )}
+                        <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
+                          <Clock size={10} />시간표
+                        </span>
+                      </div>
                     </div>
                     {!st.planned && (
-                      <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60">
+                      <button onClick={e => { e.stopPropagation(); toggleSubway(st.id); }} className="p-1.5 active:opacity-60">
                         <Star size={20}
                           className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                       </button>
                     )}
-                  </div>
+                  </button>
 
                   {/* 상하행 도착정보 */}
                   <div className="px-4 pb-4 space-y-2">
