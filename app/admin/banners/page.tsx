@@ -85,6 +85,70 @@ function BannerPreview({ form }: { form: FormData }) {
   );
 }
 
+function BannerRow({
+  b, idx, total, deletingId, onMoveUp, onMoveDown, onToggle, onEdit, onDelete,
+}: {
+  b: Banner; idx: number; total: number; deletingId: string | null;
+  onMoveUp: () => void; onMoveDown: () => void;
+  onToggle: () => void; onEdit: () => void; onDelete: () => void;
+}) {
+  const [imgFail, setImgFail] = useState(false);
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm flex">
+      <div className="shrink-0 relative" style={{ width: 100, minHeight: 72 }}>
+        {b.image_url && !imgFail ? (
+          <img src={b.image_url} alt="" onError={() => setImgFail(true)} className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }} />
+        )}
+        {b.badge && (
+          <div className="absolute top-1.5 left-1.5">
+            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+              style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}>
+              {b.badge}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className="flex-1 px-4 py-3 min-w-0">
+        <div className="flex items-start gap-2 flex-wrap">
+          <span className="text-[12px] font-bold text-gray-400">#{b.sort_order}</span>
+          <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{b.title}</p>
+          <StatusBadge banner={b} />
+        </div>
+        {b.subtitle && <p className="text-[12px] text-gray-500 mt-0.5 truncate">{b.subtitle}</p>}
+        <p className="text-[11px] text-gray-400 mt-1">
+          {new Date(b.starts_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}
+          {" ~ "}
+          {new Date(b.ends_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}
+        </p>
+      </div>
+      <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100">
+        <button onClick={onMoveUp} disabled={idx === 0}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
+          <ChevronUp size={16} className="text-gray-500" />
+        </button>
+        <button onClick={onMoveDown} disabled={idx === total - 1}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
+          <ChevronDown size={16} className="text-gray-500" />
+        </button>
+        <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+          {b.active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
+        </button>
+        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+          <Pencil size={14} className="text-gray-500" />
+        </button>
+        <button onClick={onDelete} disabled={deletingId === b.id}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
+          {deletingId === b.id
+            ? <Loader2 size={14} className="animate-spin text-gray-400" />
+            : <Trash2 size={14} className="text-red-400" />}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function StatusBadge({ banner }: { banner: Banner }) {
   const now = Date.now();
   const starts = new Date(banner.starts_at).getTime();
@@ -237,70 +301,17 @@ export default function AdminBannersPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {banners.map((b, idx) => {
-            const [imgFail, setImgFail] = useState(false);
-            return (
-              <div key={b.id} className="bg-white rounded-2xl overflow-hidden shadow-sm flex">
-                {/* 썸네일 */}
-                <div className="shrink-0 relative" style={{ width: 100, minHeight: 72 }}>
-                  {b.image_url && !imgFail ? (
-                    <img src={b.image_url} alt="" onError={() => setImgFail(true)} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full" style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }} />
-                  )}
-                  {b.badge && (
-                    <div className="absolute top-1.5 left-1.5">
-                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
-                        style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}>
-                        {b.badge}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* 정보 */}
-                <div className="flex-1 px-4 py-3 min-w-0">
-                  <div className="flex items-start gap-2 flex-wrap">
-                    <span className="text-[12px] font-bold text-gray-400">#{b.sort_order}</span>
-                    <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{b.title}</p>
-                    <StatusBadge banner={b} />
-                  </div>
-                  {b.subtitle && <p className="text-[12px] text-gray-500 mt-0.5 truncate">{b.subtitle}</p>}
-                  <p className="text-[11px] text-gray-400 mt-1">
-                    {new Date(b.starts_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}
-                    {" ~ "}
-                    {new Date(b.ends_at).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" })}
-                  </p>
-                </div>
-
-                {/* 액션 */}
-                <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100">
-                  <button onClick={() => moveOrder(b, -1)} disabled={idx === 0}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
-                    <ChevronUp size={16} className="text-gray-500" />
-                  </button>
-                  <button onClick={() => moveOrder(b, 1)} disabled={idx === banners.length - 1}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
-                    <ChevronDown size={16} className="text-gray-500" />
-                  </button>
-                  <button onClick={() => toggleActive(b)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
-                    {b.active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
-                  </button>
-                  <button onClick={() => openEdit(b)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
-                    <Pencil size={14} className="text-gray-500" />
-                  </button>
-                  <button onClick={() => handleDelete(b.id)} disabled={deletingId === b.id}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
-                    {deletingId === b.id
-                      ? <Loader2 size={14} className="animate-spin text-gray-400" />
-                      : <Trash2 size={14} className="text-red-400" />}
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+          {banners.map((b, idx) => (
+            <BannerRow
+              key={b.id}
+              b={b} idx={idx} total={banners.length} deletingId={deletingId}
+              onMoveUp={() => moveOrder(b, -1)}
+              onMoveDown={() => moveOrder(b, 1)}
+              onToggle={() => toggleActive(b)}
+              onEdit={() => openEdit(b)}
+              onDelete={() => handleDelete(b.id)}
+            />
+          ))}
         </div>
       )}
 
