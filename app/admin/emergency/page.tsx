@@ -25,7 +25,7 @@ function newId() { return "er_" + Date.now().toString(36); }
 const EMPTY: AdminEmergencyRoom = {
   id: "", name: "", address: "", phone: "",
   distance_km: null, is_pediatric: false,
-  level: "지역응급의료기관", sort_order: null,
+  level: "지역응급의료기관",
 };
 
 function EmergencyModal({ initial, onSave, onClose }: {
@@ -87,20 +87,12 @@ function EmergencyModal({ initial, onSave, onClose }: {
                   placeholder="1.5" />
               </Field>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="응급실 등급">
-                <select className={SELECT} value={form.level}
-                  onChange={e => set("level", e.target.value)}>
-                  {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                </select>
-              </Field>
-              <Field label="정렬 순서">
-                <input className={INPUT} type="number" min="1"
-                  value={form.sort_order ?? ""}
-                  onChange={e => set("sort_order", e.target.value ? parseInt(e.target.value) : null)}
-                  placeholder="1" />
-              </Field>
-            </div>
+            <Field label="응급실 등급">
+              <select className={SELECT} value={form.level}
+                onChange={e => set("level", e.target.value)}>
+                {LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </Field>
 
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.is_pediatric}

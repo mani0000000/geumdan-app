@@ -1,6 +1,9 @@
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
 // ─── 약국 (Pharmacies) ────────────────────────────────────────
+// pharmacies 테이블 컬럼: id, name, address, phone,
+//   weekday_hours, weekend_hours, night_hours,
+//   is_night_pharmacy, is_weekend_pharmacy
 
 export interface AdminPharmacy {
   id: string;
@@ -12,15 +15,13 @@ export interface AdminPharmacy {
   night_hours: string | null;
   is_night_pharmacy: boolean;
   is_weekend_pharmacy: boolean;
-  distance_km: number | null;
-  sort_order: number | null;
 }
 
 export async function adminFetchPharmacies(): Promise<AdminPharmacy[]> {
   const { data, error } = await supabaseAdmin
     .from("pharmacies")
     .select("*")
-    .order("sort_order", { ascending: true, nullsFirst: false });
+    .order("name");
   if (error) throw new Error(error.message);
   return (data ?? []) as AdminPharmacy[];
 }
@@ -41,6 +42,8 @@ export async function adminDeletePharmacy(id: string): Promise<void> {
 }
 
 // ─── 응급실 (Emergency Rooms) ─────────────────────────────────
+// emergency_rooms 테이블 컬럼: id, name, address, phone,
+//   distance_km, is_pediatric, level
 
 export interface AdminEmergencyRoom {
   id: string;
@@ -50,7 +53,6 @@ export interface AdminEmergencyRoom {
   distance_km: number | null;
   is_pediatric: boolean;
   level: string;
-  sort_order: number | null;
 }
 
 export async function adminFetchEmergencyRooms(): Promise<AdminEmergencyRoom[]> {
@@ -92,8 +94,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "매일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: true,
-    distance_km: 0.65,
-    sort_order: 1,
   },
   {
     id: "ph2",
@@ -105,8 +105,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "매일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: true,
-    distance_km: 1.0,
-    sort_order: 2,
   },
   {
     id: "ph3",
@@ -118,8 +116,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "매일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: true,
-    distance_km: 1.4,
-    sort_order: 3,
   },
   {
     id: "ph4",
@@ -131,8 +127,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "평일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: false,
-    distance_km: 3.1,
-    sort_order: 4,
   },
   {
     id: "ph5",
@@ -144,8 +138,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "매일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: true,
-    distance_km: 1.8,
-    sort_order: 5,
   },
   {
     id: "ph6",
@@ -157,8 +149,6 @@ const SEED_PHARMACIES: AdminPharmacy[] = [
     night_hours: "매일 22:00~01:00",
     is_night_pharmacy: true,
     is_weekend_pharmacy: true,
-    distance_km: 4.2,
-    sort_order: 6,
   },
 ];
 
@@ -171,7 +161,6 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
     distance_km: 1.5,
     is_pediatric: false,
     level: "지역응급의료기관",
-    sort_order: 1,
   },
   {
     id: "er2",
@@ -181,7 +170,6 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
     distance_km: 2.2,
     is_pediatric: false,
     level: "지역응급의료기관",
-    sort_order: 2,
   },
   {
     id: "er3",
@@ -191,7 +179,6 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
     distance_km: 8.5,
     is_pediatric: true,
     level: "권역응급의료센터",
-    sort_order: 3,
   },
   {
     id: "er4",
@@ -201,7 +188,6 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
     distance_km: 13.5,
     is_pediatric: true,
     level: "권역응급의료센터",
-    sort_order: 4,
   },
   {
     id: "er5",
@@ -211,7 +197,6 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
     distance_km: 16.0,
     is_pediatric: true,
     level: "권역응급의료센터",
-    sort_order: 5,
   },
 ];
 

@@ -24,7 +24,6 @@ const EMPTY: AdminPharmacy = {
   id: "", name: "", address: "", phone: "",
   weekday_hours: "", weekend_hours: "", night_hours: "",
   is_night_pharmacy: false, is_weekend_pharmacy: false,
-  distance_km: null, sort_order: null,
 };
 
 function PharmacyModal({ initial, onSave, onClose }: {
@@ -79,18 +78,10 @@ function PharmacyModal({ initial, onSave, onClose }: {
                 onChange={e => set("address", e.target.value)}
                 placeholder="인천 서구 봉오재 3로 90 (검단동)" />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="전화번호">
-                <input className={INPUT} value={form.phone}
-                  onChange={e => set("phone", e.target.value)} placeholder="032-567-0879" />
-              </Field>
-              <Field label="거리 (km)">
-                <input className={INPUT} type="number" step="0.1" min="0"
-                  value={form.distance_km ?? ""}
-                  onChange={e => set("distance_km", e.target.value ? parseFloat(e.target.value) : null)}
-                  placeholder="0.65" />
-              </Field>
-            </div>
+            <Field label="전화번호">
+              <input className={INPUT} value={form.phone}
+                onChange={e => set("phone", e.target.value)} placeholder="032-567-0879" />
+            </Field>
 
             {/* 영업시간 */}
             <div className="border border-[#E5E8EB] rounded-xl p-3 space-y-2">
@@ -125,13 +116,6 @@ function PharmacyModal({ initial, onSave, onClose }: {
                 <span className="text-[13px] text-[#4E5968]">주말약국</span>
               </label>
             </div>
-
-            <Field label="정렬 순서">
-              <input className={INPUT} type="number" min="1"
-                value={form.sort_order ?? ""}
-                onChange={e => set("sort_order", e.target.value ? parseInt(e.target.value) : null)}
-                placeholder="1" />
-            </Field>
 
             {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
           </div>
@@ -216,16 +200,16 @@ export default function AdminPharmacyPage() {
         <table className="w-full text-[13px]">
           <thead className="bg-[#F8F9FB] border-b border-[#E5E8EB]">
             <tr>
-              {["약국명", "주소", "전화번호", "평일", "주말", "심야", "태그", "거리", "수정/삭제"].map(h => (
+              {["약국명", "주소", "전화번호", "평일", "주말", "심야", "태그", "수정/삭제"].map(h => (
                 <th key={h} className="text-left px-4 py-3 text-[11px] font-bold text-[#8B95A1] whitespace-nowrap">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#F2F4F6]">
             {loading ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#B0B8C1]">로딩 중...</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#B0B8C1]">로딩 중...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={9} className="px-4 py-8 text-center text-[#B0B8C1]">약국 정보 없음 · "기본 데이터 삽입"으로 시작하세요</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#B0B8C1]">약국 정보 없음 · "기본 데이터 삽입"으로 시작하세요</td></tr>
             ) : items.map(p => (
               <tr key={p.id} className="hover:bg-[#F8F9FB]">
                 <td className="px-4 py-3 font-semibold text-[#191F28] whitespace-nowrap">{p.name}</td>
@@ -239,9 +223,6 @@ export default function AdminPharmacyPage() {
                     {p.is_night_pharmacy && <TagBadge label="심야" color="bg-[#EDE9FE] text-[#6D28D9]" />}
                     {p.is_weekend_pharmacy && <TagBadge label="주말" color="bg-[#DBEAFE] text-[#1D4ED8]" />}
                   </div>
-                </td>
-                <td className="px-4 py-3 text-[#4E5968] whitespace-nowrap">
-                  {p.distance_km != null ? `${p.distance_km}km` : "—"}
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-1.5">
@@ -279,7 +260,7 @@ export default function AdminPharmacyPage() {
               <div className="flex items-center gap-1.5"><Clock size={11} className="text-[#8B95A1]" /> 평일 {p.weekday_hours || "—"}</div>
               {p.weekend_hours && <div className="flex items-center gap-1.5"><Clock size={11} className="text-[#8B95A1]" /> 주말 {p.weekend_hours}</div>}
               {p.night_hours && <div className="flex items-center gap-1.5"><Moon size={11} className="text-[#8B95A1]" /> 심야 {p.night_hours}</div>}
-              <div className="text-[#8B95A1]">{p.phone} {p.distance_km != null ? `· ${p.distance_km}km` : ""}</div>
+              <div className="text-[#8B95A1]">{p.phone}</div>
             </div>
             <div className="flex gap-2">
               <button onClick={() => setModal(p)}
