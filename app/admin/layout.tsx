@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren,
 } from "lucide-react";
 
 const NAV = [
@@ -11,6 +11,8 @@ const NAV = [
   { href: "/admin/stores",     icon: Building2,     label: "상가건물 관리" },
   { href: "/admin/coupons",    icon: Tag,           label: "쿠폰 관리"    },
   { href: "/admin/openings",   icon: Store,         label: "신규오픈 관리" },
+  { href: "/admin/pharmacy",   icon: Pill,          label: "약국 관리"     },
+  { href: "/admin/emergency",  icon: Siren,         label: "응급실 관리"   },
   { href: "/admin/community",  icon: MessageSquare, label: "커뮤니티 관리" },
   { href: "/admin/realestate", icon: TrendingUp,    label: "부동산 시세"   },
   { href: "/admin/widgets",    icon: LayoutGrid,    label: "홈 위젯 구성"  },
