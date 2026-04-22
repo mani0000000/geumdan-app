@@ -381,7 +381,7 @@ function SubwayTimetableSheet({
           </div>
           <p className="text-[11px] text-[#86868b] mt-2 flex items-center gap-1">
             <Clock size={11} />
-            배차 간격 약 {station.timetable.intervalMin}분 기준 추정 시간표
+            배차 {station.timetable.intervalDisplay ?? `${station.timetable.intervalMin}분`} 기준 추정 시간표
           </p>
         </div>
 
@@ -1196,7 +1196,7 @@ export default function TransportPage() {
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         {st.timetable.intervalMin > 0 && (
-                          <p className="text-[12px] text-[#86868b]">배차 {st.timetable.intervalMin}분</p>
+                          <p className="text-[12px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</p>
                         )}
                         <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
                           <Clock size={10} />시간표
