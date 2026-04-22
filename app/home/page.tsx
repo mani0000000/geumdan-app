@@ -253,18 +253,11 @@ function CouponSection() {
 
   return (
     <section className="mb-1">
-      <div className="flex items-center justify-between px-4 mb-2.5">
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
-            <Tag size={12} className="text-[#F59E0B]" />
-          </div>
-          <span className="text-[15px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
-        </div>
-        <Link href="/coupons/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
-          전체보기 <ChevronRight size={13} />
-        </Link>
-      </div>
-
+      <WidgetHeader
+        title="이번 주 쿠폰"
+        badge={<Tag size={14} className="text-[#F59E0B]" />}
+        href="/coupons/"
+      />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
         {coupons.map(c => {
           const done = downloaded.has(c.id);
@@ -420,16 +413,11 @@ function NewOpeningsSection() {
 
   return (
     <section className="mb-1">
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[16px] font-black text-[#1d1d1f]">신규 오픈</span>
-          <span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>
-        </div>
-        <Link href="/stores/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
-          전체보기 <ChevronRight size={13} />
-        </Link>
-      </div>
-
+      <WidgetHeader
+        title="신규 오픈"
+        badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
+        href="/stores/"
+      />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
         {newStoreOpenings.map(s => {
           const [from, to] = catGradients[s.category] ?? catGradients["기타"];
@@ -492,10 +480,10 @@ function SosikSection() {
   return (
     <section className="mx-4 mb-1">
       {/* 탭 필 스타일 */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2 mb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
         {(["커뮤니티", "뉴스", "시세"] as SosikTab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all shrink-0 ${
               tab === t ? "bg-[#1d1d1f] text-white" : "bg-white text-[#86868b]"
             }`}>
             {t}
@@ -723,7 +711,7 @@ function MartSection() {
 
   return (
     <>
-      <p className="text-[13px] font-bold text-[#6e6e73] uppercase tracking-wide px-4 mb-1.5 mt-3">주변 마트</p>
+      <SectionLabel label="주변 마트" />
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
@@ -1194,11 +1182,35 @@ function PharmacySection() {
 }
 
 // ─── 섹션 헤더 ────────────────────────────────────────────────
+// 자체 타이틀 없는 위젯(약국·교통·소식) 앞에만 사용
 function SectionLabel({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 px-4 mb-2.5 mt-5">
-      <span className="text-[13px] font-black text-[#1d1d1f] uppercase tracking-widest">{label}</span>
-      <div className="flex-1 h-px bg-[#e5e5ea]" />
+    <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-widest px-4 pt-5 pb-1.5">
+      {label}
+    </p>
+  );
+}
+
+// 자체 타이틀 있는 섹션(쿠폰·신규오픈)에서 사용
+function WidgetHeader({
+  title, badge, href, linkLabel = "전체보기",
+}: {
+  title: string;
+  badge?: React.ReactNode;
+  href?: string;
+  linkLabel?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 pt-5 pb-2.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[18px] font-extrabold text-[#1d1d1f]">{title}</span>
+        {badge}
+      </div>
+      {href && (
+        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+          {linkLabel} <ChevronRight size={13} />
+        </Link>
+      )}
     </div>
   );
 }
@@ -1424,18 +1436,8 @@ export default function HomePage() {
         </div>
       </div>
     ),
-    coupons: () => (
-      <>
-        <SectionLabel label="이번 주 혜택" />
-        <CouponSection />
-      </>
-    ),
-    openings: () => (
-      <>
-        <SectionLabel label="신규 오픈" />
-        <NewOpeningsSection />
-      </>
-    ),
+    coupons: () => <CouponSection />,
+    openings: () => <NewOpeningsSection />,
     mart: () => <MartSection />,
     pharmacy: () => (
       <>
