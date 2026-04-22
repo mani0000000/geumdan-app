@@ -346,6 +346,10 @@ export default function TransportPage() {
           arrivals = await fetchArrivalsByNodeId(stop.id);
         } else if (source === "ic") {
           arrivals = await fetchArrivalsByStationId(stop.id);
+        } else if (source === "osm") {
+          // OSM ref stationIds often match Incheon API stationIds — try real-time first
+          arrivals = await fetchArrivalsByStationId(stop.id);
+          if (arrivals.length === 0) arrivals = await fetchArrivalsByNodeId(stop.id);
         } else if (source === "fallback") {
           arrivals = await fetchArrivalsByNodeId(stop.id);
           if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
@@ -365,9 +369,9 @@ export default function TransportPage() {
   }, [stopSource]);
 
   // ── 버스 데이터 전체 로드: GPS 기반 주변 정류장 + 도착정보 ──
-  const loadBusData = useCallback(async (lat: number, lng: number) => {
+  const loadBusData = useCallback(async (lat: number, lng: number, clearStops = true) => {
     setLoading(true);
-    setApiStops(null);
+    if (clearStops) setApiStops(null);
 
     let stops: DisplayStop[] = [];
     let src: "tago"|"ic"|"osm"|"fallback" = "fallback";
@@ -476,7 +480,7 @@ export default function TransportPage() {
         setUserPos(p);
         setLocState("ok");
         if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
-          loadBusData(p.lat, p.lng);
+          loadBusData(p.lat, p.lng, false);  // GPS 갱신 시 기존 목록 유지하면서 교체
         }
       },
       () => setLocState("denied"),
@@ -838,6 +842,20 @@ export default function TransportPage() {
               </button>
             )}
           </div>
+
+          {/* 데이터 소스 상태 배너 */}
+          {!loading && stopSource === "fallback" && (
+            <div className="bg-[#FFF3E0] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
+              <span className="text-[13px]">⚠️</span>
+              <p className="text-[12px] text-[#7C4700] font-medium">API 연결 불가 · 기본 검단 정류장 표시 중</p>
+            </div>
+          )}
+          {!loading && stopSource === "osm" && (
+            <div className="bg-[#e8f1fd] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
+              <span className="text-[13px]">🗺️</span>
+              <p className="text-[12px] text-[#0071e3] font-medium">지도 기반 정류장 · 경유 노선만 표시</p>
+            </div>
+          )}
 
           {loading ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
