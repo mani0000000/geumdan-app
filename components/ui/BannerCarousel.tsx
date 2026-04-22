@@ -114,24 +114,6 @@ export default function BannerCarousel({ banners }: Props) {
           )}
         </div>
 
-        {/* 도트 인디케이터 */}
-        {banners.length > 1 && (
-          <div className="absolute bottom-3.5 right-4 flex items-center gap-1.5">
-            {banners.map((_, i) => (
-              <button
-                key={i}
-                onMouseDown={e => e.preventDefault()}
-                onClick={() => { goTo(i); setPaused(true); setTimeout(() => setPaused(false), 3000); }}
-                className="transition-all duration-300 rounded-full"
-                style={{
-                  width: i === current ? 18 : 6,
-                  height: 6,
-                  background: i === current ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.4)",
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
