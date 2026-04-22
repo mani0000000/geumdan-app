@@ -36,6 +36,7 @@ export interface SubwayStationEntry {
     upFirst: string; upLast: string;
     downFirst: string; downLast: string;
     intervalMin: number;
+    intervalDisplay?: string; // 표시용 배차 문자열 (예: "6~15분") — 불규칙 배차 시 사용
     upDirection: string;   // 상행 종착역 이름 (예: "서울역")
     downDirection: string; // 하행 종착역 이름 (예: "인천공항")
   };
@@ -56,7 +57,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5575, lng: 126.6721,
     apiType: "arex",
     stationCode: "검암",
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -66,7 +67,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 30, upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
   // 서울 9호선
