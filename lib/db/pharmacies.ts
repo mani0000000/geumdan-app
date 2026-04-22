@@ -218,11 +218,11 @@ export async function fetchEmergencyRooms(
 
 function getMockEmergencyRooms(type: 'all' | 'pediatric'): EmergencyRoomRow[] {
   const all: EmergencyRoomRow[] = [
-    { id: 'er1', name: '검단탑병원', address: '인천 서구 검단로 345', phone: '032-561-1119', distance: '1.4km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관' },
-    { id: 'er2', name: '인천성모병원', address: '인천 부평구 동수로 56', phone: '032-280-5114', distance: '6.2km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true, level: '권역응급의료센터' },
-    { id: 'er3', name: '나사렛국제병원', address: '인천 부평구 부평대로 56', phone: '032-570-2114', distance: '7.1km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true, level: '지역응급의료센터' },
-    { id: 'er4', name: '가천대 길병원', address: '인천 남동구 남동대로 774', phone: '032-460-3114', distance: '11.3km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true, level: '권역응급의료센터' },
-    { id: 'er5', name: '인하대병원', address: '인천 중구 인항로 27', phone: '032-890-2114', distance: '13.8km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true, level: '권역응급의료센터' },
+    { id: 'er1', name: '검단탑병원',              address: '인천 서구 청마로 19번길 5 (당하동)',        phone: '032-590-0114', distance: '1.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관' },
+    { id: 'er2', name: '인천검단 온누리병원',      address: '인천 서구 완정로 199 (왕길동)',             phone: '032-568-9111', distance: '2.2km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관' },
+    { id: 'er3', name: '가톨릭대학교 인천성모병원',address: '인천 부평구 동수로 56 (부평동)',            phone: '1544-9004',    distance: '8.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
+    { id: 'er4', name: '가천대 길병원',            address: '인천 남동구 남동대로 774번길 21 (구월동)', phone: '1577-2299',    distance: '13.5km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
+    { id: 'er5', name: '인하대학교병원',           address: '인천 중구 인항로 27 (신흥동)',              phone: '032-890-2300', distance: '16.0km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
   ];
   return type === 'pediatric' ? all.filter((e) => e.isPediatric) : all;
 }
