@@ -38,20 +38,27 @@ function computeIsOpenNow(row: {
   night_hours: string | null;
 }): boolean {
   const now = new Date();
-  const day = now.getDay();
+  const day = now.getDay(); // 0=일, 6=토
   const isWeekend = day === 0 || day === 6;
-  const hour = now.getHours();
-  const isNight = hour >= 21 || hour < 6;
 
-  // 24-hour pharmacy
-  const allHours = [row.weekday_hours, row.weekend_hours, row.night_hours].join(' ');
-  if (/24시간/.test(allHours)) return true;
+  const allText = [row.weekday_hours, row.weekend_hours, row.night_hours].filter(Boolean).join(' ');
+  if (/24시간/.test(allText)) return true;
 
-  // Night time: check night_hours first, then fall through to regular hours
-  if (isNight && row.night_hours) return isWithinHoursStr(row.night_hours);
+  // 1. 오늘 요일에 맞는 일반 영업시간 먼저 체크
+  const regularHours = isWeekend ? row.weekend_hours : row.weekday_hours;
+  if (isWithinHoursStr(regularHours)) return true;
 
-  const relevantHours = isWeekend ? row.weekend_hours : row.weekday_hours;
-  return isWithinHoursStr(relevantHours);
+  // 2. 심야 시간표 체크 — 평일/주말 접두사 존중
+  if (row.night_hours) {
+    const weekdayOnly = /평일/.test(row.night_hours);
+    const weekendOnly = /주말|토요일|일요일/.test(row.night_hours);
+    const applicable = weekdayOnly ? !isWeekend
+      : weekendOnly ? isWeekend
+      : true; // "매일" 또는 접두사 없음
+    if (applicable && isWithinHoursStr(row.night_hours)) return true;
+  }
+
+  return false;
 }
 
 function computeTags(row: {
