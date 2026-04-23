@@ -424,186 +424,161 @@ function NewOpeningsSection() {
   );
 }
 
-// ─── 소식 탭 섹션 ─────────────────────────────────────────────
-type SosikTab = "커뮤니티" | "뉴스" | "시세";
-
-function SosikSection() {
+// ─── 커뮤니티 위젯 ────────────────────────────────────────────
+function CommunityWidget() {
   const router = useRouter();
-  const [tab, setTab] = useState<SosikTab>("커뮤니티");
-  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
+  if (hotPosts.length === 0) return null;
+  return (
+    <section className="mx-4 mb-1 space-y-2">
+      <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
+        className="w-full text-left rounded-2xl overflow-hidden active:opacity-90"
+        style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
+              {hotPosts[0].category}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-orange-300 font-bold">
+              <Flame size={10} />HOT
+            </span>
+          </div>
+          <p className="text-[18px] font-black text-white leading-snug mb-3 line-clamp-2">
+            {hotPosts[0].title}
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-white/60">{hotPosts[0].authorDong}</span>
+              <span className="text-[12px] text-white/40">·</span>
+              <span className="text-[12px] text-white/60">{formatRelativeTime(hotPosts[0].createdAt)}</span>
+            </div>
+            <span className="text-[13px] font-bold text-white">❤️ {hotPosts[0].likeCount}</span>
+          </div>
+        </div>
+      </button>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {hotPosts.slice(1).map(post => (
+          <button key={post.id}
+            onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+            className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#f5f5f7] text-left">
+            <span className="text-[11px] font-bold bg-[#F3F0FF] text-[#7C3AED] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+              {post.category}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{post.title}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[12px] text-[#6e6e73]">{post.authorDong}</span>
+                <span className="text-[12px] text-[#86868b] ml-auto">❤️ {post.likeCount}</span>
+              </div>
+            </div>
+          </button>
+        ))}
+        <Link href="/community/"
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
+          전체 보기 <ChevronRight size={13} />
+        </Link>
+      </div>
+    </section>
+  );
+}
 
+// ─── 뉴스 위젯 ────────────────────────────────────────────────
+function NewsWidget() {
+  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   useEffect(() => {
     fetchGeumdanNews().then(result => {
       if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
     });
   }, []);
-
   const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
-
+  if (topNews.length === 0) return null;
   return (
-    <section className="mx-4 mb-1">
-      {/* 탭 필 스타일 */}
-      <div className="flex gap-2 mb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-        {(["커뮤니티", "뉴스", "시세"] as SosikTab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all shrink-0 ${
-              tab === t ? "bg-[#1d1d1f] text-white" : "bg-white text-[#86868b]"
-            }`}>
-            {t}
+    <section className="mx-4 mb-1 space-y-2">
+      <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+        className="block rounded-2xl overflow-hidden active:opacity-90"
+        style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
+        <div className="p-4">
+          <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
+            {topNews[0].source}
+          </span>
+          <p className="text-[18px] font-black text-white leading-snug mt-3 mb-2 line-clamp-3">
+            {topNews[0].title}
+          </p>
+          <span className="text-[12px] text-white/60">{formatRelativeTime(topNews[0].publishedAt)}</span>
+        </div>
+      </a>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {topNews.slice(1).map(item => (
+          <a key={item.id}
+            href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+            className="flex items-start gap-3 px-4 py-3 active:bg-[#f5f5f7]">
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[11px] text-[#0071e3] font-semibold">{item.source}</span>
+                <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+              </div>
+            </div>
+            <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
+          </a>
+        ))}
+        <Link href="/news/"
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
+          뉴스 전체 보기 <ChevronRight size={13} />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
+// ─── 실거래가 위젯 ────────────────────────────────────────────
+function RealEstateWidget() {
+  const router = useRouter();
+  return (
+    <section className="mx-4 mb-1 space-y-2">
+      <div className="rounded-2xl overflow-hidden"
+        style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[13px] font-bold text-white/80">검단신도시 실거래가</span>
+            <Link href="/real-estate/"
+              className="flex items-center gap-0.5 text-[12px] text-white/60">
+              전체보기 <ChevronRight size={11} />
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {apartments.slice(0, 2).map(apt => (
+              <button key={apt.id} onClick={() => router.push("/real-estate/")}
+                className="bg-white/15 rounded-xl px-3 py-2.5 text-left active:bg-white/25">
+                <p className="text-[11px] text-white/70 truncate mb-0.5">{apt.name}</p>
+                <p className="text-[19px] font-black text-white leading-none">
+                  {formatPrice(apt.recentDeal?.price ?? 0)}
+                </p>
+                <p className="text-[10px] text-white/60 mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {apartments.slice(2, 5).map(apt => (
+          <button key={apt.id} onClick={() => router.push("/real-estate/")}
+            className="w-full px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
+            <div className="text-left min-w-0 flex-1 pr-2">
+              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{apt.name}</p>
+              <p className="text-[12px] text-[#6e6e73] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-[15px] font-bold text-[#059669]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
+              <p className="text-[11px] text-[#6e6e73]">실거래</p>
+            </div>
           </button>
         ))}
+        <Link href="/real-estate/"
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
+          시세 전체 보기 <ChevronRight size={13} />
+        </Link>
       </div>
-
-      {/* ── 커뮤니티 ── */}
-      {tab === "커뮤니티" && hotPosts.length > 0 && (
-        <div className="space-y-2">
-          {/* 피처드 HOT 포스트 */}
-          <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
-            className="w-full text-left rounded-2xl overflow-hidden active:opacity-90"
-            style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
-                  {hotPosts[0].category}
-                </span>
-                <span className="flex items-center gap-1 text-[11px] text-orange-300 font-bold">
-                  <Flame size={10} />HOT
-                </span>
-              </div>
-              <p className="text-[18px] font-black text-white leading-snug mb-3 line-clamp-2">
-                {hotPosts[0].title}
-              </p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-[12px] text-white/60">{hotPosts[0].authorDong}</span>
-                  <span className="text-[12px] text-white/40">·</span>
-                  <span className="text-[12px] text-white/60">{formatRelativeTime(hotPosts[0].createdAt)}</span>
-                </div>
-                <span className="text-[13px] font-bold text-white">❤️ {hotPosts[0].likeCount}</span>
-              </div>
-            </div>
-          </button>
-
-          {/* 나머지 포스트 리스트 */}
-          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-            {hotPosts.slice(1).map(post => (
-              <button key={post.id}
-                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-                className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#f5f5f7] text-left">
-                <span className="text-[11px] font-bold bg-[#F3F0FF] text-[#7C3AED] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
-                  {post.category}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{post.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[12px] text-[#6e6e73]">{post.authorDong}</span>
-                    <span className="text-[12px] text-[#86868b] ml-auto">❤️ {post.likeCount}</span>
-                  </div>
-                </div>
-              </button>
-            ))}
-            <Link href="/community/"
-              className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
-              전체 보기 <ChevronRight size={13} />
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* ── 뉴스 ── */}
-      {tab === "뉴스" && topNews.length > 0 && (
-        <div className="space-y-2">
-          {/* 피처드 뉴스 카드 */}
-          <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
-            className="block rounded-2xl overflow-hidden active:opacity-90"
-            style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
-            <div className="p-4">
-              <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
-                {topNews[0].source}
-              </span>
-              <p className="text-[18px] font-black text-white leading-snug mt-3 mb-2 line-clamp-3">
-                {topNews[0].title}
-              </p>
-              <span className="text-[12px] text-white/60">{formatRelativeTime(topNews[0].publishedAt)}</span>
-            </div>
-          </a>
-
-          {/* 나머지 뉴스 리스트 */}
-          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-            {topNews.slice(1).map(item => (
-              <a key={item.id}
-                href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
-                className="flex items-start gap-3 px-4 py-3 active:bg-[#f5f5f7]">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[11px] text-[#0071e3] font-semibold">{item.source}</span>
-                    <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-                  </div>
-                </div>
-                <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
-              </a>
-            ))}
-            <Link href="/news/"
-              className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
-              뉴스 전체 보기 <ChevronRight size={13} />
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* ── 시세 ── */}
-      {tab === "시세" && (
-        <div className="space-y-2">
-          {/* 피처드 시세 카드 */}
-          <div className="rounded-2xl overflow-hidden"
-            style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
-            <div className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[13px] font-bold text-white/80">검단신도시 실거래가</span>
-                <Link href="/real-estate/"
-                  className="flex items-center gap-0.5 text-[12px] text-white/60">
-                  전체보기 <ChevronRight size={11} />
-                </Link>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {apartments.slice(0, 2).map(apt => (
-                  <button key={apt.id} onClick={() => router.push("/real-estate/")}
-                    className="bg-white/15 rounded-xl px-3 py-2.5 text-left active:bg-white/25">
-                    <p className="text-[11px] text-white/70 truncate mb-0.5">{apt.name}</p>
-                    <p className="text-[19px] font-black text-white leading-none">
-                      {formatPrice(apt.recentDeal?.price ?? 0)}
-                    </p>
-                    <p className="text-[10px] text-white/60 mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* 나머지 아파트 리스트 */}
-          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-            {apartments.slice(2, 5).map(apt => (
-              <button key={apt.id} onClick={() => router.push("/real-estate/")}
-                className="w-full px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
-                <div className="text-left min-w-0 flex-1 pr-2">
-                  <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{apt.name}</p>
-                  <p className="text-[12px] text-[#6e6e73] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[15px] font-bold text-[#059669]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-                  <p className="text-[11px] text-[#6e6e73]">실거래</p>
-                </div>
-              </button>
-            ))}
-            <Link href="/real-estate/"
-              className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
-              시세 전체 보기 <ChevronRight size={13} />
-            </Link>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
@@ -1663,10 +1638,22 @@ export default function HomePage() {
         <HomeTransportWidget />
       </>
     ),
-    sosik: () => (
+    community: () => (
       <>
-        <SectionLabel label="검단 소식" href="/community/" />
-        <SosikSection />
+        <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />
+        <CommunityWidget />
+      </>
+    ),
+    news: () => (
+      <>
+        <SectionLabel label="검단 뉴스" href="/news/" linkLabel="전체보기" />
+        <NewsWidget />
+      </>
+    ),
+    realestate: () => (
+      <>
+        <SectionLabel label="실거래가" href="/real-estate/" linkLabel="전체보기" />
+        <RealEstateWidget />
       </>
     ),
   };

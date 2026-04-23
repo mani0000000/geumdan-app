@@ -17,8 +17,10 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "openings",  label: "신규 오픈",    enabled: true, sort_order: 6  },
   { id: "mart",      label: "주변 마트",    enabled: true, sort_order: 7  },
   { id: "pharmacy",  label: "약국·응급실",  enabled: true, sort_order: 8  },
-  { id: "transport", label: "교통",         enabled: true, sort_order: 9  },
-  { id: "sosik",     label: "검단 소식",    enabled: true, sort_order: 10 },
+  { id: "transport",   label: "교통",        enabled: true, sort_order: 9  },
+  { id: "community",  label: "커뮤니티",    enabled: true, sort_order: 10 },
+  { id: "news",       label: "검단 뉴스",   enabled: true, sort_order: 11 },
+  { id: "realestate", label: "실거래가",    enabled: true, sort_order: 12 },
 ];
 
 export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {
