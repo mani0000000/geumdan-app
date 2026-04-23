@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar, Train,
-  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw,
+  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw, Settings2,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -22,7 +22,7 @@ import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
-import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
+import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
@@ -1145,6 +1145,106 @@ function PharmacySection() {
   );
 }
 
+// ─── 홈 위젯 사용자 설정 ─────────────────────────────────────
+const USER_WIDGET_KEY = "homeWidgetUserConfig";
+
+function loadUserWidgets(): WidgetConfig[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const s = localStorage.getItem(USER_WIDGET_KEY);
+    return s ? (JSON.parse(s) as WidgetConfig[]) : null;
+  } catch { return null; }
+}
+
+function saveUserWidgets(ws: WidgetConfig[]): void {
+  try { localStorage.setItem(USER_WIDGET_KEY, JSON.stringify(ws)); } catch {}
+}
+
+function WidgetSettingsSheet({
+  widgets,
+  onSave,
+  onClose,
+}: {
+  widgets: WidgetConfig[];
+  onSave: (ws: WidgetConfig[]) => void;
+  onClose: () => void;
+}) {
+  const [draft, setDraft] = useState<WidgetConfig[]>(widgets);
+
+  function move(i: number, dir: -1 | 1) {
+    const t = i + dir;
+    if (t < 0 || t >= draft.length) return;
+    const next = [...draft];
+    [next[i], next[t]] = [next[t], next[i]];
+    setDraft(next.map((w, idx) => ({ ...w, sort_order: idx + 1 })));
+  }
+
+  function toggle(id: string) {
+    setDraft(d => d.map(w => w.id === id ? { ...w, enabled: !w.enabled } : w));
+  }
+
+  function reset() {
+    setDraft(DEFAULT_WIDGETS.map((w, i) => ({ ...w, sort_order: i + 1 })));
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200]">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
+        <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+          </div>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
+            <div>
+              <p className="text-[17px] font-bold text-[#1d1d1f]">홈 화면 설정</p>
+              <p className="text-[12px] text-[#86868b] mt-0.5">위젯 순서와 표시 여부를 설정하세요</p>
+            </div>
+            <button onClick={onClose} className="active:opacity-60 p-1">
+              <X size={20} className="text-[#6e6e73]" />
+            </button>
+          </div>
+
+          <div className="overflow-y-auto" style={{ maxHeight: "55vh" }}>
+            {draft.map((w, i) => (
+              <div key={w.id}
+                className={`flex items-center gap-3 px-5 py-3.5 border-b border-[#f5f5f7] transition-opacity ${!w.enabled ? "opacity-40" : ""}`}>
+                <div className="flex flex-col gap-0.5 shrink-0">
+                  <button onClick={() => move(i, -1)} disabled={i === 0}
+                    className="p-0.5 disabled:opacity-20 active:opacity-50 transition-opacity">
+                    <ChevronUp size={15} className="text-[#86868b]" />
+                  </button>
+                  <button onClick={() => move(i, 1)} disabled={i === draft.length - 1}
+                    className="p-0.5 disabled:opacity-20 active:opacity-50 transition-opacity">
+                    <ChevronDown size={15} className="text-[#86868b]" />
+                  </button>
+                </div>
+                <span className="text-[12px] font-black text-[#86868b] w-4 text-center shrink-0">{i + 1}</span>
+                <span className="flex-1 text-[15px] font-semibold text-[#1d1d1f]">{w.label}</span>
+                <button onClick={() => toggle(w.id)}
+                  className={`w-[46px] h-[26px] rounded-full transition-colors relative shrink-0 ${w.enabled ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`}>
+                  <span className={`absolute top-[3px] w-5 h-5 bg-white rounded-full shadow transition-all ${w.enabled ? "left-[23px]" : "left-[3px]"}`} />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="px-5 py-4 flex gap-3">
+            <button onClick={reset}
+              className="h-12 px-5 rounded-2xl border border-[#d2d2d7] text-[14px] font-semibold text-[#6e6e73] active:bg-[#f5f5f7] transition-colors shrink-0">
+              초기화
+            </button>
+            <button onClick={() => { onSave(draft); onClose(); }}
+              className="flex-1 h-12 rounded-2xl bg-[#0071e3] text-white text-[15px] font-bold active:bg-[#0058b0] transition-colors">
+              완료
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── 섹션 헤더 (모든 위젯 공통) ──────────────────────────────
 function SectionLabel({
   label,
@@ -1531,16 +1631,27 @@ export default function HomePage() {
   const router = useRouter();
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(true);
-  const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[] | null>(null);
+  const [widgets, setWidgets] = useState<WidgetConfig[]>([]);
+  const [showSettings, setShowSettings] = useState(false);
   const [userNickname, setUserNickname] = useState("검단주민");
   const [homeBanners, setHomeBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
-    fetchWidgetConfig().then(setWidgetConfig);
     getUserProfile().then(p => setUserNickname(p.nickname));
     fetchActiveBanners().then(setHomeBanners);
+    const local = loadUserWidgets();
+    if (local) {
+      setWidgets(local);
+    } else {
+      fetchWidgetConfig().then(cfg => setWidgets(cfg));
+    }
   }, []);
+
+  function handleSaveWidgets(updated: WidgetConfig[]) {
+    setWidgets(updated);
+    saveUserWidgets(updated);
+  }
 
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
@@ -1586,14 +1697,29 @@ export default function HomePage() {
     ),
   };
 
-  // config 로드 전에는 기본 순서로 렌더링
-  const activeWidgets = widgetConfig
-    ? widgetConfig.filter(w => w.enabled)
-    : Object.keys(widgetRenderers).map((id, i) => ({ id, enabled: true, sort_order: i + 1, label: id }));
+  const activeWidgets = widgets.length > 0
+    ? widgets.filter(w => w.enabled)
+    : DEFAULT_WIDGETS;
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-20">
-      <Header showLocation />
+      <Header
+        showLocation
+        rightAction={
+          <button onClick={() => setShowSettings(true)}
+            className="active:opacity-50 transition-opacity p-0.5">
+            <Settings2 size={21} className="text-[#1d1d1f]" />
+          </button>
+        }
+      />
+
+      {showSettings && (
+        <WidgetSettingsSheet
+          widgets={widgets.length > 0 ? widgets : DEFAULT_WIDGETS}
+          onSave={handleSaveWidgets}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
 
       {activeWidgets.map(w => {
         const render = widgetRenderers[w.id];
