@@ -8,6 +8,8 @@ import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
+import { fetchInstagramPosts } from "@/lib/db/instagram";
+import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import type { NewsType } from "@/lib/types";
 
 const tabs: NewsType[] = ["뉴스", "유튜브", "인스타"];
@@ -283,6 +285,7 @@ export default function NewsPage() {
   const [active, setActive] = useState<NewsType>("뉴스");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [dbItems, setDbItems] = useState(newsItems);
+  const [instaItems, setInstaItems] = useState<import("@/lib/types").NewsItem[]>([]);
   const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<YouTubeVideo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -291,21 +294,30 @@ export default function NewsPage() {
 
   const loadNews = async () => {
     setLoading(true);
-    const [result, dbNews] = await Promise.all([
+    const [result, dbNews, insta] = await Promise.all([
       fetchGeumdanNews(),
       fetchNewsArticles(undefined, 50),
+      fetchInstagramPosts(),
     ]);
     if (result.articles.length > 0) {
       setRealNews(result.articles);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     if (dbNews.length > 0) setDbItems(dbNews);
+    setInstaItems(insta);
     setLoading(false);
   };
 
   const loadYouTube = async () => {
     if (ytVideos.length > 0) return;
     setYtLoading(true);
+    // DB에 등록된 영상 먼저, 없으면 API 검색
+    const dbResult = await fetchYouTubeVideosFromDB();
+    if (dbResult.videos.length > 0) {
+      setYtVideos(dbResult.videos);
+      setYtLoading(false);
+      return;
+    }
     const result = await fetchYouTubeVideos("검단신도시");
     setYtVideos(result.videos);
     setYtLoading(false);
@@ -323,6 +335,8 @@ export default function NewsPage() {
         ? realNews.map(n => ({ ...n, summary: n.summary }))
         : dbItems.filter(n => n.type === "뉴스").map(n => ({ ...n, summary: n.summary, thumbnail: n.thumbnail }))
       )
+    : active === "인스타"
+    ? instaItems.map(n => ({ ...n, thumbnail: n.thumbnail }))
     : dbItems.filter(n => n.type === active).map(n => ({ ...n, thumbnail: n.thumbnail }));
 
   const featured = newsSource.slice(0, 8);
