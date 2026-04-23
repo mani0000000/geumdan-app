@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
-  MapPin, Phone, Clock, Lock,
+  MapPin, Phone, Clock, Lock, Tag,
   ChevronLeft, ChevronRight, X, Pencil, CheckCircle2,
   Search, Navigation, Building2, List, Map as MapIcon,
 } from "lucide-react";
@@ -12,22 +12,30 @@ import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
+import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
+import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
+import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
 const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
-  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6", 마트: "#10B981", 기타: "#9CA3AF",
+  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
+  마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
+  세탁: "#6366F1", 기타: "#9CA3AF",
 };
 const catEmoji: Record<StoreCategory, string> = {
-  카페:"☕", 음식점:"🍽️", 편의점:"🏪", "병원/약국":"💊", 미용:"💇", 학원:"📚", 마트:"🛒", 기타:"🏢",
+  카페:"☕", 음식점:"🍽️", 편의점:"🏪", "병원/약국":"💊", 미용:"💇",
+  학원:"📚", 마트:"🛒", "헬스/운동":"💪", 반려동물:"🐾", 세탁:"👕", 기타:"🏢",
 };
 const catBg: Record<StoreCategory, string> = {
-  카페:"bg-[#FEF3C7] text-[#92400E]", 음식점:"bg-[#FEE2E2] text-[#991B1B]",
+  카페:"bg-[#FEF3C7] text-[#92400E]", 음식점:"bg-[#FFF0E6] text-[#C2410C]",
   편의점:"bg-[#e8f1fd] text-[#1E40AF]", "병원/약국":"bg-[#FEE2E2] text-[#991B1B]",
   미용:"bg-[#FCE7F3] text-[#9D174D]", 학원:"bg-[#EDE9FE] text-[#5B21B6]",
-  마트:"bg-[#D1FAE5] text-[#065F46]", 기타:"bg-[#F3F4F6] text-[#374151]",
+  마트:"bg-[#D1FAE5] text-[#065F46]", "헬스/운동":"bg-[#E0F2FE] text-[#0369A1]",
+  반려동물:"bg-[#FDF2F8] text-[#9D174D]", 세탁:"bg-[#EEF2FF] text-[#4338CA]",
+  기타:"bg-[#F3F4F6] text-[#374151]",
 };
 
 // 건물 이미지 매핑 (Unsplash 무료 이미지)
@@ -202,6 +210,9 @@ const catHeroImage: Record<StoreCategory, string> = {
   미용:       "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=260&fit=crop&auto=format",
   학원:       "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&h=260&fit=crop&auto=format",
   마트:       "https://images.unsplash.com/photo-1534723452862-4c874986a2f6?w=600&h=260&fit=crop&auto=format",
+  "헬스/운동":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=260&fit=crop&auto=format",
+  반려동물:   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=260&fit=crop&auto=format",
+  세탁:       "https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=600&h=260&fit=crop&auto=format",
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
 
@@ -614,7 +625,21 @@ function classifyOpening(openDate: string): "week" | "month" | "none" {
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
 const ALL_CATS = Object.keys(catDot) as StoreCategory[];
 
-function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] }) {
+const catGrads: Record<StoreCategory, [string, string]> = {
+  카페:       ["#F59E0B", "#FB923C"],
+  음식점:     ["#EF4444", "#F97316"],
+  편의점:     ["#3B82F6", "#06B6D4"],
+  "병원/약국":["#EF4444", "#F472B6"],
+  미용:       ["#EC4899", "#C026D3"],
+  학원:       ["#8B5CF6", "#6366F1"],
+  마트:       ["#10B981", "#059669"],
+  "헬스/운동":["#0EA5E9", "#6366F1"],
+  반려동물:   ["#F472B6", "#EC4899"],
+  세탁:       ["#6366F1", "#8B5CF6"],
+  기타:       ["#6B7280", "#4B5563"],
+};
+
+function StoreListView() {
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
@@ -625,24 +650,14 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
   const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
   const [buildingLoading, setBuildingLoading] = useState(false);
   const [dlState, setDlState] = useState<Set<string>>(() => loadDownloaded());
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
     fetchActiveCoupons().then(setDbCoupons);
     fetchActiveOpenings().then(setDbOpenings);
+    fetchActiveBanners().then(setBanners);
   }, []);
-
-  // 상가 카드 클릭 → 건물 상세 조회 후 시트 열기
-  async function openBuildingSheet(b: NearbyBuilding) {
-    setSelectedBuilding(b);
-    setBuildingDetail(null);
-    if (b.hasData) {
-      setBuildingLoading(true);
-      const data = await fetchBuildingWithFloors(b.id);
-      setBuildingDetail(data);
-      setBuildingLoading(false);
-    }
-  }
 
   const allStores = useMemo<EnrichedStore[]>(() =>
     dbStores.map(s => ({ ...s, floorLabel: s.floorLabel, buildingName: s.buildingName })),
@@ -654,7 +669,6 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
     [allStores, catFilter]
   );
 
-  // 업종별 그룹핑 (필터 전체일 때만)
   const grouped = useMemo(() => {
     if (catFilter !== "전체") return null;
     const map = new Map<StoreCategory, EnrichedStore[]>();
@@ -667,106 +681,88 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
 
   const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
   const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
+
   function StoreCard({ store }: { store: EnrichedStore }) {
     const hasNew = newOpeningIds.has(store.id);
     const hasCoupon = couponStoreIds.has(store.id);
+    const [thumbFailed, setThumbFailed] = useState(false);
+    const hasThumb = !!store.thumbnail_url && !thumbFailed;
     return (
       <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl overflow-hidden flex items-center gap-3 active:scale-[0.99] transition-transform text-left shadow-sm border border-[#f0f0f0]">
-        {/* 카테고리 컬러 사이드바 */}
-        <div className="w-1 self-stretch rounded-l-2xl shrink-0" style={{ background: catDot[store.category] }} />
-        <div className="py-3.5 pr-3.5 flex items-center gap-3 flex-1 min-w-0">
+        className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
+        <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
+        <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
           <div className="relative shrink-0">
-            <StoreLogo name={store.name} category={store.category} size={44} />
+            <StoreLogo name={store.name} category={store.category} size={46} />
             {hasNew && (
-              <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#F04452] text-white px-1 py-0.5 rounded-full leading-none">N</span>
+              <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#F04452] rounded-full border-2 border-white" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex items-center gap-2">
               <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">★ PREMIUM</span>}
+              {hasNew && <span className="shrink-0 text-[9px] font-black text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">NEW</span>}
+              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
             </div>
-            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
-              <span className="text-[12px] text-[#d2d2d7]">·</span>
+              <span className="text-[11px] text-[#d2d2d7]">·</span>
               <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
               {store.hours && <>
-                <span className="text-[12px] text-[#d2d2d7]">·</span>
-                <span className="text-[12px] text-[#6e6e73]">{store.hours}</span>
+                <span className="text-[11px] text-[#d2d2d7]">·</span>
+                <span className="text-[12px] text-[#86868b]">{store.hours}</span>
               </>}
             </div>
             {hasCoupon && (
-              <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-bold text-[#F04452] bg-[#FFF0F0] px-2 py-0.5 rounded-full">
-                🏷️ 쿠폰 있음
-              </span>
+              <div className="flex items-center gap-1 mt-1.5">
+                <Tag size={10} className="text-[#0071e3]" />
+                <span className="text-[11px] font-bold text-[#0071e3]">쿠폰 사용 가능</span>
+              </div>
             )}
           </div>
-          <span className={`shrink-0 text-[11px] font-bold px-2.5 py-1 rounded-full ${store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"}`}>
-            {store.isOpen !== false ? "영업 중" : "영업 종료"}
-          </span>
+          {!hasThumb && (
+            <div className="shrink-0 flex flex-col items-end gap-2">
+              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
+              }`}>
+                {store.isOpen !== false ? "영업 중" : "영업 종료"}
+              </span>
+              <ChevronRight size={14} className="text-[#d2d2d7]" />
+            </div>
+          )}
         </div>
+        {hasThumb && (
+          <div className="shrink-0 relative" style={{ width: 88 }}>
+            <img
+              src={store.thumbnail_url!}
+              alt={store.name}
+              onError={() => setThumbFailed(true)}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
+            <div className="absolute top-2 right-2">
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
+                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
+              }`}>
+                {store.isOpen !== false ? "영업" : "종료"}
+              </span>
+            </div>
+          </div>
+        )}
       </button>
     );
   }
 
   return (
     <div>
-      {/* ── 상가 건물 ── */}
-      <div className="pt-4 pb-2">
-        <div className="flex items-center gap-3 px-4 mb-3">
-          <span className="text-[16px] font-black text-[#1d1d1f]">주변 상가건물</span>
-          <span className="text-[11px] font-black bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{nearbyBuildings.length}개</span>
-          <div className="flex-1 h-px bg-[#e5e5ea]" />
-        </div>
-        <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-          {nearbyBuildings.map(b => (
-            <button key={b.id} onClick={() => openBuildingSheet(b)}
-              className="shrink-0 w-[175px] rounded-2xl overflow-hidden bg-white shadow-sm active:scale-95 transition-transform text-left border border-[#f0f0f0]">
-              <div className="relative" style={{ height: 110 }}>
-                <img src={b.image} alt={b.name}
-                  className="w-full h-full object-cover"
-                  onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.65) 100%)" }} />
-                {b.hasData && (
-                  <div className="absolute top-2.5 right-2.5 bg-white/90 rounded-full px-1.5 py-0.5">
-                    <span className="text-[9px] font-black text-[#0071e3]">상세정보</span>
-                  </div>
-                )}
-                <div className="absolute bottom-0 left-0 right-0 px-3 pb-2.5">
-                  <p className="text-[13px] font-bold text-white leading-tight line-clamp-1">{b.name}</p>
-                  <p className="text-[10px] text-white/75 mt-0.5">{b.floors}F · {b.stores}개 매장{b.km > 0 ? ` · ${distLabel(b.km)}` : ""}</p>
-                </div>
-              </div>
-              <div className="px-3 py-2.5 flex items-center gap-1 flex-wrap">
-                {b.categories.slice(0, 4).map(c => (
-                  <span key={c} className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full"
-                    style={{ background: catDot[c] + "18", color: catDot[c] }}>
-                    {catEmoji[c]} {c}
-                  </span>
-                ))}
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* ── 이번 주 행사 배너 ── */}
+      {banners.length > 0 && <BannerCarousel banners={banners} />}
 
-      {/* ── 신규 오픈 (금주 / 이번달) ── */}
+      {/* ── 신규 오픈 ── */}
       {(() => {
         const weekOpenings  = dbOpenings.filter(o => classifyOpening(o.openDate) === "week");
         const monthOpenings = dbOpenings.filter(o => classifyOpening(o.openDate) === "month");
         if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
-
-        const catGrads: Partial<Record<import("@/lib/types").StoreCategory, [string, string]>> = {
-          카페:       ["#F59E0B", "#FB923C"],
-          음식점:     ["#EF4444", "#F97316"],
-          편의점:     ["#3B82F6", "#06B6D4"],
-          "병원/약국":["#EF4444", "#F472B6"],
-          미용:       ["#EC4899", "#C026D3"],
-          학원:       ["#8B5CF6", "#6366F1"],
-          마트:       ["#10B981", "#059669"],
-          기타:       ["#6B7280", "#4B5563"],
-        };
 
         function OpeningGroup({ items, label, badge, color }: {
           items: import("@/lib/types").NewStoreOpening[];
@@ -779,34 +775,30 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
           return (
             <div>
               <div className="flex items-center gap-2.5 px-4 mb-3">
+                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ background: color }} />
                 <span className="text-[16px] font-black text-[#1d1d1f]">{label}</span>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white" style={{ background: color }}>{badge}</span>
-                <span className="text-[11px] font-semibold text-[#86868b]">{items.length}개</span>
+                <span className="text-[11px] text-[#86868b]">{items.length}개</span>
                 <div className="flex-1 h-px bg-[#e5e5ea]" />
               </div>
               <div className="px-4 space-y-2">
-                {/* 피처드 카드 */}
                 <button onClick={() => store && setSelectedStore(store)}
                   className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
                   style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
-                  <div className="p-4">
+                  <div className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
-                        {featured.category}
-                      </span>
-                      <span className="text-[11px] font-black text-white/90 bg-black/20 px-2 py-0.5 rounded-full">{badge}</span>
+                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">{featured.category}</span>
+                      <span className="text-[10px] font-black bg-black/20 text-white px-2 py-0.5 rounded-full">{badge}</span>
                     </div>
                     <p className="text-[22px] font-black text-white leading-tight">{featured.storeName}</p>
-                    <p className="text-[13px] text-white/75 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
+                    <p className="text-[13px] text-white/70 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
                     {featured.openBenefit && (
-                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2 backdrop-blur-sm">
-                        <p className="text-[12px] text-white font-semibold">🎁 {featured.openBenefit.summary}</p>
+                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2.5">
+                        <p className="text-[12px] text-white font-semibold leading-snug">{featured.openBenefit.summary}</p>
                       </div>
                     )}
                   </div>
                 </button>
-
-                {/* 나머지 리스트 */}
                 {rest.length > 0 && (
                   <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
                     {rest.map(o => {
@@ -817,9 +809,9 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
                           <StoreLogo name={o.storeName} category={o.category} size={42} />
                           <div className="flex-1 min-w-0">
                             <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
-                            <p className="text-[12px] text-[#6e6e73]">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                            <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
                             {o.openBenefit && (
-                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">🎁 {o.openBenefit.summary}</p>
+                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>
                             )}
                           </div>
                           <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
@@ -834,14 +826,14 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         }
 
         return (
-          <div className="pt-4 pb-2 space-y-5">
-            <OpeningGroup items={weekOpenings} label="금주 신규 오픈" badge="NEW" color="#F04452" />
+          <div className="pt-4 pb-3 space-y-5">
+            <OpeningGroup items={weekOpenings} label="이번 주 신규 오픈" badge="NEW" color="#F04452" />
             <OpeningGroup items={monthOpenings} label="이번달 오픈" badge="이달" color="#FF9500" />
           </div>
         );
       })()}
 
-      {/* ── 이번 주 쿠폰 (유효한 것만 표시) ── */}
+      {/* ── 이번 주 쿠폰 ── */}
       {(() => {
         const validCoupons = dbCoupons.filter(c =>
           Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
@@ -858,10 +850,12 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         }
 
         return (
-          <div className="pt-2 pb-2">
-            <div className="flex items-center gap-1.5 px-4 mb-2.5">
-              <span className="text-[14px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
-              <span className="text-[11px] text-[#6e6e73]">{validCoupons.length}장</span>
+          <div className="pt-1 pb-3">
+            <div className="flex items-center gap-3 px-4 mb-3">
+              <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
+              <span className="text-[16px] font-black text-[#1d1d1f]">이번 주 쿠폰</span>
+              <span className="text-[11px] font-bold bg-[#FEE2E2] text-[#F04452] px-2 py-0.5 rounded-full">{validCoupons.length}장</span>
+              <div className="flex-1 h-px bg-[#e5e5ea]" />
             </div>
             <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
               {validCoupons.map(c => (
@@ -877,44 +871,37 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
         );
       })()}
 
-      {/* ── 업종 필터 ── */}
+      {/* ── 업종 필터 + 매장 목록 ── */}
       <div className="pt-3 pb-1">
-        <div className="flex items-center gap-3 px-4 mb-2.5">
+        <div className="flex items-center gap-3 px-4 mb-3">
+          <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
           <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
-          <span className="text-[11px] font-black bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{allStores.length}개</span>
+          <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
           <div className="flex-1 h-px bg-[#e5e5ea]" />
         </div>
         <div className="flex gap-2 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-          {([
-            { key: "전체", label: "전체", icon: "🏪" },
-            ...ALL_CATS.map(c => ({ key: c, label: c, icon: catEmoji[c] })),
-          ] as { key: StoreCategory | "전체"; label: string; icon: string }[]).map(item => {
-            const count = item.key === "전체" ? allStores.length : allStores.filter(s => s.category === item.key).length;
-            const active = catFilter === item.key;
+          {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => {
+            const active = catFilter === cat;
+            const color = cat === "전체" ? "#1d1d1f" : catDot[cat];
             return (
-              <button key={item.key} onClick={() => setCatFilter(item.key)}
-                className={`shrink-0 flex items-center gap-1.5 h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
-                  active ? "text-white" : "bg-white text-[#86868b]"
+              <button key={cat} onClick={() => setCatFilter(cat)}
+                className={`shrink-0 h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+                  active ? "text-white shadow-sm" : "bg-white text-[#6e6e73]"
                 }`}
-                style={active ? { background: item.key === "전체" ? "#1d1d1f" : catDot[item.key as StoreCategory] } : {}}>
-                <span className="text-[12px]">{item.icon}</span>
-                <span>{item.label}</span>
+                style={active ? { background: color } : {}}>
+                {cat}
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* ── 매장 목록 ── */}
-      <div className="px-4 pt-2 pb-4">
+      <div className="px-4 pt-2 pb-6">
         {grouped ? (
           Array.from(grouped.entries()).map(([cat, stores]) => (
             <div key={cat} className="mb-5">
-              <div className="flex items-center gap-2.5 mb-2.5">
-                <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-                  style={{ background: catDot[cat] + "20" }}>
-                  <span className="text-[14px]">{catEmoji[cat]}</span>
-                </div>
+              <div className="flex items-center gap-3 mb-2.5">
+                <div className="w-1.5 h-[18px] rounded-full shrink-0" style={{ background: catDot[cat] }} />
                 <span className="text-[15px] font-bold text-[#1d1d1f]">{cat}</span>
                 <span className="text-[11px] font-semibold bg-[#f5f5f7] text-[#86868b] px-2 py-0.5 rounded-full">{stores.length}</span>
                 <div className="flex-1 h-px bg-[#e5e5ea]" />
@@ -926,7 +913,9 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
           ))
         ) : (
           <div className="space-y-2">
-            <p className="text-[12px] font-semibold text-[#86868b] mb-2">총 {filtered.length}개 매장</p>
+            {catFilter !== "전체" && (
+              <p className="text-[12px] font-semibold text-[#86868b] mb-2">{filtered.length}개 매장</p>
+            )}
             {filtered.map(s => <StoreCard key={s.id} store={s} />)}
           </div>
         )}
@@ -938,17 +927,6 @@ function StoreListView({ nearbyBuildings }: { nearbyBuildings: NearbyBuilding[] 
           onClose={() => setSelectedStore(null)}
           allCoupons={dbCoupons}
           allOpenings={dbOpenings}
-        />
-      )}
-
-      {/* ── 상가 바텀시트 ── */}
-      {selectedBuilding && (
-        <BuildingBottomSheet
-          nearbyInfo={selectedBuilding}
-          buildingData={buildingDetail}
-          loading={buildingLoading}
-          onClose={() => { setSelectedBuilding(null); setBuildingDetail(null); }}
-          onSelectStore={s => { setSelectedBuilding(null); setBuildingDetail(null); setSelectedStore(s); }}
         />
       )}
     </div>
@@ -1304,6 +1282,10 @@ export default function StoresPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<Store | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [recommendedKws, setRecommendedKws] = useState<string[]>([]);
+  const [popularKws, setPopularKws] = useState<string[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
@@ -1322,7 +1304,28 @@ export default function StoresPage() {
     fetchAllStoresFlat().then(setAllDbStores);
     fetchActiveCoupons().then(setMapCoupons);
     fetchActiveOpenings().then(setMapOpenings);
+    fetchRecommendedKeywords().then(setRecommendedKws);
+    fetchPopularKeywords().then(setPopularKws);
   }, []);
+
+  function handleSearchSelect(kw: string) {
+    setSearchQuery(kw);
+    setSearchFocused(false);
+    if (kw.trim().length >= 2) logSearch(kw.trim());
+    searchInputRef.current?.blur();
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter" && searchQuery.trim().length >= 2) {
+      logSearch(searchQuery.trim());
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+    if (e.key === "Escape") {
+      setSearchFocused(false);
+      searchInputRef.current?.blur();
+    }
+  }
 
   // 위치 권한 요청
   function requestLocation() {
@@ -1387,21 +1390,24 @@ export default function StoresPage() {
 
       {/* 검색바 + 토글 */}
       <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
-        <div className="flex items-center gap-2 bg-[#f5f5f7] rounded-2xl px-4 h-11">
-          <Search size={15} className="text-[#86868b] shrink-0" />
+        <div className={`flex items-center gap-2.5 rounded-2xl px-4 h-12 transition-all ${searchFocused ? "bg-white ring-2 ring-[#0071e3] shadow-sm" : "bg-[#f5f5f7]"}`}>
+          <Search size={16} className={`shrink-0 transition-colors ${searchFocused ? "text-[#0071e3]" : "text-[#86868b]"}`} />
           <input
+            ref={searchInputRef}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="매장명 또는 카테고리 검색 (예: 카페, 스타벅스)"
+            onFocus={() => setSearchFocused(true)}
+            onKeyDown={handleSearchKeyDown}
+            placeholder="매장명, 업종 검색 (예: 카페, 스타벅스)"
             className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#1d1d1f] placeholder:text-[#86868b]"
           />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="active:opacity-60">
-              <X size={15} className="text-[#86868b]" />
+          {(searchQuery || searchFocused) && (
+            <button onMouseDown={e => e.preventDefault()} onClick={() => { setSearchQuery(""); setSearchFocused(false); searchInputRef.current?.blur(); }} className="active:opacity-60">
+              <X size={16} className="text-[#86868b]" />
             </button>
           )}
         </div>
-        {!isSearching && (
+        {!isSearching && !searchFocused && (
           <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
             {(["리스트", "지도"] as const).map(mode => (
               <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
@@ -1416,9 +1422,52 @@ export default function StoresPage() {
         )}
       </div>
 
+      {/* 키워드 검색 패널 */}
+      {searchFocused && !isSearching && (
+        <div className="bg-white min-h-[calc(100dvh-170px)]" onMouseDown={e => e.preventDefault()}>
+          {recommendedKws.length > 0 && (
+            <div className="px-4 pt-5 pb-4 border-b border-[#f5f5f7]">
+              <p className="text-[12px] font-bold text-[#86868b] mb-3 uppercase tracking-wide">추천 검색어</p>
+              <div className="flex flex-wrap gap-2">
+                {recommendedKws.map(kw => (
+                  <button key={kw} onClick={() => handleSearchSelect(kw)}
+                    className="h-9 px-4 bg-[#f5f5f7] rounded-full text-[14px] font-semibold text-[#1d1d1f] active:bg-[#e5e5ea] transition-colors">
+                    {kw}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {popularKws.length > 0 && (
+            <div className="px-4 pt-4 pb-6">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[12px] font-bold text-[#86868b] uppercase tracking-wide">실시간 인기 검색어</p>
+                <p className="text-[10px] text-[#86868b]">최근 7일 기준</p>
+              </div>
+              <div className="space-y-1">
+                {popularKws.map((kw, i) => (
+                  <button key={kw} onClick={() => handleSearchSelect(kw)}
+                    className="w-full flex items-center gap-3 px-2 py-2.5 rounded-xl active:bg-[#f5f5f7] transition-colors text-left">
+                    <span className={`text-[13px] font-black w-5 text-center shrink-0 ${i < 3 ? "text-[#F04452]" : "text-[#86868b]"}`}>{i + 1}</span>
+                    <span className="text-[15px] text-[#1d1d1f] font-medium flex-1">{kw}</span>
+                    {i < 3 && <span className="text-[10px] font-bold text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full shrink-0">HOT</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {recommendedKws.length === 0 && popularKws.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-20 gap-2">
+              <Search size={32} className="text-[#d2d2d7]" />
+              <p className="text-[14px] text-[#86868b]">검색어를 입력해 보세요</p>
+            </div>
+          )}
+        </div>
+      )}
+
       {isSearching ? (
-        <SearchResults results={searchResults} onSelect={(s) => setSelected(s)} />
-      ) : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
+        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+      ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
         /* ─── 건물 상세 뷰 (리스트 모드) ─── */
         <BuildingDetail
           buildingData={selectedBuildingData}
@@ -1463,7 +1512,7 @@ export default function StoresPage() {
         </>
       ) : (
         /* ─── 리스트 모드 ─── */
-        <StoreListView nearbyBuildings={nearbyWithDist} />
+        <StoreListView />
       )}
 
       {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}

@@ -63,8 +63,55 @@ const BRANDS: Record<string, { bg: string; color: string; label: string; logo?: 
   "수학학원":  { bg: "#8B5CF6", color: "#fff", label: "수" },
   "가정의학과":{ bg: "#10B981", color: "#fff", label: "가" },
   "치과":      { bg: "#06B6D4", color: "#fff", label: "치" },
-  "헬스앤뷰티":{ bg: "#EC4899", color: "#fff", label: "헬" },
   "헤어살롱 모이": { bg: "#F59E0B", color: "#fff", label: "모" },
+  // 편의점
+  "GS25":           { bg: "#0073CF", color: "#fff", label: "GS", logo: "https://logo.clearbit.com/gs25.com" },
+  "GS25 오류점":    { bg: "#0073CF", color: "#fff", label: "GS", logo: "https://logo.clearbit.com/gs25.com" },
+  "GS25 백석점":    { bg: "#0073CF", color: "#fff", label: "GS", logo: "https://logo.clearbit.com/gs25.com" },
+  "세븐일레븐":     { bg: "#E31837", color: "#fff", label: "7", logo: "https://logo.clearbit.com/7eleven.co.kr" },
+  "이마트24":       { bg: "#F5A623", color: "#fff", label: "E24", logo: "https://logo.clearbit.com/emart24.co.kr" },
+  // 카페/베이커리
+  "빽다방":         { bg: "#4D3320", color: "#fff", label: "빽", logo: "https://logo.clearbit.com/paik.co.kr" },
+  "메가커피":       { bg: "#F5A623", color: "#fff", label: "메가" },
+  "투썸플레이스":   { bg: "#2C2C2C", color: "#fff", label: "2S", logo: "https://logo.clearbit.com/twosome.co.kr" },
+  "컴포즈커피":     { bg: "#FFCD00", color: "#1d1d1f", label: "컴" },
+  "할리스":         { bg: "#B5151C", color: "#fff", label: "H", logo: "https://logo.clearbit.com/hollys.co.kr" },
+  "탐앤탐스":       { bg: "#6B3F2A", color: "#fff", label: "Tom" },
+  "배스킨라빈스":   { bg: "#E31837", color: "#fff", label: "BR", logo: "https://logo.clearbit.com/baskinrobbins.co.kr" },
+  "던킨":           { bg: "#FF6600", color: "#fff", label: "D", logo: "https://logo.clearbit.com/dunkindonuts.com" },
+  // 음식점
+  "맥도날드":       { bg: "#DA020E", color: "#fff", label: "M", logo: "https://logo.clearbit.com/mcdonalds.com" },
+  "버거킹":         { bg: "#D62300", color: "#fff", label: "BK", logo: "https://logo.clearbit.com/burgerking.com" },
+  "롯데리아":       { bg: "#E31837", color: "#fff", label: "L", logo: "https://logo.clearbit.com/lotteeats.com" },
+  "KFC":            { bg: "#E4002B", color: "#fff", label: "KFC", logo: "https://logo.clearbit.com/kfc.com" },
+  "서브웨이":       { bg: "#009A44", color: "#fff", label: "SW", logo: "https://logo.clearbit.com/subway.com" },
+  "피자헛":         { bg: "#E31837", color: "#fff", label: "PH", logo: "https://logo.clearbit.com/pizzahut.com" },
+  "도미노피자":     { bg: "#006DB6", color: "#fff", label: "D", logo: "https://logo.clearbit.com/dominos.com" },
+  "BBQ":            { bg: "#F7A800", color: "#1d1d1f", label: "BBQ", logo: "https://logo.clearbit.com/bbq.co.kr" },
+  "교촌치킨":       { bg: "#8B1A1A", color: "#fff", label: "교촌", logo: "https://logo.clearbit.com/kyochon.com" },
+  "BHC치킨":        { bg: "#E31837", color: "#fff", label: "BHC" },
+  "BHC":            { bg: "#E31837", color: "#fff", label: "BHC" },
+  "굽네치킨":       { bg: "#FF6600", color: "#fff", label: "굽네" },
+  "네네치킨":       { bg: "#004B97", color: "#fff", label: "네네" },
+  "처갓집양념치킨": { bg: "#E31837", color: "#fff", label: "처갓" },
+  "지코바":         { bg: "#FF6600", color: "#fff", label: "지코" },
+  "본죽":           { bg: "#1B5C35", color: "#fff", label: "본죽" },
+  "한솥도시락":     { bg: "#E31837", color: "#fff", label: "한솥" },
+  "김밥천국":       { bg: "#E31837", color: "#fff", label: "김천" },
+  "롯데GRS":        { bg: "#E31837", color: "#fff", label: "L" },
+  // 생활/뷰티
+  "다이소":         { bg: "#E31837", color: "#fff", label: "D", logo: "https://logo.clearbit.com/daiso.co.kr" },
+  "무신사":         { bg: "#1d1d1f", color: "#fff", label: "M" },
+  "CJ올리브네트웍스":{ bg: "#1D1D1B", color: "#fff", label: "O" },
+  // 금융/기타
+  "신한은행":       { bg: "#0046BE", color: "#fff", label: "신한", logo: "https://logo.clearbit.com/shinhan.com" },
+  "KB국민은행":     { bg: "#FFBC00", color: "#1d1d1f", label: "KB", logo: "https://logo.clearbit.com/kbstar.com" },
+  "하나은행":       { bg: "#009A8A", color: "#fff", label: "하나", logo: "https://logo.clearbit.com/hanabank.com" },
+  "농협은행":       { bg: "#0069C8", color: "#fff", label: "NH", logo: "https://logo.clearbit.com/nonghyup.com" },
+  "카카오뱅크":     { bg: "#FAE100", color: "#1d1d1f", label: "K" },
+  // 헬스
+  "필라테스 스튜디오 온": { bg: "#0EA5E9", color: "#fff", label: "On" },
+  "헬스앤뷰티":    { bg: "#EC4899", color: "#fff", label: "H&B" },
 };
 
 // 카테고리 폴백
@@ -77,12 +124,18 @@ const CAT_FALLBACK: Record<string, { bg: string; color: string }> = {
   "학원":      { bg: "#EDE9FE", color: "#5B21B6" },
   "마트":      { bg: "#D1FAE5", color: "#065F46" },
   "기타":      { bg: "#F3F4F6", color: "#374151" },
+  "헬스/운동": { bg: "#E0F2FE", color: "#0369A1" },
+  "반려동물":  { bg: "#FDF2F8", color: "#9D174D" },
+  "세탁":      { bg: "#EEF2FF", color: "#4338CA" },
 };
 
 const CAT_EMOJI: Record<string, string> = {
   "카페": "☕", "음식점": "🍽️", "편의점": "🏪",
   "병원/약국": "💊", "미용": "💇", "학원": "📚",
   "마트": "🛒", "기타": "🏢",
+  "헬스/운동": "💪",
+  "반려동물": "🐾",
+  "세탁": "👕",
 };
 
 interface StoreLogoProps {

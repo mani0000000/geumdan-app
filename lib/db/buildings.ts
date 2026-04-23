@@ -113,6 +113,7 @@ export interface FlatStore extends Store {
   floorLabel: string;
   buildingId: string;
   buildingName: string;
+  thumbnail_url?: string | null;
 }
 
 export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
@@ -146,6 +147,7 @@ export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
         floorLabel: (row.floor_label as string) ?? '',
         buildingId: (row.building_id as string) ?? '',
         buildingName: buildingNames[(row.building_id as string) ?? ''] ?? '',
+        thumbnail_url: (row.thumbnail_url as string | null) ?? null,
       }));
   } catch (err) {
     console.error('[buildings] fetchAllStoresFlat error:', err);

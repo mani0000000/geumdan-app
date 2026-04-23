@@ -11,10 +11,12 @@ import {
 import type { StoreCategory } from "@/lib/types";
 
 // ─── 상수 ────────────────────────────────────────────────────
-const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "기타"];
+const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "헬스/운동", "반려동물", "세탁", "기타"];
 const CAT_COLOR: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
-  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6", 마트: "#10B981", 기타: "#9CA3AF",
+  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
+  마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
+  세탁: "#6366F1", 기타: "#9CA3AF",
 };
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";

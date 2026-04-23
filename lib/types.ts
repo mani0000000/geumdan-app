@@ -134,6 +134,9 @@ export type StoreCategory =
   | "미용"
   | "학원"
   | "마트"
+  | "헬스/운동"
+  | "반려동물"
+  | "세탁"
   | "기타";
 
 export interface Building {
@@ -237,4 +240,5 @@ export interface Store {
   h: number;
   isOpen?: boolean;
   isPremium?: boolean;
+  thumbnail_url?: string | null;
 }

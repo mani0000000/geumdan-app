@@ -6,7 +6,7 @@ import {
   ChevronRight, Flame, TrendingUp, Droplets, Wind,
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
-  Star, Ticket, X, MapPin, Calendar,
+  Star, Ticket, X, MapPin, Calendar, Train,
   TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -21,9 +21,12 @@ import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
+import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
+import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
+import BannerCarousel from "@/components/ui/BannerCarousel";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -270,18 +273,11 @@ function CouponSection() {
 
   return (
     <section className="mb-1">
-      <div className="flex items-center justify-between px-4 mb-2.5">
-        <div className="flex items-center gap-1.5">
-          <div className="w-5 h-5 rounded-lg bg-[#FEF3C7] flex items-center justify-center">
-            <Tag size={12} className="text-[#F59E0B]" />
-          </div>
-          <span className="text-[15px] font-bold text-[#1d1d1f]">이번 주 쿠폰</span>
-        </div>
-        <Link href="/coupons/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
-          전체보기 <ChevronRight size={13} />
-        </Link>
-      </div>
-
+      <SectionLabel
+        label="이번 주 쿠폰"
+        badge={<Tag size={14} className="text-[#F59E0B]" />}
+        href="/coupons/"
+      />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
         {coupons.map(c => (
           <CouponCard
@@ -381,16 +377,11 @@ function NewOpeningsSection() {
 
   return (
     <section className="mb-1">
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-center gap-2">
-          <span className="text-[16px] font-black text-[#1d1d1f]">신규 오픈</span>
-          <span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>
-        </div>
-        <Link href="/stores/" className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
-          전체보기 <ChevronRight size={13} />
-        </Link>
-      </div>
-
+      <SectionLabel
+        label="신규 오픈"
+        badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
+        href="/stores/"
+      />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
         {newStoreOpenings.map(s => {
           const [from, to] = catGradients[s.category] ?? catGradients["기타"];
@@ -453,10 +444,10 @@ function SosikSection() {
   return (
     <section className="mx-4 mb-1">
       {/* 탭 필 스타일 */}
-      <div className="flex gap-2 mb-3">
+      <div className="flex gap-2 mb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
         {(["커뮤니티", "뉴스", "시세"] as SosikTab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+            className={`h-8 px-4 rounded-full text-[13px] font-bold transition-all shrink-0 ${
               tab === t ? "bg-[#1d1d1f] text-white" : "bg-white text-[#86868b]"
             }`}>
             {t}
@@ -684,7 +675,7 @@ function MartSection() {
 
   return (
     <>
-      <p className="text-[13px] font-bold text-[#6e6e73] uppercase tracking-wide px-4 mb-1.5 mt-3">주변 마트</p>
+      <SectionLabel label="주변 마트" />
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
@@ -1154,12 +1145,29 @@ function PharmacySection() {
   );
 }
 
-// ─── 섹션 헤더 ────────────────────────────────────────────────
-function SectionLabel({ label }: { label: string }) {
+// ─── 섹션 헤더 (모든 위젯 공통) ──────────────────────────────
+function SectionLabel({
+  label,
+  badge,
+  href,
+  linkLabel = "전체보기",
+}: {
+  label: string;
+  badge?: React.ReactNode;
+  href?: string;
+  linkLabel?: string;
+}) {
   return (
-    <div className="flex items-center gap-3 px-4 mb-2.5 mt-5">
-      <span className="text-[13px] font-black text-[#1d1d1f] uppercase tracking-widest">{label}</span>
-      <div className="flex-1 h-px bg-[#e5e5ea]" />
+    <div className="flex items-center justify-between px-4 pt-5 pb-2.5">
+      <div className="flex items-center gap-2">
+        <span className="text-[16px] font-extrabold text-[#1d1d1f]">{label}</span>
+        {badge}
+      </div>
+      {href && (
+        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+          {linkLabel} <ChevronRight size={13} />
+        </Link>
+      )}
     </div>
   );
 }
@@ -1222,13 +1230,126 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
   );
 }
 
-// ─── 홈 교통 위젯 ─────────────────────────────────────────────
+// ─── 홈 교통 위젯 (전광판 스타일) ────────────────────────────
 const STOP_NAME: Record<string, string> = Object.fromEntries(
   GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name])
 );
+const ALL_SUBWAY_STATIONS = getAllSubwayStations();
+
+// 남은 정거장 수를 도트 트랙으로 시각화
+function StopDots({ remaining }: { remaining: number }) {
+  const cap = Math.min(Math.max(remaining, 1), 5);
+  return (
+    <div className="flex items-center gap-1 my-1.5">
+      {Array.from({ length: cap + 1 }).map((_, i) => {
+        const isBus  = i === 0;
+        const isHere = i === cap;
+        return (
+          <React.Fragment key={i}>
+            <div className={[
+              "rounded-full shrink-0 transition-all",
+              isHere  ? "w-2.5 h-2.5 bg-white"
+              : isBus ? "w-2.5 h-2.5 bg-[#F5D547] animate-dot-pulse"
+                      : "w-1.5 h-1.5 bg-white/25",
+            ].join(" ")} />
+            {i < cap && <div className="h-px flex-1 bg-white/20" />}
+          </React.Fragment>
+        );
+      })}
+      <span className="text-white/40 text-[11px] ml-1.5 shrink-0">{remaining}정거장</span>
+    </div>
+  );
+}
+
+// 버스 노선 1행 전광판
+function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
+  const arriving = a.arrivalMin <= 2;
+  const close    = a.arrivalMin <= 7;
+  return (
+    <div className="px-4 py-3 border-t border-white/[0.07] animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex items-start gap-3">
+        {/* 노선 번호 */}
+        <div className={`rounded-xl px-3 py-2 shrink-0 min-w-[60px] text-center ${arriving ? "bg-[#F04452] animate-led-blink" : "bg-[#1a3a6b]"}`}>
+          <span className="text-white text-[19px] font-black leading-none tracking-tight">{a.routeNo}</span>
+          {a.isExpress && <p className="text-yellow-300 text-[9px] font-bold mt-0.5">급행</p>}
+        </div>
+        {/* 정거장 트랙 + 행선지 */}
+        <div className="flex-1 min-w-0">
+          <StopDots remaining={a.remainingStops > 0 ? a.remainingStops : 1} />
+          <p className="text-white/50 text-[12px] truncate">{a.destination} 방면</p>
+        </div>
+        {/* 도착 시간 */}
+        <div className="shrink-0 text-right pt-0.5">
+          {arriving ? (
+            <span className="text-[#F04452] text-[22px] font-black leading-none animate-led-blink">곧도착</span>
+          ) : (
+            <>
+              <span className={`text-[32px] font-black leading-none tabular-nums ${close ? "text-[#FF9500]" : "text-[#F5D547]"}`}>
+                {a.arrivalMin}
+              </span>
+              <span className="text-white/40 text-[13px] ml-0.5">분</span>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// 지하철 방향 1행 전광판
+function SubwayRow({ arrival, lineColor, isEst, delay }: {
+  arrival: SubwayArrival; lineColor: string; isEst: boolean; delay: number;
+}) {
+  const arriving = arrival.arrivalMin <= 2;
+  const close    = arrival.arrivalMin <= 7;
+  const hasCurrentStation = arrival.currentStation && arrival.currentStation !== "시간표";
+  const dirLabel = arrival.direction === "상행" ? "↑ 상행" : "↓ 하행";
+
+  return (
+    <div className="px-4 py-3 border-t border-white/[0.07] animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}>
+      {/* 상단 행: 방향 + 종착역 + 도착시간 */}
+      <div className="flex items-start gap-3 mb-2">
+        <div className="rounded-lg px-2.5 py-1.5 shrink-0" style={{ background: lineColor + "33" }}>
+          <span className="text-[13px] font-black" style={{ color: lineColor }}>{dirLabel}</span>
+        </div>
+        <div className="flex-1 min-w-0 pt-1">
+          <p className="text-white/50 text-[12px] truncate">{arrival.terminalStation} 방면</p>
+          {isEst && <p className="text-white/25 text-[10px] mt-0.5">시간표 추정</p>}
+        </div>
+        <div className="shrink-0 text-right pt-0.5">
+          {arriving ? (
+            <span className="text-[#F04452] text-[22px] font-black leading-none animate-led-blink">곧도착</span>
+          ) : (
+            <>
+              <span className={`text-[32px] font-black leading-none tabular-nums ${close ? "text-[#FF9500]" : "text-[#F5D547]"}`}>
+                {arrival.arrivalMin}
+              </span>
+              <span className="text-white/40 text-[13px] ml-0.5">분</span>
+            </>
+          )}
+        </div>
+      </div>
+      {/* 현재 위치 트랙: 이전역 → 🚇 → 여기 */}
+      {hasCurrentStation && (
+        <div className="flex items-center gap-1.5 bg-white/[0.05] rounded-xl px-3 py-2">
+          <span className="text-white/40 text-[12px] truncate max-w-[90px]">{arrival.currentStation}</span>
+          <div className="flex-1 relative h-px bg-white/15">
+            <span className="absolute top-1/2 -translate-y-1/2 text-[14px] animate-train-glide"
+              style={{ left: "35%" }}>🚇</span>
+          </div>
+          <div className="w-2.5 h-2.5 rounded-full border-2 border-white shrink-0" />
+          <span className="text-white text-[12px] font-bold shrink-0">여기</span>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function HomeTransportWidget() {
   const router = useRouter();
+
   const [favStops] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
     try { return new Set(JSON.parse(localStorage.getItem("favStops") ?? "[]")); } catch { return new Set(); }
@@ -1237,111 +1358,168 @@ function HomeTransportWidget() {
     if (typeof window === "undefined") return new Set();
     try { return new Set(JSON.parse(localStorage.getItem("favRoutes") ?? "[]")); } catch { return new Set(); }
   });
-  const [arrivals, setArrivals] = useState<Record<string, BusArrival[]>>({});
-  const [loading, setLoading] = useState<Set<string>>(new Set());
+  const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
+  const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
+
+  const [favSubways] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favSubways") ?? "[]")); } catch { return new Set(); }
+  });
+  const [subwayArrivals, setSubwayArrivals] = useState<Record<string, SubwayArrival[]>>({});
+  const [subwayLoading, setSubwayLoading] = useState<Set<string>>(new Set());
+  const [globalRefreshing, setGlobalRefreshing] = useState(false);
 
   const favStopIds = [...favStops];
+  const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
   const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
 
-  const refreshStop = useCallback(async (stopId: string) => {
-    setLoading(prev => new Set([...prev, stopId]));
+  const refreshBusStop = useCallback(async (stopId: string) => {
+    setBusLoading(prev => new Set([...prev, stopId]));
     try {
       const data = await fetchArrivalsByStationId(stopId);
-      setArrivals(prev => ({ ...prev, [stopId]: data }));
+      setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
-      setLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
+      setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
     }
   }, []);
 
+  const refreshSubwayStation = useCallback(async (station: SubwayStationWithDist) => {
+    setSubwayLoading(prev => new Set([...prev, station.id]));
+    try {
+      const data = await fetchSubwayArrivals(station);
+      setSubwayArrivals(prev => ({ ...prev, [station.id]: data }));
+    } catch { /* ignore */ } finally {
+      setSubwayLoading(prev => { const n = new Set(prev); n.delete(station.id); return n; });
+    }
+  }, []);
+
+  const refreshAll = useCallback(async () => {
+    setGlobalRefreshing(true);
+    await Promise.all([
+      ...favStopIds.map(id => refreshBusStop(id)),
+      ...favSubwayStations.map(st => refreshSubwayStation(st)),
+    ]);
+    setGlobalRefreshing(false);
+  }, [favStopIds, favSubwayStations, refreshBusStop, refreshSubwayStation]);
+
   useEffect(() => {
-    favStopIds.forEach(id => refreshStop(id));
+    favStopIds.forEach(id => refreshBusStop(id));
+    favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (favStops.size === 0) {
+  const hasBus    = favStops.size > 0;
+  const hasSubway = favSubwayStations.length > 0;
+
+  if (!hasBus && !hasSubway) {
     return (
       <section className="mx-4 mb-1">
-        <button
-          onClick={() => router.push("/transport/")}
-          className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:opacity-80 shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-            <Bus size={18} className="text-[#0071e3]" />
+        <button onClick={() => router.push("/transport/")}
+          className="w-full rounded-2xl bg-[#111827] px-4 py-4 flex items-center gap-3 active:opacity-80">
+          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+            <Bus size={18} className="text-[#F5D547]" />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 버스가 없어요</p>
-            <p className="text-[12px] text-[#6e6e73] mt-0.5">교통 탭에서 버스 노선을 즐겨찾기하면 여기 표시돼요</p>
+            <p className="text-[14px] font-bold text-white">즐겨찾기한 교통수단이 없어요</p>
+            <p className="text-[12px] text-white/40 mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기하면 여기 표시돼요</p>
           </div>
-          <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
+          <ChevronRight size={16} className="text-white/30 shrink-0" />
         </button>
       </section>
     );
   }
 
   return (
-    <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden">
-        {favStopIds.map(stopId => {
-          const stopArrivals = arrivals[stopId] ?? [];
-          const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
-          const displayed = hasFavRoutes
-            ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
-            : stopArrivals.slice(0, 3);
-          const stopName = STOP_NAME[stopId] ?? "정류장";
-          const isLoading = loading.has(stopId);
+    <section className="mx-4 mb-1 space-y-3">
 
-          return (
-            <div key={stopId} className="border-b border-[#f5f5f7] last:border-0">
-              <div className="px-4 pt-3 pb-1.5 flex items-center gap-2">
-                <MapPin size={12} className="text-[#0071e3] shrink-0" />
-                <span className="text-[12px] font-bold text-[#424245] flex-1 truncate">{stopName}</span>
-                <button
-                  onClick={() => refreshStop(stopId)}
-                  className="w-7 h-7 rounded-lg bg-[#f5f5f7] flex items-center justify-center active:opacity-70">
-                  <RefreshCw size={11} className={`text-[#0071e3] ${isLoading ? "animate-spin" : ""}`} />
-                </button>
-              </div>
-              {isLoading ? (
-                <div className="px-4 pb-3">
-                  <div className="h-4 w-40 bg-[#f5f5f7] rounded animate-pulse" />
-                </div>
-              ) : displayed.length === 0 ? (
-                <p className="px-4 pb-3 text-[12px] text-[#86868b]">도착 정보 없음</p>
-              ) : (
-                <div className="divide-y divide-[#f5f5f7]">
-                  {displayed.map((a, i) => (
-                    <div key={i} className="px-4 py-2.5 flex items-center gap-2.5">
-                      <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 shrink-0">
-                        <span className="text-white text-[13px] font-black leading-none">{a.routeNo}</span>
-                      </div>
-                      {a.isExpress && (
-                        <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded-md shrink-0">급행</span>
-                      )}
-                      <span className="text-[12px] text-[#424245] flex-1 truncate">{a.destination}</span>
-                      <div className={`rounded-lg px-2.5 py-1 text-center min-w-[52px] shrink-0 ${
-                        a.arrivalMin <= 3 ? "bg-[#F04452]"
-                        : a.arrivalMin <= 7 ? "bg-[#FF9500]"
-                        : "bg-[#0071e3]"
-                      }`}>
-                        {a.arrivalMin <= 0
-                          ? <span className="text-white text-[11px] font-bold">곧도착</span>
-                          : <>
-                              <span className="text-white text-[16px] font-black leading-none block">{a.arrivalMin}</span>
-                              <span className="text-white/80 text-[10px] leading-none block">분 후</span>
-                            </>
-                        }
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+      {/* ── 버스 정류장 카드 ── */}
+      {hasBus && favStopIds.map(stopId => {
+        const stopArrivals = busArrivals[stopId] ?? [];
+        const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
+        const displayed = hasFavRoutes
+          ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
+          : stopArrivals.slice(0, 3);
+        const stopName = STOP_NAME[stopId] ?? "정류장";
+        const isLoading = busLoading.has(stopId);
+
+        return (
+          <div key={stopId} className="bg-[#111827] rounded-2xl overflow-hidden">
+            {/* 정류장 헤더 */}
+            <div className="px-4 py-3 flex items-center gap-2 border-b border-white/[0.08]"
+              style={{ background: "linear-gradient(135deg, #1a3a6b 0%, #111827 100%)" }}>
+              <Bus size={15} className="text-[#F5D547] shrink-0" />
+              <span className="text-white font-bold text-[15px] flex-1 truncate">{stopName}</span>
+              <button onClick={() => refreshBusStop(stopId)} disabled={isLoading}
+                className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center active:bg-white/20 disabled:opacity-40">
+                <RefreshCw size={13} className={`text-white/70 ${isLoading ? "animate-spin" : ""}`} />
+              </button>
             </div>
-          );
-        })}
-        <button
-          onClick={() => router.push("/transport/")}
-          className="w-full py-3 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
-          <span className="text-[13px] text-[#0071e3] font-semibold">실시간 교통 전체보기</span>
-          <ChevronRight size={13} className="text-[#0071e3]" />
+            {/* 도착 정보 */}
+            {isLoading ? (
+              <div className="px-4 py-5 space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-8 bg-white/10 rounded-xl animate-pulse" />)}
+              </div>
+            ) : displayed.length === 0 ? (
+              <p className="px-4 py-4 text-white/30 text-[13px]">도착 정보 없음</p>
+            ) : displayed.map((a, i) => (
+              <BusRow key={i} a={a} delay={i * 60} />
+            ))}
+          </div>
+        );
+      })}
+
+      {/* ── 지하철 역 카드 ── */}
+      {hasSubway && favSubwayStations.map(st => {
+        const live = subwayArrivals[st.id];
+        const displayArrivals = live && live.length > 0 ? live : estimateNextArrivals(st.timetable);
+        const isEst = !live || live.length === 0;
+        const nextUp   = displayArrivals.find(a => a.direction === "상행");
+        const nextDown = displayArrivals.find(a => a.direction === "하행");
+        const isLoading = subwayLoading.has(st.id);
+
+        return (
+          <div key={st.id} className="bg-[#111827] rounded-2xl overflow-hidden">
+            {/* 역 헤더 */}
+            <div className="px-4 py-3 flex items-center gap-2.5 border-b border-white/[0.08]"
+              style={{ background: `linear-gradient(135deg, ${st.lineColor}22 0%, #111827 100%)` }}>
+              <Train size={15} className="shrink-0" style={{ color: st.lineColor }} />
+              <span className="text-white font-bold text-[15px] flex-1 truncate">{st.displayName}</span>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white shrink-0"
+                style={{ background: st.lineColor }}>{st.line}</span>
+              <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
+                className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center active:bg-white/20 disabled:opacity-40">
+                <RefreshCw size={13} className={`text-white/70 ${isLoading ? "animate-spin" : ""}`} />
+              </button>
+            </div>
+            {/* 도착 정보 */}
+            {isLoading ? (
+              <div className="px-4 py-5 space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-8 bg-white/10 rounded-xl animate-pulse" />)}
+              </div>
+            ) : !nextUp && !nextDown ? (
+              <p className="px-4 py-4 text-white/30 text-[13px]">운행 종료 또는 정보 없음</p>
+            ) : (
+              <>
+                {nextUp   && <SubwayRow arrival={nextUp}   lineColor={st.lineColor} isEst={isEst} delay={0}  />}
+                {nextDown && <SubwayRow arrival={nextDown} lineColor={st.lineColor} isEst={isEst} delay={60} />}
+              </>
+            )}
+          </div>
+        );
+      })}
+
+      {/* ── 하단 액션 바 ── */}
+      <div className="bg-white rounded-2xl flex overflow-hidden">
+        <button onClick={refreshAll} disabled={globalRefreshing}
+          className="flex items-center justify-center gap-2 py-3.5 px-5 active:bg-[#f5f5f7] disabled:opacity-50">
+          <RefreshCw size={14} className={`text-[#86868b] ${globalRefreshing ? "animate-spin" : ""}`} />
+          <span className="text-[13px] text-[#86868b] font-medium">새로고침</span>
+        </button>
+        <div className="w-px bg-[#f5f5f7]" />
+        <button onClick={() => router.push("/transport/")}
+          className="flex-1 py-3.5 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
+          <span className="text-[13px] text-[#0071e3] font-semibold">전체보기</span>
+          <ChevronRight size={14} className="text-[#0071e3]" />
         </button>
       </div>
     </section>
@@ -1355,16 +1533,19 @@ export default function HomePage() {
   const [weatherLoading, setWeatherLoading] = useState(true);
   const [widgetConfig, setWidgetConfig] = useState<WidgetConfig[] | null>(null);
   const [userNickname, setUserNickname] = useState("검단주민");
+  const [homeBanners, setHomeBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     fetchWidgetConfig().then(setWidgetConfig);
     getUserProfile().then(p => setUserNickname(p.nickname));
+    fetchActiveBanners().then(setHomeBanners);
   }, []);
 
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
     greeting: () => <GreetingBanner weather={weather} nickname={userNickname} />,
+    banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-4 mt-3 mb-1">
@@ -1382,34 +1563,24 @@ export default function HomePage() {
         </div>
       </div>
     ),
-    coupons: () => (
-      <>
-        <SectionLabel label="이번 주 혜택" />
-        <CouponSection />
-      </>
-    ),
-    openings: () => (
-      <>
-        <SectionLabel label="신규 오픈" />
-        <NewOpeningsSection />
-      </>
-    ),
+    coupons: () => <CouponSection />,
+    openings: () => <NewOpeningsSection />,
     mart: () => <MartSection />,
     pharmacy: () => (
       <>
-        <SectionLabel label="주말·심야 약국" />
+        <SectionLabel label="약국·응급실" />
         <PharmacySection />
       </>
     ),
     transport: () => (
       <>
-        <SectionLabel label="교통" />
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
         <HomeTransportWidget />
       </>
     ),
     sosik: () => (
       <>
-        <SectionLabel label="검단 소식" />
+        <SectionLabel label="검단 소식" href="/community/" />
         <SosikSection />
       </>
     ),
