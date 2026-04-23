@@ -51,7 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="min-h-screen bg-[#F5F6F8]">
 
       {/* ── 데스크탑 사이드바 ──────────────────────────── */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-full w-[220px] bg-[#191F28] z-30">
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 h-screen w-[220px] bg-[#191F28] z-30">
         <div className="px-5 py-5 border-b border-white/10">
           <div className="flex items-center gap-2">
             <LayoutDashboard size={18} className="text-[#3182F6]" />
@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <p className="text-white/40 text-[11px] mt-1">관리자 전용</p>
         </div>
-        <nav className="flex-1 py-4 space-y-0.5 px-2">
+        <nav className="flex-1 min-h-0 py-4 space-y-0.5 px-2 overflow-y-auto">
           {NAV.map(({ href, icon: Icon, label }) => {
             const active = pathname.startsWith(href);
             return (
@@ -95,7 +95,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {drawerOpen && (
         <div className="md:hidden fixed inset-0 z-50 flex">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDrawerOpen(false)} />
-          <aside className="relative z-50 w-[260px] bg-[#191F28] flex flex-col shadow-2xl">
+          <aside className="relative z-50 w-[260px] h-full bg-[#191F28] flex flex-col shadow-2xl">
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <LayoutDashboard size={16} className="text-[#3182F6]" />
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X size={20} />
               </button>
             </div>
-            <nav className="flex-1 py-4 space-y-1 px-3">
+            <nav className="flex-1 min-h-0 py-4 space-y-1 px-3 overflow-y-auto">
               {NAV.map(({ href, icon: Icon, label }) => {
                 const active = pathname.startsWith(href);
                 return (
