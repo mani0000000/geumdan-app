@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
-import { Bell, ChevronDown, ChevronLeft } from "lucide-react";
+import { Bell, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 interface HeaderProps {
   title?: string;
@@ -25,10 +26,16 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
             </button>
           )}
           {showLocation ? (
-            <button className="flex items-center gap-0.5 active:opacity-50 transition-opacity">
-              <span className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">검단 신도시</span>
-              <ChevronDown size={15} className="text-[#6e6e73] mt-0.5" />
-            </button>
+            <div className="active:opacity-50 transition-opacity">
+              <Image
+                src="/logos/logo.png"
+                alt="검단신도시라이프"
+                width={160}
+                height={32}
+                className="h-8 w-auto object-contain"
+                priority
+              />
+            </div>
           ) : (
             <h1 className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">{title}</h1>
           )}
