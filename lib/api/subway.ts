@@ -91,7 +91,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
     stationCode: "I023",
-    timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "계양", downDirection: "검단호수공원" },
+    timetable: { upFirst: "-", upLast: "-", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "계양", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-bakchon",
