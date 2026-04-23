@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <p className="text-white/40 text-[11px] mt-1">관리자 전용</p>
         </div>
-        <nav className="flex-1 py-4 space-y-0.5 px-2 overflow-y-auto">
+        <nav className="flex-1 min-h-0 py-4 space-y-0.5 px-2 overflow-y-auto">
           {NAV.map(({ href, icon: Icon, label }) => {
             const active = pathname.startsWith(href);
             return (
@@ -105,7 +105,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X size={20} />
               </button>
             </div>
-            <nav className="flex-1 py-4 space-y-1 px-3 overflow-y-auto">
+            <nav className="flex-1 min-h-0 py-4 space-y-1 px-3 overflow-y-auto">
               {NAV.map(({ href, icon: Icon, label }) => {
                 const active = pathname.startsWith(href);
                 return (
