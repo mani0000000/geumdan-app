@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-23T16:24:30.749Z",
+  "fetchedAt": "2026-04-23T18:53:22.293Z",
   "count": 40,
   "articles": [
     {
@@ -12,7 +12,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-1",
+      "title": "인천 서구의회, 검단구 임시청사 현장 점검 - 뉴스타운",
+      "summary": "",
+      "source": "뉴스타운",
+      "publishedAt": "2026-04-23T12:16:47.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9uRzVrZUhDWkRMMHlaOXZVYlBsUDlVNDhOR2piU2FzdjhzczVOQ28xb05nRkJ4SG44c2szNlFoQV9qR0RBT0xYMDF5SDFfUHJNS2dfamZqTXVYMTFaU3BKekhHQXNDWWg4UzhQRlVn?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-15",
       "title": "인천 서구의회 「행정체제 개편에 따른 분구추진 특별위원회」, 검단구 임시청사 현장 점검 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -21,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "인천 서구 검단조은아이365병원, 달빛어린이병원 재지정 소아 야간·휴일 진료 공백 해소 지 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -39,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-20",
       "title": "인천 더샵 검단레이크파크 2857가구 내달 풀린다 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -48,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -66,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-4",
       "title": "포스코이앤씨, 검단 ‘첫’ 더샵… 2,857세대 대단지 5월 분양 - 한국주택경제신문",
       "summary": "",
       "source": "한국주택경제신문",
@@ -75,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-26",
+      "id": "gr0-27",
       "title": "포스코이앤씨, 인천 ‘더샵 검단레이크파크’ 5월 분양 예정 - 월드투데이",
       "summary": "",
       "source": "월드투데이",
@@ -93,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-2",
       "title": "인천 서구의회, 검단구 임시청사 점검…\"행정 공백 최소화\" - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -111,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-5",
       "title": "검단호수공원역 파라곤, 인천지하철 환승역세권…높은 청약 경쟁률 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -156,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-21",
       "title": "분양가상한제 적용 2857가구… 포스코이앤씨 '더샵 검단레이크파크' 5월 분양 - 월요신문",
       "summary": "",
       "source": "월요신문",
@@ -174,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-5",
       "title": "검단신도시 랜드마크 경쟁 가열…‘실수요 중심’ 대단지의 귀환 - thefairnews.co.kr",
       "summary": "",
       "source": "thefairnews.co.kr",
@@ -192,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "검단신도시 첫번째 '더샵'...포스코이앤씨, ‘더샵 검단레이크파크’ 내달 공급 - 스마트투데이",
       "summary": "",
       "source": "스마트투데이",
@@ -300,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-33",
+      "id": "gr0-32",
       "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 5억9800만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
@@ -309,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-25",
+      "id": "gr2-27",
       "title": "더불어민주당 이영철 서구의원, 검단 발전 위한 본격 행보 시작 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -318,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-33",
+      "id": "gr2-38",
       "title": "이영철 서구의원, 인천시의원 예비후보 등록...“검증된 실력으로 검단 발전 이끌겠다” - 경인매일",
       "summary": "",
       "source": "경인매일",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-40",
+      "id": "gr2-43",
       "title": "김진규 검단구청장 예비후보 각계각층 릴레이 지지 선언 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -345,16 +354,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-30",
-      "title": "검단신도시에 첫 선보이는 롯데캐슬 브랜드 '검단신도시 롯데캐슬 넥스티엘' 입주 앞둬 - 넥스트데일리",
-      "summary": "",
-      "source": "넥스트데일리",
-      "publishedAt": "2026-04-22T01:17:18.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE0zNkh4c0EyenVqMlM5UENISjA1YlZYSXZnQ3JFQXJBbHVRMWpwS0tkMjhzUHRwa0lPbXpVem8zRjBBbVBlQXBuTGxTVDcyU1JuZ0JLMmpXZnliMFZRTkp4bUpYTE1YZGtWWW9HUXU1ONIBc0FVX3lxTFBYMDhidmRNbW0zckR1ekh4amlLNnhYYXpRWkNqMmpsNDh5NDdzeDhNSTlnVnR2UDBWdmNDZDl4Yjh0X25vT1BMQzFpaElPbENQNzNXbDVNaGppemN5ajF4b05mLTVrc1R4X2RBTTljdnJWZk0?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-45",
+      "id": "gr2-48",
       "title": "“젊고 검증된 실력으로 확실한 검단 발전 이끌겠다”... 이영철 의원, 인천시의원 선거 예비후보 등록 - 투어코리아",
       "summary": "",
       "source": "투어코리아",
