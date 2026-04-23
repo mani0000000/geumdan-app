@@ -2,6 +2,7 @@
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Plus, Pencil, Trash2, ChevronLeft, RefreshCw, Check, X } from "lucide-react";
+import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBuildings, adminUpdateBuilding,
   adminFetchFloors, adminCreateFloor, adminUpdateFloor, adminDeleteFloor,
@@ -293,9 +294,12 @@ function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSav
         <input className={INPUT} value={form.open_time ?? ""}
           onChange={e => set("open_time", e.target.value || null)} />
       </Field>
-      <Field label="이미지 URL">
-        <input className={INPUT} value={form.image_url ?? ""}
-          onChange={e => set("image_url", e.target.value || null)} />
+      <Field label="이미지">
+        <ImageUpload
+          value={form.image_url}
+          onChange={url => set("image_url", url)}
+          folder="buildings"
+        />
       </Field>
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={form.has_data} onChange={e => set("has_data", e.target.checked)} className="w-4 h-4" />

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Pencil, Trash2, ChevronRight, Search, RefreshCw } from "lucide-react";
+import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBuildings,
   adminCreateBuilding,
@@ -95,9 +96,12 @@ function BuildingModal({
               <input className={INPUT} value={form.open_time ?? ""}
                 onChange={e => set("open_time", e.target.value || null)} placeholder="예: 매일 10:00~22:00" />
             </Field>
-            <Field label="이미지 URL">
-              <input className={INPUT} value={form.image_url ?? ""}
-                onChange={e => set("image_url", e.target.value || null)} placeholder="https://..." />
+            <Field label="이미지">
+              <ImageUpload
+                value={form.image_url}
+                onChange={url => set("image_url", url)}
+                folder="buildings"
+              />
             </Field>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.has_data}
