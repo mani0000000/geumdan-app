@@ -1,17 +1,10 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "admin-images";
-
-function getAdminClient() {
-  const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_KEY ?? process.env.NEXT_PUBLIC_ADMIN_DB_KEY;
-  if (!url || !key) throw new Error("Supabase credentials not configured");
-  return createClient(url, key);
-}
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,14 +29,13 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const supabase = getAdminClient();
-    const { error } = await supabase.storage
+    const { error } = await supabaseAdmin.storage
       .from(BUCKET)
       .upload(path, buffer, { contentType: file.type, upsert: false });
 
     if (error) throw error;
 
-    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
     return NextResponse.json({ url: urlData.publicUrl });
   } catch (err) {
     console.error("[upload]", err);
