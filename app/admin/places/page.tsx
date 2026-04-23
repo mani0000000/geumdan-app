@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Pencil, Trash2, Search, Eye, EyeOff, RefreshCw } from "lucide-react";
+import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchPlaces, adminCreatePlace, adminUpdatePlace,
   adminDeletePlace, adminTogglePublished, type AdminPlace,
@@ -96,8 +97,12 @@ function PlaceModal({
           </div>
 
           <div>
-            <label className={labelCls}>대표 이미지 URL</label>
-            <input className={inputCls} value={form.thumbnail_url ?? ""} onChange={e => set("thumbnail_url", e.target.value || null)} placeholder="https://..." />
+            <label className={labelCls}>대표 이미지</label>
+            <ImageUpload
+              value={form.thumbnail_url}
+              onChange={url => set("thumbnail_url", url)}
+              folder="places"
+            />
           </div>
 
           {/* 거리·시간 */}

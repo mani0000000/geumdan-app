@@ -4,6 +4,7 @@ import {
   Plus, Pencil, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
   Image as ImageIcon, X, Loader2, AlertCircle, CheckCircle2,
 } from "lucide-react";
+import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBanners, adminCreateBanner, adminUpdateBanner, adminDeleteBanner,
   type Banner,
@@ -355,14 +356,13 @@ export default function AdminBannersPage() {
                 />
               </div>
 
-              {/* 이미지 URL */}
+              {/* 이미지 업로드 */}
               <div className="space-y-2">
-                <label className="text-[12px] font-bold text-gray-600">이미지 URL</label>
-                <input
+                <label className="text-[12px] font-bold text-gray-600">이미지</label>
+                <ImageUpload
                   value={form.image_url}
-                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
-                  placeholder="https://..."
-                  className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
+                  onChange={url => setForm(f => ({ ...f, image_url: url ?? "" }))}
+                  folder="banners"
                 />
                 <p className="text-[11px] text-gray-400">이미지가 없으면 아래 배경 그라디언트를 사용합니다</p>
               </div>
