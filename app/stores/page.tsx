@@ -10,6 +10,7 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
+import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
@@ -644,7 +645,11 @@ function StoreListView() {
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
   const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
   const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
-  const [dlState, setDlState] = useState<Set<string>>(new Set());
+  // 상가 바텀시트
+  const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
+  const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
+  const [buildingLoading, setBuildingLoading] = useState(false);
+  const [dlState, setDlState] = useState<Set<string>>(() => loadDownloaded());
   const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
@@ -834,6 +839,16 @@ function StoreListView() {
           Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
         );
         if (validCoupons.length === 0) return null;
+
+        function toggleCoupon(id: string) {
+          setDlState(prev => {
+            const n = new Set(prev);
+            n.has(id) ? n.delete(id) : n.add(id);
+            saveDownloaded(n);
+            return n;
+          });
+        }
+
         return (
           <div className="pt-1 pb-3">
             <div className="flex items-center gap-3 px-4 mb-3">
@@ -842,38 +857,15 @@ function StoreListView() {
               <span className="text-[11px] font-bold bg-[#FEE2E2] text-[#F04452] px-2 py-0.5 rounded-full">{validCoupons.length}장</span>
               <div className="flex-1 h-px bg-[#e5e5ea]" />
             </div>
-            <div className="flex gap-3 overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-              {validCoupons.map(c => {
-                const done = dlState.has(c.id);
-                const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
-                const urgent = dDay <= 3;
-                return (
-                  <div key={c.id} className="shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden shadow-sm"
-                    style={{ borderLeft: `3px solid ${c.color}` }}>
-                    <div className="px-4 pt-3.5 pb-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <StoreLogo name={c.storeName} category={c.category} size={30} rounded="rounded-lg" />
-                        <p className="text-[13px] font-bold text-[#1d1d1f] truncate flex-1">{c.storeName}</p>
-                      </div>
-                      <div className="flex items-baseline gap-1 mb-1">
-                        <span className="text-[26px] font-black leading-none" style={{ color: c.color }}>{c.discount}</span>
-                        <span className="text-[12px] font-semibold text-[#6e6e73]">할인</span>
-                      </div>
-                      <p className="text-[11px] text-[#6e6e73] line-clamp-2 leading-snug">{c.title}</p>
-                    </div>
-                    <div className="px-4 pb-3.5 flex items-center justify-between border-t border-dashed border-[#e5e5ea] pt-2.5">
-                      <span className={`text-[11px] font-bold ${urgent ? "text-[#F04452]" : "text-[#86868b]"}`}>
-                        {urgent ? `D-${dDay}` : `~ ${c.expiry.slice(5)}`}
-                      </span>
-                      <button onClick={() => setDlState(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                        className="h-7 px-4 rounded-lg text-[12px] font-bold active:opacity-70 text-white"
-                        style={{ background: done ? "#9CA3AF" : c.color }}>
-                        {done ? "완료" : "받기"}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
+              {validCoupons.map(c => (
+                <CouponCard
+                  key={c.id}
+                  coupon={c}
+                  downloaded={dlState.has(c.id)}
+                  onToggle={() => toggleCoupon(c.id)}
+                />
+              ))}
             </div>
           </div>
         );

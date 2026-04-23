@@ -12,7 +12,8 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
-import { posts, newsItems, apartments, coupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
+import { posts, newsItems, apartments, coupons as mockCoupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
@@ -22,6 +23,8 @@ import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig } from "@/lib/db/widget-config";
+import { fetchActiveCoupons } from "@/lib/db/stores";
+import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
 
@@ -248,9 +251,25 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
 // ─── 쿠폰 섹션 ────────────────────────────────────────────────
 function CouponSection() {
-  const [downloaded, setDownloaded] = useState<Set<string>>(
-    new Set(coupons.filter(c => c.downloaded).map(c => c.id))
-  );
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [downloaded, setDownloaded] = useState<Set<string>>(() => loadDownloaded());
+
+  useEffect(() => {
+    fetchActiveCoupons().then(data => {
+      setCoupons(data.length > 0 ? data : mockCoupons);
+    });
+  }, []);
+
+  function toggle(id: string) {
+    setDownloaded(prev => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      saveDownloaded(n);
+      return n;
+    });
+  }
+
+  if (coupons.length === 0) return null;
 
   return (
     <section className="mb-1">
@@ -260,70 +279,14 @@ function CouponSection() {
         href="/coupons/"
       />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-        {coupons.map(c => {
-          const done = downloaded.has(c.id);
-          const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
-          const urgent = dDay <= 3;
-          return (
-            <div key={c.id} className="shrink-0 w-[230px]">
-              {/* 쿠폰 래퍼 — 반원 노치 절취선 구조 */}
-              <div className="relative rounded-2xl overflow-hidden shadow-md"
-                style={{ background: "white", border: `1.5px solid ${c.color}22` }}>
-
-                {/* ── 상단 컬러 영역 ── */}
-                <div className="px-4 pt-3.5 pb-3" style={{ background: `${c.color}14` }}>
-                  <div className="flex items-center gap-2.5">
-                    <StoreLogo name={c.storeName} category={c.category} size={36} rounded="rounded-xl" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-extrabold text-[#1d1d1f] truncate">{c.storeName}</p>
-                      <p className="text-[11px] text-[#6e6e73] truncate mt-0.5">{c.buildingName}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* ── 절취선 노치 ── */}
-                <div className="relative flex items-center" style={{ height: "14px" }}>
-                  {/* 배경 선 */}
-                  <div className="absolute inset-x-0 top-1/2 -translate-y-1/2"
-                    style={{ borderTop: `2px dashed ${c.color}55` }} />
-                  {/* 좌측 반원 */}
-                  <div className="absolute -left-[7px] w-[14px] h-[14px] rounded-full bg-[#f5f5f7] border-r-0"
-                    style={{ border: `1.5px solid ${c.color}22`, borderLeft: "none" }} />
-                  {/* 우측 반원 */}
-                  <div className="absolute -right-[7px] w-[14px] h-[14px] rounded-full bg-[#f5f5f7] border-l-0"
-                    style={{ border: `1.5px solid ${c.color}22`, borderRight: "none" }} />
-                </div>
-
-                {/* ── 하단 흰 영역 ── */}
-                <div className="px-4 pt-2 pb-3.5">
-                  {/* 할인 금액 크게 */}
-                  <div className="flex items-baseline gap-1 mb-1">
-                    <span className="text-[28px] font-black leading-none" style={{ color: c.color }}>
-                      {c.discount}
-                    </span>
-                    <span className="text-[12px] font-bold text-[#6e6e73]">할인</span>
-                  </div>
-                  {/* 쿠폰 제목 */}
-                  <p className="text-[12px] text-[#424245] leading-snug line-clamp-2 mb-2.5">{c.title}</p>
-                  {/* 하단: 만료일 + 받기 버튼 */}
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-bold ${urgent ? "text-[#F04452]" : "text-[#86868b]"}`}>
-                      {urgent ? `⏰ D-${dDay}` : `~${c.expiry.slice(5)}`}
-                    </span>
-                    <button
-                      onClick={() => setDownloaded(d => { const n = new Set(d); n.has(c.id) ? n.delete(c.id) : n.add(c.id); return n; })}
-                      className={`h-7 px-3.5 rounded-lg text-[12px] font-extrabold active:opacity-70 transition-all ${
-                        done ? "bg-[#f5f5f7] text-[#86868b]" : "text-white shadow-sm"
-                      }`}
-                      style={done ? {} : { background: c.color }}>
-                      {done ? "✓ 완료" : "쿠폰받기"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+        {coupons.map(c => (
+          <CouponCard
+            key={c.id}
+            coupon={c}
+            downloaded={downloaded.has(c.id)}
+            onToggle={() => toggle(c.id)}
+          />
+        ))}
       </div>
     </section>
   );
