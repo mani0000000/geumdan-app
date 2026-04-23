@@ -1,12 +1,21 @@
+import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BUCKET = "admin-images";
 
+// 서비스 키 사용 — RLS 우회 (Vercel 환경변수: SUPABASE_SERVICE_KEY)
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://plwpfnbhyzblgvliiole.supabase.co";
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY ?? process.env.NEXT_PUBLIC_ADMIN_DB_KEY ?? "";
+
+const adminStorage = createClient(SUPABASE_URL, SERVICE_KEY);
+
 export async function POST(req: NextRequest) {
+  if (!SERVICE_KEY) {
+    return NextResponse.json({ error: "SUPABASE_SERVICE_KEY 환경변수를 설정해주세요" }, { status: 500 });
+  }
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -22,21 +31,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
 
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).slice(2, 8);
-    const path = `${folder}/${timestamp}-${random}.${ext}`;
-
+    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
 
-    const { error } = await supabaseAdmin.storage
+    const { error } = await adminStorage.storage
       .from(BUCKET)
-      .upload(path, buffer, { contentType: file.type, upsert: false });
+      .upload(path, Buffer.from(bytes), { contentType: file.type, upsert: false });
 
     if (error) throw error;
 
-    const { data: urlData } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
-    return NextResponse.json({ url: urlData.publicUrl });
+    const { data } = adminStorage.storage.from(BUCKET).getPublicUrl(path);
+    return NextResponse.json({ url: data.publicUrl });
   } catch (err) {
     console.error("[upload]", err);
     return NextResponse.json(
