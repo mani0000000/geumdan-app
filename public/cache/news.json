@@ -1,9 +1,36 @@
 {
-  "fetchedAt": "2026-04-24T07:47:02.301Z",
+  "fetchedAt": "2026-04-24T10:14:38.029Z",
   "count": 40,
   "articles": [
     {
+      "id": "gr1-0",
+      "title": "2분기 공급 주인공은 '검단·고덕·창릉' 신도시 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-24T08:55:02.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE9fNEh1WXhNZnJxdkZYWkhHLWgzckVyV2FVN0RMbnBydW0zZURtVlZkWEo3Xy1RN3lSRUIweWlaX1VPczRhdFlsWmh3dWxkMVk?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-0",
+      "title": "2분기 공급 주인공은 '검단·고덕·창릉' 신도시 - 한국경제",
+      "summary": "",
+      "source": "한국경제",
+      "publishedAt": "2026-04-24T08:53:52.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5TTUg5SVByWWNlaTdYcXZRcm5kUHdTWHprUEozWkFjOEpVY3ZydU9abUpSWjROd1ZUdEVHQnh3bS1CUFVvQjRNSXhtTFFYWVotZHBGMG5PX0h6Z9IBVEFVX3lxTE5OXzdQTXhFSng4dHFPbDJLcG1UOVBaaEJRRFFkcEhGWUppQVB4TUNCNFhxTlFDdUo2MVlGYnc1UkpnZFVIbHdpUjd5UzB2cGRxMXMxcg?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr1-1",
+      "title": "검단APT 주차장 붕괴 손배소…LH-GS건설, '책임 소재' 법정공방 - 뉴스드림",
+      "summary": "",
+      "source": "뉴스드림",
+      "publishedAt": "2026-04-24T07:12:29.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9GdWZiMUY0OWR1N3oxQXhuZ2x4LUd0aFZ6MEdrOTIzMk1Fd0ttMHJ5ZkVVdE9sZzFrTi05NWVPaEhoQmZwQ1pUSklPQjl1WE5yWXBtR1ZXMkZiSlBlRWVnZGliM2lBUG43WE9V0gFuQVVfeXFMUEw3VGFmUDZVb1YyamlTcmp4SGM3R1dUY0xtTFNNbS16UnRjYjBFTkFod2VMc0dCdml3VnROMDl1b3pLQnR5R1dCenhKQ2hHcHNCTHh3aG9UdUEtOVc5Q04wUzRJWnRnUXZtZnF6dXc?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-3",
       "title": "'검단아파트 붕괴사고' LH, GS건설 상대 1700억대 손해배상 소송 시작 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -12,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-5",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -21,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-1",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -30,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-0",
+      "id": "gr1-2",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -39,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-13",
       "title": "[건설 브리핑] 포스코이앤씨, 검단에 2857세대 대단지 분양…건설업계 '주거 혁신' 경쟁 가속 - 데일리팝",
       "summary": "",
       "source": "데일리팝",
@@ -48,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-19",
       "title": "수도권 신축 분양가상한제 적용 '더샵 검단레이크파크' 2857가구 공급 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -75,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
+      "id": "gr2-1",
       "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -84,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-2",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -93,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-15",
+      "id": "gr2-14",
       "title": "인천 서구의회 「행정체제 개편에 따른 분구추진 특별위원회」, 검단구 임시청사 현장 점검 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -102,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-6",
       "title": "인천 서구 검단조은아이365병원, 달빛어린이병원 재지정 소아 야간·휴일 진료 공백 해소 지 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -111,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
+      "id": "gr0-25",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2700만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
@@ -120,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-31",
+      "id": "gr0-38",
       "title": "인천 더샵 검단레이크파크 2857가구 내달 풀린다 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -129,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-8",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -138,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-24",
       "title": "[민주 부동산] 포스코이앤씨·DL이앤씨·현대건설 - 민주신문",
       "summary": "",
       "source": "민주신문",
@@ -147,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-11",
       "title": "포스코이앤씨, 검단 ‘첫’ 더샵… 2,857세대 대단지 5월 분양 - 한국주택경제신문",
       "summary": "",
       "source": "한국주택경제신문",
@@ -165,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "인천 서구의회, 검단구 임시청사 점검…\"행정 공백 최소화\" - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -174,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-29",
+      "id": "gr0-30",
       "title": "포스코이앤씨, 오는 5월 인천 더샵 검단레이크파크 분양 예정 - 쿠키뉴스",
       "summary": "",
       "source": "쿠키뉴스",
@@ -183,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-16",
       "title": "검단호수공원역 파라곤, 인천지하철 환승역세권…높은 청약 경쟁률 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -192,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-42",
+      "id": "gr2-44",
       "title": "서구 검단조은아이365병원, 달빛어린이병원 재지정…소아 야간·휴일 진료 지속 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -210,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-22",
       "title": "포스코이앤씨, 검단신도시 첫 ‘더샵’ 2857세대 공급…수변·역세권 갖춘 대단지 - 이코노미사이언스",
       "summary": "",
       "source": "이코노미사이언스",
@@ -219,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-28",
+      "id": "gr0-29",
       "title": "분양가상한제 적용 2857가구… 포스코이앤씨 '더샵 검단레이크파크' 5월 분양 - 월요신문",
       "summary": "",
       "source": "월요신문",
@@ -246,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-25",
+      "id": "gr0-26",
       "title": "포스코이앤씨, 인천 ‘더샵 검단레이크파크’ 분양...2857가구 공급 - 더트래커",
       "summary": "",
       "source": "더트래커",
@@ -264,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-27",
+      "id": "gr0-28",
       "title": "포스코이앤씨, ‘더샵 검단레이크파크’ 5월 분양 - 핀포인트뉴스",
       "summary": "",
       "source": "핀포인트뉴스",
@@ -300,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-39",
+      "id": "gr0-40",
       "title": "포스코이앤씨 '더샵 검단레이크파크' 내달 분양…2857가구 대단지 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -309,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-16",
       "title": "검단신도시 첫 '더샵' 브랜드 분양…분양가상한제 적용 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -318,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-12",
       "title": "포스코이앤씨, 인천 검단신도시 '더샵 검단레이크파크' 5월 분양 - 뉴스퀘스트",
       "summary": "",
       "source": "뉴스퀘스트",
@@ -327,39 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-18",
       "title": "포스코이앤씨, 인천 ‘더샵 검단레이크파크’ 5월 분양 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
       "publishedAt": "2026-04-23T00:19:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOd2lWR2d3NGFTdFhxbFlkTUR4Z1JuMnNmbjZEekpsUW9jTTJaTU9uYVI2ZC0zY2YtNWgycVJCYWptamdiTllsMXQ1ZHBrWjRweUZKX3pqRHliWnphSElDazQ3dC1FekdlQXpDZ0lJLTBaLUpvUVBNTk5VX3pqS2RkQjNmSUR0R1FTVGpHZEItQldGTF9yT2JsSdIBrAFBVV95cUxNMkU1TnVtNzhhQlJYWVpDcUNDSTBVZmkzTElDYjBPVnd1NnVYS3BfbmpiUHZ3V1BwREI2eS1yNlJFVy12d1JkdEtmOFhKQ3dzeHdlY2FtbnZEb2NHOGNOSHhUR1BHUVNGb1Z1QVVpanV2QjlxNTJucTlUSnhFRFpJWElFVEZWSFpvdUY5dUl5emdmeFpXN1NrcWtOcVh3MHhBUkllTlhXQ1RVQ2Ff?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-17",
-      "title": "포스코이앤씨, 인천 ‘더샵 검단레이크파크’ 5월 분양 예정 - 한국경제",
-      "summary": "",
-      "source": "한국경제",
-      "publishedAt": "2026-04-23T00:10:19.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFBIMEV2Rk1ULVA1eUN4YUYwRlNGNGRxekFULUpMY3pYVEdsNVZTbWZRS1prRXlobVNnX3ZZOTR5WXFSVlE5aWh4WDJzSzVEaGxidEFZSDA2TEt4d9IBVEFVX3lxTE9aYzJNNG81SDdvbkhVUlpwaWNvcVM1Z2hLS3IxSWs5UXZRd1lZc3RjV1U3OFdjODlDUnE4Ny1QNFB1V0luNWMtSndXcy1oUk03THJCMQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-38",
-      "title": "엘리프 검단 포레듀, 임의공급 물량 청약 접수 진행 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-23T00:02:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE4xNUlma0MtVV9yWkk5alYySlFFZlVpWGRaVUlBVzJlbFdtM1kzQ00wbWNzTml4TEFlZnpiRXJFT2RCUlloNU1HYkpSQzUxOFBiT1Vz?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-3",
-      "title": "'검단 아파트 주차장 붕괴' LH, GS건설 책임져야...24일 손배소송 첫 변론 - 뉴스핌",
-      "summary": "",
-      "source": "뉴스핌",
-      "publishedAt": "2026-04-22T23:03:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1fbEZTQllicWlMaGZkUl8yMTFGYU1KLWJaMWtaekJUTzlyN2E1bzgzd0NrYklNV3RrYzltdW5jZXdoZzc1ZXJTV2lqX1djeGNXd2IwWkEzQllXRElY?oc=5",
       "type": "뉴스"
     }
   ]
