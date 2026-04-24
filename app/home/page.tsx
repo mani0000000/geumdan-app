@@ -13,7 +13,9 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, coupons as mockCoupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { fetchThisMonthOpenings } from "@/lib/db/stores";
+import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
@@ -293,7 +295,7 @@ function CouponSection() {
 }
 
 // ─── 신규 오픈 ────────────────────────────────────────────────
-function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0]; onClose: () => void }) {
+function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose: () => void }) {
   const b = store.openBenefit;
   if (!b) return null;
   const dDay = b.validUntil
@@ -373,23 +375,28 @@ const catGradients: Record<string, [string, string]> = {
 };
 
 function NewOpeningsSection() {
-  const [sheetStore, setSheetStore] = useState<typeof newStoreOpenings[0] | null>(null);
+  const [openings, setOpenings] = useState<NewStoreOpening[]>([]);
+  const [sheetStore, setSheetStore] = useState<NewStoreOpening | null>(null);
+
+  useEffect(() => {
+    fetchThisMonthOpenings().then(setOpenings);
+  }, []);
+
+  if (openings.length === 0) return null;
 
   return (
     <section className="mb-1">
       <SectionLabel
-        label="신규 오픈"
+        label="이번달 오픈"
         badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
         href="/stores/"
       />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-        {newStoreOpenings.map(s => {
+        {openings.map(s => {
           const [from, to] = catGradients[s.category] ?? catGradients["기타"];
           return (
             <button key={s.id} onClick={() => setSheetStore(s)}
               className="shrink-0 w-[156px] bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform border border-[#f0f0f0]">
-
-              {/* 컬러 상단 블록 */}
               <div className="relative h-[108px] flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
                 <span className="text-[52px] leading-none">{s.emoji}</span>
@@ -404,8 +411,6 @@ function NewOpeningsSection() {
                   </div>
                 )}
               </div>
-
-              {/* 하단 정보 */}
               <div className="px-3 py-2.5">
                 <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{s.storeName}</p>
                 <div className="flex items-center gap-1 mt-0.5">

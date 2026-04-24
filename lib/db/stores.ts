@@ -1,6 +1,39 @@
 import { supabase } from '@/lib/supabase';
 import type { Coupon, NewStoreOpening, StoreCategory } from '@/lib/types';
 
+// ─── 이번달 오픈 매장 ─────────────────────────────────────────
+export async function fetchThisMonthOpenings(): Promise<NewStoreOpening[]> {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      .toISOString()
+      .slice(0, 10);
+
+    const { data, error } = await supabase
+      .from('stores')
+      .select('id, name, category, floor_label, open_date, logo_url, emoji, promo_text, show_in_openings, open_benefit')
+      .or(`open_date.gte.${monthStart},show_in_openings.eq.true`)
+      .eq('is_open', true)
+      .order('open_date', { ascending: false });
+
+    if (error || !data) return [];
+
+    return data.map(row => ({
+      id: row.id as string,
+      storeId: row.id as string,
+      storeName: row.name as string,
+      category: (row.category as StoreCategory) ?? '기타',
+      floor: (row.floor_label as string) ?? '',
+      openDate: (row.open_date as string) ?? now.toISOString().slice(0, 10),
+      emoji: (row.emoji as string) ?? '🏪',
+      isNew: row.open_date ? (row.open_date as string) >= monthStart : false,
+      openBenefit: (row.open_benefit as { summary: string; details: string[]; validUntil?: string }) ?? undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 // ─── StoreDetail (상세 매장 정보) ─────────────────────────────
 export interface StoreDetail {
   description: string;

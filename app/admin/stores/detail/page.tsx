@@ -21,6 +21,59 @@ const CAT_COLOR: Record<StoreCategory, string> = {
 };
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
+const TEXTAREA = INPUT + " resize-none";
+
+// ─── 업종별 상세 필드 정의 ────────────────────────────────────
+type ExtraField = { key: string; label: string; type: "text" | "boolean" | "select"; options?: string[] };
+const EXTRA_FIELDS: Partial<Record<StoreCategory, ExtraField[]>> = {
+  카페: [
+    { key: "menu_highlights", label: "대표 메뉴 (자유 입력)", type: "text" },
+    { key: "seats",           label: "좌석 수",               type: "text" },
+    { key: "delivery",        label: "배달 가능",             type: "boolean" },
+    { key: "wifi",            label: "와이파이",               type: "boolean" },
+  ],
+  음식점: [
+    { key: "menu_highlights", label: "대표 메뉴 (자유 입력)", type: "text" },
+    { key: "price_range",     label: "가격대 (예: 1만원대)",  type: "text" },
+    { key: "delivery",        label: "배달 가능",             type: "boolean" },
+    { key: "reservation",     label: "예약 가능",             type: "boolean" },
+  ],
+  편의점: [
+    { key: "brand",   label: "브랜드",       type: "select",  options: ["GS25", "CU", "세븐일레븐", "이마트24", "기타"] },
+    { key: "is_24h",  label: "24시간 운영",  type: "boolean" },
+  ],
+  "병원/약국": [
+    { key: "specialties",      label: "진료과목 / 취급 서비스", type: "text" },
+    { key: "reservation_info", label: "예약 방법",               type: "text" },
+  ],
+  미용: [
+    { key: "services",         label: "주요 시술 (쉼표 구분)",  type: "text" },
+    { key: "price_range",      label: "가격대",                 type: "text" },
+    { key: "reservation_info", label: "예약 방법",              type: "text" },
+  ],
+  학원: [
+    { key: "courses",    label: "강좌명 (쉼표 구분)",     type: "text" },
+    { key: "age_range",  label: "대상 연령/학년",         type: "text" },
+    { key: "tuition",    label: "수강료",                 type: "text" },
+  ],
+  "헬스/운동": [
+    { key: "programs",        label: "운동 종류 / 프로그램", type: "text" },
+    { key: "price_range",     label: "가격대",               type: "text" },
+    { key: "trial_available", label: "체험 가능",            type: "boolean" },
+  ],
+  마트: [
+    { key: "fresh_food", label: "신선식품 취급",  type: "boolean" },
+    { key: "delivery",   label: "배달 가능",      type: "boolean" },
+  ],
+  반려동물: [
+    { key: "pet_types",    label: "취급 동물 (쉼표 구분)",   type: "text" },
+    { key: "service_types",label: "서비스 종류 (쉼표 구분)", type: "text" },
+  ],
+  세탁: [
+    { key: "service_types", label: "서비스 종류", type: "text" },
+    { key: "same_day",      label: "당일 처리",   type: "boolean" },
+  ],
+};
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -103,7 +156,18 @@ const STORE_EMPTY: Omit<AdminStore, "id" | "building_id"> = {
   floor_label: "", name: "", category: "기타",
   phone: null, hours: null, is_open: true, is_premium: false,
   x: 0, y: 0, w: 10, h: 10,
+  open_date: null, logo_url: null, description: null,
+  promo_text: null, emoji: "🏪", show_in_openings: null,
+  open_benefit: null, extra_info: null,
 };
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-[11px] font-extrabold text-[#3182F6] uppercase tracking-widest pt-2 pb-1 border-t border-[#F2F4F6] mt-2">
+      {children}
+    </p>
+  );
+}
 
 function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
   buildingId: string;
@@ -114,16 +178,25 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
 }) {
   const [form, setForm] = useState<Omit<AdminStore, "id" | "building_id">>(
     initial
-      ? { floor_label: initial.floor_label, name: initial.name, category: initial.category,
-          phone: initial.phone, hours: initial.hours, is_open: initial.is_open,
-          is_premium: initial.is_premium, x: initial.x, y: initial.y, w: initial.w, h: initial.h }
+      ? { ...STORE_EMPTY, ...initial }
       : { ...STORE_EMPTY, floor_label: floors[0]?.label ?? "" }
   );
+  // open_benefit 상세 항목은 줄바꿈 구분 텍스트로 관리
+  const [benefitSummary, setBenefitSummary] = useState(initial?.open_benefit?.summary ?? "");
+  const [benefitDetails, setBenefitDetails] = useState((initial?.open_benefit?.details ?? []).join("\n"));
+  const [benefitValidUntil, setBenefitValidUntil] = useState(initial?.open_benefit?.validUntil ?? "");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm(f => ({ ...f, [k]: v }));
+  }
+  function setExtra(key: string, val: unknown) {
+    setForm(f => ({ ...f, extra_info: { ...(f.extra_info ?? {}), [key]: val } }));
+  }
+  function getExtra(key: string): string | boolean {
+    const v = (form.extra_info as Record<string, unknown> | null)?.[key];
+    return (v as string | boolean) ?? "";
   }
 
   async function submit(e: React.FormEvent) {
@@ -131,11 +204,17 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
     if (!form.name.trim()) { setErr("매장명을 입력하세요."); return; }
     if (!form.floor_label) { setErr("층을 선택하세요."); return; }
     setSaving(true);
+    const open_benefit = benefitSummary.trim() ? {
+      summary: benefitSummary.trim(),
+      details: benefitDetails.split("\n").filter(s => s.trim()),
+      ...(benefitValidUntil ? { validUntil: benefitValidUntil } : {}),
+    } : null;
     try {
+      const payload = { ...form, open_benefit, building_id: buildingId };
       if (initial) {
-        await adminUpdateStore(initial.id, { ...form, building_id: buildingId });
+        await adminUpdateStore(initial.id, payload);
       } else {
-        await adminCreateStore({ ...form, building_id: buildingId });
+        await adminCreateStore(payload);
       }
       onSave();
       onClose();
@@ -144,6 +223,8 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
     } finally { setSaving(false); }
   }
 
+  const extraFields = EXTRA_FIELDS[form.category] ?? [];
+
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 sm:px-4">
       <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-xl overflow-hidden">
@@ -151,8 +232,10 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
           <h2 className="text-[15px] font-bold">{initial ? "매장 수정" : "매장 추가"}</h2>
           <button onClick={onClose} className="text-[#8B95A1] hover:text-[#191F28]">✕</button>
         </div>
-        <form onSubmit={submit} className="overflow-y-auto max-h-[75vh]">
+        <form onSubmit={submit} className="overflow-y-auto max-h-[80vh]">
           <div className="px-6 py-4 space-y-3">
+
+            {/* ── 기본 정보 ── */}
             <div className="grid grid-cols-2 gap-3">
               <Field label="층 *">
                 <select className={SELECT} value={form.floor_label}
@@ -171,14 +254,16 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
               <input className={INPUT} value={form.name} onChange={e => set("name", e.target.value)}
                 placeholder="예: 파리바게뜨" />
             </Field>
-            <Field label="전화번호">
-              <input className={INPUT} value={form.phone ?? ""}
-                onChange={e => set("phone", e.target.value || null)} placeholder="032-000-0000" />
-            </Field>
-            <Field label="영업시간">
-              <input className={INPUT} value={form.hours ?? ""}
-                onChange={e => set("hours", e.target.value || null)} placeholder="10:00~22:00" />
-            </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="전화번호">
+                <input className={INPUT} value={form.phone ?? ""}
+                  onChange={e => set("phone", e.target.value || null)} placeholder="032-000-0000" />
+              </Field>
+              <Field label="영업시간">
+                <input className={INPUT} value={form.hours ?? ""}
+                  onChange={e => set("hours", e.target.value || null)} placeholder="10:00~22:00" />
+              </Field>
+            </div>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.is_open} onChange={e => set("is_open", e.target.checked)} className="w-4 h-4" />
@@ -190,7 +275,96 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
               </label>
             </div>
 
-            {/* SVG 좌표 (선택사항) */}
+            {/* ── 로고 & 소개 ── */}
+            <SectionTitle>로고 · 소개</SectionTitle>
+            <Field label="로고 이미지">
+              <ImageUpload value={form.logo_url} onChange={url => set("logo_url", url)} folder="stores" />
+            </Field>
+            <Field label="매장 소개">
+              <textarea className={TEXTAREA} rows={2} value={form.description ?? ""}
+                onChange={e => set("description", e.target.value || null)}
+                placeholder="매장 한 줄 소개" />
+            </Field>
+
+            {/* ── 오픈 정보 ── */}
+            <SectionTitle>오픈 정보</SectionTitle>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="오픈일">
+                <input className={INPUT} type="date" value={form.open_date ?? ""}
+                  onChange={e => set("open_date", e.target.value || null)} />
+              </Field>
+              <Field label="이모지">
+                <input className={INPUT} value={form.emoji}
+                  onChange={e => set("emoji", e.target.value || "🏪")}
+                  placeholder="🏪" />
+              </Field>
+            </div>
+            <Field label="홍보 문구 (이번달 오픈 카드에 표시)">
+              <input className={INPUT} value={form.promo_text ?? ""}
+                onChange={e => set("promo_text", e.target.value || null)}
+                placeholder="예: 오픈 기념 전 메뉴 10% 할인" />
+            </Field>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox"
+                checked={form.show_in_openings === true}
+                onChange={e => set("show_in_openings", e.target.checked ? true : null)}
+                className="w-4 h-4" />
+              <span className="text-[13px] text-[#4E5968]">이번달 오픈 섹션에 항상 노출 (수동 고정)</span>
+            </label>
+
+            {/* ── 오픈 혜택 ── */}
+            <details className="border border-[#E5E8EB] rounded-xl overflow-hidden">
+              <summary className="px-3 py-2.5 text-[12px] font-semibold text-[#8B95A1] cursor-pointer hover:bg-[#F8F9FB]">
+                오픈 혜택 상세 (선택사항)
+              </summary>
+              <div className="px-3 py-3 space-y-3">
+                <Field label="혜택 요약 (카드에 표시)">
+                  <input className={INPUT} value={benefitSummary}
+                    onChange={e => setBenefitSummary(e.target.value)}
+                    placeholder="예: 당일 모든메뉴 50%" />
+                </Field>
+                <Field label="혜택 상세 (한 줄에 하나씩)">
+                  <textarea className={TEXTAREA} rows={3} value={benefitDetails}
+                    onChange={e => setBenefitDetails(e.target.value)}
+                    placeholder={"당일 모든메뉴 50% 할인\n리유저블 컵 증정\n사이즈업 무료"} />
+                </Field>
+                <Field label="혜택 종료일">
+                  <input className={INPUT} type="date" value={benefitValidUntil}
+                    onChange={e => setBenefitValidUntil(e.target.value)} />
+                </Field>
+              </div>
+            </details>
+
+            {/* ── 업종별 상세 ── */}
+            {extraFields.length > 0 && (
+              <>
+                <SectionTitle>업종별 상세 정보</SectionTitle>
+                {extraFields.map(f => (
+                  <Field key={f.key} label={f.label}>
+                    {f.type === "boolean" ? (
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox"
+                          checked={getExtra(f.key) === true}
+                          onChange={e => setExtra(f.key, e.target.checked)}
+                          className="w-4 h-4" />
+                        <span className="text-[13px] text-[#4E5968]">예</span>
+                      </label>
+                    ) : f.type === "select" ? (
+                      <select className={SELECT} value={(getExtra(f.key) as string) || ""}
+                        onChange={e => setExtra(f.key, e.target.value)}>
+                        <option value="">선택</option>
+                        {f.options?.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    ) : (
+                      <input className={INPUT} value={(getExtra(f.key) as string) || ""}
+                        onChange={e => setExtra(f.key, e.target.value || "")} />
+                    )}
+                  </Field>
+                ))}
+              </>
+            )}
+
+            {/* ── SVG 맵 좌표 ── */}
             <details className="border border-[#E5E8EB] rounded-xl overflow-hidden">
               <summary className="px-3 py-2.5 text-[12px] font-semibold text-[#8B95A1] cursor-pointer hover:bg-[#F8F9FB]">
                 SVG 맵 좌표 (선택사항)
