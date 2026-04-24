@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 const url =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ??
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
   "https://plwpfnbhyzblgvliiole.supabase.co";
 const FALLBACK_KEY = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
 const rawKey = process.env.NEXT_PUBLIC_ADMIN_DB_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_KEY;
