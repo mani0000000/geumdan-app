@@ -32,14 +32,14 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   from: "#0071e3", to: "#38BDF8" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", from: "#059669", to: "#34D399" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        from: "#DC2626", to: "#FB923C" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   from: "#7C3AED", to: "#A78BFA" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     from: "#D97706", to: "#FBBF24" },
-  { icon: Store,         label: "상가",    href: "/stores/",      from: "#0891B2", to: "#22D3EE" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   from: "#BE185D", to: "#F472B6" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      from: "#78350F", to: "#D97706" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   from: "#2563EB", to: "#38BDF8", shadow: "#2563EB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", from: "#059669", to: "#6EE7B7", shadow: "#059669" },
+  { icon: Newspaper,     label: "뉴스",    href: "/news/",        from: "#DC2626", to: "#FB923C", shadow: "#DC2626" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   from: "#7C3AED", to: "#C084FC", shadow: "#7C3AED" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     from: "#D97706", to: "#FCD34D", shadow: "#D97706" },
+  { icon: Store,         label: "상가",    href: "/stores/",      from: "#0284C7", to: "#22D3EE", shadow: "#0284C7" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   from: "#BE185D", to: "#F472B6", shadow: "#BE185D" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      from: "#B45309", to: "#FCD34D", shadow: "#B45309" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -1613,16 +1613,19 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-4 mt-3 mb-1">
-        <div className="grid grid-cols-4 gap-2.5">
-          {quickMenus.map(({ icon: Icon, label, href, from }) => (
+      <div className="px-4 mt-2 mb-1">
+        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
+          {quickMenus.map(({ icon: Icon, label, href, from, to, shadow }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-white active:scale-95 transition-transform shadow-sm">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: `${from}1a` }}>
-                <Icon size={19} strokeWidth={2} style={{ color: from }} />
+              className="flex flex-col items-center gap-[9px] active:scale-90 transition-transform">
+              <div className="w-full aspect-square rounded-[22px] flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(145deg, ${from}, ${to})`,
+                  boxShadow: `0 6px 16px ${shadow}44`,
+                }}>
+                <Icon size={28} strokeWidth={1.8} color="white" />
               </div>
-              <span className="text-[11px] font-semibold text-[#1d1d1f]">{label}</span>
+              <span className="text-[11.5px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>
           ))}
         </div>
