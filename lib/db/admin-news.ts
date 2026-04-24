@@ -49,11 +49,11 @@ export interface AdminYouTubeVideo {
 export async function adminFetchYouTube(limit = 100): Promise<AdminYouTubeVideo[]> {
   const { data, error } = await supabaseAdmin
     .from("youtube_videos")
-    .select("id, video_id, title, channel_name, thumbnail, url, fetched_at")
+    .select("video_id, title, channel_name, thumbnail, url, fetched_at")
     .order("fetched_at", { ascending: false })
     .limit(limit);
   if (error) throw new Error(error.message);
-  return (data ?? []) as AdminYouTubeVideo[];
+  return (data ?? []).map(row => ({ ...row, id: row.video_id as string })) as AdminYouTubeVideo[];
 }
 
 export async function adminCreateYouTube(video: Omit<AdminYouTubeVideo, "id">): Promise<void> {
@@ -64,7 +64,7 @@ export async function adminCreateYouTube(video: Omit<AdminYouTubeVideo, "id">): 
 }
 
 export async function adminDeleteYouTube(id: string): Promise<void> {
-  const { error } = await supabaseAdmin.from("youtube_videos").delete().eq("id", id);
+  const { error } = await supabaseAdmin.from("youtube_videos").delete().eq("video_id", id);
   if (error) throw new Error(error.message);
 }
 
