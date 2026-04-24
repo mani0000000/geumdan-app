@@ -6,16 +6,15 @@ export const dynamic = "force-dynamic";
 
 const BUCKET = "admin-images";
 
-// 서비스 키 사용 — RLS 우회 (Vercel 환경변수: SUPABASE_SERVICE_KEY)
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
-
-const adminStorage = createClient(SUPABASE_URL, SERVICE_KEY);
-
 export async function POST(req: NextRequest) {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
+
   if (!SERVICE_KEY) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_KEY 환경변수를 설정해주세요" }, { status: 500 });
   }
+
+  const adminStorage = createClient(SUPABASE_URL, SERVICE_KEY);
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
