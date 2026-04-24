@@ -32,14 +32,14 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   from: "#2563EB", to: "#38BDF8", shadow: "#2563EB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", from: "#059669", to: "#6EE7B7", shadow: "#059669" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        from: "#DC2626", to: "#FB923C", shadow: "#DC2626" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   from: "#7C3AED", to: "#C084FC", shadow: "#7C3AED" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     from: "#D97706", to: "#FCD34D", shadow: "#D97706" },
-  { icon: Store,         label: "상가",    href: "/stores/",      from: "#0284C7", to: "#22D3EE", shadow: "#0284C7" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   from: "#BE185D", to: "#F472B6", shadow: "#BE185D" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      from: "#B45309", to: "#FCD34D", shadow: "#B45309" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   bg: "#EEF2FF", color: "#3B5BDB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", bg: "#EBFBEE", color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/news/",        bg: "#FFF5F5", color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   bg: "#F3F0FF", color: "#7048E8" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     bg: "#FFF9DB", color: "#E67700" },
+  { icon: Store,         label: "상가",    href: "/stores/",      bg: "#E3FAFC", color: "#0C8599" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   bg: "#FFF0F6", color: "#C2255C" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      bg: "#FFF4E6", color: "#E8590C" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -1615,15 +1615,12 @@ export default function HomePage() {
     quickmenu: () => (
       <div className="px-4 mt-2 mb-1">
         <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-          {quickMenus.map(({ icon: Icon, label, href, from, to, shadow }) => (
+          {quickMenus.map(({ icon: Icon, label, href, bg, color }) => (
             <Link key={label} href={href}
               className="flex flex-col items-center gap-[9px] active:scale-90 transition-transform">
-              <div className="w-full aspect-square rounded-[22px] flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(145deg, ${from}, ${to})`,
-                  boxShadow: `0 6px 16px ${shadow}44`,
-                }}>
-                <Icon size={28} strokeWidth={1.8} color="white" />
+              <div className="w-full aspect-square rounded-[20px] flex items-center justify-center"
+                style={{ background: bg }}>
+                <Icon size={26} strokeWidth={2} color={color} />
               </div>
               <span className="text-[11.5px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>

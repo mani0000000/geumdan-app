@@ -9,6 +9,14 @@ interface Props {
   width?: number;
 }
 
+function lightenHex(hex: string, ratio = 0.42): string {
+  const n = parseInt(hex.replace("#", ""), 16);
+  const r = Math.round(((n >> 16) & 0xff) + (255 - ((n >> 16) & 0xff)) * ratio);
+  const g = Math.round(((n >> 8) & 0xff) + (255 - ((n >> 8) & 0xff)) * ratio);
+  const b = Math.round((n & 0xff) + (255 - (n & 0xff)) * ratio);
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
+}
+
 export default function CouponCard({ coupon: c, downloaded: done, onToggle, width = 200 }: Props) {
   const dDay = Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000);
   const urgent = dDay <= 3;
@@ -18,7 +26,7 @@ export default function CouponCard({ coupon: c, downloaded: done, onToggle, widt
       className="shrink-0 relative rounded-[20px] overflow-hidden select-none"
       style={{
         width,
-        background: `linear-gradient(135deg, ${c.color} 0%, #1e1b4b 100%)`,
+        background: `linear-gradient(135deg, ${c.color} 0%, ${lightenHex(c.color)} 100%)`,
       }}
     >
       {/* 우측 노치 */}
