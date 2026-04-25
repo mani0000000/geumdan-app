@@ -39,10 +39,10 @@ export default function CouponCard({ coupon: c, downloaded: done, onToggle, widt
 
         {/* 상단: 제목 + COUPON 뱃지 */}
         <div className="flex items-start justify-between gap-2">
-          <p className="text-[10px] font-semibold text-white/70 leading-tight line-clamp-1 flex-1">
+          <p className="text-[10px] font-semibold text-white/90 leading-tight line-clamp-1 flex-1">
             {c.title}
           </p>
-          <span className="shrink-0 text-[8px] font-black tracking-widest px-1.5 py-[3px] rounded-md bg-white/20 text-white/90">
+          <span className="shrink-0 text-[8px] font-black tracking-widest px-1.5 py-[3px] rounded-md bg-white/30 text-white">
             COUPON
           </span>
         </div>
@@ -52,33 +52,33 @@ export default function CouponCard({ coupon: c, downloaded: done, onToggle, widt
           <p className="text-[40px] font-black text-white leading-none tabular-nums tracking-tight">
             {c.discount}
           </p>
-          <p className="text-[11px] font-bold text-white/55 mt-0.5">
+          <p className="text-[11px] font-bold text-white/85 mt-0.5">
             {c.discountType === "amount" ? "원 할인" : "할인"}
           </p>
         </div>
 
         {/* 매장·건물 */}
-        <p className="text-[10px] text-white/50 truncate">
+        <p className="text-[11px] font-semibold text-white/85 truncate">
           {c.storeName} · {c.buildingName}
         </p>
 
         {/* 점선 구분선 */}
-        <div className="border-t border-dashed border-white/20" />
+        <div className="border-t border-dashed border-white/30" />
 
         {/* 하단: 유효기간 + 다운로드 버튼 */}
         <div className="flex items-center justify-between pr-1">
           <div>
-            <p className={`text-[10px] font-semibold leading-tight ${urgent ? "text-yellow-300" : "text-white/60"}`}>
-              {c.expiry.replace(/-/g, ".")} 23:59까지
+            <p className={`text-[10px] font-bold leading-tight ${urgent ? "text-yellow-200" : "text-white/90"}`}>
+              {c.expiry.replace(/-/g, ".")} 까지
             </p>
             {urgent && (
-              <p className="text-[10px] font-black text-yellow-300 mt-0.5">⏰ D-{dDay}</p>
+              <p className="text-[10px] font-black text-yellow-200 mt-0.5">⏰ D-{dDay}</p>
             )}
           </div>
           <button
             onClick={onToggle}
             className="w-[38px] h-[38px] rounded-full flex items-center justify-center active:scale-90 transition-all shrink-0"
-            style={{ background: "rgba(0,0,0,0.32)" }}
+            style={{ background: "rgba(0,0,0,0.28)" }}
           >
             {done
               ? <span className="text-white text-[14px] font-black">✓</span>

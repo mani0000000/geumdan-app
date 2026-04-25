@@ -32,14 +32,14 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   bg: "#EEF2FF", color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", bg: "#EBFBEE", color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        bg: "#FFF5F5", color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   bg: "#F3F0FF", color: "#7048E8" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     bg: "#FFF9DB", color: "#E67700" },
-  { icon: Store,         label: "상가",    href: "/stores/",      bg: "#E3FAFC", color: "#0C8599" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   bg: "#FFF0F6", color: "#C2255C" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      bg: "#FFF4E6", color: "#E8590C" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
+  { icon: Store,         label: "상가",    href: "/stores/",      color: "#0C8599" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   color: "#C2255C" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      color: "#D9480F" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -1615,11 +1615,14 @@ export default function HomePage() {
     quickmenu: () => (
       <div className="px-4 mt-2 mb-1">
         <div className="grid grid-cols-4 gap-x-3 gap-y-4">
-          {quickMenus.map(({ icon: Icon, label, href, bg, color }) => (
+          {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[9px] active:scale-90 transition-transform">
-              <div className="w-full aspect-square rounded-[20px] flex items-center justify-center"
-                style={{ background: bg }}>
+              className="flex flex-col items-center gap-[9px] active:scale-95 transition-transform">
+              <div className="w-full aspect-square rounded-[22px] flex items-center justify-center"
+                style={{
+                  background: "#f5f5f7",
+                  boxShadow: "5px 5px 10px #d0d1d4, -5px -5px 10px #ffffff",
+                }}>
                 <Icon size={26} strokeWidth={2} color={color} />
               </div>
               <span className="text-[11.5px] font-semibold text-[#3c3c43] leading-none">{label}</span>
