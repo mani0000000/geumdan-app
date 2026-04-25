@@ -1738,7 +1738,7 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-5 mt-1 mb-1">
+      <div className="px-5 mt-5 mb-1">
         <div className="grid grid-cols-4 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
