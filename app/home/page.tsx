@@ -13,7 +13,9 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, coupons as mockCoupons, newStoreOpenings, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { fetchThisMonthOpenings } from "@/lib/db/stores";
+import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
@@ -35,14 +37,14 @@ import type { NewsItem } from "@/lib/types";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   from: "#0071e3", to: "#38BDF8" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", from: "#059669", to: "#34D399" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        from: "#DC2626", to: "#FB923C" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   from: "#7C3AED", to: "#A78BFA" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     from: "#D97706", to: "#FBBF24" },
-  { icon: Store,         label: "상가",    href: "/stores/",      from: "#0891B2", to: "#22D3EE" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   from: "#BE185D", to: "#F472B6" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      from: "#78350F", to: "#D97706" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
+  { icon: Store,         label: "상가",    href: "/stores/",      color: "#0C8599" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   color: "#C2255C" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      color: "#D9480F" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -298,7 +300,7 @@ function CouponSection() {
 }
 
 // ─── 신규 오픈 ────────────────────────────────────────────────
-function OpenBenefitSheet({ store, onClose }: { store: typeof newStoreOpenings[0]; onClose: () => void }) {
+function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose: () => void }) {
   const b = store.openBenefit;
   if (!b) return null;
   const dDay = b.validUntil
@@ -378,23 +380,28 @@ const catGradients: Record<string, [string, string]> = {
 };
 
 function NewOpeningsSection() {
-  const [sheetStore, setSheetStore] = useState<typeof newStoreOpenings[0] | null>(null);
+  const [openings, setOpenings] = useState<NewStoreOpening[]>([]);
+  const [sheetStore, setSheetStore] = useState<NewStoreOpening | null>(null);
+
+  useEffect(() => {
+    fetchThisMonthOpenings().then(setOpenings);
+  }, []);
+
+  if (openings.length === 0) return null;
 
   return (
     <section className="mb-1">
       <SectionLabel
-        label="신규 오픈"
+        label="이번달 오픈"
         badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
         href="/stores/"
       />
       <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
-        {newStoreOpenings.map(s => {
+        {openings.map(s => {
           const [from, to] = catGradients[s.category] ?? catGradients["기타"];
           return (
             <button key={s.id} onClick={() => setSheetStore(s)}
               className="shrink-0 w-[156px] bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform border border-[#f0f0f0]">
-
-              {/* 컬러 상단 블록 */}
               <div className="relative h-[108px] flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
                 <span className="text-[52px] leading-none">{s.emoji}</span>
@@ -409,8 +416,6 @@ function NewOpeningsSection() {
                   </div>
                 )}
               </div>
-
-              {/* 하단 정보 */}
               <div className="px-3 py-2.5">
                 <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{s.storeName}</p>
                 <div className="flex items-center gap-1 mt-0.5">
@@ -1713,6 +1718,7 @@ export default function HomePage() {
     fetchActiveBanners().then(setHomeBanners);
     const local = loadUserWidgets();
     if (local) {
+
       const savedIds = new Set(local.map((w: WidgetConfig) => w.id));
       const newWidgets = DEFAULT_WIDGETS.filter(w => !savedIds.has(w.id));
       setWidgets(newWidgets.length > 0 ? [...local, ...newWidgets] : local);
@@ -1732,16 +1738,19 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-4 mt-3 mb-1">
-        <div className="grid grid-cols-4 gap-2.5">
-          {quickMenus.map(({ icon: Icon, label, href, from }) => (
+      <div className="px-5 mt-1 mb-1">
+        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+          {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center justify-center gap-1.5 py-3.5 rounded-2xl bg-white active:scale-95 transition-transform shadow-sm">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: `${from}1a` }}>
-                <Icon size={19} strokeWidth={2} style={{ color: from }} />
+              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
+              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
+                style={{
+                  background: "#f5f5f7",
+                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
+                }}>
+                <Icon size={22} strokeWidth={2} color={color} />
               </div>
-              <span className="text-[11px] font-semibold text-[#1d1d1f]">{label}</span>
+              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>
           ))}
         </div>

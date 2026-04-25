@@ -120,6 +120,15 @@ export interface AdminStore {
   y: number;
   w: number;
   h: number;
+  // 오픈·상세 정보
+  open_date: string | null;
+  logo_url: string | null;
+  description: string | null;
+  promo_text: string | null;
+  emoji: string;
+  show_in_openings: boolean | null;
+  open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
+  extra_info: Record<string, unknown> | null;
 }
 
 export async function adminFetchStores(
