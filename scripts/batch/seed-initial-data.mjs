@@ -18,7 +18,17 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+// sb_* keys are not JWTs — strip Authorization: Bearer for PostgREST
+function makeFetch(key) {
+  return (input, init) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (!url.includes('/rest/v1/')) return fetch(input, init);
+    const headers = new Headers(init?.headers);
+    if (headers.get('Authorization')?.slice(7) === key) headers.delete('Authorization');
+    return fetch(input, { ...init, headers });
+  };
+}
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, { global: { fetch: makeFetch(SUPABASE_SERVICE_KEY) }, auth: { autoRefreshToken: false, persistSession: false } });
 
 // ─── Seed Data ────────────────────────────────────────────────
 
