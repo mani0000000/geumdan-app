@@ -9,14 +9,16 @@ const adminKey = (rawKey.startsWith("sb_publishable_") || rawKey.startsWith("sb_
   ? rawKey
   : FALLBACK_KEY;
 
-// The new sb_* key format is NOT a JWT. Sending it as Authorization: Bearer causes
-// "Invalid Compact JWS" from the Supabase gateway's JWT validator.
-// Strip the Bearer header when it equals the apikey — the gateway accepts the new
-// key format via the apikey header alone and grants the appropriate role.
+// PostgREST (/rest/v1/) rejects sb_* keys as Bearer ("Invalid Compact JWS").
+// Storage (/storage/v1/) requires Authorization: Bearer even for sb_* keys.
+// Strip Bearer only for PostgREST requests; keep it for Storage and auth endpoints.
 function makeFetch(key: string): typeof fetch {
   return (input, init) => {
+    const url = typeof input === "string" ? input : (input as Request).url;
+    const isPostgrest = url.includes("/rest/v1/");
+    if (!isPostgrest) return fetch(input as RequestInfo, init);
     const headers = new Headers(init?.headers);
-    const bearer = headers.get("Authorization")?.slice(7) ?? ""; // strip "Bearer "
+    const bearer = headers.get("Authorization")?.slice(7) ?? "";
     if (bearer === key) headers.delete("Authorization");
     return fetch(input as RequestInfo, { ...init, headers });
   };
