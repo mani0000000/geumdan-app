@@ -29,6 +29,7 @@ import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
+import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import type { YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
 
@@ -602,6 +603,56 @@ function InstagramSection() {
     </>
   );
 }
+// ─── 가볼만한곳 위젯 ─────────────────────────────────────────
+function PlacesSection() {
+  const [places, setPlaces] = useState<Place[] | null>(null);
+  useEffect(() => { fetchPublishedPlaces().then(setPlaces).catch(() => setPlaces([])); }, []);
+  if (!places?.length) return null;
+  return (
+    <>
+      <SectionLabel label="가볼만한곳" href="/places/" linkLabel="전체보기" />
+      <section className="mb-1">
+        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-3" style={{ width: "max-content" }}>
+            {places.slice(0, 8).map(p => {
+              const meta = CATEGORY_META[p.category];
+              return (
+                <Link key={p.id} href="/places/"
+                  className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+                  <div className="w-full h-[100px] relative">
+                    {p.thumbnail_url
+                      ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-[36px]"
+                          style={{ background: meta.bg }}>
+                          🗺️
+                        </div>
+                    }
+                    <span className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                      style={{ background: meta.bg, color: meta.color }}>
+                      {meta.label}
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-2">
+                    <p className="text-[12px] font-bold text-[#1d1d1f] truncate">{p.name}</p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5 line-clamp-2 leading-snug">{p.short_desc}</p>
+                    {(p.distance_km != null || p.drive_min != null) && (
+                      <p className="text-[10px] text-[#3182F6] mt-1 font-semibold">
+                        {p.distance_km != null ? `${p.distance_km}km` : ""}
+                        {p.distance_km != null && p.drive_min != null ? " · " : ""}
+                        {p.drive_min != null ? `차로 ${p.drive_min}분` : ""}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
+
 // ─── 실거래가 위젯 ────────────────────────────────────────────
 function RealEstateWidget() {
   const router = useRouter();
@@ -1731,6 +1782,7 @@ export default function HomePage() {
         <RealEstateWidget />
       </>
     ),
+    places: () => <PlacesSection />,
   };
 
   const activeWidgets = widgets.length > 0
