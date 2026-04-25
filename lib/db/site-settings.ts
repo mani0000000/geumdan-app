@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function fetchSiteSetting(key: string): Promise<string | null> {
   try {
@@ -14,9 +13,13 @@ export async function fetchSiteSetting(key: string): Promise<string | null> {
   }
 }
 
+// Delegates to server-side API route to avoid sending sb_* key as JWT Bearer
 export async function adminSaveSiteSetting(key: string, value: string): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("site_settings")
-    .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: "key" });
-  if (error) throw new Error(error.message);
+  const res = await fetch("/api/admin/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value }),
+  });
+  const json = await res.json().catch(() => ({})) as { error?: string };
+  if (!res.ok) throw new Error(json.error ?? "저장 실패");
 }

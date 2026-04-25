@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -14,7 +13,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_KEY 환경변수를 설정해주세요" }, { status: 500 });
   }
 
-  const adminStorage = createClient(SUPABASE_URL, SERVICE_KEY);
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -33,14 +31,29 @@ export async function POST(req: NextRequest) {
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
 
-    const { error } = await adminStorage.storage
-      .from(BUCKET)
-      .upload(path, Buffer.from(bytes), { contentType: file.type, upsert: false });
+    // Use Storage REST API directly. Only send Authorization: Bearer for JWT-format keys
+    // (starting with eyJ). New sb_secret_* keys are NOT JWTs and cause "Invalid Compact JWS"
+    // when used as Bearer tokens.
+    const isJwt = SERVICE_KEY.startsWith("eyJ");
+    const uploadHeaders: Record<string, string> = {
+      "apikey": SERVICE_KEY,
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "false",
+    };
+    if (isJwt) uploadHeaders["Authorization"] = `Bearer ${SERVICE_KEY}`;
 
-    if (error) throw error;
+    const storageRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
+      { method: "POST", headers: uploadHeaders, body: bytes }
+    );
 
-    const { data } = adminStorage.storage.from(BUCKET).getPublicUrl(path);
-    return NextResponse.json({ url: data.publicUrl });
+    if (!storageRes.ok) {
+      const body = await storageRes.json().catch(() => ({}));
+      throw new Error((body as { error?: string; message?: string }).error || (body as { message?: string }).message || `Storage error ${storageRes.status}`);
+    }
+
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    return NextResponse.json({ url: publicUrl });
   } catch (err) {
     console.error("[upload]", err);
     return NextResponse.json(

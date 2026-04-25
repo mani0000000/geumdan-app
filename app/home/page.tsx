@@ -31,6 +31,7 @@ import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
+import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import type { YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
 
@@ -541,64 +542,119 @@ function NewsWidget() {
 }
 
 // ─── 유튜브 위젯 ─────────────────────────────────────────────
-function YouTubeWidget() {
-  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+function YouTubeSection() {
+  const [videos, setVideos] = useState<YouTubeVideo[] | null>(null);
   useEffect(() => { fetchYouTubeVideosFromDB(6).then(r => setVideos(r.videos)); }, []);
-  if (videos.length === 0) return null;
+  if (!videos?.length) return null;
   return (
-    <section className="mb-1">
-      <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-        <div className="flex gap-3" style={{ width: "max-content" }}>
-          {videos.map(v => (
-            <a key={v.videoId} href={v.url} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden active:opacity-80">
-              <div className="relative w-full aspect-video bg-[#f5f5f7]">
-                <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-9 h-9 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-lg">
-                    <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white ml-0.5" />
+    <>
+      <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
+      <section className="mb-1">
+        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-3" style={{ width: "max-content" }}>
+            {videos.map(v => (
+              <a key={v.videoId} href={v.url} target="_blank" rel="noopener noreferrer"
+                className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+                <div className="relative w-full aspect-video bg-[#f5f5f7]">
+                  <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-9 h-9 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-lg">
+                      <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white ml-0.5" />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="px-3 py-2.5">
-                <p className="text-[12px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
-                <p className="text-[11px] text-[#86868b] mt-1">{v.channelName}</p>
-              </div>
-            </a>
-          ))}
+                <div className="px-3 py-2.5">
+                  <p className="text-[12px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
+                  <p className="text-[11px] text-[#86868b] mt-1">{v.channelName}</p>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
 
 // ─── 인스타그램 위젯 ──────────────────────────────────────────
-function InstagramWidget() {
-  const [posts, setPosts] = useState<NewsItem[]>([]);
+function InstagramSection() {
+  const [posts, setPosts] = useState<NewsItem[] | null>(null);
   useEffect(() => { fetchInstagramPosts(6).then(setPosts); }, []);
-  if (posts.length === 0) return null;
+  if (!posts?.length) return null;
   return (
-    <section className="mb-1">
-      <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-        <div className="flex gap-3" style={{ width: "max-content" }}>
-          {posts.map(p => (
-            <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
-              <div className="w-full aspect-square bg-[#f5f5f7]">
-                {p.thumbnail
-                  ? <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
-                  : <div className="w-full h-full flex items-center justify-center text-[28px]">📷</div>
-                }
-              </div>
-              <div className="px-2.5 py-2">
-                <p className="text-[11px] font-bold text-[#DD2A7B]">{p.source}</p>
-                <p className="text-[11px] text-[#4E5968] mt-0.5 line-clamp-2 leading-snug">{p.title}</p>
-              </div>
-            </a>
-          ))}
+    <>
+      <SectionLabel label="인스타 소식" href="/news/" linkLabel="전체보기" />
+      <section className="mb-1">
+        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-3" style={{ width: "max-content" }}>
+            {posts.map(p => (
+              <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
+                className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+                <div className="w-full aspect-square bg-[#f5f5f7]">
+                  {p.thumbnail
+                    ? <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-[28px]">📷</div>
+                  }
+                </div>
+                <div className="px-2.5 py-2">
+                  <p className="text-[11px] font-bold text-[#DD2A7B]">{p.source}</p>
+                  <p className="text-[11px] text-[#4E5968] mt-0.5 line-clamp-2 leading-snug">{p.title}</p>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
+  );
+}
+// ─── 가볼만한곳 위젯 ─────────────────────────────────────────
+function PlacesSection() {
+  const [places, setPlaces] = useState<Place[] | null>(null);
+  useEffect(() => { fetchPublishedPlaces().then(setPlaces).catch(() => setPlaces([])); }, []);
+  if (!places?.length) return null;
+  return (
+    <>
+      <SectionLabel label="가볼만한곳" href="/places/" linkLabel="전체보기" />
+      <section className="mb-1">
+        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-3" style={{ width: "max-content" }}>
+            {places.slice(0, 8).map(p => {
+              const meta = CATEGORY_META[p.category];
+              return (
+                <Link key={p.id} href="/places/"
+                  className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+                  <div className="w-full h-[100px] relative">
+                    {p.thumbnail_url
+                      ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
+                      : <div className="w-full h-full flex items-center justify-center text-[36px]"
+                          style={{ background: meta.bg }}>
+                          🗺️
+                        </div>
+                    }
+                    <span className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                      style={{ background: meta.bg, color: meta.color }}>
+                      {meta.label}
+                    </span>
+                  </div>
+                  <div className="px-2.5 py-2">
+                    <p className="text-[12px] font-bold text-[#1d1d1f] truncate">{p.name}</p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5 line-clamp-2 leading-snug">{p.short_desc}</p>
+                    {(p.distance_km != null || p.drive_min != null) && (
+                      <p className="text-[10px] text-[#3182F6] mt-1 font-semibold">
+                        {p.distance_km != null ? `${p.distance_km}km` : ""}
+                        {p.distance_km != null && p.drive_min != null ? " · " : ""}
+                        {p.drive_min != null ? `차로 ${p.drive_min}분` : ""}
+                      </p>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    </>
   );
 }
 
@@ -1662,7 +1718,7 @@ export default function HomePage() {
     fetchActiveBanners().then(setHomeBanners);
     const local = loadUserWidgets();
     if (local) {
-      // 저장된 설정에 없는 신규 위젯을 DEFAULT_WIDGETS 기준으로 병합
+
       const savedIds = new Set(local.map((w: WidgetConfig) => w.id));
       const newWidgets = DEFAULT_WIDGETS.filter(w => !savedIds.has(w.id));
       setWidgets(newWidgets.length > 0 ? [...local, ...newWidgets] : local);
@@ -1727,24 +1783,15 @@ export default function HomePage() {
         <NewsWidget />
       </>
     ),
-    youtube: () => (
-      <>
-        <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
-        <YouTubeWidget />
-      </>
-    ),
-    instagram: () => (
-      <>
-        <SectionLabel label="인스타 소식" href="/news/" linkLabel="전체보기" />
-        <InstagramWidget />
-      </>
-    ),
+    youtube: () => <YouTubeSection />,
+    instagram: () => <InstagramSection />,
     realestate: () => (
       <>
         <SectionLabel label="실거래가" href="/real-estate/" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),
+    places: () => <PlacesSection />,
   };
 
   const activeWidgets = widgets.length > 0
