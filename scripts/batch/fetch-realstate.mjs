@@ -28,7 +28,17 @@ if (!API_KEY || !SB_URL || !SB_KEY) {
   process.exit(1);
 }
 
-const supabase  = createClient(SB_URL, SB_KEY);
+// sb_* keys are not JWTs — strip Authorization: Bearer for PostgREST
+function makeFetch(key) {
+  return (input, init) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (!url.includes('/rest/v1/')) return fetch(input, init);
+    const headers = new Headers(init?.headers);
+    if (headers.get('Authorization')?.slice(7) === key) headers.delete('Authorization');
+    return fetch(input, { ...init, headers });
+  };
+}
+const supabase = createClient(SB_URL, SB_KEY, { global: { fetch: makeFetch(SB_KEY) }, auth: { autoRefreshToken: false, persistSession: false } });
 const LAWD_CD   = '28260';   // 인천광역시 서구
 const API_BASE  = 'https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade';
 // 검단신도시 법정동 — 1지구 + 원당지구 + 아라지구(백석) / 구도심(검단동·오류동·금곡동) 제외
