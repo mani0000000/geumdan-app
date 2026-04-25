@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -6,16 +5,14 @@ export const dynamic = "force-dynamic";
 
 const BUCKET = "admin-images";
 
-// 서비스 키 사용 — RLS 우회 (Vercel 환경변수: SUPABASE_SERVICE_KEY)
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://plwpfnbhyzblgvliiole.supabase.co";
-const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY ?? process.env.NEXT_PUBLIC_ADMIN_DB_KEY ?? "";
-
-const adminStorage = createClient(SUPABASE_URL, SERVICE_KEY);
-
 export async function POST(req: NextRequest) {
+  const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
+
   if (!SERVICE_KEY) {
     return NextResponse.json({ error: "SUPABASE_SERVICE_KEY 환경변수를 설정해주세요" }, { status: 500 });
   }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -34,14 +31,29 @@ export async function POST(req: NextRequest) {
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
 
-    const { error } = await adminStorage.storage
-      .from(BUCKET)
-      .upload(path, Buffer.from(bytes), { contentType: file.type, upsert: false });
+    // Use the Storage REST API directly — avoids JWT parsing inside @supabase/supabase-js
+    // which breaks when using the new sb_secret_* key format
+    const storageRes = await fetch(
+      `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${SERVICE_KEY}`,
+          "apikey": SERVICE_KEY,
+          "Content-Type": file.type || "application/octet-stream",
+          "x-upsert": "false",
+        },
+        body: bytes,
+      }
+    );
 
-    if (error) throw error;
+    if (!storageRes.ok) {
+      const body = await storageRes.json().catch(() => ({}));
+      throw new Error((body as { error?: string; message?: string }).error || (body as { message?: string }).message || `Storage error ${storageRes.status}`);
+    }
 
-    const { data } = adminStorage.storage.from(BUCKET).getPublicUrl(path);
-    return NextResponse.json({ url: data.publicUrl });
+    const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+    return NextResponse.json({ url: publicUrl });
   } catch (err) {
     console.error("[upload]", err);
     return NextResponse.json(
