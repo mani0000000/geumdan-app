@@ -1613,19 +1613,19 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-4 mt-2 mb-1">
-        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
+      <div className="px-5 mt-1 mb-1">
+        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[9px] active:scale-95 transition-transform">
-              <div className="w-full aspect-square rounded-[22px] flex items-center justify-center"
+              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
+              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
                 style={{
                   background: "#f5f5f7",
-                  boxShadow: "5px 5px 10px #d0d1d4, -5px -5px 10px #ffffff",
+                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
                 }}>
-                <Icon size={26} strokeWidth={2} color={color} />
+                <Icon size={22} strokeWidth={2} color={color} />
               </div>
-              <span className="text-[11.5px] font-semibold text-[#3c3c43] leading-none">{label}</span>
+              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>
           ))}
         </div>
