@@ -20,7 +20,9 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "transport",   label: "교통",        enabled: true, sort_order: 9  },
   { id: "community",  label: "커뮤니티",    enabled: true, sort_order: 10 },
   { id: "news",       label: "검단 뉴스",   enabled: true, sort_order: 11 },
-  { id: "realestate", label: "실거래가",    enabled: true, sort_order: 12 },
+  { id: "youtube",    label: "유튜브 소식", enabled: true, sort_order: 12 },
+  { id: "instagram",  label: "인스타 소식", enabled: true, sort_order: 13 },
+  { id: "realestate", label: "실거래가",    enabled: true, sort_order: 14 },
 ];
 
 export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {
@@ -30,7 +32,10 @@ export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {
       .select("id, label, enabled, sort_order")
       .order("sort_order");
     if (error || !data?.length) return DEFAULT_WIDGETS;
-    return data as WidgetConfig[];
+    // Merge: append any DEFAULT_WIDGETS entries missing from DB (new widgets added after initial save)
+    const dbIds = new Set((data as WidgetConfig[]).map(w => w.id));
+    const missing = DEFAULT_WIDGETS.filter(w => !dbIds.has(w.id));
+    return missing.length > 0 ? [...(data as WidgetConfig[]), ...missing] : (data as WidgetConfig[]);
   } catch {
     return DEFAULT_WIDGETS;
   }
