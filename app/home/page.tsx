@@ -29,6 +29,10 @@ import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
+import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
+import { fetchInstagramPosts } from "@/lib/db/instagram";
+import type { YouTubeVideo } from "@/lib/api/news";
+import type { NewsItem } from "@/lib/types";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -531,6 +535,68 @@ function NewsWidget() {
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
+      </div>
+    </section>
+  );
+}
+
+// ─── 유튜브 위젯 ─────────────────────────────────────────────
+function YouTubeWidget() {
+  const [videos, setVideos] = useState<YouTubeVideo[]>([]);
+  useEffect(() => { fetchYouTubeVideosFromDB(6).then(r => setVideos(r.videos)); }, []);
+  if (videos.length === 0) return null;
+  return (
+    <section className="mb-1">
+      <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+        <div className="flex gap-3" style={{ width: "max-content" }}>
+          {videos.map(v => (
+            <a key={v.videoId} href={v.url} target="_blank" rel="noopener noreferrer"
+              className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+              <div className="relative w-full aspect-video bg-[#f5f5f7]">
+                <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-9 h-9 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-lg">
+                    <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white ml-0.5" />
+                  </div>
+                </div>
+              </div>
+              <div className="px-3 py-2.5">
+                <p className="text-[12px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
+                <p className="text-[11px] text-[#86868b] mt-1">{v.channelName}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── 인스타그램 위젯 ──────────────────────────────────────────
+function InstagramWidget() {
+  const [posts, setPosts] = useState<NewsItem[]>([]);
+  useEffect(() => { fetchInstagramPosts(6).then(setPosts); }, []);
+  if (posts.length === 0) return null;
+  return (
+    <section className="mb-1">
+      <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+        <div className="flex gap-3" style={{ width: "max-content" }}>
+          {posts.map(p => (
+            <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
+              className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+              <div className="w-full aspect-square bg-[#f5f5f7]">
+                {p.thumbnail
+                  ? <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
+                  : <div className="w-full h-full flex items-center justify-center text-[28px]">📷</div>
+                }
+              </div>
+              <div className="px-2.5 py-2">
+                <p className="text-[11px] font-bold text-[#DD2A7B]">{p.source}</p>
+                <p className="text-[11px] text-[#4E5968] mt-0.5 line-clamp-2 leading-snug">{p.title}</p>
+              </div>
+            </a>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -1596,7 +1662,10 @@ export default function HomePage() {
     fetchActiveBanners().then(setHomeBanners);
     const local = loadUserWidgets();
     if (local) {
-      setWidgets(local);
+      // 저장된 설정에 없는 신규 위젯을 DEFAULT_WIDGETS 기준으로 병합
+      const savedIds = new Set(local.map((w: WidgetConfig) => w.id));
+      const newWidgets = DEFAULT_WIDGETS.filter(w => !savedIds.has(w.id));
+      setWidgets(newWidgets.length > 0 ? [...local, ...newWidgets] : local);
     } else {
       fetchWidgetConfig().then(cfg => setWidgets(cfg));
     }
@@ -1656,6 +1725,18 @@ export default function HomePage() {
       <>
         <SectionLabel label="검단 뉴스" href="/news/" linkLabel="전체보기" />
         <NewsWidget />
+      </>
+    ),
+    youtube: () => (
+      <>
+        <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
+        <YouTubeWidget />
+      </>
+    ),
+    instagram: () => (
+      <>
+        <SectionLabel label="인스타 소식" href="/news/" linkLabel="전체보기" />
+        <InstagramWidget />
       </>
     ),
     realestate: () => (
