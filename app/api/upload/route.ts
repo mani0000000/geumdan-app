@@ -31,16 +31,14 @@ export async function POST(req: NextRequest) {
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
 
-    // Use Storage REST API directly. Only send Authorization: Bearer for JWT-format keys
-    // (starting with eyJ). New sb_secret_* keys are NOT JWTs and cause "Invalid Compact JWS"
-    // when used as Bearer tokens.
-    const isJwt = SERVICE_KEY.startsWith("eyJ");
+    // Storage API requires Authorization: Bearer regardless of key format (sb_* or JWT).
+    // PostgREST rejects sb_* keys as Bearer ("Invalid Compact JWS"), but Storage accepts them.
     const uploadHeaders: Record<string, string> = {
       "apikey": SERVICE_KEY,
+      "Authorization": `Bearer ${SERVICE_KEY}`,
       "Content-Type": file.type || "application/octet-stream",
       "x-upsert": "false",
     };
-    if (isJwt) uploadHeaders["Authorization"] = `Bearer ${SERVICE_KEY}`;
 
     const storageRes = await fetch(
       `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
