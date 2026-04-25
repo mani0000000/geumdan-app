@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 export interface WidgetConfig {
   id: string;
@@ -43,13 +43,12 @@ export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {
 }
 
 export async function adminFetchWidgetConfig(): Promise<WidgetConfig[]> {
-  const { data, error } = await supabaseAdmin
-    .from("home_widget_config")
-    .select("id, label, enabled, sort_order")
-    .order("sort_order");
-  if (error) throw new Error(error.message);
-  if (!data?.length) return DEFAULT_WIDGETS;
-  return data as WidgetConfig[];
+  const data = await adminApiGet<WidgetConfig>("home_widget_config", {
+    select: "id,label,enabled,sort_order",
+    order: "sort_order",
+  });
+  if (!data.length) return DEFAULT_WIDGETS;
+  return data;
 }
 
 export async function adminSaveWidgetConfig(widgets: WidgetConfig[]): Promise<void> {
@@ -60,8 +59,5 @@ export async function adminSaveWidgetConfig(widgets: WidgetConfig[]): Promise<vo
     sort_order: i + 1,
     updated_at: new Date().toISOString(),
   }));
-  const { error } = await supabaseAdmin
-    .from("home_widget_config")
-    .upsert(rows, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+  await adminApiPost("home_widget_config", "POST", rows, { onConflict: "id" });
 }

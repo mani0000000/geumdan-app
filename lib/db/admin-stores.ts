@@ -1,4 +1,4 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 import type { StoreCategory } from "@/lib/types";
 
 // ─── 건물 (Buildings) ──────────────────────────────────────────
@@ -19,42 +19,21 @@ export interface AdminBuilding {
 }
 
 export async function adminFetchBuildings(): Promise<AdminBuilding[]> {
-  const { data, error } = await supabaseAdmin
-    .from("buildings")
-    .select("*")
-    .order("name");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminBuilding[];
+  return adminApiGet<AdminBuilding>("buildings", { order: "name" });
 }
 
-export async function adminCreateBuilding(
-  b: Omit<AdminBuilding, "id">
-): Promise<string> {
+export async function adminCreateBuilding(b: Omit<AdminBuilding, "id">): Promise<string> {
   const id = "b_" + Date.now().toString(36);
-  const { error } = await supabaseAdmin
-    .from("buildings")
-    .insert({ ...b, id });
-  if (error) throw new Error(error.message);
+  await adminApiPost("buildings", "POST", [{ ...b, id }]);
   return id;
 }
 
-export async function adminUpdateBuilding(
-  id: string,
-  b: Partial<AdminBuilding>
-): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("buildings")
-    .update(b)
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+export async function adminUpdateBuilding(id: string, b: Partial<AdminBuilding>): Promise<void> {
+  await adminApiPost("buildings", "PATCH", b, { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteBuilding(id: string): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("buildings")
-    .delete()
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("buildings", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
 // ─── 층 (Floors) ──────────────────────────────────────────────
@@ -69,39 +48,20 @@ export interface AdminFloor {
   sort_order: number;
 }
 
-export async function adminFetchFloors(
-  buildingId: string
-): Promise<AdminFloor[]> {
-  const { data, error } = await supabaseAdmin
-    .from("floors")
-    .select("*")
-    .eq("building_id", buildingId)
-    .order("sort_order");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminFloor[];
+export async function adminFetchFloors(buildingId: string): Promise<AdminFloor[]> {
+  return adminApiGet<AdminFloor>("floors", { order: "sort_order", eq: `building_id=eq.${buildingId}` });
 }
 
-export async function adminCreateFloor(
-  f: Omit<AdminFloor, "id">
-): Promise<void> {
-  const { error } = await supabaseAdmin.from("floors").insert(f);
-  if (error) throw new Error(error.message);
+export async function adminCreateFloor(f: Omit<AdminFloor, "id">): Promise<void> {
+  await adminApiPost("floors", "POST", [f]);
 }
 
-export async function adminUpdateFloor(
-  id: string,
-  f: Partial<AdminFloor>
-): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("floors")
-    .update(f)
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+export async function adminUpdateFloor(id: string, f: Partial<AdminFloor>): Promise<void> {
+  await adminApiPost("floors", "PATCH", f, { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteFloor(id: string): Promise<void> {
-  const { error } = await supabaseAdmin.from("floors").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("floors", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
 // ─── 매장 (Stores) ────────────────────────────────────────────
@@ -120,7 +80,6 @@ export interface AdminStore {
   y: number;
   w: number;
   h: number;
-  // 오픈·상세 정보
   open_date: string | null;
   logo_url: string | null;
   description: string | null;
@@ -131,41 +90,22 @@ export interface AdminStore {
   extra_info: Record<string, unknown> | null;
 }
 
-export async function adminFetchStores(
-  buildingId: string
-): Promise<AdminStore[]> {
-  const { data, error } = await supabaseAdmin
-    .from("stores")
-    .select("*")
-    .eq("building_id", buildingId)
-    .order("floor_label");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminStore[];
+export async function adminFetchStores(buildingId: string): Promise<AdminStore[]> {
+  return adminApiGet<AdminStore>("stores", { order: "floor_label", eq: `building_id=eq.${buildingId}` });
 }
 
-export async function adminCreateStore(
-  s: Omit<AdminStore, "id">
-): Promise<string> {
+export async function adminCreateStore(s: Omit<AdminStore, "id">): Promise<string> {
   const id = "s_" + Date.now().toString(36);
-  const { error } = await supabaseAdmin.from("stores").insert({ ...s, id });
-  if (error) throw new Error(error.message);
+  await adminApiPost("stores", "POST", [{ ...s, id }]);
   return id;
 }
 
-export async function adminUpdateStore(
-  id: string,
-  s: Partial<AdminStore>
-): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("stores")
-    .update(s)
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+export async function adminUpdateStore(id: string, s: Partial<AdminStore>): Promise<void> {
+  await adminApiPost("stores", "PATCH", s, { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteStore(id: string): Promise<void> {
-  const { error } = await supabaseAdmin.from("stores").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("stores", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
 // ─── 쿠폰 (Coupons) ───────────────────────────────────────────
@@ -185,29 +125,15 @@ export interface AdminCoupon {
 }
 
 export async function adminFetchCoupons(): Promise<AdminCoupon[]> {
-  const { data, error } = await supabaseAdmin
-    .from("store_coupons")
-    .select("*")
-    .order("expiry");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminCoupon[];
+  return adminApiGet<AdminCoupon>("store_coupons", { order: "expiry" });
 }
 
-export async function adminUpsertCoupon(
-  c: AdminCoupon
-): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("store_coupons")
-    .upsert(c, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+export async function adminUpsertCoupon(c: AdminCoupon): Promise<void> {
+  await adminApiPost("store_coupons", "POST", [c], { onConflict: "id" });
 }
 
 export async function adminDeleteCoupon(id: string): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("store_coupons")
-    .delete()
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("store_coupons", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
 // ─── 신규 오픈 (Openings) ─────────────────────────────────────
@@ -220,36 +146,18 @@ export interface AdminOpening {
   floor: string;
   open_date: string;
   emoji: string;
-  open_benefit: {
-    summary: string;
-    details: string[];
-    validUntil?: string;
-  } | null;
+  open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
   active: boolean;
 }
 
 export async function adminFetchOpenings(): Promise<AdminOpening[]> {
-  const { data, error } = await supabaseAdmin
-    .from("store_openings")
-    .select("*")
-    .order("open_date", { ascending: false });
-  if (error) throw new Error(error.message);
-  return (data ?? []) as AdminOpening[];
+  return adminApiGet<AdminOpening>("store_openings", { order: "open_date.desc" });
 }
 
-export async function adminUpsertOpening(
-  o: AdminOpening
-): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("store_openings")
-    .upsert(o, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+export async function adminUpsertOpening(o: AdminOpening): Promise<void> {
+  await adminApiPost("store_openings", "POST", [o], { onConflict: "id" });
 }
 
 export async function adminDeleteOpening(id: string): Promise<void> {
-  const { error } = await supabaseAdmin
-    .from("store_openings")
-    .delete()
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("store_openings", "DELETE", null, { eq: `id=eq.${id}` });
 }
