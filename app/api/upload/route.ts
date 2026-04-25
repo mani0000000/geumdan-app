@@ -31,20 +31,20 @@ export async function POST(req: NextRequest) {
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
 
-    // Use the Storage REST API directly. The new sb_secret_* key format is NOT a JWT
-    // so sending it as Authorization: Bearer causes "Invalid Compact JWS".
-    // The Supabase gateway grants service-role access via the apikey header alone.
+    // Use Storage REST API directly. Only send Authorization: Bearer for JWT-format keys
+    // (starting with eyJ). New sb_secret_* keys are NOT JWTs and cause "Invalid Compact JWS"
+    // when used as Bearer tokens.
+    const isJwt = SERVICE_KEY.startsWith("eyJ");
+    const uploadHeaders: Record<string, string> = {
+      "apikey": SERVICE_KEY,
+      "Content-Type": file.type || "application/octet-stream",
+      "x-upsert": "false",
+    };
+    if (isJwt) uploadHeaders["Authorization"] = `Bearer ${SERVICE_KEY}`;
+
     const storageRes = await fetch(
       `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
-      {
-        method: "POST",
-        headers: {
-          "apikey": SERVICE_KEY,
-          "Content-Type": file.type || "application/octet-stream",
-          "x-upsert": "false",
-        },
-        body: bytes,
-      }
+      { method: "POST", headers: uploadHeaders, body: bytes }
     );
 
     if (!storageRes.ok) {
