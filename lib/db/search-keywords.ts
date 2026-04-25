@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 export interface SearchKeyword {
   id: string;
@@ -35,26 +35,18 @@ export async function logSearch(keyword: string): Promise<void> {
 
 // ── Admin ──────────────────────────────────────────────────────
 export async function adminFetchKeywords(): Promise<SearchKeyword[]> {
-  const { data, error } = await supabaseAdmin
-    .from("search_keywords")
-    .select("*")
-    .order("sort_order");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as SearchKeyword[];
+  return adminApiGet<SearchKeyword>("search_keywords", { order: "sort_order" });
 }
 
 export async function adminCreateKeyword(keyword: string, sort_order: number): Promise<void> {
   const id = "skw_" + Date.now().toString(36);
-  const { error } = await supabaseAdmin.from("search_keywords").insert({ id, keyword, sort_order });
-  if (error) throw new Error(error.message);
+  await adminApiPost("search_keywords", "POST", [{ id, keyword, sort_order }]);
 }
 
 export async function adminUpdateKeyword(id: string, data: Partial<Omit<SearchKeyword, "id" | "created_at">>): Promise<void> {
-  const { error } = await supabaseAdmin.from("search_keywords").update(data).eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("search_keywords", "PATCH", data, { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteKeyword(id: string): Promise<void> {
-  const { error } = await supabaseAdmin.from("search_keywords").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("search_keywords", "DELETE", null, { eq: `id=eq.${id}` });
 }

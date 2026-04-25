@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 export interface Banner {
   id: string;
@@ -35,31 +35,24 @@ export async function fetchActiveBanners(): Promise<Banner[]> {
 // ── Admin ───────────────────────────────────────────────────────
 
 export async function adminFetchBanners(): Promise<Banner[]> {
-  const { data, error } = await supabaseAdmin
-    .from("banners")
-    .select("*")
-    .order("sort_order");
-  if (error) throw new Error(error.message);
-  return (data ?? []) as Banner[];
+  return adminApiGet<Banner>("banners", { order: "sort_order" });
 }
 
 export async function adminCreateBanner(
   b: Omit<Banner, "id" | "created_at">
 ): Promise<void> {
   const id = "bnr_" + Date.now().toString(36);
-  const { error } = await supabaseAdmin.from("banners").insert({ ...b, id });
-  if (error) throw new Error(error.message);
+  await adminApiPost("banners", "POST", [{ ...b, id }]);
 }
 
 export async function adminUpdateBanner(
   id: string,
   data: Partial<Omit<Banner, "id" | "created_at">>
 ): Promise<void> {
-  const { error } = await supabaseAdmin.from("banners").update(data).eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("banners", "PATCH", data, { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteBanner(id: string): Promise<void> {
-  const { error } = await supabaseAdmin.from("banners").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  await adminApiPost("banners", "DELETE", null, { eq: `id=eq.${id}` });
 }
+
