@@ -1,9 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
 import { ImageIcon, Upload, X, Loader2 } from "lucide-react";
-import { supabaseAdmin } from "@/lib/supabase-admin";
-
-const BUCKET = "admin-images";
 
 interface ImageUploadProps {
   value: string | null | undefined;
@@ -21,19 +18,13 @@ export default function ImageUpload({ value, onChange, folder = "misc", classNam
     setError(null);
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-      const allowed = ["jpg", "jpeg", "png", "gif", "webp", "avif", "svg"];
-      if (!allowed.includes(ext)) throw new Error("지원하지 않는 파일 형식입니다");
-
-      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .upload(path, file, { contentType: file.type, upsert: false });
-
-      if (upErr) throw new Error(upErr.message);
-
-      const { data } = supabaseAdmin.storage.from(BUCKET).getPublicUrl(path);
-      onChange(data.publicUrl);
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", folder);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const json = await res.json() as { url?: string; error?: string };
+      if (!res.ok) throw new Error(json.error ?? "업로드 실패");
+      onChange(json.url ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "업로드 실패");
     } finally {
