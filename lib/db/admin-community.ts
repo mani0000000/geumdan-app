@@ -58,7 +58,7 @@ export async function adminFetchComments(postId: string): Promise<AdminComment[]
   });
 }
 
-export async function adminDeleteComment(id: string): Promise<void> {
+export async function adminDeleteComment(id: string, _postId?: string): Promise<void> {
   await adminApiPost("community_comments", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
