@@ -14,11 +14,9 @@ const ALLOWED_TABLES = new Set([
 
 function getKey() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-  // Prefer server-only service key; fall back to anon key (works if tables have permissive RLS)
-  const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
-  const raw = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
-  // Only use the raw key if it looks valid (sb_* or JWT); otherwise fall back to anon
-  const key = (raw.startsWith("sb_") || raw.startsWith("eyJ")) ? raw : ANON_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+  // Only use SUPABASE_SERVICE_KEY (server-only) if set; ignore NEXT_PUBLIC_ADMIN_DB_KEY which may be stale
+  const key = process.env.SUPABASE_SERVICE_KEY || anonKey;
   return { url, key };
 }
 
