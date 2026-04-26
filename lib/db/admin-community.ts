@@ -8,7 +8,7 @@ export interface AdminPost {
   author: string;
   author_dong: string;
   is_anonymous: boolean;
-  view_count: number;
+  view_count: number
   like_count: number;
   comment_count: number;
   is_pinned: boolean;
@@ -31,6 +31,7 @@ export interface AdminComment {
 export async function adminFetchPosts(opts?: {
   category?: string;
   limit?: number;
+  search?: string;
 }): Promise<AdminPost[]> {
   return adminApiGet<AdminPost>("community_posts", {
     order: "created_at.desc",
