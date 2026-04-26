@@ -9,7 +9,7 @@ const ALLOWED_TABLES = new Set([
   "pharmacies", "emergency_rooms", "community_posts", "community_comments", "news_articles",
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
   "home_widget_config", "places", "search_keywords", "marts",
-  "site_settings", "youtube_videos", "instagram_posts",
+  "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
 ]);
 
 function getKey() {
