@@ -177,7 +177,13 @@ export default function AdminBannersPage() {
 
   async function reload() {
     setLoading(true);
-    try { setBanners(await adminFetchBanners()); } finally { setLoading(false); }
+    try {
+      setBanners(await adminFetchBanners());
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "데이터 로드 실패 — 콘솔 확인", false);
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => { reload(); }, []);
 

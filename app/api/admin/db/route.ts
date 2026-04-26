@@ -65,9 +65,11 @@ export async function GET(req: NextRequest) {
   const res = await pgrest(url, key, "GET", path);
   if (!res.ok) {
     const err = await res.text();
+    console.error("[admin/db GET]", table, res.status, err.slice(0, 200), "key:", key.slice(0, 20));
     return NextResponse.json({ error: err.slice(0, 300) }, { status: res.status });
   }
   const data = await res.json();
+  console.log("[admin/db GET]", table, "rows:", Array.isArray(data) ? data.length : "?", "key:", key.slice(0, 20));
   return NextResponse.json({ data });
 }
 
