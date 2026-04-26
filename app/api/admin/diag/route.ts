@@ -3,77 +3,53 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function testStorage(supabaseUrl: string, key: string, withBearer: boolean) {
-  const testPath = `_test/${Date.now()}.txt`;
-  const headers: Record<string, string> = {
-    "apikey": key,
-    "Content-Type": "text/plain",
-    "x-upsert": "true",
-  };
-  if (withBearer) headers["Authorization"] = `Bearer ${key}`;
-  const res = await fetch(`${supabaseUrl}/storage/v1/object/admin-images/${testPath}`, {
-    method: "POST", headers, body: "test",
-  });
-  const body = await res.json().catch(() => ({})) as Record<string, unknown>;
-  return res.ok
-    ? "✅ 성공"
-    : `❌ ${res.status} — ${body.error ?? body.message ?? JSON.stringify(body)}`;
+function getKey() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+  const key = process.env.SUPABASE_SERVICE_KEY || anonKey;
+  return { url, key, usingServiceKey: !!process.env.SUPABASE_SERVICE_KEY };
+}
+
+async function pgGet(url: string, key: string, path: string) {
+  const headers: Record<string, string> = { "apikey": key };
+  if (key.startsWith("eyJ")) headers["Authorization"] = `Bearer ${key}`;
+  const res = await fetch(`${url}/rest/v1/${path}`, { headers });
+  const body = await res.text();
+  return { ok: res.ok, status: res.status, body: body.slice(0, 300) };
 }
 
 export async function GET() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-  const serviceKey = process.env.SUPABASE_SERVICE_KEY || "";
-  const adminKey = process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
+  const { url, key, usingServiceKey } = getKey();
 
-  const keyInUse = serviceKey || adminKey || "없음";
-  const isJwt = keyInUse.startsWith("eyJ");
-  const keyFormat = isJwt
-    ? "JWT (eyJ...)"
-    : keyInUse.startsWith("sb_")
-    ? `sb_* 포맷 (${keyInUse.slice(0, 20)}...)`
-    : "미설정";
+  const keyType = usingServiceKey
+    ? "✅ SUPABASE_SERVICE_KEY (서비스 롤 — RLS 우회)"
+    : `⚠️ 어논 키 (RLS 적용됨) — ${key.slice(0, 30)}...`;
 
-  // Storage: test with and without Bearer
-  let storageWithBearer = "";
-  let storageWithoutBearer = "";
-  try { storageWithBearer = await testStorage(supabaseUrl, keyInUse, true); } catch (e) { storageWithBearer = `❌ 예외: ${String(e)}`; }
-  try { storageWithoutBearer = await testStorage(supabaseUrl, keyInUse, false); } catch (e) { storageWithoutBearer = `❌ 예외: ${String(e)}`; }
+  const tables = ["banners", "places", "buildings", "stores", "marts", "site_settings", "community_posts"];
+  const results: Record<string, string> = {};
 
-  // DB read
-  let dbReadResult = "";
-  try {
-    const headers: Record<string, string> = { "apikey": keyInUse, "Content-Type": "application/json" };
-    const res = await fetch(`${supabaseUrl}/rest/v1/site_settings?limit=1`, { headers });
-    const body = await res.text();
-    dbReadResult = res.ok ? `✅ 성공 (${res.status})` : `❌ ${res.status} — ${body.slice(0, 200)}`;
-  } catch (e) { dbReadResult = `❌ 예외: ${String(e)}`; }
-
-  // DB write
-  let dbWriteResult = "";
-  try {
-    const headers: Record<string, string> = {
-      "apikey": keyInUse,
-      "Content-Type": "application/json",
-      "Prefer": "resolution=merge-duplicates,return=minimal",
-    };
-    const res = await fetch(`${supabaseUrl}/rest/v1/site_settings?on_conflict=key`, {
-      method: "POST", headers,
-      body: JSON.stringify([{ key: "_test_key", value: "test", updated_at: new Date().toISOString() }]),
-    });
-    const body = await res.text();
-    dbWriteResult = res.ok ? `✅ 성공 (${res.status})` : `❌ ${res.status} — ${body.slice(0, 200)}`;
-  } catch (e) { dbWriteResult = `❌ 예외: ${String(e)}`; }
+  for (const table of tables) {
+    try {
+      const r = await pgGet(url, key, `${table}?select=id`);
+      if (r.ok) {
+        let count = "?";
+        try { count = String(JSON.parse(r.body).length); } catch { count = r.body.slice(0, 30); }
+        results[table] = `✅ OK — 행 ${count}개`;
+      } else {
+        results[table] = `❌ ${r.status} — ${r.body}`;
+      }
+    } catch (e) {
+      results[table] = `❌ 예외: ${String(e)}`;
+    }
+  }
 
   return NextResponse.json({
-    keyFormat,
-    isJwt,
-    supabaseUrl,
-    keyInUse: keyInUse.slice(0, 25) + "...",
-    tests: {
-      "storage (Bearer 있음)": storageWithBearer,
-      "storage (Bearer 없음)": storageWithoutBearer,
-      dbRead: dbReadResult,
-      dbWrite: dbWriteResult,
-    },
+    usingServiceKey,
+    keyType,
+    keyPrefix: key.slice(0, 32) + "...",
+    fix: usingServiceKey
+      ? "정상 — 서비스 키로 RLS 우회 중"
+      : "Vercel 환경변수에 SUPABASE_SERVICE_KEY(서비스 롤 키)를 추가하면 해결됩니다",
+    tableResults: results,
   });
 }

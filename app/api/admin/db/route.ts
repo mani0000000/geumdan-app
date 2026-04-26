@@ -8,7 +8,7 @@ const ALLOWED_TABLES = new Set([
   "banners", "buildings", "floors", "stores", "store_coupons", "store_openings",
   "pharmacies", "emergency_rooms", "community_posts", "community_comments", "news_articles",
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
-  "home_widget_config", "places", "search_keywords",
+  "home_widget_config", "places", "search_keywords", "marts",
   "site_settings", "youtube_videos", "instagram_posts",
 ]);
 
@@ -65,9 +65,11 @@ export async function GET(req: NextRequest) {
   const res = await pgrest(url, key, "GET", path);
   if (!res.ok) {
     const err = await res.text();
+    console.error("[admin/db GET]", table, res.status, err.slice(0, 200), "key:", key.slice(0, 20));
     return NextResponse.json({ error: err.slice(0, 300) }, { status: res.status });
   }
   const data = await res.json();
+  console.log("[admin/db GET]", table, "rows:", Array.isArray(data) ? data.length : "?", "key:", key.slice(0, 20));
   return NextResponse.json({ data });
 }
 

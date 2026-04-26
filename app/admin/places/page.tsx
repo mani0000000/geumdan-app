@@ -184,7 +184,7 @@ export default function AdminPlacesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setPlaces(await adminFetchPlaces()); } catch { /* ignore */ }
+    try { setPlaces(await adminFetchPlaces()); } catch (e) { setErr(e instanceof Error ? e.message : "로드 실패"); }
     setLoading(false);
   }, []);
 
