@@ -15,7 +15,6 @@ const EMPTY: Omit<AdminPlace, "id" | "created_at"> = {
   operating_hours: null, admission_fee: null, phone: null, website: null,
   published: true, sort_order: 0,
 };
-
 function PlaceModal({
   initial, onSave, onClose,
 }: {
@@ -184,7 +183,7 @@ export default function AdminPlacesPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    try { setPlaces(await adminFetchPlaces()); } catch (e) { setErr(e instanceof Error ? e.message : "로드 실패"); }
+    try { setPlaces(await adminFetchPlaces()); } catch (e) { console.error(e instanceof Error ? e.message : "로드 실패"); }
     setLoading(false);
   }, []);
 
