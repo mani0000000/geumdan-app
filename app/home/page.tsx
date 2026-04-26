@@ -13,11 +13,12 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies, nearbyMarts } from "@/lib/mockData";
+import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
-import type { Pharmacy, NearbyMart, MartClosingPattern } from "@/lib/mockData";
+import type { Pharmacy } from "@/lib/mockData";
+import { fetchMarts, type Mart, type MartClosingPattern } from "@/lib/db/marts";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
@@ -725,55 +726,62 @@ function nthWeekdayOfMonth(year: number, month: number, weekday: number, nth: nu
 function isMandatoryClosed(date: Date, pattern: MartClosingPattern): boolean {
   if (pattern === "open")   return false;
   if (pattern === "closed") return true;
-  if (date.getDay() !== 0)  return false; // 일요일이 아니면 false
+  if (date.getDay() !== 0)  return false;
   const y = date.getFullYear(), m = date.getMonth();
   const sundays = [1, 2, 3, 4, 5].map(n => {
     try { return nthWeekdayOfMonth(y, m, 0, n); } catch { return null; }
   }).filter(Boolean) as Date[];
-  const idx = sundays.findIndex(s => s.toDateString() === date.toDateString()) + 1; // 1~5
+  const idx = sundays.findIndex(s => s.toDateString() === date.toDateString()) + 1;
   if (pattern === "2nd4th") return idx === 2 || idx === 4;
   if (pattern === "1st3rd") return idx === 1 || idx === 3;
   return false;
 }
 
 /** 특정 날짜 기준 마트 영업 여부 */
-function getMartStatus(mart: NearbyMart, date: Date): {
+function getMartStatus(mart: Mart, date: Date): {
   isOpen: boolean;
   hours: string | null;
   reason?: string;
 } {
-  const day = date.getDay(); // 0=일, 6=토
-  if (isMandatoryClosed(date, mart.closingPattern)) {
+  const day = date.getDay();
+  if (isMandatoryClosed(date, mart.closing_pattern)) {
     return { isOpen: false, hours: null, reason: "의무휴업일" };
   }
   if (day === 0) {
-    return mart.sundayHours
-      ? { isOpen: true, hours: mart.sundayHours }
+    return mart.sunday_hours
+      ? { isOpen: true, hours: mart.sunday_hours }
       : { isOpen: false, hours: null, reason: "일요일 휴무" };
   }
-  if (day === 6) return { isOpen: true, hours: mart.saturdayHours };
-  return { isOpen: true, hours: mart.weekdayHours };
+  if (day === 6) return { isOpen: true, hours: mart.saturday_hours };
+  return { isOpen: true, hours: mart.weekday_hours };
+}
+
+function martTypeBadge(type: string) {
+  if (type === "대형마트") return "bg-[#EDE9FE] text-[#6D28D9]";
+  if (type === "중형마트") return "bg-[#DBEAFE] text-[#1D4ED8]";
+  if (type === "동네마트") return "bg-[#D1FAE5] text-[#065F46]";
+  return "bg-[#E0F2FE] text-[#0369A1]";
 }
 
 // ─── 마트 위젯 ────────────────────────────────────────────────
 function MartSection() {
-  const now   = new Date();
-  const today = now.getDay();  // 0=일, 6=토
-  const isWeekend = today === 0 || today === 6;
+  const [marts, setMarts] = useState<Mart[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
-  if (!isWeekend) return null;
+  useEffect(() => {
+    fetchMarts().then(data => { setMarts(data); setLoaded(true); });
+  }, []);
 
-  // 오늘 + 내일(토→일) 상태 계산
+  const now      = new Date();
+  const today    = now.getDay();
   const tomorrow = new Date(now);
   tomorrow.setDate(tomorrow.getDate() + 1);
-  const showTomorrow = today === 6; // 토요일이면 내일(일) 경고 함께 표시
+  const showTomorrow = today === 6;
 
-  // 오늘 기준 휴무인 마트
-  const closedToday = nearbyMarts.filter(m => !getMartStatus(m, now).isOpen);
-  // 내일 기준 휴무인 마트 (토요일에만)
-  const closedTomorrow = showTomorrow
-    ? nearbyMarts.filter(m => !getMartStatus(m, tomorrow).isOpen)
-    : [];
+  const closedToday    = marts.filter(m => !getMartStatus(m, now).isOpen);
+  const closedTomorrow = showTomorrow ? marts.filter(m => !getMartStatus(m, tomorrow).isOpen) : [];
+
+  if (loaded && marts.length === 0) return null;
 
   return (
     <>
@@ -781,7 +789,7 @@ function MartSection() {
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
-        {/* 배너 */}
+        {/* 영업 상태 배너 */}
         <div className={`px-4 py-2.5 flex items-center gap-2 ${
           closedToday.length > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
         }`}>
@@ -794,7 +802,7 @@ function MartSection() {
           </span>
         </div>
 
-        {/* 내일 경고 (토요일에 일요일 휴무 예고) */}
+        {/* 내일 경고 (토→일 의무휴업 예고) */}
         {showTomorrow && closedTomorrow.length > 0 && (
           <div className="px-4 py-2 bg-[#FEE2E2] flex items-center gap-2 border-t border-white">
             <span className="text-[13px]">⚠️</span>
@@ -806,27 +814,31 @@ function MartSection() {
 
         {/* 마트 목록 */}
         <div className="divide-y divide-[#f5f5f7]">
-          {nearbyMarts.map(mart => {
+          {marts.map(mart => {
             const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
+            const mapUrl = mart.lat && mart.lng
+              ? `https://map.kakao.com/link/map/${encodeURIComponent(mart.name)},${mart.lat},${mart.lng}`
+              : `https://map.kakao.com/link/search/${encodeURIComponent(mart.address || mart.name)}`;
 
             return (
               <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
                 {/* 로고 */}
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
                   todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
-                  <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                  {mart.logo_url
+                    ? <img src={mart.logo_url} alt={mart.brand} className="w-full h-full object-contain p-1" />
+                    : <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                  }
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 flex-wrap">
                     <span className="text-[14px] font-bold text-[#1d1d1f]">{mart.name}</span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${
-                      mart.type === "대형마트"
-                        ? "bg-[#EDE9FE] text-[#6D28D9]"
-                        : "bg-[#E0F2FE] text-[#0369A1]"
-                    }`}>{mart.type}</span>
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${martTypeBadge(mart.type)}`}>
+                      {mart.type}
+                    </span>
                   </div>
 
                   {/* 오늘 상태 */}
@@ -836,25 +848,38 @@ function MartSection() {
                     </span>
                   </div>
 
-                  {/* 내일 상태 (토요일에) */}
-                  {tmrStatus && !tmrStatus.isOpen && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <span className="text-[11px] text-[#F04452]">⚠ 내일 의무휴업</span>
+                  {/* 주말 영업시간 (평일이 아닐 때도 표시) */}
+                  {(mart.saturday_hours || mart.sunday_hours) && today < 6 && (
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {mart.saturday_hours && <span className="text-[11px] text-[#86868b]">토 {mart.saturday_hours}</span>}
+                      {mart.sunday_hours   && <span className="text-[11px] text-[#86868b]">일 {mart.sunday_hours}</span>}
                     </div>
                   )}
 
-                  {/* 의무휴업 안내 */}
-                  {mart.notice && mart.type === "대형마트" && (
+                  {/* 내일 의무휴업 경고 */}
+                  {tmrStatus && !tmrStatus.isOpen && (
+                    <span className="text-[11px] text-[#F04452]">⚠ 내일 의무휴업</span>
+                  )}
+
+                  {mart.notice && (
                     <p className="text-[11px] text-[#86868b] mt-0.5">{mart.notice}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  <span className="text-[12px] text-[#6e6e73]">{mart.distance}</span>
-                  <a href={`tel:${mart.phone}`}
-                    className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#e8f1fd]">
-                    <Phone size={14} className="text-[#0071e3]" />
-                  </a>
+                  {mart.distance && <span className="text-[12px] text-[#6e6e73]">{mart.distance}</span>}
+                  <div className="flex gap-1.5">
+                    {mart.phone && (
+                      <a href={`tel:${mart.phone}`}
+                        className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center">
+                        <Phone size={14} className="text-[#0071e3]" />
+                      </a>
+                    )}
+                    <a href={mapUrl} target="_blank" rel="noreferrer"
+                      className="w-8 h-8 bg-[#FFF3CD] rounded-xl flex items-center justify-center">
+                      <MapPin size={14} className="text-[#C57C00]" />
+                    </a>
+                  </div>
                 </div>
               </div>
             );
