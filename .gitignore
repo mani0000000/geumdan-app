@@ -52,3 +52,9 @@ ios/App/Pods
 ios/App/App.xcworkspace/xcuserdata
 *.xcworkspace/xcuserdata
 DerivedData
+
+# Android build outputs (keep APK out of git — too large)
+android/app/build/
+android/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/build/
