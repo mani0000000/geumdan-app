@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-04-26T18:35:12.742Z",
+  "fetchedAt": "2026-04-26T21:27:32.750Z",
   "count": 40,
   "articles": [
     {
@@ -27,6 +27,15 @@
       "source": "v.daum.net",
       "publishedAt": "2026-04-26T07:15:30.000Z",
       "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5TUEZDVmlFQXN2WHdkS3dvSUs3SVlLVV9ETm5GM0lPUVowb2lhY096N3NWbHJxWVFlYm9lZGZUOVVrazM4OGUxNURBTXFPLVE?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr3-0",
+      "title": "인천시, 영종·검단 등 시내버스 7개 노선 신설 - 기호일보",
+      "summary": "",
+      "source": "기호일보",
+      "publishedAt": "2026-04-26T07:15:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9jUGFBWml5WWNqYmdPNXpmVUtmMjlrb0V5STQxcDA0aTh0TEFwU0tzVzFBUUgzUzdNMm9sa1RNLVlfU0p4cnBaeGhzYWRpTFcwSEE2eGxTU2pJYnkxRldicUNnbkxVUEUxTG9NVzV1dw?oc=5",
       "type": "뉴스"
     },
     {
@@ -102,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-32",
+      "id": "gr0-30",
       "title": "수도권 신축 분양가상한제 적용 '더샵 검단레이크파크' 2857가구 공급 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -111,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-28",
+      "id": "gr0-27",
       "title": "계룡건설산업, '엘리프 검단 포레듀' 임의공급 실시 - newspim.com",
       "summary": "",
       "source": "newspim.com",
@@ -120,16 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
-      "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
-      "summary": "",
-      "source": "매일일보",
-      "publishedAt": "2026-04-23T23:41:50.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5JSmNMcHFhNERxNTRuMFdoa2VndEd2cHplajNPVXU1WWFlMUVpenFzU3FaTG1lQ2FaTHN1TWw2bjhvX05tZ1lzWVJrQ2FHWjVYUlJBOGJORVlQUzRpa2pBcUNoVFQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-23",
+      "id": "gr0-22",
       "title": "포스코이앤씨, 검단 첫 ‘더샵’ 브랜드 단지 5월 분양 ··· 2857세대 대단지 - 나눔경제뉴스",
       "summary": "",
       "source": "나눔경제뉴스",
@@ -138,12 +138,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
       "publishedAt": "2026-04-23T13:09:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5RXzlyaXJ0SnduSHc3MUR4NHI4WF9LRHQyb2hFRmJ6QzNWWUN0WFJQeHZQWFowT1ZqUVFlVWQyUTd6MGRjR3BvdHhlcjZDc3dYa2tYdU4zOTNyQQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-2",
+      "title": "인천 서구의회 , 검단구 임시청사 현장 점검 실시 - 서울뉴스통신",
+      "summary": "",
+      "source": "서울뉴스통신",
+      "publishedAt": "2026-04-23T13:04:05.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5CQVY2Zkc2b0hUUmdjQ21vR3Q1aEhwb3BFZkJGeU1vWm1QRXZ1ZXJyQTFXYW1tLTloUXNSZ3BTbnREMWxWdkI1cmJ6OHhrOExzMGVRVTBMeHhXVzhSMlFBV1VWamVQLXVTZ1Yw?oc=5",
       "type": "뉴스"
     },
     {
@@ -174,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-38",
+      "id": "gr0-36",
       "title": "인천 더샵 검단레이크파크 2857가구 내달 풀린다 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -192,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-19",
       "title": "[민주 부동산] 포스코이앤씨·DL이앤씨·현대건설 - 민주신문",
       "summary": "",
       "source": "민주신문",
@@ -210,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-17",
       "title": "[분양 리포트] 포스코이앤씨, 검단에 2857가구 ‘더샵’ 첫 공급…5월 분양 - fetv.co.kr",
       "summary": "",
       "source": "fetv.co.kr",
@@ -219,12 +228,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-27",
+      "id": "gr0-26",
       "title": "포스코이앤씨, 오는 5월 인천 더샵 검단레이크파크 분양 예정 - 쿠키뉴스",
       "summary": "",
       "source": "쿠키뉴스",
       "publishedAt": "2026-04-23T06:45:45.000Z",
       "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTFBlQ0ZjYkpXcW5DQS1CUE9YQ21RYmFIWk5OZXpVVEQ4aktMcGZRQmE5RmRlRk52VXJHcmoycV94QWZFWEUxajFWOFFsSVBud1lBV3FzeEpnUmFPdndvOWtnN01CMA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-16",
+      "title": "검단호수공원역 파라곤, 인천지하철 환승역세권…높은 청약 경쟁률 - 한국경제",
+      "summary": "",
+      "source": "한국경제",
+      "publishedAt": "2026-04-23T06:32:09.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9yUW1EVVZjTkVRWUxIYmV6aEh2VHNGZVJQWDZfTE5scHY3bjFTMGlGSERTc083ZDU2NmJ5NHZ2ejc1SW1iS3laeV9ORmduTTY5WUlHWC1Sanh0QdIBVEFVX3lxTE0xYy0yRVZrWElGclpmZUJBTm5iZWhzZ1pOWHBVY25CaW14T1Q2S29BUzZyYnJ5WW1KTkZ3RVA5WlBHWFB0RFZMZmgwb01kY2pqcXJjLQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -237,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-34",
+      "id": "gr0-33",
       "title": "[분양 뉴스브리핑] 포스코이앤씨, '더샵 검단레이크파크' 5월 분양 - 아시아타임즈",
       "summary": "",
       "source": "아시아타임즈",
@@ -246,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-18",
       "title": "포스코이앤씨, 검단신도시 첫 ‘더샵’ 2857세대 공급…수변·역세권 갖춘 대단지 - 이코노미사이언스",
       "summary": "",
       "source": "이코노미사이언스",
@@ -255,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-29",
+      "id": "gr0-28",
       "title": "분양가상한제 적용 2857가구… 포스코이앤씨 '더샵 검단레이크파크' 5월 분양 - 월요신문",
       "summary": "",
       "source": "월요신문",
@@ -264,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-33",
+      "id": "gr0-31",
       "title": "\"검단 첫 더샵\"...포스코이앤씨, 인천 '더샵 검단레이크파크' 5월 공급 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -282,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-21",
       "title": "포스코이앤씨, 인천 ‘더샵 검단레이크파크’ 분양...2857가구 공급 - 더트래커",
       "summary": "",
       "source": "더트래커",
@@ -300,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-25",
+      "id": "gr0-24",
       "title": "포스코이앤씨, ‘더샵 검단레이크파크’ 5월 분양 - 핀포인트뉴스",
       "summary": "",
       "source": "핀포인트뉴스",
@@ -336,30 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-41",
+      "id": "gr0-39",
       "title": "포스코이앤씨 '더샵 검단레이크파크' 내달 분양…2857가구 대단지 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-04-23T00:44:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE56aG9NSVI3Y0I1Q3R6OVdiZTd2QVkzRkQtYnFHR3R5eWlnZzJiNE9sclAxRjllVHJBTU1tMjY5S1EzaWdOZXJkZWd6MXU2ZWNrbmx3?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-14",
-      "title": "검단신도시 첫 '더샵' 브랜드 분양…분양가상한제 적용 - 한국경제",
-      "summary": "",
-      "source": "한국경제",
-      "publishedAt": "2026-04-23T00:41:59.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9TRWVqcndxaWxnTVU4UWZ2TExjT05JcFZZS2pYN0FRVG9ianoxWEZ0Qm1MNW9qLURPTU1DeFB4dDduZHg1aVlnSlNadUNkREl4clprSDNnOXgwZ9IBVEFVX3lxTFBTTFREZmhVRTA0MFdUT1VzTEtWM0NoMTd1TkRpMHRueTNLMUVJZEg0NVFaWE5QeVdJcGd6Z2V2QVlSeFB3UEZmeXNweE9oUmNFMnQ4Yw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-10",
-      "title": "포스코이앤씨, 인천 검단신도시 '더샵 검단레이크파크' 5월 분양 - 뉴스퀘스트",
-      "summary": "",
-      "source": "뉴스퀘스트",
-      "publishedAt": "2026-04-23T00:33:15.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1SV2NYNG8tVnF2X1JyV01Wd3o5TGFZWE96TGNaYWFXU1VNTk1YSExIMmF6WC1CM0c0NkxFRll0c2tfUkZVQmRKc0ZZbFEycXE1cmRZeGRCN05od29jbU1ENnhUMU50THpYR09NNU5TY9IBc0FVX3lxTE5GcGM0eWIyb3VYay11RURSSmJoZWdfTkFnVHBKRTdFaU94dmNyZ09XdHRsby0wMTdEMG1HOERpX28xdE04NXRPZ2JlRWw1alJXdVhQTW11S204TUszQnMwVUN3MlBZZUF1dkYtc3dtSXptWE0?oc=5",
       "type": "뉴스"
     }
   ]
