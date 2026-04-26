@@ -15,8 +15,10 @@ const ALLOWED_TABLES = new Set([
 function getKey() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
-  // Only use SUPABASE_SERVICE_KEY (server-only) if set; ignore NEXT_PUBLIC_ADMIN_DB_KEY which may be stale
-  const key = process.env.SUPABASE_SERVICE_KEY || anonKey;
+  // Priority: service key (bypasses RLS) > ADMIN_DB_KEY (JWT anon, reads work) > anon key
+  const key = process.env.SUPABASE_SERVICE_KEY
+    || process.env.NEXT_PUBLIC_ADMIN_DB_KEY
+    || anonKey;
   return { url, key };
 }
 
