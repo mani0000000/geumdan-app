@@ -274,12 +274,29 @@ function InstagramTab() {
     posted_at: new Date().toISOString().slice(0, 16),
   };
   const [form, setForm] = useState(EMPTY);
+  const [thumbLoading, setThumbLoading] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try { setItems(await adminFetchInstagram()); } catch (e) { setErr(String(e)); }
     setLoading(false);
   }, []);
+
+  async function fetchThumb() {
+    if (!form.post_url) { setErr("게시물 URL을 먼저 입력하세요"); return; }
+    setThumbLoading(true); setErr("");
+    try {
+      const res = await fetch(`/api/instagram/thumb?url=${encodeURIComponent(form.post_url)}`);
+      const data = await res.json() as { thumbnail?: string; error?: string; warning?: string };
+      if (data.thumbnail) {
+        setForm(f => ({ ...f, image_url: data.thumbnail! }));
+        if (data.warning) setErr(`⚠️ ${data.warning}`);
+      } else {
+        setErr(data.error ?? "썸네일 가져오기 실패");
+      }
+    } catch (e) { setErr(String(e)); }
+    setThumbLoading(false);
+  }
   useEffect(() => { load(); }, [load]);
 
   async function handleSave(e: React.FormEvent) {
@@ -332,14 +349,21 @@ function InstagramTab() {
           </div>
           <div>
             <label className={labelCls}>게시물 URL *</label>
-            <input className={INPUT} type="url" value={form.post_url} onChange={e => setForm(f => ({ ...f, post_url: e.target.value }))} placeholder="https://www.instagram.com/p/..." />
+            <div className="flex gap-2">
+              <input className={INPUT + " flex-1"} type="url" value={form.post_url} onChange={e => setForm(f => ({ ...f, post_url: e.target.value }))} placeholder="https://www.instagram.com/p/..." />
+              <button type="button" onClick={fetchThumb} disabled={thumbLoading || !form.post_url}
+                className="shrink-0 px-3 py-2 rounded-xl text-[12px] font-bold text-white disabled:opacity-40 transition-all"
+                style={{ background: "linear-gradient(135deg, #F58529, #DD2A7B)" }}>
+                {thumbLoading ? "⏳" : "🔗 썸네일"}
+              </button>
+            </div>
           </div>
           <div>
             <label className={labelCls}>캡션</label>
             <textarea className={INPUT + " resize-none h-20"} value={form.caption ?? ""} onChange={e => setForm(f => ({ ...f, caption: e.target.value }))} placeholder="#검단맛집 이번 주 핫플..." />
           </div>
           <div>
-            <label className={labelCls}>이미지</label>
+            <label className={labelCls}>이미지 {form.image_url ? "✅" : "(URL에서 자동 가져오기 또는 직접 업로드)"}</label>
             <ImageUpload value={form.image_url} onChange={url => setForm(f => ({ ...f, image_url: url }))} folder="instagram" />
           </div>
           {err && <p className="text-[12px] text-[#F04452]">{err}</p>}

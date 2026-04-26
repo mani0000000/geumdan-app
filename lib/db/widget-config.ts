@@ -24,6 +24,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "instagram",  label: "인스타 소식", enabled: true, sort_order: 13 },
   { id: "realestate", label: "실거래가",    enabled: true, sort_order: 14 },
   { id: "places",     label: "가볼만한곳",  enabled: true, sort_order: 15 },
+  { id: "sports",     label: "스포츠 경기", enabled: true, sort_order: 16 },
 ];
 
 export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {
