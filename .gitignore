@@ -43,3 +43,12 @@ next-env.d.ts
 
 # supabase
 supabase/.temp/
+
+# Capacitor
+android/.gradle
+android/app/build
+android/build
+ios/App/Pods
+ios/App/App.xcworkspace/xcuserdata
+*.xcworkspace/xcuserdata
+DerivedData
