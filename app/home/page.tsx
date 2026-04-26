@@ -34,6 +34,7 @@ import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import { fetchUpcomingSportsMatches, TEAM_META, type SportsMatch } from "@/lib/db/sports";
+import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import type { YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
 
@@ -655,6 +656,150 @@ function PlacesSection() {
             })}
           </div>
         </div>
+      </section>
+    </>
+  );
+}
+
+// ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
+function TideSection() {
+  const [report, setReport] = useState<TideReport | null>(null);
+  const [tab, setTab] = useState<"haerujil" | "fishing">("haerujil");
+
+  useEffect(() => {
+    setReport(getTideReport(new Date()));
+  }, []);
+
+  if (!report) return null;
+
+  const { multtae, todayTides, nextLowTide, haerujil, fishing, bestDaysThisMonth, seasonalNote } = report;
+  const activity = tab === "haerujil" ? haerujil : fishing;
+
+  const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기(조금)";
+  const sizeColor = multtae.size === "large" ? "#0071e3" : multtae.size === "medium" ? "#2F9E44" : "#6B7684";
+
+  const ratingColors: Record<ConditionRating, { bg: string; text: string; bar: string }> = {
+    excellent: { bg: "#E8F5E9", text: "#2E7D32", bar: "#4CAF50" },
+    good:      { bg: "#E3F2FD", text: "#1565C0", bar: "#2196F3" },
+    poor:      { bg: "#FBE9E7", text: "#BF360C", bar: "#FF7043" },
+  };
+  const rc = ratingColors[activity.rating];
+
+  const bestDays = tab === "haerujil" ? bestDaysThisMonth.haerujil : bestDaysThisMonth.fishing;
+  const today = new Date().getDate();
+
+  return (
+    <>
+      <SectionLabel label="서해안 조석 정보" />
+      <section className="mx-4 mb-1">
+        {/* 물때 헤더 카드 */}
+        <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] font-black text-[#1d1d1f]">{multtae.number}물</span>
+                <span className="text-[16px] font-bold text-[#1d1d1f]">{multtae.name}</span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                  style={{ background: sizeColor }}>
+                  {sizeLabel}
+                </span>
+              </div>
+              <p className="text-[12px] text-gray-500 mt-0.5">
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 약 {multtae.rangeM}m
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-[11px] text-gray-400">다음 저조</p>
+              <p className="text-[16px] font-black text-[#0071e3]">
+                {nextLowTide ? nextLowTide.timeStr : "--:--"}
+              </p>
+            </div>
+          </div>
+
+          {/* 조석 타임라인 */}
+          <div className="flex items-end gap-1.5 h-12 mb-1">
+            {todayTides.map((t, i) => {
+              const heightRatio = t.type === "high" ? 1 : 0.15;
+              return (
+                <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                  <div className="w-full rounded-t-lg transition-all"
+                    style={{
+                      height: `${Math.round(heightRatio * 40 + 4)}px`,
+                      background: t.type === "high" ? "#0071e3" : "#93C5FD",
+                    }} />
+                  <span className="text-[9px] text-gray-400 font-semibold">{t.timeStr}</span>
+                  <span className="text-[8px] text-gray-300">{t.type === "high" ? "고조" : "저조"}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 탭 */}
+        <div className="flex gap-2 mb-3">
+          {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setTab(key)}
+              className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
+                tab === key ? "bg-[#1d1d1f] text-white" : "bg-white text-gray-500 border border-gray-200"
+              }`}>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* 조건 카드 */}
+        <div className="rounded-2xl p-4 mb-3" style={{ background: rc.bg }}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[15px] font-extrabold" style={{ color: rc.text }}>
+              {activity.title}
+            </span>
+            <div className="flex gap-0.5">
+              {[1, 2, 3].map(n => (
+                <div key={n} className="w-5 h-5 rounded-full border-2"
+                  style={{
+                    background: n <= activity.stars ? rc.bar : "transparent",
+                    borderColor: rc.bar,
+                  }} />
+              ))}
+            </div>
+          </div>
+          <p className="text-[13px] leading-relaxed mb-2" style={{ color: rc.text }}>
+            {activity.reason}
+          </p>
+          <div className="bg-white/60 rounded-xl px-3 py-2">
+            <p className="text-[12px] font-semibold text-gray-600">💡 {activity.tip}</p>
+          </div>
+        </div>
+
+        {/* 이달 최적 날짜 */}
+        {bestDays.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
+            <p className="text-[12px] font-bold text-gray-500 mb-2">
+              이달 {tab === "haerujil" ? "해루질" : "낚시"} 추천일
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {bestDays.map(d => (
+                <span key={d}
+                  className={`text-[12px] font-bold px-2.5 py-1 rounded-full ${
+                    d === today
+                      ? "bg-[#1d1d1f] text-white"
+                      : d < today
+                      ? "bg-gray-100 text-gray-400 line-through"
+                      : "bg-blue-50 text-blue-700"
+                  }`}>
+                  {d}일
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 계절 안내 */}
+        {seasonalNote && (
+          <div className="bg-amber-50 rounded-xl px-4 py-3">
+            <p className="text-[12px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
+          </div>
+        )}
       </section>
     </>
   );
@@ -1961,6 +2106,7 @@ export default function HomePage() {
     ),
     places: () => <PlacesSection />,
     sports: () => <SportsSection />,
+    tides: () => <TideSection />,
   };
 
   const activeWidgets = widgets.length > 0
