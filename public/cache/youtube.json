@@ -1,6 +1,6 @@
 {
-  "fetchedAt": "2026-04-27T05:44:23.529Z",
-  "count": 20,
+  "fetchedAt": "2026-04-27T08:02:44.023Z",
+  "count": 19,
   "videos": [
     {
       "id": "yt-0",
@@ -17,6 +17,14 @@
       "channelName": "언니처럼",
       "thumbnail": "https://img.youtube.com/vi/7lZu-y35ye4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=7lZu-y35ye4"
+    },
+    {
+      "id": "yt-0",
+      "videoId": "cb5up4scQh8",
+      "title": "힐스테이트방향에서 신검단중앙역 방향 #신검단중앙역",
+      "channelName": "54앤써",
+      "thumbnail": "https://img.youtube.com/vi/cb5up4scQh8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=cb5up4scQh8"
     },
     {
       "id": "yt-0",
@@ -44,11 +52,11 @@
     },
     {
       "id": "yt-1",
-      "videoId": "cb5up4scQh8",
-      "title": "힐스테이트방향에서 신검단중앙역 방향 #신검단중앙역",
+      "videoId": "Ey8KR6fWaNo",
+      "title": "검단신도시U공원 일대 2025. 11. 29.  #검단신도시 #여울빛공원 #검단호수공원역 #신검단중앙역 #드론영상",
       "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/cb5up4scQh8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=cb5up4scQh8"
+      "thumbnail": "https://img.youtube.com/vi/Ey8KR6fWaNo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Ey8KR6fWaNo"
     },
     {
       "id": "yt-1",
@@ -60,35 +68,19 @@
     },
     {
       "id": "yt-2",
-      "videoId": "VHHn1bR4fgo",
-      "title": "[인천]봄기운 가득한 샤브샤브 무한리필 봄담아 검단신도시점 방문 후기",
-      "channelName": "푸드맥스",
-      "thumbnail": "https://img.youtube.com/vi/VHHn1bR4fgo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=VHHn1bR4fgo"
+      "videoId": "tqRdYmgZjUE",
+      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
     },
     {
       "id": "yt-2",
-      "videoId": "Ey8KR6fWaNo",
-      "title": "검단신도시U공원 일대 2025. 11. 29.  #검단신도시 #여울빛공원 #검단호수공원역 #신검단중앙역 #드론영상",
-      "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/Ey8KR6fWaNo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Ey8KR6fWaNo"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "K-t22JcmOjo",
-      "title": "EP8. 신축아파트 입주 이사 VLOG",
-      "channelName": "보리아빠",
-      "thumbnail": "https://img.youtube.com/vi/K-t22JcmOjo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=K-t22JcmOjo"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "ZsxOcWwtDgs",
-      "title": "[인천]미친 고물가 시대에 꼭 필요했던 가성비 최고의 패밀리 레스토랑 #코지하우스 #패밀리레스토랑 #인천맛집",
-      "channelName": "푸드맥스",
-      "thumbnail": "https://img.youtube.com/vi/ZsxOcWwtDgs/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ZsxOcWwtDgs"
+      "videoId": "boCEp68vEmw",
+      "title": "집 내놓은 지 이틀 만에 팔렸습니다💦 길바닥 나앉을 뻔한 40대 부부의 피 말리는 아파트 계약 & 가성비 인테리어 | 캐나다현 이사 VLOG",
+      "channelName": "현부부 hyuncouple",
+      "thumbnail": "https://img.youtube.com/vi/boCEp68vEmw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=boCEp68vEmw"
     },
     {
       "id": "yt-3",
@@ -108,59 +100,59 @@
     },
     {
       "id": "yt-3",
-      "videoId": "UVOdna5B1KU",
-      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU"
+      "videoId": "9V84BVu3CFo",
+      "title": "예비신혼부부 집구하기 검단신도시 임장투어 l 커플 브이로그 l couple vlog l 임장",
+      "channelName": "뚱이와 노을",
+      "thumbnail": "https://img.youtube.com/vi/9V84BVu3CFo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=9V84BVu3CFo"
     },
     {
       "id": "yt-3",
-      "videoId": "Wk-WJvcb7DY",
-      "title": "[자막뉴스] 검단 전면재시공 비용, \"1조원 육박 예상도\" / OBS 뉴스",
-      "channelName": "OBS뉴스",
-      "thumbnail": "https://img.youtube.com/vi/Wk-WJvcb7DY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Wk-WJvcb7DY"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "tqRdYmgZjUE",
-      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
-      "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "ASnlOFdLdK8",
-      "title": "인천 검단대형카페 서원안길 #cafe #검단신도시카페",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/ASnlOFdLdK8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ASnlOFdLdK8"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "ehfN7DTLGxw",
-      "title": "\" 인천 \" 검단신도시 \" 최고의 공원 \" ( 여울빛공원 )  탐방 [ 드론항공촬영 ] ( 촬영 2025년 10월 19일 오후 17시경 )",
-      "channelName": "청산 이호우  ",
-      "thumbnail": "https://img.youtube.com/vi/ehfN7DTLGxw/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ehfN7DTLGxw"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "E0XGAcu8f5E",
-      "title": "출근한지 며칠 안됐는데 벌써 위기가?🥹 | 경단녀 재취업 VLOG [모델로 마스크]",
-      "channelName": "misonugool미소너굴",
-      "thumbnail": "https://img.youtube.com/vi/E0XGAcu8f5E/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=E0XGAcu8f5E"
-    },
-    {
-      "id": "yt-4",
       "videoId": "30svggHOYek",
       "title": "검단신도시 4단계 사업 올해 말 준공 8조 4천억 원 투입..2028년 완공 예정",
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/30svggHOYek/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=30svggHOYek"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "3TAIXUazVc0",
+      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "OaeTXemalWw",
+      "title": "세계 TOP5 대형카페가 한국에?!",
+      "channelName": "포만주의보",
+      "thumbnail": "https://img.youtube.com/vi/OaeTXemalWw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=OaeTXemalWw"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "FBYcTmTdyNk",
+      "title": "(특집) 검단신도시 호수공원 / 검단 완성을 책임져~ 검단신도시 호수공원역 RC7 까지 완공되면 끝",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/FBYcTmTdyNk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=FBYcTmTdyNk"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "K-t22JcmOjo",
+      "title": "EP8. 신축아파트 입주 이사 VLOG",
+      "channelName": "보리아빠",
+      "thumbnail": "https://img.youtube.com/vi/K-t22JcmOjo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=K-t22JcmOjo"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "Wk-WJvcb7DY",
+      "title": "[자막뉴스] 검단 전면재시공 비용, \"1조원 육박 예상도\" / OBS 뉴스",
+      "channelName": "OBS뉴스",
+      "thumbnail": "https://img.youtube.com/vi/Wk-WJvcb7DY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Wk-WJvcb7DY"
     }
   ]
 }
