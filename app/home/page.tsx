@@ -662,20 +662,21 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
+// timeOffsetMin: 인천 기준 대비 시간 보정(분), rangeRatio: 조차 비율
 const TIDE_SPOTS = {
   haerujil: [
-    { name: "강화 여차리 갯벌",    type: "갯벌",  dist: "약 45km" },
-    { name: "영종도 북쪽 갯벌",    type: "갯벌",  dist: "약 20km" },
-    { name: "소래습지생태공원",    type: "갯벌",  dist: "약 15km" },
-    { name: "시흥 오이도 갯벌",    type: "갯벌",  dist: "약 35km" },
-    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km" },
+    { name: "강화 여차리 갯벌",     type: "갯벌", dist: "약 45km", timeOffsetMin:  20, rangeRatio: 1.05, mapQuery: "강화 여차리 갯벌" },
+    { name: "영종도 북쪽 갯벌",     type: "갯벌", dist: "약 20km", timeOffsetMin:  -5, rangeRatio: 0.97, mapQuery: "영종도 북쪽 갯벌" },
+    { name: "소래습지생태공원",     type: "갯벌", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, mapQuery: "소래습지생태공원" },
+    { name: "시흥 오이도 갯벌",     type: "갯벌", dist: "약 35km", timeOffsetMin:  25, rangeRatio: 0.87, mapQuery: "오이도 갯벌" },
+    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, mapQuery: "대부도 방아머리 갯벌" },
   ],
   fishing: [
-    { name: "소래포구 방파제",      type: "방파제", dist: "약 15km" },
-    { name: "인천항 갑문 선착장",   type: "선착장", dist: "약 18km" },
-    { name: "영종도 삼목선착장",    type: "선착장", dist: "약 22km" },
-    { name: "강화 외포리 선착장",   type: "선착장", dist: "약 45km" },
-    { name: "대부도 방아머리항",    type: "항구",   dist: "약 50km" },
+    { name: "소래포구 방파제",    type: "방파제", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, mapQuery: "소래포구 방파제" },
+    { name: "인천항 갑문 선착장", type: "선착장", dist: "약 18km", timeOffsetMin:   0, rangeRatio: 1.00, mapQuery: "인천항 갑문 선착장" },
+    { name: "영종도 삼목선착장",  type: "선착장", dist: "약 22km", timeOffsetMin:  -5, rangeRatio: 0.97, mapQuery: "영종도 삼목선착장" },
+    { name: "강화 외포리 선착장", type: "선착장", dist: "약 45km", timeOffsetMin:  25, rangeRatio: 1.02, mapQuery: "강화 외포리 선착장" },
+    { name: "대부도 방아머리항",  type: "항구",   dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, mapQuery: "대부도 방아머리항" },
   ],
 };
 
@@ -689,7 +690,7 @@ function TideSection() {
 
   if (!report) return null;
 
-  const { multtae, todayTides, nextLowTide, haerujil, fishing, bestDaysThisMonth, seasonalNote } = report;
+  const { multtae, todayTides, nextLowTide, haerujil, fishing, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
   const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
@@ -702,10 +703,15 @@ function TideSection() {
   };
   const rm = ratingMeta[activity.rating];
 
-  const bestDays = tab === "haerujil" ? bestDaysThisMonth.haerujil : bestDaysThisMonth.fishing;
-  const today = new Date().getDate();
   const spots = TIDE_SPOTS[tab];
   const maxH = Math.max(...todayTides.map(t => t.heightM));
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+
+  // 분 → HH:MM 변환 (인라인)
+  const toTime = (min: number) => {
+    const m = ((min % 1440) + 1440) % 1440;
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  };
 
   return (
     <>
@@ -809,40 +815,54 @@ function TideSection() {
             </p>
           </div>
           <div className="divide-y divide-gray-50">
-            {spots.map((s, i) => (
-              <div key={i} className="flex items-center justify-between px-4 py-2.5">
-                <div>
-                  <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                  <p className="text-[10px] text-gray-400">{s.type}</p>
+            {spots.map((s, i) => {
+              // 스팟별 조석 보정
+              const spotRange = parseFloat((multtae.rangeM * s.rangeRatio).toFixed(1));
+              const spotLowTides = todayTides
+                .filter(t => t.type === "low")
+                .map(t => {
+                  const corrMin = ((t.minutes + s.timeOffsetMin) + 1440) % 1440;
+                  return { ...t, minutes: corrMin, timeStr: toTime(corrMin) };
+                });
+              const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
+              const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
+
+              return (
+                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="text-[10px] text-gray-400">{s.type} · {s.dist}</span>
+                      {!sameAsIncheon && nextSpotLow && (
+                        <>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">
+                            저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
+                          </span>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">조차 <span className="font-semibold">{spotRange}m</span></span>
+                        </>
+                      )}
+                      {sameAsIncheon && (
+                        <>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-400">인천과 동일</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={`https://map.naver.com/v5/search/${encodeURIComponent(s.mapQuery)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-green-50 text-[11px] font-bold text-green-700"
+                  >
+                    지도 ↗
+                  </a>
                 </div>
-                <span className="text-[11px] text-gray-400 font-medium">{s.dist}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
-
-        {/* ── 이달 추천일 ── */}
-        {bestDays.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-100 px-4 py-3">
-            <p className="text-[11px] font-bold text-gray-500 mb-2.5">
-              이달 {tab === "haerujil" ? "해루질" : "낚시"} 추천일
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {bestDays.map(d => (
-                <span key={d}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                    d === today
-                      ? "bg-[#1d1d1f] text-white"
-                      : d < today
-                      ? "bg-gray-100 text-gray-300"
-                      : "bg-blue-50 text-blue-600"
-                  }`}>
-                  {d}일
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* ── 계절 안내 ── */}
         {seasonalNote && (
