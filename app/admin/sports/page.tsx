@@ -6,7 +6,9 @@ import {
   adminUpdateSportsMatch,
   adminDeleteSportsMatch,
   adminFetchSportsAssets,
-  adminSaveSportsAssets,
+  adminSaveTeamLogo,
+  adminSaveLeagueLogo,
+  adminSaveBroadcastChannels,
   TEAM_META,
   TEAM_LOGOS,
   LEAGUE_STYLES,
@@ -53,12 +55,32 @@ function statusBadge(s: MatchStatus) {
   return <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">예정</span>;
 }
 
-// 컴팩트 업로드 버튼 — 클릭 시 파일 선택 + 즉시 업로드
+// 클라이언트 사이드 이미지 압축 (Canvas API)
+async function compressLogo(file: File): Promise<Blob> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 256;
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob ?? file), "image/jpeg", 0.85);
+    };
+    img.onerror = () => resolve(file);
+    img.src = objectUrl;
+  });
+}
+
+// 컴팩트 업로드 버튼 — 클릭 시 압축 후 base64 data URL 반환 (Storage 불필요)
 function LogoUploadButton({
-  currentUrl, onUpload, onRemove, folder,
+  currentUrl, onUpload, onRemove,
 }: {
-  currentUrl?: string; onUpload: (url: string) => void;
-  onRemove: () => void; folder: string;
+  currentUrl?: string; onUpload: (url: string) => void; onRemove: () => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -68,15 +90,17 @@ function LogoUploadButton({
     setErr(null);
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("folder", folder);
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
-      const json = await res.json() as { url?: string; error?: string };
-      if (!res.ok) throw new Error(json.error ?? "업로드 실패");
-      onUpload(json.url!);
+      // 클라이언트에서 256×256 압축 → base64 직접 반환 (서버 업로드 불필요)
+      const blob = await compressLogo(file);
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.onerror = rej;
+        reader.readAsDataURL(blob);
+      });
+      onUpload(base64);
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "업로드 실패");
+      setErr(e instanceof Error ? e.message : "처리 실패");
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -192,47 +216,65 @@ export default function AdminSportsPage() {
   }
   useEffect(() => { if (tab === "assets") loadAssets(); }, [tab]);
 
-  async function saveAssets(updated: SportsAssets) {
+  async function updateTeamLogo(tc: TeamCode, url: string | null) {
     setSavingAssets(true);
     try {
-      await adminSaveSportsAssets(updated);
-      setAssets(updated);
+      await adminSaveTeamLogo(tc, url);
+      setAssets(prev => {
+        const teamLogos = { ...prev.teamLogos };
+        if (url) teamLogos[tc] = url; else delete teamLogos[tc];
+        return { ...prev, teamLogos };
+      });
       showToast("저장됐어요");
-    } catch { showToast("저장 실패", false); }
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "저장 실패", false);
+    }
     setSavingAssets(false);
   }
 
-  function updateTeamLogo(tc: TeamCode, url: string | null) {
-    const updated = {
-      ...assets,
-      teamLogos: { ...assets.teamLogos },
-    };
-    if (url) updated.teamLogos[tc] = url;
-    else delete updated.teamLogos[tc];
-    saveAssets(updated);
+  async function updateLeagueLogo(league: string, url: string | null) {
+    setSavingAssets(true);
+    try {
+      await adminSaveLeagueLogo(league, url);
+      setAssets(prev => {
+        const leagueLogos = { ...prev.leagueLogos };
+        if (url) leagueLogos[league] = url; else delete leagueLogos[league];
+        return { ...prev, leagueLogos };
+      });
+      showToast("저장됐어요");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "저장 실패", false);
+    }
+    setSavingAssets(false);
   }
 
-  function updateLeagueLogo(league: string, url: string | null) {
-    const updated = {
-      ...assets,
-      leagueLogos: { ...assets.leagueLogos },
-    };
-    if (url) updated.leagueLogos[league] = url;
-    else delete updated.leagueLogos[league];
-    saveAssets(updated);
-  }
-
-  function addChannel() {
+  async function addChannel() {
     const ch = newChannel.trim();
     if (!ch || assets.broadcastChannels.includes(ch)) return;
-    const updated = { ...assets, broadcastChannels: [...assets.broadcastChannels, ch] };
-    saveAssets(updated);
-    setNewChannel("");
+    const next = [...assets.broadcastChannels, ch];
+    setSavingAssets(true);
+    try {
+      await adminSaveBroadcastChannels(next);
+      setAssets(prev => ({ ...prev, broadcastChannels: next }));
+      setNewChannel("");
+      showToast("저장됐어요");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "저장 실패", false);
+    }
+    setSavingAssets(false);
   }
 
-  function removeChannel(ch: string) {
-    const updated = { ...assets, broadcastChannels: assets.broadcastChannels.filter(c => c !== ch) };
-    saveAssets(updated);
+  async function removeChannel(ch: string) {
+    const next = assets.broadcastChannels.filter(c => c !== ch);
+    setSavingAssets(true);
+    try {
+      await adminSaveBroadcastChannels(next);
+      setAssets(prev => ({ ...prev, broadcastChannels: next }));
+      showToast("저장됐어요");
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "저장 실패", false);
+    }
+    setSavingAssets(false);
   }
 
   return (
@@ -383,7 +425,6 @@ export default function AdminSportsPage() {
                           currentUrl={uploadedUrl}
                           onUpload={url => updateTeamLogo(tc, url)}
                           onRemove={() => updateTeamLogo(tc, null)}
-                          folder="sports/teams"
                         />
                       </div>
                     );
@@ -422,7 +463,6 @@ export default function AdminSportsPage() {
                           currentUrl={uploadedUrl}
                           onUpload={url => updateLeagueLogo(league, url)}
                           onRemove={() => updateLeagueLogo(league, null)}
-                          folder="sports/leagues"
                         />
                       </div>
                     );

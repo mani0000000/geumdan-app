@@ -133,6 +133,8 @@ export async function adminDeleteSportsMatch(id: string): Promise<void> {
 }
 
 // ─── 로고 & 채널 설정 ─────────────────────────────────────────
+// 각 로고를 개별 site_settings 키로 분리 저장 (value 크기 제한 우회)
+// sports_team_logo_{teamCode}, sports_league_logo_{encoded}, sports_broadcast_channels
 
 export interface SportsAssets {
   teamLogos: Partial<Record<TeamCode, string>>;
@@ -146,29 +148,99 @@ export const DEFAULT_SPORTS_ASSETS: SportsAssets = {
   broadcastChannels: ["SPOTV", "SPOTV2", "MBC스포츠", "KBS N스포츠", "SBS Sports", "tvN스포츠", "쿠팡플레이", "네이버스포츠", "유튜브"],
 };
 
-export async function adminFetchSportsAssets(): Promise<SportsAssets> {
-  try {
-    const rows = await adminApiGet<{ key: string; value: string }>("site_settings", {
-      select: "key,value",
-      eq: "key=eq.sports_assets",
-    });
-    if (rows[0]?.value) return { ...DEFAULT_SPORTS_ASSETS, ...JSON.parse(rows[0].value) };
-  } catch {}
-  return { ...DEFAULT_SPORTS_ASSETS };
+function leagueKey(league: string) {
+  return `sports_league_logo_${league.replace(/[^a-zA-Z0-9가-힣]/g, "_")}`;
 }
 
-export async function adminSaveSportsAssets(assets: SportsAssets): Promise<void> {
-  await adminApiPost("site_settings", "POST", [{ key: "sports_assets", value: JSON.stringify(assets) }], { onConflict: "key" });
+async function settingsGet(key: string): Promise<string | null> {
+  try {
+    const res = await fetch(`/api/admin/settings?key=${encodeURIComponent(key)}`);
+    if (!res.ok) return null;
+    const json = await res.json() as { value?: string | null };
+    return json.value ?? null;
+  } catch { return null; }
+}
+
+async function settingsSet(key: string, value: string): Promise<void> {
+  const res = await fetch("/api/admin/settings", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ key, value }),
+  });
+  const json = await res.json() as { error?: string };
+  if (!res.ok) throw new Error(json.error ?? `설정 저장 실패 (${res.status})`);
+}
+
+export async function adminFetchSportsAssets(): Promise<SportsAssets> {
+  try {
+    // 각 팀 로고 로드
+    const teamLogos: Partial<Record<TeamCode, string>> = {};
+    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","incheon_el","national"];
+    await Promise.all(teamCodes.map(async tc => {
+      const v = await settingsGet(`sports_team_logo_${tc}`);
+      if (v) teamLogos[tc] = v;
+    }));
+
+    // 각 리그 로고 로드
+    const leagueLogos: Partial<Record<string, string>> = {};
+    const leagues = ["K리그1","KBO","V리그","KBL","A매치"];
+    await Promise.all(leagues.map(async lg => {
+      const v = await settingsGet(leagueKey(lg));
+      if (v) leagueLogos[lg] = v;
+    }));
+
+    // 방송채널 로드
+    const chJson = await settingsGet("sports_broadcast_channels");
+    const channels = chJson ? JSON.parse(chJson) as string[] : DEFAULT_SPORTS_ASSETS.broadcastChannels;
+
+    return { teamLogos, leagueLogos, broadcastChannels: channels };
+  } catch {
+    return { ...DEFAULT_SPORTS_ASSETS };
+  }
+}
+
+export async function adminSaveTeamLogo(tc: TeamCode, url: string | null): Promise<void> {
+  const key = `sports_team_logo_${tc}`;
+  await settingsSet(key, url ?? "");
+}
+
+export async function adminSaveLeagueLogo(league: string, url: string | null): Promise<void> {
+  await settingsSet(leagueKey(league), url ?? "");
+}
+
+export async function adminSaveBroadcastChannels(channels: string[]): Promise<void> {
+  await settingsSet("sports_broadcast_channels", JSON.stringify(channels));
 }
 
 export async function fetchSportsAssets(): Promise<SportsAssets> {
   try {
-    const res = await fetch(`/api/admin/db?table=site_settings&select=key,value&eq=key=eq.sports_assets`);
+    // 공개 DB 라우트로 일괄 조회 (site_settings 키 패턴 매칭)
+    const res = await fetch(`/api/admin/db?table=site_settings&select=key,value&eq=key=like.sports_%25`);
     if (!res.ok) return { ...DEFAULT_SPORTS_ASSETS };
     const { data } = await res.json() as { data?: { key: string; value: string }[] };
-    if (data?.[0]?.value) return { ...DEFAULT_SPORTS_ASSETS, ...JSON.parse(data[0].value) };
-  } catch {}
-  return { ...DEFAULT_SPORTS_ASSETS };
+    if (!data?.length) return { ...DEFAULT_SPORTS_ASSETS };
+
+    const map = Object.fromEntries(data.map(r => [r.key, r.value]));
+    const teamLogos: Partial<Record<TeamCode, string>> = {};
+    const leagueLogos: Partial<Record<string, string>> = {};
+    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","incheon_el","national"];
+    const leagues = ["K리그1","KBO","V리그","KBL","A매치"];
+
+    for (const tc of teamCodes) {
+      const v = map[`sports_team_logo_${tc}`];
+      if (v) teamLogos[tc] = v;
+    }
+    for (const lg of leagues) {
+      const v = map[leagueKey(lg)];
+      if (v) leagueLogos[lg] = v;
+    }
+    const chJson = map["sports_broadcast_channels"];
+    const channels = chJson ? JSON.parse(chJson) as string[] : DEFAULT_SPORTS_ASSETS.broadcastChannels;
+
+    return { teamLogos, leagueLogos, broadcastChannels: channels };
+  } catch {
+    return { ...DEFAULT_SPORTS_ASSETS };
+  }
 }
 
 export async function fetchUpcomingSportsMatches(limit = 20): Promise<SportsMatch[]> {
