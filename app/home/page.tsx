@@ -662,6 +662,23 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
+const TIDE_SPOTS = {
+  haerujil: [
+    { name: "강화 여차리 갯벌",    type: "갯벌",  dist: "약 45km" },
+    { name: "영종도 북쪽 갯벌",    type: "갯벌",  dist: "약 20km" },
+    { name: "소래습지생태공원",    type: "갯벌",  dist: "약 15km" },
+    { name: "시흥 오이도 갯벌",    type: "갯벌",  dist: "약 35km" },
+    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km" },
+  ],
+  fishing: [
+    { name: "소래포구 방파제",      type: "방파제", dist: "약 15km" },
+    { name: "인천항 갑문 선착장",   type: "선착장", dist: "약 18km" },
+    { name: "영종도 삼목선착장",    type: "선착장", dist: "약 22km" },
+    { name: "강화 외포리 선착장",   type: "선착장", dist: "약 45km" },
+    { name: "대부도 방아머리항",    type: "항구",   dist: "약 50km" },
+  ],
+};
+
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
   const [tab, setTab] = useState<"haerujil" | "fishing">("haerujil");
@@ -675,117 +692,150 @@ function TideSection() {
   const { multtae, todayTides, nextLowTide, haerujil, fishing, bestDaysThisMonth, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
-  const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기(조금)";
-  const sizeColor = multtae.size === "large" ? "#0071e3" : multtae.size === "medium" ? "#2F9E44" : "#6B7684";
+  const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
+  const sizeColor = multtae.size === "large" ? "#0071e3" : multtae.size === "medium" ? "#34C759" : "#8E8E93";
 
-  const ratingColors: Record<ConditionRating, { bg: string; text: string; bar: string }> = {
-    excellent: { bg: "#E8F5E9", text: "#2E7D32", bar: "#4CAF50" },
-    good:      { bg: "#E3F2FD", text: "#1565C0", bar: "#2196F3" },
-    poor:      { bg: "#FBE9E7", text: "#BF360C", bar: "#FF7043" },
+  const ratingMeta: Record<ConditionRating, { label: string; bg: string; text: string; accent: string }> = {
+    excellent: { label: "최적",   bg: "#F0FDF4", text: "#15803D", accent: "#16A34A" },
+    good:      { label: "가능",   bg: "#EFF6FF", text: "#1D4ED8", accent: "#2563EB" },
+    poor:      { label: "어려움", bg: "#FFF1F2", text: "#BE123C", accent: "#E11D48" },
   };
-  const rc = ratingColors[activity.rating];
+  const rm = ratingMeta[activity.rating];
 
   const bestDays = tab === "haerujil" ? bestDaysThisMonth.haerujil : bestDaysThisMonth.fishing;
   const today = new Date().getDate();
+  const spots = TIDE_SPOTS[tab];
+  const maxH = Math.max(...todayTides.map(t => t.heightM));
 
   return (
     <>
       <SectionLabel label="서해안 조석 정보" />
-      <section className="mx-4 mb-1">
-        {/* 물때 헤더 카드 */}
-        <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
+      <section className="mx-4 mb-1 space-y-3">
+
+        {/* ── 물때 + 조석 차트 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 pt-4 pb-3 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[22px] font-black text-[#1d1d1f]">{multtae.number}물</span>
+                <span className="text-[26px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
                 <span className="text-[16px] font-bold text-[#1d1d1f]">{multtae.name}</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: sizeColor }}>
                   {sizeLabel}
                 </span>
               </div>
-              <p className="text-[12px] text-gray-500 mt-0.5">
-                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 약 {multtae.rangeM}m
+              <p className="text-[11px] text-gray-400 mt-1">
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-[11px] text-gray-400">다음 저조</p>
-              <p className="text-[16px] font-black text-[#0071e3]">
-                {nextLowTide ? nextLowTide.timeStr : "--:--"}
-              </p>
-            </div>
+            {nextLowTide && (
+              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[68px]">
+                <p className="text-[9px] text-blue-400 font-semibold">다음 저조</p>
+                <p className="text-[18px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
+              </div>
+            )}
           </div>
 
-          {/* 조석 타임라인 */}
-          <div className="flex items-end gap-1.5 h-12 mb-1">
-            {todayTides.map((t, i) => {
-              const heightRatio = t.type === "high" ? 1 : 0.15;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                  <div className="w-full rounded-t-lg transition-all"
-                    style={{
-                      height: `${Math.round(heightRatio * 40 + 4)}px`,
-                      background: t.type === "high" ? "#0071e3" : "#93C5FD",
-                    }} />
-                  <span className="text-[9px] text-gray-400 font-semibold">{t.timeStr}</span>
-                  <span className="text-[8px] text-gray-300">{t.type === "high" ? "고조" : "저조"}</span>
-                </div>
-              );
-            })}
+          {/* 조석 차트 */}
+          <div className="border-t border-gray-50 px-3 pt-3 pb-4">
+            <div className="flex gap-1.5 items-end" style={{ height: "72px" }}>
+              {todayTides.map((t, i) => {
+                const ratio = t.heightM / maxH;
+                const barH = Math.max(6, Math.round(ratio * 44));
+                const isLow = t.type === "low";
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+                    <span className="text-[9px] font-bold leading-none mb-0.5"
+                      style={{ color: isLow ? "#9CA3AF" : "#0071e3" }}>
+                      {t.heightM}m
+                    </span>
+                    <div className="w-full rounded-t-md"
+                      style={{ height: `${barH}px`, background: isLow ? "#BFDBFE" : "#0071e3" }} />
+                    <span className="text-[10px] font-semibold text-[#1d1d1f] mt-1">{t.timeStr}</span>
+                    <span className="text-[9px] text-gray-400">{isLow ? "저조" : "고조"}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* 탭 */}
-        <div className="flex gap-2 mb-3">
+        {/* ── 탭 ── */}
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
-                tab === key ? "bg-[#1d1d1f] text-white" : "bg-white text-gray-500 border border-gray-200"
+              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-400"
               }`}>
               {label}
             </button>
           ))}
         </div>
 
-        {/* 조건 카드 */}
-        <div className="rounded-2xl p-4 mb-3" style={{ background: rc.bg }}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[15px] font-extrabold" style={{ color: rc.text }}>
-              {activity.title}
-            </span>
-            <div className="flex gap-0.5">
-              {[1, 2, 3].map(n => (
-                <div key={n} className="w-5 h-5 rounded-full border-2"
-                  style={{
-                    background: n <= activity.stars ? rc.bar : "transparent",
-                    borderColor: rc.bar,
-                  }} />
-              ))}
+        {/* ── 활동 조건 카드 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 pt-4 pb-3" style={{ background: rm.bg }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-extrabold" style={{ color: rm.text }}>
+                  {tab === "haerujil" ? "해루질" : "낚시"} {rm.label}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                  style={{ background: rm.accent }}>
+                  {activity.title}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="w-4 h-4 rounded-full"
+                    style={{ background: n <= activity.stars ? rm.accent : "rgba(0,0,0,0.1)" }} />
+                ))}
+              </div>
             </div>
+            <p className="text-[12px] leading-relaxed" style={{ color: rm.text }}>
+              {activity.reason}
+            </p>
           </div>
-          <p className="text-[13px] leading-relaxed mb-2" style={{ color: rc.text }}>
-            {activity.reason}
-          </p>
-          <div className="bg-white/60 rounded-xl px-3 py-2">
-            <p className="text-[12px] font-semibold text-gray-600">💡 {activity.tip}</p>
+          <div className="px-4 py-3 border-t border-gray-50">
+            <p className="text-[12px] text-gray-600 font-medium">💡 {activity.tip}</p>
           </div>
         </div>
 
-        {/* 이달 최적 날짜 */}
+        {/* ── 추천 스팟 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-50">
+            <p className="text-[12px] font-bold text-gray-700">
+              📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
+            </p>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {spots.map((s, i) => (
+              <div key={i} className="flex items-center justify-between px-4 py-2.5">
+                <div>
+                  <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                  <p className="text-[10px] text-gray-400">{s.type}</p>
+                </div>
+                <span className="text-[11px] text-gray-400 font-medium">{s.dist}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* ── 이달 추천일 ── */}
         {bestDays.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-            <p className="text-[12px] font-bold text-gray-500 mb-2">
+          <div className="bg-white rounded-2xl border border-gray-100 px-4 py-3">
+            <p className="text-[11px] font-bold text-gray-500 mb-2.5">
               이달 {tab === "haerujil" ? "해루질" : "낚시"} 추천일
             </p>
             <div className="flex flex-wrap gap-1.5">
               {bestDays.map(d => (
                 <span key={d}
-                  className={`text-[12px] font-bold px-2.5 py-1 rounded-full ${
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
                     d === today
                       ? "bg-[#1d1d1f] text-white"
                       : d < today
-                      ? "bg-gray-100 text-gray-400 line-through"
-                      : "bg-blue-50 text-blue-700"
+                      ? "bg-gray-100 text-gray-300"
+                      : "bg-blue-50 text-blue-600"
                   }`}>
                   {d}일
                 </span>
@@ -794,9 +844,9 @@ function TideSection() {
           </div>
         )}
 
-        {/* 계절 안내 */}
+        {/* ── 계절 안내 ── */}
         {seasonalNote && (
-          <div className="bg-amber-50 rounded-xl px-4 py-3">
+          <div className="rounded-xl bg-amber-50 px-4 py-3">
             <p className="text-[12px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
           </div>
         )}
