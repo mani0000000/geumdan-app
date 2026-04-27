@@ -164,7 +164,7 @@ function NewsTab() {
   useEffect(() => {
     refresh();
     setYtLoading(true);
-    fetchYouTubeVideosFromDB(20).then(result => {
+    fetchYouTubeVideosFromDB(200).then(result => {
       setYtVideos(result.videos);
       setYtSource(result.source);
       setYtMs(result.ms);

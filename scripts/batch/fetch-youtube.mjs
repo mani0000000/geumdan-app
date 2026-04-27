@@ -2,17 +2,7 @@
 /**
  * fetch-youtube.mjs — GitHub Actions가 1시간마다 실행
  * YouTube innertube API (키 불필요, Node.js 환경)
- * → Supabase youtube_videos 테이블에 upsert
- *
- * Supabase 테이블 스키마 (최초 1회 실행 전 생성 필요):
- *   CREATE TABLE youtube_videos (
- *     video_id     TEXT PRIMARY KEY,
- *     title        TEXT NOT NULL,
- *     channel_name TEXT,
- *     thumbnail    TEXT,
- *     url          TEXT NOT NULL,
- *     fetched_at   TIMESTAMPTZ DEFAULT NOW()
- *   );
+ * → Supabase youtube_videos 테이블에 upsert (최대 200개 누적)
  */
 import { createClient } from '@supabase/supabase-js';
 
@@ -24,7 +14,6 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-// sb_* keys are not JWTs — strip Authorization: Bearer for PostgREST
 function makeFetch(key) {
   return (input, init) => {
     const url = typeof input === 'string' ? input : input.url;
@@ -34,11 +23,16 @@ function makeFetch(key) {
     return fetch(input, { ...init, headers });
   };
 }
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, { global: { fetch: makeFetch(SUPABASE_KEY) }, auth: { autoRefreshToken: false, persistSession: false } });
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: { fetch: makeFetch(SUPABASE_KEY) },
+  auth: { autoRefreshToken: false, persistSession: false },
+});
 
-// YouTube innertube API (공개 키, 브라우저와 동일)
 const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 const INNERTUBE_URL = `https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}`;
+const INNERTUBE_CONTEXT = {
+  client: { clientName: 'WEB', clientVersion: '2.20240101.00.00', hl: 'ko', gl: 'KR' },
+};
 
 async function withTimeout(promise, ms, label) {
   return Promise.race([
@@ -47,39 +41,21 @@ async function withTimeout(promise, ms, label) {
   ]);
 }
 
-async function fetchYouTubeInnertube(query = '검단신도시') {
-  const res = await withTimeout(
-    fetch(INNERTUBE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-      body: JSON.stringify({
-        context: {
-          client: {
-            clientName: 'WEB',
-            clientVersion: '2.20240101.00.00',
-            hl: 'ko',
-            gl: 'KR',
-          },
-        },
-        query,
-      }),
-    }),
-    15000,
-    'innertube'
-  );
-
-  if (!res.ok) throw new Error(`innertube HTTP ${res.status}`);
-  const data = await res.json();
-
+function parseVideos(data) {
   const contents =
     data?.contents?.twoColumnSearchResultsRenderer?.primaryContents
       ?.sectionListRenderer?.contents ?? [];
-
   const videos = [];
+  let continuationToken = null;
+
   for (const section of contents) {
+    // continuation token for page 2
+    if (section?.continuationItemRenderer) {
+      continuationToken =
+        section.continuationItemRenderer?.continuationEndpoint
+          ?.continuationCommand?.token ?? null;
+      continue;
+    }
     for (const item of section?.itemSectionRenderer?.contents ?? []) {
       const vr = item?.videoRenderer;
       if (!vr?.videoId) continue;
@@ -91,42 +67,134 @@ async function fetchYouTubeInnertube(query = '검단신도시') {
         thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         url: `https://www.youtube.com/watch?v=${videoId}`,
       });
-      if (videos.length >= 20) break;
     }
-    if (videos.length >= 20) break;
+  }
+  return { videos, continuationToken };
+}
+
+function parseContinuationVideos(data) {
+  const items =
+    data?.onResponseReceivedCommands?.[0]
+      ?.appendContinuationItemsAction?.continuationItems ?? [];
+  const videos = [];
+  for (const section of items) {
+    for (const item of section?.itemSectionRenderer?.contents ?? []) {
+      const vr = item?.videoRenderer;
+      if (!vr?.videoId) continue;
+      videos.push({
+        video_id: vr.videoId,
+        title: vr.title?.runs?.[0]?.text ?? '검단 영상',
+        channel_name: vr.ownerText?.runs?.[0]?.text ?? 'YouTube',
+        thumbnail: `https://img.youtube.com/vi/${vr.videoId}/mqdefault.jpg`,
+        url: `https://www.youtube.com/watch?v=${vr.videoId}`,
+      });
+    }
   }
   return videos;
 }
 
-// 다양한 카테고리 쿼리로 풍부한 검단 콘텐츠 수집 (라운드로빈 교차 정렬)
+async function fetchQuery(query) {
+  const res = await withTimeout(
+    fetch(INNERTUBE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+      body: JSON.stringify({ context: INNERTUBE_CONTEXT, query }),
+    }),
+    15000,
+    `search:${query}`
+  );
+  if (!res.ok) throw new Error(`innertube HTTP ${res.status}`);
+  return parseVideos(await res.json());
+}
+
+async function fetchContinuation(token) {
+  const res = await withTimeout(
+    fetch(INNERTUBE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+      body: JSON.stringify({ context: INNERTUBE_CONTEXT, continuation: token }),
+    }),
+    15000,
+    'continuation'
+  );
+  if (!res.ok) throw new Error(`continuation HTTP ${res.status}`);
+  return parseContinuationVideos(await res.json());
+}
+
+// ── 검색어 15개 — 검단 생활 전반 커버 ─────────────────────────
+const QUERIES = [
+  '검단신도시 맛집',
+  '검단신도시 카페',
+  '검단신도시 브이로그 일상',
+  '검단신도시 소식 뉴스',
+  '검단신도시 공원 산책',
+  '검단신도시 쇼핑 마트',
+  '검단신도시 부동산 아파트',
+  '검단신도시 운동 헬스',
+  '검단신도시 문화 축제 행사',
+  '검단신도시 교통 버스 지하철',
+  '검단신도시 아이 어린이 가족',
+  '검단신도시 병원 의료',
+  '인천 서구 검단 생활',
+  '검단아라 검단오류동',
+  '검단신도시 후기 정보',
+];
+
 async function fetchAllQueries() {
-  const queries = [
-    '검단신도시 맛집',
-    '검단신도시 카페',
-    '검단신도시 공원 볼거리',
-    '검단신도시 브이로그 일상',
-    '검단신도시 소식 뉴스',
-  ];
-  const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
+  const results = await Promise.allSettled(QUERIES.map(q => fetchQuery(q)));
 
-  // 카테고리별 버킷에 담기
-  const buckets = results.map(r => (r.status === 'fulfilled' ? r.value : []));
+  // 1차: 각 쿼리 첫 페이지 (라운드로빈)
+  const buckets = results.map((r, i) => {
+    if (r.status === 'fulfilled') return r.value.videos;
+    console.warn(`  ⚠️ 쿼리 실패: ${QUERIES[i]}`);
+    return [];
+  });
+  const continuationTokens = results.map(r =>
+    r.status === 'fulfilled' ? r.value.continuationToken : null
+  );
 
-  // 라운드로빈: 각 카테고리에서 1개씩 교차 → 주제 균형 보장
   const seen = new Set();
   const all = [];
-  const maxRounds = 6;
-  for (let round = 0; round < maxRounds; round++) {
+
+  // 라운드로빈으로 1페이지 교차 수집
+  const maxRound1 = Math.max(...buckets.map(b => b.length));
+  for (let i = 0; i < maxRound1; i++) {
     for (const bucket of buckets) {
-      const v = bucket[round];
-      if (!v) continue;
-      if (!seen.has(v.video_id)) {
-        seen.add(v.video_id);
-        all.push(v);
-      }
+      if (i >= bucket.length) continue;
+      const v = bucket[i];
+      if (!seen.has(v.video_id)) { seen.add(v.video_id); all.push(v); }
     }
   }
-  return all.slice(0, 30);
+  console.log(`  1페이지 수집: ${all.length}개`);
+
+  // 2차: continuation token으로 2페이지 수집 (200개 미만인 경우)
+  if (all.length < 200) {
+    const contFetches = continuationTokens
+      .map((t, i) => t ? { token: t, query: QUERIES[i] } : null)
+      .filter(Boolean);
+
+    const contResults = await Promise.allSettled(
+      contFetches.map(({ token }) => fetchContinuation(token))
+    );
+
+    const contBuckets = contResults.map((r, i) => {
+      if (r.status === 'fulfilled') return r.value;
+      console.warn(`  ⚠️ 2페이지 실패: ${contFetches[i].query}`);
+      return [];
+    });
+
+    const maxRound2 = Math.max(...contBuckets.map(b => b.length), 0);
+    for (let i = 0; i < maxRound2; i++) {
+      for (const bucket of contBuckets) {
+        if (i >= bucket.length) continue;
+        const v = bucket[i];
+        if (!seen.has(v.video_id)) { seen.add(v.video_id); all.push(v); }
+      }
+    }
+    console.log(`  2페이지 추가 후: ${all.length}개`);
+  }
+
+  return all.slice(0, 200);
 }
 
 // ── 실행 ──────────────────────────────────────────────────────
@@ -136,9 +204,9 @@ const t0 = Date.now();
 let videos;
 try {
   videos = await fetchAllQueries();
-  console.log(`  ✓ innertube API: ${videos.length}개 수집`);
+  console.log(`  ✓ 총 ${videos.length}개 수집`);
 } catch (e) {
-  console.error('  ❌ innertube 오류:', e.message);
+  console.error('  ❌ 수집 오류:', e.message);
   process.exit(1);
 }
 
@@ -147,7 +215,6 @@ if (videos.length === 0) {
   process.exit(0);
 }
 
-// Supabase upsert
 const now = new Date().toISOString();
 const rows = videos.map(v => ({ ...v, fetched_at: now }));
 
@@ -156,9 +223,8 @@ const { error } = await supabase
   .upsert(rows, { onConflict: 'video_id' });
 
 if (error) {
-  console.warn('⚠️  Supabase upsert 실패 (테이블 미생성 또는 연결 오류):', error.message);
-  console.warn('   → supabase/migrations/20260419_news_youtube.sql 을 Supabase에서 실행하세요.');
+  console.warn('⚠️  Supabase upsert 실패:', error.message);
   process.exit(0);
 }
 
-console.log(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s): ${videos.length}개 영상 Supabase 저장`);
+console.log(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s): ${videos.length}개 Supabase 저장`);
