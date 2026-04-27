@@ -34,8 +34,9 @@ import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import {
-  fetchUpcomingSportsMatches, TEAM_META, LEAGUE_STYLES, TEAM_LOGOS, LEAGUE_STANDINGS,
-  type SportsMatch, type TeamCode, type Standing,
+  fetchUpcomingSportsMatches, fetchSportsAssets, TEAM_META, LEAGUE_STYLES, TEAM_LOGOS, LEAGUE_STANDINGS,
+  DEFAULT_SPORTS_ASSETS,
+  type SportsMatch, type TeamCode, type Standing, type SportsAssets,
 } from "@/lib/db/sports";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import type { YouTubeVideo } from "@/lib/api/news";
@@ -903,16 +904,21 @@ function _getMatchResult(m: SportsMatch): "WIN" | "LOSE" | "DRAW" | null {
   return "DRAW";
 }
 
-function SportTeamLogo({ teamCode, teamName, size = 44 }: { teamCode?: TeamCode; teamName: string; size?: number }) {
+function SportTeamLogo({
+  teamCode, teamName, size = 44, logoUrl,
+}: { teamCode?: TeamCode; teamName: string; size?: number; logoUrl?: string }) {
   const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
   const bg = logo?.bg ?? _nameToColor(teamName);
   const abbr = logo?.abbr ?? _getInitials(teamName);
   const fg = logo?.fg ?? "#ffffff";
   return (
     <div className="flex flex-col items-center gap-1" style={{ width: size + 20 }}>
-      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm"
-        style={{ width: size, height: size, background: bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
-        {abbr}
+      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm overflow-hidden"
+        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
+        ) : abbr}
       </div>
       <p className="text-[9px] text-gray-500 text-center font-semibold leading-tight"
         style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
@@ -925,10 +931,12 @@ function SportTeamLogo({ teamCode, teamName, size = 44 }: { teamCode?: TeamCode;
 // ─── 스포츠 위젯 ─────────────────────────────────────────────
 function SportsSection() {
   const [matches, setMatches] = useState<SportsMatch[] | null>(null);
+  const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
   const [filter, setFilter] = useState<string>("전체");
 
   useEffect(() => {
     fetchUpcomingSportsMatches(30).then(setMatches).catch(() => setMatches([]));
+    fetchSportsAssets().then(setAssets).catch(() => {});
   }, []);
 
   if (!matches?.length) return null;
@@ -989,6 +997,8 @@ function SportsSection() {
               const oppName = isHome ? m.away_team : m.home_team;
               const myScore = isHome ? m.home_score : m.away_score;
               const oppScore = isHome ? m.away_score : m.home_score;
+              const teamLogoUrl = assets.teamLogos[m.team_code];
+              const leagueLogoUrl = assets.leagueLogos[meta.league];
 
               return (
                 <div key={m.id}
@@ -998,9 +1008,15 @@ function SportsSection() {
                   {/* 리그 그라디언트 헤더 */}
                   <div className="px-3 py-2.5 flex items-center justify-between"
                     style={{ background: ls?.gradient ?? meta.color }}>
-                    <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">
-                      {meta.league}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {leagueLogoUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={leagueLogoUrl} alt={meta.league} className="w-5 h-5 object-contain rounded" />
+                      )}
+                      <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">
+                        {meta.league}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1.5">
                       {isLive && (
                         <span className="text-[10px] font-black text-white animate-pulse bg-red-500 px-1.5 py-0.5 rounded-full">
@@ -1031,7 +1047,7 @@ function SportsSection() {
                   <div className="px-3 py-3 flex-1">
                     {hasScore ? (
                       <div className="flex items-center justify-between gap-1">
-                        <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} />
+                        <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
                         <div className="flex flex-col items-center flex-shrink-0">
                           <div className="flex items-center gap-1.5">
                             <span className="text-[28px] font-black leading-none text-[#1d1d1f]">
@@ -1050,7 +1066,7 @@ function SportsSection() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-between gap-1 py-1">
-                        <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} />
+                        <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
                         <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
                         <SportTeamLogo teamName={oppName} size={44} />
                       </div>

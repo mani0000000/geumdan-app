@@ -132,6 +132,45 @@ export async function adminDeleteSportsMatch(id: string): Promise<void> {
   await adminApiPost("sports_matches", "DELETE", undefined, { eq: `id=eq.${id}` });
 }
 
+// ─── 로고 & 채널 설정 ─────────────────────────────────────────
+
+export interface SportsAssets {
+  teamLogos: Partial<Record<TeamCode, string>>;
+  leagueLogos: Partial<Record<string, string>>;
+  broadcastChannels: string[];
+}
+
+export const DEFAULT_SPORTS_ASSETS: SportsAssets = {
+  teamLogos: {},
+  leagueLogos: {},
+  broadcastChannels: ["SPOTV", "SPOTV2", "MBC스포츠", "KBS N스포츠", "SBS Sports", "tvN스포츠", "쿠팡플레이", "네이버스포츠", "유튜브"],
+};
+
+export async function adminFetchSportsAssets(): Promise<SportsAssets> {
+  try {
+    const rows = await adminApiGet<{ key: string; value: string }>("site_settings", {
+      select: "key,value",
+      eq: "key=eq.sports_assets",
+    });
+    if (rows[0]?.value) return { ...DEFAULT_SPORTS_ASSETS, ...JSON.parse(rows[0].value) };
+  } catch {}
+  return { ...DEFAULT_SPORTS_ASSETS };
+}
+
+export async function adminSaveSportsAssets(assets: SportsAssets): Promise<void> {
+  await adminApiPost("site_settings", "POST", [{ key: "sports_assets", value: JSON.stringify(assets) }], { onConflict: "key" });
+}
+
+export async function fetchSportsAssets(): Promise<SportsAssets> {
+  try {
+    const res = await fetch(`/api/admin/db?table=site_settings&select=key,value&eq=key=eq.sports_assets`);
+    if (!res.ok) return { ...DEFAULT_SPORTS_ASSETS };
+    const { data } = await res.json() as { data?: { key: string; value: string }[] };
+    if (data?.[0]?.value) return { ...DEFAULT_SPORTS_ASSETS, ...JSON.parse(data[0].value) };
+  } catch {}
+  return { ...DEFAULT_SPORTS_ASSETS };
+}
+
 export async function fetchUpcomingSportsMatches(limit = 20): Promise<SportsMatch[]> {
   try {
     const res = await fetch(
