@@ -49,12 +49,23 @@ function PharmacyModal({ initial, onSave, onClose }: {
     if (!form.address.trim()) { setErr("주소를 입력하세요."); return; }
     setSaving(true);
     try {
-      await adminUpsertPharmacy({
+      const payload = {
         ...form,
         weekday_hours: form.weekday_hours || null,
         weekend_hours: form.weekend_hours || null,
         night_hours: form.night_hours || null,
-      });
+      };
+      try {
+        await adminUpsertPharmacy(payload);
+      } catch (firstErr: unknown) {
+        const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+        if (msg.includes("PGRST204") || msg.includes("logo_url") || msg.includes("schema cache")) {
+          await fetch("/api/admin/init-db", { method: "POST" });
+          await adminUpsertPharmacy(payload);
+        } else {
+          throw firstErr;
+        }
+      }
       onSave();
       onClose();
     } catch (e: unknown) {
@@ -163,7 +174,10 @@ export default function AdminPharmacyPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    fetch("/api/admin/init-db", { method: "POST" }).catch(() => {});
+  }, [load]);
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`'${name}'을(를) 삭제할까요?`)) return;

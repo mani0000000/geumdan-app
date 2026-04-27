@@ -51,7 +51,17 @@ function EmergencyModal({ initial, onSave, onClose }: {
     if (!form.address.trim()) { setErr("주소를 입력하세요."); return; }
     setSaving(true);
     try {
-      await adminUpsertEmergencyRoom(form);
+      try {
+        await adminUpsertEmergencyRoom(form);
+      } catch (firstErr: unknown) {
+        const msg = firstErr instanceof Error ? firstErr.message : String(firstErr);
+        if (msg.includes("PGRST204") || msg.includes("logo_url") || msg.includes("schema cache")) {
+          await fetch("/api/admin/init-db", { method: "POST" });
+          await adminUpsertEmergencyRoom(form);
+        } else {
+          throw firstErr;
+        }
+      }
       onSave();
       onClose();
     } catch (e: unknown) {
@@ -150,7 +160,10 @@ export default function AdminEmergencyPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    fetch("/api/admin/init-db", { method: "POST" }).catch(() => {});
+  }, [load]);
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`'${name}'을(를) 삭제할까요?`)) return;
