@@ -149,6 +149,7 @@ export default function AdminSportsPage() {
   const [savingAssets, setSavingAssets] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [newChannel, setNewChannel] = useState("");
+  const [rlsError, setRlsError] = useState(false);
 
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok });
@@ -211,10 +212,21 @@ export default function AdminSportsPage() {
   // ─── 로고 & 채널 로직 ───────────────────
   async function loadAssets() {
     setLoadingAssets(true);
+    // Proactively ensure anon write policies exist on site_settings
+    fetch("/api/admin/fix-rls", { method: "POST" }).catch(() => {});
     try { setAssets(await adminFetchSportsAssets()); } catch {}
     setLoadingAssets(false);
   }
   useEffect(() => { if (tab === "assets") loadAssets(); }, [tab]);
+
+  function handleSaveError(e: unknown) {
+    const msg = e instanceof Error ? e.message : "저장 실패";
+    if (msg.includes("row-level security") || msg.includes("anon_insert") || msg.includes("쓰기 권한")) {
+      setRlsError(true);
+    } else {
+      showToast(msg, false);
+    }
+  }
 
   async function updateTeamLogo(tc: TeamCode, url: string | null) {
     setSavingAssets(true);
@@ -226,9 +238,7 @@ export default function AdminSportsPage() {
         return { ...prev, teamLogos };
       });
       showToast("저장됐어요");
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "저장 실패", false);
-    }
+    } catch (e) { handleSaveError(e); }
     setSavingAssets(false);
   }
 
@@ -242,9 +252,7 @@ export default function AdminSportsPage() {
         return { ...prev, leagueLogos };
       });
       showToast("저장됐어요");
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "저장 실패", false);
-    }
+    } catch (e) { handleSaveError(e); }
     setSavingAssets(false);
   }
 
@@ -258,9 +266,7 @@ export default function AdminSportsPage() {
       setAssets(prev => ({ ...prev, broadcastChannels: next }));
       setNewChannel("");
       showToast("저장됐어요");
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "저장 실패", false);
-    }
+    } catch (e) { handleSaveError(e); }
     setSavingAssets(false);
   }
 
@@ -271,9 +277,7 @@ export default function AdminSportsPage() {
       await adminSaveBroadcastChannels(next);
       setAssets(prev => ({ ...prev, broadcastChannels: next }));
       showToast("저장됐어요");
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "저장 실패", false);
-    }
+    } catch (e) { handleSaveError(e); }
     setSavingAssets(false);
   }
 
@@ -392,6 +396,27 @@ export default function AdminSportsPage() {
             </div>
           ) : (
             <>
+              {/* RLS 오류 안내 */}
+              {rlsError && (
+                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-[13px] font-bold text-red-700 mb-1">DB 쓰기 권한 오류</p>
+                      <p className="text-[12px] text-red-600 mb-2">Supabase SQL Editor에서 아래 쿼리를 실행하면 해결됩니다.</p>
+                      <pre className="bg-white border border-red-200 rounded-xl p-3 text-[11px] text-red-800 overflow-x-auto whitespace-pre-wrap leading-relaxed select-all">{`ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS anon_select ON site_settings FOR SELECT TO anon USING (true);
+CREATE POLICY IF NOT EXISTS anon_insert ON site_settings FOR INSERT TO anon WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS anon_update ON site_settings FOR UPDATE TO anon USING (true) WITH CHECK (true);
+CREATE POLICY IF NOT EXISTS anon_delete ON site_settings FOR DELETE TO anon USING (true);`}</pre>
+                    </div>
+                    <button onClick={() => setRlsError(false)} className="text-red-400 hover:text-red-600 shrink-0">
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* 팀 로고 */}
               <section>
                 <div className="flex items-center gap-2 mb-3">
