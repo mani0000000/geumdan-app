@@ -5,6 +5,7 @@ import {
   adminFetchEmergencyRooms, adminUpsertEmergencyRoom, adminDeleteEmergencyRoom, seedEmergencyRooms,
   type AdminEmergencyRoom,
 } from "@/lib/db/admin-health";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
@@ -26,6 +27,7 @@ const EMPTY: AdminEmergencyRoom = {
   id: "", name: "", address: "", phone: "",
   distance_km: null, is_pediatric: false,
   level: "지역응급의료기관",
+  logo_url: null,
 };
 
 function EmergencyModal({ initial, onSave, onClose }: {
@@ -99,6 +101,15 @@ function EmergencyModal({ initial, onSave, onClose }: {
                 onChange={e => set("is_pediatric", e.target.checked)} className="w-4 h-4" />
               <span className="text-[13px] text-[#4E5968]">소아응급실 운영</span>
             </label>
+
+            {/* 로고/사진 */}
+            <Field label="로고 또는 사진 (선택)">
+              <ImageUpload
+                value={form.logo_url}
+                onChange={url => set("logo_url", url)}
+                folder="emergency"
+              />
+            </Field>
 
             {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
           </div>

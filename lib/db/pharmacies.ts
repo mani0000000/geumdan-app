@@ -115,6 +115,7 @@ export async function fetchAllPharmacies(): Promise<Pharmacy[]> {
         weekend_hours: row.weekend_hours,
       }),
       distance: undefined,
+      logo_url: (row.logo_url as string | null) ?? null,
     }));
   } catch (err) {
     console.error('[pharmacies] Error fetching from Supabase, falling back to mock data:', err);
@@ -163,6 +164,7 @@ export async function fetchNightPharmacies(): Promise<Pharmacy[]> {
         weekend_hours: row.weekend_hours,
       }),
       distance: undefined,
+      logo_url: (row.logo_url as string | null) ?? null,
     }));
   } catch (err) {
     console.error('[pharmacies] Error fetching from Supabase, falling back to mock data:', err);
@@ -180,6 +182,7 @@ export interface EmergencyRoomRow {
   hours: string;
   isPediatric: boolean;
   level: string;
+  logo_url?: string | null;
 }
 
 export async function fetchEmergencyRooms(
@@ -218,6 +221,7 @@ export async function fetchEmergencyRooms(
       hours: '24시간 응급실 운영',
       isPediatric: (row.is_pediatric as boolean) ?? false,
       level: (row.level as string) ?? '',
+      logo_url: (row.logo_url as string | null) ?? null,
     }));
   } catch (err) {
     console.error('[emergency] Error fetching from Supabase, falling back to mock data:', err);

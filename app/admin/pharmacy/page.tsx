@@ -5,6 +5,7 @@ import {
   adminFetchPharmacies, adminUpsertPharmacy, adminDeletePharmacy, seedPharmacies,
   type AdminPharmacy,
 } from "@/lib/db/admin-health";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
@@ -24,6 +25,7 @@ const EMPTY: AdminPharmacy = {
   id: "", name: "", address: "", phone: "",
   weekday_hours: "", weekend_hours: "", night_hours: "",
   is_night_pharmacy: false, is_weekend_pharmacy: false,
+  logo_url: null,
 };
 
 function PharmacyModal({ initial, onSave, onClose }: {
@@ -116,6 +118,15 @@ function PharmacyModal({ initial, onSave, onClose }: {
                 <span className="text-[13px] text-[#4E5968]">주말약국</span>
               </label>
             </div>
+
+            {/* 로고/사진 */}
+            <Field label="로고 또는 사진 (선택)">
+              <ImageUpload
+                value={form.logo_url}
+                onChange={url => set("logo_url", url)}
+                folder="pharmacies"
+              />
+            </Field>
 
             {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
           </div>

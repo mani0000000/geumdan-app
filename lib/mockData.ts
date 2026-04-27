@@ -1592,6 +1592,7 @@ export interface Pharmacy {
   isOpenNow: boolean;            // 컴포넌트에서 재계산 권장
   tags: string[];                // e.g. ["주말", "심야", "24시"]
   distance?: string;
+  logo_url?: string | null;
 }
 
 // ---------- Nearby Marts ----------

@@ -67,6 +67,10 @@ DO $$ BEGIN
     EXECUTE 'CREATE POLICY anon_delete ON marts FOR DELETE TO anon USING (true)'; END IF;
 END $$;
 
+-- ── pharmacies / emergency_rooms logo_url ────────────────────
+ALTER TABLE IF EXISTS pharmacies ADD COLUMN IF NOT EXISTS logo_url TEXT;
+ALTER TABLE IF EXISTS emergency_rooms ADD COLUMN IF NOT EXISTS logo_url TEXT;
+
 -- ── sports_matches ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS sports_matches (
   id         TEXT PRIMARY KEY,
