@@ -1,11 +1,16 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, MapPin, Phone } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, MapPin, Phone, ExternalLink, Copy, CheckCircle2 } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchMarts, adminCreateMart, adminUpdateMart, adminDeleteMart,
   type Mart, type MartType, type MartClosingPattern,
 } from "@/lib/db/marts";
+
+const PROJECT_REF = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] ?? "";
+const SQL_EDITOR_URL = PROJECT_REF
+  ? `https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`
+  : "https://supabase.com/dashboard";
 
 const MART_TYPES: MartType[] = ["대형마트", "중형마트", "동네마트", "슈퍼마트"];
 const CLOSING_PATTERNS: { value: MartClosingPattern; label: string }[] = [
@@ -190,11 +195,21 @@ export default function AdminMartsPage() {
   const [err, setErr] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Mart | null>(null);
+  const [tableErr, setTableErr] = useState(false);
+  const [initing, setIniting] = useState(false);
+  const [initDone, setInitDone] = useState(false);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   async function reload() {
-    setLoading(true); setErr("");
+    setLoading(true); setErr(""); setTableErr(false);
     try { setMarts(await adminFetchMarts()); }
-    catch (e) { setErr(e instanceof Error ? e.message : "로드 실패"); }
+    catch (e) {
+      const msg = e instanceof Error ? e.message : "로드 실패";
+      setErr(msg);
+      if (msg.includes("PGRST205") || msg.includes("schema cache") || msg.includes("Could not find")) {
+        setTableErr(true);
+      }
+    }
     finally { setLoading(false); }
   }
   useEffect(() => { reload(); }, []);
@@ -309,30 +324,47 @@ export default function AdminMartsPage() {
         </div>
       )}
 
-      {/* Supabase 테이블 생성 안내 */}
-      <div className="mt-6 p-4 bg-[#F8F9FA] rounded-2xl border border-dashed border-[#E5E8EB]">
-        <p className="text-[12px] font-bold text-[#8B95A1] mb-2">📋 Supabase 테이블 생성 SQL</p>
-        <pre className="text-[10px] text-[#6e6e73] whitespace-pre-wrap leading-relaxed">{`CREATE TABLE IF NOT EXISTS marts (
-  id TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  brand TEXT NOT NULL DEFAULT '',
-  type TEXT NOT NULL DEFAULT '동네마트',
-  address TEXT NOT NULL DEFAULT '',
-  phone TEXT,
-  distance TEXT,
-  weekday_hours TEXT,
-  saturday_hours TEXT,
-  sunday_hours TEXT,
-  closing_pattern TEXT NOT NULL DEFAULT 'open',
-  notice TEXT,
-  logo_url TEXT,
-  lat DOUBLE PRECISION,
-  lng DOUBLE PRECISION,
-  sort_order INT NOT NULL DEFAULT 0,
-  active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);`}</pre>
-      </div>
+      {/* 테이블 없음 오류 패널 */}
+      {tableErr && (() => {
+        const sql = `CREATE TABLE IF NOT EXISTS marts (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  brand TEXT NOT NULL DEFAULT '',\n  type TEXT NOT NULL DEFAULT '동네마트',\n  address TEXT NOT NULL DEFAULT '',\n  phone TEXT,\n  distance TEXT,\n  weekday_hours TEXT,\n  saturday_hours TEXT,\n  sunday_hours TEXT,\n  closing_pattern TEXT NOT NULL DEFAULT 'open',\n  notice TEXT,\n  logo_url TEXT,\n  lat DOUBLE PRECISION,\n  lng DOUBLE PRECISION,\n  sort_order INT NOT NULL DEFAULT 0,\n  active BOOLEAN NOT NULL DEFAULT TRUE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\nALTER TABLE marts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_all ON marts FOR ALL TO anon USING (true) WITH CHECK (true);`;
+        return (
+          <div className="mt-4 bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
+            <p className="text-[13px] font-bold text-red-700">marts 테이블이 없습니다</p>
+            <button
+              disabled={initing}
+              onClick={async () => {
+                setIniting(true);
+                try {
+                  const r = await fetch("/api/admin/init-db", { method: "POST" });
+                  const d = await r.json();
+                  if (d.success) { setInitDone(true); setTimeout(() => reload(), 1000); }
+                  else { setInitDone(false); }
+                } catch {}
+                setIniting(false);
+              }}
+              className="w-full py-2.5 rounded-xl bg-red-600 text-white text-[13px] font-bold disabled:opacity-50">
+              {initing ? "생성 중…" : initDone ? "✅ 완료" : "🗄️ 자동 생성 시도"}
+            </button>
+            <p className="text-[12px] text-red-600">자동 생성이 안 되면 아래 SQL을 직접 실행하세요.</p>
+            <pre className="bg-white border border-red-200 rounded-xl p-3 text-[10px] text-red-800 overflow-x-auto whitespace-pre leading-relaxed">{sql}</pre>
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(sql).catch(() => {});
+                  setSqlCopied(true); setTimeout(() => setSqlCopied(false), 2000);
+                }}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-red-200 bg-white text-red-600 text-[12px] font-bold">
+                {sqlCopied ? <CheckCircle2 size={13} className="text-green-500" /> : <Copy size={13} />}
+                {sqlCopied ? "복사됨" : "SQL 복사"}
+              </button>
+              <a href={SQL_EDITOR_URL} target="_blank" rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-red-600 text-white text-[12px] font-bold">
+                <ExternalLink size={13} /> SQL Editor 열기
+              </a>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

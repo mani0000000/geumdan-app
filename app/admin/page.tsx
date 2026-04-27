@@ -2,6 +2,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
+const PROJECT_REF = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] ?? "";
+const SQL_EDITOR_URL = PROJECT_REF
+  ? `https://supabase.com/dashboard/project/${PROJECT_REF}/sql/new`
+  : "https://supabase.com/dashboard";
+
 interface DiagResult {
   keySource: string;
   keyPrefix: string;
@@ -27,6 +32,9 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [fixing, setFixing] = useState(false);
   const [fixResult, setFixResult] = useState<FixRlsResult | null>(null);
+  const [initing, setIniting] = useState(false);
+  const [initResult, setInitResult] = useState<{ success: boolean; message?: string; error?: string; sql?: string } | null>(null);
+  const [initSqlCopied, setInitSqlCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/diag")
@@ -158,16 +166,65 @@ END $$;`}</pre>
 
       {/* 실패 테이블 */}
       {failedReads.length > 0 && (
-        <div className="bg-red-50 rounded-2xl p-4 mb-4">
-          <p className="font-bold text-red-600 mb-3">❌ 읽기 실패 ({failedReads.length}개)</p>
+        <div className="bg-red-50 rounded-2xl p-4 mb-4 space-y-3">
+          <p className="font-bold text-red-600">❌ 읽기 실패 ({failedReads.length}개)</p>
           <div className="space-y-1.5">
             {failedReads.map(([table, result]) => (
               <div key={table} className="flex items-start gap-2">
-                <span className="font-mono text-[12px] font-bold text-[#1d1d1f] min-w-[160px]">{table}</span>
+                <span className="font-mono text-[12px] font-bold text-[#1d1d1f] min-w-[120px]">{table}</span>
                 <span className="text-[12px] text-red-600 break-all">{result}</span>
               </div>
             ))}
           </div>
+
+          {/* DB 테이블 생성 버튼 */}
+          <button
+            disabled={initing}
+            onClick={async () => {
+              setIniting(true); setInitResult(null);
+              try {
+                const res = await fetch("/api/admin/init-db", { method: "POST" });
+                const data = await res.json();
+                setInitResult(data);
+                if (data.success) setTimeout(() => window.location.reload(), 1500);
+              } catch { setInitResult({ success: false, error: "요청 실패" }); }
+              finally { setIniting(false); }
+            }}
+            className="w-full py-2.5 rounded-xl bg-red-600 text-white text-[13px] font-bold disabled:opacity-50">
+            {initing ? "테이블 생성 중…" : "🗄️ 누락 테이블 자동 생성"}
+          </button>
+
+          {initResult && (
+            <div className={`rounded-xl p-3 text-[12px] ${initResult.success ? "bg-green-50 text-green-800" : "bg-white text-gray-700"}`}>
+              {initResult.success ? (
+                <p className="font-bold">✅ 완료! 새로고침 중…</p>
+              ) : (
+                <>
+                  <p className="font-bold text-red-600 mb-2">자동 생성 실패 (서비스 키 필요) — SQL을 직접 실행해 주세요</p>
+                  {initResult.sql && (
+                    <>
+                      <pre className="bg-gray-50 border rounded-lg p-2 overflow-x-auto text-[10px] leading-relaxed mb-2 max-h-40">{initResult.sql}</pre>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={async () => {
+                            await navigator.clipboard.writeText(initResult.sql ?? "").catch(() => {});
+                            setInitSqlCopied(true);
+                            setTimeout(() => setInitSqlCopied(false), 2000);
+                          }}
+                          className="flex-1 py-2 rounded-lg bg-gray-100 text-[12px] font-bold text-gray-700">
+                          {initSqlCopied ? "✅ 복사됨" : "SQL 복사"}
+                        </button>
+                        <a href={SQL_EDITOR_URL} target="_blank" rel="noopener noreferrer"
+                          className="flex-1 py-2 rounded-lg bg-[#3182F6] text-white text-[12px] font-bold text-center">
+                          SQL Editor 열기
+                        </a>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       )}
 
