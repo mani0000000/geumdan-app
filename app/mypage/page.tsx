@@ -139,7 +139,7 @@ export default function MyPage() {
       items: [
         { icon: Star, label: "즐겨찾는 버스", badge: String(busCount), color: "text-[#FBBF24]", href: "/transport/" },
         { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
-        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/real-estate/" },
+        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/community/?tab=시세" },
       ],
     },
     {

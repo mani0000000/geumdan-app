@@ -41,7 +41,7 @@ import type { NewsItem } from "@/lib/types";
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", color: "#2F9E44" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세", color: "#2F9E44" },
   { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
   { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
@@ -1020,55 +1020,96 @@ function SportsSection() {
 // ─── 실거래가 위젯 ────────────────────────────────────────────
 function RealEstateWidget() {
   const router = useRouter();
-  const myHome = initialMyHomes[0] ?? null;
 
-  // 검단신도시 평균 거래가 계산
-  const pricesWithDeal = apartments.filter(a => (a.recentDeal?.price ?? 0) > 0);
-  const avgPrice = pricesWithDeal.length > 0
-    ? Math.round(pricesWithDeal.reduce((s, a) => s + a.recentDeal!.price, 0) / pricesWithDeal.length / 100) * 100
-    : 0;
+  // 소식 > 시세 탭과 localStorage 동기화
+  const [myAptId, setMyAptId] = useState<string | null>(null);
+  const [myAptSzIdx, setMyAptSzIdx] = useState(0);
+  useEffect(() => {
+    setMyAptId(localStorage.getItem("myAptId"));
+    setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
+  }, []);
+
+  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+  const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
+  const mySz    = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
+  const myH     = mySz?.priceHistory ?? [];
+  const myCurr  = myH[myH.length - 1]?.price ?? 0;
+  const myPrev  = myH[myH.length - 2]?.price ?? myCurr;
+  const myDiff  = myCurr - myPrev;
+  const myPct   = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
+
+  // 검단신도시 전체 평균
+  const avgTrend = (() => {
+    const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
+    return months.map(month => {
+      let total = 0, count = 0;
+      apartments.forEach(apt => apt.sizes.forEach(sz => {
+        const entry = sz.priceHistory.find(p => p.date === month);
+        if (entry) { total += entry.price; count++; }
+      }));
+      return { date: month, price: count ? Math.round(total / count) : 0 };
+    });
+  })();
+  const avgPrice = avgTrend[avgTrend.length - 1]?.price ?? 0;
+  const avgPrev  = avgTrend[avgTrend.length - 2]?.price ?? avgPrice;
+  const avgDiff  = avgPrice - avgPrev;
+  const avgPct   = avgPrev ? (Math.abs(avgDiff) / avgPrev * 100).toFixed(1) : "0.0";
+
+  const go = () => router.push("/community/?tab=시세");
 
   return (
-    <section className="mx-4 mb-1">
-      <button onClick={() => router.push("/real-estate/")}
-        className="w-full rounded-2xl overflow-hidden active:opacity-90"
+    <section className="mx-4 mb-1 space-y-2">
+      {/* 내 집 시세 */}
+      <button onClick={go}
+        className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3.5 text-left active:bg-gray-50">
+        {myApt && mySz ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 mb-0.5">
+                <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
+                <span className="text-[10px] text-gray-400">내 집 시세</span>
+              </div>
+              <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{myApt.name}</p>
+              <p className="text-[11px] text-gray-400">{myApt.dong} · {mySz.pyeong}평</p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="text-[20px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
+              {myDiff !== 0 && (
+                <p className={`text-[11px] font-semibold ${myDiff > 0 ? "text-red-500" : "text-blue-500"}`}>
+                  {myDiff > 0 ? "▲" : "▼"} {formatPrice(Math.abs(myDiff))} ({myPct}%)
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Star size={14} className="text-amber-400 fill-amber-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-[#1d1d1f]">내 집 등록</p>
+              <p className="text-[11px] text-gray-400">소식 → 시세 탭에서 내 집을 등록하세요</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-300 shrink-0" />
+          </div>
+        )}
+      </button>
+
+      {/* 검단 신도시 평균 실거래가 */}
+      <button onClick={go}
+        className="w-full rounded-2xl overflow-hidden active:opacity-90 text-left"
         style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
-        <div className="p-4">
-          {/* 검단신도시 평균 */}
-          <div className="mb-3.5">
-            <p className="text-[11px] text-white/60 mb-0.5">검단신도시 평균 거래가</p>
-            <p className="text-[28px] font-black text-white leading-none">
+        <div className="px-4 py-3.5">
+          <p className="text-[11px] text-white/60 mb-0.5">검단 신도시 평균 실거래가</p>
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-[26px] font-black text-white leading-tight">
               {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
             </p>
-            <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
+            {avgDiff !== 0 && (
+              <p className={`text-[12px] font-semibold pb-1 ${avgDiff > 0 ? "text-green-200" : "text-blue-200"}`}>
+                {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
+              </p>
+            )}
           </div>
-
-          {/* 내 집 */}
-          {myHome ? (
-            <div className="bg-white/15 rounded-xl px-3 py-2.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1 mb-0.5">
-                    <Star size={10} className="text-amber-300 fill-amber-300" />
-                    <p className="text-[10px] text-white/60">{myHome.label ?? "내 집"}</p>
-                  </div>
-                  <p className="text-[12px] text-white/80 truncate">{myHome.aptName} · {myHome.pyeong}평</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-[18px] font-black text-white leading-tight">{formatPrice(myHome.currentPrice)}</p>
-                  {myHome.prevPrice && myHome.currentPrice !== myHome.prevPrice && (
-                    <p className={`text-[10px] font-semibold ${myHome.currentPrice > myHome.prevPrice ? "text-red-300" : "text-blue-300"}`}>
-                      {myHome.currentPrice > myHome.prevPrice ? "▲" : "▼"} {formatPrice(Math.abs(myHome.currentPrice - myHome.prevPrice))}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white/10 rounded-xl px-3 py-2.5 text-left border border-white/20 border-dashed">
-              <p className="text-[12px] text-white/50">내 집을 등록해보세요 →</p>
-            </div>
-          )}
+          <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
         </div>
       </button>
     </section>
@@ -2168,7 +2209,7 @@ export default function HomePage() {
     instagram: () => <InstagramSection />,
     realestate: () => (
       <>
-        <SectionLabel label="실거래가" href="/real-estate/" linkLabel="전체보기" />
+        <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),

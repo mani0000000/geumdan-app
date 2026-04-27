@@ -859,15 +859,6 @@ function SiseTab() {
         })}
       </div>
 
-      {/* 매물 보기 링크 */}
-      <button onClick={() => router.push("/real-estate/")}
-        className="mx-4 mt-4 w-[calc(100%-32px)] bg-white rounded-2xl px-4 py-3.5 flex items-center justify-between active:bg-[#f5f5f7]">
-        <div>
-          <p className="text-[15px] font-bold text-[#1d1d1f]">매물 / 전월세 보기</p>
-          <p className="text-[13px] text-[#6e6e73] mt-0.5">내 집 시세 관리 및 전체 매물 확인</p>
-        </div>
-        <ChevronRight size={18} className="text-[#86868b]" />
-      </button>
 
       {/* ── 정렬 선택 바텀 시트 ── */}
       {showSort && (
