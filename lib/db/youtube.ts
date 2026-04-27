@@ -27,7 +27,7 @@ async function fetchFromStaticCache(): Promise<YouTubeVideo[]> {
   return [];
 }
 
-export async function fetchYouTubeVideosFromDB(limit = 20): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
+export async function fetchYouTubeVideosFromDB(limit = 200): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
   const t0 = performance.now();
 
   if (!isSupabaseConfigured()) {

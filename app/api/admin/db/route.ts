@@ -121,7 +121,28 @@ export async function POST(req: NextRequest) {
   if (onConflict) path += `?on_conflict=${onConflict}`;
   if (eq) path += (path.includes("?") ? "&" : "?") + eq;
 
-  const res = await callSupabase(method, path, JSON.stringify(rows), prefer);
+  let res = await callSupabase(method, path, JSON.stringify(rows), prefer);
+
+  // PGRST204: 존재하지 않는 컬럼 — logo_url 제거 후 재시도
+  if (!res.ok && method === "POST" && Array.isArray(rows)) {
+    const errText = await res.text();
+    if (errText.includes("PGRST204") && errText.includes("logo_url")) {
+      console.warn("[admin/db] logo_url 컬럼 없음 — 제외 후 재시도");
+      const stripped = (rows as Record<string, unknown>[]).map(r => {
+        const { logo_url: _, ...rest } = r;
+        return rest;
+      });
+      res = await callSupabase(method, path, JSON.stringify(stripped), prefer);
+      if (!res.ok) {
+        const err2 = await res.text();
+        return NextResponse.json({ error: `${res.status} — ${err2.slice(0, 200)}` }, { status: res.status });
+      }
+      return NextResponse.json({ success: true, logoSkipped: true });
+    }
+    console.error("[admin/db POST]", table, method, res.status, errText.slice(0, 200));
+    return NextResponse.json({ error: `${res.status} — ${errText.slice(0, 200)}` }, { status: res.status });
+  }
+
   if (!res.ok) {
     const err = await res.text();
     console.error("[admin/db POST]", table, method, res.status, err.slice(0, 200));

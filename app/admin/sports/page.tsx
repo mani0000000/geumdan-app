@@ -1,17 +1,25 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   adminFetchSportsMatches,
   adminCreateSportsMatch,
   adminUpdateSportsMatch,
   adminDeleteSportsMatch,
+  adminFetchSportsAssets,
+  adminSaveTeamLogo,
+  adminSaveLeagueLogo,
+  adminSaveBroadcastChannels,
   TEAM_META,
+  TEAM_LOGOS,
+  LEAGUE_STYLES,
+  DEFAULT_SPORTS_ASSETS,
   type SportsMatch,
   type SportType,
   type MatchStatus,
   type TeamCode,
+  type SportsAssets,
 } from "@/lib/db/sports";
-import { Trophy, Plus, Pencil, Trash2, X, Save, Loader2 } from "lucide-react";
+import { Trophy, Plus, Pencil, Trash2, X, Save, Loader2, Image as ImageIcon, Tv, AlertCircle, CheckCircle2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 
 const SPORTS: SportType[] = ["축구", "야구", "배구", "농구", "A매치"];
 const STATUSES: { value: MatchStatus; label: string }[] = [
@@ -21,8 +29,7 @@ const STATUSES: { value: MatchStatus; label: string }[] = [
   { value: "cancelled", label: "취소" },
 ];
 const TEAM_CODES: TeamCode[] = ["incheon_utd", "ssg_landers", "daehan_jumpos", "incheon_el", "national"];
-
-const BROADCASTS = ["SPOTV", "SPOTV2", "MBC스포츠", "KBS N스포츠", "SBS Sports", "tvN스포츠", "쿠팡플레이", "네이버스포츠", "유튜브"];
+const LEAGUES = ["K리그1", "KBO", "V리그", "KBL", "A매치"];
 
 const EMPTY: Omit<SportsMatch, "id"> = {
   sport: "축구",
@@ -47,28 +54,121 @@ function statusBadge(s: MatchStatus) {
   return <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">예정</span>;
 }
 
+// 클라이언트 사이드 이미지 압축 (Canvas API)
+async function compressLogo(file: File): Promise<Blob> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const MAX = 256;
+      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
+      const w = Math.max(1, Math.round(img.width * scale));
+      const h = Math.max(1, Math.round(img.height * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = w; canvas.height = h;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+      canvas.toBlob(blob => resolve(blob ?? file), "image/jpeg", 0.85);
+    };
+    img.onerror = () => resolve(file);
+    img.src = objectUrl;
+  });
+}
+
+// 컴팩트 업로드 버튼 — 클릭 시 압축 후 base64 data URL 반환 (Storage 불필요)
+function LogoUploadButton({
+  currentUrl, onUpload, onRemove,
+}: {
+  currentUrl?: string; onUpload: (url: string) => void; onRemove: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleFile(file: File) {
+    setErr(null);
+    setUploading(true);
+    try {
+      // 클라이언트에서 256×256 압축 → base64 직접 반환 (서버 업로드 불필요)
+      const blob = await compressLogo(file);
+      const base64 = await new Promise<string>((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result as string);
+        reader.onerror = rej;
+        reader.readAsDataURL(blob);
+      });
+      onUpload(base64);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "처리 실패");
+    } finally {
+      setUploading(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex gap-2">
+        <button type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#3182F6] hover:text-[#3182F6] transition-colors disabled:opacity-50">
+          {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImageIcon size={13} />}
+          {currentUrl ? "교체" : "업로드"}
+        </button>
+        {currentUrl && (
+          <button type="button" onClick={onRemove}
+            className="px-3 py-2 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 hover:bg-red-50">
+            삭제
+          </button>
+        )}
+      </div>
+      {err && <p className="text-[11px] text-red-500 mt-1">{err}</p>}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+    </div>
+  );
+}
+
 export default function AdminSportsPage() {
+  const [tab, setTab] = useState<"matches" | "assets">("matches");
+
+  // ─── 경기 관리 상태 ─────────────────────
   const [matches, setMatches] = useState<SportsMatch[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadingMatches, setLoadingMatches] = useState(true);
   const [editing, setEditing] = useState<SportsMatch | null>(null);
   const [form, setForm] = useState<Omit<SportsMatch, "id">>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [filter, setFilter] = useState<SportType | "전체">("전체");
 
-  async function load() {
-    setLoading(true);
-    setMatches(await adminFetchSportsMatches());
-    setLoading(false);
+  // ─── 로고 & 채널 상태 ───────────────────
+  const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
+  const [loadingAssets, setLoadingAssets] = useState(false);
+  const [savingAssets, setSavingAssets] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [newChannel, setNewChannel] = useState("");
+  const [rlsError, setRlsError] = useState(false);
+  const [rlsCopied, setRlsCopied] = useState(false);
+  const [rlsFixing, setRlsFixing] = useState(false);
+
+  function showToast(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 2500);
   }
 
-  useEffect(() => { load(); }, []);
+  // ─── 경기 관리 로직 ─────────────────────
+  async function loadMatches() {
+    setLoadingMatches(true);
+    setMatches(await adminFetchSportsMatches());
+    setLoadingMatches(false);
+  }
+  useEffect(() => { loadMatches(); }, []);
 
   function openNew() {
     setEditing({ id: "__new__", ...EMPTY });
     setForm({ ...EMPTY, sort_order: matches.length });
   }
-
   function openEdit(m: SportsMatch) {
     setEditing(m);
     setForm({
@@ -81,7 +181,6 @@ export default function AdminSportsPage() {
       sort_order: m.sort_order, active: m.active,
     });
   }
-
   async function save() {
     if (!form.home_team || !form.away_team || !form.match_date) return;
     setSaving(true);
@@ -93,17 +192,15 @@ export default function AdminSportsPage() {
     }
     setSaving(false);
     setEditing(null);
-    load();
+    loadMatches();
   }
-
   async function del(id: string) {
     if (!confirm("삭제하시겠습니까?")) return;
     setDeleting(id);
     await adminDeleteSportsMatch(id);
     setDeleting(null);
-    load();
+    loadMatches();
   }
-
   function setF<K extends keyof typeof form>(key: K, val: typeof form[K]) {
     setForm(f => ({ ...f, [key]: val }));
     if (key === "team_code") {
@@ -111,94 +208,374 @@ export default function AdminSportsPage() {
       setForm(f => ({ ...f, [key]: val, sport: meta.sport, home_team: meta.name }));
     }
   }
-
   const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
+
+  // ─── 로고 & 채널 로직 ───────────────────
+  async function loadAssets() {
+    setLoadingAssets(true);
+    // Proactively ensure anon write policies exist on site_settings
+    fetch("/api/admin/fix-rls", { method: "POST" }).catch(() => {});
+    try { setAssets(await adminFetchSportsAssets()); } catch {}
+    setLoadingAssets(false);
+  }
+  useEffect(() => { if (tab === "assets") loadAssets(); }, [tab]);
+
+  function handleSaveError(e: unknown) {
+    const msg = e instanceof Error ? e.message : "저장 실패";
+    if (msg.includes("row-level security") || msg.includes("anon_insert") || msg.includes("쓰기 권한")) {
+      setRlsError(true);
+    } else {
+      showToast(msg, false);
+    }
+  }
+
+  async function updateTeamLogo(tc: TeamCode, url: string | null) {
+    setSavingAssets(true);
+    try {
+      await adminSaveTeamLogo(tc, url);
+      setAssets(prev => {
+        const teamLogos = { ...prev.teamLogos };
+        if (url) teamLogos[tc] = url; else delete teamLogos[tc];
+        return { ...prev, teamLogos };
+      });
+      showToast("저장됐어요");
+    } catch (e) { handleSaveError(e); }
+    setSavingAssets(false);
+  }
+
+  async function updateLeagueLogo(league: string, url: string | null) {
+    setSavingAssets(true);
+    try {
+      await adminSaveLeagueLogo(league, url);
+      setAssets(prev => {
+        const leagueLogos = { ...prev.leagueLogos };
+        if (url) leagueLogos[league] = url; else delete leagueLogos[league];
+        return { ...prev, leagueLogos };
+      });
+      showToast("저장됐어요");
+    } catch (e) { handleSaveError(e); }
+    setSavingAssets(false);
+  }
+
+  async function addChannel() {
+    const ch = newChannel.trim();
+    if (!ch || assets.broadcastChannels.includes(ch)) return;
+    const next = [...assets.broadcastChannels, ch];
+    setSavingAssets(true);
+    try {
+      await adminSaveBroadcastChannels(next);
+      setAssets(prev => ({ ...prev, broadcastChannels: next }));
+      setNewChannel("");
+      showToast("저장됐어요");
+    } catch (e) { handleSaveError(e); }
+    setSavingAssets(false);
+  }
+
+  async function removeChannel(ch: string) {
+    const next = assets.broadcastChannels.filter(c => c !== ch);
+    setSavingAssets(true);
+    try {
+      await adminSaveBroadcastChannels(next);
+      setAssets(prev => ({ ...prev, broadcastChannels: next }));
+      showToast("저장됐어요");
+    } catch (e) { handleSaveError(e); }
+    setSavingAssets(false);
+  }
 
   return (
     <div className="p-5 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between mb-5">
+      {/* 헤더 */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Trophy size={20} className="text-[#3182F6]" />
           <h1 className="text-[20px] font-extrabold text-[#1d1d1f]">스포츠 경기 관리</h1>
         </div>
-        <button onClick={openNew}
-          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold active:opacity-80">
-          <Plus size={15} />경기 추가
-        </button>
+        {tab === "matches" && (
+          <button onClick={openNew}
+            className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold active:opacity-80">
+            <Plus size={15} />경기 추가
+          </button>
+        )}
       </div>
 
-      {/* 종목 필터 */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-        {(["전체", ...SPORTS] as (SportType | "전체")[]).map(s => (
-          <button key={s} onClick={() => setFilter(s)}
-            className={`px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
-              filter === s ? "bg-[#3182F6] text-white" : "bg-white text-gray-600 border border-gray-200"
+      {/* 탭 */}
+      <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl">
+        {([
+          { key: "matches", label: "경기 관리" },
+          { key: "assets",  label: "로고 & 채널" },
+        ] as const).map(t => (
+          <button key={t.key} onClick={() => setTab(t.key)}
+            className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
+              tab === t.key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
             }`}>
-            {s}
+            {t.label}
           </button>
         ))}
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-20 text-gray-400">
-          <Loader2 size={24} className="animate-spin mr-2" />불러오는 중…
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-gray-400 text-[14px]">등록된 경기가 없습니다</div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map(m => {
-            const meta = TEAM_META[m.team_code];
-            const dt = m.match_date ? new Date(m.match_date) : null;
-            return (
-              <div key={m.id}
-                className={`bg-white rounded-2xl p-4 border ${m.active ? "border-gray-100" : "border-gray-100 opacity-50"}`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                      <span className="text-[18px]">{meta.emoji}</span>
-                      <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
-                        style={{ background: meta.color }}>
-                        {meta.league}
-                      </span>
-                      {statusBadge(m.status)}
-                      {!m.active && <span className="text-[11px] text-gray-400">비활성</span>}
+      {/* ─── 경기 관리 탭 ──────────────────────────────── */}
+      {tab === "matches" && (
+        <>
+          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
+            {(["전체", ...SPORTS] as (SportType | "전체")[]).map(s => (
+              <button key={s} onClick={() => setFilter(s)}
+                className={`px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
+                  filter === s ? "bg-[#3182F6] text-white" : "bg-white text-gray-600 border border-gray-200"
+                }`}>
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {loadingMatches ? (
+            <div className="flex items-center justify-center py-20 text-gray-400">
+              <Loader2 size={24} className="animate-spin mr-2" />불러오는 중…
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="text-center py-20 text-gray-400 text-[14px]">등록된 경기가 없습니다</div>
+          ) : (
+            <div className="space-y-3">
+              {filtered.map(m => {
+                const meta = TEAM_META[m.team_code];
+                const dt = m.match_date ? new Date(m.match_date) : null;
+                return (
+                  <div key={m.id}
+                    className={`bg-white rounded-2xl p-4 border ${m.active ? "border-gray-100" : "border-gray-100 opacity-50"}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-[18px]">{meta.emoji}</span>
+                          <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
+                            style={{ background: meta.color }}>
+                            {meta.league}
+                          </span>
+                          {statusBadge(m.status)}
+                          {!m.active && <span className="text-[11px] text-gray-400">비활성</span>}
+                        </div>
+                        <div className="flex items-center gap-2 text-[15px] font-bold text-[#1d1d1f]">
+                          <span>{m.home_team}</span>
+                          {(m.home_score != null || m.away_score != null) ? (
+                            <span className="text-[#3182F6]">{m.home_score ?? "-"} : {m.away_score ?? "-"}</span>
+                          ) : (
+                            <span className="text-gray-400 font-normal text-[13px]">vs</span>
+                          )}
+                          <span>{m.away_team}</span>
+                        </div>
+                        {dt && (
+                          <p className="text-[12px] text-gray-500 mt-1">
+                            {dt.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" })} {dt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                            {m.venue ? ` · ${m.venue}` : ""}
+                            {m.broadcast ? ` · ${m.broadcast}` : ""}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1.5 shrink-0">
+                        <button onClick={() => openEdit(m)}
+                          className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => del(m.id)} disabled={deleting === m.id}
+                          className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 disabled:opacity-50">
+                          {deleting === m.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[15px] font-bold text-[#1d1d1f]">
-                      <span>{m.home_team}</span>
-                      {(m.home_score != null || m.away_score != null) ? (
-                        <span className="text-[#3182F6]">{m.home_score ?? "-"} : {m.away_score ?? "-"}</span>
-                      ) : (
-                        <span className="text-gray-400 font-normal text-[13px]">vs</span>
-                      )}
-                      <span>{m.away_team}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ─── 로고 & 채널 탭 ────────────────────────────── */}
+      {tab === "assets" && (
+        <div className="space-y-8">
+          {loadingAssets ? (
+            <div className="flex items-center justify-center py-20 text-gray-400">
+              <Loader2 size={24} className="animate-spin mr-2" />불러오는 중…
+            </div>
+          ) : (
+            <>
+              {/* RLS 오류 안내 */}
+              {rlsError && (() => {
+                const sql = `ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_select ON site_settings FOR SELECT TO anon USING (true);\nCREATE POLICY IF NOT EXISTS anon_insert ON site_settings FOR INSERT TO anon WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_update ON site_settings FOR UPDATE TO anon USING (true) WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_delete ON site_settings FOR DELETE TO anon USING (true);`;
+                const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] ?? "";
+                const sqlEditorUrl = projectRef ? `https://supabase.com/dashboard/project/${projectRef}/sql/new` : "https://supabase.com/dashboard";
+                return (
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle size={15} className="text-red-500 shrink-0" />
+                        <p className="text-[13px] font-bold text-red-700">DB 쓰기 권한 없음</p>
+                      </div>
+                      <button onClick={() => setRlsError(false)} className="text-red-300 hover:text-red-500 shrink-0">
+                        <X size={14} />
+                      </button>
                     </div>
-                    {dt && (
-                      <p className="text-[12px] text-gray-500 mt-1">
-                        {dt.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" })} {dt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-                        {m.venue ? ` · ${m.venue}` : ""}
-                        {m.broadcast ? ` · ${m.broadcast}` : ""}
-                      </p>
+                    <p className="text-[12px] text-red-600 leading-relaxed">
+                      Supabase SQL Editor에서 아래 SQL을 실행하면 해결됩니다. <strong>최초 1회만</strong> 필요합니다.
+                    </p>
+                    <pre className="bg-white border border-red-200 rounded-xl p-3 text-[10.5px] text-red-800 overflow-x-auto whitespace-pre leading-relaxed">{sql}</pre>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(sql).catch(() => {});
+                          setRlsCopied(true);
+                          setTimeout(() => setRlsCopied(false), 2000);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold border border-red-200 bg-white text-red-600 active:bg-red-50">
+                        {rlsCopied ? <CheckCircle2 size={13} className="text-green-500" /> : <Copy size={13} />}
+                        {rlsCopied ? "복사됨" : "SQL 복사"}
+                      </button>
+                      <a href={sqlEditorUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold bg-red-600 text-white active:opacity-80">
+                        <ExternalLink size={13} />
+                        SQL Editor 열기
+                      </a>
+                    </div>
+                    <button
+                      disabled={rlsFixing}
+                      onClick={async () => {
+                        setRlsFixing(true);
+                        try {
+                          const r = await fetch("/api/admin/fix-rls", { method: "POST" });
+                          if (r.ok) { setRlsError(false); showToast("권한 수정 완료! 다시 시도해 주세요"); }
+                          else showToast("자동 수정 실패 — SQL을 직접 실행해 주세요", false);
+                        } catch { showToast("자동 수정 실패", false); }
+                        setRlsFixing(false);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 disabled:opacity-50">
+                      {rlsFixing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                      자동 수정 재시도
+                    </button>
+                  </div>
+                );
+              })()}
+
+              {/* 팀 로고 */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <ImageIcon size={16} className="text-[#3182F6]" />
+                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">팀 로고</h2>
+                  <span className="text-[12px] text-gray-400">홈화면 위젯에 표시됩니다</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {TEAM_CODES.map(tc => {
+                    const meta = TEAM_META[tc];
+                    const logo = TEAM_LOGOS[tc];
+                    const uploadedUrl = assets.teamLogos[tc];
+                    return (
+                      <div key={tc} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
+                        {/* 프리뷰 */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center font-black"
+                            style={{ background: uploadedUrl ? "transparent" : logo.bg, color: logo.fg, fontSize: 13 }}>
+                            {uploadedUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={uploadedUrl} alt={meta.name} className="w-full h-full object-cover" />
+                            ) : logo.abbr}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{meta.name}</p>
+                            <p className="text-[11px] text-gray-400">{meta.league}</p>
+                          </div>
+                        </div>
+                        {/* 업로드 */}
+                        <LogoUploadButton
+                          currentUrl={uploadedUrl}
+                          onUpload={url => updateTeamLogo(tc, url)}
+                          onRemove={() => updateTeamLogo(tc, null)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* 리그 로고 */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Trophy size={16} className="text-[#3182F6]" />
+                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">리그 로고</h2>
+                  <span className="text-[12px] text-gray-400">경기 카드 헤더에 표시됩니다</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {LEAGUES.map(league => {
+                    const ls = LEAGUE_STYLES[league];
+                    const uploadedUrl = assets.leagueLogos[league];
+                    return (
+                      <div key={league} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
+                        {/* 프리뷰 */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center"
+                            style={{ background: ls?.gradient }}>
+                            {uploadedUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={uploadedUrl} alt={league} className="w-10 h-10 object-contain" />
+                            ) : (
+                              <span className="text-[9px] font-black text-white text-center px-1 leading-tight">{league}</span>
+                            )}
+                          </div>
+                          <p className="text-[13px] font-bold text-[#1d1d1f]">{league}</p>
+                        </div>
+                        {/* 업로드 */}
+                        <LogoUploadButton
+                          currentUrl={uploadedUrl}
+                          onUpload={url => updateLeagueLogo(league, url)}
+                          onRemove={() => updateLeagueLogo(league, null)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* 방송 채널 */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Tv size={16} className="text-[#3182F6]" />
+                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">방송 채널</h2>
+                  <span className="text-[12px] text-gray-400">경기 등록 시 선택 목록</span>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-100 p-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {assets.broadcastChannels.map(ch => (
+                      <div key={ch}
+                        className="flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full bg-gray-100 text-[13px] font-semibold text-[#1d1d1f]">
+                        {ch}
+                        <button onClick={() => removeChannel(ch)}
+                          className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-300 text-gray-500 ml-0.5">
+                          <X size={11} />
+                        </button>
+                      </div>
+                    ))}
+                    {assets.broadcastChannels.length === 0 && (
+                      <p className="text-[13px] text-gray-400">채널이 없습니다</p>
                     )}
                   </div>
-                  <div className="flex gap-1.5 shrink-0">
-                    <button onClick={() => openEdit(m)}
-                      className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600">
-                      <Pencil size={14} />
-                    </button>
-                    <button onClick={() => del(m.id)} disabled={deleting === m.id}
-                      className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 disabled:opacity-50">
-                      {deleting === m.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                  <div className="flex gap-2">
+                    <input
+                      value={newChannel}
+                      onChange={e => setNewChannel(e.target.value)}
+                      onKeyDown={e => e.key === "Enter" && addChannel()}
+                      placeholder="채널 추가 (예: JTBC3)"
+                      className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
+                    />
+                    <button onClick={addChannel} disabled={!newChannel.trim() || savingAssets}
+                      className="h-10 px-4 rounded-xl bg-[#3182F6] text-white text-[13px] font-bold disabled:opacity-50 flex items-center gap-1.5">
+                      {savingAssets ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+                      추가
                     </button>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              </section>
+            </>
+          )}
         </div>
       )}
 
-      {/* 편집 모달 */}
+      {/* ─── 경기 편집 모달 ─────────────────────────────── */}
       {editing && (
         <div className="fixed inset-0 z-50 flex items-end justify-center">
           <div className="absolute inset-0 bg-black/40" onClick={() => setEditing(null)} />
@@ -213,7 +590,6 @@ export default function AdminSportsPage() {
             </div>
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
 
-              {/* 팀 / 종목 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">인천 연고 팀</label>
                 <select value={form.team_code}
@@ -227,7 +603,6 @@ export default function AdminSportsPage() {
                 </select>
               </div>
 
-              {/* 홈/어웨이 팀명 */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[12px] font-bold text-gray-500 mb-1">홈팀</label>
@@ -243,7 +618,6 @@ export default function AdminSportsPage() {
                 </div>
               </div>
 
-              {/* 점수 */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-[12px] font-bold text-gray-500 mb-1">홈 점수</label>
@@ -263,7 +637,6 @@ export default function AdminSportsPage() {
                 </div>
               </div>
 
-              {/* 경기 날짜/시간 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">경기 일시</label>
                 <input type="datetime-local" value={form.match_date?.slice(0, 16) ?? ""}
@@ -271,7 +644,6 @@ export default function AdminSportsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
               </div>
 
-              {/* 장소 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">경기장</label>
                 <input value={form.venue ?? ""}
@@ -280,7 +652,6 @@ export default function AdminSportsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
               </div>
 
-              {/* 상태 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">상태</label>
                 <div className="flex gap-2 flex-wrap">
@@ -296,11 +667,10 @@ export default function AdminSportsPage() {
                 </div>
               </div>
 
-              {/* 중계 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">중계 채널</label>
                 <div className="flex flex-wrap gap-1.5">
-                  {BROADCASTS.map(b => (
+                  {assets.broadcastChannels.map(b => (
                     <button key={b} type="button"
                       onClick={() => setF("broadcast", form.broadcast === b ? null : b)}
                       className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
@@ -316,7 +686,6 @@ export default function AdminSportsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] mt-2" />
               </div>
 
-              {/* 예매 URL */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">예매 링크</label>
                 <input value={form.ticket_url ?? ""}
@@ -325,7 +694,6 @@ export default function AdminSportsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
               </div>
 
-              {/* 정렬 순서 */}
               <div>
                 <label className="block text-[12px] font-bold text-gray-500 mb-1">정렬 순서</label>
                 <input type="number" value={form.sort_order}
@@ -333,7 +701,6 @@ export default function AdminSportsPage() {
                   className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
               </div>
 
-              {/* 활성 */}
               <label className="flex items-center gap-3 cursor-pointer">
                 <div className={`w-11 h-6 rounded-full transition-colors ${form.active ? "bg-[#3182F6]" : "bg-gray-300"}`}
                   onClick={() => setF("active", !form.active)}>
@@ -351,6 +718,14 @@ export default function AdminSportsPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* 토스트 */}
+      {toast && (
+        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold text-white ${toast.ok ? "bg-[#191F28]" : "bg-red-500"}`}>
+          {toast.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          {toast.msg}
         </div>
       )}
     </div>

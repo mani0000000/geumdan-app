@@ -108,14 +108,20 @@ export async function adminFetchRealEstateStats(): Promise<{
   totalApts: number;
   totalDeals: number;
   latestDealDate: string | null;
+  latestKbPeriod: string | null;
+  latestRebPeriod: string | null;
 }> {
-  const [apts, deals] = await Promise.all([
+  const [apts, deals, kbIdx, rebIdx] = await Promise.all([
     adminApiGet<{ id: string }>("apartments", { select: "id" }),
     adminApiGet<{ deal_date: string }>("apartment_price_history", { select: "deal_date", order: "deal_date.desc", limit: 1 }),
+    adminApiGet<{ period: string }>("apt_price_index", { select: "period", order: "period.desc", eq: "source=eq.kb", limit: 1 }),
+    adminApiGet<{ period: string }>("apt_price_index", { select: "period", order: "period.desc", eq: "source=eq.reb", limit: 1 }),
   ]);
   return {
     totalApts: apts.length,
     totalDeals: 0,
     latestDealDate: deals[0]?.deal_date ?? null,
+    latestKbPeriod: kbIdx[0]?.period ?? null,
+    latestRebPeriod: rebIdx[0]?.period ?? null,
   };
 }

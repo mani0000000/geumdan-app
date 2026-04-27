@@ -13,7 +13,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
@@ -33,7 +33,11 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
-import { fetchUpcomingSportsMatches, TEAM_META, type SportsMatch } from "@/lib/db/sports";
+import {
+  fetchUpcomingSportsMatches, fetchSportsAssets, TEAM_META, LEAGUE_STYLES, TEAM_LOGOS, LEAGUE_STANDINGS,
+  DEFAULT_SPORTS_ASSETS,
+  type SportsMatch, type TeamCode, type Standing, type SportsAssets,
+} from "@/lib/db/sports";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import type { YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
@@ -41,7 +45,7 @@ import type { NewsItem } from "@/lib/types";
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/real-estate/", color: "#2F9E44" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세", color: "#2F9E44" },
   { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
   { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
@@ -557,18 +561,19 @@ function YouTubeSection() {
           <div className="flex gap-3" style={{ width: "max-content" }}>
             {videos.map(v => (
               <a key={v.videoId} href={v.url} target="_blank" rel="noopener noreferrer"
-                className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden active:opacity-80">
+                className="shrink-0 w-[240px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
                 <div className="relative w-full aspect-video bg-[#f5f5f7]">
                   <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-9 h-9 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-lg">
+                  {/* 재생 버튼 — 우측 상단 */}
+                  <div className="absolute top-2 right-2">
+                    <div className="w-8 h-8 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-md">
                       <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white ml-0.5" />
                     </div>
                   </div>
                 </div>
                 <div className="px-3 py-2.5">
-                  <p className="text-[12px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
-                  <p className="text-[11px] text-[#86868b] mt-1">{v.channelName}</p>
+                  <p className="text-[13px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
+                  <p className="text-[12px] text-[#86868b] mt-1">{v.channelName}</p>
                 </div>
               </a>
             ))}
@@ -618,33 +623,33 @@ function PlacesSection() {
   if (!places?.length) return null;
   return (
     <>
-      <SectionLabel label="가볼만한곳" href="/places/" linkLabel="전체보기" />
+      <SectionLabel label="가볼만한곳" href="/transport/?tab=가볼만한곳" linkLabel="전체보기" />
       <section className="mb-1">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
             {places.slice(0, 8).map(p => {
               const meta = CATEGORY_META[p.category];
               return (
-                <Link key={p.id} href="/places/"
-                  className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
-                  <div className="w-full h-[100px] relative">
+                <Link key={p.id} href="/transport/?tab=가볼만한곳"
+                  className="shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
+                  <div className="w-full h-[130px] relative">
                     {p.thumbnail_url
                       ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center text-[36px]"
+                      : <div className="w-full h-full flex items-center justify-center text-[48px]"
                           style={{ background: meta.bg }}>
                           🗺️
                         </div>
                     }
-                    <span className="absolute top-2 left-2 text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                    <span className="absolute top-2 left-2 text-[11px] font-bold px-2 py-1 rounded-lg"
                       style={{ background: meta.bg, color: meta.color }}>
                       {meta.label}
                     </span>
                   </div>
-                  <div className="px-2.5 py-2">
-                    <p className="text-[12px] font-bold text-[#1d1d1f] truncate">{p.name}</p>
-                    <p className="text-[11px] text-[#86868b] mt-0.5 line-clamp-2 leading-snug">{p.short_desc}</p>
+                  <div className="px-3 py-2.5">
+                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{p.name}</p>
+                    <p className="text-[12px] text-[#86868b] mt-0.5 line-clamp-2 leading-snug">{p.short_desc}</p>
                     {(p.distance_km != null || p.drive_min != null) && (
-                      <p className="text-[10px] text-[#3182F6] mt-1 font-semibold">
+                      <p className="text-[12px] text-[#3182F6] mt-1.5 font-semibold">
                         {p.distance_km != null ? `${p.distance_km}km` : ""}
                         {p.distance_km != null && p.drive_min != null ? " · " : ""}
                         {p.drive_min != null ? `차로 ${p.drive_min}분` : ""}
@@ -662,6 +667,24 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
+// timeOffsetMin: 인천 기준 대비 시간 보정(분), rangeRatio: 조차 비율
+const TIDE_SPOTS = {
+  haerujil: [
+    { name: "강화 여차리 갯벌",     type: "갯벌", dist: "약 45km", timeOffsetMin:  20, rangeRatio: 1.05, lat: 37.6124, lng: 126.4343 },
+    { name: "영종도 북쪽 갯벌",     type: "갯벌", dist: "약 20km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.5396, lng: 126.4768 },
+    { name: "소래습지생태공원",     type: "갯벌", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4278, lng: 126.7373 },
+    { name: "시흥 오이도 갯벌",     type: "갯벌", dist: "약 35km", timeOffsetMin:  25, rangeRatio: 0.87, lat: 37.3476, lng: 126.6765 },
+    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
+  ],
+  fishing: [
+    { name: "소래포구 방파제",    type: "방파제", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4264, lng: 126.7456 },
+    { name: "인천항 갑문 선착장", type: "선착장", dist: "약 18km", timeOffsetMin:   0, rangeRatio: 1.00, lat: 37.4604, lng: 126.5949 },
+    { name: "영종도 삼목선착장",  type: "선착장", dist: "약 22km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.4959, lng: 126.4462 },
+    { name: "강화 외포리 선착장", type: "선착장", dist: "약 45km", timeOffsetMin:  25, rangeRatio: 1.02, lat: 37.6441, lng: 126.4176 },
+    { name: "대부도 방아머리항",  type: "항구",   dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
+  ],
+};
+
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
   const [tab, setTab] = useState<"haerujil" | "fishing">("haerujil");
@@ -672,131 +695,183 @@ function TideSection() {
 
   if (!report) return null;
 
-  const { multtae, todayTides, nextLowTide, haerujil, fishing, bestDaysThisMonth, seasonalNote } = report;
+  const { multtae, todayTides, nextLowTide, haerujil, fishing, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
-  const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기(조금)";
-  const sizeColor = multtae.size === "large" ? "#0071e3" : multtae.size === "medium" ? "#2F9E44" : "#6B7684";
+  const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
+  const sizeColor = multtae.size === "large" ? "#0071e3" : multtae.size === "medium" ? "#34C759" : "#8E8E93";
 
-  const ratingColors: Record<ConditionRating, { bg: string; text: string; bar: string }> = {
-    excellent: { bg: "#E8F5E9", text: "#2E7D32", bar: "#4CAF50" },
-    good:      { bg: "#E3F2FD", text: "#1565C0", bar: "#2196F3" },
-    poor:      { bg: "#FBE9E7", text: "#BF360C", bar: "#FF7043" },
+  const ratingMeta: Record<ConditionRating, { label: string; bg: string; text: string; accent: string }> = {
+    excellent: { label: "최적",   bg: "#F0FDF4", text: "#15803D", accent: "#16A34A" },
+    good:      { label: "가능",   bg: "#EFF6FF", text: "#1D4ED8", accent: "#2563EB" },
+    poor:      { label: "어려움", bg: "#FFF1F2", text: "#BE123C", accent: "#E11D48" },
   };
-  const rc = ratingColors[activity.rating];
+  const rm = ratingMeta[activity.rating];
 
-  const bestDays = tab === "haerujil" ? bestDaysThisMonth.haerujil : bestDaysThisMonth.fishing;
-  const today = new Date().getDate();
+  const spots = TIDE_SPOTS[tab];
+  const maxH = Math.max(...todayTides.map(t => t.heightM));
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+
+  // 분 → HH:MM 변환 (인라인)
+  const toTime = (min: number) => {
+    const m = ((min % 1440) + 1440) % 1440;
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  };
 
   return (
     <>
-      <SectionLabel label="서해안 조석 정보" />
-      <section className="mx-4 mb-1">
-        {/* 물때 헤더 카드 */}
-        <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-          <div className="flex items-center justify-between mb-3">
+      <SectionLabel label="서해안 물때 정보" />
+      <section className="mx-4 mb-1 space-y-3">
+
+        {/* ── 물때 + 조석 차트 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 pt-4 pb-3 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[22px] font-black text-[#1d1d1f]">{multtae.number}물</span>
+                <span className="text-[26px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
                 <span className="text-[16px] font-bold text-[#1d1d1f]">{multtae.name}</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: sizeColor }}>
                   {sizeLabel}
                 </span>
               </div>
-              <p className="text-[12px] text-gray-500 mt-0.5">
-                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 약 {multtae.rangeM}m
+              <p className="text-[11px] text-gray-400 mt-1">
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
               </p>
             </div>
-            <div className="text-right">
-              <p className="text-[11px] text-gray-400">다음 저조</p>
-              <p className="text-[16px] font-black text-[#0071e3]">
-                {nextLowTide ? nextLowTide.timeStr : "--:--"}
-              </p>
-            </div>
+            {nextLowTide && (
+              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[68px]">
+                <p className="text-[9px] text-blue-400 font-semibold">다음 저조</p>
+                <p className="text-[18px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
+              </div>
+            )}
           </div>
 
-          {/* 조석 타임라인 */}
-          <div className="flex items-end gap-1.5 h-12 mb-1">
-            {todayTides.map((t, i) => {
-              const heightRatio = t.type === "high" ? 1 : 0.15;
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                  <div className="w-full rounded-t-lg transition-all"
-                    style={{
-                      height: `${Math.round(heightRatio * 40 + 4)}px`,
-                      background: t.type === "high" ? "#0071e3" : "#93C5FD",
-                    }} />
-                  <span className="text-[9px] text-gray-400 font-semibold">{t.timeStr}</span>
-                  <span className="text-[8px] text-gray-300">{t.type === "high" ? "고조" : "저조"}</span>
-                </div>
-              );
-            })}
+          {/* 조석 차트 */}
+          <div className="border-t border-gray-50 px-3 pt-3 pb-4">
+            <div className="flex gap-1.5 items-end" style={{ height: "72px" }}>
+              {todayTides.map((t, i) => {
+                const ratio = t.heightM / maxH;
+                const barH = Math.max(6, Math.round(ratio * 44));
+                const isLow = t.type === "low";
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-0.5">
+                    <span className="text-[9px] font-bold leading-none mb-0.5"
+                      style={{ color: isLow ? "#9CA3AF" : "#0071e3" }}>
+                      {t.heightM}m
+                    </span>
+                    <div className="w-full rounded-t-md"
+                      style={{ height: `${barH}px`, background: isLow ? "#BFDBFE" : "#0071e3" }} />
+                    <span className="text-[10px] font-semibold text-[#1d1d1f] mt-1">{t.timeStr}</span>
+                    <span className="text-[9px] text-gray-400">{isLow ? "저조" : "고조"}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
-        {/* 탭 */}
-        <div className="flex gap-2 mb-3">
+        {/* ── 탭 ── */}
+        <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-colors ${
-                tab === key ? "bg-[#1d1d1f] text-white" : "bg-white text-gray-500 border border-gray-200"
+              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-400"
               }`}>
               {label}
             </button>
           ))}
         </div>
 
-        {/* 조건 카드 */}
-        <div className="rounded-2xl p-4 mb-3" style={{ background: rc.bg }}>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[15px] font-extrabold" style={{ color: rc.text }}>
-              {activity.title}
-            </span>
-            <div className="flex gap-0.5">
-              {[1, 2, 3].map(n => (
-                <div key={n} className="w-5 h-5 rounded-full border-2"
-                  style={{
-                    background: n <= activity.stars ? rc.bar : "transparent",
-                    borderColor: rc.bar,
-                  }} />
-              ))}
+        {/* ── 활동 조건 카드 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 pt-4 pb-3" style={{ background: rm.bg }}>
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-extrabold" style={{ color: rm.text }}>
+                  {tab === "haerujil" ? "해루질" : "낚시"} {rm.label}
+                </span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                  style={{ background: rm.accent }}>
+                  {activity.title}
+                </span>
+              </div>
+              <div className="flex gap-1">
+                {[1, 2, 3].map(n => (
+                  <div key={n} className="w-4 h-4 rounded-full"
+                    style={{ background: n <= activity.stars ? rm.accent : "rgba(0,0,0,0.1)" }} />
+                ))}
+              </div>
             </div>
+            <p className="text-[12px] leading-relaxed" style={{ color: rm.text }}>
+              {activity.reason}
+            </p>
           </div>
-          <p className="text-[13px] leading-relaxed mb-2" style={{ color: rc.text }}>
-            {activity.reason}
-          </p>
-          <div className="bg-white/60 rounded-xl px-3 py-2">
-            <p className="text-[12px] font-semibold text-gray-600">💡 {activity.tip}</p>
+          <div className="px-4 py-3 border-t border-gray-50">
+            <p className="text-[12px] text-gray-600 font-medium">💡 {activity.tip}</p>
           </div>
         </div>
 
-        {/* 이달 최적 날짜 */}
-        {bestDays.length > 0 && (
-          <div className="bg-white rounded-2xl p-4 mb-3 border border-gray-100">
-            <p className="text-[12px] font-bold text-gray-500 mb-2">
-              이달 {tab === "haerujil" ? "해루질" : "낚시"} 추천일
+        {/* ── 추천 스팟 ── */}
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-50">
+            <p className="text-[12px] font-bold text-gray-700">
+              📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
-            <div className="flex flex-wrap gap-1.5">
-              {bestDays.map(d => (
-                <span key={d}
-                  className={`text-[12px] font-bold px-2.5 py-1 rounded-full ${
-                    d === today
-                      ? "bg-[#1d1d1f] text-white"
-                      : d < today
-                      ? "bg-gray-100 text-gray-400 line-through"
-                      : "bg-blue-50 text-blue-700"
-                  }`}>
-                  {d}일
-                </span>
-              ))}
-            </div>
           </div>
-        )}
+          <div className="divide-y divide-gray-50">
+            {spots.map((s, i) => {
+              // 스팟별 조석 보정
+              const spotRange = parseFloat((multtae.rangeM * s.rangeRatio).toFixed(1));
+              const spotLowTides = todayTides
+                .filter(t => t.type === "low")
+                .map(t => {
+                  const corrMin = ((t.minutes + s.timeOffsetMin) + 1440) % 1440;
+                  return { ...t, minutes: corrMin, timeStr: toTime(corrMin) };
+                });
+              const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
+              const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
 
-        {/* 계절 안내 */}
+              return (
+                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="text-[10px] text-gray-400">{s.type} · {s.dist}</span>
+                      {!sameAsIncheon && nextSpotLow && (
+                        <>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">
+                            저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
+                          </span>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">조차 <span className="font-semibold">{spotRange}m</span></span>
+                        </>
+                      )}
+                      {sameAsIncheon && (
+                        <>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-400">인천과 동일</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={`https://map.kakao.com/link/map/${encodeURIComponent(s.name)},${s.lat},${s.lng}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[11px] font-bold text-yellow-700"
+                  >
+                    지도 ↗
+                  </a>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── 계절 안내 ── */}
         {seasonalNote && (
-          <div className="bg-amber-50 rounded-xl px-4 py-3">
+          <div className="rounded-xl bg-amber-50 px-4 py-3">
             <p className="text-[12px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
           </div>
         )}
@@ -805,28 +880,183 @@ function TideSection() {
   );
 }
 
+// ─── 스포츠 위젯 헬퍼 ────────────────────────────────────────
+function _nameToColor(name: string): string {
+  const palette = ["#1e40af","#6d28d9","#be185d","#065f46","#b45309","#991b1b","#0e7490","#4d7c0f"];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
+}
+
+function _getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 3).toUpperCase();
+}
+
+function _getMatchResult(m: SportsMatch): "WIN" | "LOSE" | "DRAW" | null {
+  if (m.home_score == null || m.away_score == null) return null;
+  const incheonName = TEAM_META[m.team_code].name;
+  const isHome = m.home_team === incheonName;
+  const myScore = isHome ? m.home_score : m.away_score;
+  const oppScore = isHome ? m.away_score : m.home_score;
+  if (myScore > oppScore) return "WIN";
+  if (myScore < oppScore) return "LOSE";
+  return "DRAW";
+}
+
+function SportTeamLogo({
+  teamCode, teamName, size = 44, logoUrl,
+}: { teamCode?: TeamCode; teamName: string; size?: number; logoUrl?: string }) {
+  const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
+  const bg = logo?.bg ?? _nameToColor(teamName);
+  const abbr = logo?.abbr ?? _getInitials(teamName);
+  const fg = logo?.fg ?? "#ffffff";
+  return (
+    <div className="flex flex-col items-center gap-1" style={{ width: size + 20 }}>
+      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm overflow-hidden"
+        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
+        ) : abbr}
+      </div>
+      <p className="text-[9px] text-gray-500 text-center font-semibold leading-tight"
+        style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        {teamName}
+      </p>
+    </div>
+  );
+}
+
+// ─── 경기 카드 (결과 / 예정 공통) ────────────────────────────
+function MatchCard({ m, assets, formatMatchDate }: {
+  m: SportsMatch;
+  assets: SportsAssets;
+  formatMatchDate: (iso: string) => string;
+}) {
+  const meta = TEAM_META[m.team_code];
+  const ls = LEAGUE_STYLES[meta.league];
+  const isLive = m.status === "live";
+  const isFinished = m.status === "finished";
+  const hasScore = m.home_score != null && m.away_score != null;
+  const result = isFinished ? _getMatchResult(m) : null;
+  const incheonName = meta.name;
+  const isHome = m.home_team === incheonName;
+  const oppName = isHome ? m.away_team : m.home_team;
+  const myScore = isHome ? m.home_score : m.away_score;
+  const oppScore = isHome ? m.away_score : m.home_score;
+  const teamLogoUrl = assets.teamLogos[m.team_code];
+  const leagueLogoUrl = assets.leagueLogos[meta.league];
+
+  return (
+    <div className={`shrink-0 w-[215px] rounded-2xl overflow-hidden shadow-sm border flex flex-col ${
+      isLive ? "border-red-300 ring-1 ring-red-200" : "border-gray-100"
+    } bg-white`}>
+      {/* 리그 헤더 */}
+      <div className="px-3 py-2.5 flex items-center justify-between"
+        style={{ background: ls?.gradient ?? meta.color }}>
+        <div className="flex items-center gap-1.5">
+          {leagueLogoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={leagueLogoUrl} alt={meta.league} className="w-5 h-5 object-contain rounded" />
+          )}
+          <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">{meta.league}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {isLive && (
+            <span className="text-[10px] font-black text-white animate-pulse bg-red-500 px-1.5 py-0.5 rounded-full">LIVE</span>
+          )}
+          {isFinished && result && (
+            <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
+              result === "WIN" ? "bg-green-500 text-white" : result === "LOSE" ? "bg-red-500 text-white" : "bg-gray-500 text-white"
+            }`}>{result === "WIN" ? "승" : result === "LOSE" ? "패" : "무"}</span>
+          )}
+          {isFinished && !result && (
+            <span className="text-[10px] font-semibold text-white/70">종료</span>
+          )}
+          {m.status === "upcoming" && m.match_date && (
+            <span className="text-[10px] font-semibold text-white/80">{formatMatchDate(m.match_date)}</span>
+          )}
+        </div>
+      </div>
+
+      {/* 팀 + 스코어 */}
+      <div className="px-3 py-3 flex-1">
+        {hasScore ? (
+          <div className="flex items-center justify-between gap-1">
+            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{myScore ?? "-"}</span>
+                <span className="text-[13px] font-black text-gray-300">:</span>
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{oppScore ?? "-"}</span>
+              </div>
+              {isFinished && <span className="text-[9px] text-gray-400 mt-0.5">최종</span>}
+            </div>
+            <SportTeamLogo teamName={oppName} size={44} />
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-1 py-1">
+            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
+            <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
+            <SportTeamLogo teamName={oppName} size={44} />
+          </div>
+        )}
+        {m.venue && <p className="text-[10px] text-gray-400 text-center mt-2 truncate">📍 {m.venue}</p>}
+        {m.broadcast && <p className="text-[10px] text-gray-400 text-center mt-0.5 truncate">📺 {m.broadcast}</p>}
+      </div>
+
+      {/* 예매 버튼 (예정 경기만) */}
+      {m.ticket_url && m.status === "upcoming" ? (
+        <div className="px-3 pb-3">
+          <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
+            className="block w-full text-center py-2 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
+            style={{ background: ls?.gradient ?? meta.color }}>
+            🎟 예매하기
+          </a>
+        </div>
+      ) : (
+        <div className="h-3" />
+      )}
+    </div>
+  );
+}
+
 // ─── 스포츠 위젯 ─────────────────────────────────────────────
 function SportsSection() {
   const [matches, setMatches] = useState<SportsMatch[] | null>(null);
+  const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
   const [filter, setFilter] = useState<string>("전체");
 
   useEffect(() => {
     fetchUpcomingSportsMatches(30).then(setMatches).catch(() => setMatches([]));
+    fetchSportsAssets().then(setAssets).catch(() => {});
   }, []);
 
   if (!matches?.length) return null;
 
   const sports = ["전체", ...Array.from(new Set(matches.map(m => m.sport)))];
   const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
+  const standings: Standing[] | null = filter !== "전체" ? (LEAGUE_STANDINGS[filter] ?? null) : null;
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const resultMatches = filtered
+    .filter(m => m.status === "finished" || m.status === "live")
+    .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
+    .slice(0, 6);
+  const upcomingMatches = filtered
+    .filter(m => m.status === "upcoming")
+    .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
+    .slice(0, 6);
 
   function formatMatchDate(iso: string) {
     const d = new Date(iso);
     const now = new Date();
-    const diffMs = d.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffMs / 86400000);
+    const diffDays = Math.ceil((d.getTime() - now.getTime()) / 86400000);
     const month = d.getMonth() + 1;
     const day = d.getDate();
-    const weekday = ["일", "월", "화", "수", "목", "금", "토"][d.getDay()];
+    const weekday = ["일","월","화","수","목","금","토"][d.getDay()];
     const hhmm = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
     if (diffDays === 0) return `오늘 ${hhmm}`;
     if (diffDays === 1) return `내일 ${hhmm}`;
@@ -839,110 +1069,110 @@ function SportsSection() {
       {/* 종목 필터 탭 */}
       <div className="overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
         <div className="flex gap-2" style={{ width: "max-content" }}>
-          {sports.map(s => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
-                filter === s
-                  ? "bg-[#1d1d1f] text-white"
-                  : "bg-white text-gray-500 border border-gray-200"
-              }`}>
-              {s}
-            </button>
-          ))}
+          {sports.map(s => {
+            const ls = LEAGUE_STYLES[s];
+            return (
+              <button key={s} onClick={() => setFilter(s)}
+                className="px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-all"
+                style={filter === s && ls
+                  ? { background: ls.gradient, color: "#fff", border: "none" }
+                  : filter === s
+                  ? { background: "#1d1d1f", color: "#fff", border: "none" }
+                  : { background: "#fff", color: "#6b7280", border: "1px solid #e5e7eb" }
+                }>
+                {s}
+              </button>
+            );
+          })}
         </div>
       </div>
-      {/* 경기 카드 */}
-      <section className="mb-1">
-        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-            {filtered.slice(0, 10).map(m => {
-              const meta = TEAM_META[m.team_code];
-              const isLive = m.status === "live";
-              const isFinished = m.status === "finished";
-              const hasScore = m.home_score != null || m.away_score != null;
-
-              return (
-                <div key={m.id}
-                  className={`shrink-0 w-[200px] rounded-2xl overflow-hidden bg-white shadow-sm border ${
-                    isLive ? "border-red-300 ring-1 ring-red-200" : "border-gray-100"
-                  }`}>
-                  {/* 팀 색상 헤더 */}
-                  <div className="px-3 py-2 flex items-center justify-between"
-                    style={{ background: meta.color + "18" }}>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[14px]">{meta.emoji}</span>
-                      <span className="text-[11px] font-extrabold" style={{ color: meta.color }}>
-                        {meta.league}
-                      </span>
-                    </div>
-                    {isLive && (
-                      <span className="text-[10px] font-black text-red-600 animate-pulse">● LIVE</span>
-                    )}
-                    {isFinished && (
-                      <span className="text-[10px] font-bold text-gray-400">종료</span>
-                    )}
-                    {m.status === "upcoming" && m.match_date && (
-                      <span className="text-[10px] font-semibold text-gray-500">
-                        {formatMatchDate(m.match_date)}
-                      </span>
-                    )}
-                  </div>
-
-                  {/* 스코어 / 경기 정보 */}
-                  <div className="px-3 py-3">
-                    {hasScore ? (
-                      <div className="flex items-center justify-center gap-3 py-1">
-                        <div className="text-center flex-1">
-                          <p className="text-[11px] text-gray-500 font-semibold truncate">{m.home_team}</p>
-                          <p className="text-[28px] font-black text-[#1d1d1f] leading-none mt-0.5">
-                            {m.home_score ?? "-"}
-                          </p>
-                        </div>
-                        <span className="text-[18px] font-black text-gray-300">:</span>
-                        <div className="text-center flex-1">
-                          <p className="text-[11px] text-gray-500 font-semibold truncate">{m.away_team}</p>
-                          <p className="text-[28px] font-black text-[#1d1d1f] leading-none mt-0.5">
-                            {m.away_score ?? "-"}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-1">
-                        <p className="text-[13px] font-bold text-[#1d1d1f] text-center">{m.home_team}</p>
-                        <p className="text-[11px] text-gray-400 text-center my-0.5">vs</p>
-                        <p className="text-[13px] font-bold text-[#1d1d1f] text-center">{m.away_team}</p>
-                      </div>
-                    )}
-
-                    {m.venue && (
-                      <p className="text-[10px] text-gray-400 text-center mt-1 truncate">
-                        📍 {m.venue}
-                      </p>
-                    )}
-                    {m.broadcast && (
-                      <p className="text-[10px] text-gray-400 text-center mt-0.5 truncate">
-                        📺 {m.broadcast}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* 예매 버튼 */}
-                  {m.ticket_url && m.status === "upcoming" && (
-                    <div className="px-3 pb-3">
-                      <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
-                        className="block w-full text-center py-2 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
-                        style={{ background: meta.color }}>
-                        🎟 예매하기
-                      </a>
-                    </div>
-                  )}
-                  {!m.ticket_url && <div className="h-3" />}
-                </div>
-              );
-            })}
-          </div>
+      {/* 경기 결과 */}
+      {resultMatches.length > 0 && (
+        <div className="px-4 mb-1">
+          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 결과</p>
         </div>
-      </section>
+      )}
+      {resultMatches.length > 0 && (
+        <section className="mb-3">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {resultMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 경기 예정 */}
+      {upcomingMatches.length > 0 && (
+        <div className="px-4 mb-1">
+          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 예정</p>
+        </div>
+      )}
+      {upcomingMatches.length > 0 && (
+        <section className="mb-1">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 결과도 예정도 없을 때 — cancelled 포함 전체 표시 */}
+      {resultMatches.length === 0 && upcomingMatches.length === 0 && (
+        <section className="mb-1">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {filtered.slice(0, 10).map(m => (
+                <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 리그 순위표 */}
+      {standings && (
+        <div className="mx-4 mb-3 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+          <div className="px-4 py-2.5 flex items-center gap-2"
+            style={{ background: LEAGUE_STYLES[filter]?.gradient ?? "#1d1d1f" }}>
+            <span className="text-[13px] font-black text-white">{filter} 순위</span>
+          </div>
+          {standings.map(s => {
+            const highlight = !!s.teamCode;
+            return (
+              <div key={s.rank}
+                className={`flex items-center px-4 py-2.5 border-b border-gray-50 last:border-0 ${
+                  highlight ? "bg-blue-50/60" : ""
+                }`}>
+                <span className={`text-[12px] font-black w-5 flex-shrink-0 ${
+                  s.rank === 1 ? "text-amber-500" : s.rank <= 3 ? "text-amber-400" : "text-gray-400"
+                }`}>{s.rank}</span>
+                <span className={`flex-1 text-[13px] ml-2 truncate ${
+                  highlight ? "font-black text-blue-700" : "font-semibold text-[#1d1d1f]"
+                }`}>
+                  {highlight ? "★ " : ""}{s.teamName}
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[11px] text-gray-500">
+                    {s.wins}승{s.draws !== undefined ? ` ${s.draws}무` : ""} {s.losses}패
+                  </span>
+                  {s.points !== undefined && (
+                    <span className={`text-[12px] font-black min-w-[28px] text-right ${
+                      highlight ? "text-blue-600" : "text-gray-700"
+                    }`}>{s.points}점</span>
+                  )}
+                  {s.winRate !== undefined && (
+                    <span className={`text-[11px] font-bold min-w-[40px] text-right ${
+                      highlight ? "text-blue-600" : "text-gray-600"
+                    }`}>{(s.winRate * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }
@@ -950,51 +1180,98 @@ function SportsSection() {
 // ─── 실거래가 위젯 ────────────────────────────────────────────
 function RealEstateWidget() {
   const router = useRouter();
+
+  // 소식 > 시세 탭과 localStorage 동기화
+  const [myAptId, setMyAptId] = useState<string | null>(null);
+  const [myAptSzIdx, setMyAptSzIdx] = useState(0);
+  useEffect(() => {
+    setMyAptId(localStorage.getItem("myAptId"));
+    setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
+  }, []);
+
+  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+  const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
+  const mySz    = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
+  const myH     = mySz?.priceHistory ?? [];
+  const myCurr  = myH[myH.length - 1]?.price ?? 0;
+  const myPrev  = myH[myH.length - 2]?.price ?? myCurr;
+  const myDiff  = myCurr - myPrev;
+  const myPct   = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
+
+  // 검단신도시 전체 평균
+  const avgTrend = (() => {
+    const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
+    return months.map(month => {
+      let total = 0, count = 0;
+      apartments.forEach(apt => apt.sizes.forEach(sz => {
+        const entry = sz.priceHistory.find(p => p.date === month);
+        if (entry) { total += entry.price; count++; }
+      }));
+      return { date: month, price: count ? Math.round(total / count) : 0 };
+    });
+  })();
+  const avgPrice = avgTrend[avgTrend.length - 1]?.price ?? 0;
+  const avgPrev  = avgTrend[avgTrend.length - 2]?.price ?? avgPrice;
+  const avgDiff  = avgPrice - avgPrev;
+  const avgPct   = avgPrev ? (Math.abs(avgDiff) / avgPrev * 100).toFixed(1) : "0.0";
+
+  const go = () => router.push("/community/?tab=시세");
+
   return (
     <section className="mx-4 mb-1 space-y-2">
-      <div className="rounded-2xl overflow-hidden"
-        style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] font-bold text-white/80">검단신도시 실거래가</span>
-            <Link href="/real-estate/"
-              className="flex items-center gap-0.5 text-[12px] text-white/60">
-              전체보기 <ChevronRight size={11} />
-            </Link>
-          </div>
-          <div className="grid grid-cols-2 gap-2">
-            {apartments.slice(0, 2).map(apt => (
-              <button key={apt.id} onClick={() => router.push("/real-estate/")}
-                className="bg-white/15 rounded-xl px-3 py-2.5 text-left active:bg-white/25">
-                <p className="text-[11px] text-white/70 truncate mb-0.5">{apt.name}</p>
-                <p className="text-[19px] font-black text-white leading-none">
-                  {formatPrice(apt.recentDeal?.price ?? 0)}
-                </p>
-                <p className="text-[10px] text-white/60 mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-        {apartments.slice(2, 5).map(apt => (
-          <button key={apt.id} onClick={() => router.push("/real-estate/")}
-            className="w-full px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
-            <div className="text-left min-w-0 flex-1 pr-2">
-              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{apt.name}</p>
-              <p className="text-[12px] text-[#6e6e73] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
+      {/* 내 집 시세 */}
+      <button onClick={go}
+        className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3.5 text-left active:bg-gray-50">
+        {myApt && mySz ? (
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1 mb-0.5">
+                <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
+                <span className="text-[10px] text-gray-400">내 집 시세</span>
+              </div>
+              <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{myApt.name}</p>
+              <p className="text-[11px] text-gray-400">{myApt.dong} · {mySz.pyeong}평</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[15px] font-bold text-[#059669]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-              <p className="text-[11px] text-[#6e6e73]">실거래</p>
+              <p className="text-[20px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
+              {myDiff !== 0 && (
+                <p className={`text-[11px] font-semibold ${myDiff > 0 ? "text-red-500" : "text-blue-500"}`}>
+                  {myDiff > 0 ? "▲" : "▼"} {formatPrice(Math.abs(myDiff))} ({myPct}%)
+                </p>
+              )}
             </div>
-          </button>
-        ))}
-        <Link href="/real-estate/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
-          시세 전체 보기 <ChevronRight size={13} />
-        </Link>
-      </div>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Star size={14} className="text-amber-400 fill-amber-400 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-[#1d1d1f]">내 집 등록</p>
+              <p className="text-[11px] text-gray-400">소식 → 시세 탭에서 내 집을 등록하세요</p>
+            </div>
+            <ChevronRight size={14} className="text-gray-300 shrink-0" />
+          </div>
+        )}
+      </button>
+
+      {/* 검단 신도시 평균 실거래가 */}
+      <button onClick={go}
+        className="w-full rounded-2xl overflow-hidden active:opacity-90 text-left"
+        style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
+        <div className="px-4 py-3.5">
+          <p className="text-[11px] text-white/60 mb-0.5">검단 신도시 평균 실거래가</p>
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-[26px] font-black text-white leading-tight">
+              {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
+            </p>
+            {avgDiff !== 0 && (
+              <p className={`text-[12px] font-semibold pb-1 ${avgDiff > 0 ? "text-green-200" : "text-blue-200"}`}>
+                {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
+              </p>
+            )}
+          </div>
+          <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
+        </div>
+      </button>
     </section>
   );
 }
@@ -1275,6 +1552,7 @@ interface EmergencyRoom {
   hours: string;
   isPediatric: boolean;
   level: string; // 응급의료기관 분류
+  logo_url?: string | null;
 }
 
 const emergencyRooms: EmergencyRoom[] = [
@@ -1348,7 +1626,11 @@ function PharmacySection() {
     fetchEmergencyRooms("all").then(data => { if (data.length > 0) setErData(data); });
   }, []);
 
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const isWeekend = now.getDay() === 0 || now.getDay() === 6;
   const hour = now.getHours();
   const isNight = hour >= 21 || hour < 6;
@@ -1419,8 +1701,11 @@ function PharmacySection() {
                 const { isOpen, todayHours, todayLabel } = getPharmacyStatus(p, now);
                 return (
                   <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
-                      <PillBottle size={18} className={isOpen ? "text-[#065F46]" : "text-[#86868b]"} />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${p.logo_url ? "bg-white border border-[#e5e5ea]" : isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
+                      {p.logo_url
+                        ? <img src={p.logo_url} alt={p.name} className="w-full h-full object-cover" />
+                        : <PillBottle size={18} className={isOpen ? "text-[#065F46]" : "text-[#86868b]"} />
+                      }
                     </div>
                     <div className="flex-1 min-w-0">
                       {/* 이름 + 거리 */}
@@ -1502,10 +1787,13 @@ function PharmacySection() {
           <div className="divide-y divide-[#f5f5f7]">
             {erList.map(er => (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 bg-[#FEE2E2]">
-                  {mainType === "소아응급실"
-                    ? <span className="text-[18px]">👶</span>
-                    : <AlertTriangle size={18} className="text-[#F04452]" />}
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${er.logo_url ? "bg-white border border-[#e5e5ea]" : "bg-[#FEE2E2]"}`}>
+                  {er.logo_url
+                    ? <img src={er.logo_url} alt={er.name} className="w-full h-full object-cover" />
+                    : mainType === "소아응급실"
+                      ? <span className="text-[18px]">👶</span>
+                      : <AlertTriangle size={18} className="text-[#F04452]" />
+                  }
                 </div>
                 <div className="flex-1 min-w-0">
                   {/* 이름 + 거리 */}
@@ -1673,9 +1961,9 @@ function SectionLabel({
   linkLabel?: string;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 pt-5 pb-2.5">
+    <div className="flex items-center justify-between px-4 pt-6 pb-3">
       <div className="flex items-center gap-2">
-        <span className="text-[16px] font-extrabold text-[#1d1d1f]">{label}</span>
+        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
         {badge}
       </div>
       {href && (
@@ -1893,26 +2181,32 @@ function HomeTransportWidget() {
 
   const hasBus    = favStops.size > 0;
   const hasSubway = favSubwayStations.length > 0;
+  const transportHref = (hasSubway && !hasBus) ? "/transport/?tab=지하철" : "/transport/?tab=버스";
 
   if (!hasBus && !hasSubway) {
     return (
-      <section className="mx-4 mb-1">
-        <button onClick={() => router.push("/transport/")}
-          className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-            <Bus size={18} className="text-[#0071e3]" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
-            <p className="text-[12px] text-[#86868b] mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기해 보세요</p>
-          </div>
-          <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
-        </button>
-      </section>
+      <>
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
+        <section className="mx-4 mb-1">
+          <button onClick={() => router.push("/transport/")}
+            className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
+              <Bus size={18} className="text-[#0071e3]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
+              <p className="text-[12px] text-[#86868b] mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기해 보세요</p>
+            </div>
+            <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
+          </button>
+        </section>
+      </>
     );
   }
 
   return (
+    <>
+    <SectionLabel label="교통" href={transportHref} linkLabel="전체보기" />
     <section className="mx-4 mb-1 space-y-2.5">
 
       {/* ── 버스 정류장 카드 ── */}
@@ -1926,17 +2220,14 @@ function HomeTransportWidget() {
         const isLoading = busLoading.has(stopId);
 
         return (
-          <div key={stopId} className="bg-white rounded-2xl overflow-hidden shadow-sm"
-            style={{ borderLeft: "4px solid #0071e3" }}>
+          <div key={stopId} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 정류장 헤더 */}
-            <div className="px-4 pt-3.5 pb-3 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-                <Bus size={14} className="text-[#0071e3]" />
-              </div>
-              <span className="text-[#1d1d1f] font-extrabold text-[15px] flex-1 truncate">{stopName}</span>
+            <div className="px-4 py-2.5 flex items-center gap-2 bg-[#0071e3]">
+              <Bus size={14} className="text-white shrink-0" />
+              <span className="text-white font-extrabold text-[14px] flex-1 truncate">{stopName}</span>
               <button onClick={() => refreshBusStop(stopId)} disabled={isLoading}
-                className="w-8 h-8 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:bg-[#e5e5ea] disabled:opacity-40">
-                <RefreshCw size={13} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
+                className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
+                <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
             {/* 도착 정보 */}
@@ -1963,21 +2254,18 @@ function HomeTransportWidget() {
         const isLoading = subwayLoading.has(st.id);
 
         return (
-          <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm"
-            style={{ borderLeft: `4px solid ${st.lineColor}` }}>
+          <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 역 헤더 */}
-            <div className="px-4 pt-3.5 pb-3 flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: st.lineColor + "18" }}>
-                <Train size={14} style={{ color: st.lineColor }} />
-              </div>
+            <div className="px-4 py-2.5 flex items-center gap-2"
+              style={{ background: st.lineColor }}>
+              <Train size={14} className="text-white shrink-0" />
               <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                <span className="text-[#1d1d1f] font-extrabold text-[15px] truncate">{st.displayName}</span>
-                <span className="text-[11px] font-bold shrink-0" style={{ color: st.lineColor }}>{st.line}</span>
+                <span className="text-white font-extrabold text-[14px] truncate">{st.displayName}</span>
+                <span className="text-[11px] font-bold text-white/70 shrink-0">{st.line}</span>
               </div>
               <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
-                className="w-8 h-8 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:bg-[#e5e5ea] disabled:opacity-40">
-                <RefreshCw size={13} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
+                className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
+                <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
             {/* 도착 정보 */}
@@ -1997,21 +2285,8 @@ function HomeTransportWidget() {
         );
       })}
 
-      {/* ── 하단 액션 바 ── */}
-      <div className="bg-white rounded-2xl flex overflow-hidden shadow-sm">
-        <button onClick={refreshAll} disabled={globalRefreshing}
-          className="flex items-center justify-center gap-1.5 py-3.5 px-5 active:bg-[#f5f5f7] disabled:opacity-50">
-          <RefreshCw size={14} className={`text-[#86868b] ${globalRefreshing ? "animate-spin" : ""}`} />
-          <span className="text-[13px] text-[#86868b] font-medium">새로고침</span>
-        </button>
-        <div className="w-px bg-[#f5f5f7]" />
-        <button onClick={() => router.push("/transport/")}
-          className="flex-1 py-3.5 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
-          <span className="text-[13px] text-[#0071e3] font-semibold">전체보기</span>
-          <ChevronRight size={14} className="text-[#0071e3]" />
-        </button>
-      </div>
     </section>
+    </>
   );
 }
 
@@ -2078,12 +2353,7 @@ export default function HomePage() {
         <PharmacySection />
       </>
     ),
-    transport: () => (
-      <>
-        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
-        <HomeTransportWidget />
-      </>
-    ),
+    transport: () => <HomeTransportWidget />,
     community: () => (
       <>
         <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />
@@ -2100,7 +2370,7 @@ export default function HomePage() {
     instagram: () => <InstagramSection />,
     realestate: () => (
       <>
-        <SectionLabel label="실거래가" href="/real-estate/" linkLabel="전체보기" />
+        <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),

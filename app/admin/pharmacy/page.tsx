@@ -5,6 +5,7 @@ import {
   adminFetchPharmacies, adminUpsertPharmacy, adminDeletePharmacy, seedPharmacies,
   type AdminPharmacy,
 } from "@/lib/db/admin-health";
+import ImageUpload from "@/components/ui/ImageUpload";
 
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
@@ -24,7 +25,10 @@ const EMPTY: AdminPharmacy = {
   id: "", name: "", address: "", phone: "",
   weekday_hours: "", weekend_hours: "", night_hours: "",
   is_night_pharmacy: false, is_weekend_pharmacy: false,
+  logo_url: null,
 };
+
+const LOGO_SQL = `ALTER TABLE pharmacies ADD COLUMN IF NOT EXISTS logo_url TEXT;\nALTER TABLE emergency_rooms ADD COLUMN IF NOT EXISTS logo_url TEXT;`;
 
 function PharmacyModal({ initial, onSave, onClose }: {
   initial: AdminPharmacy | null;
@@ -36,6 +40,8 @@ function PharmacyModal({ initial, onSave, onClose }: {
   );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
+  const [logoWarn, setLogoWarn] = useState(false);
+  const [sqlCopied, setSqlCopied] = useState(false);
 
   function set<K extends keyof AdminPharmacy>(k: K, v: AdminPharmacy[K]) {
     setForm(f => ({ ...f, [k]: v }));
@@ -46,18 +52,27 @@ function PharmacyModal({ initial, onSave, onClose }: {
     if (!form.name.trim()) { setErr("약국명을 입력하세요."); return; }
     if (!form.address.trim()) { setErr("주소를 입력하세요."); return; }
     setSaving(true);
+    setLogoWarn(false);
     try {
-      await adminUpsertPharmacy({
+      const payload = {
         ...form,
         weekday_hours: form.weekday_hours || null,
         weekend_hours: form.weekend_hours || null,
         night_hours: form.night_hours || null,
-      });
+      };
+      const { logoSaved } = await adminUpsertPharmacy(payload);
+      if (!logoSaved) { setLogoWarn(true); setSaving(false); onSave(); return; }
       onSave();
       onClose();
     } catch (e: unknown) {
       setErr(e instanceof Error ? e.message : "저장 실패");
     } finally { setSaving(false); }
+  }
+
+  async function copySQL() {
+    await navigator.clipboard.writeText(LOGO_SQL);
+    setSqlCopied(true);
+    setTimeout(() => setSqlCopied(false), 2000);
   }
 
   return (
@@ -117,7 +132,32 @@ function PharmacyModal({ initial, onSave, onClose }: {
               </label>
             </div>
 
+            {/* 로고/사진 */}
+            <Field label="로고 또는 사진 (선택)">
+              <ImageUpload
+                value={form.logo_url}
+                onChange={url => set("logo_url", url)}
+                folder="pharmacies"
+              />
+            </Field>
+
             {err && <p className="text-[#F04452] text-[12px]">{err}</p>}
+
+            {logoWarn && (
+              <div className="rounded-xl bg-[#FFF7ED] border border-[#FED7AA] p-3 space-y-2">
+                <p className="text-[12px] font-bold text-[#92400E]">⚠️ 나머지 정보는 저장됐지만 로고는 저장되지 않았습니다</p>
+                <p className="text-[11px] text-[#92400E]">Supabase SQL Editor에서 아래 SQL을 실행한 후 다시 저장하세요.</p>
+                <pre className="text-[10px] bg-white rounded-lg p-2 text-[#374151] overflow-x-auto border border-[#FED7AA]">{LOGO_SQL}</pre>
+                <div className="flex gap-2">
+                  <button type="button" onClick={copySQL}
+                    className="px-3 py-1.5 rounded-lg text-[11px] font-bold bg-[#92400E] text-white">
+                    {sqlCopied ? "✓ 복사됨" : "SQL 복사"}
+                  </button>
+                  <button type="button" onClick={onClose}
+                    className="px-3 py-1.5 rounded-lg text-[11px] border border-[#FED7AA] text-[#92400E]">닫기</button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="px-6 py-4 border-t flex gap-2 justify-end">
             <button type="button" onClick={onClose}
@@ -152,7 +192,10 @@ export default function AdminPharmacyPage() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    fetch("/api/admin/init-db", { method: "POST" }).catch(() => {});
+  }, [load]);
 
   async function handleDelete(id: string, name: string) {
     if (!confirm(`'${name}'을(를) 삭제할까요?`)) return;
