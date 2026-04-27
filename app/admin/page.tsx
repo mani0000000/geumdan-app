@@ -13,10 +13,20 @@ interface DiagResult {
   advice: string;
 }
 
+interface FixRlsResult {
+  success: boolean;
+  writeTest: { ok: boolean; msg: string };
+  policyResults?: { table: string; ok: boolean; msg: string }[];
+  message?: string;
+  sql?: string | null;
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [diag, setDiag] = useState<DiagResult | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fixing, setFixing] = useState(false);
+  const [fixResult, setFixResult] = useState<FixRlsResult | null>(null);
 
   useEffect(() => {
     fetch("/api/admin/diag")
@@ -84,20 +94,49 @@ export default function AdminPage() {
           <p className="font-bold text-blue-700 text-[14px] mb-1">해결 방법</p>
           <p className="text-[13px] text-blue-800 leading-relaxed">{diag.advice}</p>
 
-          {!diag.isServiceKey && (
-            <div className="mt-3 bg-white/60 rounded-xl p-3 text-[12px] text-gray-700 space-y-1">
-              <p className="font-bold">① Supabase 서비스 롤 키 복사</p>
-              <p>Supabase → Project Settings → API → <strong>service_role</strong> secret</p>
-              <p className="font-bold mt-1">② Vercel 환경변수 설정</p>
-              <p>이름: <code className="bg-gray-100 px-1 rounded font-mono">SUPABASE_SERVICE_KEY</code></p>
-              <p>값: 복사한 service_role 키</p>
-              <p className="font-bold mt-1">③ Vercel 재배포 (Deployments → Redeploy)</p>
+          {/* 자동 수정 버튼 */}
+          {!diag.writeOk && (
+            <button
+              onClick={async () => {
+                setFixing(true);
+                setFixResult(null);
+                try {
+                  const res = await fetch("/api/admin/fix-rls", { method: "POST" });
+                  const data = await res.json();
+                  setFixResult(data);
+                  if (data.success) setTimeout(() => window.location.reload(), 1500);
+                } catch {
+                  setFixResult({ success: false, writeTest: { ok: false, msg: "요청 실패" } });
+                } finally {
+                  setFixing(false);
+                }
+              }}
+              disabled={fixing}
+              className="mt-3 w-full py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-bold disabled:opacity-50"
+            >
+              {fixing ? "자동 수정 중…" : "⚡ RLS 자동 수정 시도"}
+            </button>
+          )}
+
+          {fixResult && (
+            <div className={`mt-3 rounded-xl p-3 text-[12px] ${fixResult.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
+              <p className="font-bold mb-1">{fixResult.success ? "✅ 자동 수정 성공 — 새로고침 중…" : "❌ 자동 수정 실패"}</p>
+              <p className="font-mono">{fixResult.writeTest?.msg}</p>
+              {fixResult.message && <p className="mt-1">{fixResult.message}</p>}
             </div>
           )}
 
-          {diag.isServiceKey && !diag.writeOk && (
+          {!diag.isServiceKey && (
+            <div className="mt-3 bg-white/60 rounded-xl p-3 text-[12px] text-gray-700 space-y-1">
+              <p className="font-bold">서비스 롤 키 설정 (영구 해결)</p>
+              <p>Supabase → Project Settings → API → <strong>service_role</strong> secret 복사</p>
+              <p>Vercel 환경변수 <code className="bg-gray-100 px-1 rounded font-mono">SUPABASE_SERVICE_KEY</code> 에 붙여넣기 후 재배포</p>
+            </div>
+          )}
+
+          {diag.isServiceKey && !diag.writeOk && !fixResult?.success && (
             <div className="mt-3 bg-white/60 rounded-xl p-3 text-[12px] text-gray-700">
-              <p className="font-bold mb-1">Supabase SQL Editor에서 실행:</p>
+              <p className="font-bold mb-1">수동 방법 (Supabase SQL Editor):</p>
               <pre className="bg-gray-100 rounded p-2 overflow-x-auto text-[11px] whitespace-pre-wrap">{`DO $$
 DECLARE t text;
 BEGIN
