@@ -18,6 +18,7 @@ export interface Mart {
   closing_pattern: MartClosingPattern;
   notice: string | null;
   logo_url: string | null;
+  image_url: string | null;
   lat: number | null;
   lng: number | null;
   sort_order: number;

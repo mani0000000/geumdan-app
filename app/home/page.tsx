@@ -126,7 +126,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
   if (loading) {
     return (
-      <div className="mx-4 mt-3 mb-1 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
+      <div className="mx-4 mt-3 mb-3 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 bg-white/20 rounded-xl" />
           <div className="flex-1 space-y-2">
@@ -151,7 +151,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
   return (
     <>
-      <div className={`mx-4 mt-3 mb-1 bg-gradient-to-br ${gradient} rounded-2xl overflow-hidden`}>
+      <div className={`mx-4 mt-3 mb-3 bg-gradient-to-br ${gradient} rounded-2xl overflow-hidden`}>
         {/* 항상 보이는 바 */}
         <button onClick={() => setExpanded(e => !e)}
           className="w-full flex items-center gap-3 px-4 py-3.5 active:opacity-80">
@@ -286,7 +286,7 @@ function CouponSection() {
   if (coupons.length === 0) return null;
 
   return (
-    <section className="mb-1">
+    <section className="mb-3">
       <SectionLabel
         label="이번 주 쿠폰"
         badge={<Tag size={14} className="text-[#F59E0B]" />}
@@ -397,7 +397,7 @@ function NewOpeningsSection() {
   if (openings.length === 0) return null;
 
   return (
-    <section className="mb-1">
+    <section className="mb-3">
       <SectionLabel
         label="이번달 오픈"
         badge={<span className="text-[10px] font-black bg-[#F04452] text-white px-2 py-0.5 rounded-full tracking-wide">NEW</span>}
@@ -447,7 +447,7 @@ function CommunityWidget() {
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
   if (hotPosts.length === 0) return null;
   return (
-    <section className="mx-4 mb-1 space-y-2">
+    <section className="mx-4 mb-3 space-y-2">
       <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
         className="w-full text-left rounded-2xl overflow-hidden active:opacity-90"
         style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
@@ -510,7 +510,7 @@ function NewsWidget() {
   const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
   if (topNews.length === 0) return null;
   return (
-    <section className="mx-4 mb-1 space-y-2">
+    <section className="mx-4 mb-3 space-y-2">
       <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
         className="block rounded-2xl overflow-hidden active:opacity-90"
         style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
@@ -556,24 +556,24 @@ function YouTubeSection() {
   return (
     <>
       <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
-      <section className="mb-1">
+      <section className="mb-3">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          <div className="flex gap-3" style={{ width: "max-content" }}>
+          <div className="flex gap-4" style={{ width: "max-content" }}>
             {videos.map(v => (
               <a key={v.videoId} href={v.url} target="_blank" rel="noopener noreferrer"
-                className="shrink-0 w-[240px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
+                className="shrink-0 w-[290px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
                 <div className="relative w-full aspect-video bg-[#f5f5f7]">
                   <img src={v.thumbnail} alt={v.title} className="w-full h-full object-cover" />
                   {/* 재생 버튼 — 우측 상단 */}
-                  <div className="absolute top-2 right-2">
-                    <div className="w-8 h-8 bg-[#FF0000]/90 rounded-full flex items-center justify-center shadow-md">
-                      <div className="w-0 h-0 border-y-[5px] border-y-transparent border-l-[9px] border-l-white ml-0.5" />
+                  <div className="absolute top-2.5 right-2.5">
+                    <div className="w-11 h-11 bg-[#FF0000] rounded-full flex items-center justify-center shadow-lg ring-2 ring-white/40">
+                      <div className="w-0 h-0 border-y-[7px] border-y-transparent border-l-[11px] border-l-white ml-0.5" />
                     </div>
                   </div>
                 </div>
-                <div className="px-3 py-2.5">
-                  <p className="text-[13px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
-                  <p className="text-[12px] text-[#86868b] mt-1">{v.channelName}</p>
+                <div className="px-3.5 py-3">
+                  <p className="text-[14px] font-bold text-[#1d1d1f] line-clamp-2 leading-snug">{v.title}</p>
+                  <p className="text-[12px] text-[#86868b] mt-1.5 font-medium">{v.channelName}</p>
                 </div>
               </a>
             ))}
@@ -592,7 +592,7 @@ function InstagramSection() {
   return (
     <>
       <SectionLabel label="인스타 소식" href="/news/" linkLabel="전체보기" />
-      <section className="mb-1">
+      <section className="mb-3">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
             {posts.map(p => (
@@ -617,6 +617,16 @@ function InstagramSection() {
   );
 }
 // ─── 가볼만한곳 위젯 ─────────────────────────────────────────
+function placeKakaoMapUrl(p: Place): string {
+  const lat = (p as Place & { lat?: number | null }).lat;
+  const lng = (p as Place & { lng?: number | null }).lng;
+  if (lat != null && lng != null) {
+    return `https://map.kakao.com/link/map/${encodeURIComponent(p.name)},${lat},${lng}`;
+  }
+  const q = p.address && p.address.trim().length > 0 ? p.address : p.name;
+  return `https://map.kakao.com/link/search/${encodeURIComponent(q)}`;
+}
+
 function PlacesSection() {
   const [places, setPlaces] = useState<Place[] | null>(null);
   useEffect(() => { fetchPublishedPlaces().then(setPlaces).catch(() => setPlaces([])); }, []);
@@ -624,39 +634,44 @@ function PlacesSection() {
   return (
     <>
       <SectionLabel label="가볼만한곳" href="/transport/?tab=가볼만한곳" linkLabel="전체보기" />
-      <section className="mb-1">
+      <section className="mb-3">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          <div className="flex gap-3" style={{ width: "max-content" }}>
+          <div className="flex gap-3.5" style={{ width: "max-content" }}>
             {places.slice(0, 8).map(p => {
               const meta = CATEGORY_META[p.category];
               return (
-                <Link key={p.id} href="/transport/?tab=가볼만한곳"
-                  className="shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
-                  <div className="w-full h-[130px] relative">
+                <a key={p.id} href={placeKakaoMapUrl(p)} target="_blank" rel="noopener noreferrer"
+                  className="shrink-0 w-[235px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
+                  <div className="w-full h-[155px] relative">
                     {p.thumbnail_url
                       ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
-                      : <div className="w-full h-full flex items-center justify-center text-[48px]"
+                      : <div className="w-full h-full flex items-center justify-center text-[52px]"
                           style={{ background: meta.bg }}>
                           🗺️
                         </div>
                     }
-                    <span className="absolute top-2 left-2 text-[11px] font-bold px-2 py-1 rounded-lg"
+                    <span className="absolute top-2.5 left-2.5 text-[11px] font-bold px-2 py-1 rounded-lg"
                       style={{ background: meta.bg, color: meta.color }}>
                       {meta.label}
                     </span>
                   </div>
-                  <div className="px-3 py-2.5">
-                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{p.name}</p>
-                    <p className="text-[12px] text-[#86868b] mt-0.5 line-clamp-2 leading-snug">{p.short_desc}</p>
-                    {(p.distance_km != null || p.drive_min != null) && (
-                      <p className="text-[12px] text-[#3182F6] mt-1.5 font-semibold">
-                        {p.distance_km != null ? `${p.distance_km}km` : ""}
-                        {p.distance_km != null && p.drive_min != null ? " · " : ""}
-                        {p.drive_min != null ? `차로 ${p.drive_min}분` : ""}
-                      </p>
-                    )}
+                  <div className="px-3.5 py-3">
+                    <p className="text-[15px] font-extrabold text-[#1d1d1f] truncate">{p.name}</p>
+                    <p className="text-[13px] text-[#6e6e73] mt-1 line-clamp-2 leading-snug">{p.short_desc}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      {(p.distance_km != null || p.drive_min != null) ? (
+                        <p className="text-[11px] text-[#3182F6] font-bold">
+                          {p.distance_km != null ? `${p.distance_km}km` : ""}
+                          {p.distance_km != null && p.drive_min != null ? " · " : ""}
+                          {p.drive_min != null ? `차로 ${p.drive_min}분` : ""}
+                        </p>
+                      ) : <span />}
+                      <span className="inline-flex items-center gap-0.5 text-[11px] font-bold text-[#FFCD00] bg-[#1d1d1f] px-2 py-0.5 rounded-full">
+                        <MapPin size={10} /> 지도
+                      </span>
+                    </div>
                   </div>
-                </Link>
+                </a>
               );
             })}
           </div>
@@ -721,7 +736,7 @@ function TideSection() {
   return (
     <>
       <SectionLabel label="서해안 물때 정보" />
-      <section className="mx-4 mb-1 space-y-3">
+      <section className="mx-4 mb-3 space-y-3">
 
         {/* ── 물때 + 조석 차트 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
@@ -1024,10 +1039,13 @@ function MatchCard({ m, assets, formatMatchDate }: {
 }
 
 // ─── 스포츠 위젯 ─────────────────────────────────────────────
+type SportsTab = "예정" | "결과";
+
 function SportsSection() {
   const [matches, setMatches] = useState<SportsMatch[] | null>(null);
   const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
   const [filter, setFilter] = useState<string>("전체");
+  const [tab, setTab] = useState<SportsTab>("예정");
 
   useEffect(() => {
     fetchUpcomingSportsMatches(30).then(setMatches).catch(() => setMatches([]));
@@ -1044,11 +1062,15 @@ function SportsSection() {
   const resultMatches = filtered
     .filter(m => m.status === "finished" || m.status === "live")
     .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
-    .slice(0, 6);
+    .slice(0, 8);
   const upcomingMatches = filtered
     .filter(m => m.status === "upcoming")
     .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
-    .slice(0, 6);
+    .slice(0, 8);
+  const showFallback = resultMatches.length === 0 && upcomingMatches.length === 0;
+  const visibleMatches = showFallback
+    ? filtered.slice(0, 10)
+    : tab === "예정" ? upcomingMatches : resultMatches;
 
   function formatMatchDate(iso: string) {
     const d = new Date(iso);
@@ -1066,6 +1088,29 @@ function SportsSection() {
   return (
     <>
       <SectionLabel label="인천 스포츠" />
+
+      {/* 결과 / 예정 탭 */}
+      {!showFallback && (
+        <div className="px-4 pb-2.5">
+          <div className="bg-white rounded-2xl p-1 inline-flex w-full shadow-sm border border-[#f0f0f0]">
+            {(["예정", "결과"] as SportsTab[]).map(t => {
+              const count = t === "예정" ? upcomingMatches.length : resultMatches.length;
+              return (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`flex-1 py-2 rounded-xl text-[14px] font-bold transition-all ${
+                    tab === t ? "bg-[#1d1d1f] text-white" : "text-[#86868b]"
+                  }`}>
+                  {t === "예정" ? "📅 경기 예정" : "🏆 경기 결과"}
+                  <span className={`ml-1.5 text-[11px] font-extrabold ${tab === t ? "text-white/80" : "text-[#bdbdc1]"}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* 종목 필터 탭 */}
       <div className="overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
         <div className="flex gap-2" style={{ width: "max-content" }}>
@@ -1086,44 +1131,17 @@ function SportsSection() {
           })}
         </div>
       </div>
-      {/* 경기 결과 */}
-      {resultMatches.length > 0 && (
-        <div className="px-4 mb-1">
-          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 결과</p>
+
+      {/* 경기 카드 */}
+      {visibleMatches.length === 0 ? (
+        <div className="mx-4 bg-white rounded-2xl py-8 px-4 text-center text-[13px] text-[#86868b] shadow-sm mb-1">
+          {tab === "예정" ? "예정된 경기가 없어요" : "최근 경기 결과가 없어요"}
         </div>
-      )}
-      {resultMatches.length > 0 && (
+      ) : (
         <section className="mb-3">
           <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
             <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {resultMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 경기 예정 */}
-      {upcomingMatches.length > 0 && (
-        <div className="px-4 mb-1">
-          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 예정</p>
-        </div>
-      )}
-      {upcomingMatches.length > 0 && (
-        <section className="mb-1">
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* 결과도 예정도 없을 때 — cancelled 포함 전체 표시 */}
-      {resultMatches.length === 0 && upcomingMatches.length === 0 && (
-        <section className="mb-1">
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {filtered.slice(0, 10).map(m => (
+              {visibleMatches.map(m => (
                 <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
               ))}
             </div>
@@ -1218,7 +1236,7 @@ function RealEstateWidget() {
   const go = () => router.push("/community/?tab=시세");
 
   return (
-    <section className="mx-4 mb-1 space-y-2">
+    <section className="mx-4 mb-3 space-y-2">
       {/* 내 집 시세 */}
       <button onClick={go}
         className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3.5 text-left active:bg-gray-50">
@@ -1351,7 +1369,7 @@ function MartSection() {
   return (
     <>
       <SectionLabel label="주변 마트" />
-      <section className="mx-4 mb-1">
+      <section className="mx-4 mb-3">
       <div className="bg-white rounded-2xl overflow-hidden">
 
         {/* 영업 상태 배너 */}
@@ -1388,13 +1406,15 @@ function MartSection() {
 
             return (
               <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
-                {/* 로고 */}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
+                {/* 사진 / 로고 */}
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
                   todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
-                  {mart.logo_url
+                  {mart.image_url
+                    ? <img src={mart.image_url} alt={mart.name} className="w-full h-full object-cover" />
+                    : mart.logo_url
                     ? <img src={mart.logo_url} alt={mart.brand} className="w-full h-full object-contain p-1" />
-                    : <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                    : <ShoppingBag size={18} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
                   }
                 </div>
 
@@ -1650,7 +1670,7 @@ function PharmacySection() {
   );
 
   return (
-    <section className="mx-4 mb-1">
+    <section className="mx-4 mb-3">
       <div className="bg-white rounded-2xl overflow-hidden">
         {/* 상태 배너 */}
         {(isWeekend || isNight) && mainType === "약국" && (
@@ -1961,13 +1981,13 @@ function SectionLabel({
   linkLabel?: string;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 pt-6 pb-3">
+    <div className="flex items-center justify-between px-4 pt-7 pb-3">
       <div className="flex items-center gap-2">
-        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
+        <span className="text-[21px] font-black text-[#1d1d1f] tracking-tight">{label}</span>
         {badge}
       </div>
       {href && (
-        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+        <Link href={href} className="text-[13px] text-[#0071e3] font-semibold flex items-center gap-0.5">
           {linkLabel} <ChevronRight size={13} />
         </Link>
       )}
@@ -2187,7 +2207,7 @@ function HomeTransportWidget() {
     return (
       <>
         <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
-        <section className="mx-4 mb-1">
+        <section className="mx-4 mb-3">
           <button onClick={() => router.push("/transport/")}
             className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
@@ -2207,7 +2227,7 @@ function HomeTransportWidget() {
   return (
     <>
     <SectionLabel label="교통" href={transportHref} linkLabel="전체보기" />
-    <section className="mx-4 mb-1 space-y-2.5">
+    <section className="mx-4 mb-3 space-y-2.5">
 
       {/* ── 버스 정류장 카드 ── */}
       {hasBus && favStopIds.map(stopId => {
