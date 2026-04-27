@@ -13,7 +13,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
@@ -618,14 +618,14 @@ function PlacesSection() {
   if (!places?.length) return null;
   return (
     <>
-      <SectionLabel label="가볼만한곳" href="/places/" linkLabel="전체보기" />
+      <SectionLabel label="가볼만한곳" href="/transport/?tab=가볼만한곳" linkLabel="전체보기" />
       <section className="mb-1">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
             {places.slice(0, 8).map(p => {
               const meta = CATEGORY_META[p.category];
               return (
-                <Link key={p.id} href="/places/"
+                <Link key={p.id} href="/transport/?tab=가볼만한곳"
                   className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
                   <div className="w-full h-[100px] relative">
                     {p.thumbnail_url
@@ -715,7 +715,7 @@ function TideSection() {
 
   return (
     <>
-      <SectionLabel label="서해안 조석 정보" />
+      <SectionLabel label="서해안 물때 정보" />
       <section className="mx-4 mb-1 space-y-3">
 
         {/* ── 물때 + 조석 차트 ── */}
@@ -1020,51 +1020,57 @@ function SportsSection() {
 // ─── 실거래가 위젯 ────────────────────────────────────────────
 function RealEstateWidget() {
   const router = useRouter();
+  const myHome = initialMyHomes[0] ?? null;
+
+  // 검단신도시 평균 거래가 계산
+  const pricesWithDeal = apartments.filter(a => (a.recentDeal?.price ?? 0) > 0);
+  const avgPrice = pricesWithDeal.length > 0
+    ? Math.round(pricesWithDeal.reduce((s, a) => s + a.recentDeal!.price, 0) / pricesWithDeal.length / 100) * 100
+    : 0;
+
   return (
-    <section className="mx-4 mb-1 space-y-2">
-      <div className="rounded-2xl overflow-hidden"
+    <section className="mx-4 mb-1">
+      <button onClick={() => router.push("/real-estate/")}
+        className="w-full rounded-2xl overflow-hidden active:opacity-90"
         style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
         <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[13px] font-bold text-white/80">검단신도시 실거래가</span>
-            <Link href="/real-estate/"
-              className="flex items-center gap-0.5 text-[12px] text-white/60">
-              전체보기 <ChevronRight size={11} />
-            </Link>
+          {/* 검단신도시 평균 */}
+          <div className="mb-3.5">
+            <p className="text-[11px] text-white/60 mb-0.5">검단신도시 평균 거래가</p>
+            <p className="text-[28px] font-black text-white leading-none">
+              {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
+            </p>
+            <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {apartments.slice(0, 2).map(apt => (
-              <button key={apt.id} onClick={() => router.push("/real-estate/")}
-                className="bg-white/15 rounded-xl px-3 py-2.5 text-left active:bg-white/25">
-                <p className="text-[11px] text-white/70 truncate mb-0.5">{apt.name}</p>
-                <p className="text-[19px] font-black text-white leading-none">
-                  {formatPrice(apt.recentDeal?.price ?? 0)}
-                </p>
-                <p className="text-[10px] text-white/60 mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
-              </button>
-            ))}
-          </div>
+
+          {/* 내 집 */}
+          {myHome ? (
+            <div className="bg-white/15 rounded-xl px-3 py-2.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Star size={10} className="text-amber-300 fill-amber-300" />
+                    <p className="text-[10px] text-white/60">{myHome.label ?? "내 집"}</p>
+                  </div>
+                  <p className="text-[12px] text-white/80 truncate">{myHome.aptName} · {myHome.pyeong}평</p>
+                </div>
+                <div className="text-right shrink-0">
+                  <p className="text-[18px] font-black text-white leading-tight">{formatPrice(myHome.currentPrice)}</p>
+                  {myHome.prevPrice && myHome.currentPrice !== myHome.prevPrice && (
+                    <p className={`text-[10px] font-semibold ${myHome.currentPrice > myHome.prevPrice ? "text-red-300" : "text-blue-300"}`}>
+                      {myHome.currentPrice > myHome.prevPrice ? "▲" : "▼"} {formatPrice(Math.abs(myHome.currentPrice - myHome.prevPrice))}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-white/10 rounded-xl px-3 py-2.5 text-left border border-white/20 border-dashed">
+              <p className="text-[12px] text-white/50">내 집을 등록해보세요 →</p>
+            </div>
+          )}
         </div>
-      </div>
-      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-        {apartments.slice(2, 5).map(apt => (
-          <button key={apt.id} onClick={() => router.push("/real-estate/")}
-            className="w-full px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
-            <div className="text-left min-w-0 flex-1 pr-2">
-              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{apt.name}</p>
-              <p className="text-[12px] text-[#6e6e73] mt-0.5">{apt.dong} · {apt.recentDeal?.pyeong}평</p>
-            </div>
-            <div className="text-right shrink-0">
-              <p className="text-[15px] font-bold text-[#059669]">{formatPrice(apt.recentDeal?.price ?? 0)}</p>
-              <p className="text-[11px] text-[#6e6e73]">실거래</p>
-            </div>
-          </button>
-        ))}
-        <Link href="/real-estate/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
-          시세 전체 보기 <ChevronRight size={13} />
-        </Link>
-      </div>
+      </button>
     </section>
   );
 }
@@ -1418,7 +1424,11 @@ function PharmacySection() {
     fetchEmergencyRooms("all").then(data => { if (data.length > 0) setErData(data); });
   }, []);
 
-  const now = new Date();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
+  }, []);
   const isWeekend = now.getDay() === 0 || now.getDay() === 6;
   const hour = now.getHours();
   const isNight = hour >= 21 || hour < 6;
@@ -1963,26 +1973,32 @@ function HomeTransportWidget() {
 
   const hasBus    = favStops.size > 0;
   const hasSubway = favSubwayStations.length > 0;
+  const transportHref = (hasSubway && !hasBus) ? "/transport/?tab=지하철" : "/transport/?tab=버스";
 
   if (!hasBus && !hasSubway) {
     return (
-      <section className="mx-4 mb-1">
-        <button onClick={() => router.push("/transport/")}
-          className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
-          <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-            <Bus size={18} className="text-[#0071e3]" />
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
-            <p className="text-[12px] text-[#86868b] mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기해 보세요</p>
-          </div>
-          <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
-        </button>
-      </section>
+      <>
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
+        <section className="mx-4 mb-1">
+          <button onClick={() => router.push("/transport/")}
+            className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
+              <Bus size={18} className="text-[#0071e3]" />
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
+              <p className="text-[12px] text-[#86868b] mt-0.5">교통 탭에서 버스·지하철을 즐겨찾기해 보세요</p>
+            </div>
+            <ChevronRight size={16} className="text-[#d2d2d7] shrink-0" />
+          </button>
+        </section>
+      </>
     );
   }
 
   return (
+    <>
+    <SectionLabel label="교통" href={transportHref} linkLabel="전체보기" />
     <section className="mx-4 mb-1 space-y-2.5">
 
       {/* ── 버스 정류장 카드 ── */}
@@ -2067,21 +2083,8 @@ function HomeTransportWidget() {
         );
       })}
 
-      {/* ── 하단 액션 바 ── */}
-      <div className="bg-white rounded-2xl flex overflow-hidden shadow-sm">
-        <button onClick={refreshAll} disabled={globalRefreshing}
-          className="flex items-center justify-center gap-1.5 py-3.5 px-5 active:bg-[#f5f5f7] disabled:opacity-50">
-          <RefreshCw size={14} className={`text-[#86868b] ${globalRefreshing ? "animate-spin" : ""}`} />
-          <span className="text-[13px] text-[#86868b] font-medium">새로고침</span>
-        </button>
-        <div className="w-px bg-[#f5f5f7]" />
-        <button onClick={() => router.push("/transport/")}
-          className="flex-1 py-3.5 flex items-center justify-center gap-1 active:bg-[#f5f5f7]">
-          <span className="text-[13px] text-[#0071e3] font-semibold">전체보기</span>
-          <ChevronRight size={14} className="text-[#0071e3]" />
-        </button>
-      </div>
     </section>
+    </>
   );
 }
 
@@ -2148,12 +2151,7 @@ export default function HomePage() {
         <PharmacySection />
       </>
     ),
-    transport: () => (
-      <>
-        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
-        <HomeTransportWidget />
-      </>
-    ),
+    transport: () => <HomeTransportWidget />,
     community: () => (
       <>
         <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />

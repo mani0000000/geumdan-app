@@ -469,6 +469,12 @@ function SubwayTimetableSheet({
 
 export default function TransportPage() {
   const [tab, setTab] = useState<Tab>("가볼만한곳");
+
+  // URL ?tab= 파라미터로 초기 탭 설정
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab") as Tab | null;
+    if (t && (["버스", "지하철", "가볼만한곳"] as string[]).includes(t)) setTab(t);
+  }, []);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
