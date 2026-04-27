@@ -2,6 +2,22 @@ import { supabase } from '@/lib/supabase';
 import { pharmacies as mockPharmacies } from '@/lib/mockData';
 import type { Pharmacy } from '@/lib/mockData';
 
+async function fetchLogosFromSettings(prefix: string, ids: string[]): Promise<Record<string, string>> {
+  if (ids.length === 0) return {};
+  try {
+    const { data } = await supabase.from('site_settings').select('key,value');
+    if (!data) return {};
+    const map: Record<string, string> = {};
+    for (const r of data) {
+      if (typeof r.key === 'string' && r.key.startsWith(`${prefix}_logo_`)) {
+        const id = r.key.slice(`${prefix}_logo_`.length);
+        if (ids.includes(id) && r.value) map[id] = r.value as string;
+      }
+    }
+    return map;
+  } catch { return {}; }
+}
+
 function isSupabaseConfigured(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -94,6 +110,9 @@ export async function fetchAllPharmacies(): Promise<Pharmacy[]> {
       return mockPharmacies;
     }
 
+    const ids = data.map(r => r.id as string);
+    const logos = await fetchLogosFromSettings('pharmacy', ids);
+
     return data.map((row) => ({
       id: row.id as string,
       name: row.name as string,
@@ -115,7 +134,7 @@ export async function fetchAllPharmacies(): Promise<Pharmacy[]> {
         weekend_hours: row.weekend_hours,
       }),
       distance: undefined,
-      logo_url: (row.logo_url as string | null) ?? null,
+      logo_url: logos[row.id as string] ?? null,
     }));
   } catch (err) {
     console.error('[pharmacies] Error fetching from Supabase, falling back to mock data:', err);
@@ -211,6 +230,9 @@ export async function fetchEmergencyRooms(
       return getMockEmergencyRooms(type);
     }
 
+    const ids = data.map(r => r.id as string);
+    const logos = await fetchLogosFromSettings('emergency', ids);
+
     return data.map((row) => ({
       id: row.id as string,
       name: row.name as string,
@@ -221,7 +243,7 @@ export async function fetchEmergencyRooms(
       hours: '24시간 응급실 운영',
       isPediatric: (row.is_pediatric as boolean) ?? false,
       level: (row.level as string) ?? '',
-      logo_url: (row.logo_url as string | null) ?? null,
+      logo_url: logos[row.id as string] ?? null,
     }));
   } catch (err) {
     console.error('[emergency] Error fetching from Supabase, falling back to mock data:', err);
