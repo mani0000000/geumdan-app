@@ -16,36 +16,44 @@ function candidateKeys(): string[] {
   ].filter((k): k is string => typeof k === "string" && k.length > 10);
 }
 
+// Storage는 PostgREST와 달리 모든 키 형식에 항상 Bearer 필요
 function storageHeaders(key: string, contentType: string): Record<string, string> {
-  const h: Record<string, string> = {
+  return {
     "apikey": key,
+    "Authorization": `Bearer ${key}`,
     "Content-Type": contentType,
     "x-upsert": "false",
   };
-  // JWT 형식 키만 Authorization: Bearer 추가 (admin/db, fix-rls 라우트와 동일 패턴)
-  if (key.startsWith("eyJ")) {
-    h["Authorization"] = `Bearer ${key}`;
-  }
-  return h;
 }
 
-async function ensureBucket(key: string): Promise<void> {
-  const res = await fetch(`${SUPABASE_URL}/storage/v1/bucket/${BUCKET}`, {
-    method: "GET",
-    headers: { "apikey": key, ...(key.startsWith("eyJ") ? { "Authorization": `Bearer ${key}` } : {}) },
-  });
-  if (res.status === 200) return;
+async function tryCreateBucket(key: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
+      method: "POST",
+      headers: { "apikey": key, "Authorization": `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: BUCKET, name: BUCKET, public: true }),
+    });
+    return res.ok || res.status === 409; // 409 = already exists
+  } catch {
+    return false;
+  }
+}
 
-  // 버킷이 없으면 생성 시도 (서비스 키가 있을 때만 성공)
-  await fetch(`${SUPABASE_URL}/storage/v1/bucket`, {
-    method: "POST",
-    headers: {
-      "apikey": key,
-      "Content-Type": "application/json",
-      ...(key.startsWith("eyJ") ? { "Authorization": `Bearer ${key}` } : {}),
-    },
-    body: JSON.stringify({ id: BUCKET, name: BUCKET, public: false }),
-  });
+async function tryUpload(
+  key: string, path: string, bytes: ArrayBuffer, contentType: string,
+): Promise<{ ok: true; url: string } | { ok: false; status: number; error: string }> {
+  const res = await fetch(
+    `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
+    { method: "POST", headers: storageHeaders(key, contentType), body: bytes },
+  );
+
+  if (res.ok) {
+    return { ok: true, url: `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}` };
+  }
+
+  const body = await res.json().catch(() => ({})) as { error?: string; message?: string };
+  const error = body.error ?? body.message ?? `Storage ${res.status}`;
+  return { ok: false, status: res.status, error };
 }
 
 export async function POST(req: NextRequest) {
@@ -59,43 +67,49 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const allowed = ["jpg", "jpeg", "png", "gif", "webp", "avif", "svg"];
-    if (!allowed.includes(ext)) {
+    if (!["jpg","jpeg","png","gif","webp","avif","svg"].includes(ext)) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
 
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const bytes = await file.arrayBuffer();
     const contentType = file.type || "application/octet-stream";
-
     const keys = candidateKeys();
+
     let lastError = "업로드 실패";
+    let bucketCreated = false;
 
     for (const key of keys) {
-      try {
-        await ensureBucket(key);
-      } catch {
-        // 버킷 확인 실패는 무시하고 업로드 시도
+      const result = await tryUpload(key, path, bytes, contentType);
+
+      if (result.ok) return NextResponse.json({ url: result.url });
+
+      lastError = result.error;
+      console.warn("[upload] 키 실패:", key.slice(0, 20), result.status, lastError);
+
+      // 버킷 없음(404) → 생성 후 재시도
+      if (result.status === 404 && !bucketCreated) {
+        bucketCreated = await tryCreateBucket(key);
+        if (bucketCreated) {
+          const retry = await tryUpload(key, path, bytes, contentType);
+          if (retry.ok) return NextResponse.json({ url: retry.url });
+          lastError = retry.ok ? "" : retry.error;
+        }
       }
 
-      const res = await fetch(
-        `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
-        { method: "POST", headers: storageHeaders(key, contentType), body: bytes },
-      );
-
-      if (res.ok) {
-        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
-        return NextResponse.json({ url: publicUrl });
-      }
-
-      const body = await res.json().catch(() => ({})) as { error?: string; message?: string };
-      lastError = body.error ?? body.message ?? `Storage error ${res.status}`;
-      console.warn("[upload] 키 실패:", key.slice(0, 20), res.status, lastError);
-
-      if (res.status !== 401 && res.status !== 403) break; // 인증 외 오류는 재시도 불필요
+      // 인증 오류가 아니면 다른 키로 재시도할 필요 없음
+      if (result.status !== 401 && result.status !== 403) break;
     }
 
-    return NextResponse.json({ error: lastError }, { status: 500 });
+    // 모든 키 실패 시 안내 메시지 반환
+    const isAuthError = lastError.toLowerCase().includes("unauthorized") ||
+                        lastError.toLowerCase().includes("invalid") ||
+                        lastError === "Error";
+    const msg = isAuthError
+      ? "이미지 업로드 권한이 없습니다. Vercel 환경변수에 SUPABASE_SERVICE_KEY를 설정해 주세요."
+      : lastError;
+
+    return NextResponse.json({ error: msg }, { status: 500 });
   } catch (err) {
     console.error("[upload]", err);
     return NextResponse.json(
