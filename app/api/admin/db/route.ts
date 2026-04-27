@@ -121,32 +121,37 @@ export async function POST(req: NextRequest) {
   if (onConflict) path += `?on_conflict=${onConflict}`;
   if (eq) path += (path.includes("?") ? "&" : "?") + eq;
 
-  let res = await callSupabase(method, path, JSON.stringify(rows), prefer);
+  // PGRST204: 스키마 캐시에 없는 컬럼 — 해당 컬럼 제거 후 재시도 (최대 10회)
+  let currentRows = rows;
+  const skipped: string[] = [];
 
-  // PGRST204: 존재하지 않는 컬럼 — logo_url 제거 후 재시도
-  if (!res.ok && method === "POST" && Array.isArray(rows)) {
-    const errText = await res.text();
-    if (errText.includes("PGRST204") && errText.includes("logo_url")) {
-      console.warn("[admin/db] logo_url 컬럼 없음 — 제외 후 재시도");
-      const stripped = (rows as Record<string, unknown>[]).map(r => {
-        const { logo_url: _, ...rest } = r;
-        return rest;
-      });
-      res = await callSupabase(method, path, JSON.stringify(stripped), prefer);
-      if (!res.ok) {
-        const err2 = await res.text();
-        return NextResponse.json({ error: `${res.status} — ${err2.slice(0, 200)}` }, { status: res.status });
-      }
-      return NextResponse.json({ success: true, logoSkipped: true });
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const res = await callSupabase(method, path, JSON.stringify(currentRows), prefer);
+    if (res.ok) {
+      return NextResponse.json({ success: true, skippedColumns: skipped.length ? skipped : undefined });
     }
+
+    const errText = await res.text();
+
+    // PGRST204 + 컬럼명 파싱 — 해당 컬럼 제거 후 재시도
+    if (errText.includes("PGRST204") && method === "POST" && Array.isArray(currentRows)) {
+      const match = errText.match(/'([^']+)' column/);
+      const col = match?.[1];
+      if (col) {
+        console.warn(`[admin/db] PGRST204: '${col}' 컬럼 없음 — 제외 후 재시도`);
+        skipped.push(col);
+        currentRows = (currentRows as Record<string, unknown>[]).map(r => {
+          const copy = { ...r };
+          delete copy[col];
+          return copy;
+        });
+        continue;
+      }
+    }
+
     console.error("[admin/db POST]", table, method, res.status, errText.slice(0, 200));
     return NextResponse.json({ error: `${res.status} — ${errText.slice(0, 200)}` }, { status: res.status });
   }
 
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[admin/db POST]", table, method, res.status, err.slice(0, 200));
-    return NextResponse.json({ error: `${res.status} — ${err.slice(0, 200)}` }, { status: res.status });
-  }
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ error: "너무 많은 컬럼 오류" }, { status: 500 });
 }
