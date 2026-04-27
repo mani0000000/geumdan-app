@@ -19,8 +19,7 @@ import {
   type TeamCode,
   type SportsAssets,
 } from "@/lib/db/sports";
-import ImageUpload from "@/components/ui/ImageUpload";
-import { Trophy, Plus, Pencil, Trash2, X, Save, Loader2, Image as ImageIcon, Tv, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Trophy, Plus, Pencil, Trash2, X, Save, Loader2, Image as ImageIcon, Tv, AlertCircle, CheckCircle2, Copy, ExternalLink, RefreshCw } from "lucide-react";
 
 const SPORTS: SportType[] = ["축구", "야구", "배구", "농구", "A매치"];
 const STATUSES: { value: MatchStatus; label: string }[] = [
@@ -150,6 +149,8 @@ export default function AdminSportsPage() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [newChannel, setNewChannel] = useState("");
   const [rlsError, setRlsError] = useState(false);
+  const [rlsCopied, setRlsCopied] = useState(false);
+  const [rlsFixing, setRlsFixing] = useState(false);
 
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok });
@@ -397,25 +398,60 @@ export default function AdminSportsPage() {
           ) : (
             <>
               {/* RLS 오류 안내 */}
-              {rlsError && (
-                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-2">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle size={16} className="text-red-500 mt-0.5 shrink-0" />
-                    <div className="flex-1">
-                      <p className="text-[13px] font-bold text-red-700 mb-1">DB 쓰기 권한 오류</p>
-                      <p className="text-[12px] text-red-600 mb-2">Supabase SQL Editor에서 아래 쿼리를 실행하면 해결됩니다.</p>
-                      <pre className="bg-white border border-red-200 rounded-xl p-3 text-[11px] text-red-800 overflow-x-auto whitespace-pre-wrap leading-relaxed select-all">{`ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY IF NOT EXISTS anon_select ON site_settings FOR SELECT TO anon USING (true);
-CREATE POLICY IF NOT EXISTS anon_insert ON site_settings FOR INSERT TO anon WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS anon_update ON site_settings FOR UPDATE TO anon USING (true) WITH CHECK (true);
-CREATE POLICY IF NOT EXISTS anon_delete ON site_settings FOR DELETE TO anon USING (true);`}</pre>
+              {rlsError && (() => {
+                const sql = `ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_select ON site_settings FOR SELECT TO anon USING (true);\nCREATE POLICY IF NOT EXISTS anon_insert ON site_settings FOR INSERT TO anon WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_update ON site_settings FOR UPDATE TO anon USING (true) WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_delete ON site_settings FOR DELETE TO anon USING (true);`;
+                const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] ?? "";
+                const sqlEditorUrl = projectRef ? `https://supabase.com/dashboard/project/${projectRef}/sql/new` : "https://supabase.com/dashboard";
+                return (
+                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle size={15} className="text-red-500 shrink-0" />
+                        <p className="text-[13px] font-bold text-red-700">DB 쓰기 권한 없음</p>
+                      </div>
+                      <button onClick={() => setRlsError(false)} className="text-red-300 hover:text-red-500 shrink-0">
+                        <X size={14} />
+                      </button>
                     </div>
-                    <button onClick={() => setRlsError(false)} className="text-red-400 hover:text-red-600 shrink-0">
-                      <X size={14} />
+                    <p className="text-[12px] text-red-600 leading-relaxed">
+                      Supabase SQL Editor에서 아래 SQL을 실행하면 해결됩니다. <strong>최초 1회만</strong> 필요합니다.
+                    </p>
+                    <pre className="bg-white border border-red-200 rounded-xl p-3 text-[10.5px] text-red-800 overflow-x-auto whitespace-pre leading-relaxed">{sql}</pre>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => {
+                          await navigator.clipboard.writeText(sql).catch(() => {});
+                          setRlsCopied(true);
+                          setTimeout(() => setRlsCopied(false), 2000);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold border border-red-200 bg-white text-red-600 active:bg-red-50">
+                        {rlsCopied ? <CheckCircle2 size={13} className="text-green-500" /> : <Copy size={13} />}
+                        {rlsCopied ? "복사됨" : "SQL 복사"}
+                      </button>
+                      <a href={sqlEditorUrl} target="_blank" rel="noopener noreferrer"
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold bg-red-600 text-white active:opacity-80">
+                        <ExternalLink size={13} />
+                        SQL Editor 열기
+                      </a>
+                    </div>
+                    <button
+                      disabled={rlsFixing}
+                      onClick={async () => {
+                        setRlsFixing(true);
+                        try {
+                          const r = await fetch("/api/admin/fix-rls", { method: "POST" });
+                          if (r.ok) { setRlsError(false); showToast("권한 수정 완료! 다시 시도해 주세요"); }
+                          else showToast("자동 수정 실패 — SQL을 직접 실행해 주세요", false);
+                        } catch { showToast("자동 수정 실패", false); }
+                        setRlsFixing(false);
+                      }}
+                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 disabled:opacity-50">
+                      {rlsFixing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                      자동 수정 재시도
                     </button>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* 팀 로고 */}
               <section>
