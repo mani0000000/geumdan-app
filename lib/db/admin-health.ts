@@ -19,18 +19,8 @@ export async function adminFetchPharmacies(): Promise<AdminPharmacy[]> {
 }
 
 export async function adminUpsertPharmacy(p: AdminPharmacy): Promise<{ logoSaved: boolean }> {
-  try {
-    await adminApiPost("pharmacies", "POST", [p], { onConflict: "id" });
-    return { logoSaved: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("PGRST204") && msg.includes("logo_url")) {
-      const { logo_url: _logo, ...rest } = p;
-      await adminApiPost("pharmacies", "POST", [rest], { onConflict: "id" });
-      return { logoSaved: false };
-    }
-    throw err;
-  }
+  const { logoSkipped } = await adminApiPost("pharmacies", "POST", [p], { onConflict: "id" });
+  return { logoSaved: !logoSkipped };
 }
 
 export async function adminDeletePharmacy(id: string): Promise<void> {
@@ -53,18 +43,8 @@ export async function adminFetchEmergencyRooms(): Promise<AdminEmergencyRoom[]> 
 }
 
 export async function adminUpsertEmergencyRoom(r: AdminEmergencyRoom): Promise<{ logoSaved: boolean }> {
-  try {
-    await adminApiPost("emergency_rooms", "POST", [r], { onConflict: "id" });
-    return { logoSaved: true };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("PGRST204") && msg.includes("logo_url")) {
-      const { logo_url: _logo, ...rest } = r;
-      await adminApiPost("emergency_rooms", "POST", [rest], { onConflict: "id" });
-      return { logoSaved: false };
-    }
-    throw err;
-  }
+  const { logoSkipped } = await adminApiPost("emergency_rooms", "POST", [r], { onConflict: "id" });
+  return { logoSaved: !logoSkipped };
 }
 
 export async function adminDeleteEmergencyRoom(id: string): Promise<void> {

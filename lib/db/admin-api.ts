@@ -24,12 +24,13 @@ export async function adminApiPost(
   method: "POST" | "PATCH" | "DELETE",
   rows: unknown,
   opts: { onConflict?: string; eq?: string } = {}
-): Promise<void> {
+): Promise<{ logoSkipped?: boolean }> {
   const res = await fetch("/api/admin/db", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ table, method, rows, ...opts }),
   });
-  const json = await res.json() as { error?: string };
+  const json = await res.json() as { error?: string; logoSkipped?: boolean };
   if (!res.ok) throw new Error(json.error ?? `DB 오류 (${res.status})`);
+  return { logoSkipped: json.logoSkipped };
 }
