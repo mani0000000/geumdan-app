@@ -688,6 +688,7 @@ const TIDE_SPOTS = {
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
   const [tab, setTab] = useState<"haerujil" | "fishing">("haerujil");
+  const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
 
   useEffect(() => {
     setReport(getTideReport(new Date()));
@@ -856,13 +857,12 @@ function TideSection() {
                       )}
                     </div>
                   </div>
-                  <a
-                    href={`https://map.kakao.com/link/map/${encodeURIComponent(s.name)},${s.lat},${s.lng}`}
-                    target="_blank" rel="noopener noreferrer"
+                  <button
+                    onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
                     className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[11px] font-bold text-yellow-700"
                   >
                     지도 ↗
-                  </a>
+                  </button>
                 </div>
               );
             })}
@@ -876,6 +876,7 @@ function TideSection() {
           </div>
         )}
       </section>
+      {mapTarget && <MapBottomSheet {...mapTarget} onClose={() => setMapTarget(null)} />}
     </>
   );
 }
@@ -1332,6 +1333,7 @@ function martTypeBadge(type: string) {
 function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
@@ -1440,10 +1442,11 @@ function MartSection() {
                         <Phone size={14} className="text-[#0071e3]" />
                       </a>
                     )}
-                    <a href={mapUrl} target="_blank" rel="noreferrer"
+                    <button
+                      onClick={() => setMapTarget({ name: mart.name, address: mart.address ?? "", lat: mart.lat ?? undefined, lng: mart.lng ?? undefined })}
                       className="w-8 h-8 bg-[#FFF3CD] rounded-xl flex items-center justify-center">
                       <MapPin size={14} className="text-[#C57C00]" />
-                    </a>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1452,6 +1455,7 @@ function MartSection() {
         </div>
       </div>
       </section>
+      {mapTarget && <MapBottomSheet {...mapTarget} onClose={() => setMapTarget(null)} />}
     </>
   );
 }
@@ -1459,7 +1463,7 @@ function MartSection() {
 // ─── 약국 영업 상태 계산 ──────────────────────────────────────
 function withinHoursStr(hoursStr: string, cur: number): boolean {
   if (/24시간/.test(hoursStr)) return true;
-  for (const m of [...hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*~\s*(\d{1,2}):(\d{2})/g)]) {
+  for (const m of [...hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*[~\-]\s*(\d{1,2}):(\d{2})/g)]) {
     const s = +m[1] * 60 + +m[2], e = +m[3] * 60 + +m[4];
     if (e < s ? (cur >= s || cur < e) : (cur >= s && cur < e)) return true;
   }
@@ -1490,8 +1494,24 @@ function getPharmacyStatus(p: Pharmacy, now: Date): {
   return { isOpen: p.isOpenNow, todayHours: null, todayLabel: "" };
 }
 
-// ─── 지도 팝업 ────────────────────────────────────────────────
-function MapModal({ name, address, onClose }: { name: string; address: string; onClose: () => void }) {
+// ─── 지도 앱 선택 바텀시트 ───────────────────────────────────
+interface MapTarget { name: string; address: string; lat?: number; lng?: number; }
+
+function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onClose: () => void }) {
+  const q = encodeURIComponent(address || name);
+  const n = encodeURIComponent(name);
+  const kakaoUrl = lat && lng
+    ? `https://map.kakao.com/link/map/${n},${lat},${lng}`
+    : `https://map.kakao.com/link/search/${q}`;
+  const naverUrl = `https://map.naver.com/v5/search/${q}`;
+  const tmapUrl  = `https://tmap.life/search?query=${q}`;
+
+  const apps = [
+    { label: "카카오맵", url: kakaoUrl, bg: "bg-[#FEE500]", text: "text-[#3C1E1E]", emoji: "🗺" },
+    { label: "네이버지도", url: naverUrl, bg: "bg-[#03C75A]", text: "text-white",    emoji: "🧭" },
+    { label: "티맵",     url: tmapUrl,  bg: "bg-[#0068FF]", text: "text-white",    emoji: "📍" },
+  ];
+
   return (
     <div className="fixed inset-0 z-[300]" onClick={onClose}>
       <div className="absolute inset-0 bg-black/40" />
@@ -1503,34 +1523,20 @@ function MapModal({ name, address, onClose }: { name: string; address: string; o
           <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
             <div className="flex-1 min-w-0">
               <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{name}</p>
-              <p className="text-[12px] text-[#6e6e73] mt-0.5 line-clamp-1">{address}</p>
+              <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{address}</p>
             </div>
             <button onClick={onClose} className="ml-3 shrink-0 active:opacity-60">
               <X size={20} className="text-[#6e6e73]" />
             </button>
           </div>
-          <div style={{ height: 300 }}>
-            <iframe
-              src={`https://maps.google.com/maps?q=${encodeURIComponent(address)}&output=embed&hl=ko`}
-              width="100%"
-              height="300"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              title={name}
-            />
-          </div>
-          <div className="px-5 pb-10 pt-3">
-            <a
-              href={`https://maps.google.com/maps?q=${encodeURIComponent(address)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full h-11 bg-[#0071e3] rounded-xl flex items-center justify-center gap-2 text-white text-[14px] font-bold active:bg-[#0058b0]"
-              onClick={e => e.stopPropagation()}
-            >
-              <MapPin size={15} />
-              지도 앱으로 열기
-            </a>
+          <div className="px-5 pt-4 pb-10 space-y-2.5">
+            <p className="text-[12px] font-semibold text-[#8e8e93]">지도 앱 선택</p>
+            {apps.map(app => (
+              <a key={app.label} href={app.url} target="_blank" rel="noopener noreferrer"
+                className={`w-full h-12 ${app.bg} ${app.text} rounded-2xl flex items-center justify-center gap-2 text-[15px] font-bold active:opacity-80`}>
+                <span>{app.emoji}</span> {app.label}
+              </a>
+            ))}
           </div>
         </div>
       </div>
@@ -1619,7 +1625,7 @@ function PharmacySection() {
   const [showAll, setShowAll] = useState(false);
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
   const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
-  const [mapTarget, setMapTarget] = useState<{ name: string; address: string } | null>(null);
+  const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
 
   useEffect(() => {
     fetchAllPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
@@ -1760,14 +1766,14 @@ function PharmacySection() {
                     {/* 버튼 */}
                     <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
                       <div className="flex items-center gap-1.5">
+                        <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
+                          <Phone size={14} className="text-[#0071e3]" />
+                        </a>
                         <button
                           onClick={() => setMapTarget({ name: p.name, address: p.address })}
                           className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
                           <MapPin size={14} className="text-[#0071e3]" />
                         </button>
-                        <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                          <Phone size={14} className="text-[#0071e3]" />
-                        </a>
                       </div>
                     </div>
                   </div>
@@ -1822,14 +1828,14 @@ function PharmacySection() {
                 {/* 버튼 */}
                 <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
                   <div className="flex items-center gap-1.5">
+                    <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
+                      <Phone size={14} className="text-[#F04452]" />
+                    </a>
                     <button
                       onClick={() => setMapTarget({ name: er.name, address: er.address })}
                       className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
                       <MapPin size={14} className="text-[#F04452]" />
                     </button>
-                    <a href={`tel:${er.phone}`} className="w-8 h-8 bg-[#FEE2E2] rounded-xl flex items-center justify-center active:opacity-70">
-                      <Phone size={14} className="text-[#F04452]" />
-                    </a>
                   </div>
                 </div>
               </div>
@@ -1838,9 +1844,8 @@ function PharmacySection() {
         )}
       </div>
       {mapTarget && (
-        <MapModal
-          name={mapTarget.name}
-          address={mapTarget.address}
+        <MapBottomSheet
+          {...mapTarget}
           onClose={() => setMapTarget(null)}
         />
       )}
