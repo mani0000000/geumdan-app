@@ -1500,43 +1500,72 @@ interface MapTarget { name: string; address: string; lat?: number; lng?: number;
 function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onClose: () => void }) {
   const q = encodeURIComponent(address || name);
   const n = encodeURIComponent(name);
+
   const kakaoUrl = lat && lng
     ? `https://map.kakao.com/link/map/${n},${lat},${lng}`
     : `https://map.kakao.com/link/search/${q}`;
-  const naverUrl = `https://map.naver.com/v5/search/${q}`;
+  const naverUrl = lat && lng
+    ? `https://map.naver.com/v5/search/${q}`
+    : `https://map.naver.com/v5/search/${q}`;
   const tmapUrl  = `https://tmap.life/search?query=${q}`;
 
+  const embedUrl = lat && lng
+    ? `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed&hl=ko`
+    : `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
+
   const apps = [
-    { label: "카카오맵", url: kakaoUrl, bg: "bg-[#FEE500]", text: "text-[#3C1E1E]", emoji: "🗺" },
-    { label: "네이버지도", url: naverUrl, bg: "bg-[#03C75A]", text: "text-white",    emoji: "🧭" },
-    { label: "티맵",     url: tmapUrl,  bg: "bg-[#0068FF]", text: "text-white",    emoji: "📍" },
+    { label: "카카오맵", url: kakaoUrl, bg: "#FEE500", textColor: "#3C1E1E", char: "K" },
+    { label: "네이버",   url: naverUrl, bg: "#03C75A", textColor: "#ffffff",  char: "N" },
+    { label: "티맵",     url: tmapUrl,  bg: "#0068FF", textColor: "#ffffff",  char: "T" },
   ];
 
   return (
     <div className="fixed inset-0 z-[300]" onClick={onClose}>
-      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-black/50" />
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center" onClick={e => e.stopPropagation()}>
         <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
-          <div className="flex justify-center pt-3 pb-1">
+          {/* 핸들 */}
+          <div className="flex justify-center pt-3 pb-2">
             <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
           </div>
-          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
+
+          {/* 헤더: 장소명 + 앱 아이콘 버튼들 */}
+          <div className="flex items-center gap-3 px-5 pb-3">
             <div className="flex-1 min-w-0">
               <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{name}</p>
               <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{address}</p>
             </div>
-            <button onClick={onClose} className="ml-3 shrink-0 active:opacity-60">
-              <X size={20} className="text-[#6e6e73]" />
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              {apps.map(app => (
+                <a key={app.label} href={app.url} target="_blank" rel="noopener noreferrer"
+                  className="flex flex-col items-center gap-1 active:scale-90 transition-transform">
+                  <div className="w-10 h-10 rounded-[12px] flex items-center justify-center text-[15px] font-black shadow-sm"
+                    style={{ backgroundColor: app.bg, color: app.textColor }}>
+                    {app.char}
+                  </div>
+                  <span className="text-[10px] text-[#8e8e93] font-medium">{app.label}</span>
+                </a>
+              ))}
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f2f2f7] flex items-center justify-center ml-1 active:opacity-60 self-start mt-0.5">
+                <X size={16} className="text-[#6e6e73]" />
+              </button>
+            </div>
           </div>
-          <div className="px-5 pt-4 pb-10 space-y-2.5">
-            <p className="text-[12px] font-semibold text-[#8e8e93]">지도 앱 선택</p>
-            {apps.map(app => (
-              <a key={app.label} href={app.url} target="_blank" rel="noopener noreferrer"
-                className={`w-full h-12 ${app.bg} ${app.text} rounded-2xl flex items-center justify-center gap-2 text-[15px] font-bold active:opacity-80`}>
-                <span>{app.emoji}</span> {app.label}
-              </a>
-            ))}
+
+          {/* 지도 미리보기 */}
+          <div className="px-4 pb-10">
+            <div className="w-full h-[230px] rounded-2xl overflow-hidden bg-[#f2f2f7]">
+              <iframe
+                src={embedUrl}
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title={name}
+              />
+            </div>
           </div>
         </div>
       </div>
