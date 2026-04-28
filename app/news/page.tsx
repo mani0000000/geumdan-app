@@ -343,7 +343,7 @@ export default function NewsPage() {
   const rest = newsSource.slice(8);
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="검단 뉴스" />
 
       {/* Tabs */}
