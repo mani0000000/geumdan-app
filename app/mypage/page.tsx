@@ -154,7 +154,7 @@ export default function MyPage() {
   ];
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="마이페이지" />
 
       {/* 프로필 카드 */}
