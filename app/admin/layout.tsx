@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera,
 } from "lucide-react";
 
 const NAV = [
@@ -21,6 +21,7 @@ const NAV = [
   { href: "/admin/places",     icon: MapPin,        label: "가볼만한곳 관리"},
   { href: "/admin/keywords",   icon: Search,        label: "검색어 관리"   },
   { href: "/admin/sports",      icon: Trophy,        label: "스포츠 관리"   },
+  { href: "/admin/instagram",  icon: Camera,        label: "인스타그램 관리"},
   { href: "/admin/settings",   icon: Settings,      label: "앱 설정"       },
 ];
 
