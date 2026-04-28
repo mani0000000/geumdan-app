@@ -126,7 +126,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
   if (loading) {
     return (
-      <div className="mx-4 mt-3 mb-1 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
+      <div className="mx-4 mt-3 mb-3 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 bg-white/20 rounded-xl" />
           <div className="flex-1 space-y-2">
@@ -151,7 +151,7 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
 
   return (
     <>
-      <div className={`mx-4 mt-3 mb-1 bg-gradient-to-br ${gradient} rounded-2xl overflow-hidden`}>
+      <div className={`mx-4 mt-3 mb-3 bg-gradient-to-br ${gradient} rounded-2xl overflow-hidden`}>
         {/* 항상 보이는 바 */}
         <button onClick={() => setExpanded(e => !e)}
           className="w-full flex items-center gap-3 px-4 py-3.5 active:opacity-80">
@@ -2389,7 +2389,7 @@ export default function HomePage() {
     : DEFAULT_WIDGETS;
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header
         showLocation
         rightAction={

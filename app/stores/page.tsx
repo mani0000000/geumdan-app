@@ -1130,7 +1130,7 @@ function BuildingDetail({
 
   if (!buildingData) {
     return (
-      <div className="pb-20">
+      <div className="pb-28">
         <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] px-4 flex items-center h-12">
           <button onClick={onBack} className="mr-3 active:opacity-60">
             <ChevronLeft size={22} className="text-[#1d1d1f]" />
@@ -1159,7 +1159,7 @@ function BuildingDetail({
   const currentFloor = buildingData.floors[floorIdx];
 
   return (
-    <div className="pb-20">
+    <div className="pb-28">
       <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7]">
         <div className="px-4 flex items-center h-12">
           <button onClick={onBack} className="mr-3 active:opacity-60">
@@ -1385,7 +1385,7 @@ export default function StoresPage() {
   }, [mapCatFilter, nearbyWithDist]);
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="상가" />
 
       {/* 검색바 + 토글 */}

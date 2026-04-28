@@ -758,7 +758,7 @@ export default function TransportPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="교통 정보" />
 
       {/* 플로팅 새로고침 버튼 (하단) */}

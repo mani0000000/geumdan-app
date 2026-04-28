@@ -24,6 +24,8 @@ export interface Place {
   published: boolean;
   sort_order: number;
   created_at: string;
+  lat: number | null;
+  lng: number | null;
 }
 
 export const CATEGORY_META: Record<PlaceCategory, { label: string; color: string; bg: string }> = {
