@@ -16,9 +16,9 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px]">
       <div className="flex items-center justify-around px-3 h-[64px] rounded-[36px]
-        bg-[#0b1f4a]/75 backdrop-blur-2xl
-        border border-white/10
-        shadow-[0_8px_32px_rgba(0,0,0,0.45)]">
+        bg-white/90 backdrop-blur-2xl
+        border border-black/[0.06]
+        shadow-[0_4px_28px_rgba(0,0,0,0.13)]">
         {navItems.map(({ href, label, icon: Icon, match, center }) => {
           const active = Array.isArray(match)
             ? match.some((m) => pathname.includes(m))
@@ -39,11 +39,11 @@ export default function BottomNav() {
                 <Icon
                   size={center ? 22 : 20}
                   strokeWidth={active ? 2.3 : 1.7}
-                  className={active ? "text-white" : "text-white/50"}
+                  className={active ? "text-white" : "text-[#8e8e93]"}
                 />
               </div>
               <span className={`text-[10px] font-medium tracking-tight transition-colors
-                ${active ? "text-white" : "text-white/40"}`}>
+                ${active ? "text-[#2563EB]" : "text-[#8e8e93]"}`}>
                 {label}
               </span>
             </Link>
