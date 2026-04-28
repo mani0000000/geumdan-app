@@ -1389,12 +1389,12 @@ function MartSection() {
             return (
               <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
                 {/* 로고 */}
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
+                <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
                   todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
                   {mart.logo_url
                     ? <img src={mart.logo_url} alt={mart.brand} className="w-full h-full object-contain p-1" />
-                    : <ShoppingBag size={17} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                    : <ShoppingBag size={22} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
                   }
                 </div>
 
