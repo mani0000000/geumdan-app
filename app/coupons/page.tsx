@@ -21,9 +21,9 @@ function daysLeft(expiry: string) {
 
 function ExpiryBadge({ expiry }: { expiry: string }) {
   const d = daysLeft(expiry);
-  if (d <= 3) return <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">D-{d}</span>;
-  if (d <= 7) return <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#D97706]">D-{d}</span>;
-  return <span className="text-[11px] text-[#6e6e73]">~ {expiry.slice(5)}</span>;
+  if (d <= 3) return <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#FEE2E2] text-[#F04452]">D-{d}</span>;
+  if (d <= 7) return <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#FEF3C7] text-[#D97706]">D-{d}</span>;
+  return <span className="text-[12px] text-[#6e6e73]">~ {expiry.slice(5)}</span>;
 }
 
 // ─── 바코드 모킹 ──────────────────────────────────────────────
@@ -40,12 +40,12 @@ function MockBarcode({ id, color }: { id: string; color: string }) {
           <div key={i} style={{ width: w, height: i % 5 === 0 ? 48 : 36, background: i % 2 === 0 ? "#1d1d1f" : "transparent" }} />
         ))}
       </div>
-      <p className="text-[11px] text-[#6e6e73] tracking-widest font-mono">
+      <p className="text-[12px] text-[#6e6e73] tracking-widest font-mono">
         {id.toUpperCase()}-{Date.now().toString().slice(-6)}
       </p>
       <div className="flex items-center gap-1.5">
         <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />
-        <span className="text-[12px] font-semibold" style={{ color }}>쿠폰 제시 후 결제</span>
+        <span className="text-[13px] font-semibold" style={{ color }}>쿠폰 제시 후 결제</span>
       </div>
     </div>
   );
@@ -84,9 +84,9 @@ function CouponDetailSheet({
             <StoreLogo name={coupon.storeName} category={coupon.category} size={52} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-1 flex-wrap">
-                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[13px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: coupon.color }}>{coupon.category}</span>
-                <span className="text-[11px] bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
+                <span className="text-[12px] bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
                 <ExpiryBadge expiry={coupon.expiry} />
               </div>
               <p className="text-[17px] font-black text-[#1d1d1f] leading-snug">{coupon.storeName}</p>
@@ -104,8 +104,8 @@ function CouponDetailSheet({
           <div className="mx-4 mt-3 rounded-2xl p-5 flex items-center gap-4"
             style={{ background: coupon.color + "18" }}>
             <div className="flex-1">
-              <p className="text-[13px] font-semibold mb-1" style={{ color: coupon.color }}>이번 주 혜택</p>
-              <p className="text-[16px] font-bold text-[#1d1d1f] leading-snug">{coupon.title}</p>
+              <p className="text-[14px] font-semibold mb-1" style={{ color: coupon.color }}>이번 주 혜택</p>
+              <p className="text-[17px] font-bold text-[#1d1d1f] leading-snug">{coupon.title}</p>
             </div>
             <div className="text-[34px] font-black shrink-0" style={{ color: coupon.color }}>
               {coupon.discount}
@@ -117,8 +117,8 @@ function CouponDetailSheet({
             <div className="mx-4 mt-3 bg-white rounded-2xl px-4 py-4 flex items-start gap-3">
               <Star size={16} className="shrink-0 mt-0.5" style={{ color: coupon.color }} fill={coupon.color} />
               <div>
-                <p className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{detail.promo}</p>
-                <p className="text-[13px] text-[#424245] mt-1.5 leading-relaxed">{detail.description}</p>
+                <p className="text-[15px] font-bold text-[#1d1d1f] leading-snug">{detail.promo}</p>
+                <p className="text-[14px] text-[#424245] mt-1.5 leading-relaxed">{detail.description}</p>
               </div>
             </div>
           )}
@@ -126,10 +126,10 @@ function CouponDetailSheet({
           {/* 하이라이트 */}
           {detail?.highlights && (
             <div className="mx-4 mt-3 bg-white rounded-2xl px-4 py-4">
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-3">매장 특징</p>
+              <p className="text-[14px] font-bold text-[#6e6e73] mb-3">매장 특징</p>
               <div className="space-y-2.5">
                 {detail.highlights.map((h, i) => (
-                  <p key={i} className="text-[14px] text-[#1d1d1f]">{h}</p>
+                  <p key={i} className="text-[15px] text-[#1d1d1f]">{h}</p>
                 ))}
               </div>
             </div>
@@ -138,20 +138,20 @@ function CouponDetailSheet({
           {/* 추천 메뉴 / 상품 */}
           {detail?.menu && detail.menu.length > 0 && (
             <div className="mx-4 mt-3 bg-white rounded-2xl px-4 py-4">
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-3">
+              <p className="text-[14px] font-bold text-[#6e6e73] mb-3">
                 {coupon.category === "카페" || coupon.category === "음식점" ? "추천 메뉴" : "추천 상품"}
               </p>
               <div className="space-y-2.5">
                 {detail.menu.map((item, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[14px] text-[#1d1d1f] font-medium">{item.name}</span>
+                      <span className="text-[15px] text-[#1d1d1f] font-medium">{item.name}</span>
                       {item.tag && (
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                        <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
                           style={{ background: coupon.color }}>{item.tag}</span>
                       )}
                     </div>
-                    <span className="text-[13px] font-semibold text-[#424245]">{item.price}</span>
+                    <span className="text-[14px] font-semibold text-[#424245]">{item.price}</span>
                   </div>
                 ))}
               </div>
@@ -163,13 +163,13 @@ function CouponDetailSheet({
             <div className="mx-4 mt-3 bg-white rounded-2xl px-4 py-4">
               <div className="flex items-center gap-2 mb-3">
                 <Info size={14} className="text-[#6e6e73]" />
-                <p className="text-[13px] font-bold text-[#6e6e73]">사용 조건</p>
+                <p className="text-[14px] font-bold text-[#6e6e73]">사용 조건</p>
               </div>
               <div className="space-y-2">
                 {detail.conditions.map((c, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-[#86868b] mt-2 shrink-0" />
-                    <p className="text-[13px] text-[#424245] leading-snug">{c}</p>
+                    <p className="text-[14px] text-[#424245] leading-snug">{c}</p>
                   </div>
                 ))}
               </div>
@@ -179,15 +179,15 @@ function CouponDetailSheet({
           {/* 매장 정보 */}
           {detail && (
             <div className="mx-4 mt-3 bg-white rounded-2xl px-4 py-4">
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-3">매장 정보</p>
+              <p className="text-[14px] font-bold text-[#6e6e73] mb-3">매장 정보</p>
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
                     <MapPin size={13} className="text-[#0071e3]" />
                   </div>
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">위치</p>
-                    <p className="text-[14px] text-[#1d1d1f] font-medium">{detail.location}</p>
+                    <p className="text-[13px] text-[#6e6e73]">위치</p>
+                    <p className="text-[15px] text-[#1d1d1f] font-medium">{detail.location}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -195,8 +195,8 @@ function CouponDetailSheet({
                     <Clock size={13} className="text-[#0071e3]" />
                   </div>
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">영업시간</p>
-                    <p className="text-[14px] text-[#1d1d1f] font-medium">{detail.hours}</p>
+                    <p className="text-[13px] text-[#6e6e73]">영업시간</p>
+                    <p className="text-[15px] text-[#1d1d1f] font-medium">{detail.hours}</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -204,9 +204,9 @@ function CouponDetailSheet({
                     <Phone size={13} className="text-[#0071e3]" />
                   </div>
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">전화</p>
+                    <p className="text-[13px] text-[#6e6e73]">전화</p>
                     <a href={`tel:${detail.phone}`}
-                      className="text-[14px] text-[#0071e3] font-medium">{detail.phone}</a>
+                      className="text-[15px] text-[#0071e3] font-medium">{detail.phone}</a>
                   </div>
                 </div>
               </div>
@@ -215,7 +215,7 @@ function CouponDetailSheet({
               <button className="mt-4 w-full flex items-center justify-between bg-[#f5f5f7] rounded-xl px-4 py-3 active:bg-[#d2d2d7]">
                 <div className="flex items-center gap-2">
                   <MapPin size={14} className="text-[#0071e3]" />
-                  <span className="text-[13px] font-semibold text-[#1d1d1f]">길찾기 / 지도 보기</span>
+                  <span className="text-[14px] font-semibold text-[#1d1d1f]">길찾기 / 지도 보기</span>
                 </div>
                 <ChevronRight size={14} className="text-[#86868b]" />
               </button>
@@ -225,7 +225,7 @@ function CouponDetailSheet({
           {/* 바코드 */}
           {downloaded && (
             <div className="mx-4 mt-3">
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2 px-1">쿠폰 코드</p>
+              <p className="text-[14px] font-bold text-[#6e6e73] mb-2 px-1">쿠폰 코드</p>
               <MockBarcode id={coupon.id} color={coupon.color} />
             </div>
           )}
@@ -235,7 +235,7 @@ function CouponDetailSheet({
             <div className="mx-4 mt-3 rounded-xl px-4 py-3 flex items-center gap-2"
               style={{ background: d <= 3 ? "#FEE2E2" : "#FEF3C7" }}>
               <span className="text-[14px]">⏰</span>
-              <p className="text-[13px] font-semibold" style={{ color: d <= 3 ? "#F04452" : "#D97706" }}>
+              <p className="text-[14px] font-semibold" style={{ color: d <= 3 ? "#F04452" : "#D97706" }}>
                 {d <= 3 ? `마감 ${d}일 전! 지금 바로 사용하세요` : `${d}일 후 만료됩니다`}
               </p>
             </div>
@@ -279,19 +279,19 @@ function CouponCard({ coupon, downloaded, onToggle, onDetail }: {
         <StoreLogo name={coupon.storeName} category={coupon.category} size={44} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-            <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
+            <span className="text-[13px] font-bold px-2 py-0.5 rounded-full text-white"
               style={{ background: coupon.color }}>{coupon.category}</span>
-            <span className="text-[11px] bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
+            <span className="text-[12px] bg-[#f5f5f7] text-[#424245] px-2 py-0.5 rounded-full">{coupon.buildingName}</span>
             <ExpiryBadge expiry={coupon.expiry} />
           </div>
-          <p className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{coupon.storeName}</p>
-          <p className="text-[13px] text-[#6e6e73] mt-0.5 leading-snug">{coupon.title}</p>
+          <p className="text-[15px] font-bold text-[#1d1d1f] leading-snug">{coupon.storeName}</p>
+          <p className="text-[14px] text-[#6e6e73] mt-0.5 leading-snug">{coupon.title}</p>
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           <span className="text-[19px] font-black" style={{ color: coupon.color }}>{coupon.discount}</span>
           <button
             onClick={e => { e.stopPropagation(); onToggle(); }}
-            className={`flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[12px] font-bold transition-all active:opacity-70 ${
+            className={`flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-[13px] font-bold transition-all active:opacity-70 ${
               downloaded ? "bg-[#f5f5f7] text-[#6e6e73]" : "text-white"
             }`}
             style={downloaded ? {} : { background: coupon.color }}>

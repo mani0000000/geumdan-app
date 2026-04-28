@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Tag, Bus, Home as HomeIcon,
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar, Train,
-  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw, Settings2,
+  TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw, Settings2, ExternalLink,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -616,9 +616,114 @@ function InstagramSection() {
     </>
   );
 }
+// ─── 가볼만한곳 상세 바텀시트 ────────────────────────────────
+function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => void }) {
+  const meta = CATEGORY_META[place.category];
+  const q = encodeURIComponent(place.address || place.name);
+  const mapUrl = place.lat && place.lng
+    ? `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
+    : `https://map.kakao.com/link/search/${q}`;
+
+  return (
+    <div className="fixed inset-0 z-[300]" onClick={onClose}>
+      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center" onClick={e => e.stopPropagation()}>
+        <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden max-h-[85dvh] flex flex-col">
+          {/* 핸들 */}
+          <div className="flex justify-center pt-3 pb-1 shrink-0">
+            <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+          </div>
+
+          {/* 스크롤 영역 */}
+          <div className="overflow-y-auto flex-1">
+            {/* 썸네일 */}
+            <div className="w-full h-[200px] relative shrink-0">
+              {place.thumbnail_url
+                ? <img src={place.thumbnail_url} alt={place.name} className="w-full h-full object-cover" />
+                : <div className="w-full h-full flex items-center justify-center text-[64px]" style={{ background: meta.bg }}>🗺️</div>
+              }
+              <button onClick={onClose}
+                className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
+                <X size={16} className="text-white" />
+              </button>
+              <span className="absolute bottom-3 left-3 text-[12px] font-bold px-2.5 py-1 rounded-lg"
+                style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
+            </div>
+
+            {/* 기본 정보 */}
+            <div className="px-5 pt-4 pb-3">
+              <h2 className="text-[20px] font-black text-[#1d1d1f]">{place.name}</h2>
+              {(place.distance_km != null || place.drive_min != null) && (
+                <p className="text-[13px] text-[#3182F6] font-semibold mt-0.5">
+                  {place.distance_km != null ? `${place.distance_km}km` : ""}
+                  {place.distance_km != null && place.drive_min != null ? " · " : ""}
+                  {place.drive_min != null ? `차로 ${place.drive_min}분` : ""}
+                </p>
+              )}
+              <p className="text-[14px] text-[#424245] mt-2 leading-relaxed">{place.description || place.short_desc}</p>
+
+              {/* 태그 */}
+              {place.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {place.tags.map(t => (
+                    <span key={t} className="text-[12px] px-2.5 py-1 rounded-full bg-[#f5f5f7] text-[#424245] font-medium">#{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 상세 정보 */}
+            <div className="mx-4 mb-3 bg-[#f5f5f7] rounded-2xl px-4 py-3 space-y-2.5">
+              {place.address && (
+                <div className="flex items-start gap-2.5">
+                  <MapPin size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
+                  <p className="text-[13px] text-[#1d1d1f]">{place.address}</p>
+                </div>
+              )}
+              {place.operating_hours && (
+                <div className="flex items-start gap-2.5">
+                  <Clock size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
+                  <p className="text-[13px] text-[#1d1d1f]">{place.operating_hours}</p>
+                </div>
+              )}
+              {place.admission_fee && (
+                <div className="flex items-start gap-2.5">
+                  <Tag size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
+                  <p className="text-[13px] text-[#1d1d1f]">{place.admission_fee}</p>
+                </div>
+              )}
+              {place.phone && (
+                <div className="flex items-start gap-2.5">
+                  <Phone size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
+                  <a href={`tel:${place.phone}`} className="text-[13px] text-[#0071e3]">{place.phone}</a>
+                </div>
+              )}
+            </div>
+
+            {/* 지도/홈피 버튼 */}
+            <div className="px-4 pb-10 flex gap-2">
+              <a href={mapUrl} target="_blank" rel="noopener noreferrer"
+                className="flex-1 h-11 rounded-xl bg-[#FEE500] text-[#3C1E1E] flex items-center justify-center gap-1.5 text-[14px] font-bold active:opacity-80">
+                <MapPin size={15} />카카오맵
+              </a>
+              {place.website && (
+                <a href={place.website} target="_blank" rel="noopener noreferrer"
+                  className="flex-1 h-11 rounded-xl bg-[#3182F6] text-white flex items-center justify-center gap-1.5 text-[14px] font-bold active:opacity-80">
+                  <ExternalLink size={15} />홈페이지
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── 가볼만한곳 위젯 ─────────────────────────────────────────
 function PlacesSection() {
   const [places, setPlaces] = useState<Place[] | null>(null);
+  const [selected, setSelected] = useState<Place | null>(null);
   useEffect(() => { fetchPublishedPlaces().then(setPlaces).catch(() => setPlaces([])); }, []);
   if (!places?.length) return null;
   return (
@@ -630,10 +735,11 @@ function PlacesSection() {
             {places.slice(0, 8).map(p => {
               const meta = CATEGORY_META[p.category];
               return (
-                <Link key={p.id} href="/transport/?tab=가볼만한곳"
-                  className="shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm">
+                <button key={p.id} onClick={() => setSelected(p)}
+                  className="shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden active:opacity-80 shadow-sm text-left">
                   <div className="w-full h-[130px] relative">
                     {p.thumbnail_url
+                      // eslint-disable-next-line @next/next/no-img-element
                       ? <img src={p.thumbnail_url} alt={p.name} className="w-full h-full object-cover" />
                       : <div className="w-full h-full flex items-center justify-center text-[48px]"
                           style={{ background: meta.bg }}>
@@ -656,12 +762,13 @@ function PlacesSection() {
                       </p>
                     )}
                   </div>
-                </Link>
+                </button>
               );
             })}
           </div>
         </div>
       </section>
+      {selected && <PlaceDetailSheet place={selected} onClose={() => setSelected(null)} />}
     </>
   );
 }
@@ -748,28 +855,58 @@ function TideSection() {
             )}
           </div>
 
-          {/* 조석 차트 */}
-          <div className="border-t border-gray-50 px-3 pt-3 pb-4">
-            <div className="flex gap-1.5 items-end" style={{ height: "72px" }}>
-              {todayTides.map((t, i) => {
-                const ratio = t.heightM / maxH;
-                const barH = Math.max(6, Math.round(ratio * 44));
-                const isLow = t.type === "low";
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center justify-end gap-0.5">
-                    <span className="text-[9px] font-bold leading-none mb-0.5"
-                      style={{ color: isLow ? "#9CA3AF" : "#0071e3" }}>
-                      {t.heightM}m
-                    </span>
-                    <div className="w-full rounded-t-md"
-                      style={{ height: `${barH}px`, background: isLow ? "#BFDBFE" : "#0071e3" }} />
-                    <span className="text-[10px] font-semibold text-[#1d1d1f] mt-1">{t.timeStr}</span>
-                    <span className="text-[9px] text-gray-400">{isLow ? "저조" : "고조"}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* 조석 곡선 차트 */}
+          {(() => {
+            const W = 320; const H = 72; const PAD_X = 28; const PAD_Y = 8;
+            const minH2 = Math.min(...todayTides.map(t => t.heightM));
+            const range = maxH - minH2 || 1;
+            const toX = (i: number) => PAD_X + (i / (todayTides.length - 1)) * (W - PAD_X * 2);
+            const toY = (h: number) => PAD_Y + (1 - (h - minH2) / range) * (H - PAD_Y * 2);
+            const pts = todayTides.map((t, i) => ({ x: toX(i), y: toY(t.heightM) }));
+            // 스무스 베지어 곡선
+            let d = `M${pts[0].x},${pts[0].y}`;
+            for (let i = 1; i < pts.length; i++) {
+              const cp1x = (pts[i - 1].x + pts[i].x) / 2;
+              d += ` C${cp1x},${pts[i - 1].y} ${cp1x},${pts[i].y} ${pts[i].x},${pts[i].y}`;
+            }
+            const fill = `${d} L${pts[pts.length - 1].x},${H} L${pts[0].x},${H} Z`;
+            const nowX = PAD_X + (nowMin / 1440) * (W - PAD_X * 2);
+            return (
+              <div className="border-t border-gray-50 px-3 pt-2 pb-1">
+                <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full" style={{ height: 96 }}>
+                  <defs>
+                    <linearGradient id="tideGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#0071e3" stopOpacity="0.55" />
+                      <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.05" />
+                    </linearGradient>
+                  </defs>
+                  {/* 그라데이션 fill */}
+                  <path d={fill} fill="url(#tideGrad)" />
+                  {/* 곡선 선 */}
+                  <path d={d} fill="none" stroke="#0071e3" strokeWidth="2.5" strokeLinecap="round" />
+                  {/* 현재 시각 세로선 */}
+                  {nowX >= PAD_X && nowX <= W - PAD_X && (
+                    <line x1={nowX} y1={PAD_Y} x2={nowX} y2={H}
+                      stroke="#F97316" strokeWidth="1.5" strokeDasharray="3,3" />
+                  )}
+                  {/* 데이터 포인트 레이블 */}
+                  {pts.map((p, i) => {
+                    const t = todayTides[i];
+                    const isLow = t.type === "low";
+                    return (
+                      <g key={i}>
+                        <circle cx={p.x} cy={p.y} r={3.5} fill={isLow ? "#BFDBFE" : "#0071e3"} stroke="white" strokeWidth="1.5" />
+                        <text x={p.x} y={p.y - 5} textAnchor="middle" fontSize="8" fontWeight="700"
+                          fill={isLow ? "#9CA3AF" : "#0071e3"}>{t.heightM}m</text>
+                        <text x={p.x} y={H + 11} textAnchor="middle" fontSize="9" fontWeight="600" fill="#1d1d1f">{t.timeStr}</text>
+                        <text x={p.x} y={H + 21} textAnchor="middle" fontSize="8" fill="#9CA3AF">{isLow ? "저조" : "고조"}</text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── 탭 ── */}
@@ -949,6 +1086,7 @@ function MatchCard({ m, assets, formatMatchDate }: {
   const oppScore = isHome ? m.away_score : m.home_score;
   const teamLogoUrl = assets.teamLogos[m.team_code];
   const leagueLogoUrl = assets.leagueLogos[meta.league];
+  const oppLogoUrl = assets.awayTeamLogos?.[oppName];
 
   return (
     <div className={`shrink-0 w-[215px] rounded-2xl overflow-hidden shadow-sm border flex flex-col ${
@@ -995,13 +1133,13 @@ function MatchCard({ m, assets, formatMatchDate }: {
               </div>
               {isFinished && <span className="text-[9px] text-gray-400 mt-0.5">최종</span>}
             </div>
-            <SportTeamLogo teamName={oppName} size={44} />
+            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
           </div>
         ) : (
           <div className="flex items-center justify-between gap-1 py-1">
             <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
             <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
-            <SportTeamLogo teamName={oppName} size={44} />
+            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
           </div>
         )}
         {m.venue && <p className="text-[10px] text-gray-400 text-center mt-2 truncate">📍 {m.venue}</p>}
@@ -1514,9 +1652,9 @@ function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onCl
     : `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
 
   const apps = [
-    { label: "카카오맵", url: kakaoUrl, bg: "#FEE500", textColor: "#3C1E1E", char: "K" },
-    { label: "네이버",   url: naverUrl, bg: "#03C75A", textColor: "#ffffff",  char: "N" },
-    { label: "티맵",     url: tmapUrl,  bg: "#0068FF", textColor: "#ffffff",  char: "T" },
+    { label: "카카오맵", url: kakaoUrl, icon: "/icons/kakaomap.svg" },
+    { label: "네이버",   url: naverUrl, icon: "/icons/navermap.svg" },
+    { label: "티맵",     url: tmapUrl,  icon: "/icons/tmap.svg"     },
   ];
 
   return (
@@ -1539,10 +1677,8 @@ function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onCl
               {apps.map(app => (
                 <a key={app.label} href={app.url} target="_blank" rel="noopener noreferrer"
                   className="flex flex-col items-center gap-1 active:scale-90 transition-transform">
-                  <div className="w-10 h-10 rounded-[12px] flex items-center justify-center text-[15px] font-black shadow-sm"
-                    style={{ backgroundColor: app.bg, color: app.textColor }}>
-                    {app.char}
-                  </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={app.icon} alt={app.label} className="w-10 h-10 rounded-[12px] shadow-sm" />
                   <span className="text-[10px] text-[#8e8e93] font-medium">{app.label}</span>
                 </a>
               ))}
@@ -2078,30 +2214,30 @@ function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
   const arriving = a.arrivalMin <= 2;
   const close    = a.arrivalMin <= 7;
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5 border-t border-[#f5f5f7] animate-slide-up"
+    <div className="flex items-center gap-2.5 px-3 py-2 border-t border-[#f5f5f7] animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}>
       {/* 노선 번호 */}
-      <div className={`rounded-xl px-2.5 py-2 shrink-0 min-w-[52px] text-center ${arriving ? "bg-[#F04452]" : "bg-[#0071e3]"}`}>
-        <span className="text-white text-[16px] font-black leading-none tracking-tight">{a.routeNo}</span>
-        {a.isExpress && <p className="text-yellow-200 text-[9px] font-bold mt-0.5">급행</p>}
+      <div className={`rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center ${arriving ? "bg-[#F04452]" : "bg-[#0071e3]"}`}>
+        <span className="text-white text-[14px] font-black leading-none tracking-tight">{a.routeNo}</span>
+        {a.isExpress && <p className="text-yellow-200 text-[8px] font-bold">급행</p>}
       </div>
       {/* 목적지 */}
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination}</p>
+        <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.destination}</p>
         {a.remainingStops > 0 && (
-          <p className="text-[11px] text-[#86868b] mt-0.5">{a.remainingStops}정거장 전</p>
+          <p className="text-[10px] text-[#86868b]">{a.remainingStops}정거장 전</p>
         )}
       </div>
       {/* 도착 시간 */}
-      <div className={`shrink-0 rounded-2xl px-3 py-2 min-w-[58px] text-center ${
+      <div className={`shrink-0 rounded-xl px-2.5 py-1.5 min-w-[52px] text-center ${
         arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#EFF6FF]"
       }`}>
         {arriving ? (
-          <span className="text-[#F04452] text-[13px] font-black animate-led-blink">곧도착</span>
+          <span className="text-[#F04452] text-[11px] font-black animate-led-blink">곧도착</span>
         ) : (
           <>
-            <span className={`text-[22px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#0071e3]"}`}>{a.arrivalMin}</span>
-            <span className={`text-[10px] ${close ? "text-[#F97316]/70" : "text-[#0071e3]/60"}`}>분 후</span>
+            <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#0071e3]"}`}>{a.arrivalMin}</span>
+            <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#0071e3]/60"}`}>분 후</span>
           </>
         )}
       </div>
@@ -2119,32 +2255,32 @@ function SubwayRow({ arrival, lineColor, isEst, delay }: {
   const dirArrow = arrival.direction === "상행" ? "↑" : "↓";
 
   return (
-    <div className="flex items-center gap-3 px-4 py-3.5 border-t border-[#f5f5f7] animate-slide-up"
+    <div className="flex items-center gap-2.5 px-3 py-2 border-t border-[#f5f5f7] animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}>
       {/* 방향 배지 */}
-      <div className="rounded-xl px-2.5 py-2 shrink-0 min-w-[52px] text-center" style={{ background: lineColor + "18" }}>
-        <span className="text-[18px] font-black leading-none" style={{ color: lineColor }}>{dirArrow}</span>
+      <div className="rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center" style={{ background: lineColor + "18" }}>
+        <span className="text-[16px] font-black leading-none" style={{ color: lineColor }}>{dirArrow}</span>
         {arrival.isExpress && (
-          <p className="text-[9px] font-bold mt-0.5" style={{ color: lineColor }}>{arrival.trainTypeName ?? "급행"}</p>
+          <p className="text-[8px] font-bold" style={{ color: lineColor }}>{arrival.trainTypeName ?? "급행"}</p>
         )}
       </div>
       {/* 종착역 + 현재 위치 */}
       <div className="flex-1 min-w-0">
-        <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{arrival.terminalStation} 방면</p>
-        <p className="text-[11px] text-[#86868b] mt-0.5">
+        <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{arrival.terminalStation} 방면</p>
+        <p className="text-[10px] text-[#86868b]">
           {hasPos ? `${arrival.currentStation} 출발` : isEst ? "시간표 기준" : ""}
         </p>
       </div>
       {/* 도착 시간 */}
-      <div className={`shrink-0 rounded-2xl px-3 py-2 min-w-[58px] text-center ${
+      <div className={`shrink-0 rounded-xl px-2.5 py-1.5 min-w-[52px] text-center ${
         arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#f5f5f7]"
       }`}>
         {arriving ? (
-          <span className="text-[#F04452] text-[13px] font-black animate-led-blink">곧도착</span>
+          <span className="text-[#F04452] text-[11px] font-black animate-led-blink">곧도착</span>
         ) : (
           <>
-            <span className={`text-[22px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#1d1d1f]"}`}>{arrival.arrivalMin}</span>
-            <span className={`text-[10px] ${close ? "text-[#F97316]/70" : "text-[#86868b]"}`}>분 후</span>
+            <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#1d1d1f]"}`}>{arrival.arrivalMin}</span>
+            <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#86868b]"}`}>분 후</span>
           </>
         )}
       </div>
@@ -2248,17 +2384,17 @@ function HomeTransportWidget() {
         const stopArrivals = busArrivals[stopId] ?? [];
         const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
         const displayed = hasFavRoutes
-          ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a)))
-          : stopArrivals.slice(0, 3);
+          ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a))).slice(0, 2)
+          : stopArrivals.slice(0, 2);
         const stopName = STOP_NAME[stopId] ?? "정류장";
         const isLoading = busLoading.has(stopId);
 
         return (
           <div key={stopId} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 정류장 헤더 */}
-            <div className="px-4 py-2.5 flex items-center gap-2 bg-[#0071e3]">
-              <Bus size={14} className="text-white shrink-0" />
-              <span className="text-white font-extrabold text-[14px] flex-1 truncate">{stopName}</span>
+            <div className="px-3 py-2 flex items-center gap-2 bg-[#0071e3]">
+              <Bus size={13} className="text-white shrink-0" />
+              <span className="text-white font-extrabold text-[13px] flex-1 truncate">{stopName}</span>
               <button onClick={() => refreshBusStop(stopId)} disabled={isLoading}
                 className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
                 <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
@@ -2290,12 +2426,12 @@ function HomeTransportWidget() {
         return (
           <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 역 헤더 */}
-            <div className="px-4 py-2.5 flex items-center gap-2"
+            <div className="px-3 py-2 flex items-center gap-2"
               style={{ background: st.lineColor }}>
-              <Train size={14} className="text-white shrink-0" />
+              <Train size={13} className="text-white shrink-0" />
               <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                <span className="text-white font-extrabold text-[14px] truncate">{st.displayName}</span>
-                <span className="text-[11px] font-bold text-white/70 shrink-0">{st.line}</span>
+                <span className="text-white font-extrabold text-[13px] truncate">{st.displayName}</span>
+                <span className="text-[10px] font-bold text-white/70 shrink-0">{st.line}</span>
               </div>
               <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
                 className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">

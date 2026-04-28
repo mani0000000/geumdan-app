@@ -140,16 +140,22 @@ export interface SportsAssets {
   teamLogos: Partial<Record<TeamCode, string>>;
   leagueLogos: Partial<Record<string, string>>;
   broadcastChannels: string[];
+  awayTeamLogos: Record<string, string>; // teamName → url
 }
 
 export const DEFAULT_SPORTS_ASSETS: SportsAssets = {
   teamLogos: {},
   leagueLogos: {},
   broadcastChannels: ["SPOTV", "SPOTV2", "MBC스포츠", "KBS N스포츠", "SBS Sports", "tvN스포츠", "쿠팡플레이", "네이버스포츠", "유튜브"],
+  awayTeamLogos: {},
 };
 
 function leagueKey(league: string) {
   return `sports_league_logo_${league.replace(/[^a-zA-Z0-9가-힣]/g, "_")}`;
+}
+
+function awayKey(teamName: string) {
+  return `sports_away_logo_${teamName.replace(/[^a-zA-Z0-9가-힣]/g, "_")}`;
 }
 
 async function settingsGet(key: string): Promise<string | null> {
@@ -193,7 +199,14 @@ export async function adminFetchSportsAssets(): Promise<SportsAssets> {
     const chJson = await settingsGet("sports_broadcast_channels");
     const channels = chJson ? JSON.parse(chJson) as string[] : DEFAULT_SPORTS_ASSETS.broadcastChannels;
 
-    return { teamLogos, leagueLogos, broadcastChannels: channels };
+    // 원정팀 로고 로드
+    const awayTeamLogos: Record<string, string> = {};
+    const awayJson = await settingsGet("sports_away_team_logos");
+    if (awayJson) {
+      try { Object.assign(awayTeamLogos, JSON.parse(awayJson) as Record<string, string>); } catch { /* */ }
+    }
+
+    return { teamLogos, leagueLogos, broadcastChannels: channels, awayTeamLogos };
   } catch {
     return { ...DEFAULT_SPORTS_ASSETS };
   }
@@ -210,6 +223,13 @@ export async function adminSaveLeagueLogo(league: string, url: string | null): P
 
 export async function adminSaveBroadcastChannels(channels: string[]): Promise<void> {
   await settingsSet("sports_broadcast_channels", JSON.stringify(channels));
+}
+
+export async function adminSaveAwayTeamLogo(teamName: string, url: string | null, current: Record<string, string>): Promise<Record<string, string>> {
+  const next = { ...current };
+  if (url) next[teamName] = url; else delete next[teamName];
+  await settingsSet("sports_away_team_logos", JSON.stringify(next));
+  return next;
 }
 
 export async function fetchSportsAssets(): Promise<SportsAssets> {
@@ -237,7 +257,11 @@ export async function fetchSportsAssets(): Promise<SportsAssets> {
     const chJson = map["sports_broadcast_channels"];
     const channels = chJson ? JSON.parse(chJson) as string[] : DEFAULT_SPORTS_ASSETS.broadcastChannels;
 
-    return { teamLogos, leagueLogos, broadcastChannels: channels };
+    const awayTeamLogos: Record<string, string> = {};
+    const awayJson = map["sports_away_team_logos"];
+    if (awayJson) { try { Object.assign(awayTeamLogos, JSON.parse(awayJson) as Record<string, string>); } catch { /* */ } }
+
+    return { teamLogos, leagueLogos, broadcastChannels: channels, awayTeamLogos };
   } catch {
     return { ...DEFAULT_SPORTS_ASSETS };
   }
