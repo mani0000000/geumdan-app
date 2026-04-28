@@ -14,6 +14,7 @@ const EMPTY: Omit<AdminPlace, "id" | "created_at"> = {
   thumbnail_url: null, tags: [], distance_km: null, drive_min: null,
   operating_hours: null, admission_fee: null, phone: null, website: null,
   published: true, sort_order: 0,
+  lat: null, lng: null,
 };
 function PlaceModal({
   initial, onSave, onClose,
@@ -113,6 +114,18 @@ function PlaceModal({
             <div>
               <label className={labelCls}>자동차 소요 (분)</label>
               <input type="number" className={inputCls} value={form.drive_min ?? ""} onChange={e => set("drive_min", e.target.value ? Number(e.target.value) : null)} placeholder="예: 40" />
+            </div>
+          </div>
+
+          {/* 위도·경도 (지도 연결용) */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls}>위도 (lat)</label>
+              <input type="number" step="any" className={inputCls} value={form.lat ?? ""} onChange={e => set("lat", e.target.value ? Number(e.target.value) : null)} placeholder="예: 37.6788" />
+            </div>
+            <div>
+              <label className={labelCls}>경도 (lng)</label>
+              <input type="number" step="any" className={inputCls} value={form.lng ?? ""} onChange={e => set("lng", e.target.value ? Number(e.target.value) : null)} placeholder="예: 126.6438" />
             </div>
           </div>
 

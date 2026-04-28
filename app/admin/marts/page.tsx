@@ -23,7 +23,7 @@ const CLOSING_PATTERNS: { value: MartClosingPattern; label: string }[] = [
 const EMPTY: Omit<Mart, "id"> = {
   name: "", brand: "", type: "동네마트", address: "", phone: "",
   distance: "", weekday_hours: "", saturday_hours: "", sunday_hours: "",
-  closing_pattern: "open", notice: "", logo_url: null,
+  closing_pattern: "open", notice: "", logo_url: null, image_url: null,
   lat: null, lng: null, sort_order: 0, active: true,
 };
 
@@ -62,10 +62,16 @@ function MartForm({
 
         <form onSubmit={submit} className="overflow-y-auto flex-1">
           <div className="p-5 space-y-4">
-            {/* 로고 */}
-            <div>
-              <p className="text-[13px] font-semibold text-[#191F28] mb-2">로고 이미지</p>
-              <ImageUpload value={form.logo_url} onChange={v => set("logo_url", v)} folder="marts" />
+            {/* 로고 / 매장 이미지 */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="text-[13px] font-semibold text-[#191F28] mb-2">로고 이미지</p>
+                <ImageUpload value={form.logo_url} onChange={v => set("logo_url", v)} folder="marts" />
+              </div>
+              <div>
+                <p className="text-[13px] font-semibold text-[#191F28] mb-2">매장 사진</p>
+                <ImageUpload value={form.image_url} onChange={v => set("image_url", v)} folder="marts" />
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -326,7 +332,7 @@ export default function AdminMartsPage() {
 
       {/* 테이블 없음 오류 패널 */}
       {tableErr && (() => {
-        const sql = `CREATE TABLE IF NOT EXISTS marts (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  brand TEXT NOT NULL DEFAULT '',\n  type TEXT NOT NULL DEFAULT '동네마트',\n  address TEXT NOT NULL DEFAULT '',\n  phone TEXT,\n  distance TEXT,\n  weekday_hours TEXT,\n  saturday_hours TEXT,\n  sunday_hours TEXT,\n  closing_pattern TEXT NOT NULL DEFAULT 'open',\n  notice TEXT,\n  logo_url TEXT,\n  lat DOUBLE PRECISION,\n  lng DOUBLE PRECISION,\n  sort_order INT NOT NULL DEFAULT 0,\n  active BOOLEAN NOT NULL DEFAULT TRUE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\nALTER TABLE marts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_all ON marts FOR ALL TO anon USING (true) WITH CHECK (true);`;
+        const sql = `CREATE TABLE IF NOT EXISTS marts (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  brand TEXT NOT NULL DEFAULT '',\n  type TEXT NOT NULL DEFAULT '동네마트',\n  address TEXT NOT NULL DEFAULT '',\n  phone TEXT,\n  distance TEXT,\n  weekday_hours TEXT,\n  saturday_hours TEXT,\n  sunday_hours TEXT,\n  closing_pattern TEXT NOT NULL DEFAULT 'open',\n  notice TEXT,\n  logo_url TEXT,\n  image_url TEXT,\n  lat DOUBLE PRECISION,\n  lng DOUBLE PRECISION,\n  sort_order INT NOT NULL DEFAULT 0,\n  active BOOLEAN NOT NULL DEFAULT TRUE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\nALTER TABLE marts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE marts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_all ON marts FOR ALL TO anon USING (true) WITH CHECK (true);`;
         return (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
             <p className="text-[13px] font-bold text-red-700">marts 테이블이 없습니다</p>
