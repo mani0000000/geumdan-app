@@ -9,6 +9,7 @@ import {
   adminSaveTeamLogo,
   adminSaveLeagueLogo,
   adminSaveBroadcastChannels,
+  adminSaveAwayTeamLogo,
   TEAM_META,
   TEAM_LOGOS,
   LEAGUE_STYLES,
@@ -148,6 +149,7 @@ export default function AdminSportsPage() {
   const [savingAssets, setSavingAssets] = useState(false);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [newChannel, setNewChannel] = useState("");
+  const [newAwayTeam, setNewAwayTeam] = useState("");
   const [rlsError, setRlsError] = useState(false);
   const [rlsCopied, setRlsCopied] = useState(false);
   const [rlsFixing, setRlsFixing] = useState(false);
@@ -277,6 +279,16 @@ export default function AdminSportsPage() {
     try {
       await adminSaveBroadcastChannels(next);
       setAssets(prev => ({ ...prev, broadcastChannels: next }));
+      showToast("저장됐어요");
+    } catch (e) { handleSaveError(e); }
+    setSavingAssets(false);
+  }
+
+  async function updateAwayTeamLogo(teamName: string, url: string | null) {
+    setSavingAssets(true);
+    try {
+      const next = await adminSaveAwayTeamLogo(teamName, url, assets.awayTeamLogos);
+      setAssets(prev => ({ ...prev, awayTeamLogos: next }));
       showToast("저장됐어요");
     } catch (e) { handleSaveError(e); }
     setSavingAssets(false);
@@ -529,6 +541,59 @@ export default function AdminSportsPage() {
                     );
                   })}
                 </div>
+              </section>
+
+              {/* 원정팀 로고 */}
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <ImageIcon size={16} className="text-[#3182F6]" />
+                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">원정팀 로고</h2>
+                  <span className="text-[12px] text-gray-400">상대팀 이름으로 등록</span>
+                </div>
+                {/* 새 팀 추가 */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-3">
+                  <p className="text-[12px] font-semibold text-gray-500 mb-2">팀 이름 입력 후 로고 업로드</p>
+                  <div className="flex gap-2">
+                    <input
+                      value={newAwayTeam}
+                      onChange={e => setNewAwayTeam(e.target.value)}
+                      placeholder="팀 이름 (예: 울산 HD)"
+                      className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
+                    />
+                    {newAwayTeam.trim() && (
+                      <LogoUploadButton
+                        currentUrl={assets.awayTeamLogos[newAwayTeam.trim()]}
+                        onUpload={url => { updateAwayTeamLogo(newAwayTeam.trim(), url); setNewAwayTeam(""); }}
+                        onRemove={() => updateAwayTeamLogo(newAwayTeam.trim(), null)}
+                      />
+                    )}
+                  </div>
+                </div>
+                {/* 등록된 원정팀 로고 목록 */}
+                {Object.keys(assets.awayTeamLogos).length > 0 && (
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {Object.entries(assets.awayTeamLogos).map(([teamName, url]) => (
+                      <div key={teamName} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-sm">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={url} alt={teamName} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{teamName}</p>
+                            <button onClick={() => updateAwayTeamLogo(teamName, null)}
+                              className="text-[11px] text-red-500 mt-0.5 hover:underline">삭제</button>
+                          </div>
+                        </div>
+                        <LogoUploadButton
+                          currentUrl={url}
+                          onUpload={u => updateAwayTeamLogo(teamName, u)}
+                          onRemove={() => updateAwayTeamLogo(teamName, null)}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
               </section>
 
               {/* 방송 채널 */}

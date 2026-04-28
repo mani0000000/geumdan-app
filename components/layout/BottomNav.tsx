@@ -16,9 +16,9 @@ export default function BottomNav() {
   return (
     <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px]">
       <div className="flex items-center justify-around px-3 h-[64px] rounded-[36px]
-        bg-white/90 backdrop-blur-2xl
-        border border-black/[0.06]
-        shadow-[0_4px_28px_rgba(0,0,0,0.13)]">
+        bg-white/60 backdrop-blur-[28px]
+        border border-white/50
+        shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
         {navItems.map(({ href, label, icon: Icon, match, center }) => {
           const active = Array.isArray(match)
             ? match.some((m) => pathname.includes(m))
