@@ -14,7 +14,7 @@ import { fetchDBPosts } from "@/lib/db/posts";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
-import type { CommunityCategory, NewsType } from "@/lib/types";
+import type { CommunityCategory, NewsType, Post } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────────
@@ -33,10 +33,71 @@ const catColor: Record<CommunityCategory, string> = {
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
 };
 
+type SortKey = "latest" | "likes" | "comments" | "views";
+const SORT_OPTS: { key: SortKey; label: string }[] = [
+  { key: "latest",   label: "최신순" },
+  { key: "likes",    label: "반응순" },
+  { key: "comments", label: "댓글순" },
+  { key: "views",    label: "조회수순" },
+];
+
+function hotScore(p: { viewCount: number; likeCount: number; commentCount: number }) {
+  return p.viewCount + p.likeCount * 5 + p.commentCount * 3;
+}
+
+function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useRouter> }) {
+  return (
+    <button onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+      className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
+      <div className="flex gap-3">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-2">
+            {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
+            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+              {post.category}
+            </span>
+            {post.isHot && (
+              <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                <Flame size={10} /> HOT
+              </span>
+            )}
+          </div>
+          <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
+          <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
+        </div>
+        {post.images && post.images.length > 0 && (
+          <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
+            <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
+        <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
+        <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+        <div className="flex items-center gap-3 ml-auto">
+          <div className="flex items-center gap-1">
+            <ThumbsUp size={12} className="text-[#86868b]" />
+            <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <MessageSquare size={12} className="text-[#86868b]" />
+            <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye size={12} className="text-[#86868b]" />
+            <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
+    </button>
+  );
+}
+
 function CommunityTab() {
   const router = useRouter();
   const [active, setActive] = useState<CommunityCategory>("전체");
-  const [dbPosts, setDbPosts] = useState<typeof posts>([]);
+  const [sort, setSort] = useState<SortKey>("latest");
+  const [dbPosts, setDbPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
@@ -46,14 +107,32 @@ function CommunityTab() {
     });
   }, []);
 
-  // DB 포스트 최신순 + 목업 포스트 (고정/HOT 우선)
-  const allPosts = [
+  const allPosts: Post[] = [
     ...dbPosts,
     ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
   ];
-  const filtered = active === "전체"
-    ? allPosts
+
+  // Top 3 hot posts across all categories (by composite score)
+  const hotPosts = [...allPosts]
+    .sort((a, b) => hotScore(b) - hotScore(a))
+    .slice(0, 3);
+
+  const hotIds = new Set(hotPosts.map(p => p.id));
+
+  // Category filter then sort — exclude hot posts from main list when on 전체
+  const categoryFiltered = active === "전체"
+    ? allPosts.filter(p => !hotIds.has(p.id))
     : allPosts.filter(p => p.category === active);
+
+  const sorted = [...categoryFiltered].sort((a, b) => {
+    if (sort === "likes")    return b.likeCount    - a.likeCount;
+    if (sort === "comments") return b.commentCount - a.commentCount;
+    if (sort === "views")    return b.viewCount    - a.viewCount;
+    // latest: DB posts come first (already sorted), mock posts by id
+    return 0;
+  });
+
+  const rankColors = ["#F04452", "#F97316", "#F59E0B"];
 
   return (
     <div className="pb-4">
@@ -69,8 +148,74 @@ function CommunityTab() {
         </div>
       </div>
 
+      {/* HOT 인기글 — 전체 탭에서만 표시 */}
+      {active === "전체" && !loadingPosts && hotPosts.length > 0 && (
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-[#F04452]" />
+            <span className="text-[15px] font-extrabold text-[#1d1d1f]">인기글 TOP 3</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+            {hotPosts.map((post, idx) => (
+              <button key={post.id}
+                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-[#f9f9f9] transition-colors">
+                <span className="text-[18px] font-black w-6 text-center shrink-0"
+                  style={{ color: rankColors[idx] }}>
+                  {idx + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${catColor[post.category]}`}>
+                      {post.category}
+                    </span>
+                  </div>
+                  <p className="text-[14px] font-semibold text-[#1d1d1f] truncate leading-snug">{post.title}</p>
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <Eye size={10} />{post.viewCount.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <ThumbsUp size={10} />{post.likeCount}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <MessageSquare size={10} />{post.commentCount}
+                    </span>
+                    <span className="text-[11px] text-[#86868b] ml-auto">{formatRelativeTime(post.createdAt)}</span>
+                  </div>
+                </div>
+                {post.images && post.images.length > 0 && (
+                  <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                    <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 정렬 필터 */}
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <span className="text-[13px] font-medium text-[#86868b] shrink-0">
+          {active === "전체" ? `전체 ${sorted.length}개` : `${active} ${sorted.length}개`}
+        </span>
+        <div className="ml-auto flex gap-1.5">
+          {SORT_OPTS.map(opt => (
+            <button key={opt.key} onClick={() => setSort(opt.key)}
+              className={`h-7 px-2.5 rounded-full text-[12px] font-semibold transition-colors ${
+                sort === opt.key
+                  ? "bg-[#1d1d1f] text-white"
+                  : "bg-[#f5f5f7] text-[#424245]"
+              }`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Posts */}
-      <div className="px-4 pt-3 space-y-2">
+      <div className="px-4 pt-1 space-y-2">
         {loadingPosts ? (
           [1,2,3].map(i => (
             <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
@@ -80,51 +225,7 @@ function CommunityTab() {
             </div>
           ))
         ) : (
-          filtered.map(post => (
-            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-              <div className="flex gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-                    <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                      {post.category}
-                    </span>
-                    {post.isHot && (
-                      <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                        <Flame size={10} /> HOT
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-                  <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
-                </div>
-                {post.images && post.images.length > 0 && (
-                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
-                    <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
-                <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-                <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </button>
-          ))
+          sorted.map(post => <PostCard key={post.id} post={post} router={router} />)
         )}
       </div>
     </div>
@@ -969,7 +1070,7 @@ function SoikContent() {
   });
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-40">
       <Header title="소식" />
 
       {/* Main tabs */}
@@ -989,7 +1090,7 @@ function SoikContent() {
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (
         <button onClick={() => router.push("/community/write/")}
-          className="fixed bottom-[74px] right-4 w-14 h-14 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:bg-[#0058b0] z-40">
+          className="fixed bottom-[100px] right-5 w-14 h-14 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:bg-[#0058b0] z-40">
           <Plus size={24} className="text-white" />
         </button>
       )}
