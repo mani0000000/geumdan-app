@@ -686,69 +686,114 @@ function StoreListView() {
     const hasNew = newOpeningIds.has(store.id);
     const hasCoupon = couponStoreIds.has(store.id);
     const [thumbFailed, setThumbFailed] = useState(false);
-    const hasThumb = !!store.thumbnail_url && !thumbFailed;
+    const [heroFailed, setHeroFailed] = useState(false);
+    const heroThumb = !!store.thumbnail_url && !thumbFailed ? store.thumbnail_url! : null;
+    const [gFrom, gTo] = catGrads[store.category];
+    const isOpen = store.isOpen !== false;
     return (
       <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
-        <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
-        <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
-          <div className="relative shrink-0">
-            <StoreLogo name={store.name} category={store.category} size={46} />
-            {hasNew && (
-              <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#F04452] rounded-full border-2 border-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-              {hasNew && <span className="shrink-0 text-[9px] font-black text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">NEW</span>}
-              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
-              <span className="text-[11px] text-[#d2d2d7]">·</span>
-              <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
-              {store.hours && <>
-                <span className="text-[11px] text-[#d2d2d7]">·</span>
-                <span className="text-[12px] text-[#86868b]">{store.hours}</span>
-              </>}
-            </div>
-            {hasCoupon && (
-              <div className="flex items-center gap-1 mt-1.5">
-                <Tag size={10} className="text-[#0071e3]" />
-                <span className="text-[11px] font-bold text-[#0071e3]">쿠폰 사용 가능</span>
+        className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#eeeef0] flex flex-col h-full">
+        {/* Hero */}
+        <div className="relative overflow-hidden" style={{ aspectRatio: "5/3" }}>
+          {heroThumb ? (
+            <img src={heroThumb} alt={store.name} onError={() => setThumbFailed(true)}
+              className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full relative">
+              {!heroFailed && (
+                <img src={catHeroImage[store.category]} alt=""
+                  onError={() => setHeroFailed(true)}
+                  className="absolute inset-0 w-full h-full object-cover" />
+              )}
+              <div className="absolute inset-0"
+                style={{ background: `linear-gradient(135deg, ${gFrom}cc, ${gTo}99)` }} />
+              <div className="absolute inset-0 opacity-15"
+                style={{
+                  backgroundImage: "radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)",
+                  backgroundSize: "10px 10px",
+                }} />
+              <div className="absolute right-1 -bottom-3 opacity-25"
+                style={{ fontSize: 78, lineHeight: 1 }}>
+                {catEmoji[store.category]}
               </div>
-            )}
-          </div>
-          {!hasThumb && (
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업 중" : "영업 종료"}
-              </span>
-              <ChevronRight size={14} className="text-[#d2d2d7]" />
             </div>
           )}
-        </div>
-        {hasThumb && (
-          <div className="shrink-0 relative" style={{ width: 88 }}>
-            <img
-              src={store.thumbnail_url!}
-              alt={store.name}
-              onError={() => setThumbFailed(true)}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
-            <div className="absolute top-2 right-2">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업" : "종료"}
-              </span>
+
+          {/* 좌상단 뱃지 */}
+          {(hasNew || store.isPremium || hasCoupon) && (
+            <div className="absolute top-1.5 left-1.5 flex flex-col items-start gap-1">
+              {hasNew && (
+                <span className="text-[9px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                  NEW
+                </span>
+              )}
+              {store.isPremium && (
+                <span className="text-[9px] font-black bg-gradient-to-r from-[#F59E0B] to-[#F97316] text-white px-1.5 py-0.5 rounded-md shadow-sm">
+                  ★ PREMIUM
+                </span>
+              )}
+              {hasCoupon && (
+                <span className="text-[9px] font-black bg-white/95 text-[#0071e3] px-1.5 py-0.5 rounded-md shadow-sm flex items-center gap-0.5 backdrop-blur-md">
+                  <Tag size={8} strokeWidth={3} /> 쿠폰
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* 우상단 영업 상태 */}
+          <div className="absolute top-1.5 right-1.5">
+            <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md backdrop-blur-md shadow-sm ${
+              isOpen ? "bg-[#00C471]/95 text-white" : "bg-black/60 text-white"
+            }`}>
+              {isOpen ? "● 영업중" : "영업종료"}
+            </span>
+          </div>
+
+          {/* 하단 그라디언트 (가독성) */}
+          <div className="absolute inset-x-0 bottom-0 h-10 pointer-events-none"
+            style={{ background: "linear-gradient(to top, rgba(0,0,0,0.35), transparent)" }} />
+
+          {/* 좌측 하단 로고 (오버랩) */}
+          <div className="absolute -bottom-3.5 left-2.5">
+            <div className="ring-[2.5px] ring-white rounded-xl shadow-md overflow-hidden bg-white">
+              <StoreLogo name={store.name} category={store.category} size={38} rounded="rounded-xl" />
             </div>
           </div>
-        )}
+        </div>
+
+        {/* 본문 */}
+        <div className="pt-5 pb-2.5 px-2.5 flex-1 flex flex-col gap-1">
+          <span className={`self-start text-[9.5px] font-black px-1.5 py-0.5 rounded-md ${catBg[store.category]}`}>
+            {catEmoji[store.category]} {store.category}
+          </span>
+
+          <p className="text-[14px] font-black text-[#1d1d1f] leading-tight line-clamp-1">
+            {store.name}
+          </p>
+
+          <div className="flex items-center gap-0.5 text-[11px] text-[#6e6e73]">
+            <MapPin size={9} className="shrink-0 text-[#86868b]" />
+            <span className="truncate min-w-0">{store.buildingName}</span>
+          </div>
+
+          <div className="flex items-center justify-between gap-1 text-[10.5px] mt-auto">
+            <span className="font-black px-1.5 py-0.5 rounded-md text-white shrink-0"
+              style={{ background: catDot[store.category] }}>
+              {store.floorLabel}
+            </span>
+            {store.hours ? (
+              <span className="text-[#86868b] truncate flex items-center gap-0.5 min-w-0">
+                <Clock size={9} className="shrink-0 text-[#a1a1a6]" />
+                <span className="truncate">{store.hours}</span>
+              </span>
+            ) : store.phone ? (
+              <span className="text-[#86868b] truncate flex items-center gap-0.5 min-w-0">
+                <Phone size={9} className="shrink-0 text-[#a1a1a6]" />
+                <span className="truncate">{store.phone}</span>
+              </span>
+            ) : null}
+          </div>
+        </div>
       </button>
     );
   }
@@ -898,26 +943,37 @@ function StoreListView() {
 
       <div className="px-4 pt-2 pb-6">
         {grouped ? (
-          Array.from(grouped.entries()).map(([cat, stores]) => (
-            <div key={cat} className="mb-5">
-              <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-1.5 h-[18px] rounded-full shrink-0" style={{ background: catDot[cat] }} />
-                <span className="text-[15px] font-bold text-[#1d1d1f]">{cat}</span>
-                <span className="text-[11px] font-semibold bg-[#f5f5f7] text-[#86868b] px-2 py-0.5 rounded-full">{stores.length}</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
+          Array.from(grouped.entries()).map(([cat, stores]) => {
+            const [gFrom, gTo] = catGrads[cat];
+            return (
+              <div key={cat} className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                    style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
+                    <span className="text-[14px]">{catEmoji[cat]}</span>
+                  </div>
+                  <span className="text-[15px] font-black text-[#1d1d1f]">{cat}</span>
+                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                    style={{ background: catDot[cat] }}>
+                    {stores.length}
+                  </span>
+                  <div className="flex-1 h-px bg-[#e5e5ea]" />
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  {stores.map(s => <StoreCard key={s.id} store={s} />)}
+                </div>
               </div>
-              <div className="space-y-2">
-                {stores.map(s => <StoreCard key={s.id} store={s} />)}
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <div className="space-y-2">
+          <>
             {catFilter !== "전체" && (
-              <p className="text-[12px] font-semibold text-[#86868b] mb-2">{filtered.length}개 매장</p>
+              <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">{filtered.length}개 매장</p>
             )}
-            {filtered.map(s => <StoreCard key={s.id} store={s} />)}
-          </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {filtered.map(s => <StoreCard key={s.id} store={s} />)}
+            </div>
+          </>
         )}
       </div>
 
