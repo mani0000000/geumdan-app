@@ -1044,120 +1044,153 @@ function _getMatchResult(m: SportsMatch): "WIN" | "LOSE" | "DRAW" | null {
 }
 
 function SportTeamLogo({
-  teamCode, teamName, size = 44, logoUrl,
+  teamCode, teamName, size = 56, logoUrl,
 }: { teamCode?: TeamCode; teamName: string; size?: number; logoUrl?: string }) {
   const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
   const bg = logo?.bg ?? _nameToColor(teamName);
   const abbr = logo?.abbr ?? _getInitials(teamName);
   const fg = logo?.fg ?? "#ffffff";
   return (
-    <div className="flex flex-col items-center gap-1" style={{ width: size + 20 }}>
-      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm overflow-hidden"
-        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
+    <div className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ width: size + 16 }}>
+      <div className="rounded-full flex items-center justify-center font-black overflow-hidden"
+        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.3) }}>
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
         ) : abbr}
       </div>
-      <p className="text-[9px] text-gray-500 text-center font-semibold leading-tight"
-        style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <p className="text-[10px] text-[#3d3d3d] text-center font-semibold leading-tight"
+        style={{ width: size + 16, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {teamName}
       </p>
     </div>
   );
 }
 
-// ─── 경기 카드 (결과 / 예정 공통) ────────────────────────────
+// ─── 경기 카드 (가로 배너 스타일) ────────────────────────────
 function MatchCard({ m, assets, formatMatchDate }: {
   m: SportsMatch;
   assets: SportsAssets;
   formatMatchDate: (iso: string) => string;
 }) {
   const meta = TEAM_META[m.team_code];
-  const ls = LEAGUE_STYLES[meta.league];
   const isLive = m.status === "live";
   const isFinished = m.status === "finished";
   const hasScore = m.home_score != null && m.away_score != null;
   const result = isFinished ? _getMatchResult(m) : null;
   const incheonName = meta.name;
   const isHome = m.home_team === incheonName;
-  const oppName = isHome ? m.away_team : m.home_team;
-  const myScore = isHome ? m.home_score : m.away_score;
-  const oppScore = isHome ? m.away_score : m.home_score;
   const teamLogoUrl = assets.teamLogos[m.team_code];
-  const leagueLogoUrl = assets.leagueLogos[meta.league];
-  const oppLogoUrl = assets.awayTeamLogos?.[oppName];
+
+  const homeLogoUrl = isHome ? teamLogoUrl : assets.awayTeamLogos?.[m.home_team];
+  const awayLogoUrl = !isHome ? teamLogoUrl : assets.awayTeamLogos?.[m.away_team];
+  const homeTeamCode: TeamCode | undefined = isHome ? m.team_code : undefined;
+  const awayTeamCode: TeamCode | undefined = !isHome ? m.team_code : undefined;
+
+  const matchDate = m.match_date ? new Date(m.match_date) : null;
+  const timeStr = matchDate
+    ? matchDate.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+    : "TBD";
+  const dateStr = matchDate ? formatMatchDate(m.match_date) : "";
+
+  // 오른쪽 패널 색상 — 팀 primary color 기반
+  const rightBg = meta.color;
+
+  function TeamBadge({ teamCode, teamName, logoUrl }: { teamCode?: TeamCode; teamName: string; logoUrl?: string }) {
+    const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
+    const bg = logo?.bg ?? _nameToColor(teamName);
+    const abbr = logo?.abbr ?? _getInitials(teamName);
+    const fg = logo?.fg ?? "#ffffff";
+    return (
+      <div className="flex flex-col items-center gap-1.5" style={{ width: 72 }}>
+        <div className="w-[52px] h-[52px] rounded-full overflow-hidden flex items-center justify-center font-black flex-shrink-0"
+          style={{ background: logoUrl ? "transparent" : bg, color: fg, fontSize: 14 }}>
+          {logoUrl
+            // eslint-disable-next-line @next/next/no-img-element
+            ? <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
+            : abbr}
+        </div>
+        <p className="text-[8.5px] font-black text-[#1d1d1f] text-center leading-tight uppercase"
+          style={{ width: 72, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+          {teamName}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className={`shrink-0 w-[215px] rounded-2xl overflow-hidden shadow-sm border flex flex-col ${
-      isLive ? "border-red-300 ring-1 ring-red-200" : "border-gray-100"
-    } bg-white`}>
-      {/* 리그 헤더 */}
-      <div className="px-3 py-2.5 flex items-center justify-between"
-        style={{ background: ls?.gradient ?? meta.color }}>
-        <div className="flex items-center gap-1.5">
-          {leagueLogoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={leagueLogoUrl} alt={meta.league} className="w-5 h-5 object-contain rounded" />
-          )}
-          <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">{meta.league}</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          {isLive && (
-            <span className="text-[10px] font-black text-white animate-pulse bg-red-500 px-1.5 py-0.5 rounded-full">LIVE</span>
-          )}
-          {isFinished && result && (
-            <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
-              result === "WIN" ? "bg-green-500 text-white" : result === "LOSE" ? "bg-red-500 text-white" : "bg-gray-500 text-white"
-            }`}>{result === "WIN" ? "승" : result === "LOSE" ? "패" : "무"}</span>
-          )}
-          {isFinished && !result && (
-            <span className="text-[10px] font-semibold text-white/70">종료</span>
-          )}
-          {m.status === "upcoming" && m.match_date && (
-            <span className="text-[10px] font-semibold text-white/80">{formatMatchDate(m.match_date)}</span>
-          )}
-        </div>
-      </div>
+    <div className={`w-full rounded-2xl overflow-hidden flex shadow-sm ${isLive ? "ring-2 ring-red-400" : ""}`}
+      style={{ height: 88 }}>
+      {/* 왼쪽: 흰색 — 홈팀 VS 원정팀 */}
+      <div className="flex-1 bg-white flex items-center px-4 gap-0 min-w-0">
+        <TeamBadge teamCode={homeTeamCode} teamName={m.home_team} logoUrl={homeLogoUrl} />
 
-      {/* 팀 + 스코어 */}
-      <div className="px-3 py-3 flex-1">
-        {hasScore ? (
-          <div className="flex items-center justify-between gap-1">
-            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{myScore ?? "-"}</span>
-                <span className="text-[13px] font-black text-gray-300">:</span>
-                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{oppScore ?? "-"}</span>
+        {/* 중앙: VS or 스코어 */}
+        <div className="flex-1 flex flex-col items-center justify-center min-w-0">
+          {hasScore ? (
+            <>
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-[30px] font-black leading-none text-[#1d1d1f]">{m.home_score}</span>
+                <span className="text-[15px] font-black text-[#d1d5db] mb-0.5">:</span>
+                <span className="text-[30px] font-black leading-none text-[#1d1d1f]">{m.away_score}</span>
               </div>
+              {isLive && <span className="text-[9px] font-black text-red-500 animate-pulse mt-0.5">● 진행중</span>}
               {isFinished && <span className="text-[9px] text-gray-400 mt-0.5">최종</span>}
-            </div>
-            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-1 py-1">
-            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
-            <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
-            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
-          </div>
-        )}
-        {m.venue && <p className="text-[10px] text-gray-400 text-center mt-2 truncate">📍 {m.venue}</p>}
-        {m.broadcast && <p className="text-[10px] text-gray-400 text-center mt-0.5 truncate">📺 {m.broadcast}</p>}
+            </>
+          ) : (
+            <span className="text-[34px] font-black italic leading-none"
+              style={{ color: "transparent", WebkitTextStroke: "1.5px #c8c8c8", letterSpacing: "-1px" }}>
+              VS
+            </span>
+          )}
+        </div>
+
+        <TeamBadge teamCode={awayTeamCode} teamName={m.away_team} logoUrl={awayLogoUrl} />
       </div>
 
-      {/* 예매 버튼 (예정 경기만) */}
-      {m.ticket_url && m.status === "upcoming" ? (
-        <div className="px-3 pb-3">
-          <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
-            className="block w-full text-center py-2 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
-            style={{ background: ls?.gradient ?? meta.color }}>
-            🎟 예매하기
-          </a>
-        </div>
-      ) : (
-        <div className="h-3" />
-      )}
+      {/* 오른쪽: 팀 컬러 다크 패널 — 날짜/시간 or 결과 */}
+      <div className="flex flex-col items-center justify-center text-white flex-shrink-0"
+        style={{
+          background: rightBg,
+          clipPath: "polygon(18px 0, 100% 0, 100% 100%, 0 100%)",
+          minWidth: 108,
+          paddingLeft: 26,
+          paddingRight: 14,
+          filter: "brightness(0.85)",
+        }}>
+        {isLive ? (
+          <span className="text-[13px] font-black animate-pulse">● LIVE</span>
+        ) : isFinished ? (
+          <>
+            {result && (
+              <span className={`text-[24px] font-black leading-none ${
+                result === "WIN" ? "text-emerald-300" : result === "LOSE" ? "text-red-300" : "text-gray-300"
+              }`}>{result === "WIN" ? "승" : result === "LOSE" ? "패" : "무"}</span>
+            )}
+            <span className="text-[9px] opacity-60 mt-1">최종</span>
+          </>
+        ) : (
+          <>
+            {dateStr && (
+              <span className="text-[9px] font-semibold opacity-75 mb-0.5 whitespace-nowrap">
+                {dateStr.replace(timeStr, "").trim() || dateStr}
+              </span>
+            )}
+            <span className="text-[19px] font-black leading-tight whitespace-nowrap tracking-tight">{timeStr}</span>
+            {m.broadcast && (
+              <span className="text-[8.5px] opacity-60 mt-1 text-center" style={{ maxWidth: 88, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {m.broadcast}
+              </span>
+            )}
+            {m.ticket_url && (
+              <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
+                className="mt-1.5 text-[8px] font-black bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap active:opacity-70">
+                예매
+              </a>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
@@ -1179,15 +1212,14 @@ function SportsSection() {
   const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
   const standings: Standing[] | null = filter !== "전체" ? (LEAGUE_STANDINGS[filter] ?? null) : null;
 
-  const today = new Date(); today.setHours(0, 0, 0, 0);
   const resultMatches = filtered
     .filter(m => m.status === "finished" || m.status === "live")
     .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
-    .slice(0, 6);
+    .slice(0, 5);
   const upcomingMatches = filtered
     .filter(m => m.status === "upcoming")
     .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
-    .slice(0, 6);
+    .slice(0, 5);
 
   function formatMatchDate(iso: string) {
     const d = new Date(iso);
@@ -1225,54 +1257,43 @@ function SportsSection() {
           })}
         </div>
       </div>
+
       {/* 경기 결과 */}
       {resultMatches.length > 0 && (
         <div className="px-4 mb-1">
           <p className="text-[12px] font-bold text-gray-400 mb-2">경기 결과</p>
-        </div>
-      )}
-      {resultMatches.length > 0 && (
-        <section className="mb-3">
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {resultMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
-            </div>
+          <div className="space-y-2">
+            {resultMatches.map(m => (
+              <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
+            ))}
           </div>
-        </section>
+        </div>
       )}
 
       {/* 경기 예정 */}
       {upcomingMatches.length > 0 && (
-        <div className="px-4 mb-1">
+        <div className={`px-4 ${resultMatches.length > 0 ? "mt-4" : ""} mb-1`}>
           <p className="text-[12px] font-bold text-gray-400 mb-2">경기 예정</p>
+          <div className="space-y-2">
+            {upcomingMatches.map(m => (
+              <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
+            ))}
+          </div>
         </div>
       )}
-      {upcomingMatches.length > 0 && (
-        <section className="mb-1">
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
-            </div>
-          </div>
-        </section>
-      )}
 
-      {/* 결과도 예정도 없을 때 — cancelled 포함 전체 표시 */}
+      {/* 결과도 예정도 없을 때 */}
       {resultMatches.length === 0 && upcomingMatches.length === 0 && (
-        <section className="mb-1">
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
-              {filtered.slice(0, 10).map(m => (
-                <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
-              ))}
-            </div>
-          </div>
-        </section>
+        <div className="px-4 space-y-2 mb-1">
+          {filtered.slice(0, 10).map(m => (
+            <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
+          ))}
+        </div>
       )}
 
       {/* 리그 순위표 */}
       {standings && (
-        <div className="mx-4 mb-3 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+        <div className="mx-4 mt-4 mb-3 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
           <div className="px-4 py-2.5 flex items-center gap-2"
             style={{ background: LEAGUE_STYLES[filter]?.gradient ?? "#1d1d1f" }}>
             <span className="text-[13px] font-black text-white">{filter} 순위</span>
