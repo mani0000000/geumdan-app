@@ -33,8 +33,8 @@ const catColor: Record<CommunityCategory, string> = {
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
 };
 
-type SortKey = "latest" | "likes" | "comments" | "views";
-const SORT_OPTS: { key: SortKey; label: string }[] = [
+type CommSortKey = "latest" | "likes" | "comments" | "views";
+const SORT_OPTS: { key: CommSortKey; label: string }[] = [
   { key: "latest",   label: "최신순" },
   { key: "likes",    label: "반응순" },
   { key: "comments", label: "댓글순" },
@@ -43,6 +43,21 @@ const SORT_OPTS: { key: SortKey; label: string }[] = [
 
 function hotScore(p: { viewCount: number; likeCount: number; commentCount: number }) {
   return p.viewCount + p.likeCount * 5 + p.commentCount * 3;
+}
+
+// ─── 뉴스 조회 추적 (localStorage) ──────────────────────────
+function getNewsViews(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem("newsViews") ?? "{}") as Record<string, number>; }
+  catch { return {}; }
+}
+function trackNewsView(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const v = getNewsViews();
+    v[id] = (v[id] ?? 0) + 1;
+    localStorage.setItem("newsViews", JSON.stringify(v));
+  } catch { /* ignore */ }
 }
 
 function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useRouter> }) {
@@ -96,7 +111,7 @@ function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useR
 function CommunityTab() {
   const router = useRouter();
   const [active, setActive] = useState<CommunityCategory>("전체");
-  const [sort, setSort] = useState<SortKey>("latest");
+  const [sort, setSort] = useState<CommSortKey>("latest");
   const [dbPosts, setDbPosts] = useState<Post[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
@@ -128,8 +143,7 @@ function CommunityTab() {
     if (sort === "likes")    return b.likeCount    - a.likeCount;
     if (sort === "comments") return b.commentCount - a.commentCount;
     if (sort === "views")    return b.viewCount    - a.viewCount;
-    // latest: DB posts come first (already sorted), mock posts by id
-    return 0;
+    return 0; // latest: DB posts already ordered by created_at desc
   });
 
   const rankColors = ["#F04452", "#F97316", "#F59E0B"];
@@ -285,6 +299,19 @@ function NewsTab() {
   const instaItems = newsItems.filter(n => n.type === "인스타");
   const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
+  // 일주일 내 기사 중 클릭 수(localStorage) 기준 TOP 3
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const views = !loading ? getNewsViews() : {};
+  const hotNews = !loading
+    ? [...newsSource]
+        .filter(a => new Date(a.publishedAt).getTime() > oneWeekAgo)
+        .sort((a, b) => {
+          const vDiff = (views[b.id] ?? 0) - (views[a.id] ?? 0);
+          return vDiff !== 0 ? vDiff : new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        })
+        .slice(0, 3)
+    : [];
+
   return (
     <div className="pb-6">
 
@@ -342,6 +369,45 @@ function NewsTab() {
         </div>
       </div>
 
+      {/* ── 핫뉴스 TOP 3 ── */}
+      {!loading && hotNews.length > 0 && (
+        <div className="px-4 pt-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-[#F04452]" />
+            <span className="text-[15px] font-extrabold text-[#1d1d1f]">이번 주 핫뉴스</span>
+            <span className="text-[12px] text-[#86868b]">많이 본 기사</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] shadow-sm">
+            {hotNews.map((item, idx) => {
+              const rankColors = ["#F04452", "#F97316", "#F59E0B"];
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="flex items-center gap-3 px-4 py-3.5 active:bg-[#f9f9f9] transition-colors">
+                  <span className="text-[18px] font-black w-6 text-center shrink-0"
+                    style={{ color: rankColors[idx] }}>
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
+                      <span className="text-[11px] text-[#86868b]">·</span>
+                      <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+                    </div>
+                  </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── 뉴스 ── */}
       <div className="pt-5">
         <div className="flex items-center justify-between px-4 mb-3">
@@ -376,13 +442,21 @@ function NewsTab() {
           ) : (
             newsSource.slice(0, newsLimit).map((item) => (
               <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                className="bg-white rounded-2xl px-4 py-3.5 flex flex-col gap-1.5 active:opacity-80 shadow-sm">
-                <p className="text-[13px] font-semibold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
-                  <span className="text-[11px] text-[#86868b]">·</span>
-                  <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-                  <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
+                onClick={() => trackNewsView(item.id)}
+                className="bg-white rounded-2xl px-4 py-3.5 flex gap-3 items-center active:opacity-80 shadow-sm">
+                {item.thumbnail && (
+                  <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-[#e5e5ea]">
+                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
+                    <span className="text-[11px] text-[#86868b]">·</span>
+                    <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+                    <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
+                  </div>
                 </div>
               </a>
             ))
