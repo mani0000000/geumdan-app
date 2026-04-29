@@ -303,3 +303,118 @@ export async function fetchUpcomingSportsMatches(limit = 20): Promise<SportsMatc
     return [];
   }
 }
+
+// ─── 새 DB 테이블 타입 ────────────────────────────────────────
+
+export interface SportCategory {
+  id: string;
+  name: string;
+  icon: string | null;
+  sort_order: number;
+  active: boolean;
+}
+
+export interface League {
+  id: string;
+  sport_category_id: string;
+  name: string;
+  type: "리그" | "A매치" | "컵" | "토너먼트";
+  logo_url: string | null;
+  sort_order: number;
+  active: boolean;
+}
+
+export interface Team {
+  id: string;
+  league_id: string;
+  name: string;
+  short_name: string | null;
+  logo_url: string | null;
+  primary_color: string | null;
+  city: string | null;
+  sort_order: number;
+  active: boolean;
+}
+
+export interface Broadcaster {
+  id: string;
+  name: string;
+  channel_number: string | null;
+  logo_url: string | null;
+  sort_order: number;
+  active: boolean;
+}
+
+// ─── 새 DB CRUD 함수 ─────────────────────────────────────────
+
+async function dbGet<T>(table: string, params: Record<string, string> = {}): Promise<T[]> {
+  const qs = new URLSearchParams({ table, ...params }).toString();
+  const res = await fetch(`/api/admin/db?${qs}`);
+  if (!res.ok) return [];
+  const { data } = await res.json() as { data?: T[] };
+  return data ?? [];
+}
+
+async function dbPost(table: string, method: string, rows: unknown, extra: Record<string, string> = {}): Promise<void> {
+  const res = await fetch("/api/admin/db", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ table, method, rows, ...extra }),
+  });
+  if (!res.ok) {
+    const j = await res.json() as { error?: string };
+    throw new Error(j.error ?? `DB error ${res.status}`);
+  }
+}
+
+// SportCategory
+export async function fetchSportCategories(): Promise<SportCategory[]> {
+  return dbGet<SportCategory>("sport_categories", { select: "*", order: "sort_order" });
+}
+export async function saveSportCategory(c: Partial<SportCategory> & { id?: string }): Promise<void> {
+  if (!c.id) c.id = crypto.randomUUID();
+  await dbPost("sport_categories", "POST", [c], { onConflict: "id" });
+}
+export async function deleteSportCategory(id: string): Promise<void> {
+  await dbPost("sport_categories", "DELETE", undefined, { eq: `id=eq.${id}` });
+}
+
+// League
+export async function fetchLeagues(sportCategoryId?: string): Promise<League[]> {
+  const params: Record<string, string> = { select: "*", order: "sort_order" };
+  if (sportCategoryId) params.eq = `sport_category_id=eq.${sportCategoryId}`;
+  return dbGet<League>("leagues", params);
+}
+export async function saveLeague(l: Partial<League> & { id?: string }): Promise<void> {
+  if (!l.id) l.id = crypto.randomUUID();
+  await dbPost("leagues", "POST", [l], { onConflict: "id" });
+}
+export async function deleteLeague(id: string): Promise<void> {
+  await dbPost("leagues", "DELETE", undefined, { eq: `id=eq.${id}` });
+}
+
+// Team
+export async function fetchTeams(leagueId?: string): Promise<Team[]> {
+  const params: Record<string, string> = { select: "*", order: "sort_order" };
+  if (leagueId) params.eq = `league_id=eq.${leagueId}`;
+  return dbGet<Team>("teams", params);
+}
+export async function saveTeam(t: Partial<Team> & { id?: string }): Promise<void> {
+  if (!t.id) t.id = crypto.randomUUID();
+  await dbPost("teams", "POST", [t], { onConflict: "id" });
+}
+export async function deleteTeam(id: string): Promise<void> {
+  await dbPost("teams", "DELETE", undefined, { eq: `id=eq.${id}` });
+}
+
+// Broadcaster
+export async function fetchBroadcasters(): Promise<Broadcaster[]> {
+  return dbGet<Broadcaster>("broadcasters", { select: "*", order: "sort_order" });
+}
+export async function saveBroadcaster(b: Partial<Broadcaster> & { id?: string }): Promise<void> {
+  if (!b.id) b.id = crypto.randomUUID();
+  await dbPost("broadcasters", "POST", [b], { onConflict: "id" });
+}
+export async function deleteBroadcaster(id: string): Promise<void> {
+  await dbPost("broadcasters", "DELETE", undefined, { eq: `id=eq.${id}` });
+}
