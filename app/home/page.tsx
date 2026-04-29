@@ -1044,23 +1044,23 @@ function _getMatchResult(m: SportsMatch): "WIN" | "LOSE" | "DRAW" | null {
 }
 
 function SportTeamLogo({
-  teamCode, teamName, size = 44, logoUrl,
+  teamCode, teamName, size = 56, logoUrl,
 }: { teamCode?: TeamCode; teamName: string; size?: number; logoUrl?: string }) {
   const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
   const bg = logo?.bg ?? _nameToColor(teamName);
   const abbr = logo?.abbr ?? _getInitials(teamName);
   const fg = logo?.fg ?? "#ffffff";
   return (
-    <div className="flex flex-col items-center gap-1" style={{ width: size + 20 }}>
-      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm overflow-hidden"
-        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
+    <div className="flex flex-col items-center gap-1.5 flex-shrink-0" style={{ width: size + 16 }}>
+      <div className="rounded-full flex items-center justify-center font-black overflow-hidden"
+        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.3) }}>
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
         ) : abbr}
       </div>
-      <p className="text-[9px] text-gray-500 text-center font-semibold leading-tight"
-        style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <p className="text-[10px] text-[#3d3d3d] text-center font-semibold leading-tight"
+        style={{ width: size + 16, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {teamName}
       </p>
     </div>
@@ -1081,83 +1081,101 @@ function MatchCard({ m, assets, formatMatchDate }: {
   const result = isFinished ? _getMatchResult(m) : null;
   const incheonName = meta.name;
   const isHome = m.home_team === incheonName;
-  const oppName = isHome ? m.away_team : m.home_team;
-  const myScore = isHome ? m.home_score : m.away_score;
-  const oppScore = isHome ? m.away_score : m.home_score;
   const teamLogoUrl = assets.teamLogos[m.team_code];
   const leagueLogoUrl = assets.leagueLogos[meta.league];
-  const oppLogoUrl = assets.awayTeamLogos?.[oppName];
+
+  // 항상 홈팀 왼쪽 / 원정팀 오른쪽
+  const homeLogoUrl = isHome ? teamLogoUrl : assets.awayTeamLogos?.[m.home_team];
+  const awayLogoUrl = !isHome ? teamLogoUrl : assets.awayTeamLogos?.[m.away_team];
+  const homeTeamCode: TeamCode | undefined = isHome ? m.team_code : undefined;
+  const awayTeamCode: TeamCode | undefined = !isHome ? m.team_code : undefined;
+
+  const matchTime = m.match_date
+    ? new Date(m.match_date).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+    : "TBD";
+  const matchDay = m.match_date ? formatMatchDate(m.match_date) : "";
 
   return (
-    <div className={`shrink-0 w-[215px] rounded-2xl overflow-hidden shadow-sm border flex flex-col ${
-      isLive ? "border-red-300 ring-1 ring-red-200" : "border-gray-100"
-    } bg-white`}>
-      {/* 리그 헤더 */}
-      <div className="px-3 py-2.5 flex items-center justify-between"
-        style={{ background: ls?.gradient ?? meta.color }}>
+    <div className={`shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-sm border bg-white flex flex-col ${
+      isLive ? "border-red-200 ring-1 ring-red-200" : "border-gray-100"
+    }`}>
+      {/* 상단 리그 메타 */}
+      <div className="px-3.5 pt-3 pb-1 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          {leagueLogoUrl && (
+          {leagueLogoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={leagueLogoUrl} alt={meta.league} className="w-5 h-5 object-contain rounded" />
+            <img src={leagueLogoUrl} alt={meta.league} className="w-4 h-4 object-contain rounded" />
+          ) : (
+            <div className="w-1 h-3.5 rounded-full flex-shrink-0" style={{ background: ls?.accent ?? meta.color }} />
           )}
-          <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">{meta.league}</span>
+          <span className="text-[11px] font-bold text-gray-500">{meta.league}</span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {isLive && (
-            <span className="text-[10px] font-black text-white animate-pulse bg-red-500 px-1.5 py-0.5 rounded-full">LIVE</span>
+            <span className="text-[9px] font-black text-white bg-red-500 px-1.5 py-0.5 rounded-full animate-pulse">LIVE</span>
           )}
           {isFinished && result && (
-            <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
-              result === "WIN" ? "bg-green-500 text-white" : result === "LOSE" ? "bg-red-500 text-white" : "bg-gray-500 text-white"
+            <span className={`text-[9px] font-black px-2 py-0.5 rounded-full text-white ${
+              result === "WIN" ? "bg-emerald-500" : result === "LOSE" ? "bg-red-500" : "bg-gray-400"
             }`}>{result === "WIN" ? "승" : result === "LOSE" ? "패" : "무"}</span>
           )}
           {isFinished && !result && (
-            <span className="text-[10px] font-semibold text-white/70">종료</span>
+            <span className="text-[9px] font-semibold text-gray-400">종료</span>
           )}
-          {m.status === "upcoming" && m.match_date && (
-            <span className="text-[10px] font-semibold text-white/80">{formatMatchDate(m.match_date)}</span>
+          {m.status === "upcoming" && (
+            <span className="text-[10px] font-semibold text-gray-400">{matchDay.split(" ").slice(0, 1).join("")}</span>
           )}
         </div>
       </div>
 
-      {/* 팀 + 스코어 */}
-      <div className="px-3 py-3 flex-1">
-        {hasScore ? (
-          <div className="flex items-center justify-between gap-1">
-            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
-            <div className="flex flex-col items-center flex-shrink-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{myScore ?? "-"}</span>
-                <span className="text-[13px] font-black text-gray-300">:</span>
-                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{oppScore ?? "-"}</span>
+      {/* 홈팀 | 중앙(스코어/시간) | 원정팀 */}
+      <div className="px-3.5 pt-1 pb-3 flex items-center justify-between gap-1">
+        <SportTeamLogo teamCode={homeTeamCode} teamName={m.home_team} size={54} logoUrl={homeLogoUrl} />
+
+        {/* 중앙 */}
+        <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+          {hasScore ? (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{m.home_score ?? "-"}</span>
+                <span className="text-[13px] font-black text-[#d1d5db]">:</span>
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{m.away_score ?? "-"}</span>
               </div>
-              {isFinished && <span className="text-[9px] text-gray-400 mt-0.5">최종</span>}
-            </div>
-            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
-          </div>
-        ) : (
-          <div className="flex items-center justify-between gap-1 py-1">
-            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
-            <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
-            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
-          </div>
-        )}
-        {m.venue && <p className="text-[10px] text-gray-400 text-center mt-2 truncate">📍 {m.venue}</p>}
-        {m.broadcast && <p className="text-[10px] text-gray-400 text-center mt-0.5 truncate">📺 {m.broadcast}</p>}
+              <span className="text-[9px] text-gray-400">{isLive ? "진행중" : "최종"}</span>
+            </>
+          ) : (
+            <>
+              <div className="px-3.5 py-1.5 rounded-lg" style={{ background: "#152040" }}>
+                <span className="text-[16px] font-black text-white tracking-widest">{matchTime}</span>
+              </div>
+              {m.broadcast ? (
+                <p className="text-[10px] text-gray-400 font-medium text-center truncate w-full px-1 mt-0.5">{m.broadcast}</p>
+              ) : (
+                <p className="text-[10px] text-gray-300 mt-0.5">-</p>
+              )}
+            </>
+          )}
+        </div>
+
+        <SportTeamLogo teamCode={awayTeamCode} teamName={m.away_team} size={54} logoUrl={awayLogoUrl} />
       </div>
 
-      {/* 예매 버튼 (예정 경기만) */}
-      {m.ticket_url && m.status === "upcoming" ? (
+      {/* 장소 */}
+      {m.venue && (
+        <p className="text-[10px] text-gray-400 text-center pb-1.5 px-3 truncate">📍 {m.venue}</p>
+      )}
+
+      {/* 예매 버튼 */}
+      {m.ticket_url && m.status === "upcoming" && (
         <div className="px-3 pb-3">
           <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
-            className="block w-full text-center py-2 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
+            className="block w-full text-center py-1.5 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
             style={{ background: ls?.gradient ?? meta.color }}>
             🎟 예매하기
           </a>
         </div>
-      ) : (
-        <div className="h-3" />
       )}
+      {!(m.ticket_url && m.status === "upcoming") && !m.venue && <div className="h-2" />}
     </div>
   );
 }
