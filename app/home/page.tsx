@@ -2237,19 +2237,16 @@ function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
   return (
     <div className="flex items-center gap-2.5 px-3 py-2 border-t border-[#f5f5f7] animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}>
-      {/* 노선 번호 */}
       <div className={`rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center ${arriving ? "bg-[#F04452]" : "bg-[#0071e3]"}`}>
         <span className="text-white text-[14px] font-black leading-none tracking-tight">{a.routeNo}</span>
         {a.isExpress && <p className="text-yellow-200 text-[8px] font-bold">급행</p>}
       </div>
-      {/* 목적지 */}
       <div className="flex-1 min-w-0">
         <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.destination}</p>
         {a.remainingStops > 0 && (
           <p className="text-[10px] text-[#86868b]">{a.remainingStops}정거장 전</p>
         )}
       </div>
-      {/* 도착 시간 */}
       <div className={`shrink-0 rounded-xl px-2.5 py-1.5 min-w-[52px] text-center ${
         arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#EFF6FF]"
       }`}>
@@ -2259,49 +2256,6 @@ function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
           <>
             <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#0071e3]"}`}>{a.arrivalMin}</span>
             <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#0071e3]/60"}`}>분 후</span>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// 지하철 방향 1행
-function SubwayRow({ arrival, lineColor, isEst, delay }: {
-  arrival: SubwayArrival; lineColor: string; isEst: boolean; delay: number;
-}) {
-  const arriving = arrival.arrivalMin <= 2;
-  const close    = arrival.arrivalMin <= 7;
-  const hasPos   = arrival.currentStation && arrival.currentStation !== "시간표";
-  const dirArrow = arrival.direction === "상행" ? "↑" : "↓";
-
-  return (
-    <div className="flex items-center gap-2.5 px-3 py-2 border-t border-[#f5f5f7] animate-slide-up"
-      style={{ animationDelay: `${delay}ms` }}>
-      {/* 방향 배지 */}
-      <div className="rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center" style={{ background: lineColor + "18" }}>
-        <span className="text-[16px] font-black leading-none" style={{ color: lineColor }}>{dirArrow}</span>
-        {arrival.isExpress && (
-          <p className="text-[8px] font-bold" style={{ color: lineColor }}>{arrival.trainTypeName ?? "급행"}</p>
-        )}
-      </div>
-      {/* 종착역 + 현재 위치 */}
-      <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{arrival.terminalStation} 방면</p>
-        <p className="text-[10px] text-[#86868b]">
-          {hasPos ? `${arrival.currentStation} 출발` : isEst ? "시간표 기준" : ""}
-        </p>
-      </div>
-      {/* 도착 시간 */}
-      <div className={`shrink-0 rounded-xl px-2.5 py-1.5 min-w-[52px] text-center ${
-        arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#f5f5f7]"
-      }`}>
-        {arriving ? (
-          <span className="text-[#F04452] text-[11px] font-black animate-led-blink">곧도착</span>
-        ) : (
-          <>
-            <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#1d1d1f]"}`}>{arrival.arrivalMin}</span>
-            <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#86868b]"}`}>분 후</span>
           </>
         )}
       </div>
@@ -2440,37 +2394,60 @@ function HomeTransportWidget() {
         const live = subwayArrivals[st.id];
         const displayArrivals = live && live.length > 0 ? live : estimateNextArrivals(st.timetable);
         const isEst = !live || live.length === 0;
-        const nextUp   = displayArrivals.find(a => a.direction === "상행");
-        const nextDown = displayArrivals.find(a => a.direction === "하행");
         const isLoading = subwayLoading.has(st.id);
+        const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
+        const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+        const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
 
         return (
           <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 역 헤더 */}
-            <div className="px-3 py-2 flex items-center gap-2"
-              style={{ background: st.lineColor }}>
-              <Train size={13} className="text-white shrink-0" />
-              <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
-                <span className="text-white font-extrabold text-[13px] truncate">{st.displayName}</span>
-                <span className="text-[10px] font-bold text-white/70 shrink-0">{st.line}</span>
+            <div className="px-3 py-2.5 flex items-center gap-2" style={{ background: st.lineColor }}>
+              <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center shrink-0">
+                <span className="text-[11px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
               </div>
+              <span className="text-white font-extrabold text-[14px] flex-1 truncate">{st.displayName}</span>
               <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
                 className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
                 <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
-            {/* 도착 정보 */}
+            {/* 도착 정보 헤더 */}
+            <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+              <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+              {isEst && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+            </div>
+            {/* 2열 도착 */}
             {isLoading ? (
-              <div className="px-4 pb-4 space-y-2">
-                {[1, 2].map(i => <div key={i} className="h-10 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+              <div className="grid grid-cols-2 gap-2 p-3">
+                {[0,1].map(i => <div key={i} className="h-14 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
               </div>
-            ) : !nextUp && !nextDown ? (
-              <p className="px-4 pb-4 text-[#86868b] text-[13px]">운행 종료 또는 정보 없음</p>
+            ) : upArrivals.length === 0 && downArrivals.length === 0 ? (
+              <p className="px-3 py-3 text-[12px] text-[#86868b]">운행 종료 또는 정보 없음</p>
             ) : (
-              <>
-                {nextUp   && <SubwayRow arrival={nextUp}   lineColor={st.lineColor} isEst={isEst} delay={0}  />}
-                {nextDown && <SubwayRow arrival={nextDown} lineColor={st.lineColor} isEst={isEst} delay={60} />}
-              </>
+              <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                {[
+                  { label: st.timetable.upDirection, arrivals: upArrivals },
+                  { label: st.timetable.downDirection, arrivals: downArrivals },
+                ].map(({ label, arrivals }, col) => (
+                  <div key={col} className="px-3 py-2.5">
+                    <div className="flex items-center gap-0.5 mb-2">
+                      <span className="text-[11px] font-bold text-[#1d1d1f] truncate flex-1">{label} 방면</span>
+                      <ChevronRight size={11} className="text-[#86868b] shrink-0" />
+                    </div>
+                    {arrivals.length > 0 ? arrivals.map((a, i) => (
+                      <div key={i} className="flex items-center justify-between py-0.5">
+                        <span className="text-[11px] text-[#424245] truncate flex-1 mr-1">{a.terminalStation}</span>
+                        <span className={`text-[15px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                          {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                        </span>
+                      </div>
+                    )) : (
+                      <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         );
