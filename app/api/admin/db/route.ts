@@ -9,6 +9,7 @@ const ALLOWED_TABLES = new Set([
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
   "home_widget_config", "places", "search_keywords", "marts",
   "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
+  "sport_categories", "leagues", "teams", "broadcasters",
 ]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";

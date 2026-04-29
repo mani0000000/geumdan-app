@@ -1,44 +1,596 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   adminFetchSportsMatches,
   adminCreateSportsMatch,
   adminUpdateSportsMatch,
   adminDeleteSportsMatch,
-  adminFetchSportsAssets,
-  adminSaveTeamLogo,
-  adminSaveLeagueLogo,
-  adminSaveBroadcastChannels,
-  adminSaveAwayTeamLogo,
   TEAM_META,
-  TEAM_LOGOS,
-  LEAGUE_STYLES,
-  DEFAULT_SPORTS_ASSETS,
   type SportsMatch,
   type SportType,
   type MatchStatus,
   type TeamCode,
-  type SportsAssets,
 } from "@/lib/db/sports";
-import { Trophy, Plus, Pencil, Trash2, X, Save, Loader2, Image as ImageIcon, Tv, AlertCircle, CheckCircle2, Copy, ExternalLink, RefreshCw } from "lucide-react";
+import {
+  fetchSportCategories, createSportCategory, updateSportCategory, deleteSportCategory,
+  fetchLeagues, createLeague, updateLeague, deleteLeague,
+  fetchTeams, createTeam, updateTeam, deleteTeam,
+  fetchBroadcasters, createBroadcaster, updateBroadcaster, deleteBroadcaster,
+  compressImageToBase64,
+  type SportCategory, type League, type LeagueType, type Team, type Broadcaster,
+} from "@/lib/db/sports-admin";
+import {
+  Trophy, Plus, Pencil, Trash2, X, Save, Loader2, Image as ImageIcon, Tv, AlertCircle, CheckCircle2,
+  Users, Volleyball, ListTree,
+} from "lucide-react";
 
-const SPORTS: SportType[] = ["축구", "야구", "배구", "농구", "A매치"];
+type Tab = "categories" | "leagues" | "teams" | "broadcasters" | "matches";
+
+const TABS: { key: Tab; label: string; icon: React.ComponentType<{ size?: number }> }[] = [
+  { key: "categories",   label: "종목",     icon: ListTree },
+  { key: "leagues",      label: "리그/대회", icon: Trophy },
+  { key: "teams",        label: "팀",       icon: Users },
+  { key: "broadcasters", label: "방송사",    icon: Tv },
+  { key: "matches",      label: "경기 일정", icon: Volleyball },
+];
+
+// ─── 공용 — 토스트 ─────────────────────────────────────────────
+function useToast() {
+  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  function show(msg: string, ok = true) {
+    setToast({ msg, ok });
+    setTimeout(() => setToast(null), 2500);
+  }
+  return { toast, show };
+}
+
+// ─── 로고 업로드 버튼 ──────────────────────────────────────────
+function LogoUploader({ value, onChange }: { value: string | null; onChange: (url: string | null) => void }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [busy, setBusy] = useState(false);
+  async function pick(file: File) {
+    setBusy(true);
+    try { onChange(await compressImageToBase64(file)); }
+    finally { setBusy(false); if (inputRef.current) inputRef.current.value = ""; }
+  }
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-12 h-12 rounded-xl border border-gray-200 bg-gray-50 flex items-center justify-center overflow-hidden shrink-0">
+        {value
+          ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={value} alt="" className="w-full h-full object-cover" />
+          : <ImageIcon size={16} className="text-gray-300" />}
+      </div>
+      <button type="button" onClick={() => inputRef.current?.click()} disabled={busy}
+        className="flex-1 h-10 rounded-xl border-2 border-dashed border-gray-300 text-gray-500 text-[12px] font-bold hover:border-[#3182F6] hover:text-[#3182F6] disabled:opacity-50 flex items-center justify-center gap-1">
+        {busy ? <Loader2 size={13} className="animate-spin" /> : <ImageIcon size={13} />}
+        {value ? "교체" : "로고 업로드"}
+      </button>
+      {value && (
+        <button type="button" onClick={() => onChange(null)}
+          className="h-10 px-3 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 hover:bg-red-50">
+          삭제
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden"
+        onChange={e => { const f = e.target.files?.[0]; if (f) pick(f); }} />
+    </div>
+  );
+}
+
+// ─── 종목 탭 ────────────────────────────────────────────────────
+function CategoriesTab({ onChange }: { onChange: () => void }) {
+  const [items, setItems] = useState<SportCategory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<SportCategory> | null>(null);
+  const { toast, show } = useToast();
+
+  async function load() {
+    setLoading(true);
+    try { setItems(await fetchSportCategories()); } catch (e) { show(String(e), false); }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function save() {
+    if (!editing?.name) return;
+    try {
+      if (editing.id) await updateSportCategory(editing.id, { name: editing.name, icon: editing.icon ?? null, sort_order: editing.sort_order ?? 0, active: editing.active ?? true });
+      else await createSportCategory({ name: editing.name, icon: editing.icon ?? null, sort_order: editing.sort_order ?? items.length, active: true });
+      setEditing(null);
+      await load();
+      onChange();
+      show("저장됐어요");
+    } catch (e) { show(e instanceof Error ? e.message : "저장 실패", false); }
+  }
+
+  async function del(id: string) {
+    if (!confirm("종목을 삭제하면 하위 리그·팀이 모두 삭제됩니다. 진행할까요?")) return;
+    try { await deleteSportCategory(id); await load(); onChange(); show("삭제됐어요"); }
+    catch (e) { show(e instanceof Error ? e.message : "삭제 실패", false); }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button onClick={() => setEditing({ name: "", icon: "", sort_order: items.length })}
+          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold">
+          <Plus size={15} />종목 추가
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" />불러오는 중…</div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-[13px]">등록된 종목이 없습니다</div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {items.map(c => (
+            <div key={c.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+              <div className="text-[28px]">{c.icon || "🏆"}</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{c.name}</p>
+                <p className="text-[11px] text-gray-400">정렬 {c.sort_order}</p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => setEditing(c)} className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100"><Pencil size={13} /></button>
+                <button onClick={() => del(c.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={13} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={editing.id ? "종목 수정" : "종목 추가"} onClose={() => setEditing(null)} onSave={save}>
+          <Field label="종목명">
+            <input value={editing.name ?? ""} onChange={e => setEditing({ ...editing, name: e.target.value })}
+              placeholder="예: 축구"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <Field label="아이콘 (이모지)">
+            <input value={editing.icon ?? ""} onChange={e => setEditing({ ...editing, icon: e.target.value })}
+              placeholder="예: ⚽"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <Field label="정렬 순서">
+            <input type="number" value={editing.sort_order ?? 0}
+              onChange={e => setEditing({ ...editing, sort_order: Number(e.target.value) })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+        </Modal>
+      )}
+      <Toast toast={toast} />
+    </div>
+  );
+}
+
+// ─── 리그 탭 ────────────────────────────────────────────────────
+function LeaguesTab({ categories, onChange }: { categories: SportCategory[]; onChange: () => void }) {
+  const [items, setItems] = useState<League[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<League> | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const { toast, show } = useToast();
+
+  async function load() {
+    setLoading(true);
+    try { setItems(await fetchLeagues()); } catch (e) { show(String(e), false); }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const filtered = filter === "all" ? items : items.filter(l => l.sport_category_id === filter);
+  const catName = (id: string) => categories.find(c => c.id === id)?.name ?? "—";
+  const catIcon = (id: string) => categories.find(c => c.id === id)?.icon ?? "🏆";
+
+  async function save() {
+    if (!editing?.name || !editing.sport_category_id) return;
+    try {
+      const payload = {
+        sport_category_id: editing.sport_category_id,
+        name: editing.name,
+        type: (editing.type ?? "리그") as LeagueType,
+        logo_url: editing.logo_url ?? null,
+        sort_order: editing.sort_order ?? 0,
+        active: editing.active ?? true,
+      };
+      if (editing.id) await updateLeague(editing.id, payload);
+      else await createLeague(payload);
+      setEditing(null);
+      await load();
+      onChange();
+      show("저장됐어요");
+    } catch (e) { show(e instanceof Error ? e.message : "저장 실패", false); }
+  }
+
+  async function del(id: string) {
+    if (!confirm("리그를 삭제하면 하위 팀이 모두 삭제됩니다. 진행할까요?")) return;
+    try { await deleteLeague(id); await load(); onChange(); show("삭제됐어요"); }
+    catch (e) { show(e instanceof Error ? e.message : "삭제 실패", false); }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>전체</FilterChip>
+          {categories.map(c => (
+            <FilterChip key={c.id} active={filter === c.id} onClick={() => setFilter(c.id)}>
+              {c.icon} {c.name}
+            </FilterChip>
+          ))}
+        </div>
+        <button onClick={() => setEditing({ name: "", type: "리그", sport_category_id: categories[0]?.id, sort_order: items.length })}
+          disabled={categories.length === 0}
+          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold disabled:opacity-50">
+          <Plus size={15} />리그 추가
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" />불러오는 중…</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-[13px]">등록된 리그가 없습니다</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filtered.map(l => (
+            <div key={l.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center overflow-hidden shrink-0">
+                {l.logo_url
+                  ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={l.logo_url} alt={l.name} className="w-full h-full object-cover" />
+                  : <span className="text-white text-[10px] font-black px-1 text-center leading-tight">{l.name}</span>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{l.name}</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600 shrink-0">{l.type}</span>
+                </div>
+                <p className="text-[11px] text-gray-400">{catIcon(l.sport_category_id)} {catName(l.sport_category_id)}</p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => setEditing(l)} className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100"><Pencil size={13} /></button>
+                <button onClick={() => del(l.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={13} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={editing.id ? "리그 수정" : "리그 추가"} onClose={() => setEditing(null)} onSave={save}>
+          <Field label="종목">
+            <select value={editing.sport_category_id ?? ""}
+              onChange={e => setEditing({ ...editing, sport_category_id: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+              {categories.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
+            </select>
+          </Field>
+          <Field label="리그명">
+            <input value={editing.name ?? ""} onChange={e => setEditing({ ...editing, name: e.target.value })}
+              placeholder="예: K리그1"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <Field label="유형">
+            <div className="flex gap-2 flex-wrap">
+              {(["리그", "A매치", "컵", "토너먼트"] as LeagueType[]).map(t => (
+                <button key={t} type="button" onClick={() => setEditing({ ...editing, type: t })}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-bold border ${
+                    (editing.type ?? "리그") === t ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-gray-600 border-gray-200"
+                  }`}>{t}</button>
+              ))}
+            </div>
+          </Field>
+          <Field label="로고">
+            <LogoUploader value={editing.logo_url ?? null} onChange={url => setEditing({ ...editing, logo_url: url })} />
+          </Field>
+          <Field label="정렬 순서">
+            <input type="number" value={editing.sort_order ?? 0}
+              onChange={e => setEditing({ ...editing, sort_order: Number(e.target.value) })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+        </Modal>
+      )}
+      <Toast toast={toast} />
+    </div>
+  );
+}
+
+// ─── 팀 탭 ──────────────────────────────────────────────────────
+function TeamsTab({ categories, leagues, onChange }: { categories: SportCategory[]; leagues: League[]; onChange: () => void }) {
+  const [items, setItems] = useState<Team[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<Team> | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const { toast, show } = useToast();
+
+  async function load() {
+    setLoading(true);
+    try { setItems(await fetchTeams()); } catch (e) { show(String(e), false); }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  const leagueById = useMemo(() => new Map(leagues.map(l => [l.id, l])), [leagues]);
+  const catById = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
+  const filtered = filter === "all" ? items : items.filter(t => t.league_id === filter);
+
+  async function save() {
+    if (!editing?.name || !editing.league_id) return;
+    try {
+      const payload = {
+        league_id: editing.league_id,
+        name: editing.name,
+        short_name: editing.short_name ?? null,
+        logo_url: editing.logo_url ?? null,
+        primary_color: editing.primary_color ?? null,
+        city: editing.city ?? null,
+        sort_order: editing.sort_order ?? 0,
+        active: editing.active ?? true,
+      };
+      if (editing.id) await updateTeam(editing.id, payload);
+      else await createTeam(payload);
+      setEditing(null);
+      await load();
+      onChange();
+      show("저장됐어요");
+    } catch (e) { show(e instanceof Error ? e.message : "저장 실패", false); }
+  }
+
+  async function del(id: string) {
+    if (!confirm("팀을 삭제하시겠습니까?")) return;
+    try { await deleteTeam(id); await load(); onChange(); show("삭제됐어요"); }
+    catch (e) { show(e instanceof Error ? e.message : "삭제 실패", false); }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>전체</FilterChip>
+          {leagues.map(l => (
+            <FilterChip key={l.id} active={filter === l.id} onClick={() => setFilter(l.id)}>
+              {catById.get(l.sport_category_id)?.icon} {l.name}
+            </FilterChip>
+          ))}
+        </div>
+        <button onClick={() => setEditing({ name: "", league_id: leagues[0]?.id, sort_order: items.length })}
+          disabled={leagues.length === 0}
+          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold disabled:opacity-50">
+          <Plus size={15} />팀 추가
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" />불러오는 중…</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-[13px]">등록된 팀이 없습니다</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filtered.map(t => {
+            const league = leagueById.get(t.league_id);
+            const cat = league ? catById.get(league.sport_category_id) : undefined;
+            return (
+              <div key={t.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center font-black text-white shrink-0"
+                  style={{ background: t.primary_color ?? "#94a3b8" }}>
+                  {t.logo_url
+                    ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={t.logo_url} alt={t.name} className="w-full h-full object-cover" />
+                    : <span className="text-[11px]">{t.short_name || t.name.slice(0, 2)}</span>}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{t.name}</p>
+                  <p className="text-[11px] text-gray-400 truncate">
+                    {cat?.icon} {league?.name}{t.city ? ` · ${t.city}` : ""}
+                  </p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => setEditing(t)} className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100"><Pencil size={13} /></button>
+                  <button onClick={() => del(t.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={13} /></button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={editing.id ? "팀 수정" : "팀 추가"} onClose={() => setEditing(null)} onSave={save}>
+          <Field label="리그">
+            <select value={editing.league_id ?? ""}
+              onChange={e => setEditing({ ...editing, league_id: e.target.value })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+              {leagues.map(l => (
+                <option key={l.id} value={l.id}>
+                  {catById.get(l.sport_category_id)?.icon} {l.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="팀명">
+            <input value={editing.name ?? ""} onChange={e => setEditing({ ...editing, name: e.target.value })}
+              placeholder="예: SSG 랜더스"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="약어 (3자)">
+              <input value={editing.short_name ?? ""} onChange={e => setEditing({ ...editing, short_name: e.target.value || null })}
+                placeholder="SSG" maxLength={5}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+            </Field>
+            <Field label="연고지">
+              <input value={editing.city ?? ""} onChange={e => setEditing({ ...editing, city: e.target.value || null })}
+                placeholder="인천"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+            </Field>
+          </div>
+          <Field label="대표 색상">
+            <div className="flex gap-2">
+              <input type="color" value={editing.primary_color ?? "#3182F6"}
+                onChange={e => setEditing({ ...editing, primary_color: e.target.value })}
+                className="w-12 h-10 rounded-xl border border-gray-200 cursor-pointer" />
+              <input value={editing.primary_color ?? ""}
+                onChange={e => setEditing({ ...editing, primary_color: e.target.value || null })}
+                placeholder="#0033A0"
+                className="flex-1 border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] font-mono" />
+            </div>
+          </Field>
+          <Field label="로고">
+            <LogoUploader value={editing.logo_url ?? null} onChange={url => setEditing({ ...editing, logo_url: url })} />
+          </Field>
+          <Field label="정렬 순서">
+            <input type="number" value={editing.sort_order ?? 0}
+              onChange={e => setEditing({ ...editing, sort_order: Number(e.target.value) })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+        </Modal>
+      )}
+      <Toast toast={toast} />
+    </div>
+  );
+}
+
+// ─── 방송사 탭 ──────────────────────────────────────────────────
+function BroadcastersTab({ onChange }: { onChange: () => void }) {
+  const [items, setItems] = useState<Broadcaster[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<Partial<Broadcaster> | null>(null);
+  const { toast, show } = useToast();
+
+  async function load() {
+    setLoading(true);
+    try { setItems(await fetchBroadcasters()); } catch (e) { show(String(e), false); }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  async function save() {
+    if (!editing?.name) return;
+    try {
+      const payload = {
+        name: editing.name,
+        channel_number: editing.channel_number ?? null,
+        logo_url: editing.logo_url ?? null,
+        sort_order: editing.sort_order ?? 0,
+        active: editing.active ?? true,
+      };
+      if (editing.id) await updateBroadcaster(editing.id, payload);
+      else await createBroadcaster(payload);
+      setEditing(null);
+      await load();
+      onChange();
+      show("저장됐어요");
+    } catch (e) { show(e instanceof Error ? e.message : "저장 실패", false); }
+  }
+
+  async function del(id: string) {
+    if (!confirm("방송사를 삭제하시겠습니까?")) return;
+    try { await deleteBroadcaster(id); await load(); onChange(); show("삭제됐어요"); }
+    catch (e) { show(e instanceof Error ? e.message : "삭제 실패", false); }
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex justify-end">
+        <button onClick={() => setEditing({ name: "", sort_order: items.length })}
+          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold">
+          <Plus size={15} />방송사 추가
+        </button>
+      </div>
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" />불러오는 중…</div>
+      ) : items.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-[13px]">등록된 방송사가 없습니다</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {items.map(b => (
+            <div key={b.id} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
+                {b.logo_url
+                  ? /* eslint-disable-next-line @next/next/no-img-element */ <img src={b.logo_url} alt={b.name} className="w-full h-full object-cover" />
+                  : <Tv size={18} className="text-gray-400" />}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{b.name}</p>
+                <p className="text-[11px] text-gray-400">{b.channel_number ? `Ch.${b.channel_number}` : "OTT/온라인"}</p>
+              </div>
+              <div className="flex gap-1">
+                <button onClick={() => setEditing(b)} className="p-2 rounded-lg bg-gray-50 text-gray-600 hover:bg-gray-100"><Pencil size={13} /></button>
+                <button onClick={() => del(b.id)} className="p-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-100"><Trash2 size={13} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {editing && (
+        <Modal title={editing.id ? "방송사 수정" : "방송사 추가"} onClose={() => setEditing(null)} onSave={save}>
+          <Field label="방송사명">
+            <input value={editing.name ?? ""} onChange={e => setEditing({ ...editing, name: e.target.value })}
+              placeholder="예: SPOTV"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <Field label="채널 번호 (없으면 비워두세요)">
+            <input value={editing.channel_number ?? ""} onChange={e => setEditing({ ...editing, channel_number: e.target.value || null })}
+              placeholder="예: 21"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+          <Field label="로고">
+            <LogoUploader value={editing.logo_url ?? null} onChange={url => setEditing({ ...editing, logo_url: url })} />
+          </Field>
+          <Field label="정렬 순서">
+            <input type="number" value={editing.sort_order ?? 0}
+              onChange={e => setEditing({ ...editing, sort_order: Number(e.target.value) })}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+        </Modal>
+      )}
+      <Toast toast={toast} />
+    </div>
+  );
+}
+
+// ─── 경기 일정 탭 (FK 활용) ─────────────────────────────────────
 const STATUSES: { value: MatchStatus; label: string }[] = [
-  { value: "upcoming",  label: "예정" },
-  { value: "live",      label: "진행중" },
-  { value: "finished",  label: "종료" },
+  { value: "upcoming", label: "예정" },
+  { value: "live", label: "진행중" },
+  { value: "finished", label: "종료" },
   { value: "cancelled", label: "취소" },
 ];
-const TEAM_CODES: TeamCode[] = ["incheon_utd", "ssg_landers", "daehan_jumpos", "incheon_el", "national"];
-const LEAGUES = ["K리그1", "KBO", "V리그", "KBL", "A매치"];
 
-const EMPTY: Omit<SportsMatch, "id"> = {
-  sport: "축구",
-  team_code: "incheon_utd",
-  home_team: "",
-  away_team: "",
-  home_score: null,
-  away_score: null,
+function statusBadge(s: MatchStatus) {
+  if (s === "live")      return <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold animate-pulse">● LIVE</span>;
+  if (s === "finished")  return <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold">종료</span>;
+  if (s === "cancelled") return <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[11px] font-bold">취소</span>;
+  return <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">예정</span>;
+}
+
+interface MatchForm {
+  league_id: string | null;
+  team_home_id: string | null;
+  team_away_id: string | null;
+  broadcaster_id: string | null;
+  // legacy 필드 (호환성 — 자동 채움)
+  sport: SportType;
+  team_code: TeamCode;
+  home_team: string;
+  away_team: string;
+  home_score: number | null;
+  away_score: number | null;
+  match_date: string;
+  venue: string | null;
+  status: MatchStatus;
+  ticket_url: string | null;
+  broadcast: string | null;
+  sort_order: number;
+  active: boolean;
+}
+
+const EMPTY_FORM: MatchForm = {
+  league_id: null, team_home_id: null, team_away_id: null, broadcaster_id: null,
+  sport: "축구", team_code: "incheon_utd",
+  home_team: "", away_team: "",
+  home_score: null, away_score: null,
   match_date: "",
   venue: null,
   status: "upcoming",
@@ -48,750 +600,447 @@ const EMPTY: Omit<SportsMatch, "id"> = {
   active: true,
 };
 
-function statusBadge(s: MatchStatus) {
-  if (s === "live")      return <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 text-[11px] font-bold animate-pulse">● LIVE</span>;
-  if (s === "finished")  return <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 text-[11px] font-bold">종료</span>;
-  if (s === "cancelled") return <span className="px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-[11px] font-bold">취소</span>;
-  return <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[11px] font-bold">예정</span>;
-}
-
-// 클라이언트 사이드 이미지 압축 (Canvas API)
-async function compressLogo(file: File): Promise<Blob> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-      const MAX = 256;
-      const scale = Math.min(MAX / img.width, MAX / img.height, 1);
-      const w = Math.max(1, Math.round(img.width * scale));
-      const h = Math.max(1, Math.round(img.height * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = w; canvas.height = h;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
-      canvas.toBlob(blob => resolve(blob ?? file), "image/jpeg", 0.85);
-    };
-    img.onerror = () => resolve(file);
-    img.src = objectUrl;
-  });
-}
-
-// 컴팩트 업로드 버튼 — 클릭 시 압축 후 base64 data URL 반환 (Storage 불필요)
-function LogoUploadButton({
-  currentUrl, onUpload, onRemove,
-}: {
-  currentUrl?: string; onUpload: (url: string) => void; onRemove: () => void;
+function MatchesTab({ categories, leagues, teams, broadcasters }: {
+  categories: SportCategory[]; leagues: League[]; teams: Team[]; broadcasters: Broadcaster[];
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
+  const [matches, setMatches] = useState<SportsMatch[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState<{ id: string | null; form: MatchForm } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string>("all");
+  const { toast, show } = useToast();
 
-  async function handleFile(file: File) {
-    setErr(null);
-    setUploading(true);
-    try {
-      // 클라이언트에서 256×256 압축 → base64 직접 반환 (서버 업로드 불필요)
-      const blob = await compressLogo(file);
-      const base64 = await new Promise<string>((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result as string);
-        reader.onerror = rej;
-        reader.readAsDataURL(blob);
-      });
-      onUpload(base64);
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : "처리 실패");
-    } finally {
-      setUploading(false);
-      if (inputRef.current) inputRef.current.value = "";
-    }
+  const teamById = useMemo(() => new Map(teams.map(t => [t.id, t])), [teams]);
+  const leagueById = useMemo(() => new Map(leagues.map(l => [l.id, l])), [leagues]);
+  const catById = useMemo(() => new Map(categories.map(c => [c.id, c])), [categories]);
+  const bcById = useMemo(() => new Map(broadcasters.map(b => [b.id, b])), [broadcasters]);
+
+  async function load() {
+    setLoading(true);
+    try { setMatches(await adminFetchSportsMatches() as unknown as SportsMatch[]); } catch (e) { show(String(e), false); }
+    setLoading(false);
+  }
+  useEffect(() => { load(); }, []);
+
+  function openNew() {
+    setEditing({ id: null, form: { ...EMPTY_FORM, sort_order: matches.length } });
   }
 
+  function openEdit(m: SportsMatch) {
+    const ext = m as unknown as SportsMatch & { league_id?: string; team_home_id?: string; team_away_id?: string; broadcaster_id?: string };
+    setEditing({
+      id: m.id,
+      form: {
+        league_id: ext.league_id ?? null,
+        team_home_id: ext.team_home_id ?? null,
+        team_away_id: ext.team_away_id ?? null,
+        broadcaster_id: ext.broadcaster_id ?? null,
+        sport: m.sport, team_code: m.team_code,
+        home_team: m.home_team, away_team: m.away_team,
+        home_score: m.home_score, away_score: m.away_score,
+        match_date: m.match_date?.slice(0, 16) ?? "",
+        venue: m.venue, status: m.status,
+        ticket_url: m.ticket_url, broadcast: m.broadcast,
+        sort_order: m.sort_order, active: m.active,
+      },
+    });
+  }
+
+  function setF<K extends keyof MatchForm>(key: K, val: MatchForm[K]) {
+    setEditing(e => e ? { ...e, form: { ...e.form, [key]: val } } : null);
+  }
+
+  // 리그 선택 시 종목 자동 동기화
+  function selectLeague(leagueId: string | null) {
+    setEditing(e => {
+      if (!e) return null;
+      const next: MatchForm = { ...e.form, league_id: leagueId, team_home_id: null, team_away_id: null };
+      if (leagueId) {
+        const lg = leagueById.get(leagueId);
+        const cat = lg ? catById.get(lg.sport_category_id) : undefined;
+        if (cat) next.sport = cat.name as SportType;
+      }
+      return { ...e, form: next };
+    });
+  }
+
+  function selectHomeTeam(teamId: string | null) {
+    setEditing(e => {
+      if (!e) return null;
+      const t = teamId ? teamById.get(teamId) : undefined;
+      return { ...e, form: { ...e.form, team_home_id: teamId, home_team: t?.name ?? e.form.home_team } };
+    });
+  }
+
+  function selectAwayTeam(teamId: string | null) {
+    setEditing(e => {
+      if (!e) return null;
+      const t = teamId ? teamById.get(teamId) : undefined;
+      return { ...e, form: { ...e.form, team_away_id: teamId, away_team: t?.name ?? e.form.away_team } };
+    });
+  }
+
+  function selectBroadcaster(bcId: string | null) {
+    setEditing(e => {
+      if (!e) return null;
+      const b = bcId ? bcById.get(bcId) : undefined;
+      return { ...e, form: { ...e.form, broadcaster_id: bcId, broadcast: b?.name ?? e.form.broadcast } };
+    });
+  }
+
+  async function save() {
+    if (!editing) return;
+    const f = editing.form;
+    if (!f.home_team || !f.away_team || !f.match_date) {
+      show("홈팀, 원정팀, 경기 일시를 모두 입력해 주세요", false);
+      return;
+    }
+    setSaving(true);
+    try {
+      const payload = {
+        ...f,
+        match_date: new Date(f.match_date).toISOString(),
+      };
+      if (editing.id) await adminUpdateSportsMatch(editing.id, payload);
+      else await adminCreateSportsMatch(payload);
+      setEditing(null);
+      await load();
+      show("저장됐어요");
+    } catch (e) {
+      show(e instanceof Error ? e.message : "저장 실패", false);
+    }
+    setSaving(false);
+  }
+
+  async function del(id: string) {
+    if (!confirm("경기를 삭제하시겠습니까?")) return;
+    setDeleting(id);
+    try { await adminDeleteSportsMatch(id); await load(); show("삭제됐어요"); }
+    catch (e) { show(e instanceof Error ? e.message : "삭제 실패", false); }
+    setDeleting(null);
+  }
+
+  const filtered = filter === "all" ? matches : matches.filter(m => {
+    const ext = m as unknown as SportsMatch & { league_id?: string };
+    return ext.league_id === filter;
+  });
+
+  // 편집 중인 리그에 속한 팀 후보
+  const teamCandidates = editing?.form.league_id
+    ? teams.filter(t => t.league_id === editing.form.league_id)
+    : teams;
+
   return (
-    <div>
-      <div className="flex gap-2">
-        <button type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold border-2 border-dashed border-gray-300 text-gray-500 hover:border-[#3182F6] hover:text-[#3182F6] transition-colors disabled:opacity-50">
-          {uploading ? <Loader2 size={13} className="animate-spin" /> : <ImageIcon size={13} />}
-          {currentUrl ? "교체" : "업로드"}
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <FilterChip active={filter === "all"} onClick={() => setFilter("all")}>전체</FilterChip>
+          {leagues.map(l => (
+            <FilterChip key={l.id} active={filter === l.id} onClick={() => setFilter(l.id)}>
+              {catById.get(l.sport_category_id)?.icon} {l.name}
+            </FilterChip>
+          ))}
+        </div>
+        <button onClick={openNew}
+          className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold">
+          <Plus size={15} />경기 추가
         </button>
-        {currentUrl && (
-          <button type="button" onClick={onRemove}
-            className="px-3 py-2 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 hover:bg-red-50">
-            삭제
-          </button>
-        )}
       </div>
-      {err && <p className="text-[11px] text-red-500 mt-1">{err}</p>}
-      <input ref={inputRef} type="file" accept="image/*" className="hidden"
-        onChange={e => { const f = e.target.files?.[0]; if (f) handleFile(f); }} />
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16 text-gray-400"><Loader2 size={20} className="animate-spin mr-2" />불러오는 중…</div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-[13px]">등록된 경기가 없습니다</div>
+      ) : (
+        <div className="space-y-3">
+          {filtered.map(m => {
+            const ext = m as unknown as SportsMatch & { league_id?: string; team_home_id?: string; team_away_id?: string; broadcaster_id?: string };
+            const lg = ext.league_id ? leagueById.get(ext.league_id) : undefined;
+            const cat = lg ? catById.get(lg.sport_category_id) : undefined;
+            const meta = TEAM_META[m.team_code];
+            const dt = m.match_date ? new Date(m.match_date) : null;
+            const homeTeam = ext.team_home_id ? teamById.get(ext.team_home_id) : undefined;
+            const awayTeam = ext.team_away_id ? teamById.get(ext.team_away_id) : undefined;
+            return (
+              <div key={m.id} className={`bg-white rounded-2xl p-4 border border-gray-100 ${m.active ? "" : "opacity-50"}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      <span className="text-[16px]">{cat?.icon ?? meta?.emoji}</span>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{lg?.name ?? meta?.league}</span>
+                      {statusBadge(m.status)}
+                      {!m.active && <span className="text-[11px] text-gray-400">비활성</span>}
+                    </div>
+                    <div className="flex items-center gap-2 text-[15px] font-bold text-[#1d1d1f]">
+                      {homeTeam?.logo_url && /* eslint-disable-next-line @next/next/no-img-element */ <img src={homeTeam.logo_url} alt="" className="w-5 h-5 rounded-full" />}
+                      <span>{m.home_team}</span>
+                      {(m.home_score != null || m.away_score != null) ? (
+                        <span className="text-[#3182F6]">{m.home_score ?? "-"} : {m.away_score ?? "-"}</span>
+                      ) : (
+                        <span className="text-gray-400 font-normal text-[13px]">vs</span>
+                      )}
+                      <span>{m.away_team}</span>
+                      {awayTeam?.logo_url && /* eslint-disable-next-line @next/next/no-img-element */ <img src={awayTeam.logo_url} alt="" className="w-5 h-5 rounded-full" />}
+                    </div>
+                    {dt && (
+                      <p className="text-[12px] text-gray-500 mt-1">
+                        {dt.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" })} {dt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                        {m.venue ? ` · ${m.venue}` : ""}
+                        {m.broadcast ? ` · ${m.broadcast}` : ""}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex gap-1.5 shrink-0">
+                    <button onClick={() => openEdit(m)} className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600"><Pencil size={14} /></button>
+                    <button onClick={() => del(m.id)} disabled={deleting === m.id}
+                      className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 disabled:opacity-50">
+                      {deleting === m.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {editing && (
+        <Modal
+          title={editing.id ? "경기 수정" : "경기 추가"}
+          onClose={() => setEditing(null)}
+          onSave={save}
+          saving={saving}
+        >
+          <Field label="리그/대회">
+            <select value={editing.form.league_id ?? ""} onChange={e => selectLeague(e.target.value || null)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+              <option value="">— 리그 선택 (선택사항) —</option>
+              {leagues.map(l => (
+                <option key={l.id} value={l.id}>
+                  {catById.get(l.sport_category_id)?.icon} {l.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="홈팀">
+              <select value={editing.form.team_home_id ?? ""} onChange={e => selectHomeTeam(e.target.value || null)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+                <option value="">— 선택 —</option>
+                {teamCandidates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              <input value={editing.form.home_team} onChange={e => setF("home_team", e.target.value)}
+                placeholder="또는 직접 입력"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] mt-1.5" />
+            </Field>
+            <Field label="원정팀">
+              <select value={editing.form.team_away_id ?? ""} onChange={e => selectAwayTeam(e.target.value || null)}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+                <option value="">— 선택 —</option>
+                {teamCandidates.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
+              <input value={editing.form.away_team} onChange={e => setF("away_team", e.target.value)}
+                placeholder="또는 직접 입력"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] mt-1.5" />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="홈 점수">
+              <input type="number" min={0} value={editing.form.home_score ?? ""}
+                onChange={e => setF("home_score", e.target.value === "" ? null : Number(e.target.value))}
+                placeholder="-"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+            </Field>
+            <Field label="원정 점수">
+              <input type="number" min={0} value={editing.form.away_score ?? ""}
+                onChange={e => setF("away_score", e.target.value === "" ? null : Number(e.target.value))}
+                placeholder="-"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+            </Field>
+          </div>
+
+          <Field label="경기 일시">
+            <input type="datetime-local" value={editing.form.match_date?.slice(0, 16) ?? ""}
+              onChange={e => setF("match_date", e.target.value)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+
+          <Field label="경기장">
+            <input value={editing.form.venue ?? ""}
+              onChange={e => setF("venue", e.target.value || null)}
+              placeholder="예: 인천SSG랜더스필드"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+
+          <Field label="상태">
+            <div className="flex gap-2 flex-wrap">
+              {STATUSES.map(s => (
+                <button key={s.value} type="button" onClick={() => setF("status", s.value)}
+                  className={`px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
+                    editing.form.status === s.value ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-gray-600 border-gray-200"
+                  }`}>{s.label}</button>
+              ))}
+            </div>
+          </Field>
+
+          <Field label="중계 방송사">
+            <select value={editing.form.broadcaster_id ?? ""} onChange={e => selectBroadcaster(e.target.value || null)}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
+              <option value="">— 방송사 선택 —</option>
+              {broadcasters.map(b => (
+                <option key={b.id} value={b.id}>
+                  {b.name}{b.channel_number ? ` (Ch.${b.channel_number})` : ""}
+                </option>
+              ))}
+            </select>
+            <input value={editing.form.broadcast ?? ""} onChange={e => setF("broadcast", e.target.value || null)}
+              placeholder="또는 직접 입력"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] mt-1.5" />
+          </Field>
+
+          <Field label="예매 링크">
+            <input value={editing.form.ticket_url ?? ""} onChange={e => setF("ticket_url", e.target.value || null)}
+              placeholder="https://ticket.interpark.com/..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+
+          <Field label="정렬 순서">
+            <input type="number" value={editing.form.sort_order}
+              onChange={e => setF("sort_order", Number(e.target.value))}
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
+          </Field>
+
+          <label className="flex items-center gap-3 cursor-pointer pt-1">
+            <div className={`w-11 h-6 rounded-full transition-colors ${editing.form.active ? "bg-[#3182F6]" : "bg-gray-300"}`}
+              onClick={() => setF("active", !editing.form.active)}>
+              <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${editing.form.active ? "translate-x-5.5" : "translate-x-0.5"}`} />
+            </div>
+            <span className="text-[13px] font-semibold text-[#1d1d1f]">홈화면에 표시</span>
+          </label>
+        </Modal>
+      )}
+      <Toast toast={toast} />
     </div>
   );
 }
 
+// ─── 공통 컴포넌트 ───────────────────────────────────────────────
+function FilterChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick}
+      className={`px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
+        active ? "bg-[#3182F6] text-white" : "bg-white text-gray-600 border border-gray-200"
+      }`}>{children}</button>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <label className="block text-[12px] font-bold text-gray-500 mb-1">{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function Modal({ title, children, onClose, onSave, saving }: {
+  title: string; children: React.ReactNode; onClose: () => void; onSave: () => void; saving?: boolean;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative w-full max-w-[500px] bg-white rounded-t-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="font-extrabold text-[16px] text-[#1d1d1f]">{title}</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+        </div>
+        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">{children}</div>
+        <div className="px-5 py-4 border-t border-gray-100">
+          <button onClick={onSave} disabled={saving}
+            className="w-full flex items-center justify-center gap-2 bg-[#3182F6] text-white py-3 rounded-xl font-bold text-[15px] disabled:opacity-50">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Toast({ toast }: { toast: { msg: string; ok: boolean } | null }) {
+  if (!toast) return null;
+  return (
+    <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold text-white ${toast.ok ? "bg-[#191F28]" : "bg-red-500"}`}>
+      {toast.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+      {toast.msg}
+    </div>
+  );
+}
+
+// ─── 페이지 ──────────────────────────────────────────────────────
 export default function AdminSportsPage() {
-  const [tab, setTab] = useState<"matches" | "assets">("matches");
+  const [tab, setTab] = useState<Tab>("categories");
+  const [categories, setCategories] = useState<SportCategory[]>([]);
+  const [leagues, setLeagues] = useState<League[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [broadcasters, setBroadcasters] = useState<Broadcaster[]>([]);
+  const [bootstrapped, setBootstrapped] = useState(false);
 
-  // ─── 경기 관리 상태 ─────────────────────
-  const [matches, setMatches] = useState<SportsMatch[]>([]);
-  const [loadingMatches, setLoadingMatches] = useState(true);
-  const [editing, setEditing] = useState<SportsMatch | null>(null);
-  const [form, setForm] = useState<Omit<SportsMatch, "id">>(EMPTY);
-  const [saving, setSaving] = useState(false);
-  const [deleting, setDeleting] = useState<string | null>(null);
-  const [filter, setFilter] = useState<SportType | "전체">("전체");
-
-  // ─── 로고 & 채널 상태 ───────────────────
-  const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
-  const [loadingAssets, setLoadingAssets] = useState(false);
-  const [savingAssets, setSavingAssets] = useState(false);
-  const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
-  const [newChannel, setNewChannel] = useState("");
-  const [newAwayTeam, setNewAwayTeam] = useState("");
-  const [rlsError, setRlsError] = useState(false);
-  const [rlsCopied, setRlsCopied] = useState(false);
-  const [rlsFixing, setRlsFixing] = useState(false);
-
-  function showToast(msg: string, ok = true) {
-    setToast({ msg, ok });
-    setTimeout(() => setToast(null), 2500);
-  }
-
-  // ─── 경기 관리 로직 ─────────────────────
-  async function loadMatches() {
-    setLoadingMatches(true);
-    setMatches(await adminFetchSportsMatches());
-    setLoadingMatches(false);
-  }
-  useEffect(() => { loadMatches(); }, []);
-
-  function openNew() {
-    setEditing({ id: "__new__", ...EMPTY });
-    setForm({ ...EMPTY, sort_order: matches.length });
-  }
-  function openEdit(m: SportsMatch) {
-    setEditing(m);
-    setForm({
-      sport: m.sport, team_code: m.team_code,
-      home_team: m.home_team, away_team: m.away_team,
-      home_score: m.home_score, away_score: m.away_score,
-      match_date: m.match_date?.slice(0, 16) ?? "",
-      venue: m.venue, status: m.status,
-      ticket_url: m.ticket_url, broadcast: m.broadcast,
-      sort_order: m.sort_order, active: m.active,
-    });
-  }
-  async function save() {
-    if (!form.home_team || !form.away_team || !form.match_date) return;
-    setSaving(true);
-    const payload = { ...form, match_date: new Date(form.match_date).toISOString() };
-    if (editing?.id === "__new__") {
-      await adminCreateSportsMatch(payload);
-    } else if (editing) {
-      await adminUpdateSportsMatch(editing.id, payload);
-    }
-    setSaving(false);
-    setEditing(null);
-    loadMatches();
-  }
-  async function del(id: string) {
-    if (!confirm("삭제하시겠습니까?")) return;
-    setDeleting(id);
-    await adminDeleteSportsMatch(id);
-    setDeleting(null);
-    loadMatches();
-  }
-  function setF<K extends keyof typeof form>(key: K, val: typeof form[K]) {
-    setForm(f => ({ ...f, [key]: val }));
-    if (key === "team_code") {
-      const meta = TEAM_META[val as TeamCode];
-      setForm(f => ({ ...f, [key]: val, sport: meta.sport, home_team: meta.name }));
+  async function reloadAll() {
+    try {
+      const [c, l, t, b] = await Promise.all([
+        fetchSportCategories(),
+        fetchLeagues(),
+        fetchTeams(),
+        fetchBroadcasters(),
+      ]);
+      setCategories(c); setLeagues(l); setTeams(t); setBroadcasters(b);
+    } catch (e) {
+      console.warn("[admin/sports] 부트스트랩 실패", e);
+    } finally {
+      setBootstrapped(true);
     }
   }
-  const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
-
-  // ─── 로고 & 채널 로직 ───────────────────
-  async function loadAssets() {
-    setLoadingAssets(true);
-    // Proactively ensure anon write policies exist on site_settings
-    fetch("/api/admin/fix-rls", { method: "POST" }).catch(() => {});
-    try { setAssets(await adminFetchSportsAssets()); } catch {}
-    setLoadingAssets(false);
-  }
-  useEffect(() => { if (tab === "assets") loadAssets(); }, [tab]);
-
-  function handleSaveError(e: unknown) {
-    const msg = e instanceof Error ? e.message : "저장 실패";
-    if (msg.includes("row-level security") || msg.includes("anon_insert") || msg.includes("쓰기 권한")) {
-      setRlsError(true);
-    } else {
-      showToast(msg, false);
-    }
-  }
-
-  async function updateTeamLogo(tc: TeamCode, url: string | null) {
-    setSavingAssets(true);
-    try {
-      await adminSaveTeamLogo(tc, url);
-      setAssets(prev => {
-        const teamLogos = { ...prev.teamLogos };
-        if (url) teamLogos[tc] = url; else delete teamLogos[tc];
-        return { ...prev, teamLogos };
-      });
-      showToast("저장됐어요");
-    } catch (e) { handleSaveError(e); }
-    setSavingAssets(false);
-  }
-
-  async function updateLeagueLogo(league: string, url: string | null) {
-    setSavingAssets(true);
-    try {
-      await adminSaveLeagueLogo(league, url);
-      setAssets(prev => {
-        const leagueLogos = { ...prev.leagueLogos };
-        if (url) leagueLogos[league] = url; else delete leagueLogos[league];
-        return { ...prev, leagueLogos };
-      });
-      showToast("저장됐어요");
-    } catch (e) { handleSaveError(e); }
-    setSavingAssets(false);
-  }
-
-  async function addChannel() {
-    const ch = newChannel.trim();
-    if (!ch || assets.broadcastChannels.includes(ch)) return;
-    const next = [...assets.broadcastChannels, ch];
-    setSavingAssets(true);
-    try {
-      await adminSaveBroadcastChannels(next);
-      setAssets(prev => ({ ...prev, broadcastChannels: next }));
-      setNewChannel("");
-      showToast("저장됐어요");
-    } catch (e) { handleSaveError(e); }
-    setSavingAssets(false);
-  }
-
-  async function removeChannel(ch: string) {
-    const next = assets.broadcastChannels.filter(c => c !== ch);
-    setSavingAssets(true);
-    try {
-      await adminSaveBroadcastChannels(next);
-      setAssets(prev => ({ ...prev, broadcastChannels: next }));
-      showToast("저장됐어요");
-    } catch (e) { handleSaveError(e); }
-    setSavingAssets(false);
-  }
-
-  async function updateAwayTeamLogo(teamName: string, url: string | null) {
-    setSavingAssets(true);
-    try {
-      const next = await adminSaveAwayTeamLogo(teamName, url, assets.awayTeamLogos);
-      setAssets(prev => ({ ...prev, awayTeamLogos: next }));
-      showToast("저장됐어요");
-    } catch (e) { handleSaveError(e); }
-    setSavingAssets(false);
-  }
+  useEffect(() => { reloadAll(); }, []);
 
   return (
-    <div className="p-5 max-w-3xl mx-auto">
-      {/* 헤더 */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Trophy size={20} className="text-[#3182F6]" />
-          <h1 className="text-[20px] font-extrabold text-[#1d1d1f]">스포츠 경기 관리</h1>
-        </div>
-        {tab === "matches" && (
-          <button onClick={openNew}
-            className="flex items-center gap-1.5 bg-[#3182F6] text-white px-4 py-2 rounded-xl text-[13px] font-bold active:opacity-80">
-            <Plus size={15} />경기 추가
-          </button>
-        )}
+    <div className="p-5 max-w-5xl mx-auto">
+      <div className="flex items-center gap-2 mb-5">
+        <Trophy size={20} className="text-[#3182F6]" />
+        <h1 className="text-[20px] font-extrabold text-[#1d1d1f]">스포츠 경기관리</h1>
       </div>
 
       {/* 탭 */}
-      <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl">
-        {([
-          { key: "matches", label: "경기 관리" },
-          { key: "assets",  label: "로고 & 채널" },
-        ] as const).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)}
-            className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
-              tab === t.key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
-            }`}>
-            {t.label}
-          </button>
-        ))}
+      <div className="flex gap-1 mb-5 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+        {TABS.map(t => {
+          const Icon = t.icon;
+          const active = tab === t.key;
+          return (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              className={`flex-1 min-w-[80px] flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                active ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
+              }`}>
+              <Icon size={14} />{t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* ─── 경기 관리 탭 ──────────────────────────────── */}
-      {tab === "matches" && (
+      {!bootstrapped ? (
+        <div className="flex items-center justify-center py-20 text-gray-400">
+          <Loader2 size={24} className="animate-spin mr-2" />초기 데이터 로드 중…
+        </div>
+      ) : (
         <>
-          <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-            {(["전체", ...SPORTS] as (SportType | "전체")[]).map(s => (
-              <button key={s} onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-colors ${
-                  filter === s ? "bg-[#3182F6] text-white" : "bg-white text-gray-600 border border-gray-200"
-                }`}>
-                {s}
-              </button>
-            ))}
-          </div>
-
-          {loadingMatches ? (
-            <div className="flex items-center justify-center py-20 text-gray-400">
-              <Loader2 size={24} className="animate-spin mr-2" />불러오는 중…
-            </div>
-          ) : filtered.length === 0 ? (
-            <div className="text-center py-20 text-gray-400 text-[14px]">등록된 경기가 없습니다</div>
-          ) : (
-            <div className="space-y-3">
-              {filtered.map(m => {
-                const meta = TEAM_META[m.team_code];
-                const dt = m.match_date ? new Date(m.match_date) : null;
-                return (
-                  <div key={m.id}
-                    className={`bg-white rounded-2xl p-4 border ${m.active ? "border-gray-100" : "border-gray-100 opacity-50"}`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                          <span className="text-[18px]">{meta.emoji}</span>
-                          <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
-                            style={{ background: meta.color }}>
-                            {meta.league}
-                          </span>
-                          {statusBadge(m.status)}
-                          {!m.active && <span className="text-[11px] text-gray-400">비활성</span>}
-                        </div>
-                        <div className="flex items-center gap-2 text-[15px] font-bold text-[#1d1d1f]">
-                          <span>{m.home_team}</span>
-                          {(m.home_score != null || m.away_score != null) ? (
-                            <span className="text-[#3182F6]">{m.home_score ?? "-"} : {m.away_score ?? "-"}</span>
-                          ) : (
-                            <span className="text-gray-400 font-normal text-[13px]">vs</span>
-                          )}
-                          <span>{m.away_team}</span>
-                        </div>
-                        {dt && (
-                          <p className="text-[12px] text-gray-500 mt-1">
-                            {dt.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" })} {dt.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-                            {m.venue ? ` · ${m.venue}` : ""}
-                            {m.broadcast ? ` · ${m.broadcast}` : ""}
-                          </p>
-                        )}
-                      </div>
-                      <div className="flex gap-1.5 shrink-0">
-                        <button onClick={() => openEdit(m)}
-                          className="p-2 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600">
-                          <Pencil size={14} />
-                        </button>
-                        <button onClick={() => del(m.id)} disabled={deleting === m.id}
-                          className="p-2 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 disabled:opacity-50">
-                          {deleting === m.id ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {tab === "categories"   && <CategoriesTab onChange={reloadAll} />}
+          {tab === "leagues"      && <LeaguesTab categories={categories} onChange={reloadAll} />}
+          {tab === "teams"        && <TeamsTab categories={categories} leagues={leagues} onChange={reloadAll} />}
+          {tab === "broadcasters" && <BroadcastersTab onChange={reloadAll} />}
+          {tab === "matches"      && <MatchesTab categories={categories} leagues={leagues} teams={teams} broadcasters={broadcasters} />}
         </>
-      )}
-
-      {/* ─── 로고 & 채널 탭 ────────────────────────────── */}
-      {tab === "assets" && (
-        <div className="space-y-8">
-          {loadingAssets ? (
-            <div className="flex items-center justify-center py-20 text-gray-400">
-              <Loader2 size={24} className="animate-spin mr-2" />불러오는 중…
-            </div>
-          ) : (
-            <>
-              {/* RLS 오류 안내 */}
-              {rlsError && (() => {
-                const sql = `ALTER TABLE site_settings ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_select ON site_settings FOR SELECT TO anon USING (true);\nCREATE POLICY IF NOT EXISTS anon_insert ON site_settings FOR INSERT TO anon WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_update ON site_settings FOR UPDATE TO anon USING (true) WITH CHECK (true);\nCREATE POLICY IF NOT EXISTS anon_delete ON site_settings FOR DELETE TO anon USING (true);`;
-                const projectRef = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] ?? "";
-                const sqlEditorUrl = projectRef ? `https://supabase.com/dashboard/project/${projectRef}/sql/new` : "https://supabase.com/dashboard";
-                return (
-                  <div className="bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle size={15} className="text-red-500 shrink-0" />
-                        <p className="text-[13px] font-bold text-red-700">DB 쓰기 권한 없음</p>
-                      </div>
-                      <button onClick={() => setRlsError(false)} className="text-red-300 hover:text-red-500 shrink-0">
-                        <X size={14} />
-                      </button>
-                    </div>
-                    <p className="text-[12px] text-red-600 leading-relaxed">
-                      Supabase SQL Editor에서 아래 SQL을 실행하면 해결됩니다. <strong>최초 1회만</strong> 필요합니다.
-                    </p>
-                    <pre className="bg-white border border-red-200 rounded-xl p-3 text-[10.5px] text-red-800 overflow-x-auto whitespace-pre leading-relaxed">{sql}</pre>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={async () => {
-                          await navigator.clipboard.writeText(sql).catch(() => {});
-                          setRlsCopied(true);
-                          setTimeout(() => setRlsCopied(false), 2000);
-                        }}
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold border border-red-200 bg-white text-red-600 active:bg-red-50">
-                        {rlsCopied ? <CheckCircle2 size={13} className="text-green-500" /> : <Copy size={13} />}
-                        {rlsCopied ? "복사됨" : "SQL 복사"}
-                      </button>
-                      <a href={sqlEditorUrl} target="_blank" rel="noopener noreferrer"
-                        className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-bold bg-red-600 text-white active:opacity-80">
-                        <ExternalLink size={13} />
-                        SQL Editor 열기
-                      </a>
-                    </div>
-                    <button
-                      disabled={rlsFixing}
-                      onClick={async () => {
-                        setRlsFixing(true);
-                        try {
-                          const r = await fetch("/api/admin/fix-rls", { method: "POST" });
-                          if (r.ok) { setRlsError(false); showToast("권한 수정 완료! 다시 시도해 주세요"); }
-                          else showToast("자동 수정 실패 — SQL을 직접 실행해 주세요", false);
-                        } catch { showToast("자동 수정 실패", false); }
-                        setRlsFixing(false);
-                      }}
-                      className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-[12px] font-bold text-red-500 border border-red-200 disabled:opacity-50">
-                      {rlsFixing ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-                      자동 수정 재시도
-                    </button>
-                  </div>
-                );
-              })()}
-
-              {/* 팀 로고 */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <ImageIcon size={16} className="text-[#3182F6]" />
-                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">팀 로고</h2>
-                  <span className="text-[12px] text-gray-400">홈화면 위젯에 표시됩니다</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {TEAM_CODES.map(tc => {
-                    const meta = TEAM_META[tc];
-                    const logo = TEAM_LOGOS[tc];
-                    const uploadedUrl = assets.teamLogos[tc];
-                    return (
-                      <div key={tc} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
-                        {/* 프리뷰 */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center font-black"
-                            style={{ background: uploadedUrl ? "transparent" : logo.bg, color: logo.fg, fontSize: 13 }}>
-                            {uploadedUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={uploadedUrl} alt={meta.name} className="w-full h-full object-cover" />
-                            ) : logo.abbr}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{meta.name}</p>
-                            <p className="text-[11px] text-gray-400">{meta.league}</p>
-                          </div>
-                        </div>
-                        {/* 업로드 */}
-                        <LogoUploadButton
-                          currentUrl={uploadedUrl}
-                          onUpload={url => updateTeamLogo(tc, url)}
-                          onRemove={() => updateTeamLogo(tc, null)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* 리그 로고 */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <Trophy size={16} className="text-[#3182F6]" />
-                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">리그 로고</h2>
-                  <span className="text-[12px] text-gray-400">경기 카드 헤더에 표시됩니다</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {LEAGUES.map(league => {
-                    const ls = LEAGUE_STYLES[league];
-                    const uploadedUrl = assets.leagueLogos[league];
-                    return (
-                      <div key={league} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
-                        {/* 프리뷰 */}
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0 shadow-sm flex items-center justify-center"
-                            style={{ background: ls?.gradient }}>
-                            {uploadedUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img src={uploadedUrl} alt={league} className="w-10 h-10 object-contain" />
-                            ) : (
-                              <span className="text-[9px] font-black text-white text-center px-1 leading-tight">{league}</span>
-                            )}
-                          </div>
-                          <p className="text-[13px] font-bold text-[#1d1d1f]">{league}</p>
-                        </div>
-                        {/* 업로드 */}
-                        <LogoUploadButton
-                          currentUrl={uploadedUrl}
-                          onUpload={url => updateLeagueLogo(league, url)}
-                          onRemove={() => updateLeagueLogo(league, null)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-
-              {/* 원정팀 로고 */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <ImageIcon size={16} className="text-[#3182F6]" />
-                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">원정팀 로고</h2>
-                  <span className="text-[12px] text-gray-400">상대팀 이름으로 등록</span>
-                </div>
-                {/* 새 팀 추가 */}
-                <div className="bg-white rounded-2xl border border-gray-100 p-4 mb-3">
-                  <p className="text-[12px] font-semibold text-gray-500 mb-2">팀 이름 입력 후 로고 업로드</p>
-                  <div className="flex gap-2">
-                    <input
-                      value={newAwayTeam}
-                      onChange={e => setNewAwayTeam(e.target.value)}
-                      placeholder="팀 이름 (예: 울산 HD)"
-                      className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
-                    />
-                    {newAwayTeam.trim() && (
-                      <LogoUploadButton
-                        currentUrl={assets.awayTeamLogos[newAwayTeam.trim()]}
-                        onUpload={url => { updateAwayTeamLogo(newAwayTeam.trim(), url); setNewAwayTeam(""); }}
-                        onRemove={() => updateAwayTeamLogo(newAwayTeam.trim(), null)}
-                      />
-                    )}
-                  </div>
-                </div>
-                {/* 등록된 원정팀 로고 목록 */}
-                {Object.keys(assets.awayTeamLogos).length > 0 && (
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {Object.entries(assets.awayTeamLogos).map(([teamName, url]) => (
-                      <div key={teamName} className="bg-white rounded-2xl p-4 border border-gray-100 space-y-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0 shadow-sm">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={url} alt={teamName} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{teamName}</p>
-                            <button onClick={() => updateAwayTeamLogo(teamName, null)}
-                              className="text-[11px] text-red-500 mt-0.5 hover:underline">삭제</button>
-                          </div>
-                        </div>
-                        <LogoUploadButton
-                          currentUrl={url}
-                          onUpload={u => updateAwayTeamLogo(teamName, u)}
-                          onRemove={() => updateAwayTeamLogo(teamName, null)}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* 방송 채널 */}
-              <section>
-                <div className="flex items-center gap-2 mb-3">
-                  <Tv size={16} className="text-[#3182F6]" />
-                  <h2 className="text-[15px] font-extrabold text-[#1d1d1f]">방송 채널</h2>
-                  <span className="text-[12px] text-gray-400">경기 등록 시 선택 목록</span>
-                </div>
-                <div className="bg-white rounded-2xl border border-gray-100 p-4">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {assets.broadcastChannels.map(ch => (
-                      <div key={ch}
-                        className="flex items-center gap-1 pl-3 pr-1.5 py-1.5 rounded-full bg-gray-100 text-[13px] font-semibold text-[#1d1d1f]">
-                        {ch}
-                        <button onClick={() => removeChannel(ch)}
-                          className="w-5 h-5 rounded-full flex items-center justify-center hover:bg-gray-300 text-gray-500 ml-0.5">
-                          <X size={11} />
-                        </button>
-                      </div>
-                    ))}
-                    {assets.broadcastChannels.length === 0 && (
-                      <p className="text-[13px] text-gray-400">채널이 없습니다</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      value={newChannel}
-                      onChange={e => setNewChannel(e.target.value)}
-                      onKeyDown={e => e.key === "Enter" && addChannel()}
-                      placeholder="채널 추가 (예: JTBC3)"
-                      className="flex-1 h-10 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
-                    />
-                    <button onClick={addChannel} disabled={!newChannel.trim() || savingAssets}
-                      className="h-10 px-4 rounded-xl bg-[#3182F6] text-white text-[13px] font-bold disabled:opacity-50 flex items-center gap-1.5">
-                      {savingAssets ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-                      추가
-                    </button>
-                  </div>
-                </div>
-              </section>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* ─── 경기 편집 모달 ─────────────────────────────── */}
-      {editing && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setEditing(null)} />
-          <div className="relative w-full max-w-[500px] bg-white rounded-t-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-              <h2 className="font-extrabold text-[16px] text-[#1d1d1f]">
-                {editing.id === "__new__" ? "경기 추가" : "경기 수정"}
-              </h2>
-              <button onClick={() => setEditing(null)} className="text-gray-400 hover:text-gray-600">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">인천 연고 팀</label>
-                <select value={form.team_code}
-                  onChange={e => setF("team_code", e.target.value as TeamCode)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px] bg-white">
-                  {TEAM_CODES.map(tc => (
-                    <option key={tc} value={tc}>
-                      {TEAM_META[tc].emoji} {TEAM_META[tc].name} ({TEAM_META[tc].league})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-bold text-gray-500 mb-1">홈팀</label>
-                  <input value={form.home_team} onChange={e => setF("home_team", e.target.value)}
-                    placeholder="홈팀 이름"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-bold text-gray-500 mb-1">원정팀</label>
-                  <input value={form.away_team} onChange={e => setF("away_team", e.target.value)}
-                    placeholder="원정팀 이름"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[12px] font-bold text-gray-500 mb-1">홈 점수</label>
-                  <input type="number" min={0}
-                    value={form.home_score ?? ""}
-                    onChange={e => setF("home_score", e.target.value === "" ? null : Number(e.target.value))}
-                    placeholder="-"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-                </div>
-                <div>
-                  <label className="block text-[12px] font-bold text-gray-500 mb-1">원정 점수</label>
-                  <input type="number" min={0}
-                    value={form.away_score ?? ""}
-                    onChange={e => setF("away_score", e.target.value === "" ? null : Number(e.target.value))}
-                    placeholder="-"
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">경기 일시</label>
-                <input type="datetime-local" value={form.match_date?.slice(0, 16) ?? ""}
-                  onChange={e => setF("match_date", e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">경기장</label>
-                <input value={form.venue ?? ""}
-                  onChange={e => setF("venue", e.target.value || null)}
-                  placeholder="예) 인천SSG랜더스필드"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">상태</label>
-                <div className="flex gap-2 flex-wrap">
-                  {STATUSES.map(s => (
-                    <button key={s.value} type="button"
-                      onClick={() => setF("status", s.value)}
-                      className={`px-3 py-1.5 rounded-full text-[12px] font-bold border transition-colors ${
-                        form.status === s.value ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-gray-600 border-gray-200"
-                      }`}>
-                      {s.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">중계 채널</label>
-                <div className="flex flex-wrap gap-1.5">
-                  {assets.broadcastChannels.map(b => (
-                    <button key={b} type="button"
-                      onClick={() => setF("broadcast", form.broadcast === b ? null : b)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-bold border transition-colors ${
-                        form.broadcast === b ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-gray-600 border-gray-200"
-                      }`}>
-                      {b}
-                    </button>
-                  ))}
-                </div>
-                <input value={form.broadcast ?? ""}
-                  onChange={e => setF("broadcast", e.target.value || null)}
-                  placeholder="직접 입력"
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-[13px] mt-2" />
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">예매 링크</label>
-                <input value={form.ticket_url ?? ""}
-                  onChange={e => setF("ticket_url", e.target.value || null)}
-                  placeholder="https://ticket.interpark.com/..."
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-              </div>
-
-              <div>
-                <label className="block text-[12px] font-bold text-gray-500 mb-1">정렬 순서</label>
-                <input type="number" value={form.sort_order}
-                  onChange={e => setF("sort_order", Number(e.target.value))}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-[14px]" />
-              </div>
-
-              <label className="flex items-center gap-3 cursor-pointer">
-                <div className={`w-11 h-6 rounded-full transition-colors ${form.active ? "bg-[#3182F6]" : "bg-gray-300"}`}
-                  onClick={() => setF("active", !form.active)}>
-                  <div className={`w-5 h-5 bg-white rounded-full shadow mt-0.5 transition-transform ${form.active ? "translate-x-5.5" : "translate-x-0.5"}`} />
-                </div>
-                <span className="text-[13px] font-semibold text-[#1d1d1f]">홈화면에 표시</span>
-              </label>
-            </div>
-
-            <div className="px-5 py-4 border-t border-gray-100">
-              <button onClick={save} disabled={saving || !form.home_team || !form.away_team || !form.match_date}
-                className="w-full flex items-center justify-center gap-2 bg-[#3182F6] text-white py-3 rounded-xl font-bold text-[15px] disabled:opacity-50">
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                저장
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 토스트 */}
-      {toast && (
-        <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold text-white ${toast.ok ? "bg-[#191F28]" : "bg-red-500"}`}>
-          {toast.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-          {toast.msg}
-        </div>
       )}
     </div>
   );

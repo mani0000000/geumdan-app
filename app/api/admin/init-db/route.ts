@@ -99,6 +99,74 @@ DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename='sports_matches' AND policyname='anon_delete') THEN
     EXECUTE 'CREATE POLICY anon_delete ON sports_matches FOR DELETE TO anon USING (true)'; END IF;
 END $$;
+
+-- ── 스포츠 분류 (종목 → 리그 → 팀) + 방송사 ─────────────────────
+CREATE TABLE IF NOT EXISTS sport_categories (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name        TEXT NOT NULL UNIQUE,
+  icon        TEXT,
+  sort_order  SMALLINT NOT NULL DEFAULT 0,
+  active      BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS leagues (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sport_category_id UUID NOT NULL REFERENCES sport_categories(id) ON DELETE CASCADE,
+  name              TEXT NOT NULL,
+  type              TEXT NOT NULL DEFAULT '리그' CHECK (type IN ('리그','A매치','컵','토너먼트')),
+  logo_url          TEXT,
+  sort_order        SMALLINT NOT NULL DEFAULT 0,
+  active            BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (sport_category_id, name)
+);
+CREATE INDEX IF NOT EXISTS idx_leagues_sport ON leagues(sport_category_id);
+CREATE TABLE IF NOT EXISTS teams (
+  id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  league_id     UUID NOT NULL REFERENCES leagues(id) ON DELETE CASCADE,
+  name          TEXT NOT NULL,
+  short_name    TEXT,
+  logo_url      TEXT,
+  primary_color TEXT,
+  city          TEXT,
+  sort_order    SMALLINT NOT NULL DEFAULT 0,
+  active        BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (league_id, name)
+);
+CREATE INDEX IF NOT EXISTS idx_teams_league ON teams(league_id);
+CREATE TABLE IF NOT EXISTS broadcasters (
+  id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name           TEXT NOT NULL UNIQUE,
+  channel_number TEXT,
+  logo_url       TEXT,
+  sort_order     SMALLINT NOT NULL DEFAULT 0,
+  active         BOOLEAN  NOT NULL DEFAULT TRUE,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE sports_matches ADD COLUMN IF NOT EXISTS league_id      UUID REFERENCES leagues(id)      ON DELETE SET NULL;
+ALTER TABLE sports_matches ADD COLUMN IF NOT EXISTS team_home_id   UUID REFERENCES teams(id)        ON DELETE SET NULL;
+ALTER TABLE sports_matches ADD COLUMN IF NOT EXISTS team_away_id   UUID REFERENCES teams(id)        ON DELETE SET NULL;
+ALTER TABLE sports_matches ADD COLUMN IF NOT EXISTS broadcaster_id UUID REFERENCES broadcasters(id) ON DELETE SET NULL;
+
+ALTER TABLE sport_categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE leagues          ENABLE ROW LEVEL SECURITY;
+ALTER TABLE teams            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE broadcasters     ENABLE ROW LEVEL SECURITY;
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['sport_categories','leagues','teams','broadcasters'] LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = t AND policyname='anon_select') THEN
+      EXECUTE format('CREATE POLICY anon_select ON %I FOR SELECT TO anon USING (true)', t); END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = t AND policyname='anon_insert') THEN
+      EXECUTE format('CREATE POLICY anon_insert ON %I FOR INSERT TO anon WITH CHECK (true)', t); END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = t AND policyname='anon_update') THEN
+      EXECUTE format('CREATE POLICY anon_update ON %I FOR UPDATE TO anon USING (true) WITH CHECK (true)', t); END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = t AND policyname='anon_delete') THEN
+      EXECUTE format('CREATE POLICY anon_delete ON %I FOR DELETE TO anon USING (true)', t); END IF;
+  END LOOP;
+END $$;
 `;
 
 async function runSql(key: string, sql: string): Promise<{ ok: boolean; error?: string }> {
