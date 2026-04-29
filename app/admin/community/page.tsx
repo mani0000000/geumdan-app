@@ -134,6 +134,16 @@ function PostDetailPanel({ post }: { post: AdminPost }) {
       <p className="text-[13px] text-[#4E5968] whitespace-pre-wrap break-words leading-relaxed">
         {post.content}
       </p>
+      {post.images && post.images.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-3">
+          {post.images.map((src, i) => (
+            <a key={i} href={src} target="_blank" rel="noopener noreferrer"
+              className="block w-20 h-20 rounded-xl overflow-hidden border border-[#E5E8EB] hover:opacity-80 transition-opacity">
+              <img src={src} alt="" className="w-full h-full object-cover" />
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -83,19 +83,28 @@ function CommunityTab() {
           filtered.map(post => (
             <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
               className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-              <div className="flex items-center gap-2 mb-2">
-                {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                  {post.category}
-                </span>
-                {post.isHot && (
-                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                    <Flame size={10} /> HOT
-                  </span>
+              <div className="flex gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-2">
+                    {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
+                    <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                      {post.category}
+                    </span>
+                    {post.isHot && (
+                      <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                        <Flame size={10} /> HOT
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
+                  <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
+                </div>
+                {post.images && post.images.length > 0 && (
+                  <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
+                    <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+                  </div>
                 )}
               </div>
-              <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-              <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
               <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
                 <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
                 <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
