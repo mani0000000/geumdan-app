@@ -45,8 +45,8 @@ export default function WritePage() {
         saveMyPostId(post.id);
         router.push(`/community/detail/?id=${post.id}`);
       } else {
-        // Supabase 미설정 시 목록으로 이동
-        router.push("/community/");
+        setError("글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setSubmitting(false);
       }
     } catch {
       setError("글 등록에 실패했습니다. 다시 시도해주세요.");

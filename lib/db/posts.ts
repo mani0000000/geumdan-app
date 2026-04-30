@@ -30,14 +30,11 @@
  * CREATE INDEX idx_posts_category   ON community_posts(category);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { Post, CommunityCategory } from '@/lib/types';
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
