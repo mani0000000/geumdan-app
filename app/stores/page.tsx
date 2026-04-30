@@ -604,40 +604,8 @@ function StoreListDetailSheet({
   );
 }
 
-// ─── 신규오픈 날짜 헬퍼 ─────────────────────────────────────
-function getWeekBounds() {
-  const now = new Date();
-  const day = now.getDay(); // 0=일, 1=월
-  const diffToMon = day === 0 ? -6 : 1 - day;
-  const mon = new Date(now); mon.setDate(now.getDate() + diffToMon); mon.setHours(0,0,0,0);
-  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
-  return { mon, sun };
-}
-function classifyOpening(openDate: string): "week" | "month" | "none" {
-  const d = new Date(openDate);
-  const now = new Date();
-  const { mon, sun } = getWeekBounds();
-  if (d >= mon && d <= sun) return "week";
-  if (d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()) return "month";
-  return "none";
-}
-
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
 const ALL_CATS = Object.keys(catDot) as StoreCategory[];
-
-const catGrads: Record<StoreCategory, [string, string]> = {
-  카페:       ["#F59E0B", "#FB923C"],
-  음식점:     ["#EF4444", "#F97316"],
-  편의점:     ["#3B82F6", "#06B6D4"],
-  "병원/약국":["#EF4444", "#F472B6"],
-  미용:       ["#EC4899", "#C026D3"],
-  학원:       ["#8B5CF6", "#6366F1"],
-  마트:       ["#10B981", "#059669"],
-  "헬스/운동":["#0EA5E9", "#6366F1"],
-  반려동물:   ["#F472B6", "#EC4899"],
-  세탁:       ["#6366F1", "#8B5CF6"],
-  기타:       ["#6B7280", "#4B5563"],
-};
 
 function StoreListView() {
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
@@ -758,77 +726,75 @@ function StoreListView() {
       {/* ── 이번 주 행사 배너 ── */}
       {banners.length > 0 && <BannerCarousel banners={banners} />}
 
-      {/* ── 신규 오픈 ── */}
+      {/* ── 인기 매장 ── */}
       {(() => {
-        const weekOpenings  = dbOpenings.filter(o => classifyOpening(o.openDate) === "week");
-        const monthOpenings = dbOpenings.filter(o => classifyOpening(o.openDate) === "month");
-        if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
-
-        function OpeningGroup({ items, label, badge, color }: {
-          items: import("@/lib/types").NewStoreOpening[];
-          label: string; badge: string; color: string;
-        }) {
-          if (items.length === 0) return null;
-          const [featured, ...rest] = items;
-          const store = allStores.find(s => s.id === featured.storeId);
-          const [gFrom, gTo] = catGrads[featured.category] ?? ["#6B7280", "#4B5563"];
-          return (
-            <div>
-              <div className="flex items-center gap-2.5 px-4 mb-3">
-                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ background: color }} />
-                <span className="text-[16px] font-black text-[#1d1d1f]">{label}</span>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white" style={{ background: color }}>{badge}</span>
-                <span className="text-[11px] text-[#86868b]">{items.length}개</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
-              </div>
-              <div className="px-4 space-y-2">
-                <button onClick={() => store && setSelectedStore(store)}
-                  className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">{featured.category}</span>
-                      <span className="text-[10px] font-black bg-black/20 text-white px-2 py-0.5 rounded-full">{badge}</span>
-                    </div>
-                    <p className="text-[22px] font-black text-white leading-tight">{featured.storeName}</p>
-                    <p className="text-[13px] text-white/70 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
-                    {featured.openBenefit && (
-                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2.5">
-                        <p className="text-[12px] text-white font-semibold leading-snug">{featured.openBenefit.summary}</p>
-                      </div>
-                    )}
-                  </div>
-                </button>
-                {rest.length > 0 && (
-                  <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-                    {rest.map(o => {
-                      const s = allStores.find(x => x.id === o.storeId);
-                      return (
-                        <button key={o.id} onClick={() => s && setSelectedStore(s)}
-                          className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                          <StoreLogo name={o.storeName} category={o.category} size={42} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
-                            <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
-                            {o.openBenefit && (
-                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>
-                            )}
-                          </div>
-                          <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }
+        const premium = allStores.filter(s => s.isPremium === true);
+        const withCoupon = allStores.filter(s => couponStoreIds.has(s.id) && !s.isPremium);
+        const popularStores = [...premium, ...withCoupon].slice(0, 12);
+        if (popularStores.length === 0) return null;
 
         return (
-          <div className="pt-4 pb-3 space-y-5">
-            <OpeningGroup items={weekOpenings} label="이번 주 신규 오픈" badge="NEW" color="#F04452" />
-            <OpeningGroup items={monthOpenings} label="이번달 오픈" badge="이달" color="#FF9500" />
+          <div className="pt-4 pb-3">
+            <div className="flex items-center gap-2.5 px-4 mb-3">
+              <div className="w-1.5 h-5 rounded-full shrink-0 bg-[#FF9500]" />
+              <span className="text-[18px] font-black text-[#1d1d1f]">인기 매장</span>
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white bg-[#FF9500]">HOT</span>
+              <span className="text-[11px] text-[#86868b]">{popularStores.length}개</span>
+              <div className="flex-1 h-px bg-[#e5e5ea]" />
+            </div>
+            <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+              {popularStores.map(store => {
+                const hasCoupon = couponStoreIds.has(store.id);
+                const isPremium = store.isPremium === true;
+                return (
+                  <button
+                    key={store.id}
+                    onClick={() => setSelectedStore(store)}
+                    className="shrink-0 w-[180px] bg-white rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
+                  >
+                    <div className="relative h-[110px]" style={{ background: catDot[store.category] + "15" }}>
+                      {store.thumbnail_url ? (
+                        <img src={store.thumbnail_url} alt={store.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <StoreLogo name={store.name} category={store.category} size={64} />
+                        </div>
+                      )}
+                      {isPremium && (
+                        <div className="absolute top-2 left-2">
+                          <span className="text-[9px] font-black text-white bg-[#FF9500] px-2 py-0.5 rounded-full shadow-sm">PREMIUM</span>
+                        </div>
+                      )}
+                      <div className="absolute top-2 right-2">
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
+                          store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/90 text-[#9CA3AF]"
+                        }`}>
+                          {store.isOpen !== false ? "영업" : "종료"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="px-3 pt-2.5 pb-3">
+                      <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <span
+                          className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                          style={{ background: catDot[store.category] + "22", color: catDot[store.category] }}
+                        >
+                          {catEmoji[store.category]} {store.category}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-[#86868b] mt-1.5 truncate">{store.buildingName} · {store.floorLabel}</p>
+                      {hasCoupon && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          <Tag size={10} className="text-[#0071e3]" />
+                          <span className="text-[10px] font-bold text-[#0071e3]">쿠폰</span>
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         );
       })()}
@@ -873,23 +839,17 @@ function StoreListView() {
 
       {/* ── 업종 필터 + 매장 목록 ── */}
       <div className="pt-3 pb-1">
-        <div className="flex items-center gap-3 px-4 mb-3">
-          <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
-          <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
-          <div className="flex-1 h-px bg-[#e5e5ea]" />
-        </div>
         <div className="flex gap-2 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
           {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => {
             const active = catFilter === cat;
             const color = cat === "전체" ? "#1d1d1f" : catDot[cat];
             return (
               <button key={cat} onClick={() => setCatFilter(cat)}
-                className={`shrink-0 h-8 px-4 rounded-full text-[13px] font-bold transition-all ${
+                className={`shrink-0 h-9 px-4 rounded-full text-[13px] font-bold transition-all ${
                   active ? "text-white shadow-sm" : "bg-white text-[#6e6e73]"
                 }`}
                 style={active ? { background: color } : {}}>
-                {cat}
+                {cat === "전체" ? `전체 ${allStores.length}` : cat}
               </button>
             );
           })}
