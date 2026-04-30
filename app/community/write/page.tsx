@@ -77,7 +77,8 @@ export default function WritePage() {
         saveMyPostId(post.id);
         router.push(`/community/detail/?id=${post.id}`);
       } else {
-        router.push("/community/");
+        setError("글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
+        setSubmitting(false);
       }
     } catch {
       setError("글 등록에 실패했습니다. 다시 시도해주세요.");
