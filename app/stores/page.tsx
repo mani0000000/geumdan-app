@@ -764,13 +764,10 @@ const StoreCard = memo(function StoreCard({
   );
 });
 
-const STORE_TABS = ["인기", "전체", "신규"] as const;
-type StoreTabKey = (typeof STORE_TABS)[number];
 const PAGE_SIZE = 12;
-const POPULAR_LIMIT = 24;
+const POPULAR_LIMIT = 12;
 
 function StoreListView() {
-  const [tab, setTab] = useState<StoreTabKey>("인기");
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
@@ -814,40 +811,30 @@ function StoreListView() {
     return scored;
   }, [allStores, couponStoreIds, newOpeningIds]);
 
-  const newStores = useMemo(
-    () => allStores.filter(s => newOpeningIds.has(s.id)),
-    [allStores, newOpeningIds]
+  const baseList = useMemo<EnrichedStore[]>(
+    () => (catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter)),
+    [catFilter, allStores]
   );
 
-  const baseList = useMemo<EnrichedStore[]>(() => {
-    let list: EnrichedStore[];
-    if (tab === "인기") list = popularStores;
-    else if (tab === "신규") list = newStores;
-    else list = allStores;
-    return catFilter === "전체" ? list : list.filter(s => s.category === catFilter);
-  }, [tab, catFilter, popularStores, newStores, allStores]);
-
-  // 전체 탭만 lazy load 적용. 인기/신규는 이미 작은 셋이라 한 번에 렌더.
-  const isLazy = tab === "전체";
   const visibleList = useMemo(
-    () => (isLazy ? baseList.slice(0, visibleCount) : baseList),
-    [isLazy, baseList, visibleCount]
+    () => baseList.slice(0, visibleCount),
+    [baseList, visibleCount]
   );
-  const hasMore = isLazy && visibleCount < baseList.length;
+  const hasMore = visibleCount < baseList.length;
 
-  // 전체 탭에서 카테고리=전체일 때만 업종별 그룹핑
+  // 카테고리=전체일 때만 업종별 그룹핑
   const grouped = useMemo(() => {
-    if (tab !== "전체" || catFilter !== "전체") return null;
+    if (catFilter !== "전체") return null;
     const map = new Map<StoreCategory, EnrichedStore[]>();
     ALL_CATS.forEach(c => {
       const group = visibleList.filter(s => s.category === c);
       if (group.length > 0) map.set(c, group);
     });
     return map;
-  }, [tab, catFilter, visibleList]);
+  }, [catFilter, visibleList]);
 
-  // 탭/필터 전환 시 visibleCount 초기화
-  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, catFilter]);
+  // 필터 전환 시 visibleCount 초기화
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [catFilter]);
 
   // IntersectionObserver — sentinel 노출 시 다음 페이지 로드
   useEffect(() => {
@@ -867,12 +854,6 @@ function StoreListView() {
   }, [hasMore, baseList.length]);
 
   const handleSelectStore = useCallback((s: EnrichedStore) => setSelectedStore(s), []);
-
-  const tabCounts = {
-    인기: popularStores.length,
-    전체: allStores.length,
-    신규: newStores.length,
-  } as const;
 
   return (
     <div>
@@ -992,35 +973,37 @@ function StoreListView() {
         );
       })()}
 
-      {/* ── 매장 목록 — 탭 + 업종 필터 + Lazy Load ── */}
+      {/* ── 🔥 인기 매장 — 상단 고정 가로 스크롤 섹션 ── */}
+      {popularStores.length > 0 && (
+        <div className="pt-3 pb-2">
+          <div className="flex items-center gap-2.5 px-4 mb-3">
+            <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
+            <span className="text-[16px] font-black text-[#1d1d1f]">🔥 인기 매장</span>
+            <span className="text-[11px] font-bold bg-[#FFF0F0] text-[#F04452] px-2 py-0.5 rounded-full">TOP {popularStores.length}</span>
+            <div className="flex-1 h-px bg-[#e5e5ea]" />
+          </div>
+          <div className="flex gap-2.5 overflow-x-auto px-4 pb-2 snap-x snap-mandatory" style={{ scrollbarWidth: "none" }}>
+            {popularStores.map(s => (
+              <div key={s.id} className="shrink-0 snap-start" style={{ width: 168 }}>
+                <StoreCard
+                  store={s}
+                  hasNew={newOpeningIds.has(s.id)}
+                  hasCoupon={couponStoreIds.has(s.id)}
+                  onSelect={handleSelectStore}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 매장 목록 — 업종 필터 + Lazy Load ── */}
       <div className="pt-3 pb-1">
         <div className="flex items-center gap-3 px-4 mb-3">
           <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[16px] font-black text-[#1d1d1f]">매장 둘러보기</span>
+          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
           <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
           <div className="flex-1 h-px bg-[#e5e5ea]" />
-        </div>
-
-        {/* 탭 — 인기 / 전체 / 신규 */}
-        <div className="px-4 mb-2.5">
-          <div className="flex gap-1 bg-[#f5f5f7] rounded-2xl p-1">
-            {STORE_TABS.map(t => {
-              const active = tab === t;
-              const icon = t === "인기" ? "🔥" : t === "신규" ? "✨" : "📋";
-              return (
-                <button key={t} onClick={() => setTab(t)}
-                  className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1 transition-all ${
-                    active ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
-                  }`}>
-                  <span>{icon}</span>
-                  <span>{t}</span>
-                  <span className={`text-[10px] font-bold ${active ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-                    {tabCounts[t]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         {/* 업종 필터 */}
@@ -1044,16 +1027,12 @@ function StoreListView() {
       <div className="px-4 pt-2 pb-6">
         {visibleList.length === 0 ? (
           <div className="flex flex-col items-center py-14 gap-2">
-            <span className="text-3xl">
-              {tab === "인기" ? "🔥" : tab === "신규" ? "✨" : "🏪"}
-            </span>
-            <p className="text-[14px] font-semibold text-[#424245]">
-              {tab === "인기" ? "추천할 매장이 곧 등록돼요" : tab === "신규" ? "신규 오픈 매장이 없어요" : "조건에 맞는 매장이 없어요"}
-            </p>
+            <span className="text-3xl">🏪</span>
+            <p className="text-[14px] font-semibold text-[#424245]">조건에 맞는 매장이 없어요</p>
             <p className="text-[12px] text-[#86868b]">다른 업종을 선택해 보세요</p>
           </div>
         ) : grouped ? (
-          // 전체 탭 + 카테고리=전체 → 업종별 그룹핑 + 그라디언트 헤더 + 2열 그리드
+          // 카테고리=전체 → 업종별 그룹핑 + 그라디언트 헤더 + 2열 그리드
           <>
             {Array.from(grouped.entries()).map(([cat, stores]) => {
               const [gFrom, gTo] = catGrads[cat];
@@ -1085,7 +1064,7 @@ function StoreListView() {
                 </div>
               );
             })}
-            {/* Lazy load sentinel (전체 탭에서만) */}
+            {/* Lazy load sentinel */}
             {hasMore && (
               <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
                 <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
@@ -1094,10 +1073,10 @@ function StoreListView() {
             )}
           </>
         ) : (
-          // 단일 그리드 (인기/신규 탭, 또는 전체 탭+업종 필터)
+          // 단일 그리드 (업종 필터 적용 시)
           <>
             <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">
-              {tab === "전체" && hasMore
+              {hasMore
                 ? `${visibleList.length} / ${baseList.length}개 표시 중`
                 : `${visibleList.length}개 매장`}
             </p>
