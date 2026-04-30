@@ -764,6 +764,82 @@ const StoreCard = memo(function StoreCard({
   );
 });
 
+// 인기 매장 — 가로 스크롤 전용. StoreCard와 달리 고정 높이/단일 배지/정사각 히어로로 좁은 폭에 맞춤.
+const PopularCard = memo(function PopularCard({
+  store, hasNew, hasCoupon, onSelect,
+}: {
+  store: EnrichedStore;
+  hasNew: boolean;
+  hasCoupon: boolean;
+  onSelect: (s: EnrichedStore) => void;
+}) {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [heroFailed, setHeroFailed] = useState(false);
+  const heroThumb = !!store.thumbnail_url && !thumbFailed ? store.thumbnail_url! : null;
+  const [gFrom, gTo] = catGrads[store.category];
+  const isOpen = store.isOpen !== false;
+  const badge = hasNew
+    ? { label: "NEW", bg: "#F04452" }
+    : store.isPremium
+      ? { label: "★ PREMIUM", bg: "#F59E0B" }
+      : hasCoupon
+        ? { label: "쿠폰", bg: "#0071e3" }
+        : null;
+  return (
+    <button onClick={() => onSelect(store)}
+      className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-[#eeeef0] flex flex-col w-full">
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: "1/1" }}>
+        {heroThumb ? (
+          <img src={heroThumb} alt={store.name}
+            loading="lazy" decoding="async"
+            onError={() => setThumbFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover" />
+        ) : (
+          <>
+            {!heroFailed && (
+              <img src={catHeroImage[store.category]} alt=""
+                loading="lazy" decoding="async"
+                onError={() => setHeroFailed(true)}
+                className="absolute inset-0 w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0"
+              style={{ background: `linear-gradient(135deg, ${gFrom}cc, ${gTo}99)` }} />
+            <div className="absolute right-1 -bottom-1 opacity-25"
+              style={{ fontSize: 64, lineHeight: 1 }}>
+              {catEmoji[store.category]}
+            </div>
+          </>
+        )}
+        {badge && (
+          <span className="absolute top-1.5 left-1.5 text-[9px] font-black text-white px-1.5 py-0.5 rounded-md shadow-sm"
+            style={{ background: badge.bg }}>
+            {badge.label}
+          </span>
+        )}
+        <span className={`absolute top-1.5 right-1.5 text-[8.5px] font-black px-1.5 py-0.5 rounded-md backdrop-blur-md shadow-sm ${
+          isOpen ? "bg-[#00C471]/95 text-white" : "bg-black/60 text-white"
+        }`}>
+          {isOpen ? "● 영업중" : "종료"}
+        </span>
+        <div className="absolute inset-x-0 bottom-0 h-8 pointer-events-none"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.35), transparent)" }} />
+      </div>
+      <div className="px-2.5 pt-2 pb-2.5">
+        <p className="text-[13px] font-black text-[#1d1d1f] leading-tight line-clamp-1">
+          {store.name}
+        </p>
+        <div className="flex items-center gap-1 mt-1 text-[10.5px] text-[#6e6e73]">
+          <span className="shrink-0 font-black text-white rounded"
+            style={{ background: catDot[store.category], fontSize: 9, padding: "1px 4px" }}>
+            {store.floorLabel}
+          </span>
+          <span className="truncate min-w-0">{store.buildingName}</span>
+        </div>
+      </div>
+    </button>
+  );
+});
+
 const PAGE_SIZE = 12;
 const POPULAR_LIMIT = 12;
 
@@ -811,9 +887,11 @@ function StoreListView() {
     return scored;
   }, [allStores, couponStoreIds, newOpeningIds]);
 
-  const baseList = useMemo<EnrichedStore[]>(() => {
-    return catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter);
-  }, [catFilter, allStores]);
+  const baseList = useMemo<EnrichedStore[]>(
+    () => (catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter)),
+    [catFilter, allStores]
+  );
+  const hasMore = visibleCount < baseList.length;
 
   const visibleList = useMemo(
     () => baseList.slice(0, visibleCount),
@@ -972,19 +1050,19 @@ function StoreListView() {
         );
       })()}
 
-      {/* ── 인기 매장 — 가로 스크롤 ── */}
+      {/* ── 🔥 인기 매장 — 상단 고정 가로 스크롤 섹션 ── */}
       {popularStores.length > 0 && (
         <div className="pt-3 pb-2">
           <div className="flex items-center gap-2.5 px-4 mb-3">
             <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
             <span className="text-[16px] font-black text-[#1d1d1f]">🔥 인기 매장</span>
-            <span className="text-[11px] font-bold bg-[#FEE2E2] text-[#F04452] px-2 py-0.5 rounded-full">{popularStores.length}</span>
+            <span className="text-[11px] font-bold bg-[#FFF0F0] text-[#F04452] px-2 py-0.5 rounded-full">TOP {popularStores.length}</span>
             <div className="flex-1 h-px bg-[#e5e5ea]" />
           </div>
-          <div className="flex gap-2.5 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+          <div className="flex gap-2.5 overflow-x-auto px-4 pb-2 snap-x" style={{ scrollbarWidth: "none" }}>
             {popularStores.map(s => (
-              <div key={s.id} className="shrink-0 w-[160px]">
-                <StoreCard
+              <div key={s.id} className="shrink-0 snap-start" style={{ width: 156 }}>
+                <PopularCard
                   store={s}
                   hasNew={newOpeningIds.has(s.id)}
                   hasCoupon={couponStoreIds.has(s.id)}
@@ -1063,6 +1141,7 @@ function StoreListView() {
                 </div>
               );
             })}
+            {/* Lazy load sentinel */}
             {hasMore && (
               <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
                 <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
@@ -1071,7 +1150,7 @@ function StoreListView() {
             )}
           </>
         ) : (
-          // 업종 필터 적용 → 단일 그리드
+          // 단일 그리드 (업종 필터 적용 시)
           <>
             <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">
               {hasMore
@@ -1089,6 +1168,7 @@ function StoreListView() {
                 />
               ))}
             </div>
+            {/* Lazy load sentinel */}
             {hasMore && (
               <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
                 <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
