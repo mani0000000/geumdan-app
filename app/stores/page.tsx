@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, memo, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import {
@@ -639,18 +639,101 @@ const catGrads: Record<StoreCategory, [string, string]> = {
   기타:       ["#6B7280", "#4B5563"],
 };
 
+// 매장 카드 — memo로 리렌더 최소화. props는 모두 안정적 참조여야 함.
+const StoreCard = memo(function StoreCard({
+  store, hasNew, hasCoupon, onSelect,
+}: {
+  store: EnrichedStore;
+  hasNew: boolean;
+  hasCoupon: boolean;
+  onSelect: (s: EnrichedStore) => void;
+}) {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const hasThumb = !!store.thumbnail_url && !thumbFailed;
+  return (
+    <button onClick={() => onSelect(store)}
+      className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
+      <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
+      <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
+        <div className="relative shrink-0">
+          <StoreLogo name={store.name} category={store.category} size={46} />
+          {hasNew && (
+            <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#F04452] rounded-full border-2 border-white" />
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
+            {hasNew && <span className="shrink-0 text-[9px] font-black text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">NEW</span>}
+            {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
+            <span className="text-[11px] text-[#d2d2d7]">·</span>
+            <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
+            {store.hours && <>
+              <span className="text-[11px] text-[#d2d2d7]">·</span>
+              <span className="text-[12px] text-[#86868b]">{store.hours}</span>
+            </>}
+          </div>
+          {hasCoupon && (
+            <div className="flex items-center gap-1 mt-1.5">
+              <Tag size={10} className="text-[#0071e3]" />
+              <span className="text-[11px] font-bold text-[#0071e3]">쿠폰 사용 가능</span>
+            </div>
+          )}
+        </div>
+        {!hasThumb && (
+          <div className="shrink-0 flex flex-col items-end gap-2">
+            <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+              store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
+            }`}>
+              {store.isOpen !== false ? "영업 중" : "영업 종료"}
+            </span>
+            <ChevronRight size={14} className="text-[#d2d2d7]" />
+          </div>
+        )}
+      </div>
+      {hasThumb && (
+        <div className="shrink-0 relative" style={{ width: 88 }}>
+          <img
+            src={store.thumbnail_url!}
+            alt={store.name}
+            loading="lazy"
+            decoding="async"
+            onError={() => setThumbFailed(true)}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
+          <div className="absolute top-2 right-2">
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
+              store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
+            }`}>
+              {store.isOpen !== false ? "영업" : "종료"}
+            </span>
+          </div>
+        </div>
+      )}
+    </button>
+  );
+});
+
+const STORE_TABS = ["인기", "전체", "신규"] as const;
+type StoreTabKey = (typeof STORE_TABS)[number];
+const PAGE_SIZE = 12;
+const POPULAR_LIMIT = 24;
+
 function StoreListView() {
+  const [tab, setTab] = useState<StoreTabKey>("인기");
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
   const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
   const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
-  // 상가 바텀시트
-  const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
-  const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
-  const [buildingLoading, setBuildingLoading] = useState(false);
   const [dlState, setDlState] = useState<Set<string>>(() => loadDownloaded());
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
@@ -664,94 +747,75 @@ function StoreListView() {
     [dbStores]
   );
 
-  const filtered = useMemo(() =>
-    catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter),
-    [allStores, catFilter]
-  );
-
-  const grouped = useMemo(() => {
-    if (catFilter !== "전체") return null;
-    const map = new Map<StoreCategory, EnrichedStore[]>();
-    ALL_CATS.forEach(c => {
-      const group = allStores.filter(s => s.category === c);
-      if (group.length > 0) map.set(c, group);
-    });
-    return map;
-  }, [allStores, catFilter]);
-
   const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
   const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
 
-  function StoreCard({ store }: { store: EnrichedStore }) {
-    const hasNew = newOpeningIds.has(store.id);
-    const hasCoupon = couponStoreIds.has(store.id);
-    const [thumbFailed, setThumbFailed] = useState(false);
-    const hasThumb = !!store.thumbnail_url && !thumbFailed;
-    return (
-      <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
-        <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
-        <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
-          <div className="relative shrink-0">
-            <StoreLogo name={store.name} category={store.category} size={46} />
-            {hasNew && (
-              <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#F04452] rounded-full border-2 border-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-              {hasNew && <span className="shrink-0 text-[9px] font-black text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">NEW</span>}
-              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
-              <span className="text-[11px] text-[#d2d2d7]">·</span>
-              <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
-              {store.hours && <>
-                <span className="text-[11px] text-[#d2d2d7]">·</span>
-                <span className="text-[12px] text-[#86868b]">{store.hours}</span>
-              </>}
-            </div>
-            {hasCoupon && (
-              <div className="flex items-center gap-1 mt-1.5">
-                <Tag size={10} className="text-[#0071e3]" />
-                <span className="text-[11px] font-bold text-[#0071e3]">쿠폰 사용 가능</span>
-              </div>
-            )}
-          </div>
-          {!hasThumb && (
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업 중" : "영업 종료"}
-              </span>
-              <ChevronRight size={14} className="text-[#d2d2d7]" />
-            </div>
-          )}
-        </div>
-        {hasThumb && (
-          <div className="shrink-0 relative" style={{ width: 88 }}>
-            <img
-              src={store.thumbnail_url!}
-              alt={store.name}
-              onError={() => setThumbFailed(true)}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
-            <div className="absolute top-2 right-2">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업" : "종료"}
-              </span>
-            </div>
-          </div>
-        )}
-      </button>
+  // 인기 매장: 프리미엄 + 쿠폰 + 신규 오픈 시그널 점수 합산 후 상위 N개
+  const popularStores = useMemo(() => {
+    const scored = allStores
+      .map(s => {
+        let score = 0;
+        if (s.isPremium) score += 100;
+        if (couponStoreIds.has(s.id)) score += 50;
+        if (newOpeningIds.has(s.id)) score += 30;
+        if (s.isOpen !== false) score += 5;
+        return { s, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, POPULAR_LIMIT)
+      .map(({ s }) => s);
+    return scored;
+  }, [allStores, couponStoreIds, newOpeningIds]);
+
+  const newStores = useMemo(
+    () => allStores.filter(s => newOpeningIds.has(s.id)),
+    [allStores, newOpeningIds]
+  );
+
+  const baseList = useMemo<EnrichedStore[]>(() => {
+    let list: EnrichedStore[];
+    if (tab === "인기") list = popularStores;
+    else if (tab === "신규") list = newStores;
+    else list = allStores;
+    return catFilter === "전체" ? list : list.filter(s => s.category === catFilter);
+  }, [tab, catFilter, popularStores, newStores, allStores]);
+
+  // 전체 탭만 lazy load 적용. 인기/신규는 이미 작은 셋이라 한 번에 렌더.
+  const isLazy = tab === "전체";
+  const visibleList = useMemo(
+    () => (isLazy ? baseList.slice(0, visibleCount) : baseList),
+    [isLazy, baseList, visibleCount]
+  );
+  const hasMore = isLazy && visibleCount < baseList.length;
+
+  // 탭/필터 전환 시 visibleCount 초기화
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [tab, catFilter]);
+
+  // IntersectionObserver — sentinel 노출 시 다음 페이지 로드
+  useEffect(() => {
+    if (!hasMore) return;
+    const target = sentinelRef.current;
+    if (!target) return;
+    const io = new IntersectionObserver(
+      entries => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount(c => Math.min(c + PAGE_SIZE, baseList.length));
+        }
+      },
+      { rootMargin: "200px" }
     );
-  }
+    io.observe(target);
+    return () => io.disconnect();
+  }, [hasMore, baseList.length]);
+
+  const handleSelectStore = useCallback((s: EnrichedStore) => setSelectedStore(s), []);
+
+  const tabCounts = {
+    인기: popularStores.length,
+    전체: allStores.length,
+    신규: newStores.length,
+  } as const;
 
   return (
     <div>
@@ -871,14 +935,38 @@ function StoreListView() {
         );
       })()}
 
-      {/* ── 업종 필터 + 매장 목록 ── */}
+      {/* ── 매장 목록 — 탭 + 업종 필터 + Lazy Load ── */}
       <div className="pt-3 pb-1">
         <div className="flex items-center gap-3 px-4 mb-3">
           <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
+          <span className="text-[16px] font-black text-[#1d1d1f]">매장 둘러보기</span>
           <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
           <div className="flex-1 h-px bg-[#e5e5ea]" />
         </div>
+
+        {/* 탭 — 인기 / 전체 / 신규 */}
+        <div className="px-4 mb-2.5">
+          <div className="flex gap-1 bg-[#f5f5f7] rounded-2xl p-1">
+            {STORE_TABS.map(t => {
+              const active = tab === t;
+              const icon = t === "인기" ? "🔥" : t === "신규" ? "✨" : "📋";
+              return (
+                <button key={t} onClick={() => setTab(t)}
+                  className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1 transition-all ${
+                    active ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
+                  }`}>
+                  <span>{icon}</span>
+                  <span>{t}</span>
+                  <span className={`text-[10px] font-bold ${active ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                    {tabCounts[t]}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 업종 필터 */}
         <div className="flex gap-2 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
           {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => {
             const active = catFilter === cat;
@@ -897,27 +985,42 @@ function StoreListView() {
       </div>
 
       <div className="px-4 pt-2 pb-6">
-        {grouped ? (
-          Array.from(grouped.entries()).map(([cat, stores]) => (
-            <div key={cat} className="mb-5">
-              <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-1.5 h-[18px] rounded-full shrink-0" style={{ background: catDot[cat] }} />
-                <span className="text-[15px] font-bold text-[#1d1d1f]">{cat}</span>
-                <span className="text-[11px] font-semibold bg-[#f5f5f7] text-[#86868b] px-2 py-0.5 rounded-full">{stores.length}</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
-              </div>
-              <div className="space-y-2">
-                {stores.map(s => <StoreCard key={s.id} store={s} />)}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="space-y-2">
-            {catFilter !== "전체" && (
-              <p className="text-[12px] font-semibold text-[#86868b] mb-2">{filtered.length}개 매장</p>
-            )}
-            {filtered.map(s => <StoreCard key={s.id} store={s} />)}
+        {visibleList.length === 0 ? (
+          <div className="flex flex-col items-center py-14 gap-2">
+            <span className="text-3xl">
+              {tab === "인기" ? "🔥" : tab === "신규" ? "✨" : "🏪"}
+            </span>
+            <p className="text-[14px] font-semibold text-[#424245]">
+              {tab === "인기" ? "추천할 매장이 곧 등록돼요" : tab === "신규" ? "신규 오픈 매장이 없어요" : "조건에 맞는 매장이 없어요"}
+            </p>
+            <p className="text-[12px] text-[#86868b]">다른 업종을 선택해 보세요</p>
           </div>
+        ) : (
+          <>
+            <p className="text-[12px] font-semibold text-[#86868b] mb-2">
+              {tab === "전체" && hasMore
+                ? `${visibleList.length} / ${baseList.length}개 표시 중`
+                : `${visibleList.length}개 매장`}
+            </p>
+            <div className="space-y-2">
+              {visibleList.map(s => (
+                <StoreCard
+                  key={s.id}
+                  store={s}
+                  hasNew={newOpeningIds.has(s.id)}
+                  hasCoupon={couponStoreIds.has(s.id)}
+                  onSelect={handleSelectStore}
+                />
+              ))}
+            </div>
+            {/* Lazy load sentinel */}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
+                <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                <p className="text-[11px] text-[#86868b]">매장 더 불러오는 중...</p>
+              </div>
+            )}
+          </>
         )}
       </div>
 
