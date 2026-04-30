@@ -45,14 +45,14 @@ import type { NewsItem } from "@/lib/types";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세", color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
-  { icon: Store,         label: "상가",    href: "/stores/",      color: "#0C8599" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   color: "#C2255C" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      color: "#D9480F" },
+  { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/news/?tab=뉴스",                               color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
+  { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/?tab=커뮤니티&category=중고거래",    color: "#C2255C" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",                                      color: "#D9480F" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -837,28 +837,28 @@ function TideSection() {
           <div className="px-4 pt-4 pb-3 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[26px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
-                <span className="text-[16px] font-bold text-[#1d1d1f]">{multtae.name}</span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[30px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
+                <span className="text-[19px] font-bold text-[#1d1d1f]">{multtae.name}</span>
+                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: sizeColor }}>
                   {sizeLabel}
                 </span>
               </div>
-              <p className="text-[11px] text-gray-400 mt-1">
+              <p className="text-[13px] text-gray-500 mt-1">
                 음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
               </p>
             </div>
             {nextLowTide && (
-              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[68px]">
-                <p className="text-[9px] text-blue-400 font-semibold">다음 저조</p>
-                <p className="text-[18px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
+              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[78px]">
+                <p className="text-[11px] text-blue-500 font-semibold">다음 저조</p>
+                <p className="text-[21px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
               </div>
             )}
           </div>
 
           {/* 조석 곡선 차트 */}
           {(() => {
-            const W = 320; const H = 72; const PAD_X = 28; const PAD_Y = 8;
+            const W = 320; const H = 78; const PAD_X = 14; const PAD_Y = 8;
             const minH2 = Math.min(...todayTides.map(t => t.heightM));
             const range = maxH - minH2 || 1;
             const toX = (i: number) => PAD_X + (i / (todayTides.length - 1)) * (W - PAD_X * 2);
@@ -873,8 +873,8 @@ function TideSection() {
             const fill = `${d} L${pts[pts.length - 1].x},${H} L${pts[0].x},${H} Z`;
             const nowX = PAD_X + (nowMin / 1440) * (W - PAD_X * 2);
             return (
-              <div className="border-t border-gray-50 px-3 pt-2 pb-1">
-                <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full" style={{ height: 96 }}>
+              <div className="border-t border-gray-50 px-1 pt-2 pb-1">
+                <svg viewBox={`0 0 ${W} ${H + 26}`} className="w-full" style={{ height: 110 }}>
                   <defs>
                     <linearGradient id="tideGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#0071e3" stopOpacity="0.55" />
@@ -896,11 +896,11 @@ function TideSection() {
                     const isLow = t.type === "low";
                     return (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r={3.5} fill={isLow ? "#BFDBFE" : "#0071e3"} stroke="white" strokeWidth="1.5" />
-                        <text x={p.x} y={p.y - 5} textAnchor="middle" fontSize="8" fontWeight="700"
-                          fill={isLow ? "#9CA3AF" : "#0071e3"}>{t.heightM}m</text>
-                        <text x={p.x} y={H + 11} textAnchor="middle" fontSize="9" fontWeight="600" fill="#1d1d1f">{t.timeStr}</text>
-                        <text x={p.x} y={H + 21} textAnchor="middle" fontSize="8" fill="#9CA3AF">{isLow ? "저조" : "고조"}</text>
+                        <circle cx={p.x} cy={p.y} r={3.8} fill={isLow ? "#BFDBFE" : "#0071e3"} stroke="white" strokeWidth="1.5" />
+                        <text x={p.x} y={p.y - 5} textAnchor="middle" fontSize="10" fontWeight="700"
+                          fill={isLow ? "#6B7280" : "#0071e3"}>{t.heightM}m</text>
+                        <text x={p.x} y={H + 12} textAnchor="middle" fontSize="11" fontWeight="700" fill="#1d1d1f">{t.timeStr}</text>
+                        <text x={p.x} y={H + 23} textAnchor="middle" fontSize="9.5" fill="#6B7280">{isLow ? "저조" : "고조"}</text>
                       </g>
                     );
                   })}
@@ -914,8 +914,8 @@ function TideSection() {
         <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
-                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-400"
+              className={`flex-1 py-2.5 rounded-lg text-[15px] font-bold transition-all ${
+                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
               }`}>
               {label}
             </button>
@@ -926,11 +926,11 @@ function TideSection() {
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-4 pt-4 pb-3" style={{ background: rm.bg }}>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[15px] font-extrabold" style={{ color: rm.text }}>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[17px] font-extrabold" style={{ color: rm.text }}>
                   {tab === "haerujil" ? "해루질" : "낚시"} {rm.label}
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: rm.accent }}>
                   {activity.title}
                 </span>
@@ -942,19 +942,19 @@ function TideSection() {
                 ))}
               </div>
             </div>
-            <p className="text-[12px] leading-relaxed" style={{ color: rm.text }}>
+            <p className="text-[14px] leading-relaxed" style={{ color: rm.text }}>
               {activity.reason}
             </p>
           </div>
           <div className="px-4 py-3 border-t border-gray-50">
-            <p className="text-[12px] text-gray-600 font-medium">💡 {activity.tip}</p>
+            <p className="text-[14px] text-gray-700 font-medium">💡 {activity.tip}</p>
           </div>
         </div>
 
         {/* ── 추천 스팟 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-[12px] font-bold text-gray-700">
+            <p className="text-[14px] font-bold text-gray-700">
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
           </div>
@@ -974,30 +974,30 @@ function TideSection() {
               return (
                 <div key={i} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                      <span className="text-[10px] text-gray-400">{s.type} · {s.dist}</span>
+                    <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className="text-[12px] text-gray-500">{s.type} · {s.dist}</span>
                       {!sameAsIncheon && nextSpotLow && (
                         <>
-                          <span className="text-[10px] text-gray-300">·</span>
-                          <span className="text-[10px] text-gray-500">
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-600">
                             저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
                           </span>
-                          <span className="text-[10px] text-gray-300">·</span>
-                          <span className="text-[10px] text-gray-500">조차 <span className="font-semibold">{spotRange}m</span></span>
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-600">조차 <span className="font-semibold">{spotRange}m</span></span>
                         </>
                       )}
                       {sameAsIncheon && (
                         <>
-                          <span className="text-[10px] text-gray-300">·</span>
-                          <span className="text-[10px] text-gray-400">인천과 동일</span>
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-500">인천과 동일</span>
                         </>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[11px] font-bold text-yellow-700"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[12px] font-bold text-yellow-700"
                   >
                     지도 ↗
                   </button>
@@ -1010,7 +1010,7 @@ function TideSection() {
         {/* ── 계절 안내 ── */}
         {seasonalNote && (
           <div className="rounded-xl bg-amber-50 px-4 py-3">
-            <p className="text-[12px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
+            <p className="text-[13px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
           </div>
         )}
       </section>
@@ -1060,8 +1060,8 @@ function SportTeamLogo({
           <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
         ) : abbr}
       </div>
-      <p className="text-[10px] text-[#3d3d3d] text-center font-semibold leading-tight"
-        style={{ width: size + 16, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+      <p className="text-[11px] text-gray-700 text-center font-bold leading-tight"
+        style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
         {teamName}
       </p>
     </div>
@@ -1213,14 +1213,42 @@ function SportsSection() {
   const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
   const standings: Standing[] | null = filter !== "전체" ? (LEAGUE_STANDINGS[filter] ?? null) : null;
 
-  const resultMatches = filtered
-    .filter(m => m.status === "finished" || m.status === "live")
-    .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
-    .slice(0, 5);
-  const upcomingMatches = filtered
-    .filter(m => m.status === "upcoming")
-    .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
-    .slice(0, 5);
+  const now = new Date();
+
+  /** 종목별로 라운드로빈 인터리브: [축구A, 야구A, 농구A, 축구B, 야구B, ...] */
+  function interleaveBySport(list: SportsMatch[]): SportsMatch[] {
+    if (filter !== "전체") return list;
+    const buckets = new Map<string, SportsMatch[]>();
+    for (const m of list) {
+      const key = m.sport;
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key)!.push(m);
+    }
+    const result: SportsMatch[] = [];
+    let added = true;
+    while (added) {
+      added = false;
+      for (const arr of buckets.values()) {
+        const next = arr.shift();
+        if (next) { result.push(next); added = true; }
+      }
+    }
+    return result;
+  }
+
+  // 결과: 최근 → 과거 순. 종목별 라운드로빈 후 슬라이스
+  const resultMatches = interleaveBySport(
+    filtered
+      .filter(m => m.status === "finished" || m.status === "live")
+      .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
+  ).slice(0, 8);
+
+  // 예정: 미래 일정만 (지난 upcoming은 숨김). 가까운 순으로 정렬 후 종목 라운드로빈
+  const upcomingMatches = interleaveBySport(
+    filtered
+      .filter(m => m.status === "upcoming" && new Date(m.match_date).getTime() >= now.getTime())
+      .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
+  ).slice(0, 8);
 
   function formatMatchDate(iso: string) {
     const d = new Date(iso);
@@ -1271,14 +1299,17 @@ function SportsSection() {
         </div>
       )}
 
-      {/* 경기 예정 */}
+      {/* 경기 예정 — 우측 그라데이션 배경 */}
       {upcomingMatches.length > 0 && (
-        <div className={`px-4 ${resultMatches.length > 0 ? "mt-4" : ""} mb-1`}>
-          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 예정</p>
-          <div className="space-y-2">
-            {upcomingMatches.map(m => (
-              <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
-            ))}
+        <section className="mx-4 mb-2 rounded-2xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 50%, #E0F2FE 100%)" }}>
+          <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+            <span className="text-[13px] font-bold text-[#1D4ED8]">📅 경기 예정</span>
+          </div>
+          <div className="overflow-x-auto px-3 pb-3 pt-1" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3" style={{ width: "max-content" }}>
+              {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
+            </div>
           </div>
         </div>
       )}
@@ -1339,12 +1370,21 @@ function SportsSection() {
 }
 
 // ─── 실거래가 위젯 ────────────────────────────────────────────
+type PyeongFilter = "전체" | "20평대" | "30평대" | "40평대+";
+
+function pyeongBucket(pyeong: number): PyeongFilter {
+  if (pyeong < 30) return "20평대";
+  if (pyeong < 40) return "30평대";
+  return "40평대+";
+}
+
 function RealEstateWidget() {
   const router = useRouter();
 
   // 소식 > 시세 탭과 localStorage 동기화
   const [myAptId, setMyAptId] = useState<string | null>(null);
   const [myAptSzIdx, setMyAptSzIdx] = useState(0);
+  const [pyeongFilter, setPyeongFilter] = useState<PyeongFilter>("전체");
   useEffect(() => {
     setMyAptId(localStorage.getItem("myAptId"));
     setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
@@ -1359,12 +1399,13 @@ function RealEstateWidget() {
   const myDiff  = myCurr - myPrev;
   const myPct   = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
 
-  // 검단신도시 전체 평균
+  // 검단신도시 평균 (평수 필터 반영)
   const avgTrend = (() => {
     const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
     return months.map(month => {
       let total = 0, count = 0;
       apartments.forEach(apt => apt.sizes.forEach(sz => {
+        if (pyeongFilter !== "전체" && pyeongBucket(sz.pyeong) !== pyeongFilter) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
       }));
@@ -1378,25 +1419,29 @@ function RealEstateWidget() {
 
   const go = () => router.push("/community/?tab=시세");
 
+  const PYEONG_FILTERS: PyeongFilter[] = ["전체", "20평대", "30평대", "40평대+"];
+
   return (
     <section className="mx-4 mb-1 space-y-2">
-      {/* 내 집 시세 */}
+      {/* 내 집 시세 — 따뜻한 그라데이션 배경 */}
       <button onClick={go}
-        className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3.5 text-left active:bg-gray-50">
+        className="w-full rounded-2xl overflow-hidden active:opacity-95 text-left shadow-sm"
+        style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)" }}>
+        <div className="px-4 py-3.5">
         {myApt && mySz ? (
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1 mb-0.5">
-                <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
-                <span className="text-[10px] text-gray-400">내 집 시세</span>
+                <Star size={12} className="text-amber-500 fill-amber-500 shrink-0" />
+                <span className="text-[12px] font-bold text-amber-700">내 집 시세</span>
               </div>
-              <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{myApt.name}</p>
-              <p className="text-[11px] text-gray-400">{myApt.dong} · {mySz.pyeong}평</p>
+              <p className="text-[16px] font-extrabold text-[#1d1d1f] truncate">{myApt.name}</p>
+              <p className="text-[12px] text-gray-600 mt-0.5">{myApt.dong} · {mySz.pyeong}평</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[20px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
+              <p className="text-[24px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
               {myDiff !== 0 && (
-                <p className={`text-[11px] font-semibold ${myDiff > 0 ? "text-red-500" : "text-blue-500"}`}>
+                <p className={`text-[12px] font-bold ${myDiff > 0 ? "text-red-600" : "text-blue-600"}`}>
                   {myDiff > 0 ? "▲" : "▼"} {formatPrice(Math.abs(myDiff))} ({myPct}%)
                 </p>
               )}
@@ -1404,35 +1449,52 @@ function RealEstateWidget() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Star size={14} className="text-amber-400 fill-amber-400 shrink-0" />
+            <Star size={14} className="text-amber-500 fill-amber-500 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-[#1d1d1f]">내 집 등록</p>
-              <p className="text-[11px] text-gray-400">소식 → 시세 탭에서 내 집을 등록하세요</p>
+              <p className="text-[14px] font-bold text-[#1d1d1f]">내 집 등록</p>
+              <p className="text-[12px] text-gray-600">소식 → 시세 탭에서 내 집을 등록하세요</p>
             </div>
-            <ChevronRight size={14} className="text-gray-300 shrink-0" />
+            <ChevronRight size={14} className="text-gray-400 shrink-0" />
           </div>
         )}
+        </div>
       </button>
 
       {/* 검단 신도시 평균 실거래가 */}
-      <button onClick={go}
-        className="w-full rounded-2xl overflow-hidden active:opacity-90 text-left"
+      <div className="w-full rounded-2xl overflow-hidden text-left shadow-sm"
         style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
-        <div className="px-4 py-3.5">
-          <p className="text-[11px] text-white/60 mb-0.5">검단 신도시 평균 실거래가</p>
-          <div className="flex items-end justify-between gap-2">
-            <p className="text-[26px] font-black text-white leading-tight">
-              {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
+        <button onClick={go} className="block w-full text-left active:opacity-90">
+          <div className="px-4 pt-3.5">
+            <p className="text-[12px] font-semibold text-white mb-0.5">
+              검단신도시 {pyeongFilter !== "전체" ? `${pyeongFilter} ` : ""}평균 실거래가
             </p>
-            {avgDiff !== 0 && (
-              <p className={`text-[12px] font-semibold pb-1 ${avgDiff > 0 ? "text-green-200" : "text-blue-200"}`}>
-                {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
+            <div className="flex items-end justify-between gap-2">
+              <p className="text-[28px] font-black text-white leading-tight">
+                {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
               </p>
-            )}
+              {avgDiff !== 0 && (
+                <p className={`text-[13px] font-bold pb-1 text-white`}>
+                  {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
+                </p>
+              )}
+            </div>
+            <p className="text-[11px] text-white mt-1">최근 실거래 기준</p>
           </div>
-          <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
+        </button>
+        {/* 평수별 필터 탭 */}
+        <div className="flex gap-1.5 px-3 pt-2 pb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {PYEONG_FILTERS.map(p => (
+            <button key={p} onClick={() => setPyeongFilter(p)}
+              className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                pyeongFilter === p
+                  ? "bg-white text-[#0D9488]"
+                  : "bg-white/15 text-white border border-white/30"
+              }`}>
+              {p}
+            </button>
+          ))}
         </div>
-      </button>
+      </div>
     </section>
   );
 }
@@ -1463,7 +1525,24 @@ function isMandatoryClosed(date: Date, pattern: MartClosingPattern): boolean {
   return false;
 }
 
-/** 특정 날짜+시각 기준 마트 영업 여부 (의무휴업·요일별 시간 모두 반영) */
+/** 영업시간 문자열 안에 현재 분(0~1439)이 포함되는지 */
+function isWithinHours(hoursStr: string | null, curMinutes: number): boolean {
+  if (!hoursStr) return false;
+  if (/24시간|상시|연중무휴/.test(hoursStr)) return true;
+  for (const m of hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})/g)) {
+    const s = +m[1] * 60 + +m[2];
+    const e = +m[3] * 60 + +m[4];
+    if (e <= s) {
+      // 자정 넘김 (예: 22:00~02:00)
+      if (curMinutes >= s || curMinutes < e) return true;
+    } else if (curMinutes >= s && curMinutes < e) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** 특정 날짜 기준 마트 영업 여부 */
 function getMartStatus(mart: Mart, date: Date): {
   isOpen: boolean;
   hours: string | null;
@@ -1475,21 +1554,22 @@ function getMartStatus(mart: Mart, date: Date): {
   if (isMandatoryClosed(date, mart.closing_pattern)) {
     return { isOpen: false, hours: null, reason: "의무휴업일" };
   }
-  let hours: string | null = null;
-  if (day === 0) {
-    if (!mart.sunday_hours) return { isOpen: false, hours: null, reason: "일요일 휴무" };
-    hours = mart.sunday_hours;
-  } else if (day === 6) {
-    hours = mart.saturday_hours;
-  } else {
-    hours = mart.weekday_hours;
+  const hours =
+    day === 0 ? mart.sunday_hours
+    : day === 6 ? mart.saturday_hours
+    : mart.weekday_hours;
+  if (!hours) {
+    if (day === 0) return { isOpen: false, hours: null, reason: "일요일 휴무" };
+    return { isOpen: false, hours: null, reason: "영업시간 미등록" };
   }
-  if (!hours) return { isOpen: true, hours: null };
-  const cur = date.getHours() * 60 + date.getMinutes();
-  const within = withinHoursStr(hours, cur);
-  return within
+  // 오늘 날짜와 동일하면 시:분 비교, 미래 날짜면 영업일 자체로 판단
+  const sameDay = date.toDateString() === new Date().toDateString();
+  if (!sameDay) return { isOpen: true, hours };
+  const now = new Date();
+  const cur = now.getHours() * 60 + now.getMinutes();
+  return isWithinHours(hours, cur)
     ? { isOpen: true, hours }
-    : { isOpen: false, hours, reason: "영업종료", closedNow: true };
+    : { isOpen: false, hours, reason: "영업종료" };
 }
 
 function martTypeBadge(type: string) {
@@ -1500,20 +1580,13 @@ function martTypeBadge(type: string) {
 }
 
 // ─── 마트 위젯 ────────────────────────────────────────────────
-/** 검단신도시 중앙 fallback 좌표 */
-const GEOMDAN_FALLBACK = { lat: 37.6020, lng: 126.7100 };
-
-function formatDist(m: number): string {
-  if (m < 1000) return `${Math.round(m / 10) * 10}m`;
-  return `${(m / 1000).toFixed(1)}km`;
-}
+const MART_INITIAL_COUNT = 5;
 
 function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number }>(GEOMDAN_FALLBACK);
-  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "fallback">("fallback");
+  const [showAll, setShowAll] = useState(false);
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
@@ -1622,7 +1695,8 @@ function MartSection() {
 
         {/* 마트 목록 */}
         <div className="divide-y divide-[#f5f5f7]">
-          {sorted.map(({ mart, dist, status }) => {
+          {(showAll ? marts : marts.slice(0, MART_INITIAL_COUNT)).map(mart => {
+            const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
             const distLabel   = Number.isFinite(dist) ? formatDist(dist) : null;
 
@@ -1712,6 +1786,19 @@ function MartSection() {
             );
           })}
         </div>
+
+        {/* 더보기 / 접기 버튼 */}
+        {marts.length > MART_INITIAL_COUNT && (
+          <button
+            onClick={() => setShowAll(v => !v)}
+            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#0071e3] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
+          >
+            {showAll
+              ? <>접기 <ChevronUp size={14} /></>
+              : <>마트 {marts.length - MART_INITIAL_COUNT}곳 더보기 <ChevronDown size={14} /></>
+            }
+          </button>
+        )}
       </div>
       </section>
       {mapTarget && <MapBottomSheet {...mapTarget} onClose={() => setMapTarget(null)} />}
@@ -2459,7 +2546,7 @@ function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
   const arriving = a.arrivalMin <= 2;
   const close    = a.arrivalMin <= 7;
   return (
-    <div className="flex items-center gap-2.5 px-3 py-2 border-t border-[#f5f5f7] animate-slide-up"
+    <div className="flex items-center gap-2.5 px-3 py-2 animate-slide-up"
       style={{ animationDelay: `${delay}ms` }}>
       <div className={`rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center ${arriving ? "bg-[#F04452]" : "bg-[#0071e3]"}`}>
         <span className="text-white text-[14px] font-black leading-none tracking-tight">{a.routeNo}</span>
@@ -2475,11 +2562,54 @@ function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
         arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#EFF6FF]"
       }`}>
         {arriving ? (
-          <span className="text-[#F04452] text-[11px] font-black animate-led-blink">곧도착</span>
+          <span className="text-[#F04452] text-[11px] font-black animate-led-blink whitespace-nowrap">곧 도착</span>
         ) : (
           <>
             <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#0071e3]"}`}>{a.arrivalMin}</span>
             <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#0071e3]/60"}`}>분 후</span>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 지하철 방향 1행
+function SubwayRow({ arrival, lineColor, isEst, delay }: {
+  arrival: SubwayArrival; lineColor: string; isEst: boolean; delay: number;
+}) {
+  const arriving = arrival.arrivalMin <= 2;
+  const close    = arrival.arrivalMin <= 7;
+  const hasPos   = arrival.currentStation && arrival.currentStation !== "시간표";
+  const dirArrow = arrival.direction === "상행" ? "↑" : "↓";
+
+  return (
+    <div className="flex items-center gap-2.5 px-3 py-2 animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}>
+      {/* 방향 배지 */}
+      <div className="rounded-lg px-2 py-1 shrink-0 min-w-[46px] text-center" style={{ background: lineColor + "18" }}>
+        <span className="text-[16px] font-black leading-none" style={{ color: lineColor }}>{dirArrow}</span>
+        {arrival.isExpress && (
+          <p className="text-[8px] font-bold" style={{ color: lineColor }}>{arrival.trainTypeName ?? "급행"}</p>
+        )}
+      </div>
+      {/* 종착역 + 현재 위치 */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{arrival.terminalStation} 방면</p>
+        <p className="text-[10px] text-[#86868b]">
+          {hasPos ? `${arrival.currentStation} 출발` : isEst ? "시간표 기준" : ""}
+        </p>
+      </div>
+      {/* 도착 시간 */}
+      <div className={`shrink-0 rounded-xl px-2.5 py-1.5 min-w-[52px] text-center ${
+        arriving ? "bg-[#FEE2E2]" : close ? "bg-[#FFF7ED]" : "bg-[#f5f5f7]"
+      }`}>
+        {arriving ? (
+          <span className="text-[#F04452] text-[11px] font-black animate-led-blink whitespace-nowrap">곧 도착</span>
+        ) : (
+          <>
+            <span className={`text-[18px] font-black leading-none block ${close ? "text-[#F97316]" : "text-[#1d1d1f]"}`}>{arrival.arrivalMin}</span>
+            <span className={`text-[9px] ${close ? "text-[#F97316]/70" : "text-[#86868b]"}`}>분 후</span>
           </>
         )}
       </div>

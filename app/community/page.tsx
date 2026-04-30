@@ -110,9 +110,13 @@ function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useR
 
 function CommunityTab() {
   const router = useRouter();
-  const [active, setActive] = useState<CommunityCategory>("전체");
-  const [sort, setSort] = useState<CommSortKey>("latest");
-  const [dbPosts, setDbPosts] = useState<Post[]>([]);
+  const [active, setActive] = useState<CommunityCategory>(() => {
+    if (typeof window === "undefined") return "전체";
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c && (categories as string[]).includes(c)) return c as CommunityCategory;
+    return "전체";
+  });
+  const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
