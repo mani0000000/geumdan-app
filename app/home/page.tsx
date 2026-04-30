@@ -23,7 +23,7 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
@@ -1441,23 +1441,33 @@ function isMandatoryClosed(date: Date, pattern: MartClosingPattern): boolean {
   return false;
 }
 
-/** 특정 날짜 기준 마트 영업 여부 */
+/** 특정 날짜+시각 기준 마트 영업 여부 (의무휴업·요일별 시간 모두 반영) */
 function getMartStatus(mart: Mart, date: Date): {
   isOpen: boolean;
   hours: string | null;
   reason?: string;
+  /** 영업일이지만 시간상 영업종료된 상태 */
+  closedNow?: boolean;
 } {
   const day = date.getDay();
   if (isMandatoryClosed(date, mart.closing_pattern)) {
     return { isOpen: false, hours: null, reason: "의무휴업일" };
   }
+  let hours: string | null = null;
   if (day === 0) {
-    return mart.sunday_hours
-      ? { isOpen: true, hours: mart.sunday_hours }
-      : { isOpen: false, hours: null, reason: "일요일 휴무" };
+    if (!mart.sunday_hours) return { isOpen: false, hours: null, reason: "일요일 휴무" };
+    hours = mart.sunday_hours;
+  } else if (day === 6) {
+    hours = mart.saturday_hours;
+  } else {
+    hours = mart.weekday_hours;
   }
-  if (day === 6) return { isOpen: true, hours: mart.saturday_hours };
-  return { isOpen: true, hours: mart.weekday_hours };
+  if (!hours) return { isOpen: true, hours: null };
+  const cur = date.getHours() * 60 + date.getMinutes();
+  const within = withinHoursStr(hours, cur);
+  return within
+    ? { isOpen: true, hours }
+    : { isOpen: false, hours, reason: "영업종료", closedNow: true };
 }
 
 function martTypeBadge(type: string) {
@@ -1468,14 +1478,44 @@ function martTypeBadge(type: string) {
 }
 
 // ─── 마트 위젯 ────────────────────────────────────────────────
+/** 검단신도시 중앙 fallback 좌표 */
+const GEOMDAN_FALLBACK = { lat: 37.6020, lng: 126.7100 };
+
+function formatDist(m: number): string {
+  if (m < 1000) return `${Math.round(m / 10) * 10}m`;
+  return `${(m / 1000).toFixed(1)}km`;
+}
+
 function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number }>(GEOMDAN_FALLBACK);
+  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "fallback">("fallback");
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
   }, []);
+
+  const requestLocation = useCallback(() => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setLocState("denied");
+      return;
+    }
+    setLocState("loading");
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocState("ok");
+      },
+      () => setLocState("denied"),
+      { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false },
+    );
+  }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   const now      = new Date();
   const today    = now.getDay();
@@ -1483,10 +1523,33 @@ function MartSection() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const showTomorrow = today === 6;
 
-  const closedToday    = marts.filter(m => !getMartStatus(m, now).isOpen);
-  const closedTomorrow = showTomorrow ? marts.filter(m => !getMartStatus(m, tomorrow).isOpen) : [];
+  // 거리 계산 + 정렬: 영업중→영업종료/휴무 그룹 내에서 거리 오름차순
+  const withDist = marts.map(m => {
+    const dist = m.lat != null && m.lng != null
+      ? haversineM(userPos.lat, userPos.lng, m.lat, m.lng)
+      : Number.POSITIVE_INFINITY;
+    const status = getMartStatus(m, now);
+    return { mart: m, dist, status };
+  });
+  const sorted = withDist.sort((a, b) => {
+    const aOpen = a.status.isOpen ? 0 : 1;
+    const bOpen = b.status.isOpen ? 0 : 1;
+    if (aOpen !== bOpen) return aOpen - bOpen;
+    return a.dist - b.dist;
+  });
+
+  const closedTodayCount    = withDist.filter(x => !x.status.isOpen && x.status.reason === "의무휴업일").length;
+  const closedTomorrow      = showTomorrow ? marts.filter(m => isMandatoryClosed(tomorrow, m.closing_pattern)) : [];
 
   if (loaded && marts.length === 0) return null;
+
+  const locLabel = locState === "loading"
+    ? "내 위치 확인 중…"
+    : locState === "ok"
+      ? "내 위치 기준 가까운 순"
+      : locState === "denied"
+        ? "위치 권한 거부 — 검단신도시 중앙 기준"
+        : "검단신도시 중앙 기준";
 
   return (
     <>
@@ -1494,15 +1557,33 @@ function MartSection() {
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
-        {/* 영업 상태 배너 */}
+        {/* 위치 기준 표시줄 */}
+        <div className="px-4 py-2 flex items-center justify-between gap-2 border-b border-[#f5f5f7]">
+          <div className="flex items-center gap-1.5">
+            <MapPin size={11} className={locState === "ok" ? "text-[#0071e3]" : "text-[#86868b]"} />
+            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#0071e3]" : "text-[#6e6e73]"}`}>
+              {locLabel}
+            </span>
+          </div>
+          <button
+            onClick={requestLocation}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg active:bg-[#f5f5f7]"
+            aria-label="위치 새로고침"
+          >
+            <RefreshCw size={11} className={`text-[#0071e3] ${locState === "loading" ? "animate-spin" : ""}`} />
+            <span className="text-[11px] text-[#0071e3] font-semibold">위치 갱신</span>
+          </button>
+        </div>
+
+        {/* 의무휴업 배너 */}
         <div className={`px-4 py-2.5 flex items-center gap-2 ${
-          closedToday.length > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
+          closedTodayCount > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
         }`}>
-          <ShoppingBag size={13} className={closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"} />
-          <span className={`text-[13px] font-semibold ${closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"}`}>
-            {closedToday.length > 0
-              ? `오늘 ${closedToday.length}곳 휴무 — 미리 확인하세요`
-              : "오늘 주변 마트 모두 정상 영업 중"
+          <ShoppingBag size={13} className={closedTodayCount > 0 ? "text-[#D97706]" : "text-[#059669]"} />
+          <span className={`text-[13px] font-semibold ${closedTodayCount > 0 ? "text-[#D97706]" : "text-[#059669]"}`}>
+            {closedTodayCount > 0
+              ? `오늘 ${closedTodayCount}곳 의무휴업 — 미리 확인하세요`
+              : "오늘 주변 마트 모두 정상 영업일"
             }
           </span>
         </div>
@@ -1519,42 +1600,60 @@ function MartSection() {
 
         {/* 마트 목록 */}
         <div className="divide-y divide-[#f5f5f7]">
-          {marts.map(mart => {
-            const todayStatus = getMartStatus(mart, now);
+          {sorted.map(({ mart, dist, status }) => {
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
-            const mapUrl = mart.lat && mart.lng
-              ? `https://map.kakao.com/link/map/${encodeURIComponent(mart.name)},${mart.lat},${mart.lng}`
-              : `https://map.kakao.com/link/search/${encodeURIComponent(mart.address || mart.name)}`;
+            const distLabel   = Number.isFinite(dist) ? formatDist(dist) : null;
+
+            // 배지 색상/문구
+            let badgeClass = "bg-[#DCFCE7] text-[#059669]";
+            let badgeText  = "영업중";
+            if (!status.isOpen) {
+              if (status.reason === "의무휴업일") {
+                badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
+                badgeText  = "오늘 휴무";
+              } else if (status.reason === "일요일 휴무") {
+                badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
+                badgeText  = "일요일 휴무";
+              } else {
+                badgeClass = "bg-[#E5E7EB] text-[#6B7280]";
+                badgeText  = "영업종료";
+              }
+            }
 
             return (
               <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
                 {/* 로고 */}
                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
-                  todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
+                  status.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
                   {mart.logo_url
                     ? <img src={mart.logo_url} alt={mart.brand} className="w-full h-full object-contain p-1" />
-                    : <ShoppingBag size={22} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                    : <ShoppingBag size={22} className={status.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
                   }
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#1d1d1f]">{mart.name}</span>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${martTypeBadge(mart.type)}`}>
+                    <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{mart.name}</span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${martTypeBadge(mart.type)}`}>
                       {mart.type}
                     </span>
-                  </div>
-
-                  {/* 오늘 상태 */}
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`text-[12px] font-semibold ${todayStatus.isOpen ? "text-[#059669]" : "text-[#F04452]"}`}>
-                      {todayStatus.isOpen ? `영업 중 · ${todayStatus.hours}` : `오늘 휴무${todayStatus.reason ? ` (${todayStatus.reason})` : ""}`}
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${badgeClass}`}>
+                      {badgeText}
                     </span>
                   </div>
 
-                  {/* 주말 영업시간 (평일이 아닐 때도 표시) */}
-                  {(mart.saturday_hours || mart.sunday_hours) && today < 6 && (
+                  {/* 오늘 시간 정보 */}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`text-[12px] font-semibold ${status.isOpen ? "text-[#059669]" : "text-[#86868b]"}`}>
+                      {status.hours
+                        ? `${status.isOpen ? "영업 중" : "영업 마감"} · ${status.hours}`
+                        : status.reason ?? "휴무"}
+                    </span>
+                  </div>
+
+                  {/* 주말 영업시간 (평일에만 미리 보여주기) */}
+                  {(mart.saturday_hours || mart.sunday_hours) && today >= 1 && today <= 5 && (
                     <div className="flex items-center gap-2 mt-0.5">
                       {mart.saturday_hours && <span className="text-[11px] text-[#86868b]">토 {mart.saturday_hours}</span>}
                       {mart.sunday_hours   && <span className="text-[11px] text-[#86868b]">일 {mart.sunday_hours}</span>}
@@ -1562,17 +1661,17 @@ function MartSection() {
                   )}
 
                   {/* 내일 의무휴업 경고 */}
-                  {tmrStatus && !tmrStatus.isOpen && (
+                  {tmrStatus && !tmrStatus.isOpen && tmrStatus.reason === "의무휴업일" && (
                     <span className="text-[11px] text-[#F04452]">⚠ 내일 의무휴업</span>
                   )}
 
                   {mart.notice && (
-                    <p className="text-[11px] text-[#86868b] mt-0.5">{mart.notice}</p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5 truncate">{mart.notice}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  {mart.distance && <span className="text-[12px] text-[#6e6e73]">{mart.distance}</span>}
+                  {distLabel && <span className="text-[12px] text-[#6e6e73] font-semibold">{distLabel}</span>}
                   <div className="flex gap-1.5">
                     {mart.phone && (
                       <a href={`tel:${mart.phone}`}
