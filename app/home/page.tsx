@@ -8,6 +8,7 @@ import {
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar, Train,
   TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw, Settings2, ExternalLink,
+  LocateFixed, Loader2,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -23,7 +24,8 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
+import { GEUMDAN_CENTER } from "@/lib/geumdan";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
@@ -1745,6 +1747,8 @@ interface EmergencyRoom {
   isPediatric: boolean;
   level: string; // 응급의료기관 분류
   logo_url?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 const emergencyRooms: EmergencyRoom[] = [
@@ -1758,6 +1762,7 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: false,
     level: "지역응급의료기관",
+    lat: 37.5950, lng: 126.6585,
   },
   {
     id: "er2",
@@ -1769,6 +1774,7 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: false,
     level: "지역응급의료기관",
+    lat: 37.6018, lng: 126.6644,
   },
   {
     id: "er3",
@@ -1780,6 +1786,7 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
+    lat: 37.4870, lng: 126.7240,
   },
   {
     id: "er4",
@@ -1791,6 +1798,7 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
+    lat: 37.4543, lng: 126.7023,
   },
   {
     id: "er5",
@@ -1802,8 +1810,17 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
+    lat: 37.4566, lng: 126.6334,
   },
 ];
+
+// 거리(m)를 사람이 읽기 좋은 문자열로 포맷
+function formatDistanceKm(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)}m`;
+  return `${(meters / 1000).toFixed(1)}km`;
+}
+
+type GeoStatus = "idle" | "loading" | "ready" | "fallback" | "denied";
 
 function PharmacySection() {
   const [mainType, setMainType] = useState<EmergencyType>("약국");
@@ -1812,6 +1829,34 @@ function PharmacySection() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
   const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
+
+  // ─── 내 위치 (검단 중심 fallback) ─────────────────────────
+  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number }>(GEUMDAN_CENTER);
+  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
+
+  const requestLocation = useCallback(() => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      setUserLoc(GEUMDAN_CENTER);
+      setGeoStatus("fallback");
+      return;
+    }
+    setGeoStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus("ready");
+      },
+      () => {
+        setUserLoc(GEUMDAN_CENTER);
+        setGeoStatus("denied");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
 
   useEffect(() => {
     fetchAllPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
@@ -1827,7 +1872,24 @@ function PharmacySection() {
   const hour = now.getHours();
   const isNight = hour >= 21 || hour < 6;
 
-  const filtered = pharmacies.filter(p => {
+  // ─── 거리 + 영업중 정렬 (약국) ─────────────────────────
+  const sortedPharmacies = React.useMemo(() => {
+    const enriched = pharmacies.map(p => {
+      const hasGeo = typeof p.lat === "number" && typeof p.lng === "number";
+      const distM = hasGeo
+        ? haversineM(userLoc.lat, userLoc.lng, p.lat as number, p.lng as number)
+        : Number.POSITIVE_INFINITY;
+      const { isOpen } = getPharmacyStatus(p, now);
+      return { p, distM, isOpen };
+    });
+    enriched.sort((a, b) => {
+      if (a.isOpen !== b.isOpen) return a.isOpen ? -1 : 1;
+      return a.distM - b.distM;
+    });
+    return enriched;
+  }, [pharmacies, userLoc, now]);
+
+  const filtered = sortedPharmacies.filter(({ p }) => {
     if (filter === "주말") return p.tags.includes("주말");
     if (filter === "심야") return p.tags.includes("심야");
     return true;
@@ -1837,9 +1899,26 @@ function PharmacySection() {
 
   const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
 
-  const erList = erData.filter(e =>
-    mainType === "소아응급실" ? e.isPediatric : true
-  );
+  // ─── 거리 + 영업중 정렬 (응급실) ───────────────────────
+  const sortedEr = React.useMemo(() => {
+    const filteredEr = erData.filter(e => mainType === "소아응급실" ? e.isPediatric : true);
+    const enriched = filteredEr.map(er => {
+      const hasGeo = typeof er.lat === "number" && typeof er.lng === "number";
+      const distM = hasGeo
+        ? haversineM(userLoc.lat, userLoc.lng, er.lat as number, er.lng as number)
+        : Number.POSITIVE_INFINITY;
+      return { er, distM };
+    });
+    enriched.sort((a, b) => a.distM - b.distM);
+    return enriched;
+  }, [erData, userLoc, mainType]);
+
+  const erList = sortedEr;
+
+  const locLabel =
+    geoStatus === "loading" ? "내 위치 확인 중…"
+    : geoStatus === "ready" ? "내 위치 기준 정렬"
+    : "검단 중심 기준 정렬 (위치 미허용)";
 
   return (
     <section className="mx-4 mb-1">
@@ -1878,8 +1957,28 @@ function PharmacySection() {
 
         {mainType === "약국" ? (
           <>
+            {/* 내 위치 기준 정렬 헤더 */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                {geoStatus === "loading"
+                  ? <Loader2 size={12} className="text-[#0071e3] animate-spin shrink-0" />
+                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"} />
+                }
+                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                  {locLabel}
+                </span>
+              </div>
+              <button
+                onClick={requestLocation}
+                disabled={geoStatus === "loading"}
+                className="flex items-center gap-1 h-6 px-2 rounded-full bg-[#f5f5f7] text-[11px] font-semibold text-[#424245] active:opacity-60 disabled:opacity-40">
+                <RefreshCw size={10} className={geoStatus === "loading" ? "animate-spin" : ""} />
+                새로고침
+              </button>
+            </div>
+
             {/* 약국 서브필터 */}
-            <div className="flex gap-2 px-4 pt-3 pb-2">
+            <div className="flex gap-2 px-4 pt-2 pb-2">
               {filterBtns.map(f => (
                 <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
                   className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
@@ -1889,8 +1988,9 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
-              {displayed.map(p => {
-                const { isOpen, todayHours, todayLabel } = getPharmacyStatus(p, now);
+              {displayed.map(({ p, distM, isOpen }) => {
+                const { todayHours, todayLabel } = getPharmacyStatus(p, now);
+                const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : "거리 미정";
                 return (
                   <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${p.logo_url ? "bg-white border border-[#e5e5ea]" : isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
@@ -1908,7 +2008,9 @@ function PharmacySection() {
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
-                        {p.distance && <span className="text-[12px] text-[#86868b] shrink-0">{p.distance}</span>}
+                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                          {distLabel}
+                        </span>
                       </div>
                       {/* 주소 */}
                       <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{p.address}</p>
@@ -1976,8 +2078,30 @@ function PharmacySection() {
           </>
         ) : (
           /* 응급실 / 소아응급실 목록 */
+          <>
+            {/* 내 위치 기준 정렬 헤더 */}
+            <div className="flex items-center justify-between px-4 pt-3 pb-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                {geoStatus === "loading"
+                  ? <Loader2 size={12} className="text-[#F04452] animate-spin shrink-0" />
+                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#F04452]" : "text-[#86868b]"} />
+                }
+                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#F04452]" : "text-[#86868b]"}`}>
+                  {locLabel}
+                </span>
+              </div>
+              <button
+                onClick={requestLocation}
+                disabled={geoStatus === "loading"}
+                className="flex items-center gap-1 h-6 px-2 rounded-full bg-[#f5f5f7] text-[11px] font-semibold text-[#424245] active:opacity-60 disabled:opacity-40">
+                <RefreshCw size={10} className={geoStatus === "loading" ? "animate-spin" : ""} />
+                새로고침
+              </button>
+            </div>
           <div className="divide-y divide-[#f5f5f7]">
-            {erList.map(er => (
+            {erList.map(({ er, distM }) => {
+              const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : er.distance;
+              return (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${er.logo_url ? "bg-white border border-[#e5e5ea]" : "bg-[#FEE2E2]"}`}>
                   {er.logo_url
@@ -1991,7 +2115,7 @@ function PharmacySection() {
                   {/* 이름 + 거리 */}
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{er.name}</span>
-                    <span className="text-[12px] text-[#86868b] shrink-0">{er.distance}</span>
+                    <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#F04452]" : "text-[#86868b]"}`}>{distLabel}</span>
                   </div>
                   {/* 분류 + 소아과 뱃지 */}
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -2025,8 +2149,10 @@ function PharmacySection() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+          </>
         )}
       </div>
       {mapTarget && (
