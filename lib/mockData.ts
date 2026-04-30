@@ -1593,6 +1593,8 @@ export interface Pharmacy {
   tags: string[];                // e.g. ["주말", "심야", "24시"]
   distance?: string;
   logo_url?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 // ---------- Nearby Marts ----------
@@ -1700,7 +1702,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    distance: "650m",
+    lat: 37.5953,
+    lng: 126.6585,
   },
   {
     id: "ph2",
@@ -1712,7 +1715,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    distance: "1.0km",
+    lat: 37.5979,
+    lng: 126.6688,
   },
   {
     id: "ph3",
@@ -1724,7 +1728,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    distance: "1.4km",
+    lat: 37.6034,
+    lng: 126.6643,
   },
   {
     id: "ph4",
@@ -1736,7 +1741,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "평일 22:00~01:00",
     isOpenNow: false,
     tags: ["심야"],
-    distance: "3.1km",
+    lat: 37.5310,
+    lng: 126.6800,
   },
   {
     id: "ph5",
@@ -1748,7 +1754,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    distance: "1.8km",
+    lat: 37.6050,
+    lng: 126.6595,
   },
   {
     id: "ph6",
@@ -1760,7 +1767,8 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    distance: "4.2km",
+    lat: 37.4990,
+    lng: 126.6870,
   },
 ];
 
