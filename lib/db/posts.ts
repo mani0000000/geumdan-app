@@ -30,14 +30,11 @@
  * CREATE INDEX idx_posts_category   ON community_posts(category);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { Post, CommunityCategory } from '@/lib/types';
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
@@ -52,6 +49,7 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
+    images: (row.images as string[]) ?? [],
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
   };
@@ -103,6 +101,7 @@ export interface PostInput {
   author: string;
   authorDong: string;
   isAnonymous: boolean;
+  images?: string[];
 }
 
 export async function createPost(input: PostInput): Promise<Post | null> {
@@ -117,6 +116,7 @@ export async function createPost(input: PostInput): Promise<Post | null> {
         author: input.author,
         author_dong: input.authorDong,
         is_anonymous: input.isAnonymous,
+        images: input.images ?? [],
       })
       .select()
       .single();
