@@ -1,9 +1,9 @@
 {
-  "fetchedAt": "2026-04-30T16:11:38.413Z",
+  "fetchedAt": "2026-04-30T19:04:23.316Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
       "title": "검단신도시 첫 롯데캐슬 '넥스티엘' 입주 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "인천 서구, 미등록 제조기업까지 사각지대 없는 화재예방 활동 추진 - sejungfocus.com",
       "summary": "",
       "source": "sejungfocus.com",
@@ -39,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-5",
       "title": "인천 서구 일원 '검단신도시 롯데캐슬 넥스티엘' 30일부터 입주 진행 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "검단신도시 주거 지도의 완성, ‘검단신도시 롯데캐슬 넥스티엘’ 입주 시작 - 서울경제TV",
       "summary": "",
       "source": "서울경제TV",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "인천 서구 명칭 ‘서해구’로 사실상 확정…국회 행안위 통과 - 데일리안",
       "summary": "",
       "source": "데일리안",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-33",
+      "id": "gr2-45",
       "title": "모경종 국회의원·이영철 서구의원, 완정사거리 완충녹지 재정비사업 현장 점검 - 투어코리아",
       "summary": "",
       "source": "투어코리아",
@@ -90,15 +90,6 @@
       "source": "뷰어스",
       "publishedAt": "2026-04-29T22:00:11.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE5zcmN4YjNqQ21lbmVNXzBRTHdud0ZRLWNGOVIyYjZ3NGp0RzRRaVFZOWNVX2VFczFER3p1c1NMOWlGWEpZdXE3cmp2TXltUVdWN0xNWHdEVjM?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-5",
-      "title": "검단구 인사권 행사 중단…신설구 행정 혼란 예상 - B world",
-      "summary": "",
-      "source": "B world",
-      "publishedAt": "2026-04-29T07:24:56.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBkN1lWU3Rlc05mMGtfVnVrV2F2S1duczV2X3lvb2N3UUJXdGFFdjZ3TlRLSmpHcW9URkdIX3lwWklWUW5HdmZ0cFhYMGk0eTU2R0JQaWdnQXNPclNWODlTSUl6UkluNjVhUDNSblAtQUU?oc=5",
       "type": "뉴스"
     },
     {
@@ -129,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
+      "id": "gr2-1",
       "title": "인천 서구의회 분구특위, 검단구 임시청사 현장 점검 - 중부일보",
       "summary": "",
       "source": "중부일보",
@@ -147,7 +138,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-0",
+      "title": "인천 검단구 출범 전 조직개편 '올스톱' - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-28T10:50:04.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTFBTbkdja1loa1BabWE3Z2piNkUxY3VoUlpqdGpRajg5d1pNYWQwSlNDekJ4VWNnUk1tYk8wX2lVUFFnOHdxUjRETGRxVQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-2",
       "title": "인천 검단구 출범 전 조직개편 '올스톱' - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -255,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-11",
+      "id": "gr1-12",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 76㎡ 5억7700만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
@@ -264,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-14",
       "title": "2분기 공급 주인공은 '검단·고덕·창릉' 신도시 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -273,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-6",
+      "id": "gr1-5",
       "title": "검단 아파트 붕괴 1738억 소송 … GS건설 'LH 설계 탓' - 세이프타임즈",
       "summary": "",
       "source": "세이프타임즈",
@@ -300,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-5",
+      "id": "gr1-6",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -309,21 +309,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-28",
+      "id": "gr2-35",
       "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
       "summary": "",
       "source": "매일일보",
       "publishedAt": "2026-04-23T23:41:50.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5JSmNMcHFhNERxNTRuMFdoa2VndEd2cHplajNPVXU1WWFlMUVpenFzU3FaTG1lQ2FaTHN1TWw2bjhvX05tZ1lzWVJrQ2FHWjVYUlJBOGJORVlQUzRpa2pBcUNoVFQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-14",
-      "title": "신도시 내 ‘역세권 프리미엄’ 부각…‘검단신도시 롯데캐슬 넥스티엘’ 눈길 - 뷰어스",
-      "summary": "",
-      "source": "뷰어스",
-      "publishedAt": "2026-04-23T23:00:26.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE4weTJQUV9XMTlObVJWeGVWZGVDdUI3QzVGMGlaQ01vQ0dvNjZZRVgxM1BFVkRIdHpYYmxyakVlYjljdU41ZTV6N0UwWHFrcy1kc3JIcVdjZWZnQkRtVkE?oc=5",
       "type": "뉴스"
     },
     {
@@ -336,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-35",
+      "id": "gr2-32",
       "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -345,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-38",
+      "id": "gr2-36",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -354,12 +345,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-94",
+      "id": "gr2-95",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
       "publishedAt": "2026-04-23T08:28:54.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE93QTZIeGFuOWprQlpOaEkyOEhhUGpHaEhOTUtqOW1EcEVvSXRHRVNnbE1FYkZ3RmJpR2VRUlhIOHFkWDBySklQclhVQjAzdlNNdjBxNVVOYzBUYUE3YnJsTTd6anljV0lxcXhkZ1NR?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-29",
+      "title": "인천 서구의회, 검단구 임시청사 점검…\"행정 공백 최소화\" - 신아일보",
+      "summary": "",
+      "source": "신아일보",
+      "publishedAt": "2026-04-23T07:20:09.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBVTzV5VWs4YnhrU2VGTTY4cFpuSXhhVXJaRHNWLXlsNGtFY0lQNC1wNHdXZ2oyMVRBZ1ZwSnRmekNNLWhTblBrQzE5UkZpRzI4Q0tTcjM0Z1IxbE1hRXIwSXFvR0dCVTJoTk16Q2J4bl8?oc=5",
       "type": "뉴스"
     }
   ]
