@@ -1204,124 +1204,98 @@ export default function TransportPage() {
             </div>
           ) : (
             subwayList.map((st) => {
+              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+              const isEstimated = st.arrivals.length === 0;
+              const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
+              const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+              const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
               return (
-                <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
-                  {/* 역 헤더 — 탭하면 시간표 */}
-                  <button
-                    onClick={() => setTimetableStation(st)}
-                    className="w-full px-4 pt-4 pb-3 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: st.lineColor + "22" }}>
-                      <Train size={20} style={{ color: st.lineColor }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-[16px] font-bold text-[#1d1d1f]">{st.displayName}</p>
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                          style={{ background: st.lineColor }}>{st.line}</span>
+                <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                  {/* 역 헤더 — 라인 컬러 배경 */}
+                  <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: st.lineColor }}>
+                    <button onClick={() => setTimetableStation(st)}
+                      className="flex items-center gap-2 flex-1 min-w-0 active:opacity-70 text-left">
+                      <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
+                        <span className="text-[12px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {st.timetable.intervalMin > 0 && (
-                          <p className="text-[12px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</p>
-                        )}
-                        <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
-                          <Clock size={10} />시간표
-                        </span>
-                      </div>
-                    </div>
+                      <span className="text-white font-extrabold text-[15px] truncate">{st.displayName}</span>
+                      <span className="flex items-center gap-0.5 text-white/70 text-[11px] font-medium shrink-0">
+                        <Clock size={10} />시간표
+                      </span>
+                    </button>
                     {!st.planned && (
-                      <button onClick={e => { e.stopPropagation(); toggleSubway(st.id); }} className="p-1.5 active:opacity-60">
-                        <Star size={20}
-                          className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                      <button onClick={() => toggleSubway(st.id)} className="p-1 active:opacity-60 shrink-0">
+                        <Star size={18}
+                          className={favSubways.has(st.id) ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
                       </button>
                     )}
-                  </button>
-
-                  {/* 상하행 도착정보 */}
-                  <div className="px-4 pb-4 space-y-2">
-                    {st.loadingArrivals ? (
-                      [0, 1].map(i => (
-                        <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
-                          <div className="space-y-1.5">
-                            <div className="h-3.5 w-20 bg-[#d2d2d7] rounded" />
-                            <div className="h-3 w-14 bg-[#d2d2d7] rounded" />
-                          </div>
-                          <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
-                        </div>
-                      ))
-                    ) : (() => {
-                      // 실시간 있으면 실시간, 없으면 시간표 계산으로 대체
-                      const displayArrivals = st.arrivals.length > 0
-                        ? st.arrivals
-                        : estimateNextArrivals(st.timetable);
-                      const isEstimated = st.arrivals.length === 0;
-                      const upArrivals   = displayArrivals.filter(a => a.direction === "상행");
-                      const downArrivals = displayArrivals.filter(a => a.direction === "하행");
-
-                      if (displayArrivals.length === 0) return (
-                        <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                          <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
-                        </div>
-                      );
-
-                      // 방향 × 열차종류(일반/급행) 기준으로 행 목록 구성
-                      const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
-                        ...upArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-                        ...upArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-                        ...downArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-                        ...downArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-                      ];
-
-                      return (
-                      <>
-                        {isEstimated && (
-                          <div className="flex items-center gap-1.5 px-1 pb-1">
-                            <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준 추정 도착</span>
-                          </div>
-                        )}
-                        {rows.map(({ a, dir }, i) => (
-                          <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                            <div className="flex-1 min-w-0 mr-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                                  dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
-                                }`}>{dir}</span>
-                                {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
-                                    {a.trainTypeName ?? "급행"}
-                                  </span>
-                                )}
-                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
-                              </div>
-                              <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                                {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
-                              </p>
-                            </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
-                          </div>
-                        ))}
-                      </>
-                      );
-                    })()}
-
-                    {/* 첫차/막차 */}
-                    {st.timetable.upFirst !== "-" && (
-                      <div className="flex gap-2 pt-1">
-                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                          <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
-                          <p className="text-[12px] font-bold text-[#1d1d1f]">
-                            {st.timetable.upFirst} / {st.timetable.upLast}
-                          </p>
-                        </div>
-                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                          <p className="text-[10px] text-[#6e6e73] mb-0.5">하행 첫차/막차</p>
-                          <p className="text-[12px] font-bold text-[#1d1d1f]">
-                            {st.timetable.downFirst} / {st.timetable.downLast}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
+
+                  {/* 도착 정보 헤더 */}
+                  <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                    <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+                    <div className="flex items-center gap-2">
+                      {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+                      {st.timetable.intervalMin > 0 && (
+                        <span className="text-[10px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2열 도착 */}
+                  {st.loadingArrivals ? (
+                    <div className="grid grid-cols-2 gap-2 p-3">
+                      {[0,1].map(i => <div key={i} className="h-16 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                    </div>
+                  ) : displayArrivals.length === 0 ? (
+                    <p className="px-3 py-3 text-[13px] text-[#6e6e73] text-center">운행 종료</p>
+                  ) : (
+                    <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                      {[
+                        { label: st.timetable.upDirection, arrivals: upArrivals },
+                        { label: st.timetable.downDirection, arrivals: downArrivals },
+                      ].map(({ label, arrivals: dirArrivals }, col) => (
+                        <div key={col} className="px-3 py-2.5">
+                          <div className="flex items-center gap-0.5 mb-2.5 pb-1.5 border-b border-[#f5f5f7]">
+                            <span className="text-[12px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                            <ChevronRight size={12} className="text-[#86868b] shrink-0" />
+                          </div>
+                          {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                            <div key={i} className="flex items-center justify-between py-1">
+                              <div className="flex-1 min-w-0 mr-1">
+                                <span className="text-[12px] text-[#424245] block truncate">{a.terminalStation}</span>
+                                {!isEstimated && a.currentStation && (
+                                  <span className="text-[9px] text-[#86868b]">{a.currentStation} 출발</span>
+                                )}
+                                {a.isExpress && (
+                                  <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
+                                )}
+                              </div>
+                              <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                                {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                              </span>
+                            </div>
+                          )) : (
+                            <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 첫차/막차 */}
+                  {st.timetable.upFirst !== "-" && (
+                    <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                      </div>
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })
