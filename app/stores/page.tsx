@@ -23,11 +23,16 @@ const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
   "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
   마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
-  세탁: "#6366F1", 기타: "#9CA3AF",
+  세탁: "#6366F1",
+  베이커리: "#D97706", 부동산: "#0EA5A8", 스터디카페: "#7C3AED",
+  안경원: "#0F766E", 꽃집: "#DB2777",
+  기타: "#9CA3AF",
 };
 const catEmoji: Record<StoreCategory, string> = {
   카페:"☕", 음식점:"🍽️", 편의점:"🏪", "병원/약국":"💊", 미용:"💇",
-  학원:"📚", 마트:"🛒", "헬스/운동":"💪", 반려동물:"🐾", 세탁:"👕", 기타:"🏢",
+  학원:"📚", 마트:"🛒", "헬스/운동":"💪", 반려동물:"🐾", 세탁:"👕",
+  베이커리:"🥐", 부동산:"🏘️", 스터디카페:"📖", 안경원:"👓", 꽃집:"💐",
+  기타:"🏢",
 };
 const catBg: Record<StoreCategory, string> = {
   카페:"bg-[#FEF3C7] text-[#92400E]", 음식점:"bg-[#FFF0E6] text-[#C2410C]",
@@ -35,6 +40,9 @@ const catBg: Record<StoreCategory, string> = {
   미용:"bg-[#FCE7F3] text-[#9D174D]", 학원:"bg-[#EDE9FE] text-[#5B21B6]",
   마트:"bg-[#D1FAE5] text-[#065F46]", "헬스/운동":"bg-[#E0F2FE] text-[#0369A1]",
   반려동물:"bg-[#FDF2F8] text-[#9D174D]", 세탁:"bg-[#EEF2FF] text-[#4338CA]",
+  베이커리:"bg-[#FEF3C7] text-[#9A3412]", 부동산:"bg-[#CCFBF1] text-[#115E59]",
+  스터디카페:"bg-[#F3E8FF] text-[#6B21A8]", 안경원:"bg-[#CFFAFE] text-[#155E75]",
+  꽃집:"bg-[#FCE7F3] text-[#9D174D]",
   기타:"bg-[#F3F4F6] text-[#374151]",
 };
 
@@ -142,6 +150,65 @@ function SheetBackdrop({ zIndex, onClose, children }: { zIndex: number; onClose:
   );
 }
 
+// ─── 스와이프 가능한 바텀시트 훅 ────────────────────────────
+// 위로 스와이프 → full(전체 화면), 아래로 스와이프 → half(원래) 또는 close
+type SheetMode = "half" | "full";
+function useSwipeSheet(onClose: () => void, initial: SheetMode = "half") {
+  const [mode, setMode] = useState<SheetMode>(initial);
+  const [dragY, setDragY] = useState(0);
+  const startRef = useRef<{ y: number; t: number } | null>(null);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    startRef.current = { y: e.clientY, t: Date.now() };
+    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
+  };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!startRef.current) return;
+    const delta = e.clientY - startRef.current.y;
+    setDragY(mode === "full" ? Math.max(-12, delta) : delta);
+  };
+  const onPointerUp = (e: React.PointerEvent) => {
+    if (!startRef.current) return;
+    const delta = e.clientY - startRef.current.y;
+    const dt = Math.max(1, Date.now() - startRef.current.t);
+    const v = Math.abs(delta) / dt; // px/ms
+    startRef.current = null;
+
+    if (mode === "half") {
+      if (delta < -40 || (delta < -10 && v > 0.5)) setMode("full");
+      else if (delta > 130 || (delta > 30 && v > 0.6)) { onClose(); return; }
+    } else {
+      if (delta > 280) { onClose(); return; }
+      if (delta > 100 || (delta > 30 && v > 0.5)) setMode("half");
+    }
+    setDragY(0);
+  };
+
+  const handleProps = {
+    onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp,
+    style: { touchAction: "none" as const },
+  };
+  const sheetStyle: React.CSSProperties = {
+    bottom: 0,
+    top: mode === "full" ? 0 : "auto",
+    height: mode === "full" ? "100dvh" : "90dvh",
+    maxHeight: mode === "full" ? "100dvh" : "90dvh",
+    borderTopLeftRadius: mode === "full" ? 0 : 24,
+    borderTopRightRadius: mode === "full" ? 0 : 24,
+    transform: `translateY(${dragY}px)`,
+    transition: dragY ? "none" : "all .28s cubic-bezier(.4,0,.2,1)",
+    boxShadow: "0 -4px 32px rgba(0,0,0,.22)",
+  };
+
+  return { mode, dragY, setMode, handleProps, sheetStyle };
+}
+
 // ─── 매장 바텀시트 ────────────────────────────────────────────
 function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
   const [sent, setSent] = useState(false);
@@ -213,6 +280,11 @@ const catHeroImage: Record<StoreCategory, string> = {
   "헬스/운동":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=260&fit=crop&auto=format",
   반려동물:   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=260&fit=crop&auto=format",
   세탁:       "https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=600&h=260&fit=crop&auto=format",
+  베이커리:   "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=600&h=260&fit=crop&auto=format",
+  부동산:     "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=260&fit=crop&auto=format",
+  스터디카페: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?w=600&h=260&fit=crop&auto=format",
+  안경원:     "https://images.unsplash.com/photo-1574258495973-f010dfbb5371?w=600&h=260&fit=crop&auto=format",
+  꽃집:       "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&h=260&fit=crop&auto=format",
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
 
@@ -228,12 +300,7 @@ function BuildingBottomSheet({
 }) {
   const [floorIdx, setFloorIdx] = useState(-1);
   const [imgFailed, setImgFailed] = useState(false);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
 
   const allStores: { store: Store; floorLabel: string }[] = buildingData
     ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
@@ -245,11 +312,16 @@ function BuildingBottomSheet({
   return (
     <div className="fixed inset-0" style={{ zIndex: 300 }}>
       <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl"
-        style={{ zIndex: 2, maxHeight: "86%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
+        style={{ zIndex: 2, ...sheetStyle }}>
 
-        {/* 건물 이미지 헤더 */}
-        <div className="relative shrink-0" style={{ height: 160 }}>
+        {/* 건물 이미지 헤더 (드래그 가능) */}
+        <div className="relative shrink-0" style={{ height: 160, ...handleProps.style }}
+          onPointerDown={handleProps.onPointerDown}
+          onPointerMove={handleProps.onPointerMove}
+          onPointerUp={handleProps.onPointerUp}
+          onPointerCancel={handleProps.onPointerCancel}
+        >
           {!imgFailed && nearbyInfo.image ? (
             <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
               className="w-full h-full object-cover" />
@@ -260,10 +332,14 @@ function BuildingBottomSheet({
           )}
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.6) 100%)" }} />
           <div className="absolute top-2 left-1/2 -translate-x-1/2">
-            <div className="w-10 h-1 rounded-full bg-white/50" />
+            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
           </div>
-          <button onClick={onClose}
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
             <X size={14} className="text-white" />
           </button>
           <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
@@ -368,6 +444,7 @@ function StoreListDetailSheet({
   const [detail, setDetail] = useState<StoreDetail | null>(null);
   const coupon = allCoupons.find(c => c.storeId === store.id);
   const opening = allOpenings.find(o => o.storeId === store.id);
+  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
 
   useEffect(() => {
     fetchStoreDetail(store.id).then(setDetail);
@@ -377,11 +454,21 @@ function StoreListDetailSheet({
   const heroImg = catHeroImage[store.category];
 
   return (
-    <SheetBackdrop zIndex={300} onClose={onClose}>
-      <div className="bg-white rounded-t-3xl overflow-hidden max-h-[90dvh] flex flex-col">
+    <div className="fixed inset-0" style={{ zIndex: 300 }}>
+      {/* backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} style={{ zIndex: 1 }} />
+      {/* sheet panel */}
+      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
+        style={{ zIndex: 2, ...sheetStyle }}
+        onClick={e => e.stopPropagation()}>
 
-        {/* ── 대표 이미지 헤더 ── */}
-        <div className="relative shrink-0" style={{ height: 220 }}>
+        {/* ── 대표 이미지 헤더 (드래그 가능) ── */}
+        <div className="relative shrink-0" style={{ height: 220, ...handleProps.style }}
+          onPointerDown={handleProps.onPointerDown}
+          onPointerMove={handleProps.onPointerMove}
+          onPointerUp={handleProps.onPointerUp}
+          onPointerCancel={handleProps.onPointerCancel}
+        >
           {/* 이미지 or 컬러 fallback */}
           {!imgFailed ? (
             <img
@@ -403,12 +490,16 @@ function StoreListDetailSheet({
 
           {/* 드래그 핸들 */}
           <div className="absolute top-2.5 left-1/2 -translate-x-1/2">
-            <div className="w-10 h-1 rounded-full bg-white/50" />
+            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
           </div>
 
-          {/* 닫기 버튼 */}
-          <button onClick={onClose}
-            className="absolute top-3.5 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+          {/* 닫기 버튼 — 드래그 이벤트 격리 */}
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            className="absolute top-3.5 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
             <X size={16} className="text-white" />
           </button>
 
@@ -600,7 +691,7 @@ function StoreListDetailSheet({
           </div>
         </div>
       </div>
-    </SheetBackdrop>
+    </div>
   );
 }
 
@@ -636,6 +727,11 @@ const catGrads: Record<StoreCategory, [string, string]> = {
   "헬스/운동":["#0EA5E9", "#6366F1"],
   반려동물:   ["#F472B6", "#EC4899"],
   세탁:       ["#6366F1", "#8B5CF6"],
+  베이커리:   ["#D97706", "#F59E0B"],
+  부동산:     ["#0EA5A8", "#10B981"],
+  스터디카페: ["#7C3AED", "#A855F7"],
+  안경원:     ["#0F766E", "#14B8A6"],
+  꽃집:       ["#DB2777", "#F472B6"],
   기타:       ["#6B7280", "#4B5563"],
 };
 
@@ -1001,12 +1097,7 @@ function MapBuildingSheet({
 }) {
   const [floorIdx, setFloorIdx] = useState<number>(-1);
   const [imgFailed, setImgFailed] = useState(false);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
 
   const allStores: { store: Store; floorLabel: string }[] = buildingData
     ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
@@ -1022,11 +1113,16 @@ function MapBuildingSheet({
       <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
       {/* 시트 */}
       <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white rounded-t-3xl"
-        style={{ zIndex: 2, maxHeight: "82%", boxShadow: "0 -4px 32px rgba(0,0,0,.22)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+        className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
+        style={{ zIndex: 2, ...sheetStyle }}
       >
-        {/* 건물 이미지 헤더 */}
-        <div className="relative shrink-0" style={{ height: 160 }}>
+        {/* 건물 이미지 헤더 (드래그 가능) */}
+        <div className="relative shrink-0" style={{ height: 160, ...handleProps.style }}
+          onPointerDown={handleProps.onPointerDown}
+          onPointerMove={handleProps.onPointerMove}
+          onPointerUp={handleProps.onPointerUp}
+          onPointerCancel={handleProps.onPointerCancel}
+        >
           {!imgFailed && nearbyInfo.image ? (
             <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
               className="w-full h-full object-cover" />
@@ -1039,10 +1135,15 @@ function MapBuildingSheet({
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 100%)" }} />
           {/* 핸들 */}
           <div className="absolute top-2 left-1/2 -translate-x-1/2">
-            <div className="w-10 h-1 rounded-full bg-white/50" />
+            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
           </div>
           {/* 닫기 */}
-          <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+          <button
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            onPointerDown={(e) => e.stopPropagation()}
+            onPointerMove={(e) => e.stopPropagation()}
+            onPointerUp={(e) => e.stopPropagation()}
+            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
             <X size={14} className="text-white" />
           </button>
           {/* 건물명 */}
