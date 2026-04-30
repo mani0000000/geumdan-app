@@ -891,6 +891,7 @@ function StoreListView() {
     () => (catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter)),
     [catFilter, allStores]
   );
+  const hasMore = visibleCount < baseList.length;
 
   const visibleList = useMemo(
     () => baseList.slice(0, visibleCount),
