@@ -35,7 +35,13 @@ const catColor: Record<CommunityCategory, string> = {
 
 function CommunityTab() {
   const router = useRouter();
-  const [active, setActive] = useState<CommunityCategory>("전체");
+  const [active, setActive] = useState<CommunityCategory>(() => {
+    if (typeof window !== "undefined") {
+      const c = new URLSearchParams(window.location.search).get("cat");
+      if (c && (categories as string[]).includes(c)) return c as CommunityCategory;
+    }
+    return "전체";
+  });
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
 

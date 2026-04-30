@@ -64,7 +64,7 @@ function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
   return (
     <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
       {min <= 0
-        ? <span className="text-white text-[12px] font-bold">곧도착</span>
+        ? <span className="text-white text-[12px] font-bold">곧 도착</span>
         : <>
             <span className="text-white text-[21px] font-black leading-none">{min}</span>
             <span className="text-white/80 text-[11px] block leading-none mt-0.5">분 후</span>
@@ -419,7 +419,7 @@ function SubwayTimetableSheet({
                       let diff = h * 60 + m - nowMin;
                       if (diff < 0) diff += 1440;
                       return diff === 0 ? (
-                        <span className="text-[22px] font-black text-[#F04452]">곧도착</span>
+                        <span className="text-[22px] font-black text-[#F04452]">곧 도착</span>
                       ) : (
                         <>
                           <span className="text-[28px] font-black text-[#0071e3]">{diff}</span>

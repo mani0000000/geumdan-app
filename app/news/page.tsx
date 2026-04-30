@@ -282,7 +282,13 @@ function NewsListItem({ item }: { item: CardItem }) {
 }
 
 export default function NewsPage() {
-  const [active, setActive] = useState<NewsType>("뉴스");
+  const [active, setActive] = useState<NewsType>(() => {
+    if (typeof window !== "undefined") {
+      const t = new URLSearchParams(window.location.search).get("tab");
+      if (t === "유튜브" || t === "인스타" || t === "뉴스") return t as NewsType;
+    }
+    return "뉴스";
+  });
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [dbItems, setDbItems] = useState(newsItems);
   const [instaItems, setInstaItems] = useState<import("@/lib/types").NewsItem[]>([]);

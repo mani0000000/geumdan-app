@@ -97,6 +97,14 @@ export default function MyPage() {
     getFavoriteBuses().then(b => setBusCount(b.length));
     getFavoriteStores().then(s => setStoreCount(s.length));
     getFavoriteApts().then(a => setAptCount(a.length));
+    // hash 로 진입한 경우 스크롤
+    if (typeof window !== "undefined" && window.location.hash) {
+      const id = window.location.hash.slice(1);
+      requestAnimationFrame(() => {
+        const el = document.getElementById(id);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
   }, []);
 
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
@@ -381,7 +389,9 @@ export default function MyPage() {
 
       {/* 메뉴 */}
       {menuGroups.map(grp => (
-        <div key={grp.title} className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div key={grp.title}
+          id={grp.title === "즐겨찾기" ? "favorites" : undefined}
+          className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden scroll-mt-24">
           <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#6e6e73]">{grp.title}</p>
           <div className="divide-y divide-[#f5f5f7]">
             {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
