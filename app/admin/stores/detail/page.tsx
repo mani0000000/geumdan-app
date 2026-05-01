@@ -189,6 +189,7 @@ const STORE_EMPTY: Omit<AdminStore, "id" | "building_id"> = {
   open_date: null, logo_url: null, description: null,
   promo_text: null, emoji: "🏪", show_in_openings: null,
   open_benefit: null, extra_info: null,
+  is_published: true, admin_password: null, admin_email: null,
 };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -392,6 +393,40 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                   </Field>
                 ))}
               </>
+            )}
+
+            {/* ── 매장 페이지 / 어드민 ── */}
+            <SectionTitle>매장 페이지 · 매장 어드민</SectionTitle>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox"
+                checked={form.is_published !== false}
+                onChange={e => set("is_published", e.target.checked)}
+                className="w-4 h-4" />
+              <span className="text-[13px] text-[#4E5968]">매장 브랜드 페이지 공개</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="매장 어드민 비밀번호">
+                <input className={INPUT} type="text" value={form.admin_password ?? ""}
+                  onChange={e => set("admin_password", e.target.value || null)}
+                  placeholder="비워두면 0000 사용" />
+              </Field>
+              <Field label="매장 담당자 이메일">
+                <input className={INPUT} type="email" value={form.admin_email ?? ""}
+                  onChange={e => set("admin_email", e.target.value || null)}
+                  placeholder="owner@example.com" />
+              </Field>
+            </div>
+            {initial && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a href={`/stores/${initial.id}`} target="_blank" rel="noopener noreferrer"
+                  className="h-9 px-3 inline-flex items-center rounded-lg bg-[#F0F7FF] text-[#0071e3] text-[12px] font-bold">
+                  매장 페이지 열기 ↗
+                </a>
+                <a href={`/stores/${initial.id}/admin`} target="_blank" rel="noopener noreferrer"
+                  className="h-9 px-3 inline-flex items-center rounded-lg bg-[#1d1d1f] text-white text-[12px] font-bold">
+                  매장 어드민 열기 ↗
+                </a>
+              </div>
             )}
 
             {/* ── SVG 맵 좌표 ── */}

@@ -1629,7 +1629,7 @@ function BuildingDetail({
 
       {selectedStore && (
         <StoreSheet store={selectedStore} onClose={() => setSelectedStore(null)}
-          onDetail={() => { setSelectedStore(null); router.push(`/stores/detail/?id=${selectedStore.id}`); }} />
+          onDetail={() => { setSelectedStore(null); router.push(`/stores/${selectedStore.id}`); }} />
       )}
     </div>
   );
@@ -1885,7 +1885,7 @@ export default function StoresPage() {
 
       {selected && selected.name !== "공실" && (
         <StoreSheet store={selected} onClose={() => setSelected(null)}
-          onDetail={() => { setSelected(null); router.push(`/stores/detail/?id=${selected.id}`); }} />
+          onDetail={() => { setSelected(null); router.push(`/stores/${selected.id}`); }} />
       )}
       <BottomNav />
     </div>
