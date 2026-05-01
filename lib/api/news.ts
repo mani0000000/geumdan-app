@@ -374,6 +374,43 @@ async function fetchYouTubeHTML(query: string): Promise<YouTubeVideo[]> {
   } catch { return []; }
 }
 
+// ── /api/news 라우트 호출 (서버에서 RSS 파싱 + 캐시) ──────────
+export type NewsCategory = "검단신도시" | "인천" | "부동산" | "교통";
+
+const BASE_API = BASE_PATH; // basePath 가 있으면 prefix 자동 추가
+
+export async function fetchNewsFromApi(
+  category: NewsCategory = "검단신도시",
+): Promise<{ articles: NewsArticle[]; source: string; ms: number }> {
+  const t0 = performance.now();
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 8000);
+    const res  = await fetch(
+      `${BASE_API}/api/news?category=${encodeURIComponent(category)}`,
+      { signal: ctrl.signal },
+    );
+    clearTimeout(tid);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const articles: NewsArticle[] = Array.isArray(json.articles) ? json.articles : [];
+    if (articles.length > 0) {
+      return {
+        articles,
+        source: (json.source as string) ?? "api",
+        ms: Math.round(performance.now() - t0),
+      };
+    }
+  } catch { /* fall through */ }
+
+  // 정적 export 환경 (Capacitor) 등에서 /api/news 가 없을 때만 대체 경로 사용
+  if (category === "검단신도시") {
+    const live = await fetchGeumdanNews();
+    return live;
+  }
+  return { articles: [], source: "없음", ms: Math.round(performance.now() - t0) };
+}
+
 // ── 메인 exports ──────────────────────────────────────────────
 
 export async function fetchYouTubeVideos(query = "검단신도시"): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
