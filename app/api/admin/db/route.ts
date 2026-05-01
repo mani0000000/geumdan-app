@@ -10,6 +10,7 @@ const ALLOWED_TABLES = new Set([
   "home_widget_config", "places", "search_keywords", "marts",
   "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
   "sport_categories", "leagues", "teams", "broadcasters",
+  "post_reports", "post_hidden",
   // 매장 브랜드 페이지
   "store_menus", "store_hours", "store_events", "store_reservations",
   "store_waitings", "store_reviews", "coupon_uses",

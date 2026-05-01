@@ -35,6 +35,7 @@ export interface Post {
   images?: string[];
   isPinned?: boolean;
   isHot?: boolean;
+  isHidden?: boolean;
 }
 
 export interface Comment {
@@ -137,7 +138,30 @@ export type StoreCategory =
   | "헬스/운동"
   | "반려동물"
   | "세탁"
+  | "베이커리"
+  | "부동산"
+  | "스터디카페"
+  | "안경원"
+  | "꽃집"
   | "기타";
+
+// Store suggestion (사용자 제안)
+export type SuggestionType = "simple" | "detail";
+
+export interface StoreSuggestion {
+  id?: string;
+  type: SuggestionType;
+  category?: StoreCategory | string;
+  storeName?: string;
+  buildingName?: string;
+  floor?: string;
+  phone?: string;
+  hours?: string;
+  description?: string;
+  message?: string;
+  contact?: string;
+  createdAt?: string;
+}
 
 export interface Building {
   id: string;
