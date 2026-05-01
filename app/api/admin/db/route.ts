@@ -10,6 +10,7 @@ const ALLOWED_TABLES = new Set([
   "home_widget_config", "places", "search_keywords", "marts",
   "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
   "sport_categories", "leagues", "teams", "broadcasters",
+  "post_reports", "post_hidden",
 ]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";

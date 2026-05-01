@@ -52,10 +52,12 @@ function rowToPost(row: Record<string, unknown>): Post {
     images: (row.images as string[]) ?? [],
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
+    isHidden: (row.is_hidden as boolean) ?? false,
   };
 }
 
 // ── 목록 조회 ────────────────────────────────────────────────
+// 어드민이 숨김 처리한(is_hidden=true) 게시글은 제외
 export async function fetchDBPosts(
   category?: string,
   limit = 50
@@ -70,7 +72,9 @@ export async function fetchDBPosts(
     if (category && category !== '전체') q = q.eq('category', category);
     const { data, error } = await q;
     if (error) throw error;
-    return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+    return (data ?? [])
+      .map(row => rowToPost(row as Record<string, unknown>))
+      .filter(p => !p.isHidden);
   } catch (e) {
     console.error('[posts] fetchDBPosts error:', e);
     return [];

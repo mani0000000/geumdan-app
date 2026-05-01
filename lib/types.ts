@@ -35,6 +35,7 @@ export interface Post {
   images?: string[];
   isPinned?: boolean;
   isHot?: boolean;
+  isHidden?: boolean;
 }
 
 export interface Comment {

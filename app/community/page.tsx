@@ -8,9 +8,16 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import { Avatar } from "@/components/ui/Avatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchDBPosts } from "@/lib/db/posts";
+import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
+import {
+  fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
@@ -60,51 +67,68 @@ function trackNewsView(id: string) {
   } catch { /* ignore */ }
 }
 
-function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useRouter> }) {
+function PostCard({
+  post, router, onHide, onReport,
+}: {
+  post: Post;
+  router: ReturnType<typeof useRouter>;
+  onHide: (id: string) => void;
+  onReport: (id: string) => void;
+}) {
   return (
-    <button onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-      className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-      <div className="flex gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-              {post.category}
-            </span>
-            {post.isHot && (
-              <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                <Flame size={10} /> HOT
+    <div className="relative bg-white rounded-2xl px-4 py-4">
+      <button onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+        className="w-full text-left active:opacity-80 transition-opacity">
+        <div className="flex gap-3">
+          <Avatar nickname={post.author} size="sm" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2 pr-8">
+              {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
+              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                {post.category}
               </span>
-            )}
+              {post.isHot && (
+                <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                  <Flame size={10} /> HOT
+                </span>
+              )}
+            </div>
+            <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
+            <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
           </div>
-          <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-          <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
+          {post.images && post.images.length > 0 && (
+            <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+            </div>
+          )}
         </div>
-        {post.images && post.images.length > 0 && (
-          <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
-            <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
-          </div>
-        )}
-      </div>
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
-        <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-        <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-        <div className="flex items-center gap-3 ml-auto">
-          <div className="flex items-center gap-1">
-            <ThumbsUp size={12} className="text-[#86868b]" />
-            <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <MessageSquare size={12} className="text-[#86868b]" />
-            <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Eye size={12} className="text-[#86868b]" />
-            <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
+          <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
+          <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+          <div className="flex items-center gap-3 ml-auto">
+            <div className="flex items-center gap-1">
+              <ThumbsUp size={12} className="text-[#86868b]" />
+              <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <MessageSquare size={12} className="text-[#86868b]" />
+              <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <Eye size={12} className="text-[#86868b]" />
+              <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+            </div>
           </div>
         </div>
+      </button>
+      <div className="absolute top-3 right-3">
+        <PostMenu
+          onHide={() => onHide(post.id)}
+          onReport={() => onReport(post.id)}
+        />
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -121,6 +145,8 @@ function CommunityTab() {
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [sort, setSort] = useState<CommSortKey>("latest");
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
   // 글쓰기 후 ?refresh=... 가 붙어 돌아오면 목록을 다시 가져온다.
   useEffect(() => {
@@ -130,10 +156,35 @@ function CommunityTab() {
     });
   }, [refreshKey]);
 
+  useEffect(() => {
+    fetchHiddenPostIds(getMyNickname()).then(setHiddenIds);
+  }, []);
+
+  const handleHide = async (id: string) => {
+    if (isMockPostId(id)) {
+      setHiddenIds(prev => new Set(prev).add(id));
+      return;
+    }
+    const ok = await hidePost(id, getMyNickname());
+    if (ok) setHiddenIds(prev => new Set(prev).add(id));
+  };
+
+  const handleReportSubmit = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    if (!isMockPostId(reportTarget)) {
+      await reportPost({
+        postId: reportTarget,
+        reporterNickname: getMyNickname(),
+        reason,
+        detail,
+      });
+    }
+  };
+
   const allPosts: Post[] = [
     ...dbPosts,
     ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
-  ];
+  ].filter(p => !hiddenIds.has(p.id));
 
   // Top 3 hot posts across all categories (by composite score)
   const hotPosts = [...allPosts]
@@ -247,9 +298,30 @@ function CommunityTab() {
             </div>
           ))
         ) : (
-          sorted.map(post => <PostCard key={post.id} post={post} router={router} />)
+          sorted.map(post => (
+            <PostCard
+              key={post.id}
+              post={post}
+              router={router}
+              onHide={handleHide}
+              onReport={(id) => setReportTarget(id)}
+            />
+          ))
+        )}
+        {!loadingPosts && sorted.length === 0 && (
+          <div className="bg-white rounded-2xl py-12 flex flex-col items-center gap-2">
+            <span className="text-3xl">📭</span>
+            <p className="text-[14px] text-[#6e6e73]">아직 글이 없어요</p>
+          </div>
         )}
       </div>
+
+      <ReportModal
+        open={!!reportTarget}
+        target="post"
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }

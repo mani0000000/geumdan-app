@@ -14,6 +14,7 @@ export interface AdminPost {
   images?: string[];
   is_pinned: boolean;
   is_hot: boolean;
+  is_hidden?: boolean;
   created_at: string;
   updated_at: string;
 }

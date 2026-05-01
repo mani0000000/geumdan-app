@@ -7,6 +7,9 @@ import {
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
+import { Avatar } from "@/components/ui/Avatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import {
   fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
 } from "@/lib/db/posts";
@@ -15,6 +18,11 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
+import {
+  fetchHiddenPostIds, hidePost, unhidePost, reportPost, reportComment,
+  type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -50,6 +58,11 @@ function saveMyCommentId(id: string) {
   } catch { /* ignore */ }
 }
 
+type ReportTarget =
+  | { kind: "post"; id: string }
+  | { kind: "comment"; id: string }
+  | null;
+
 function DetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -65,7 +78,6 @@ function DetailContent() {
   const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Set<string>>(new Set());
   const [submittingComment, setSubmittingComment] = useState(false);
 
@@ -81,6 +93,11 @@ function DetailContent() {
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
+  // 신고/숨기기
+  const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
+  const [hidden, setHidden] = useState(false);
+  const [hideToast, setHideToast] = useState("");
+
   // 포스트 로드
   useEffect(() => {
     async function load() {
@@ -91,7 +108,6 @@ function DetailContent() {
       } else {
         found = await fetchDBPost(postId);
         if (!found) {
-          // DB 포스트를 못 찾으면 목록으로
           router.replace("/community/");
           return;
         }
@@ -100,6 +116,12 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
+
+      // 숨김 여부 확인
+      if (!isMock) {
+        const ids = await fetchHiddenPostIds(getMyNickname());
+        setHidden(ids.has(postId));
+      }
     }
     load();
   }, [postId, isMock, router]);
@@ -131,20 +153,20 @@ function DetailContent() {
   const submitComment = async () => {
     if (!commentText.trim() || submittingComment) return;
     setSubmittingComment(true);
+    const myNick = getMyNickname();
     if (isMock) {
-      // mock 포스트는 클라이언트 상태에만 추가
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: anonymous ? "익명" : "검단주민",
+        author: myNick,
         authorDong: "검단",
         content: commentText.trim(),
-        likeCount: 0, isAnonymous: anonymous,
+        likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
       }]);
     } else {
       const saved = await createComment({
-        postId, author: "검단주민", authorDong: "검단",
-        content: commentText.trim(), isAnonymous: anonymous,
+        postId, author: myNick, authorDong: "검단",
+        content: commentText.trim(), isAnonymous: false,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -174,14 +196,17 @@ function DetailContent() {
 
   // 댓글 좋아요
   const handleCommentLike = async (id: string) => {
-    const liked = commentLikes.has(id);
+    const isLiked = commentLikes.has(id);
     setCommentLikes(prev => {
-      const next = new Set(prev); liked ? next.delete(id) : next.add(id); return next;
+      const next = new Set(prev);
+      if (isLiked) next.delete(id);
+      else next.add(id);
+      return next;
     });
     setComments(prev => prev.map(c =>
-      c.id === id ? { ...c, likeCount: c.likeCount + (liked ? -1 : 1) } : c
+      c.id === id ? { ...c, likeCount: c.likeCount + (isLiked ? -1 : 1) } : c
     ));
-    if (!isMock) await toggleCommentLike(id, liked ? -1 : 1);
+    if (!isMock) await toggleCommentLike(id, isLiked ? -1 : 1);
   };
 
   // 글 수정 저장
@@ -203,6 +228,42 @@ function DetailContent() {
     const ok = await deletePost(postId);
     if (ok) router.replace("/community/");
     else setDeletingPost(false);
+  };
+
+  // 숨기기 / 숨김 해제
+  const handleHidePost = async () => {
+    if (isMock) {
+      setHidden(true);
+      setHideToast("이 글을 숨겼어요");
+      setTimeout(() => router.replace("/community/"), 600);
+      return;
+    }
+    const ok = await hidePost(postId, getMyNickname());
+    if (ok) {
+      setHidden(true);
+      setHideToast("이 글을 숨겼어요");
+      setTimeout(() => router.replace("/community/"), 600);
+    }
+  };
+  const handleUnhidePost = async () => {
+    if (isMock) { setHidden(false); return; }
+    const ok = await unhidePost(postId, getMyNickname());
+    if (ok) setHidden(false);
+  };
+
+  // 신고 제출
+  const handleSubmitReport = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    const reporterNickname = getMyNickname();
+    if (reportTarget.kind === "post") {
+      if (!isMock) {
+        await reportPost({ postId: reportTarget.id, reporterNickname, reason, detail });
+      }
+    } else {
+      if (!isMock) {
+        await reportComment({ commentId: reportTarget.id, reporterNickname, reason, detail });
+      }
+    }
   };
 
   if (postLoading || !post) {
@@ -258,9 +319,13 @@ function DetailContent() {
             </div>
           )}
           {!isMyPost && (
-            <button className="active:opacity-60">
-              <MoreHorizontal size={22} className="text-[#6e6e73]" />
-            </button>
+            <PostMenu
+              isHidden={hidden}
+              onHide={handleHidePost}
+              onUnhide={handleUnhidePost}
+              onReport={() => setReportTarget({ kind: "post", id: postId })}
+              size={22}
+            />
           )}
         </div>
       </div>
@@ -298,7 +363,7 @@ function DetailContent() {
             <>
               <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
+                <Avatar nickname={post.author} size="md" />
                 <div>
                   <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
                   <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
@@ -332,10 +397,15 @@ function DetailContent() {
                 <MessageSquare size={15} />
                 <span className="text-[14px]">{comments.length}</span>
               </div>
-              <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
-                <Flag size={14} />
-                <span className="text-[13px]">신고</span>
-              </button>
+              {!isMyPost && (
+                <button
+                  onClick={() => setReportTarget({ kind: "post", id: postId })}
+                  className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60"
+                >
+                  <Flag size={14} />
+                  <span className="text-[13px]">신고</span>
+                </button>
+              )}
             </div>
           )}
         </article>
@@ -348,8 +418,8 @@ function DetailContent() {
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-sm shrink-0">👤</div>
-                <div className="flex-1">
+                <Avatar nickname={c.author} size="sm" />
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
                     <span className="text-[12px] text-[#86868b]">{c.authorDong}</span>
@@ -363,11 +433,19 @@ function DetailContent() {
                         {c.likeCount}
                       </span>
                     </button>
-                    {myCommentIds.has(c.id) && (
+                    {myCommentIds.has(c.id) ? (
                       <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
                         className="flex items-center gap-0.5 text-[#86868b] active:opacity-60 disabled:opacity-40">
                         <Trash2 size={11} />
                         <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => setReportTarget({ kind: "comment", id: c.id })}
+                        className="flex items-center gap-0.5 text-[#86868b] active:opacity-60"
+                      >
+                        <Flag size={11} />
+                        <span className="text-[12px]">신고</span>
                       </button>
                     )}
                   </div>
@@ -380,9 +458,9 @@ function DetailContent() {
       </div>
 
       {/* Comment input */}
-      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
+      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
+          <Avatar nickname={getMyNickname()} size="sm" />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
@@ -393,12 +471,21 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-            익명
-          </button>
         </div>
       </div>
+
+      {hideToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#1d1d1f] text-white text-[13px] px-4 py-2 rounded-full z-50">
+          {hideToast}
+        </div>
+      )}
+
+      <ReportModal
+        open={!!reportTarget}
+        target={reportTarget?.kind ?? "post"}
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleSubmitReport}
+      />
     </div>
   );
 }
