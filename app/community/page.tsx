@@ -118,6 +118,7 @@ function CommunityTab() {
   });
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [sort, setSort] = useState<CommSortKey>("latest");
 
   useEffect(() => {
     fetchDBPosts(undefined, 50).then(data => {

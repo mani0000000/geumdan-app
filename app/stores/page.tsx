@@ -993,7 +993,6 @@ function StoreListView() {
     () => baseList.slice(0, visibleCount),
     [baseList, visibleCount]
   );
-  const hasMore = visibleCount < baseList.length;
 
   // 카테고리=전체일 때만 업종별 그룹핑
   const grouped = useMemo(() => {
