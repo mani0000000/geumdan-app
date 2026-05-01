@@ -281,6 +281,14 @@ function NewsListItem({ item }: { item: CardItem }) {
   );
 }
 
+interface ApiNews {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  description: string;
+}
+
 export default function NewsPage() {
   const [active, setActive] = useState<NewsType>("뉴스");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
@@ -294,15 +302,32 @@ export default function NewsPage() {
 
   const loadNews = async () => {
     setLoading(true);
-    const [result, dbNews, insta] = await Promise.all([
-      fetchGeumdanNews(),
+    try {
+      const apiRes = await fetch("/api/news");
+      const apiData = await apiRes.json();
+
+      let newsArticles: NewsArticle[] = [];
+      if (apiData.items && Array.isArray(apiData.items) && apiData.items.length > 0) {
+        newsArticles = apiData.items.map((item: ApiNews, idx: number) => ({
+          id: `api-${idx}`,
+          title: item.title,
+          summary: item.description,
+          source: item.source,
+          publishedAt: item.pubDate,
+          url: item.link,
+          type: "뉴스" as const,
+        }));
+        setRealNews(newsArticles);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch from /api/news:", error);
+    }
+
+    const [dbNews, insta] = await Promise.all([
       fetchNewsArticles(undefined, 50),
       fetchInstagramPosts(),
     ]);
-    if (result.articles.length > 0) {
-      setRealNews(result.articles);
-      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-    }
     if (dbNews.length > 0) setDbItems(dbNews);
     setInstaItems(insta);
     setLoading(false);

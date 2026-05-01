@@ -500,18 +500,44 @@ function CommunityWidget() {
 }
 
 // ─── 뉴스 위젯 ────────────────────────────────────────────────
+interface ApiNews {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  description: string;
+}
+
 function NewsWidget() {
-  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [realNews, setRealNews] = useState<ApiNews[]>([]);
   useEffect(() => {
-    fetchGeumdanNews().then(result => {
-      if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
-    });
+    fetch("/api/news")
+      .then(res => res.json())
+      .then(data => {
+        if (data.items && data.items.length > 0) {
+          setRealNews(data.items.slice(0, 4));
+        }
+      })
+      .catch(() => {
+        /* fallback to mockData handled in topNews */
+      });
   }, []);
-  const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
+
+  const topNews = realNews.length > 0
+    ? realNews.map((item, idx) => ({
+        id: `api-${idx}`,
+        title: item.title,
+        url: item.link,
+        publishedAt: item.pubDate,
+        source: item.source,
+        summary: item.description,
+      }))
+    : newsItems.slice(0, 4);
+
   if (topNews.length === 0) return null;
   return (
     <section className="mx-4 mb-1 space-y-2">
-      <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+      <a href={topNews[0].url || "#"} target="_blank" rel="noopener noreferrer"
         className="block rounded-2xl overflow-hidden active:opacity-90"
         style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
         <div className="p-4">
@@ -527,7 +553,7 @@ function NewsWidget() {
       <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {topNews.slice(1).map(item => (
           <a key={item.id}
-            href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+            href={item.url || "#"} target="_blank" rel="noopener noreferrer"
             className="flex items-start gap-3 px-4 py-3 active:bg-[#f5f5f7]">
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
