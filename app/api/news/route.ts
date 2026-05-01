@@ -24,14 +24,23 @@ const QUERIES: Record<string, string[]> = {
 
 const DEFAULT_CATEGORY = "검단신도시";
 
-function stripXml(s: string): string {
+function decodeEntities(s: string): string {
   return s
-    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function stripXml(s: string): string {
+  // Google News RSS double-encodes description content (e.g. `&amp;nbsp;`,
+  // `&lt;a href=...&gt;`), so we decode entities twice before stripping the
+  // resulting tags. Stripping first leaves the encoded `<a>` text visible.
+  return decodeEntities(decodeEntities(s))
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
