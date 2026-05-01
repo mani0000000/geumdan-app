@@ -1,13 +1,18 @@
 /**
  * 뉴스/유튜브 데이터 수집
  *
- * 속도 우선순위:
- *  0. GitHub Actions가 3시간마다 pre-fetch한 정적 JSON 캐시 (즉시, CORS 없음)
- *  1. YouTube Data API v3 (NEXT_PUBLIC_YOUTUBE_API_KEY 있을 때, 가장 안정적)
- *  2. Piped / Invidious 오픈 YouTube API (키 불필요, JSON 응답)
- *  3. 네이버 뉴스 검색 API (CORS 프록시 병렬)
- *  4. Google News RSS (CORS 프록시 병렬)
- *  5. rss2json fallback
+ * 뉴스 우선순위:
+ *  0. /api/news 서버 라우트 (Vercel 배포 시 30분 revalidate, 항상 최신)
+ *  1. GitHub Actions가 3시간마다 pre-fetch한 정적 JSON 캐시 (정적/Capacitor 빌드 fallback)
+ *  2. 네이버 뉴스 검색 API (CORS 프록시 병렬)
+ *  3. Google News RSS (CORS 프록시 병렬)
+ *  4. rss2json fallback
+ *
+ * 유튜브 우선순위:
+ *  0. 정적 JSON 캐시
+ *  1. YouTube Data API v3 (NEXT_PUBLIC_YOUTUBE_API_KEY 있을 때)
+ *  2. Piped / Invidious 오픈 API (키 불필요)
+ *  3. allorigins HTML 파싱
  *
  * CORS 프록시는 allorigins.win + corsproxy.io 동시 시도 → 빠른 쪽 사용
  */
@@ -38,6 +43,24 @@ const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
 const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
+
+// ── /api/news 라우트 (서버에서 30분 revalidate) ────────────────
+// 정적 export (Capacitor) 빌드에서는 라우트가 없으므로 404 → 빈 배열 반환
+async function fetchFromRoute(): Promise<NewsArticle[]> {
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 6000);
+    const res  = await fetch(`${BASE_PATH}/api/news?limit=40`, {
+      signal: ctrl.signal,
+      cache: "no-store",
+    });
+    clearTimeout(tid);
+    if (!res.ok) return [];
+    const d = await res.json();
+    if (Array.isArray(d.articles)) return d.articles as NewsArticle[];
+  } catch { /* ignore */ }
+  return [];
+}
 
 // ── 캐시 ──────────────────────────────────────────────────────
 function isFresh(fetchedAt: string): boolean {
@@ -404,11 +427,15 @@ export async function fetchYouTubeVideos(query = "검단신도시"): Promise<{ v
 export async function fetchGeumdanNews(): Promise<{ articles: NewsArticle[]; source: string; ms: number }> {
   const t0 = performance.now();
 
-  // 0. Static cache
+  // 0. /api/news 서버 라우트 (실시간, 30분 revalidate)
+  const route = await fetchFromRoute();
+  if (route.length > 0) return { articles: route, source: "API", ms: Math.round(performance.now() - t0) };
+
+  // 1. Static cache (정적 빌드 fallback)
   const cached = await fetchCachedNews();
   if (cached.length > 0) return { articles: cached, source: "캐시", ms: Math.round(performance.now() - t0) };
 
-  // 1–3. Live — all in parallel, first non-empty wins
+  // 2–4. Live — all in parallel, first non-empty wins
   const promise = new Promise<{ articles: NewsArticle[]; source: string }>((resolve, reject) => {
     let done = false; let count = 0;
     const total = 3;
