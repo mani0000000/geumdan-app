@@ -8,16 +8,22 @@ interface NewsItem {
   description: string;
 }
 
-/**
- * Google News RSS 파싱 헬퍼
- */
-function stripXml(s: string): string {
+function decodeEntities(s: string): string {
   return s
-    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function stripXml(s: string): string {
+  // Google News RSS double-encodes description content (e.g. `&amp;nbsp;`),
+  // so we decode entities twice before stripping the resulting tags.
+  return decodeEntities(decodeEntities(s))
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
@@ -35,9 +41,6 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
-/**
- * RSS XML 파싱
- */
 function parseRssXml(xml: string): NewsItem[] {
   if (!xml.includes("<item>")) return [];
 
@@ -63,69 +66,68 @@ function parseRssXml(xml: string): NewsItem[] {
       });
     }
 
-    if (items.length >= 30) break;
+    if (items.length >= 50) break;
   }
 
   return items;
 }
 
-/**
- * CORS 프록시를 통한 RSS 페칭
- */
-async function fetchRssWithCors(rssUrl: string): Promise<string> {
-  const timeoutMs = 7000;
+const RSS_HEADERS: Record<string, string> = {
+  "User-Agent":
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+  Accept: "application/rss+xml, application/xml, text/xml, */*;q=0.8",
+  "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.5",
+};
 
-  // allorigins.win 시도
+async function fetchRssDirect(rssUrl: string, timeoutMs = 8000): Promise<string> {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(
-      `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,
-      { signal: ctrl.signal, cache: "no-store" }
-    );
-    clearTimeout(tid);
-    if (res.ok) {
-      const j = await res.json();
-      return (j.contents as string) ?? "";
-    }
+    const res = await fetch(rssUrl, {
+      headers: RSS_HEADERS,
+      signal: ctrl.signal,
+      cache: "no-store",
+    });
+    if (!res.ok) return "";
+    return await res.text();
   } catch {
-    /* continue to next proxy */
-  }
-
-  // corsproxy.io 시도
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(
-      `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`,
-      { signal: ctrl.signal, cache: "no-store" }
-    );
+    return "";
+  } finally {
     clearTimeout(tid);
-    if (res.ok) {
-      return await res.text();
-    }
-  } catch {
-    /* fallback */
   }
-
-  return "";
 }
 
-/**
- * Google News RSS 페칭
- */
+const NEWS_QUERIES = ["검단신도시", "검단 아파트", "인천 서구 검단"];
+
+async function fetchOneQuery(query: string): Promise<NewsItem[]> {
+  const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+  const xml = await fetchRssDirect(rssUrl);
+  if (!xml) return [];
+  return parseRssXml(xml);
+}
+
 async function fetchGoogleNewsRss(): Promise<NewsItem[]> {
-  const rssUrl =
-    "https://news.google.com/rss/search?q=검단신도시&hl=ko&gl=KR&ceid=KR:ko";
+  const results = await Promise.all(NEWS_QUERIES.map(fetchOneQuery));
 
-  try {
-    const xml = await fetchRssWithCors(rssUrl);
-    if (!xml) return [];
-    return parseRssXml(xml);
-  } catch {
-    return [];
+  const seen = new Set<string>();
+  const merged: NewsItem[] = [];
+  for (const arr of results) {
+    for (const item of arr) {
+      const key = item.link !== "#" ? item.link : item.title;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(item);
+    }
   }
+
+  merged.sort(
+    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime()
+  );
+  return merged.slice(0, 30);
 }
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function GET() {
   try {
@@ -135,7 +137,7 @@ export async function GET() {
       { items, success: true, timestamp: new Date().toISOString() },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+          "Cache-Control": "public, s-maxage=900, stale-while-revalidate=1800",
           "Content-Type": "application/json",
         },
       }
