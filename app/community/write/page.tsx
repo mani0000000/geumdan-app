@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import { getMyNickname, setMyNickname } from "@/lib/identity";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -21,8 +22,7 @@ export default function WritePage() {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
-  const [nickname, setNickname] = useState("검단주민");
+  const [nickname, setNickname] = useState(() => getMyNickname());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,14 +32,16 @@ export default function WritePage() {
     if (!canSubmit) return;
     setSubmitting(true);
     setError("");
+    const finalNickname = nickname.trim() || "검단주민";
+    setMyNickname(finalNickname);
     try {
       const post = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: nickname.trim() || "검단주민",
+        author: finalNickname,
         authorDong: "검단",
-        isAnonymous: anonymous,
+        isAnonymous: false,
       });
       if (post) {
         saveMyPostId(post.id);
@@ -115,26 +117,13 @@ export default function WritePage() {
         </div>
 
         {/* Bottom toolbar */}
-        <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
-          <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
-              <ImageIcon size={18} className="text-[#6e6e73]" />
-            </button>
-            {!anonymous && (
-              <input value={nickname} onChange={e => setNickname(e.target.value)}
-                placeholder="닉네임" maxLength={12}
-                className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
-            )}
-          </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`flex items-center gap-2 h-8 px-3 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
-              anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"
-            }`}>
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${anonymous ? "border-white" : "border-[#86868b]"}`}>
-              {anonymous && <div className="w-2 h-2 rounded-full bg-white" />}
-            </div>
-            익명
+        <div className="px-4 py-3 flex items-center gap-3 border-t border-[#f5f5f7]">
+          <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+            <ImageIcon size={18} className="text-[#6e6e73]" />
           </button>
+          <input value={nickname} onChange={e => setNickname(e.target.value)}
+            placeholder="닉네임" maxLength={12}
+            className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none flex-1" />
         </div>
 
         {error && (

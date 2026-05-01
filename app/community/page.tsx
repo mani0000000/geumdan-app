@@ -8,9 +8,16 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import { Avatar } from "@/components/ui/Avatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchDBPosts } from "@/lib/db/posts";
+import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
+import {
+  fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
@@ -38,12 +45,15 @@ function CommunityTab() {
   const [active, setActive] = useState<CommunityCategory>("전체");
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
   useEffect(() => {
     fetchDBPosts(undefined, 50).then(data => {
       setDbPosts(data);
       setLoadingPosts(false);
     });
+    fetchHiddenPostIds(getMyNickname()).then(setHiddenIds);
   }, []);
 
   // DB 포스트 최신순 + 목업 포스트 (고정/HOT 우선)
@@ -51,9 +61,31 @@ function CommunityTab() {
     ...dbPosts,
     ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
   ];
+  const visible = allPosts.filter(p => !hiddenIds.has(p.id));
   const filtered = active === "전체"
-    ? allPosts
-    : allPosts.filter(p => p.category === active);
+    ? visible
+    : visible.filter(p => p.category === active);
+
+  const handleHide = async (id: string) => {
+    if (isMockPostId(id)) {
+      setHiddenIds(prev => new Set(prev).add(id));
+      return;
+    }
+    const ok = await hidePost(id, getMyNickname());
+    if (ok) setHiddenIds(prev => new Set(prev).add(id));
+  };
+
+  const handleReportSubmit = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    if (!isMockPostId(reportTarget)) {
+      await reportPost({
+        postId: reportTarget,
+        reporterNickname: getMyNickname(),
+        reason,
+        detail,
+      });
+    }
+  };
 
   return (
     <div className="pb-4">
@@ -81,43 +113,71 @@ function CommunityTab() {
           ))
         ) : (
           filtered.map(post => (
-            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-              <div className="flex items-center gap-2 mb-2">
-                {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                  {post.category}
-                </span>
-                {post.isHot && (
-                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                    <Flame size={10} /> HOT
-                  </span>
-                )}
-              </div>
-              <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-              <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
-                <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-                <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+            <div key={post.id} className="relative bg-white rounded-2xl px-4 py-4">
+              <button
+                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                className="w-full text-left active:opacity-80 transition-opacity"
+              >
+                <div className="flex items-start gap-3">
+                  <Avatar nickname={post.author} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
+                      <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                        {post.category}
+                      </span>
+                      {post.isHot && (
+                        <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                          <Flame size={10} /> HOT
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug pr-8">{post.title}</p>
+                    <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
                   </div>
                 </div>
+                <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
+                  <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
+                  <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+                  <div className="flex items-center gap-3 ml-auto">
+                    <div className="flex items-center gap-1">
+                      <ThumbsUp size={12} className="text-[#86868b]" />
+                      <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <MessageSquare size={12} className="text-[#86868b]" />
+                      <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Eye size={12} className="text-[#86868b]" />
+                      <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              </button>
+              <div className="absolute top-3 right-3">
+                <PostMenu
+                  onHide={() => handleHide(post.id)}
+                  onReport={() => setReportTarget(post.id)}
+                />
               </div>
-            </button>
+            </div>
           ))
         )}
+        {!loadingPosts && filtered.length === 0 && (
+          <div className="bg-white rounded-2xl py-12 flex flex-col items-center gap-2">
+            <span className="text-3xl">📭</span>
+            <p className="text-[14px] text-[#6e6e73]">아직 글이 없어요</p>
+          </div>
+        )}
       </div>
+
+      <ReportModal
+        open={!!reportTarget}
+        target="post"
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ export interface AdminPost {
   comment_count: number;
   is_pinned: boolean;
   is_hot: boolean;
+  is_hidden?: boolean;
   created_at: string;
   updated_at: string;
 }
