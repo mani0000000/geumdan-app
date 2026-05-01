@@ -305,6 +305,18 @@ function DetailContent() {
                 </div>
               </div>
               <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+              {post.images && post.images.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {post.images.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      className="w-full rounded-xl border border-[#e5e5ea] object-cover"
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
 

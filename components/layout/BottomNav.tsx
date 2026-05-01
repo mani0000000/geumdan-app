@@ -14,9 +14,10 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
+  const isStoresPath = pathname.startsWith("/stores");
   return (
     <>
-      <SuggestFAB />
+      {isStoresPath && <SuggestFAB />}
       <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px]">
         <div className="flex items-center justify-around px-3 h-[64px] rounded-[36px]
           bg-white/60 backdrop-blur-[28px]
