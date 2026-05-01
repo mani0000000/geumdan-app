@@ -37,20 +37,16 @@ const YT_API_KEY    = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY  ?? "";
 const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
-const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
-
-// ── 캐시 ──────────────────────────────────────────────────────
-function isFresh(fetchedAt: string): boolean {
-  try { return Date.now() - new Date(fetchedAt).getTime() < CACHE_TTL_MS; }
-  catch { return false; }
-}
+// 정적 export(GitHub Pages) 환경에서 /api/news 가 stripped 되므로 캐시가 유일한 소스가 된다.
+// GH Actions 가 3시간마다 갱신하지만 실패/지연을 감안해 staleness 체크를 제거하고 캐시를 항상 사용한다.
+// (캐시가 매우 오래됐다면 호출자가 라이브 fetch 로 덮어쓰도록 빈 배열 대신 캐시를 그대로 반환)
 
 export async function fetchCachedNews(): Promise<NewsArticle[]> {
   try {
     const res = await fetch(`${BASE_PATH}/cache/news.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.articles) && d.articles.length > 0 && isFresh(d.fetchedAt)) {
+    if (Array.isArray(d.articles) && d.articles.length > 0) {
       return d.articles as NewsArticle[];
     }
   } catch { /* ignore */ }
@@ -62,7 +58,7 @@ export async function fetchCachedYouTube(): Promise<YouTubeVideo[]> {
     const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.videos) && d.videos.length > 0 && isFresh(d.fetchedAt)) {
+    if (Array.isArray(d.videos) && d.videos.length > 0) {
       return d.videos as YouTubeVideo[];
     }
   } catch { /* ignore */ }

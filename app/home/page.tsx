@@ -540,7 +540,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/news/"
+        <Link href="/news"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -1311,7 +1311,7 @@ function SportsSection() {
               {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* 결과도 예정도 없을 때 */}
@@ -1582,11 +1582,16 @@ function martTypeBadge(type: string) {
 // ─── 마트 위젯 ────────────────────────────────────────────────
 const MART_INITIAL_COUNT = 5;
 
+// 검단신도시 중앙 좌표 (위치 권한 거부 시 폴백)
+const GEUMDAN_CENTER = { lat: 37.6075, lng: 126.6485 };
+
 function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
   const [showAll, setShowAll] = useState(false);
+  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number }>(GEUMDAN_CENTER);
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
@@ -1695,10 +1700,9 @@ function MartSection() {
 
         {/* 마트 목록 */}
         <div className="divide-y divide-[#f5f5f7]">
-          {(showAll ? marts : marts.slice(0, MART_INITIAL_COUNT)).map(mart => {
-            const todayStatus = getMartStatus(mart, now);
+          {(showAll ? sorted : sorted.slice(0, MART_INITIAL_COUNT)).map(({ mart, dist, status }) => {
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
-            const distLabel   = Number.isFinite(dist) ? formatDist(dist) : null;
+            const distLabel   = Number.isFinite(dist) ? formatDistanceKm(dist) : null;
 
             // 배지 색상/문구
             let badgeClass = "bg-[#DCFCE7] text-[#059669]";
