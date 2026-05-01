@@ -6,7 +6,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchNewsFromApi, fetchYouTubeVideos, type NewsArticle, type NewsCategory, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
@@ -14,6 +14,8 @@ import type { NewsType } from "@/lib/types";
 
 const tabs: NewsType[] = ["뉴스", "유튜브", "인스타"];
 const tabIcon: Record<NewsType, string> = { 뉴스: "📰", 유튜브: "▶️", 인스타: "📷" };
+
+const newsCategories: NewsCategory[] = ["검단신도시", "인천", "부동산", "교통"];
 
 // Gradient palettes for card news
 const cardGradients = [
@@ -282,12 +284,8 @@ function NewsListItem({ item }: { item: CardItem }) {
 }
 
 export default function NewsPage() {
-  const [active, setActive] = useState<NewsType>(() => {
-    if (typeof window === "undefined") return "뉴스";
-    const t = new URLSearchParams(window.location.search).get("tab");
-    if (t === "유튜브" || t === "인스타" || t === "뉴스") return t as NewsType;
-    return "뉴스";
-  });
+  const [active, setActive] = useState<NewsType>("뉴스");
+  const [category, setCategory] = useState<NewsCategory>("검단신도시");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [dbItems, setDbItems] = useState(newsItems);
   const [instaItems, setInstaItems] = useState<import("@/lib/types").NewsItem[]>([]);
@@ -297,15 +295,15 @@ export default function NewsPage() {
   const [ytLoading, setYtLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  const loadNews = async () => {
+  const loadNews = async (cat: NewsCategory = category) => {
     setLoading(true);
     const [result, dbNews, insta] = await Promise.all([
-      fetchGeumdanNews(),
+      fetchNewsFromApi(cat),
       fetchNewsArticles(undefined, 50),
       fetchInstagramPosts(),
     ]);
+    setRealNews(result.articles);
     if (result.articles.length > 0) {
-      setRealNews(result.articles);
       setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
     }
     if (dbNews.length > 0) setDbItems(dbNews);
@@ -328,7 +326,7 @@ export default function NewsPage() {
     setYtLoading(false);
   };
 
-  useEffect(() => { loadNews(); }, []);
+  useEffect(() => { loadNews(category); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [category]);
 
   // 유튜브 탭 선택 시 자동 로드
   useEffect(() => {
@@ -361,17 +359,38 @@ export default function NewsPage() {
         ))}
       </div>
 
+      {/* 카테고리 서브탭 (뉴스 탭에서만) */}
+      {active === "뉴스" && (
+        <div className="bg-white sticky top-[100px] z-20 border-b border-[#f5f5f7]">
+          <div className="flex gap-2 px-4 py-2.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            {newsCategories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`shrink-0 h-8 px-3.5 rounded-full text-[13px] font-semibold transition-colors ${
+                  category === cat
+                    ? "bg-[#0071e3] text-white"
+                    : "bg-[#f5f5f7] text-[#424245] active:bg-[#e8e8ed]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Status */}
       {active !== "유튜브" && (
         <div className="flex items-center justify-between px-4 py-2.5">
           {realNews.length > 0 && active === "뉴스"
             ? <div className="flex items-center gap-1.5">
                 <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
-                <span className="text-[13px] text-[#424245]">실시간 검단 뉴스 {realNews.length}건</span>
+                <span className="text-[13px] text-[#424245]">실시간 {category} 뉴스 {realNews.length}건</span>
               </div>
             : <span className="text-[13px] text-[#6e6e73]">검단 신도시 소식</span>
           }
-          <button onClick={loadNews} className="flex items-center gap-1 active:opacity-60">
+          <button onClick={() => loadNews(category)} className="flex items-center gap-1 active:opacity-60">
             <RefreshCw size={12} className={`text-[#6e6e73] ${loading ? "animate-spin" : ""}`} />
             {lastUpdated && <span className="text-[12px] text-[#86868b]">{lastUpdated}</span>}
           </button>

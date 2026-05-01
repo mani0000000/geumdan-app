@@ -17,7 +17,7 @@ import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/Coup
 import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
-import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
+import { fetchNewsFromApi, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy } from "@/lib/mockData";
 import { fetchMarts, type Mart, type MartClosingPattern } from "@/lib/db/marts";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
@@ -504,7 +504,7 @@ function CommunityWidget() {
 function NewsWidget() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   useEffect(() => {
-    fetchGeumdanNews().then(result => {
+    fetchNewsFromApi("검단신도시").then(result => {
       if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
     });
   }, []);
