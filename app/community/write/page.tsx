@@ -64,7 +64,7 @@ export default function WritePage() {
     setSubmitting(true);
     setError("");
     try {
-      const post = await createPost({
+      const { post, imagesDropped } = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
@@ -73,17 +73,12 @@ export default function WritePage() {
         isAnonymous: anonymous,
         images,
       });
-      if (post) {
-        saveMyPostId(post.id);
-        // refresh 쿼리로 목록 페이지의 fetch effect를 다시 트리거해서
-        // 새로 작성한 글이 목록에 즉시 보이게 한다.
-        router.replace(`/community/?refresh=${post.id}`);
-      } else {
-        setError("글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
-        setSubmitting(false);
-      }
-    } catch {
-      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
+      saveMyPostId(post.id);
+      if (imagesDropped) alert("이미지는 아직 지원되지 않아 글만 등록되었어요.");
+      router.replace(`/community/?refresh=${post.id}`);
+    } catch (e) {
+      const detail = e instanceof Error ? e.message : "";
+      setError(`글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.${detail ? ` (${detail})` : ""}`);
       setSubmitting(false);
     }
   };
