@@ -1,31 +1,52 @@
-import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { supabase } from "@/lib/supabase";
 
-interface NewsItem {
+export const runtime = "nodejs";
+export const revalidate = 1800;
+
+export interface NewsArticle {
+  id: string;
   title: string;
-  link: string;
-  pubDate: string;
+  summary: string;
   source: string;
-  description: string;
+  publishedAt: string;
+  url: string;
+  thumbnail?: string;
+  type: "뉴스";
 }
 
-/**
- * Google News RSS 파싱 헬퍼
- */
-function stripXml(s: string): string {
+const QUERIES: Record<string, string[]> = {
+  검단신도시: ["검단신도시", "검단+아파트"],
+  인천:       ["인천+서구+검단", "인천+서구"],
+  부동산:     ["검단+부동산", "검단+분양"],
+  교통:       ["검단+지하철", "검단+버스", "검단+도로"],
+};
+
+const DEFAULT_CATEGORY = "검단신도시";
+
+function decodeEntities(s: string): string {
   return s
-    .replace(/<[^>]+>/g, "")
+    .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
-    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ");
+}
+
+function stripXml(s: string): string {
+  // Google News RSS double-encodes description content (e.g. `&amp;nbsp;`,
+  // `&lt;a href=...&gt;`), so we decode entities twice before stripping the
+  // resulting tags. Stripping first leaves the encoded `<a>` text visible.
+  return decodeEntities(decodeEntities(s))
+    .replace(/<[^>]+>/g, "")
+    .replace(/\s+/g, " ")
     .trim();
 }
 
 function tagVal(xml: string, tag: string): string {
   const m = xml.match(
-    new RegExp(
-      `<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`
-    )
+    new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`),
   );
   return m ? (m[1] ?? m[2] ?? "").trim() : "";
 }
@@ -35,121 +56,122 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
-/**
- * RSS XML 파싱
- */
-function parseRssXml(xml: string): NewsItem[] {
+function parseRssXml(xml: string, prefix: string): NewsArticle[] {
   if (!xml.includes("<item>")) return [];
-
-  const items: NewsItem[] = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
-  let match;
-
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const raw = match[1];
-    const title = stripXml(tagVal(raw, "title"));
-    const link = tagVal(raw, "link") || tagVal(raw, "guid");
-    const desc = stripXml(tagVal(raw, "description")).slice(0, 200);
-    const pub = tagVal(raw, "pubDate");
-    const src = tagVal(raw, "source") || extractSource(title);
-
-    if (title.length > 5) {
-      items.push({
+  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
+    .map((m, i) => {
+      const raw   = m[1];
+      const title = stripXml(tagVal(raw, "title"));
+      const link  = tagVal(raw, "link") || tagVal(raw, "guid");
+      const desc  = stripXml(tagVal(raw, "description")).slice(0, 160);
+      const pub   = tagVal(raw, "pubDate");
+      const src   = stripXml(tagVal(raw, "source")) || extractSource(title);
+      return {
+        id: `${prefix}-${i}`,
         title,
-        link: link || "#",
-        pubDate: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+        summary: desc,
         source: src,
-        description: desc,
-      });
-    }
-
-    if (items.length >= 30) break;
-  }
-
-  return items;
+        publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+        url: link || "#",
+        thumbnail: undefined,
+        type: "뉴스" as const,
+      };
+    })
+    .filter(n => n.title.length > 5 && n.url !== "#");
 }
 
-/**
- * CORS 프록시를 통한 RSS 페칭
- */
-async function fetchRssWithCors(rssUrl: string): Promise<string> {
-  const timeoutMs = 7000;
-
-  // allorigins.win 시도
+async function fetchRssQuery(query: string, prefix: string): Promise<NewsArticle[]> {
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
   try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(
-      `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,
-      { signal: ctrl.signal, cache: "no-store" }
-    );
-    clearTimeout(tid);
-    if (res.ok) {
-      const j = await res.json();
-      return (j.contents as string) ?? "";
-    }
-  } catch {
-    /* continue to next proxy */
-  }
-
-  // corsproxy.io 시도
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(
-      `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`,
-      { signal: ctrl.signal, cache: "no-store" }
-    );
-    clearTimeout(tid);
-    if (res.ok) {
-      return await res.text();
-    }
-  } catch {
-    /* fallback */
-  }
-
-  return "";
-}
-
-/**
- * Google News RSS 페칭
- */
-async function fetchGoogleNewsRss(): Promise<NewsItem[]> {
-  const rssUrl =
-    "https://news.google.com/rss/search?q=검단신도시&hl=ko&gl=KR&ceid=KR:ko";
-
-  try {
-    const xml = await fetchRssWithCors(rssUrl);
-    if (!xml) return [];
-    return parseRssXml(xml);
+    const res = await fetch(url, {
+      next: { revalidate: 1800 },
+      signal: AbortSignal.timeout(8000),
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; GeumdanApp/1.0)" },
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    return parseRssXml(xml, prefix);
   } catch {
     return [];
   }
 }
 
-export async function GET() {
-  try {
-    const items = await fetchGoogleNewsRss();
-
-    return NextResponse.json(
-      { items, success: true, timestamp: new Date().toISOString() },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
-          "Content-Type": "application/json",
-        },
-      }
-    );
-  } catch (error) {
-    console.error("[/api/news] Error:", error);
-    return NextResponse.json(
-      {
-        items: [],
-        success: false,
-        error: "Failed to fetch news",
-        timestamp: new Date().toISOString(),
-      },
-      { status: 500 }
-    );
+async function fetchSupabaseFallback(limit = 30): Promise<NewsArticle[]> {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    return [];
   }
+  try {
+    const { data, error } = await supabase
+      .from("news_articles")
+      .select("id, title, summary, source, published_at, url, thumbnail")
+      .order("published_at", { ascending: false })
+      .limit(limit);
+    if (error || !data) return [];
+    return data
+      .map((row, i) => ({
+        id: (row.id as string) ?? `db-${i}`,
+        title: (row.title as string) ?? "",
+        summary: (row.summary as string) ?? "",
+        source: (row.source as string) ?? "DB",
+        publishedAt: (row.published_at as string) ?? new Date().toISOString(),
+        url: (row.url as string) ?? "",
+        thumbnail: (row.thumbnail as string) ?? undefined,
+        type: "뉴스" as const,
+      }))
+      .filter(a => a.title.length > 0 && a.url.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const sp = request.nextUrl.searchParams;
+  const requested = sp.get("category") ?? DEFAULT_CATEGORY;
+  const category = QUERIES[requested] ? requested : DEFAULT_CATEGORY;
+
+  const queries = QUERIES[category];
+  const t0 = Date.now();
+
+  const results = await Promise.all(
+    queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
+  );
+
+  const seen = new Set<string>();
+  const merged: NewsArticle[] = [];
+  for (const arr of results) {
+    for (const a of arr) {
+      const key = a.url !== "#" ? a.url : a.title;
+      if (!seen.has(key)) {
+        seen.add(key);
+        merged.push(a);
+      }
+    }
+  }
+  merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+
+  let articles = merged.slice(0, 30);
+  let source = "google-news-rss";
+
+  if (articles.length === 0) {
+    const fallback = await fetchSupabaseFallback();
+    if (fallback.length > 0) {
+      articles = fallback;
+      source = "supabase";
+    }
+  }
+
+  return Response.json(
+    {
+      category,
+      source,
+      ms: Date.now() - t0,
+      fetchedAt: new Date().toISOString(),
+      articles,
+    },
+    {
+      headers: {
+        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+      },
+    },
+  );
 }

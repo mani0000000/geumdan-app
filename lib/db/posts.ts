@@ -30,14 +30,11 @@
  * CREATE INDEX idx_posts_category   ON community_posts(category);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 import type { Post, CommunityCategory } from '@/lib/types';
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
@@ -52,6 +49,7 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
+    images: (row.images as string[]) ?? [],
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
     isHidden: (row.is_hidden as boolean) ?? false,
@@ -107,29 +105,57 @@ export interface PostInput {
   author: string;
   authorDong: string;
   isAnonymous: boolean;
+  images?: string[];
 }
 
-export async function createPost(input: PostInput): Promise<Post | null> {
-  if (!isConfigured()) return null;
-  try {
-    const { data, error } = await supabase
-      .from('community_posts')
-      .insert({
-        category: input.category,
-        title: input.title,
-        content: input.content,
-        author: input.author,
-        author_dong: input.authorDong,
-        is_anonymous: input.isAnonymous,
-      })
-      .select()
-      .single();
-    if (error) throw error;
-    return rowToPost(data as Record<string, unknown>);
-  } catch (e) {
-    console.error('[posts] createPost error:', e);
-    return null;
+export interface CreatePostResult {
+  post: Post;
+  imagesDropped: boolean;
+}
+
+function isImagesColumnMissing(err: unknown): boolean {
+  const e = err as { code?: string; message?: string } | null;
+  if (!e) return false;
+  return e.code === 'PGRST204' && /['"]?images['"]? column/i.test(e.message ?? '');
+}
+
+export async function createPost(input: PostInput): Promise<CreatePostResult> {
+  if (!isConfigured()) {
+    throw new Error('서비스 설정이 완료되지 않았어요. 관리자에게 문의해주세요.');
   }
+  const base = {
+    category: input.category,
+    title: input.title,
+    content: input.content,
+    author: input.author,
+    author_dong: input.authorDong,
+    is_anonymous: input.isAnonymous,
+  };
+  const hasImages = (input.images?.length ?? 0) > 0;
+  const payload = hasImages ? { ...base, images: input.images } : base;
+
+  let { data, error } = await supabase
+    .from('community_posts')
+    .insert(payload)
+    .select()
+    .single();
+
+  let imagesDropped = false;
+  if (error && hasImages && isImagesColumnMissing(error)) {
+    console.warn('[posts] images column missing — retrying without images');
+    imagesDropped = true;
+    ({ data, error } = await supabase
+      .from('community_posts')
+      .insert(base)
+      .select()
+      .single());
+  }
+
+  if (error) {
+    console.error('[posts] createPost error:', error);
+    throw new Error(error.message || '글 등록에 실패했습니다.');
+  }
+  return { post: rowToPost(data as Record<string, unknown>), imagesDropped };
 }
 
 // ── 수정 ─────────────────────────────────────────────────────

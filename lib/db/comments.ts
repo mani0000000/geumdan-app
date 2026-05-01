@@ -24,7 +24,7 @@
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface DBComment {
   id: string;
@@ -38,10 +38,7 @@ export interface DBComment {
 }
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
 function rowToComment(row: Record<string, unknown>): DBComment {
