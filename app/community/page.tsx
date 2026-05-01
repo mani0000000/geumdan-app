@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
@@ -110,6 +110,8 @@ function PostCard({ post, router }: { post: Post; router: ReturnType<typeof useR
 
 function CommunityTab() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const refreshKey = searchParams.get("refresh");
   const [active, setActive] = useState<CommunityCategory>(() => {
     if (typeof window === "undefined") return "전체";
     const c = new URLSearchParams(window.location.search).get("category");
@@ -120,12 +122,13 @@ function CommunityTab() {
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [sort, setSort] = useState<CommSortKey>("latest");
 
+  // 글쓰기 후 ?refresh=... 가 붙어 돌아오면 목록을 다시 가져온다.
   useEffect(() => {
     fetchDBPosts(undefined, 50).then(data => {
       setDbPosts(data);
       setLoadingPosts(false);
     });
-  }, []);
+  }, [refreshKey]);
 
   const allPosts: Post[] = [
     ...dbPosts,

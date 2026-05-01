@@ -75,7 +75,9 @@ export default function WritePage() {
       });
       if (post) {
         saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
+        // refresh 쿼리로 목록 페이지의 fetch effect를 다시 트리거해서
+        // 새로 작성한 글이 목록에 즉시 보이게 한다.
+        router.replace(`/community/?refresh=${post.id}`);
       } else {
         setError("글 등록에 실패했습니다. 잠시 후 다시 시도해주세요.");
         setSubmitting(false);
