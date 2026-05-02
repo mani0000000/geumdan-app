@@ -1,9 +1,9 @@
 {
-  "fetchedAt": "2026-05-02T09:52:13.535Z",
+  "fetchedAt": "2026-05-02T12:42:29.555Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-0",
+      "id": "gr2-1",
       "title": "민주 인천시당, 영종·서구·검단 등 광역·기초의원 후보 14명 확정 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -30,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-11",
+      "id": "gr2-10",
       "title": "[지선 D-30]인천북부, 징검다리 '4선' 나올까…초대는 누구 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -75,15 +75,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
-      "title": "인천 서구 명칭 ‘서해구’로 사실상 확정…국회 행안위 통과 - 데일리안",
-      "summary": "",
-      "source": "데일리안",
-      "publishedAt": "2026-04-30T00:59:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBwT3ZYaG5RaWpxNWFYYkd1SzF6TmhMSEdJVVBwYmNQZDZtZWtZbG01eURvZHZrV1hpVkVLa2ozTjFqS3FtelY2UWtMaVlZM25tdVEzU1RB0gGaAkFVX3lxTFB5U3A0cGhXek1Sb3ZIQUE5cGs5Mkd5RWpMU1Z4blZMX2hRWFZQa25lbmxEVm9LaEVDUlcxa3NGUF9QX0RxSDZFdVp1OWhLYUV3U3o4RmxXY3dCVzhUTDN6WTdjczNsTmEtMmlFbXlDdEMwVHVWTEkwTGxaOUk2Skh0OWl1dmtSUV9uSk81RGZzaXJ4S1k0b200Y0pWS0loaDZqb1RUcWxaNkZURG9oU09FaDN4RmxOdlYya2ttZS0wOFlReDFXZEJ6dHZ5T2dJZjNKMTlxVDZ3M0Fub2xSX1I1dVVaZ0hWY29sQXpUaGZtYXdPa0lIcl8xUnl3UEV1OHA5M01lRXJmbmp3bTNWMmxNQm5USHdWa0hrdw?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr0-4",
       "title": "‘검단신도시 롯데캐슬 넥스티엘’ 입주 신호탄 - 이뉴스투데이",
       "summary": "",
@@ -102,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-0",
       "title": "인천 서구의회 분구특위, 검단구 임시청사 현장 점검 - 중부일보",
       "summary": "",
       "source": "중부일보",
@@ -165,16 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-12",
-      "title": "The E-STATION - 에너지 미디어",
-      "summary": "",
-      "source": "에너지 미디어",
-      "publishedAt": "2026-04-26T19:36:26.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiwAFBVV95cUxPSzZlRG96VG9ZdlpLYXdFMm5sb2RZT185NWY4V2FweFI3eExaMDNBdnI0SW5LTTFQaVZMR2JVMmFQbXpHRTR2Y3V5Q2hjZFgwS09SelRPRnRKVnRHa2dNbFNxMm5Ncmd0V01XZmRlZFNBNnVxcXFOZDE4SXRDOVhmUm9ZT1VKX1dIN0tobk5mSmRHMGJtajVrcWFOTl95M2o5VjVGR2FsQVUtM0VvZHI0U28wSkRHNzJXNnk2VDdscEg?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-8",
+      "id": "gr1-7",
       "title": "더불어민주당 남동·검단구청장 후보 확정…완성된 인천 기초단체장 대진표 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -183,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-18",
       "title": "인프라 없는데 신도시 왜 가? ‘완성된 신도시’에만 청약 몰린다 - 문화일보",
       "summary": "",
       "source": "문화일보",
@@ -219,6 +201,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr0-62",
+      "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 파이낸셜뉴스",
+      "summary": "",
+      "source": "파이낸셜뉴스",
+      "publishedAt": "2026-04-24T02:51:24.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5PYjhjOU10a3NjMnpXTmhrTkRPNndRTUY4X0VKV0NXZFdHNHJHb3g0M1dBQ2NiNmtFbTdYREM2UEd4QTcxUjQ4aXJwemtvdXJoVkJiWTNqNVhVUdIBXkFVX3lxTE1kMnhOYzQwQ2RMQVo0YTQ4NC16OW5FYlRIV3BjbHVWQm1rRlU3cURTY3JveFkwT2tLcUt2QmdIQnczRVo5bUtVMHlvVWFWT2Nsc0dHRzk3alBoRnZBWWc?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr1-4",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 뉴시스",
       "summary": "",
@@ -228,16 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
-      "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
-      "summary": "",
-      "source": "매일일보",
-      "publishedAt": "2026-04-23T23:41:50.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5JSmNMcHFhNERxNTRuMFdoa2VndEd2cHplajNPVXU1WWFlMUVpenFzU3FaTG1lQ2FaTHN1TWw2bjhvX05tZ1lzWVJrQ2FHWjVYUlJBOGJORVlQUzRpa2pBcUNoVFQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-10",
+      "id": "gr2-8",
       "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -246,7 +228,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-29",
+      "id": "gr2-9",
+      "title": "인천 서구의회 , 검단구 임시청사 현장 점검 실시 - 서울뉴스통신",
+      "summary": "",
+      "source": "서울뉴스통신",
+      "publishedAt": "2026-04-23T13:04:05.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5CQVY2Zkc2b0hUUmdjQ21vR3Q1aEhwb3BFZkJGeU1vWm1QRXZ1ZXJyQTFXYW1tLTloUXNSZ3BTbnREMWxWdkI1cmJ6OHhrOExzMGVRVTBMeHhXVzhSMlFBV1VWamVQLXVTZ1Yw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-24",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -255,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-7",
       "title": "인천 서구의회, 검단구 임시청사 점검…\"행정 공백 최소화\" - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -327,21 +318,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
-      "title": "인천 서구, 지하철역 ‘찾아가는 건강상담’ 호응…정기 운영 확대 - 매일일보",
+      "id": "gr2-35",
+      "title": "인천 서구, 분구 전 마지막 마을학교 통합 워크숍 개최... 행정은 나뉘어도 교육은 잇는다 - 대한투데이",
       "summary": "",
-      "source": "매일일보",
-      "publishedAt": "2026-04-20T04:43:44.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE82OC1MZ1prVWcwal93Y3ZkbDRXaWh3SWlJM200NDBUR1RZNmFweXpsLVMwQUR5QzVqY2hhOGh3LVRTZURQUzNZWmZaQzB5M3BtYmw5ai1zN3lmZklXbDZ4S0tWZ1I?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-14",
-      "title": "인천 서구·검단구, 마을학교 워크숍 개최 - 한국정경신문",
-      "summary": "",
-      "source": "한국정경신문",
-      "publishedAt": "2026-04-17T05:51:14.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE9MVFpsbjdCY2xJZzZmTnBqbjNvSVl1NXBYUTNIcWVGZEV1ZmhhcWVlQm5yUDlDbXpjdGhZLUxKZkc1aUZ0VTlvdC1DUE9KRF9fVFE?oc=5",
+      "source": "대한투데이",
+      "publishedAt": "2026-04-17T01:49:43.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTFBTeHJxdV9TRTJESFpHQ0tRTkJjaEJER0d0Njc0N01SaVdINW54eUpocERzdlZCY2MyQjJOaDNsd1lDWmxObk9ET2JPOFp2d0x4S1RWcEVWRFdBaGZIRmU3WmFGMVFySWlNR1E?oc=5",
       "type": "뉴스"
     },
     {
@@ -360,6 +342,24 @@
       "source": "인천신문",
       "publishedAt": "2026-04-16T07:00:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE1fX1pNOGMyOEFqUTI1MDRFdW9zb1RKVEhVVjlZbkRDWDhSYms5Tm55QUd4TzlsVXZ3NzQtaUZnNDFlY2JCZXF3eVhkYVBOeUx1MkJheHVCQlVHMjBuS0J5TEoya05PMjdzS2Exb2FXT3FnbDcx0gF4QVVfeXFMUGtPUFpxak5VdXZ0dmZTRmFfWmJkOGRKNHljZlNmeFVyNWRMcTVHdzNHTi1kZmtmN3RJNnB1U2tsQU5hUkNyS0VPV3FJZE5fUHYtRUY5azRGYWthblgwcTR1ZVY5QndKemlDV3FKeU9SSVZTaGZWYjkw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-28",
+      "title": "인천 검단신도시 '엘리프 검단 포레듀' 임의공급 청약 진행 - 한경매거진&북",
+      "summary": "",
+      "source": "한경매거진&북",
+      "publishedAt": "2026-04-15T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1pYXJobU5Ba3pqdThyQ3ktRHBQZWhYTWtyUnBqZkdESWZ3ZHRSUklMR29maGJoMmtZMGF1VUNGX3E4TnBhZG5KQzdyXzlpSjM1Zm5QR04zU0lGbXFrTk1EQm82b3VmS3JX?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-34",
+      "title": "인천 서구 검단구 출범 대비 예산 로드맵 가동 본예산 편성 교육 실시 > 뉴스 - 더코리아",
+      "summary": "",
+      "source": "더코리아",
+      "publishedAt": "2026-04-14T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTFBFQnMxT24xWDRkQjBDSnhLalFJZGVCbTVrTkIwdzVuUEZWMFozV0VqX05XV3UzNkhYVHdBdTc2M2ZWbms?oc=5",
       "type": "뉴스"
     }
   ]
