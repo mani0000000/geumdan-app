@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo, useRef, useCallback, memo } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   MapPin, Phone, Clock, Lock, Tag,
@@ -737,12 +738,11 @@ const catGrads: Record<StoreCategory, [string, string]> = {
 
 // 매장 카드 — 매거진형 2열 그리드. memo로 리렌더 최소화 (props는 안정적 참조여야 함)
 const StoreCard = memo(function StoreCard({
-  store, hasNew, hasCoupon, onSelect,
+  store, hasNew, hasCoupon,
 }: {
   store: EnrichedStore;
   hasNew: boolean;
   hasCoupon: boolean;
-  onSelect: (s: EnrichedStore) => void;
 }) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const [heroFailed, setHeroFailed] = useState(false);
@@ -750,7 +750,7 @@ const StoreCard = memo(function StoreCard({
   const [gFrom, gTo] = catGrads[store.category];
   const isOpen = store.isOpen !== false;
   return (
-    <button onClick={() => onSelect(store)}
+    <Link href={`/stores/${store.id}`}
       className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#eeeef0] flex flex-col h-full">
       {/* Hero */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "5/3" }}>
@@ -856,18 +856,17 @@ const StoreCard = memo(function StoreCard({
           ) : null}
         </div>
       </div>
-    </button>
+    </Link>
   );
 });
 
 // 인기 매장 — 가로 스크롤 전용. StoreCard와 달리 고정 높이/단일 배지/정사각 히어로로 좁은 폭에 맞춤.
 const PopularCard = memo(function PopularCard({
-  store, hasNew, hasCoupon, onSelect,
+  store, hasNew, hasCoupon,
 }: {
   store: EnrichedStore;
   hasNew: boolean;
   hasCoupon: boolean;
-  onSelect: (s: EnrichedStore) => void;
 }) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const [heroFailed, setHeroFailed] = useState(false);
@@ -882,7 +881,7 @@ const PopularCard = memo(function PopularCard({
         ? { label: "쿠폰", bg: "#0071e3" }
         : null;
   return (
-    <button onClick={() => onSelect(store)}
+    <Link href={`/stores/${store.id}`}
       className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-[#eeeef0] flex flex-col w-full">
       <div className="relative w-full overflow-hidden" style={{ aspectRatio: "1/1" }}>
         {heroThumb ? (
@@ -932,7 +931,7 @@ const PopularCard = memo(function PopularCard({
           <span className="truncate min-w-0">{store.buildingName}</span>
         </div>
       </div>
-    </button>
+    </Link>
   );
 });
 
@@ -1025,7 +1024,6 @@ function StoreListView() {
     return () => io.disconnect();
   }, [hasMore, baseList.length]);
 
-  const handleSelectStore = useCallback((s: EnrichedStore) => setSelectedStore(s), []);
 
   return (
     <div>
@@ -1161,7 +1159,6 @@ function StoreListView() {
                   store={s}
                   hasNew={newOpeningIds.has(s.id)}
                   hasCoupon={couponStoreIds.has(s.id)}
-                  onSelect={handleSelectStore}
                 />
               </div>
             ))}
@@ -1229,7 +1226,6 @@ function StoreListView() {
                         store={s}
                         hasNew={newOpeningIds.has(s.id)}
                         hasCoupon={couponStoreIds.has(s.id)}
-                        onSelect={handleSelectStore}
                       />
                     ))}
                   </div>
@@ -1259,7 +1255,6 @@ function StoreListView() {
                   store={s}
                   hasNew={newOpeningIds.has(s.id)}
                   hasCoupon={couponStoreIds.has(s.id)}
-                  onSelect={handleSelectStore}
                 />
               ))}
             </div>
