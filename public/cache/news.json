@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-02T21:29:43.208Z",
+  "fetchedAt": "2026-05-03T01:46:02.412Z",
   "count": 40,
   "articles": [
     {
@@ -62,7 +62,7 @@
       "summary": "",
       "source": "이뉴스투데이",
       "publishedAt": "2026-04-29T23:59:26.000Z",
-      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1HeWVEWHBPNUs3TDBjaWdLOTVpazR4TlFlaDN1RzhhV1k3Yjh0MnVuem1hZVg0Tk9FaWw3VVNSZDZrRmNDUlE2bzI1bGI2S2ZxNjlFdm5jZElfSHFRTHY2ZmpQcnRVcS1CYVFvclJHVF9jQQ?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9reEI1S2hMMENFOHVsanpKdV9sbmNCTFVPM2ZFcGpLWVJCRGZBSzc0UHF5TmxCRDNMdzRSREV1ZUxQR0NUV0NWLWZZdWZNQkg1Tk1KT1k0dVI3TFR4NWpTZU1VcmhHeDRKaGZLSjFmRXPSAXRBVV95cUxQeWY4LVI4Y2xINWZOUG9JdTFxV0I3WXRIYmhLXzFfdkFEbnk4OHJEUnhFWlhWMzdCRTJ4ZjlXUl96S1NiME9RclFEdXZkekFnN2F6QmFjOHFyaFFzbDZkNkZsNldFTUExQXoxTmFiT3VaQzk2QQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -111,12 +111,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-0",
+      "id": "gr3-2",
       "title": "최정규 인천교통공사 사장 “지난해 1호선 검단연장선 개통·내부고객만족도 역대 최고점 달성... 가장 의미 있는 성과” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
       "publishedAt": "2026-04-27T01:41:05.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5KSFdOckpnYzhmUXRGWFFGY0lPZ2kzU3F5OVEzZldkSjlJTU9LMzRfTVdONkFVbm5RNjc0WkpaYnJGbWNaRXJnV3VqVUlST1FpREJ2aUpReV9aSFYtZHBfOTZ0cmh6RjlMaXlMMzdB?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9HajdZMmNhcE53WlJld1YyOHpJS0tCbldacy1jQjZJQmlXcVQ5LW5RMzNrc2poMTFOYzJ2SC1UU2l4bWZQcXJGdDMtSFZCX3M2Uy1EWjZzbkVFYWwyc1RHYTVJcHlPQmZVNlFJ?oc=5",
       "type": "뉴스"
     },
     {
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-30",
       "title": "인프라 없는데 신도시 왜 가? ‘완성된 신도시’에만 청약 몰린다 - 문화일보",
       "summary": "",
       "source": "문화일보",
@@ -160,7 +160,7 @@
       "title": "'검단아파트 붕괴사고' LH, GS건설 상대 1700억대 손해배상 소송 시작 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
-      "publishedAt": "2026-04-24T03:23:06.000Z",
+      "publishedAt": "2026-04-24T07:00:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE95MXhybldwb1prb2ZiWTYxMGtVeVNPcDUxeGdEVDJYOXVmdkhhd1dVNzJHaEh6cERPaWwzVjBFMUgyamEzUk05QnVObktJOUR6NEtfZ19tYXdwZHBvbmtfQTNR?oc=5",
       "type": "뉴스"
     },
@@ -183,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-26",
+      "id": "gr2-28",
       "title": "인천 서구의회, 검단구 임시청사 현장 점검 실시 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -246,15 +246,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-60",
-      "title": "검단신도시 '더샵 검단레이크파크' 5월 분양 예정 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-23T01:04:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5kdzNNczgxWk9CaUp1bHNveWV3dGplcGFzVWpEZWlvZlEybjF0VjRIenFiX0Z0aW1ZTFdMXzZEbEJfWWxieWZXTGN0MWwzblpVdExR?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr1-9",
       "title": "'검단 아파트 주차장 붕괴' LH, GS건설 책임져야...24일 손배소송 첫 변론 - 뉴스핌",
       "summary": "",
@@ -300,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-1",
+      "id": "gr3-0",
       "title": "강남규 검단구청장 예비후보, 국토부 장관 만나 검단 교통 문제 정책제안서 전달 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -318,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-26",
+      "id": "gr0-25",
       "title": "인천 검단신도시 '엘리프 검단 포레듀' 임의공급 청약 진행 - 한경매거진&북",
       "summary": "",
       "source": "한경매거진&북",
@@ -355,6 +346,15 @@
     },
     {
       "id": "gr3-17",
+      "title": "허숙정, 검단 상권 현장 간담회…\"교통·주차·청소년 인프라 개선 시급\" - 신아일보",
+      "summary": "",
+      "source": "신아일보",
+      "publishedAt": "2026-04-13T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE5FeHpVM0o1dHFwTlBnOVd6U2UtU3JuSUk0dXQ4MVpfWGlaVEhCRF9MTGdmMHRRUDFGek5BYjA2cUhNc1NlVmFVYTRVOENVbjB2MVFhM1pYaUlIT1VFX1pQcDgyRE1rbU9VRmFDZEwzQng?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr3-54",
       "title": "검단 아라역 ‘상습 정체’ 풀리나…서구의회·국회의원 현장 점검 - 글로벌경제신문",
       "summary": "",
       "source": "글로벌경제신문",
