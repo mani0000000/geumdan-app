@@ -20,7 +20,9 @@ export interface SubwayArrival {
   trainTypeName?: string;  // "직통", "급행" 등
 }
 
-export type SubwayApiType = "ic1" | "arex" | "seoul9" | "planned";
+// 인천교통공사 IcSubwayInfoService 는 1·2호선을 동일 엔드포인트로 제공한다.
+// "ic1" 은 호선 구분자가 아니라 "Incheon city subway API 호출" 의 의미.
+export type SubwayApiType = "ic1" | "ic2" | "arex" | "seoul9" | "planned";
 
 export interface SubwayStationEntry {
   id: string;
@@ -155,6 +157,70 @@ const STATION_DB: SubwayStationEntry[] = [
     stationCode: "I052",
     timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
   },
+
+  // 서울 9호선 — 검단에서 가장 가까운 서쪽 종점
+  {
+    id: "seoul9-gaehwa",
+    displayName: "개화역",
+    line: "9호선",
+    lineColor: "#BDB048",
+    lat: 37.5783, lng: 126.7986,
+    apiType: "seoul9",
+    stationCode: "개화",
+    timetable: { upFirst: "05:30", upLast: "23:52", downFirst: "-", downLast: "-", intervalMin: 6, intervalDisplay: "4~12분", upDirection: "중앙보훈병원", downDirection: "개화" },
+  },
+
+  // 인천2호선 — 검단신도시 통과 구간
+  {
+    id: "ic2-geomdanoryu",
+    displayName: "검단오류역",
+    line: "인천2호선",
+    lineColor: "#ED8B00",
+    lat: 37.6079, lng: 126.6488,
+    apiType: "ic2",
+    stationCode: "I201",
+    timetable: { upFirst: "05:30", upLast: "24:12", downFirst: "-", downLast: "-", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+  },
+  {
+    id: "ic2-wanggil",
+    displayName: "왕길역",
+    line: "인천2호선",
+    lineColor: "#ED8B00",
+    lat: 37.6004, lng: 126.6595,
+    apiType: "ic2",
+    stationCode: "I202",
+    timetable: { upFirst: "05:32", upLast: "24:14", downFirst: "05:40", downLast: "25:03", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+  },
+  {
+    id: "ic2-geomdansageori",
+    displayName: "검단사거리역",
+    line: "인천2호선",
+    lineColor: "#ED8B00",
+    lat: 37.5961, lng: 126.6692,
+    apiType: "ic2",
+    stationCode: "I203",
+    timetable: { upFirst: "05:34", upLast: "24:17", downFirst: "05:38", downLast: "25:01", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+  },
+  {
+    id: "ic2-majeon",
+    displayName: "마전역",
+    line: "인천2호선",
+    lineColor: "#ED8B00",
+    lat: 37.5891, lng: 126.6781,
+    apiType: "ic2",
+    stationCode: "I204",
+    timetable: { upFirst: "05:36", upLast: "24:19", downFirst: "05:36", downLast: "24:59", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+  },
+  {
+    id: "ic2-wanjeong",
+    displayName: "완정역",
+    line: "인천2호선",
+    lineColor: "#ED8B00",
+    lat: 37.5818, lng: 126.6847,
+    apiType: "ic2",
+    stationCode: "I205",
+    timetable: { upFirst: "05:38", upLast: "24:21", downFirst: "05:34", downLast: "24:57", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+  },
 ];
 
 // ── 전체 역 목록 (미개통 제외) ───────────────────────────────
@@ -282,6 +348,7 @@ export async function fetchSubwayArrivals(
   // 운행 시간 외 → 시간표 추정으로 폴백 (스테일 실시간 데이터 방지)
   if (!isInServiceHours(station.timetable)) return [];
   if (station.apiType === "ic1")    return fetchIc1Arrivals(station.stationCode);
+  if (station.apiType === "ic2")    return fetchIc1Arrivals(station.stationCode); // 동일 엔드포인트
   if (station.apiType === "arex")   return fetchArexArrivals(station.stationCode);
   if (station.apiType === "seoul9") return fetchSeoul9Arrivals(station.stationCode);
   return [];
