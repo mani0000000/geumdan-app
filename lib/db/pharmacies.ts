@@ -135,6 +135,8 @@ export async function fetchAllPharmacies(): Promise<Pharmacy[]> {
       }),
       distance: undefined,
       logo_url: logos[row.id as string] ?? null,
+      lat: typeof row.lat === 'number' ? row.lat : null,
+      lng: typeof row.lng === 'number' ? row.lng : null,
     }));
   } catch (err) {
     console.error('[pharmacies] Error fetching from Supabase, falling back to mock data:', err);
@@ -184,6 +186,8 @@ export async function fetchNightPharmacies(): Promise<Pharmacy[]> {
       }),
       distance: undefined,
       logo_url: (row.logo_url as string | null) ?? null,
+      lat: typeof row.lat === 'number' ? row.lat : null,
+      lng: typeof row.lng === 'number' ? row.lng : null,
     }));
   } catch (err) {
     console.error('[pharmacies] Error fetching from Supabase, falling back to mock data:', err);
@@ -202,6 +206,8 @@ export interface EmergencyRoomRow {
   isPediatric: boolean;
   level: string;
   logo_url?: string | null;
+  lat?: number | null;
+  lng?: number | null;
 }
 
 export async function fetchEmergencyRooms(
@@ -244,6 +250,8 @@ export async function fetchEmergencyRooms(
       isPediatric: (row.is_pediatric as boolean) ?? false,
       level: (row.level as string) ?? '',
       logo_url: logos[row.id as string] ?? null,
+      lat: typeof row.lat === 'number' ? row.lat : null,
+      lng: typeof row.lng === 'number' ? row.lng : null,
     }));
   } catch (err) {
     console.error('[emergency] Error fetching from Supabase, falling back to mock data:', err);
@@ -253,11 +261,11 @@ export async function fetchEmergencyRooms(
 
 function getMockEmergencyRooms(type: 'all' | 'pediatric'): EmergencyRoomRow[] {
   const all: EmergencyRoomRow[] = [
-    { id: 'er1', name: '검단탑병원',              address: '인천 서구 청마로 19번길 5 (당하동)',        phone: '032-590-0114', distance: '1.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관' },
-    { id: 'er2', name: '인천검단 온누리병원',      address: '인천 서구 완정로 199 (왕길동)',             phone: '032-568-9111', distance: '2.2km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관' },
-    { id: 'er3', name: '가톨릭대학교 인천성모병원',address: '인천 부평구 동수로 56 (부평동)',            phone: '1544-9004',    distance: '8.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
-    { id: 'er4', name: '가천대 길병원',            address: '인천 남동구 남동대로 774번길 21 (구월동)', phone: '1577-2299',    distance: '13.5km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
-    { id: 'er5', name: '인하대학교병원',           address: '인천 중구 인항로 27 (신흥동)',              phone: '032-890-2300', distance: '16.0km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터' },
+    { id: 'er1', name: '검단탑병원',              address: '인천 서구 청마로 19번길 5 (당하동)',        phone: '032-590-0114', distance: '1.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관', lat: 37.5950, lng: 126.6585 },
+    { id: 'er2', name: '인천검단 온누리병원',      address: '인천 서구 완정로 199 (왕길동)',             phone: '032-568-9111', distance: '2.2km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: false, level: '지역응급의료기관', lat: 37.6018, lng: 126.6644 },
+    { id: 'er3', name: '가톨릭대학교 인천성모병원',address: '인천 부평구 동수로 56 (부평동)',            phone: '1544-9004',    distance: '8.5km',  isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터', lat: 37.4870, lng: 126.7240 },
+    { id: 'er4', name: '가천대 길병원',            address: '인천 남동구 남동대로 774번길 21 (구월동)', phone: '1577-2299',    distance: '13.5km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터', lat: 37.4543, lng: 126.7023 },
+    { id: 'er5', name: '인하대학교병원',           address: '인천 중구 인항로 27 (신흥동)',              phone: '032-890-2300', distance: '16.0km', isOpen: true, hours: '24시간 응급실 운영', isPediatric: true,  level: '권역응급의료센터', lat: 37.4566, lng: 126.6334 },
   ];
   return type === 'pediatric' ? all.filter((e) => e.isPediatric) : all;
 }

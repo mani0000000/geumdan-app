@@ -11,7 +11,9 @@ import { coupons, couponDetails } from "@/lib/mockData";
 import type { Coupon, StoreCategory } from "@/lib/types";
 
 const CATEGORIES: (StoreCategory | "전체")[] = [
-  "전체", "카페", "음식점", "병원/약국", "미용", "마트", "기타",
+  "전체", "카페", "음식점", "병원/약국", "미용", "마트",
+  "베이커리", "부동산", "스터디카페", "안경원", "꽃집",
+  "기타",
 ];
 const BUILDINGS = ["전체", ...Array.from(new Set(coupons.map(c => c.buildingName)))];
 

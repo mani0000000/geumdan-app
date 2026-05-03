@@ -30,14 +30,11 @@
  * CREATE INDEX idx_posts_category   ON community_posts(category);
  */
 
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { Post, CommunityCategory } from '@/lib/types';
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
@@ -69,14 +66,17 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
+    images: (row.images as string[]) ?? [],
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
+    isHidden: (row.is_hidden as boolean) ?? false,
   };
 }
 
 const POST_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
 
 // ── 목록 조회 ────────────────────────────────────────────────
+// 어드민이 숨김 처리한(is_hidden=true) 게시글은 제외
 export async function fetchDBPosts(
   category?: string,
   limit = 50
@@ -100,6 +100,10 @@ export async function fetchDBPosts(
       return (fb.data ?? []).map(row => rowToPost(row as Record<string, unknown>));
     }
     return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+    if (error) throw error;
+    return (data ?? [])
+      .map(row => rowToPost(row as Record<string, unknown>))
+      .filter(p => !p.isHidden);
   } catch (e) {
     console.error('[posts] fetchDBPosts error:', e);
     return [];
@@ -139,12 +143,46 @@ export interface PostInput {
   authorDong: string;
   isAnonymous: boolean;
   userId?: string | null;
+  images?: string[];
 }
 
-export async function createPost(input: PostInput): Promise<Post | null> {
-  if (!isConfigured()) return null;
-  try {
-    const { data, error } = await supabase
+export interface CreatePostResult {
+  post: Post;
+  imagesDropped: boolean;
+}
+
+function isImagesColumnMissing(err: unknown): boolean {
+  const e = err as { code?: string; message?: string } | null;
+  if (!e) return false;
+  return e.code === 'PGRST204' && /['"]?images['"]? column/i.test(e.message ?? '');
+}
+
+export async function createPost(input: PostInput): Promise<CreatePostResult> {
+  if (!isConfigured()) {
+    throw new Error('서비스 설정이 완료되지 않았어요. 관리자에게 문의해주세요.');
+  }
+  const base = {
+    category: input.category,
+    title: input.title,
+    content: input.content,
+    author: input.author,
+    author_dong: input.authorDong,
+    is_anonymous: input.isAnonymous,
+  };
+  const hasImages = (input.images?.length ?? 0) > 0;
+  const payload = hasImages ? { ...base, images: input.images } : base;
+
+  let { data, error } = await supabase
+    .from('community_posts')
+    .insert(payload)
+    .select()
+    .single();
+
+  let imagesDropped = false;
+  if (error && hasImages && isImagesColumnMissing(error)) {
+    console.warn('[posts] images column missing — retrying without images');
+    imagesDropped = true;
+    ({ data, error } = await supabase
       .from('community_posts')
       .insert({
         category: input.category,
@@ -162,7 +200,16 @@ export async function createPost(input: PostInput): Promise<Post | null> {
   } catch (e) {
     console.error('[posts] createPost error:', e);
     return null;
+      .insert(base)
+      .select()
+      .single());
   }
+
+  if (error) {
+    console.error('[posts] createPost error:', error);
+    throw new Error(error.message || '글 등록에 실패했습니다.');
+  }
+  return { post: rowToPost(data as Record<string, unknown>), imagesDropped };
 }
 
 // ── 수정 ─────────────────────────────────────────────────────

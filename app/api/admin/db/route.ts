@@ -11,6 +11,10 @@ const ALLOWED_TABLES = new Set([
   "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
   "sport_categories", "leagues", "teams", "broadcasters",
   "users", "user_activity_stats", "admin_member_logs",
+  "post_reports", "post_hidden",
+  // 매장 브랜드 페이지
+  "store_menus", "store_hours", "store_events", "store_reservations",
+  "store_waitings", "store_reviews", "coupon_uses",
 ]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
