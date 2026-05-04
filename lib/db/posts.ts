@@ -99,8 +99,6 @@ export async function fetchDBPosts(
         .limit(limit);
       return (fb.data ?? []).map(row => rowToPost(row as Record<string, unknown>));
     }
-    return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
-    if (error) throw error;
     return (data ?? [])
       .map(row => rowToPost(row as Record<string, unknown>))
       .filter(p => !p.isHidden);
@@ -168,6 +166,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     author: input.author,
     author_dong: input.authorDong,
     is_anonymous: input.isAnonymous,
+    user_id: input.userId ?? null,
   };
   const hasImages = (input.images?.length ?? 0) > 0;
   const payload = hasImages ? { ...base, images: input.images } : base;
@@ -184,22 +183,6 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     imagesDropped = true;
     ({ data, error } = await supabase
       .from('community_posts')
-      .insert({
-        category: input.category,
-        title: input.title,
-        content: input.content,
-        author: input.author,
-        author_dong: input.authorDong,
-        is_anonymous: input.isAnonymous,
-        user_id: input.userId ?? null,
-      })
-      .select(POST_SELECT)
-      .single();
-    if (error) throw error;
-    return rowToPost(data as Record<string, unknown>);
-  } catch (e) {
-    console.error('[posts] createPost error:', e);
-    return null;
       .insert(base)
       .select()
       .single());
