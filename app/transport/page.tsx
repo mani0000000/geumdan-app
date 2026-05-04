@@ -121,36 +121,40 @@ function BusDetailSheet({
     setNoRouteData(false);
 
     async function load() {
+      let d: RouteDetail | null = null;
+      let s: RouteStation[] = [];
+      let l: BusLocation[] = [];
+
+      // 1) 인천 routeId가 있으면 인천 API 우선 시도
       if (arrival.routeId) {
-        const [d, s, l] = await Promise.all([
+        const [icDetail, icStations, icLocations] = await Promise.all([
           fetchRouteDetail(arrival.routeId),
           fetchStationsByRoute(arrival.routeId),
           fetchBusLocations(arrival.routeId),
         ]);
         if (cancelled) return;
-        setDetail(d); setStations(s); setLocations(l);
-        setLoading(false);
-        if (!d && s.length === 0) setNoRouteData(true);
-      } else if (arrival.routeNo) {
+        d = icDetail; s = icStations; l = icLocations;
+      }
+
+      // 2) 인천 API가 비어있고 routeNo가 있으면 TAGO로 보강
+      if ((!d || s.length === 0) && arrival.routeNo) {
         const tagoRouteId = await searchRouteByNo(arrival.routeNo);
         if (cancelled) return;
         if (tagoRouteId) {
-          const [d, s] = await Promise.all([
+          const [tagoDetail, tagoStations] = await Promise.all([
             fetchRouteDetailFromTago(tagoRouteId),
             fetchStationsByRouteTago(tagoRouteId),
           ]);
           if (cancelled) return;
-          setDetail(d); setStations(s); setLocations([]);
-          setLoading(false);
-          if (!d && s.length === 0) setNoRouteData(true);
-        } else {
-          setLoading(false);
-          setNoRouteData(true);
+          if (!d) d = tagoDetail;
+          if (s.length === 0) s = tagoStations;
         }
-      } else {
-        setLoading(false);
-        setNoRouteData(true);
       }
+
+      if (cancelled) return;
+      setDetail(d); setStations(s); setLocations(l);
+      setLoading(false);
+      if (!d && s.length === 0) setNoRouteData(true);
     }
 
     load();
@@ -257,10 +261,13 @@ function BusDetailSheet({
               ))}
             </div>
           ) : noRouteData ? (
-            <div className="py-12 text-center">
+            <div className="py-10 text-center">
               <Bus size={28} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] text-[#6e6e73]">노선 정보 없음</p>
-              <p className="text-[12px] text-[#86868b] mt-1">공공 API에서 해당 노선을 찾을 수 없습니다</p>
+              <p className="text-[14px] font-semibold text-[#424245]">
+                {arrival.routeNo}번 {arrival.destination !== "종점" && arrival.destination !== "방향 미상" ? `· ${arrival.destination} 방면` : ""}
+              </p>
+              <p className="text-[12px] text-[#86868b] mt-1.5">상세 노선 정보를 불러오지 못했습니다</p>
+              <p className="text-[11px] text-[#a1a1a6] mt-0.5">잠시 후 새로고침해 주세요</p>
             </div>
           ) : curStations.length === 0 ? (
             <div className="py-12 text-center">
@@ -665,25 +672,53 @@ export default function TransportPage() {
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
     const DEFAULT = { lat: 37.594, lng: 126.710 };
-    posRef.current = DEFAULT;
-    setUserPos(DEFAULT);
     loadSubwayData();
-    loadBusData(DEFAULT.lat, DEFAULT.lng);
 
-    if (!navigator.geolocation) { setLocState("denied"); return; }
+    if (!navigator.geolocation) {
+      posRef.current = DEFAULT;
+      setUserPos(DEFAULT);
+      setLocState("denied");
+      loadBusData(DEFAULT.lat, DEFAULT.lng);
+      return;
+    }
+
     setLocState("loading");
+
+    // GPS가 빠르게 응답하면 그 위치로 첫 로드. 2초 안에 안 오면 DEFAULT로
+    // 우선 로드하고, 이후 GPS 도착 시 사용자 위치로 재조회.
+    let initialDispatched = false;
+    const dispatchInitial = (lat: number, lng: number) => {
+      if (initialDispatched) return;
+      initialDispatched = true;
+      posRef.current = { lat, lng };
+      setUserPos({ lat, lng });
+      loadBusData(lat, lng);
+    };
+
+    const fastTimer = setTimeout(() => dispatchInitial(DEFAULT.lat, DEFAULT.lng), 2000);
+
     navigator.geolocation.getCurrentPosition(
       pos => {
+        clearTimeout(fastTimer);
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        posRef.current = p;
-        setUserPos(p);
         setLocState("ok");
-        if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
-          loadBusData(p.lat, p.lng, false);  // GPS 갱신 시 기존 목록 유지하면서 교체
+        if (initialDispatched) {
+          // 이미 DEFAULT로 로드됨 — 사용자 실제 위치로 다시 조회 (목록은 유지하며 교체)
+          posRef.current = p;
+          setUserPos(p);
+          if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 50) {
+            loadBusData(p.lat, p.lng, false);
+          }
+        } else {
+          dispatchInitial(p.lat, p.lng);
         }
       },
-      () => setLocState("denied"),
-      { timeout: 3000, maximumAge: 300000, enableHighAccuracy: false }
+      () => {
+        clearTimeout(fastTimer);
+        setLocState("denied");
+        dispatchInitial(DEFAULT.lat, DEFAULT.lng);
+      },
+      { timeout: 8000, maximumAge: 60000, enableHighAccuracy: true }
     );
   }, [loadBusData, loadSubwayData]);
 

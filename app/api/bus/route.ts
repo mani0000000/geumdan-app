@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 15;
 
 const BUS_BASE  = "https://apis.data.go.kr/6280000";
 const TAGO_BASE = "https://apis.data.go.kr/1613000";
@@ -22,10 +23,10 @@ const ACTIONS: Record<string, { base: string; path: string; required: string[] }
   aroundStations:    { base: BUS_BASE,  path: "/busStationAroundInfoService/getBusStationAroundList",          required: ["GPS_LATI", "GPS_LONG"] },
   // 국가대중교통 TAGO API (전국 공통 - cityCode=30 인천)
   tagoStations:      { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
-  tagoArrivals:      { base: TAGO_BASE, path: "/BusArrivalService/getArrivalInfoList",                         required: ["cityCode", "nodeId"] },
-  tagoRoutes:        { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoList",                   required: ["cityCode", "routeNo"] },
+  tagoArrivals:      { base: TAGO_BASE, path: "/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList",       required: ["cityCode", "nodeId"] },
+  tagoRoutes:        { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteNoList",                     required: ["cityCode", "routeNo"] },
   tagoRouteDetail:   { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoIem",                    required: ["cityCode", "routeId"] },
-  tagoRouteStations: { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteSttnList",                   required: ["cityCode", "routeId"] },
+  tagoRouteStations: { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteAcctoThrghSttnList",         required: ["cityCode", "routeId"] },
 };
 
 export async function GET(request: NextRequest) {
@@ -53,6 +54,8 @@ export async function GET(request: NextRequest) {
   sp.forEach((v, k) => { if (k !== "action") params.set(k, v); });
   if (!params.has("pageNo"))    params.set("pageNo", "1");
   if (!params.has("numOfRows")) params.set("numOfRows", "20");
+  // TAGO requires _type=xml or json explicitly on some endpoints
+  if (meta.base === TAGO_BASE && !params.has("_type")) params.set("_type", "xml");
 
   const upstream = `${meta.base}${meta.path}?serviceKey=${encodeURIComponent(key)}&${params.toString()}`;
 
@@ -65,7 +68,7 @@ export async function GET(request: NextRequest) {
   if (hit && Date.now() - hit.ts < ttl) {
     return new Response(hit.body, {
       status: 200,
-      headers: { "Content-Type": hit.contentType, "Cache-Control": "no-store" },
+      headers: { "Content-Type": hit.contentType, "Cache-Control": "no-store", "X-Bus-Cache": "HIT" },
     });
   }
 
@@ -74,13 +77,30 @@ export async function GET(request: NextRequest) {
     const text = await res.text();
     const contentType = res.headers.get("content-type") ?? "application/xml";
     if (res.ok) {
-      cache.set(cacheKey, { ts: Date.now(), body: text, contentType });
+      // Surface non-zero resultCode as an upstream message (still 200 so existing
+      // clients keep working, but we add a header for diagnostics).
+      const code = text.match(/<resultCode>(\d+)<\/resultCode>/)?.[1] ?? "";
+      const msg  = text.match(/<resultMsg>([^<]+)<\/resultMsg>/)?.[1] ?? "";
+      const headers: Record<string, string> = {
+        "Content-Type": contentType,
+        "Cache-Control": "no-store",
+      };
+      if (code) headers["X-Upstream-Code"] = code;
+      if (msg)  headers["X-Upstream-Msg"]  = encodeURIComponent(msg);
+      if (code === "0" || code === "00") {
+        cache.set(cacheKey, { ts: Date.now(), body: text, contentType });
+      } else if (code) {
+        // Don't cache error responses — log to server console for debugging
+        console.warn(`[api/bus] ${action} upstream resultCode=${code} msg=${msg}`);
+      }
+      return new Response(text, { status: 200, headers });
     }
     return new Response(text, {
       status: res.status,
       headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
     });
   } catch (err) {
+    console.warn(`[api/bus] ${action} fetch failed:`, err);
     return Response.json({ error: "upstream_failed", message: String(err) }, { status: 502 });
   }
 }

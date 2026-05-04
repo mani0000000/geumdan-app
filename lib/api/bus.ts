@@ -160,12 +160,26 @@ async function apiFetch(action: string, params: Record<string, string>): Promise
   const qs = new URLSearchParams({ action, ...params }).toString();
   try {
     const res = await fetch(`/api/bus?${qs}`, { signal: AbortSignal.timeout(10000) });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+        console.warn(`[bus] ${action} HTTP ${res.status}`);
+      }
+      return [];
+    }
     const xml = await res.text();
     const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
-    if (code !== "0" && code !== "00") return [];
+    if (code !== "0" && code !== "00") {
+      if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+        const msg = xml.match(/<resultMsg>([^<]+)<\/resultMsg>/)?.[1] ?? "";
+        console.warn(`[bus] ${action} resultCode=${code} msg=${msg}`);
+      }
+      return [];
+    }
     return parseXmlItems(xml);
-  } catch {
+  } catch (err) {
+    if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
+      console.warn(`[bus] ${action} fetch error:`, err);
+    }
     return [];
   }
 }
@@ -272,18 +286,23 @@ export async function fetchNearbyStopsFromTago(lat: number, lng: number): Promis
 }
 
 // ─── TAGO 실시간 도착정보 (인천 cityCode=30) ─────────────────────
+// nodenm 은 "조회한 정류소의 이름"이라 destination 으로 쓰면 안 됨.
 export async function fetchArrivalsByNodeId(nodeId: string): Promise<BusArrival[]> {
   const items = await apiFetch("tagoArrivals", { cityCode: "30", nodeId });
-  return items.map(d => ({
-    routeNo: d.routeno ?? d.routeNo ?? "",
-    routeId: d.routeid ?? d.routeId ?? "",
-    destination: d.nodenm ?? d.nodeName ?? "종점",
-    arrivalMin: Math.max(0, Math.round(Number(d.arrtime ?? d.arrTime ?? "0") / 60)),
-    remainingStops: Number(d.arrprevstationcnt ?? d.arrPrevStationCnt ?? "0"),
-    isLowFloor: (d.routetp ?? d.routeTp ?? "").includes("저상"),
-    isExpress: (d.routetp ?? d.routeTp ?? "").includes("급행"),
-    plateNo: d.vehicleNo ?? "",
-  }));
+  return items.map(d => {
+    const routeTp = d.routetp ?? d.routeTp ?? "";
+    const vehicleTp = d.vehicletp ?? d.vehicleTp ?? "";
+    return {
+      routeNo: d.routeno ?? d.routeNo ?? "",
+      routeId: d.routeid ?? d.routeId ?? "",
+      destination: "종점",
+      arrivalMin: Math.max(0, Math.round(Number(d.arrtime ?? d.arrTime ?? "0") / 60)),
+      remainingStops: Number(d.arrprevstationcnt ?? d.arrPrevStationCnt ?? "0"),
+      isLowFloor: vehicleTp.includes("저상"),
+      isExpress: routeTp.includes("급행") || routeTp.includes("직행"),
+      plateNo: "",
+    };
+  });
 }
 
 // ─── 인천 공공API: GPS 기반 주변 정류소 조회 (TAGO 안 될 때 폴백) ──
