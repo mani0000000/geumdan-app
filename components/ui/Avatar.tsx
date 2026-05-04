@@ -1,31 +1,5 @@
 "use client";
 
-interface AvatarProps {
-  src?: string | null;
-  size?: number;
-  className?: string;
-  fallback?: string;
-}
-
-export default function Avatar({ src, size = 36, className = "", fallback = "👤" }: AvatarProps) {
-  const style = { width: size, height: size, fontSize: Math.round(size * 0.5) };
-  if (src) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={src}
-        alt=""
-        className={`rounded-full object-cover bg-[#e8f1fd] ${className}`}
-        style={style}
-      />
-    );
-  }
-  return (
-    <div
-      className={`rounded-full bg-[#e8f1fd] flex items-center justify-center ${className}`}
-      style={style}
-    >
-      <span>{fallback}</span>
 const PALETTE = [
   "#F87171", "#FB923C", "#F59E0B", "#34D399",
   "#10B981", "#22D3EE", "#3B82F6", "#6366F1",
@@ -84,3 +58,5 @@ export function Avatar({ nickname, imageUrl, size = "sm", className = "" }: Prop
     </div>
   );
 }
+
+export default Avatar;
