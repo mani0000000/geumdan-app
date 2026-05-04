@@ -6,6 +6,13 @@ export const dynamic = "force-dynamic";
 const BUS_BASE  = "https://apis.data.go.kr/6280000";
 const TAGO_BASE = "https://apis.data.go.kr/1613000";
 
+const STATIC_ACTIONS = new Set(["routeInfo", "routeStations", "tagoRouteStations", "tagoRouteDetail"]);
+const STATIC_TTL_MS  = 5 * 60 * 1000;
+const DEFAULT_TTL_MS = 30 * 1000;
+
+type CacheEntry = { ts: number; body: string; contentType: string };
+const cache = new Map<string, CacheEntry>();
+
 const ACTIONS: Record<string, { base: string; path: string; required: string[] }> = {
   // 인천 전용 API
   arrivals:          { base: BUS_BASE,  path: "/busArrivalService/getBusArrivalList",                         required: ["stationId"] },
@@ -49,15 +56,29 @@ export async function GET(request: NextRequest) {
 
   const upstream = `${meta.base}${meta.path}?serviceKey=${encodeURIComponent(key)}&${params.toString()}`;
 
+  const cacheKeyParams = new URLSearchParams(params);
+  cacheKeyParams.delete("serviceKey");
+  const cacheKey = `${meta.base}${meta.path}?${cacheKeyParams.toString()}`;
+  const ttl = STATIC_ACTIONS.has(action) ? STATIC_TTL_MS : DEFAULT_TTL_MS;
+
+  const hit = cache.get(cacheKey);
+  if (hit && Date.now() - hit.ts < ttl) {
+    return new Response(hit.body, {
+      status: 200,
+      headers: { "Content-Type": hit.contentType, "Cache-Control": "no-store" },
+    });
+  }
+
   try {
     const res = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
     const text = await res.text();
+    const contentType = res.headers.get("content-type") ?? "application/xml";
+    if (res.ok) {
+      cache.set(cacheKey, { ts: Date.now(), body: text, contentType });
+    }
     return new Response(text, {
       status: res.status,
-      headers: {
-        "Content-Type": res.headers.get("content-type") ?? "application/xml",
-        "Cache-Control": "no-store",
-      },
+      headers: { "Content-Type": contentType, "Cache-Control": "no-store" },
     });
   } catch (err) {
     return Response.json({ error: "upstream_failed", message: String(err) }, { status: 502 });
