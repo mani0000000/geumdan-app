@@ -311,6 +311,19 @@ export async function fetchNearbyStopsFromApi(lat: number, lng: number): Promise
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
+// ─── 서버사이드 OSM 프록시: 주변 정류소 + 경유 노선 (캐시 포함) ──
+// 클라이언트 직접 Overpass 호출 대신 /api/bus-stops 를 통해 서버에서 처리.
+// 1시간 인메모리 캐시 → 모바일 타임아웃 문제 해결.
+export async function fetchNearbyStopsFromServer(lat: number, lng: number): Promise<NearbyStop[]> {
+  const res = await fetch(`/api/bus-stops?lat=${lat}&lng=${lng}`, {
+    signal: AbortSignal.timeout(32000),
+  });
+  if (!res.ok) throw new Error(`bus-stops API ${res.status}`);
+  const data: { stops: NearbyStop[]; source: string } = await res.json();
+  if (!data.stops || data.stops.length === 0) throw new Error("empty");
+  return data.stops;
+}
+
 // ─── 검단신도시 폴백 정류소 (OSM ref 기반 실제 좌표 + 경유 노선) ─
 // routes는 OSM Overpass에서 추출한 정적 스냅샷이므로 실시간 도착정보가 아니다.
 // 공공API/OSM Overpass 모두 실패한 경우 최소한 어떤 노선이 지나가는지 표시하기 위함.
