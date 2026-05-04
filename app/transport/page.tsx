@@ -13,7 +13,7 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
-  fetchNearbyStopsFromTago, fetchNearbyStopsFromApi, fetchNearbyStopsWide,
+  fetchNearbyStopsFromTago, fetchNearbyStopsFromApi, fetchNearbyStopsWide, fetchNearbyStopsFromServer,
   fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
   searchRouteByNo, fetchRouteDetailFromTago, fetchStationsByRouteTago,
@@ -581,13 +581,10 @@ export default function TransportPage() {
           }));
         } else throw new Error("api_empty");
       } catch {
-        // 3순위: OSM Overpass (경유 노선 정보 포함)
+        // 3순위: 서버사이드 OSM 프록시 (1시간 캐시 → 모바일 타임아웃 방지)
         try {
-          const nearby = await Promise.race([
-            fetchNearbyStopsWide(lat, lng),
-            new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
-          ]);
-          if (nearby.length === 0) throw new Error("empty");
+          const nearby = await fetchNearbyStopsFromServer(lat, lng);
+          if (nearby.length === 0) throw new Error("server_osm_empty");
           src = "osm";
           stops = nearby.slice(0, 14).map(s => ({
             id: s.stationId, name: s.stationName,
@@ -595,17 +592,32 @@ export default function TransportPage() {
             lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
           }));
         } catch {
-          // 4순위: 검단신도시 하드코딩 정류장 (OSM 기반 정적 노선 정보 포함)
-          src = "fallback";
-          stops = GEUMDAN_BUS_STATIONS
-            .map(s => ({
-              id: s.stationId, name: s.name,
-              distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-              arrivals: [], loadingArrivals: true,
-              lat: s.lat, lng: s.lng,
-              osmRoutes: s.routes,
-            }))
-            .sort((a, b) => a.distM - b.distM);
+          // 4순위: 클라이언트 OSM Overpass 직접 호출 (느림, 모바일 폴백)
+          try {
+            const nearby = await Promise.race([
+              fetchNearbyStopsWide(lat, lng),
+              new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
+            ]);
+            if (nearby.length === 0) throw new Error("empty");
+            src = "osm";
+            stops = nearby.slice(0, 14).map(s => ({
+              id: s.stationId, name: s.stationName,
+              distM: s.distanceM, arrivals: [], loadingArrivals: true,
+              lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
+            }));
+          } catch {
+            // 5순위: 검단신도시 하드코딩 정류장 (OSM 기반 정적 노선 정보 포함)
+            src = "fallback";
+            stops = GEUMDAN_BUS_STATIONS
+              .map(s => ({
+                id: s.stationId, name: s.name,
+                distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+                arrivals: [], loadingArrivals: true,
+                lat: s.lat, lng: s.lng,
+                osmRoutes: s.routes,
+              }))
+              .sort((a, b) => a.distM - b.distM);
+          }
         }
       }
     }
