@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   if (!params.has("pageNo"))    params.set("pageNo", "1");
   if (!params.has("numOfRows")) params.set("numOfRows", "20");
 
-  const upstream = `${meta.base}${meta.path}?serviceKey=${key}&${params.toString()}`;
+  const upstream = `${meta.base}${meta.path}?serviceKey=${encodeURIComponent(key)}&${params.toString()}`;
 
   try {
     const res = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
