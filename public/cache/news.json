@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-04T13:18:58.691Z",
+  "fetchedAt": "2026-05-04T16:24:36.183Z",
   "count": 40,
   "articles": [
     {
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-9",
       "title": "2857가구 절반이 소형 '더샵 검단레이크파크' - 네이트",
       "summary": "",
       "source": "네이트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-11",
+      "id": "gr2-12",
       "title": "인천 서구 주민들, 한국환경공단 이전 반대･수도권매립지 종료 위한 3일 대규모 규탄대회 - 인천뉴스",
       "summary": "",
       "source": "인천뉴스",
@@ -138,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-5",
       "title": "롯데캐슬 넥스티엘 372가구 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -147,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-65",
+      "id": "gr2-69",
       "title": "[지선 D-30]인천북부, 징검다리 '4선' 나올까…초대는 누구 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -201,7 +201,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-4",
+      "title": "‘검단신도시 롯데캐슬 넥스티엘’ 입주 신호탄 - 이뉴스투데이",
+      "summary": "",
+      "source": "이뉴스투데이",
+      "publishedAt": "2026-04-29T23:59:26.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9reEI1S2hMMENFOHVsanpKdV9sbmNCTFVPM2ZFcGpLWVJCRGZBSzc0UHF5TmxCRDNMdzRSREV1ZUxQR0NUV0NWLWZZdWZNQkg1Tk1KT1k0dVI3TFR4NWpTZU1VcmhHeDRKaGZLSjFmRXPSAXRBVV95cUxQeWY4LVI4Y2xINWZOUG9JdTFxV0I3WXRIYmhLXzFfdkFEbnk4OHJEUnhFWlhWMzdCRTJ4ZjlXUl96S1NiME9RclFEdXZkekFnN2F6QmFjOHFyaFFzbDZkNkZsNldFTUExQXoxTmFiT3VaQzk2QQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-10",
       "title": "[건설사 체력점검 – GS건설③] 검단 재시공 이후…남은 과제와 쟁점 - 뷰어스",
       "summary": "",
       "source": "뷰어스",
@@ -237,16 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
-      "title": "분양가 상승 기조 속 가격 경쟁력 갖춘 엘리프 검단 포레듀 - 한경매거진&북",
-      "summary": "",
-      "source": "한경매거진&북",
-      "publishedAt": "2026-04-28T00:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1vVU9KN1l5bnlXTDhRUF9tcEZMWXRBVlk0dXhwQW96dnFtT2J1cGNfWnBKbFBZdUl1S2pwUGg1enFLS3RWV2VaRl9ST3JhOXVmemFkRmdoZ3pFYjN6NFM3cmd0WC1aVDlCMERobQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-18",
+      "id": "gr0-17",
       "title": "'더샵 검단레이크파크' 2857가구 공급 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -261,15 +261,6 @@
       "source": "전국매일신문",
       "publishedAt": "2026-04-27T01:41:05.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5KSFdOckpnYzhmUXRGWFFGY0lPZ2kzU3F5OVEzZldkSjlJTU9LMzRfTVdONkFVbm5RNjc0WkpaYnJGbWNaRXJnV3VqVUlST1FpREJ2aUpReV9aSFYtZHBfOTZ0cmh6RjlMaXlMMzdB?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-17",
-      "title": "2분기 공급 주인공은 '검단·고덕·창릉' 신도시 - 한국경제",
-      "summary": "",
-      "source": "한국경제",
-      "publishedAt": "2026-04-24T08:53:52.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5TTUg5SVByWWNlaTdYcXZRcm5kUHdTWHprUEozWkFjOEpVY3ZydU9abUpSWjROd1ZUdEVHQnh3bS1CUFVvQjRNSXhtTFFYWVotZHBGMG5PX0h6Z9IBVEFVX3lxTE5OXzdQTXhFSng4dHFPbDJLcG1UOVBaaEJRRFFkcEhGWUppQVB4TUNCNFhxTlFDdUo2MVlGYnc1UkpnZFVIbHdpUjd5UzB2cGRxMXMxcg?oc=5",
       "type": "뉴스"
     },
     {
@@ -318,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-50",
+      "id": "gr2-52",
       "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -360,6 +351,15 @@
       "source": "한국경제",
       "publishedAt": "2026-04-23T07:00:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9TRWVqcndxaWxnTVU4UWZ2TExjT05JcFZZS2pYN0FRVG9ianoxWEZ0Qm1MNW9qLURPTU1DeFB4dDduZHg1aVlnSlNadUNkREl4clprSDNnOXgwZ9IBVEFVX3lxTFBTTFREZmhVRTA0MFdUT1VzTEtWM0NoMTd1TkRpMHRueTNLMUVJZEg0NVFaWE5QeVdJcGd6Z2V2QVlSeFB3UEZmeXNweE9oUmNFMnQ4Yw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-60",
+      "title": "인천 서구의회 「행정체제 개편에 따른 분구추진 특별위원회」, 검단구 임시청사 현장 점검 실시 - sejungfocus.com",
+      "summary": "",
+      "source": "sejungfocus.com",
+      "publishedAt": "2026-04-23T06:40:01.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1fZ3JYd2hSaDYtTEpQektMZmtnQzFNM25rSGhRMGU3QzRoSnVlVUVKck9UbG1USWJqNG9RM2VOcTZQcjQtUy1Oa2JvNVhzd202dkp6YndocXBIbG9oLXlrOWJ3YW1zajFBRFJIWg?oc=5",
       "type": "뉴스"
     }
   ]
