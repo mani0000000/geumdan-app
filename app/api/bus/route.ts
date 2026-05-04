@@ -26,11 +26,7 @@ export async function GET(request: NextRequest) {
     ?? process.env.NEXT_PUBLIC_BUS_API_KEY
     ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
   if (!key) {
-    console.warn("[/api/bus] DATA_GO_KR_API_KEY missing — set Vercel env var to enable real-time arrivals");
-    return Response.json({
-      error: "api_key_not_configured",
-      hint: "Set DATA_GO_KR_API_KEY (or NEXT_PUBLIC_BUS_API_KEY) on the deploy environment",
-    }, { status: 500 });
+    return Response.json({ error: "api_key_not_configured" }, { status: 500 });
   }
 
   const sp = request.nextUrl.searchParams;
@@ -44,12 +40,14 @@ export async function GET(request: NextRequest) {
     if (!sp.get(k)) return Response.json({ error: `missing_${k}` }, { status: 400 });
   }
 
-  const params = new URLSearchParams({ serviceKey: key });
+  // serviceKey는 URLSearchParams에 넣으면 이중 인코딩됨 (data.go.kr 403 원인)
+  // 나머지 파라미터만 URLSearchParams로 처리하고, serviceKey는 raw로 직접 붙임
+  const params = new URLSearchParams();
   sp.forEach((v, k) => { if (k !== "action") params.set(k, v); });
   if (!params.has("pageNo"))    params.set("pageNo", "1");
   if (!params.has("numOfRows")) params.set("numOfRows", "20");
 
-  const upstream = `${meta.base}${meta.path}?${params.toString()}`;
+  const upstream = `${meta.base}${meta.path}?serviceKey=${key}&${params.toString()}`;
 
   try {
     const res = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
