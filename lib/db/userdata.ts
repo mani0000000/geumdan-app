@@ -11,6 +11,7 @@ export interface UserProfile {
   nickname: string;
   dong: string;
   intro: string;
+  avatar_url: string | null;
   level: "새싹" | "주민" | "이웃" | "터줏대감";
   post_count: number;
   comment_count: number;
@@ -87,6 +88,7 @@ const DEFAULT_PROFILE: Omit<UserProfile, "id"> = {
   nickname: "검단주민",
   dong: "당하동",
   intro: "",
+  avatar_url: null,
   level: "새싹",
   post_count: 0,
   comment_count: 0,
@@ -151,7 +153,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     try {
       const { data } = await supabase
         .from("users")
-        .select("id,nickname,dong,intro,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
+        .select("id,nickname,dong,intro,avatar_url,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
         .eq("id", uid)
         .single();
       if (data) {
@@ -174,7 +176,7 @@ export async function getUserProfile(): Promise<UserProfile> {
 }
 
 export async function updateUserProfile(
-  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro">>
+  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro" | "avatar_url">>
 ): Promise<void> {
   const uid = await getOrCreateUserId();
 

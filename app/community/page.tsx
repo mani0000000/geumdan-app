@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import Avatar from "@/components/ui/Avatar";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchDBPosts } from "@/lib/db/posts";
@@ -96,7 +97,8 @@ function CommunityTab() {
               </div>
               <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
               <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#f5f5f7]">
+                <Avatar src={post.authorAvatarUrl} size={20} alt={post.author} />
                 <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
                 <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
                 <div className="flex items-center gap-3 ml-auto">

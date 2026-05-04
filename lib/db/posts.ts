@@ -41,13 +41,16 @@ function isConfigured(): boolean {
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
+  const isAnon = Boolean(row.is_anonymous);
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
     title: row.title as string,
     content: row.content as string,
-    author: (row.is_anonymous ? '익명' : row.author) as string,
+    author: (isAnon ? '익명' : row.author) as string,
     authorDong: row.author_dong as string,
+    authorAvatarUrl: isAnon ? null : ((row.author_avatar_url as string | null) ?? null),
+    authorUserId: (row.user_id as string | null) ?? null,
     createdAt: row.created_at as string,
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
@@ -102,6 +105,8 @@ export interface PostInput {
   content: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  userId?: string | null;
   isAnonymous: boolean;
 }
 
@@ -116,6 +121,8 @@ export async function createPost(input: PostInput): Promise<Post | null> {
         content: input.content,
         author: input.author,
         author_dong: input.authorDong,
+        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
+        user_id: input.userId ?? null,
         is_anonymous: input.isAnonymous,
       })
       .select()
@@ -125,6 +132,24 @@ export async function createPost(input: PostInput): Promise<Post | null> {
   } catch (e) {
     console.error('[posts] createPost error:', e);
     return null;
+  }
+}
+
+// ── 내가 쓴 글 ─────────────────────────────────────────────────
+export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]> {
+  if (!isConfigured() || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+  } catch (e) {
+    console.error('[posts] fetchMyPosts error:', e);
+    return [];
   }
 }
 

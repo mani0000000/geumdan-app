@@ -28,6 +28,8 @@ export interface Post {
   content: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  authorUserId?: string | null;
   createdAt: string;
   viewCount: number;
   likeCount: number;
@@ -41,6 +43,7 @@ export interface Comment {
   id: string;
   postId: string;
   author: string;
+  authorAvatarUrl?: string | null;
   content: string;
   createdAt: string;
   likeCount: number;

@@ -11,11 +11,13 @@ import {
   fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
 } from "@/lib/db/posts";
 import {
-  fetchComments, createComment, deleteComment, toggleCommentLike,
+  fetchComments, createComment, deleteComment, toggleCommentLike, updateComment,
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
 import type { Post } from "@/lib/types";
+import Avatar from "@/components/ui/Avatar";
+import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
@@ -80,6 +82,20 @@ function DetailContent() {
 
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
+  const [editCommentId, setEditCommentId] = useState<string | null>(null);
+  const [editCommentText, setEditCommentText] = useState("");
+
+  const [meAvatar, setMeAvatar] = useState<string | null>(null);
+  const [meNickname, setMeNickname] = useState("검단주민");
+  const [meDong, setMeDong] = useState("검단");
+
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setMeAvatar(p.avatar_url);
+      setMeNickname(p.nickname);
+      setMeDong(p.dong);
+    });
+  }, []);
 
   // 포스트 로드
   useEffect(() => {
@@ -142,9 +158,15 @@ function DetailContent() {
         createdAt: new Date().toISOString(),
       }]);
     } else {
+      const uid = await getOrCreateUserId();
       const saved = await createComment({
-        postId, author: "검단주민", authorDong: "검단",
-        content: commentText.trim(), isAnonymous: anonymous,
+        postId,
+        author: meNickname,
+        authorDong: meDong,
+        authorAvatarUrl: meAvatar,
+        userId: uid,
+        content: commentText.trim(),
+        isAnonymous: anonymous,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -298,7 +320,7 @@ function DetailContent() {
             <>
               <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
+                <Avatar src={post.authorAvatarUrl} size={36} alt={post.author} />
                 <div>
                   <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
                   <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
@@ -336,14 +358,35 @@ function DetailContent() {
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
-                <div className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center text-sm shrink-0">👤</div>
+                <Avatar src={c.authorAvatarUrl} size={32} alt={c.author} className="shrink-0" />
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
                     <span className="text-[12px] text-[#86868b]">{c.authorDong}</span>
                     <span className="text-[12px] text-[#86868b] ml-auto">{formatRelativeTime(c.createdAt)}</span>
                   </div>
-                  <p className="text-[15px] text-[#1d1d1f] leading-relaxed">{c.content}</p>
+                  {editCommentId === c.id ? (
+                    <div className="space-y-2">
+                      <textarea value={editCommentText} onChange={e => setEditCommentText(e.target.value)} rows={3}
+                        className="w-full text-[15px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-2 resize-none" />
+                      <div className="flex gap-2">
+                        <button onClick={() => setEditCommentId(null)}
+                          className="h-8 px-3 rounded-lg border border-[#d2d2d7] text-[13px] text-[#6e6e73] active:opacity-60">취소</button>
+                        <button
+                          onClick={async () => {
+                            if (!editCommentText.trim()) return;
+                            const ok = isMock ? true : await updateComment(c.id, editCommentText.trim());
+                            if (ok) {
+                              setComments(prev => prev.map(x => x.id === c.id ? { ...x, content: editCommentText.trim() } : x));
+                              setEditCommentId(null);
+                            }
+                          }}
+                          className="h-8 px-3 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold active:opacity-80">저장</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-[15px] text-[#1d1d1f] leading-relaxed">{c.content}</p>
+                  )}
                   <div className="flex items-center gap-3 mt-2">
                     <button onClick={() => handleCommentLike(c.id)} className="flex items-center gap-1 active:opacity-60">
                       <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#0071e3] fill-[#0071e3]" : "text-[#86868b]"} />
@@ -351,12 +394,19 @@ function DetailContent() {
                         {c.likeCount}
                       </span>
                     </button>
-                    {myCommentIds.has(c.id) && (
-                      <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
-                        className="flex items-center gap-0.5 text-[#86868b] active:opacity-60 disabled:opacity-40">
-                        <Trash2 size={11} />
-                        <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
-                      </button>
+                    {myCommentIds.has(c.id) && editCommentId !== c.id && (
+                      <>
+                        <button onClick={() => { setEditCommentId(c.id); setEditCommentText(c.content); }}
+                          className="flex items-center gap-0.5 text-[#86868b] active:opacity-60">
+                          <Pencil size={11} />
+                          <span className="text-[12px]">수정</span>
+                        </button>
+                        <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
+                          className="flex items-center gap-0.5 text-[#86868b] active:opacity-60 disabled:opacity-40">
+                          <Trash2 size={11} />
+                          <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -370,7 +420,7 @@ function DetailContent() {
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
+          <Avatar src={anonymous ? null : meAvatar} size={32} alt={meNickname} className="shrink-0" />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
