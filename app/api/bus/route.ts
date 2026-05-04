@@ -26,7 +26,11 @@ export async function GET(request: NextRequest) {
     ?? process.env.NEXT_PUBLIC_BUS_API_KEY
     ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
   if (!key) {
-    return Response.json({ error: "api_key_not_configured" }, { status: 500 });
+    console.warn("[/api/bus] DATA_GO_KR_API_KEY missing — set Vercel env var to enable real-time arrivals");
+    return Response.json({
+      error: "api_key_not_configured",
+      hint: "Set DATA_GO_KR_API_KEY (or NEXT_PUBLIC_BUS_API_KEY) on the deploy environment",
+    }, { status: 500 });
   }
 
   const sp = request.nextUrl.searchParams;
