@@ -38,6 +38,7 @@ export async function GET(request: NextRequest) {
     return Response.json({ error: "missing_lat_lng" }, { status: 400 });
   }
 
+  // Round to ~3 decimal places for cache key (~111m grid)
   const cacheKey = `${lat.toFixed(3)}_${lng.toFixed(3)}`;
   const cached = cache.get(cacheKey);
   if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
@@ -75,8 +76,8 @@ out body;`;
       if (!routeNo) continue;
       const nameTag = rel.tags?.name ?? "";
       const destination =
-        nameTag.includes("→") ? nameTag.split("→").pop().trim() :
-        nameTag.includes("->") ? nameTag.split("->").pop().trim() :
+        nameTag.includes("\u2192") ? nameTag.split("\u2192").pop()!.trim() :
+        nameTag.includes("->") ? nameTag.split("->").pop()!.trim() :
         rel.tags?.to ?? "";
       for (const m of (rel.members ?? [])) {
         if (m.type !== "node") continue;
@@ -88,14 +89,14 @@ out body;`;
 
     const stops = stopNodes
       .map(s => {
-        const dist = haversineM(lat, lng, s.lat, s.lon);
+        const dist = haversineM(lat, lng, s.lat!, s.lon!);
         const routes = stopRoutes.get(s.id) ?? [];
         return {
-          stationId: s.tags.ref ?? String(s.id),
+          stationId: s.tags!.ref ?? String(s.id),
           osmNodeId: s.id,
-          stationName: s.tags.name,
-          lat: s.lat,
-          lng: s.lon,
+          stationName: s.tags!.name!,
+          lat: s.lat!,
+          lng: s.lon!,
           distanceM: Math.round(dist),
           osmRoutes: routes.sort((a, b) => a.routeNo.localeCompare(b.routeNo, "ko")),
         };
@@ -104,7 +105,7 @@ out body;`;
       .sort((a, b) => a.distanceM - b.distanceM)
       .slice(0, 20);
 
-    const result = { stops, source: "osm" };
+    const result = { stops, source: "osm" as const };
     cache.set(cacheKey, { data: result, ts: Date.now() });
 
     return Response.json(result, {
