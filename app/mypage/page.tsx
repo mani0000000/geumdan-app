@@ -387,7 +387,7 @@ export default function MyPage() {
             )
           )}
         </div>
-      </div>
+      </section>
 
       {/* ── 4. 포인트 & 월간 레벨 카드 ──────────────────────────────── */}
       <div className="mx-4 mb-3 rounded-2xl overflow-hidden"
@@ -399,13 +399,7 @@ export default function MyPage() {
                 <Trophy size={16} className="text-white/80" />
                 <span className="text-[14px] font-bold text-white/80">이번 달 등급</span>
               </div>
-              <span className="text-[29px] font-black text-white">{monthlyLevel}</span>
             </div>
-            <div className="text-right">
-              <p className="text-[13px] text-white/70">보유 포인트</p>
-              <p className="text-[27px] font-black text-white">{gameStats.points.toLocaleString()}P</p>
-            </div>
-          </div>
 
           <div className="mb-3">
             <div className="flex justify-between mb-1.5">
@@ -415,7 +409,6 @@ export default function MyPage() {
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
             </div>
-          </div>
 
           <div className="flex gap-3">
             <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
@@ -424,40 +417,37 @@ export default function MyPage() {
                 <span className="text-[19px] font-black text-white">{gameStats.weeklyLikes}</span>
                 <span className="text-[13px] text-white/60">/{WEEKLY_LIKES_MAX}</span>
               </div>
-              <div className="h-1 bg-white/20 rounded-full mt-1.5 overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%` }} />
+              <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2.5">
+                <p className="text-[11px] text-white/70 font-semibold">이번 주 글</p>
+                <span className="text-[18px] font-black text-white">{gameStats.weeklyPosts}개</span>
+                <p className="text-[11px] text-white/60 mt-0.5">글 1개 = +10P</p>
               </div>
             </div>
-            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
-              <p className="text-[12px] text-white/70">이번 주 글</p>
-              <span className="text-[19px] font-black text-white">{gameStats.weeklyPosts}개</span>
-              <p className="text-[12px] text-white/60 mt-0.5">글 1개 = +10P</p>
-            </div>
-          </div>
 
-          <button onClick={() => setShowPointHistory(s => !s)}
-            className="mt-3 w-full text-center text-[13px] text-white/70 active:opacity-60 flex items-center justify-center gap-1">
-            포인트 내역 {showPointHistory ? "▲" : "▼"}
-          </button>
-          {showPointHistory && (
-            <div className="mt-2 bg-white/10 rounded-xl p-3 space-y-1.5">
-              {gameStats.pointHistory.length === 0 ? (
-                <p className="text-[13px] text-white/60 text-center">포인트 내역이 없습니다</p>
-              ) : gameStats.pointHistory.map((h, i) => (
-                <div key={i} className="flex items-center justify-between">
-                  <span className="text-[13px] text-white/80">{h.desc}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-white/50">{h.date.slice(5)}</span>
-                    <span className={`text-[14px] font-bold ${h.points > 0 ? "text-white" : "text-white/60"}`}>
-                      {h.points > 0 ? "+" : ""}{h.points}P
-                    </span>
+            <button onClick={() => setShowPointHistory(s => !s)}
+              className="mt-3 w-full text-center text-[12px] text-white/70 active:opacity-60 flex items-center justify-center gap-1">
+              포인트 내역 {showPointHistory ? "▲" : "▼"}
+            </button>
+            {showPointHistory && (
+              <div className="mt-2 bg-white/10 backdrop-blur-sm rounded-xl p-3 space-y-1.5">
+                {gameStats.pointHistory.length === 0 ? (
+                  <p className="text-[12px] text-white/60 text-center">포인트 내역이 없습니다</p>
+                ) : gameStats.pointHistory.map((h, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <span className="text-[12px] text-white/80">{h.desc}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] text-white/50">{h.date.slice(5)}</span>
+                      <span className={`text-[13px] font-bold ${h.points > 0 ? "text-white" : "text-white/60"}`}>
+                        {h.points > 0 ? "+" : ""}{h.points}P
+                      </span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── 5. 주간 미션 ──────────────────────────────────────────── */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
@@ -466,37 +456,35 @@ export default function MyPage() {
             <Zap size={16} className="text-[#F59E0B]" />
             <span className="text-[16px] font-bold text-[#1d1d1f]">주간 미션</span>
           </div>
-          <span className="text-[13px] text-[#6e6e73]">
-            {missions.filter(m => m.done).length}/{missions.length} 완료
-          </span>
-        </div>
-        <div className="px-4 pb-4 space-y-2">
-          {missions.map(m => (
-            <div key={m.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${m.done ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"}`}>
-              <span className="text-xl">{m.icon}</span>
-              <div className="flex-1 min-w-0">
-                <p className={`text-[14px] font-bold ${m.done ? "text-[#065F46]" : "text-[#1d1d1f]"}`}>{m.title}</p>
-                <p className={`text-[12px] ${m.done ? "text-[#00C471]" : "text-[#6e6e73]"}`}>{m.desc}</p>
+          <div className="px-4 pb-4 space-y-2">
+            {missions.map(m => (
+              <div key={m.id}
+                className={`flex items-center gap-3 rounded-xl px-3 py-3 ${m.done ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"}`}>
+                <span className="text-xl shrink-0">{m.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-[14px] font-bold ${m.done ? "text-[#065F46]" : "text-[#1d1d1f]"}`}>{m.title}</p>
+                  <p className={`text-[12px] ${m.done ? "text-[#00C471]" : "text-[#6e6e73]"}`}>{m.desc}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={`text-[13px] font-bold ${m.done ? "text-[#00C471]" : "text-[#F59E0B]"}`}>+{m.reward}P</span>
+                  {m.done ? (
+                    <CheckCircle2 size={16} className="text-[#00C471]" />
+                  ) : (
+                    <button
+                      onClick={async () => {
+                        await completeMission(m.id, m.reward, m.title);
+                        setGameStats(await getUserGameStats());
+                      }}
+                      className="h-7 px-2.5 bg-[#F59E0B] rounded-xl text-[12px] font-bold text-white active:opacity-70">
+                      완료
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-[13px] font-bold ${m.done ? "text-[#00C471]" : "text-[#F59E0B]"}`}>+{m.reward}P</span>
-                {m.done ? (
-                  <CheckCircle2 size={16} className="text-[#00C471]" />
-                ) : (
-                  <button
-                    onClick={async () => {
-                      await completeMission(m.id, m.reward, m.title);
-                      setGameStats(await getUserGameStats());
-                    }}
-                    className="h-7 px-2.5 bg-[#F59E0B] rounded-xl text-[12px] font-bold text-white active:opacity-70">
-                    완료
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* ── 6. 포인트 교환 ───────────────────────────────────────── */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
@@ -505,21 +493,42 @@ export default function MyPage() {
             <Gift size={16} className="text-[#0071e3]" />
             <span className="text-[16px] font-bold text-[#1d1d1f]">포인트 교환</span>
           </div>
-          <span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>
-        </div>
-        <div className="px-4 pb-4 space-y-2">
-          {REWARDS.map(r => {
-            const done = gameStats.redeemedRewards.includes(r.id);
-            const canRedeem = gameStats.points >= r.cost && !done;
-            return (
-              <div key={r.id} className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
-                <span className="text-2xl">{r.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.title}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[13px] font-bold text-[#0071e3]">{r.cost}P</span>
-                    <span className="text-[12px] text-[#6e6e73]">잔여 {r.stock}개</span>
+          <div className="px-4 pb-3 space-y-2">
+            {REWARDS.map(r => {
+              const done = gameStats.redeemedRewards.includes(r.id);
+              const canRedeem = gameStats.points >= r.cost && !done;
+              return (
+                <div key={r.id} className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
+                  <span className="text-2xl shrink-0">{r.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[13px] font-bold text-[#0071e3]">{r.cost}P</span>
+                      <span className="text-[12px] text-[#6e6e73]">잔여 {r.stock}개</span>
+                    </div>
                   </div>
+                  {done ? (
+                    <div className="flex items-center gap-1 bg-[#D1FAE5] px-3 py-1.5 rounded-xl shrink-0">
+                      <CheckCircle2 size={13} className="text-[#00C471]" />
+                      <span className="text-[12px] font-bold text-[#065F46]">교환완료</span>
+                    </div>
+                  ) : redeemTarget === r.id ? (
+                    <div className="flex gap-1.5 shrink-0">
+                      <button onClick={() => setRedeemTarget(null)}
+                        className="h-8 px-2.5 bg-[#d2d2d7] rounded-xl text-[12px] font-bold text-[#424245] active:opacity-70">취소</button>
+                      <button onClick={() => handleRedeemConfirm(r)}
+                        className="h-8 px-2.5 bg-[#0071e3] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => canRedeem && setRedeemTarget(r.id)}
+                      disabled={!canRedeem}
+                      className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors shrink-0 ${
+                        canRedeem ? "bg-[#0071e3] text-white active:bg-[#0058b0]" : "bg-[#d2d2d7] text-[#86868b]"
+                      }`}>
+                      교환
+                    </button>
+                  )}
                 </div>
                 {done ? (
                   <div className="flex items-center gap-1 bg-[#D1FAE5] px-3 py-1.5 rounded-xl">
@@ -558,7 +567,7 @@ export default function MyPage() {
           <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="즐겨찾는 상가" badge={storeCount} onClick={() => router.push("/stores/")} />
           <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="관심 아파트" badge={aptCount} onClick={() => router.push("/community/?tab=시세")} />
         </div>
-      </div>
+      </section>
 
       {/* ── 8. 설정 ───────────────────────────────────────────── */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
@@ -574,7 +583,7 @@ export default function MyPage() {
       {/* ── 9. 로그아웃 ─────────────────────────────────────────── */}
       <div className="mx-4 mb-6">
         <button onClick={() => router.push("/login/")}
-          className="w-full flex items-center justify-center gap-2 h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
+          className="w-full flex items-center justify-center gap-2 h-12 bg-white rounded-2xl border border-[#f0f0f0] shadow-sm text-[#F04452] text-[15px] font-semibold active:bg-[#FEE2E2] transition-colors">
           <LogOut size={16} />로그아웃
         </button>
       </div>

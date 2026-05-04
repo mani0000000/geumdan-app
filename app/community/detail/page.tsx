@@ -5,8 +5,11 @@ import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
   MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import {
   fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
 } from "@/lib/db/posts";
@@ -15,16 +18,22 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
+import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
+import {
+  fetchHiddenPostIds, hidePost, unhidePost, reportPost, reportComment,
+  type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import type { Post } from "@/lib/types";
 import Avatar from "@/components/ui/Avatar";
 import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
-  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
-  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
-  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
-  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
+  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", authorAvatar: null, authorId: null, content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
+  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", authorAvatar: null, authorId: null, content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
+  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", authorAvatar: null, authorId: null, content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
+  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", authorAvatar: null, authorId: null, content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
 ];
 
 const catColor: Record<string, string> = {
@@ -52,6 +61,11 @@ function saveMyCommentId(id: string) {
   } catch { /* ignore */ }
 }
 
+type ReportTarget =
+  | { kind: "post"; id: string }
+  | { kind: "comment"; id: string }
+  | null;
+
 function DetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,7 +81,6 @@ function DetailContent() {
   const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Set<string>>(new Set());
   const [submittingComment, setSubmittingComment] = useState(false);
 
@@ -97,6 +110,11 @@ function DetailContent() {
     });
   }, []);
 
+  // 신고/숨기기
+  const [reportTarget, setReportTarget] = useState<ReportTarget>(null);
+  const [hidden, setHidden] = useState(false);
+  const [hideToast, setHideToast] = useState("");
+
   // 포스트 로드
   useEffect(() => {
     async function load() {
@@ -107,7 +125,6 @@ function DetailContent() {
       } else {
         found = await fetchDBPost(postId);
         if (!found) {
-          // DB 포스트를 못 찾으면 목록으로
           router.replace("/community/");
           return;
         }
@@ -116,6 +133,12 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
+
+      // 숨김 여부 확인
+      if (!isMock) {
+        const ids = await fetchHiddenPostIds(getMyNickname());
+        setHidden(ids.has(postId));
+      }
     }
     load();
   }, [postId, isMock, router]);
@@ -149,12 +172,15 @@ function DetailContent() {
     setSubmittingComment(true);
     if (isMock) {
       // mock 포스트는 클라이언트 상태에만 추가
+      const profile = await getUserProfile();
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: anonymous ? "익명" : "검단주민",
-        authorDong: "검단",
+        author: profile.nickname,
+        authorDong: profile.dong,
+        authorAvatar: profile.avatar_url ?? null,
+        authorId: profile.id,
         content: commentText.trim(),
-        likeCount: 0, isAnonymous: anonymous,
+        likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
       }]);
     } else {
@@ -175,6 +201,7 @@ function DetailContent() {
         await syncCommentCount(postId, 1);
         setPost(prev => prev ? { ...prev, commentCount: prev.commentCount + 1 } : prev);
       }
+      void touchLastActive();
     }
     setCommentText("");
     setSubmittingComment(false);
@@ -196,14 +223,17 @@ function DetailContent() {
 
   // 댓글 좋아요
   const handleCommentLike = async (id: string) => {
-    const liked = commentLikes.has(id);
+    const isLiked = commentLikes.has(id);
     setCommentLikes(prev => {
-      const next = new Set(prev); liked ? next.delete(id) : next.add(id); return next;
+      const next = new Set(prev);
+      if (isLiked) next.delete(id);
+      else next.add(id);
+      return next;
     });
     setComments(prev => prev.map(c =>
-      c.id === id ? { ...c, likeCount: c.likeCount + (liked ? -1 : 1) } : c
+      c.id === id ? { ...c, likeCount: c.likeCount + (isLiked ? -1 : 1) } : c
     ));
-    if (!isMock) await toggleCommentLike(id, liked ? -1 : 1);
+    if (!isMock) await toggleCommentLike(id, isLiked ? -1 : 1);
   };
 
   // 글 수정 저장
@@ -225,6 +255,42 @@ function DetailContent() {
     const ok = await deletePost(postId);
     if (ok) router.replace("/community/");
     else setDeletingPost(false);
+  };
+
+  // 숨기기 / 숨김 해제
+  const handleHidePost = async () => {
+    if (isMock) {
+      setHidden(true);
+      setHideToast("이 글을 숨겼어요");
+      setTimeout(() => router.replace("/community/"), 600);
+      return;
+    }
+    const ok = await hidePost(postId, getMyNickname());
+    if (ok) {
+      setHidden(true);
+      setHideToast("이 글을 숨겼어요");
+      setTimeout(() => router.replace("/community/"), 600);
+    }
+  };
+  const handleUnhidePost = async () => {
+    if (isMock) { setHidden(false); return; }
+    const ok = await unhidePost(postId, getMyNickname());
+    if (ok) setHidden(false);
+  };
+
+  // 신고 제출
+  const handleSubmitReport = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    const reporterNickname = getMyNickname();
+    if (reportTarget.kind === "post") {
+      if (!isMock) {
+        await reportPost({ postId: reportTarget.id, reporterNickname, reason, detail });
+      }
+    } else {
+      if (!isMock) {
+        await reportComment({ commentId: reportTarget.id, reporterNickname, reason, detail });
+      }
+    }
   };
 
   if (postLoading || !post) {
@@ -280,9 +346,13 @@ function DetailContent() {
             </div>
           )}
           {!isMyPost && (
-            <button className="active:opacity-60">
-              <MoreHorizontal size={22} className="text-[#6e6e73]" />
-            </button>
+            <PostMenu
+              isHidden={hidden}
+              onHide={handleHidePost}
+              onUnhide={handleUnhidePost}
+              onReport={() => setReportTarget({ kind: "post", id: postId })}
+              size={22}
+            />
           )}
         </div>
       </div>
@@ -327,6 +397,18 @@ function DetailContent() {
                 </div>
               </div>
               <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+              {post.images && post.images.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {post.images.map((src, i) => (
+                    <img
+                      key={i}
+                      src={src}
+                      alt=""
+                      className="w-full rounded-xl border border-[#e5e5ea] object-cover"
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
 
@@ -342,10 +424,15 @@ function DetailContent() {
                 <MessageSquare size={15} />
                 <span className="text-[14px]">{comments.length}</span>
               </div>
-              <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
-                <Flag size={14} />
-                <span className="text-[13px]">신고</span>
-              </button>
+              {!isMyPost && (
+                <button
+                  onClick={() => setReportTarget({ kind: "post", id: postId })}
+                  className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60"
+                >
+                  <Flag size={14} />
+                  <span className="text-[13px]">신고</span>
+                </button>
+              )}
             </div>
           )}
         </article>
@@ -418,7 +505,7 @@ function DetailContent() {
       </div>
 
       {/* Comment input */}
-      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
+      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar src={anonymous ? null : meAvatar} size={32} alt={meNickname} className="shrink-0" />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
@@ -431,12 +518,21 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-            익명
-          </button>
         </div>
       </div>
+
+      {hideToast && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-[#1d1d1f] text-white text-[13px] px-4 py-2 rounded-full z-50">
+          {hideToast}
+        </div>
+      )}
+
+      <ReportModal
+        open={!!reportTarget}
+        target={reportTarget?.kind ?? "post"}
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleSubmitReport}
+      />
     </div>
   );
 }

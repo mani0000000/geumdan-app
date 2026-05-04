@@ -6,6 +6,8 @@
 import { supabase } from "@/lib/supabase";
 
 // ── 타입 ────────────────────────────────────────────────────────────
+export type UserStatus = "active" | "suspended" | "withdrawn";
+
 export interface UserProfile {
   id: string;
   nickname: string;
@@ -13,6 +15,7 @@ export interface UserProfile {
   intro: string;
   avatar_url: string | null;
   level: "새싹" | "주민" | "이웃" | "터줏대감";
+  status: UserStatus;
   post_count: number;
   comment_count: number;
   like_count: number;
@@ -90,6 +93,7 @@ const DEFAULT_PROFILE: Omit<UserProfile, "id"> = {
   intro: "",
   avatar_url: null,
   level: "새싹",
+  status: "active",
   post_count: 0,
   comment_count: 0,
   like_count: 0,
@@ -190,6 +194,19 @@ export async function updateUserProfile(
   const cached = lsGet(PROFILE_KEY);
   const prev = cached ? (JSON.parse(cached) as UserProfile) : { id: uid, ...DEFAULT_PROFILE };
   lsSet(PROFILE_KEY, JSON.stringify({ ...prev, ...patch }));
+}
+
+// ── 마지막 활동 시간 갱신 ────────────────────────────────────────────
+//   페이지 진입 / 글·댓글 작성 시 호출 (실패 무시)
+export async function touchLastActive(): Promise<void> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) return;
+  try {
+    await supabase
+      .from("users")
+      .update({ last_active_at: new Date().toISOString() })
+      .eq("id", uid);
+  } catch { /* silent */ }
 }
 
 // ── 포인트 추가 (내역 기록 포함) ──────────────────────────────────────

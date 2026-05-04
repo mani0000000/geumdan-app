@@ -24,7 +24,7 @@
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface DBComment {
   id: string;
@@ -41,11 +41,10 @@ export interface DBComment {
 }
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
+
+const COMMENT_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
 
 function rowToComment(row: Record<string, unknown>): DBComment {
   const isAnon = Boolean(row.is_anonymous);
@@ -69,10 +68,17 @@ export async function fetchComments(postId: string): Promise<DBComment[]> {
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .select('*')
+      .select(COMMENT_SELECT)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    if (error) throw error;
+    if (error) {
+      const fb = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      return (fb.data ?? []).map(row => rowToComment(row as Record<string, unknown>));
+    }
     return (data ?? []).map(row => rowToComment(row as Record<string, unknown>));
   } catch (e) {
     console.error('[comments] fetchComments error:', e);
@@ -89,6 +95,7 @@ export interface CommentInput {
   userId?: string | null;
   content: string;
   isAnonymous: boolean;
+  userId?: string | null;
 }
 
 export async function createComment(
@@ -106,8 +113,9 @@ export async function createComment(
         user_id: input.userId ?? null,
         content: input.content,
         is_anonymous: input.isAnonymous,
+        user_id: input.userId ?? null,
       })
-      .select()
+      .select(COMMENT_SELECT)
       .single();
     if (error) throw error;
     return rowToComment(data as Record<string, unknown>);

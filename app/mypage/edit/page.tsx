@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera, Loader2 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
+import { Avatar } from "@/components/ui/Avatar";
 
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;
@@ -28,6 +29,7 @@ export default function EditProfilePage() {
       setLevel(p.level);
       setAvatarUrl(p.avatar_url);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,7 +67,12 @@ export default function EditProfilePage() {
 
   const save = async () => {
     setSaving(true);
-    await updateUserProfile({ nickname: nickname.trim(), dong, intro });
+    await updateUserProfile({
+      nickname: nickname.trim(),
+      dong,
+      intro,
+      avatar_url: avatarUrl,
+    });
     router.back();
   };
 
