@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-04T10:54:15.595Z",
+  "fetchedAt": "2026-05-04T13:18:58.691Z",
   "count": 40,
   "articles": [
     {
@@ -12,7 +12,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-2",
       "title": "인천 서구, 검단 완정사거리 완충녹지 재정비 완료…맨발 산책로 조성 - 연합시민의소리",
       "summary": "",
       "source": "연합시민의소리",
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "인천 서구, 골목형상점가 4개소 신규 지정 공모 추진 - sejungfocus.com",
       "summary": "",
       "source": "sejungfocus.com",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-16",
       "title": "인천 서구, 마전동 완충녹지 재정비 완료… ‘도심 속 힐링 공간’으로 재탄생 - sejungfocus.com",
       "summary": "",
       "source": "sejungfocus.com",
@@ -66,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "인천 서구 ‘안녕 검단구, 반가워’ 검단구출범준비단, 제9회 아동 축제서 홍보부스 성황 - 시민행정신문",
       "summary": "",
       "source": "시민행정신문",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-8",
       "title": "2857가구 절반이 소형 '더샵 검단레이크파크' - 네이트",
       "summary": "",
       "source": "네이트",
@@ -120,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-20",
+      "id": "gr2-21",
       "title": "민주당 인천시당, 광역·기초의원 14곳 경선 결과 발표 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -147,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-60",
+      "id": "gr2-65",
       "title": "[지선 D-30]인천북부, 징검다리 '4선' 나올까…초대는 누구 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -192,7 +192,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr2-14",
+      "title": "인천 서구 명칭 ‘서해구’로 사실상 확정…국회 행안위 통과 - 데일리안",
+      "summary": "",
+      "source": "데일리안",
+      "publishedAt": "2026-04-30T00:59:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMilwJBVV95cUxNVGtDSlY1aTNnS3U0Q21lVk1lSDZVOTdZam5LZnBMUFdSbThIWDJtTHJXMmMxWGEwN3FPUjUxLTRFczhrb2VwbWpfTjNNbDJTbzE0UTJrVFpWZ0N0S2IzVDNpbWp6bHp3N3pXc3AwdmRCZTg2RzRxWXVob3I2azhSUWxmOGJPM2Iwb2pTeklmSGIzV2w0MHNSUzA3NGt2aGJfZFVRYmlwQzZ5Z3ZMNlM0ME50RkpoUmRnaVFfdnVjMmFNeXI0aDhjLWI1dE4yRmVNVmxZem1ydXBEeUFUcl9HbXFPM29fOHdFemQzNjUtanRkQUwyRXVCelBQWXlvVFRDNGZacjViQWtBN0VDbngtSXJKY2tDZWPSAZoCQVVfeXFMUHlTcDRwaFd6TVJvdkhBQTlwazkyR3lFakxTVnhuVkxfaFFYVlBrbmVubERWb0toRUNSVzFrc0ZQX1BfRHFINkV1WnU5aEthRXdTejhGbFdjd0JXOFRMM3pZN2NzM2xOYS0yaUVteUN0QzBUdVZMSTBMbFo5STZKSHQ5aXV2a1JRX25KTzVEZnNpcnhLWTRvbTRjSlZLSWhoNmpvVFRxbFo2RlREb2hTT0VoM3hGbE52VjJra21lLTA4WVF4MVdkQnp0dnlPZ0lmM0oxOXFUNnczQW5vbFJfUjV1VVpnSFZjb2xBelRoZm1hd09rSUhyXzFSeXdQRXU4cDkzTWVFcmZuandtM1YybE1CblRId1ZrSGt3?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-7",
       "title": "[건설사 체력점검 – GS건설③] 검단 재시공 이후…남은 과제와 쟁점 - 뷰어스",
       "summary": "",
       "source": "뷰어스",
@@ -219,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-11",
+      "id": "gr1-12",
       "title": "분양가 상승 기조 속 가격 경쟁력 갖춘 엘리프 검단 포레듀 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -246,21 +255,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-21",
+      "id": "gr3-1",
       "title": "최정규 인천교통공사 사장 “지난해 1호선 검단연장선 개통·내부고객만족도 역대 최고점 달성... 가장 의미 있는 성과” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
       "publishedAt": "2026-04-27T01:41:05.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9HajdZMmNhcE53WlJld1YyOHpJS0tCbldacy1jQjZJQmlXcVQ5LW5RMzNrc2poMTFOYzJ2SC1UU2l4bWZQcXJGdDMtSFZCX3M2Uy1EWjZzbkVFYWwyc1RHYTVJcHlPQmZVNlFJ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-9",
-      "title": "인천시, 영종·검단 등 시내버스 7개 노선 신설 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-04-26T07:15:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9jUGFBWml5WWNqYmdPNXpmVUtmMjlrb0V5STQxcDA0aTh0TEFwU0tzVzFBUUgzUzdNMm9sa1RNLVlfU0p4cnBaeGhzYWRpTFcwSEE2eGxTU2pJYnkxRldicUNnbkxVUEUxTG9NVzV1dw?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5KSFdOckpnYzhmUXRGWFFGY0lPZ2kzU3F5OVEzZldkSjlJTU9LMzRfTVdONkFVbm5RNjc0WkpaYnJGbWNaRXJnV3VqVUlST1FpREJ2aUpReV9aSFYtZHBfOTZ0cmh6RjlMaXlMMzdB?oc=5",
       "type": "뉴스"
     },
     {
@@ -273,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-5",
+      "id": "gr1-4",
       "title": "검단 아파트 붕괴 1738억 소송 … GS건설 'LH 설계 탓' - 세이프타임즈",
       "summary": "",
       "source": "세이프타임즈",
@@ -300,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-4",
+      "id": "gr1-5",
       "title": "LH, '인천 검단아파트 붕괴' 시공사 GS건설에 손배소 재판 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -309,7 +309,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-46",
+      "id": "gr1-17",
+      "title": "5월 대단지 청약 본격화…서울은 고분양가·검단은 가격 메리트 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-24T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFA4blhBUHJKd2U1dXpkYnlFR1BSQnFneXZXZTlEYXl1elZ5aEZQbno1VkUwYjZIZXAxbGZsSEwtZmVDT3drTk5UbGZCaGhxbm8?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-50",
       "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -318,16 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-98",
-      "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-23T13:10:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE44a21MTUI5aFAtTWF5OUg1WDlnR0k5RjU5U2VMWFNrUjdacVowMkVvUjcyMHNrQ2JMSEdRVDZSVDV6SmpXcFhDQUFreUlHZnJ2clY0?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-32",
+      "id": "gr2-31",
       "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -336,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-33",
+      "id": "gr2-32",
       "title": "인천 서구의회, 검단구 임시청사 점검…\"행정 공백 최소화\" - 신아일보",
       "summary": "",
       "source": "신아일보",
