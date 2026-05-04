@@ -95,7 +95,6 @@ export interface CommentInput {
   userId?: string | null;
   content: string;
   isAnonymous: boolean;
-  userId?: string | null;
 }
 
 export async function createComment(
@@ -113,7 +112,6 @@ export async function createComment(
         user_id: input.userId ?? null,
         content: input.content,
         is_anonymous: input.isAnonymous,
-        user_id: input.userId ?? null,
       })
       .select(COMMENT_SELECT)
       .single();

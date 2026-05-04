@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera, Loader2 } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
-import { Avatar } from "@/components/ui/Avatar";
 
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;

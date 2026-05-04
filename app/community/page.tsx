@@ -9,6 +9,8 @@ import {
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import Avatar from "@/components/ui/Avatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
@@ -78,7 +80,7 @@ function PostCard({
       <button onClick={() => router.push(`/community/detail/?id=${post.id}`)}
         className="w-full text-left active:opacity-80 transition-opacity">
         <div className="flex gap-3">
-          <Avatar nickname={post.author} size="sm" />
+          <Avatar src={post.authorAvatarUrl} size={32} alt={post.author} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 pr-8">
               {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
@@ -296,7 +298,7 @@ function CommunityTab() {
             </div>
           ))
         ) : (
-          filtered.map(post => (
+          sorted.map(post => (
             <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
               className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
               <div className="flex items-center gap-2 mb-2">

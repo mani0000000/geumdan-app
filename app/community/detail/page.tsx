@@ -5,7 +5,7 @@ import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
   MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
 } from "lucide-react";
-import { Avatar } from "@/components/ui/Avatar";
+import Avatar from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import { PostMenu } from "@/components/ui/PostMenu";
@@ -25,15 +25,13 @@ import {
 } from "@/lib/db/reports";
 import { getMyNickname } from "@/lib/identity";
 import type { Post } from "@/lib/types";
-import Avatar from "@/components/ui/Avatar";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
-  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", authorAvatar: null, authorId: null, content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
-  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", authorAvatar: null, authorId: null, content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
-  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", authorAvatar: null, authorId: null, content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
-  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", authorAvatar: null, authorId: null, content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
+  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", authorAvatarUrl: null, authorUserId: null, content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
+  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", authorAvatarUrl: null, authorUserId: null, content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
+  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", authorAvatarUrl: null, authorUserId: null, content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
+  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", authorAvatarUrl: null, authorUserId: null, content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
 ];
 
 const catColor: Record<string, string> = {
@@ -101,6 +99,7 @@ function DetailContent() {
   const [meAvatar, setMeAvatar] = useState<string | null>(null);
   const [meNickname, setMeNickname] = useState("검단주민");
   const [meDong, setMeDong] = useState("검단");
+  const [anonymous, setAnonymous] = useState(false);
 
   useEffect(() => {
     getUserProfile().then(p => {
@@ -177,8 +176,8 @@ function DetailContent() {
         id: `c${Date.now()}`, postId,
         author: profile.nickname,
         authorDong: profile.dong,
-        authorAvatar: profile.avatar_url ?? null,
-        authorId: profile.id,
+        authorAvatarUrl: profile.avatar_url ?? null,
+        authorUserId: profile.id,
         content: commentText.trim(),
         likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
@@ -518,6 +517,10 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
+          <button onClick={() => setAnonymous(!anonymous)}
+            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
+            익명
+          </button>
         </div>
       </div>
 
