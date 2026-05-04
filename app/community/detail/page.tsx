@@ -5,10 +5,9 @@ import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
   MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
 } from "lucide-react";
-import Avatar from "@/components/ui/Avatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { Avatar } from "@/components/ui/Avatar";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
 import {
@@ -155,20 +154,15 @@ function DetailContent() {
   const submitComment = async () => {
     if (!commentText.trim() || submittingComment) return;
     setSubmittingComment(true);
-    const myNick = getMyNickname();
     if (isMock) {
       // mock 포스트는 클라이언트 상태에만 추가
       const profile = await getUserProfile();
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: anonymous ? "익명" : profile.nickname,
+        author: profile.nickname,
         authorDong: profile.dong,
-        authorAvatar: anonymous ? null : (profile.avatar_url ?? null),
+        authorAvatar: profile.avatar_url ?? null,
         authorId: profile.id,
-      setComments(prev => [...prev, {
-        id: `c${Date.now()}`, postId,
-        author: myNick,
-        authorDong: "검단",
         content: commentText.trim(),
         likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
@@ -181,10 +175,8 @@ function DetailContent() {
         author: profile.nickname,
         authorDong: profile.dong,
         content: commentText.trim(),
-        isAnonymous: anonymous,
+        isAnonymous: false,
         userId,
-        postId, author: myNick, authorDong: "검단",
-        content: commentText.trim(), isAnonymous: false,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -382,8 +374,7 @@ function DetailContent() {
             <>
               <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
               <div className="flex items-center gap-3 mb-5">
-                <Avatar src={post.authorAvatar ?? null} size={36} />
-                <Avatar nickname={post.author} size="md" />
+                <Avatar nickname={post.author} imageUrl={post.authorAvatar} size="md" />
                 <div>
                   <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
                   <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
@@ -438,9 +429,7 @@ function DetailContent() {
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
-                <Avatar src={c.authorAvatar ?? null} size={32} className="shrink-0" />
-                <div className="flex-1">
-                <Avatar nickname={c.author} size="sm" />
+                <Avatar nickname={c.author} imageUrl={c.authorAvatar} size="sm" className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
@@ -482,8 +471,7 @@ function DetailContent() {
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <Avatar src={null} size={32} className="shrink-0" />
-          <Avatar nickname={getMyNickname()} size="sm" />
+          <Avatar nickname={getMyNickname()} size="sm" className="shrink-0" />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
