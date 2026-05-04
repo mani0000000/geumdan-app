@@ -595,7 +595,7 @@ export default function TransportPage() {
             lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
           }));
         } catch {
-          // 4순위: 검단신도시 하드코딩 정류장
+          // 4순위: 검단신도시 하드코딩 정류장 (OSM 기반 정적 노선 정보 포함)
           src = "fallback";
           stops = GEUMDAN_BUS_STATIONS
             .map(s => ({
@@ -603,6 +603,7 @@ export default function TransportPage() {
               distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
               arrivals: [], loadingArrivals: true,
               lat: s.lat, lng: s.lng,
+              osmRoutes: s.routes,
             }))
             .sort((a, b) => a.distM - b.distM);
         }

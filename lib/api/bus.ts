@@ -311,18 +311,144 @@ export async function fetchNearbyStopsFromApi(lat: number, lng: number): Promise
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
-// ─── 검단신도시 폴백 정류소 (OSM ref 기반 실제 좌표) ─────────
-export const GEUMDAN_BUS_STATIONS = [
-  { id: "gd-1",  stationId: "89459", name: "금강펜테리움더시글로",       lat: 37.5920, lng: 126.7095 },
-  { id: "gd-2",  stationId: "42697", name: "아라역7번출구",              lat: 37.5923, lng: 126.7118 },
-  { id: "gd-3",  stationId: "42454", name: "아라역6번출구",              lat: 37.5919, lng: 126.7122 },
-  { id: "gd-4",  stationId: "42449", name: "서구영어마을",               lat: 37.5921, lng: 126.7053 },
-  { id: "gd-5",  stationId: "89406", name: "아라센트럴파크",             lat: 37.5889, lng: 126.7101 },
-  { id: "gd-6",  stationId: "89405", name: "검단한신더휴캐널파크1103동", lat: 37.5895, lng: 126.7075 },
-  { id: "gd-7",  stationId: "42447", name: "원당사거리.검단선사박물관",  lat: 37.5936, lng: 126.7000 },
-  { id: "gd-8",  stationId: "89393", name: "호반써밋1차 3101동",         lat: 37.5935, lng: 126.7079 },
-  { id: "gd-9",  stationId: "89432", name: "아라역8번출구",              lat: 37.5935, lng: 126.7129 },
-  { id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)",   lat: 37.5913, lng: 126.6987 },
+// ─── 검단신도시 폴백 정류소 (OSM ref 기반 실제 좌표 + 경유 노선) ─
+// routes는 OSM Overpass에서 추출한 정적 스냅샷이므로 실시간 도착정보가 아니다.
+// 공공API/OSM Overpass 모두 실패한 경우 최소한 어떤 노선이 지나가는지 표시하기 위함.
+export interface FallbackBusStation {
+  id: string;
+  stationId: string;
+  name: string;
+  lat: number;
+  lng: number;
+  routes: Array<{ routeNo: string; destination: string }>;
+}
+
+export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
+  {
+    id: "gd-1", stationId: "89459", name: "금강펜테리움더시글로", lat: 37.5920, lng: 126.7095,
+    routes: [
+      { routeNo: "30", destination: "왕길동" },
+      { routeNo: "78", destination: "1차풍림아이원" },
+      { routeNo: "308", destination: "인천국제공항" },
+      { routeNo: "841", destination: "김포차량등록사업소" },
+      { routeNo: "1002", destination: "완정사거리" },
+      { routeNo: "1004", destination: "원님마을.주공아파트" },
+      { routeNo: "급행97", destination: "왕길동" },
+    ],
+  },
+  {
+    id: "gd-2", stationId: "42697", name: "아라역7번출구", lat: 37.5923, lng: 126.7118,
+    routes: [
+      { routeNo: "30", destination: "왕길동" },
+      { routeNo: "78", destination: "1차풍림아이원" },
+      { routeNo: "308", destination: "인천국제공항" },
+      { routeNo: "841", destination: "김포차량등록사업소" },
+      { routeNo: "1002", destination: "완정사거리" },
+      { routeNo: "1100", destination: "검단산업단지" },
+      { routeNo: "9802", destination: "검단산업단지" },
+      { routeNo: "급행97", destination: "왕길동" },
+      { routeNo: "M6457", destination: "검암역로얄파크시티" },
+    ],
+  },
+  {
+    id: "gd-3", stationId: "42454", name: "아라역6번출구", lat: 37.5919, lng: 126.7122,
+    routes: [
+      { routeNo: "30", destination: "송내역남부" },
+      { routeNo: "78", destination: "송정역" },
+      { routeNo: "308", destination: "북변환승센터" },
+      { routeNo: "841", destination: "계산동이마트" },
+      { routeNo: "1002", destination: "서울시청" },
+      { routeNo: "1100", destination: "서울역" },
+      { routeNo: "9802", destination: "양재역" },
+      { routeNo: "급행97", destination: "금마초등학교" },
+    ],
+  },
+  {
+    id: "gd-4", stationId: "42449", name: "서구영어마을", lat: 37.5921, lng: 126.7053,
+    routes: [
+      { routeNo: "30", destination: "왕길동" },
+      { routeNo: "76", destination: "마전지구버스차고지" },
+      { routeNo: "77", destination: "마전지구버스차고지" },
+      { routeNo: "78", destination: "1차풍림아이원" },
+      { routeNo: "87", destination: "드림파크수영장" },
+      { routeNo: "93", destination: "국제성모병원" },
+      { routeNo: "308", destination: "인천국제공항" },
+      { routeNo: "841", destination: "김포차량등록사업소" },
+      { routeNo: "931", destination: "검단오류역" },
+      { routeNo: "1002", destination: "완정사거리" },
+      { routeNo: "1100", destination: "검단산업단지" },
+      { routeNo: "9802", destination: "검단산업단지" },
+      { routeNo: "9901", destination: "아이푸드파크산업단지" },
+      { routeNo: "급행97", destination: "왕길동" },
+      { routeNo: "순환83", destination: "마전지구버스차고지" },
+      { routeNo: "인천e음88", destination: "창신초등학교" },
+      { routeNo: "M6457", destination: "검암역로얄파크시티" },
+      { routeNo: "N90", destination: "원당사거리.검단선사박물관" },
+    ],
+  },
+  {
+    id: "gd-5", stationId: "89406", name: "아라센트럴파크", lat: 37.5889, lng: 126.7101,
+    routes: [
+      { routeNo: "87", destination: "드림파크수영장" },
+    ],
+  },
+  {
+    id: "gd-6", stationId: "89405", name: "검단한신더휴캐널파크1103동", lat: 37.5895, lng: 126.7075,
+    routes: [
+      { routeNo: "77", destination: "마전지구버스차고지" },
+      { routeNo: "87", destination: "드림파크수영장" },
+      { routeNo: "9901", destination: "아이푸드파크산업단지" },
+      { routeNo: "순환83", destination: "마전지구버스차고지" },
+      { routeNo: "인천e음89", destination: "검단로제비앙라포레" },
+    ],
+  },
+  {
+    id: "gd-7", stationId: "42447", name: "원당사거리.검단선사박물관", lat: 37.5936, lng: 126.7000,
+    routes: [
+      { routeNo: "30", destination: "왕길동" },
+      { routeNo: "77", destination: "마전지구버스차고지" },
+      { routeNo: "78", destination: "1차풍림아이원" },
+      { routeNo: "87", destination: "드림파크수영장" },
+      { routeNo: "93", destination: "국제성모병원" },
+      { routeNo: "308", destination: "인천국제공항" },
+      { routeNo: "841", destination: "김포차량등록사업소" },
+      { routeNo: "931", destination: "검단오류역" },
+      { routeNo: "1002", destination: "완정사거리" },
+      { routeNo: "1004", destination: "원님마을.주공아파트" },
+      { routeNo: "1100", destination: "검단산업단지" },
+      { routeNo: "9901", destination: "아이푸드파크산업단지" },
+      { routeNo: "급행97", destination: "왕길동" },
+      { routeNo: "순환83", destination: "마전지구버스차고지" },
+      { routeNo: "인천e음88", destination: "창신초등학교" },
+      { routeNo: "N90", destination: "원당사거리.검단선사박물관" },
+    ],
+  },
+  {
+    id: "gd-8", stationId: "89393", name: "호반써밋1차 3101동", lat: 37.5935, lng: 126.7079,
+    routes: [
+      { routeNo: "76", destination: "박촌역" },
+      { routeNo: "93", destination: "인천이음초등학교" },
+      { routeNo: "인천e음88", destination: "계양역" },
+      { routeNo: "인천e음89", destination: "검단로제비앙라포레" },
+      { routeNo: "N90", destination: "계양역" },
+    ],
+  },
+  {
+    id: "gd-9", stationId: "89432", name: "아라역8번출구", lat: 37.5935, lng: 126.7129,
+    routes: [
+      { routeNo: "75", destination: "귤현차량사업소" },
+      { routeNo: "931", destination: "마곡나루역" },
+      { routeNo: "1101", destination: "서울역" },
+      { routeNo: "인천e음88", destination: "계양역" },
+      { routeNo: "M6659", destination: "여의도복합환승센터" },
+      { routeNo: "M6660", destination: "구로디지털단지역" },
+      { routeNo: "N90", destination: "계양역" },
+    ],
+  },
+  {
+    id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)", lat: 37.5913, lng: 126.6987,
+    routes: [],
+  },
 ];
 
 // ─── TAGO: 노선번호로 routeId 검색 ───────────────────────────
