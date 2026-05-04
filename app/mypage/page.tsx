@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import Avatar from "@/components/ui/Avatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import {
   getUserProfile,
@@ -186,7 +186,7 @@ export default function MyPage() {
         <div className="h-16 bg-[#0071e3]" />
         <div className="px-4 pb-5">
           <div className="flex items-end justify-between -mt-8 mb-3">
-            <Avatar src={profile?.avatar_url ?? null} size={64} className="border-4 border-white shadow-sm" />
+            <Avatar nickname={nickname} imageUrl={profile?.avatar_url} size="lg" className="border-4 border-white shadow-sm" />
             <button onClick={() => router.push("/mypage/edit/")}
               className="h-8 px-3.5 border border-[#d2d2d7] rounded-xl text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
               프로필 수정
