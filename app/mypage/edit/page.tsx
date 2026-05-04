@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera, Loader2 } from "lucide-react";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
-import Avatar from "@/components/ui/Avatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;
@@ -80,7 +80,7 @@ export default function EditProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative">
-            <Avatar src={avatarUrl} size={96} className="border-4 border-white shadow-sm" />
+            <Avatar nickname={nickname} imageUrl={avatarUrl} size="lg" className="border-4 border-white shadow-sm" />
             <button
               onClick={() => !uploading && fileInputRef.current?.click()}
               disabled={uploading}

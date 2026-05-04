@@ -181,28 +181,6 @@ export default function MyPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="마이페이지" />
 
-      {/* 프로필 카드 */}
-      <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="h-16 bg-[#0071e3]" />
-        <div className="px-4 pb-5">
-          <div className="flex items-end justify-between -mt-8 mb-3">
-            <Avatar nickname={nickname} imageUrl={profile?.avatar_url} size="lg" className="border-4 border-white shadow-sm" />
-            <button onClick={() => router.push("/mypage/edit/")}
-              className="h-8 px-3.5 border border-[#d2d2d7] rounded-xl text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
-              프로필 수정
-            </button>
-          </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-[19px] font-bold text-[#1d1d1f]">{nickname}</h2>
-            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${levelBadge[level] ?? levelBadge["새싹"]}`}>
-              {level}
-            </span>
-          </div>
-          <p className="text-[14px] text-[#6e6e73] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
-          <div className="mt-3">
-            <div className="flex justify-between mb-1">
-              <span className="text-[12px] text-[#6e6e73]">레벨 진행도</span>
-              <span className="text-[12px] font-bold text-[#0071e3]">{levelPct[level] ?? 15}%</span>
       {/* ── 인사 배너 ────────────────────────────────────── */}
       <div className="px-4 pt-5 pb-2">
         <p className="text-[12px] font-semibold text-[#86868b] mb-1 tracking-wide">
