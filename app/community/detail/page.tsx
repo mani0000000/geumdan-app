@@ -5,9 +5,9 @@ import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
   MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
 } from "lucide-react";
+import { Avatar } from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { Avatar } from "@/components/ui/Avatar";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
 import {
@@ -18,6 +18,7 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
+import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
 import {
   fetchHiddenPostIds, hidePost, unhidePost, reportPost, reportComment,
   type ReportReason,
@@ -27,10 +28,10 @@ import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
-  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
-  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
-  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
-  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
+  { id: "c1", postId: "", author: "이웃주민",   authorDong: "당하동", authorAvatar: null, authorId: null, content: "정보 공유 감사해요! 저도 궁금했는데 도움이 됐어요 😊",                              likeCount: 5, isAnonymous: false, createdAt: "2026-03-28T10:45:00" },
+  { id: "c2", postId: "", author: "검단맘",     authorDong: "원당동", authorAvatar: null, authorId: null, content: "우리 아이 다니는 곳이랑 비슷하네요. 국공립이 제일 좋은 것 같아요.",               likeCount: 3, isAnonymous: false, createdAt: "2026-03-28T11:20:00" },
+  { id: "c3", postId: "", author: "신혼부부",   authorDong: "대곡동", authorAvatar: null, authorId: null, content: "저도 내년에 알아봐야 하는데... 혹시 대기 얼마나 걸리나요?",                       likeCount: 1, isAnonymous: false, createdAt: "2026-03-28T12:05:00" },
+  { id: "c4", postId: "", author: "육아맘김씨", authorDong: "당하동", authorAvatar: null, authorId: null, content: "댓글 주셔서 감사해요! 국공립은 보통 1~2년 대기예요 ㅠㅠ 미리미리 신청해두세요!", likeCount: 8, isAnonymous: false, createdAt: "2026-03-28T12:30:00" },
 ];
 
 const catColor: Record<string, string> = {
@@ -153,20 +154,29 @@ function DetailContent() {
   const submitComment = async () => {
     if (!commentText.trim() || submittingComment) return;
     setSubmittingComment(true);
-    const myNick = getMyNickname();
     if (isMock) {
+      // mock 포스트는 클라이언트 상태에만 추가
+      const profile = await getUserProfile();
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: myNick,
-        authorDong: "검단",
+        author: profile.nickname,
+        authorDong: profile.dong,
+        authorAvatar: profile.avatar_url ?? null,
+        authorId: profile.id,
         content: commentText.trim(),
         likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
       }]);
     } else {
+      const profile = await getUserProfile();
+      const userId = await getOrCreateUserId();
       const saved = await createComment({
-        postId, author: myNick, authorDong: "검단",
-        content: commentText.trim(), isAnonymous: false,
+        postId,
+        author: profile.nickname,
+        authorDong: profile.dong,
+        content: commentText.trim(),
+        isAnonymous: false,
+        userId,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -175,6 +185,7 @@ function DetailContent() {
         await syncCommentCount(postId, 1);
         setPost(prev => prev ? { ...prev, commentCount: prev.commentCount + 1 } : prev);
       }
+      void touchLastActive();
     }
     setCommentText("");
     setSubmittingComment(false);
@@ -363,7 +374,7 @@ function DetailContent() {
             <>
               <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
               <div className="flex items-center gap-3 mb-5">
-                <Avatar nickname={post.author} size="md" />
+                <Avatar nickname={post.author} imageUrl={post.authorAvatar} size="md" />
                 <div>
                   <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
                   <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
@@ -418,7 +429,7 @@ function DetailContent() {
           <div className="space-y-5">
             {comments.map(c => (
               <div key={c.id} className="flex gap-3">
-                <Avatar nickname={c.author} size="sm" />
+                <Avatar nickname={c.author} imageUrl={c.authorAvatar} size="sm" className="shrink-0" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
@@ -460,7 +471,7 @@ function DetailContent() {
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <Avatar nickname={getMyNickname()} size="sm" />
+          <Avatar nickname={getMyNickname()} size="sm" className="shrink-0" />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}

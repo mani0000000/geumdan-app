@@ -1,9 +1,10 @@
 "use client";
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, Image as ImageIcon, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
 import { getMyNickname, setMyNickname } from "@/lib/identity";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
@@ -44,10 +45,19 @@ export default function WritePage() {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState(() => getMyNickname());
+  const [authorDong, setAuthorDong] = useState("검단");
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setNickname(p.nickname);
+      setAuthorDong(p.dong);
+    });
+  }, []);
 
   const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
@@ -66,15 +76,18 @@ export default function WritePage() {
     const finalNickname = nickname.trim() || "검단주민";
     setMyNickname(finalNickname);
     try {
+      const userId = await getOrCreateUserId();
       const { post, imagesDropped } = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
         author: finalNickname,
-        authorDong: "검단",
-        isAnonymous: false,
+        authorDong,
+        isAnonymous: anonymous,
+        userId,
         images,
       });
+      void touchLastActive();
       saveMyPostId(post.id);
       if (imagesDropped) alert("이미지는 아직 지원되지 않아 글만 등록되었어요.");
       router.replace(`/community/?refresh=${post.id}`);
@@ -195,7 +208,7 @@ export default function WritePage() {
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·혐오 표현, 개인정보 노출, 불법 정보 공유
+            광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
           </p>
         </div>
       </div>

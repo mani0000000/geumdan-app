@@ -31,6 +31,8 @@ export interface DBComment {
   postId: string;
   author: string;
   authorDong: string;
+  authorAvatar: string | null;
+  authorId: string | null;
   content: string;
   likeCount: number;
   isAnonymous: boolean;
@@ -41,15 +43,30 @@ function isConfigured(): boolean {
   return isSupabaseConfigured;
 }
 
+const COMMENT_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
+
 function rowToComment(row: Record<string, unknown>): DBComment {
+  const userRow = (row.users ?? null) as
+    | { nickname?: string; dong?: string; avatar_url?: string | null; status?: string }
+    | null;
+  const isAnonymous = (row.is_anonymous as boolean) ?? false;
+  const author = isAnonymous
+    ? '익명'
+    : (userRow?.nickname ?? (row.author as string));
+  const authorDong = isAnonymous
+    ? (row.author_dong as string)
+    : (userRow?.dong ?? (row.author_dong as string));
+  const authorAvatar = isAnonymous ? null : (userRow?.avatar_url ?? null);
   return {
     id: row.id as string,
     postId: row.post_id as string,
-    author: (row.is_anonymous ? '익명' : row.author) as string,
-    authorDong: row.author_dong as string,
+    author,
+    authorDong,
+    authorAvatar,
+    authorId: (row.user_id as string | null) ?? null,
     content: row.content as string,
     likeCount: (row.like_count as number) ?? 0,
-    isAnonymous: (row.is_anonymous as boolean) ?? false,
+    isAnonymous,
     createdAt: row.created_at as string,
   };
 }
@@ -60,10 +77,17 @@ export async function fetchComments(postId: string): Promise<DBComment[]> {
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .select('*')
+      .select(COMMENT_SELECT)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    if (error) throw error;
+    if (error) {
+      const fb = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      return (fb.data ?? []).map(row => rowToComment(row as Record<string, unknown>));
+    }
     return (data ?? []).map(row => rowToComment(row as Record<string, unknown>));
   } catch (e) {
     console.error('[comments] fetchComments error:', e);
@@ -78,6 +102,7 @@ export interface CommentInput {
   authorDong: string;
   content: string;
   isAnonymous: boolean;
+  userId?: string | null;
 }
 
 export async function createComment(
@@ -93,8 +118,9 @@ export async function createComment(
         author_dong: input.authorDong,
         content: input.content,
         is_anonymous: input.isAnonymous,
+        user_id: input.userId ?? null,
       })
-      .select()
+      .select(COMMENT_SELECT)
       .single();
     if (error) throw error;
     return rowToComment(data as Record<string, unknown>);

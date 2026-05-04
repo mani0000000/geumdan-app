@@ -30,7 +30,7 @@
  * CREATE INDEX idx_posts_category   ON community_posts(category);
  */
 
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from "@/lib/supabase";
 import type { Post, CommunityCategory } from '@/lib/types';
 
 function isConfigured(): boolean {
@@ -38,13 +38,30 @@ function isConfigured(): boolean {
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
+  // joined users row: row.users = { nickname, dong, avatar_url, status }
+  const userRow = (row.users ?? null) as
+    | { nickname?: string; dong?: string; avatar_url?: string | null; status?: string }
+    | null;
+  const isAnonymous = (row.is_anonymous as boolean) ?? false;
+
+  // 비익명일 때만 최신 프로필로 덮어쓰기 — 닉네임/동네/아바타는 항상 최신값 사용
+  const author = isAnonymous
+    ? '익명'
+    : (userRow?.nickname ?? (row.author as string));
+  const authorDong = isAnonymous
+    ? (row.author_dong as string)
+    : (userRow?.dong ?? (row.author_dong as string));
+  const authorAvatar = isAnonymous ? null : (userRow?.avatar_url ?? null);
+
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
     title: row.title as string,
     content: row.content as string,
-    author: (row.is_anonymous ? '익명' : row.author) as string,
-    authorDong: row.author_dong as string,
+    author,
+    authorDong,
+    authorAvatar,
+    authorId: (row.user_id as string | null) ?? null,
     createdAt: row.created_at as string,
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
@@ -56,6 +73,8 @@ function rowToPost(row: Record<string, unknown>): Post {
   };
 }
 
+const POST_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
+
 // ── 목록 조회 ────────────────────────────────────────────────
 // 어드민이 숨김 처리한(is_hidden=true) 게시글은 제외
 export async function fetchDBPosts(
@@ -66,12 +85,20 @@ export async function fetchDBPosts(
   try {
     let q = supabase
       .from('community_posts')
-      .select('*')
+      .select(POST_SELECT)
       .order('created_at', { ascending: false })
       .limit(limit);
     if (category && category !== '전체') q = q.eq('category', category);
     const { data, error } = await q;
-    if (error) throw error;
+    if (error) {
+      // Embedded resource 미지원 환경(=마이그레이션 전) 폴백
+      const fb = await supabase
+        .from('community_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      return (fb.data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+    }
     return (data ?? [])
       .map(row => rowToPost(row as Record<string, unknown>))
       .filter(p => !p.isHidden);
@@ -87,10 +114,18 @@ export async function fetchDBPost(id: string): Promise<Post | null> {
   try {
     const { data, error } = await supabase
       .from('community_posts')
-      .select('*')
+      .select(POST_SELECT)
       .eq('id', id)
       .single();
-    if (error) return null;
+    if (error) {
+      const fb = await supabase
+        .from('community_posts')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (fb.error || !fb.data) return null;
+      return rowToPost(fb.data as Record<string, unknown>);
+    }
     return rowToPost(data as Record<string, unknown>);
   } catch {
     return null;
@@ -105,6 +140,7 @@ export interface PostInput {
   author: string;
   authorDong: string;
   isAnonymous: boolean;
+  userId?: string | null;
   images?: string[];
 }
 
@@ -130,6 +166,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     author: input.author,
     author_dong: input.authorDong,
     is_anonymous: input.isAnonymous,
+    user_id: input.userId ?? null,
   };
   const hasImages = (input.images?.length ?? 0) > 0;
   const payload = hasImages ? { ...base, images: input.images } : base;
@@ -169,7 +206,7 @@ export async function updatePost(
       .from('community_posts')
       .update({ ...input, updated_at: new Date().toISOString() })
       .eq('id', id)
-      .select()
+      .select(POST_SELECT)
       .single();
     if (error) throw error;
     return rowToPost(data as Record<string, unknown>);

@@ -1,18 +1,22 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Camera } from "lucide-react";
+import { ChevronLeft, Camera, Loader2 } from "lucide-react";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
+import { Avatar } from "@/components/ui/Avatar";
 
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;
 
 export default function EditProfilePage() {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [nickname, setNickname] = useState("검단주민");
   const [dong, setDong] = useState("당하동");
   const [intro, setIntro] = useState("검단에서 살고 있는 주민이에요 🏡");
   const [level, setLevel] = useState("새싹");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -21,12 +25,37 @@ export default function EditProfilePage() {
       setDong(p.dong);
       setIntro(p.intro || intro);
       setLevel(p.level);
+      setAvatarUrl(p.avatar_url ?? null);
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function handleAvatarFile(file: File) {
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("folder", "avatars");
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const json = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !json.url) throw new Error(json.error ?? "업로드 실패");
+      setAvatarUrl(json.url);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "프로필 사진 업로드 실패");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
 
   const save = async () => {
     setSaving(true);
-    await updateUserProfile({ nickname: nickname.trim(), dong, intro });
+    await updateUserProfile({
+      nickname: nickname.trim(),
+      dong,
+      intro,
+      avatar_url: avatarUrl,
+    });
     router.back();
   };
 
@@ -51,12 +80,40 @@ export default function EditProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-[#e8f1fd] flex items-center justify-center text-4xl">👤</div>
-            <button className="absolute bottom-0 right-0 w-8 h-8 bg-[#0071e3] rounded-full flex items-center justify-center active:opacity-80">
-              <Camera size={14} className="text-white" />
+            <Avatar nickname={nickname} imageUrl={avatarUrl} size="lg" className="border-4 border-white shadow-sm" />
+            <button
+              onClick={() => !uploading && fileInputRef.current?.click()}
+              disabled={uploading}
+              className="absolute bottom-0 right-0 w-8 h-8 bg-[#0071e3] rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-60 shadow"
+            >
+              {uploading ? (
+                <Loader2 size={14} className="text-white animate-spin" />
+              ) : (
+                <Camera size={14} className="text-white" />
+              )}
             </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={e => {
+                const f = e.target.files?.[0];
+                if (f) handleAvatarFile(f);
+              }}
+            />
           </div>
-          <p className="text-[13px] text-[#6e6e73] mt-2">프로필 사진 변경</p>
+          <p className="text-[13px] text-[#6e6e73] mt-2">
+            {uploading ? "업로드 중..." : "프로필 사진 변경"}
+          </p>
+          {avatarUrl && !uploading && (
+            <button
+              onClick={() => setAvatarUrl(null)}
+              className="text-[12px] text-[#86868b] mt-1 underline active:opacity-60"
+            >
+              제거
+            </button>
+          )}
         </div>
 
         {/* Fields */}

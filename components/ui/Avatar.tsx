@@ -1,3 +1,5 @@
+"use client";
+
 const PALETTE = [
   "#F87171", "#FB923C", "#F59E0B", "#34D399",
   "#10B981", "#22D3EE", "#3B82F6", "#6366F1",
@@ -56,3 +58,5 @@ export function Avatar({ nickname, imageUrl, size = "sm", className = "" }: Prop
     </div>
   );
 }
+
+export default Avatar;
