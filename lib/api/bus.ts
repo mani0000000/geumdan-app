@@ -285,10 +285,10 @@ export async function fetchNearbyStopsFromTago(lat: number, lng: number): Promis
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
-// ─── TAGO 실시간 도착정보 (인천 cityCode=30) ─────────────────────
+// ─── TAGO 실시간 도착정보 (인천 cityCode=23) ─────────────────────
 // nodenm 은 "조회한 정류소의 이름"이라 destination 으로 쓰면 안 됨.
 export async function fetchArrivalsByNodeId(nodeId: string): Promise<BusArrival[]> {
-  const items = await apiFetch("tagoArrivals", { cityCode: "30", nodeId });
+  const items = await apiFetch("tagoArrivals", { cityCode: "23", nodeId });
   return items.map(d => {
     const routeTp = d.routetp ?? d.routeTp ?? "";
     const vehicleTp = d.vehicletp ?? d.vehicleTp ?? "";
@@ -484,13 +484,13 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
 ];
 
 // ─── TAGO: 노선번호로 routeId 검색 ───────────────────────────
-export async function searchRouteByNo(routeNo: string, cityCode = "30"): Promise<string | null> {
+export async function searchRouteByNo(routeNo: string, cityCode = "23"): Promise<string | null> {
   const items = await apiFetch("tagoRoutes", { cityCode, routeNo });
   return items[0]?.routeid ?? items[0]?.routeId ?? null;
 }
 
 // ─── TAGO: routeId로 노선 상세 조회 ─────────────────────────
-export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30"): Promise<RouteDetail | null> {
+export async function fetchRouteDetailFromTago(routeId: string, cityCode = "23"): Promise<RouteDetail | null> {
   const items = await apiFetch("tagoRouteDetail", { cityCode, routeId });
   if (!items.length) return null;
   const d = items[0];
@@ -511,7 +511,7 @@ export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30")
 }
 
 // ─── TAGO: routeId로 전 정류장 목록 조회 ─────────────────────
-export async function fetchStationsByRouteTago(routeId: string, cityCode = "30"): Promise<RouteStation[]> {
+export async function fetchStationsByRouteTago(routeId: string, cityCode = "23"): Promise<RouteStation[]> {
   const items = await apiFetch("tagoRouteStations", { cityCode, routeId, numOfRows: "100" });
   return items
     .map(d => ({
