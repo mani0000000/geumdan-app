@@ -14,7 +14,6 @@ export interface UserProfile {
   dong: string;
   intro: string;
   avatar_url: string | null;
-  email: string | null;
   level: "새싹" | "주민" | "이웃" | "터줏대감";
   status: UserStatus;
   post_count: number;
@@ -93,7 +92,6 @@ const DEFAULT_PROFILE: Omit<UserProfile, "id"> = {
   dong: "당하동",
   intro: "",
   avatar_url: null,
-  email: null,
   level: "새싹",
   status: "active",
   post_count: 0,
@@ -159,7 +157,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     try {
       const { data } = await supabase
         .from("users")
-        .select("id,nickname,dong,intro,avatar_url,email,level,status,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
+        .select("id,nickname,dong,intro,avatar_url,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
         .eq("id", uid)
         .single();
       if (data) {

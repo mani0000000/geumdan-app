@@ -1,11 +1,10 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown, ChevronLeft, Image as ImageIcon, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
-import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
-import { getMyNickname, setMyNickname } from "@/lib/identity";
+import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -46,9 +45,9 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
-  const [nickname, setNickname] = useState(() => getMyNickname());
+  const [nickname, setNickname] = useState("검단주민");
   const [authorDong, setAuthorDong] = useState("검단");
-  const [images, setImages] = useState<string[]>([]);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -56,6 +55,7 @@ export default function WritePage() {
     getUserProfile().then(p => {
       setNickname(p.nickname);
       setAuthorDong(p.dong);
+      setAvatarUrl(p.avatar_url);
     });
   }, []);
 
@@ -76,13 +76,15 @@ export default function WritePage() {
     const finalNickname = nickname.trim() || "검단주민";
     setMyNickname(finalNickname);
     try {
-      const userId = await getOrCreateUserId();
-      const { post, imagesDropped } = await createPost({
+      const uid = await getOrCreateUserId();
+      const post = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: finalNickname,
+        author: nickname.trim() || "검단주민",
         authorDong,
+        authorAvatarUrl: avatarUrl,
+        userId: uid,
         isAnonymous: anonymous,
         userId,
         images,

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Camera, Loader2 } from "lucide-react";
+import Avatar from "@/components/ui/Avatar";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
 import { Avatar } from "@/components/ui/Avatar";
 
@@ -13,40 +14,56 @@ export default function EditProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [nickname, setNickname] = useState("검단주민");
   const [dong, setDong] = useState("당하동");
-  const [intro, setIntro] = useState("검단에서 살고 있는 주민이에요 🏡");
+  const [intro, setIntro] = useState("");
   const [level, setLevel] = useState("새싹");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     getUserProfile().then(p => {
       setNickname(p.nickname);
       setDong(p.dong);
-      setIntro(p.intro || intro);
+      setIntro(p.intro || "");
       setLevel(p.level);
-      setAvatarUrl(p.avatar_url ?? null);
+      setAvatarUrl(p.avatar_url);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleAvatarFile(file: File) {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError(null);
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("folder", "avatars");
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const json = (await res.json()) as { url?: string; error?: string };
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "avatars");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const json = await res.json() as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error ?? "업로드 실패");
+      // 업로드 즉시 DB 반영 → 다른 화면에서도 바로 보이도록
+      await updateUserProfile({ avatar_url: json.url });
       setAvatarUrl(json.url);
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "프로필 사진 업로드 실패");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "업로드 실패");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }
+  };
+
+  const removeAvatar = async () => {
+    setUploading(true);
+    try {
+      await updateUserProfile({ avatar_url: null });
+      setAvatarUrl(null);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -80,39 +97,43 @@ export default function EditProfilePage() {
         {/* Avatar */}
         <div className="flex flex-col items-center mb-8">
           <div className="relative">
-            <Avatar nickname={nickname} imageUrl={avatarUrl} size="lg" className="border-4 border-white shadow-sm" />
+            <Avatar src={avatarUrl} size={96} alt={nickname} />
             <button
-              onClick={() => !uploading && fileInputRef.current?.click()}
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
-              className="absolute bottom-0 right-0 w-8 h-8 bg-[#0071e3] rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-60 shadow"
+              className="absolute bottom-0 right-0 w-8 h-8 bg-[#0071e3] rounded-full flex items-center justify-center active:opacity-80 disabled:opacity-50 shadow"
             >
-              {uploading ? (
-                <Loader2 size={14} className="text-white animate-spin" />
-              ) : (
-                <Camera size={14} className="text-white" />
-              )}
+              {uploading
+                ? <Loader2 size={14} className="text-white animate-spin" />
+                : <Camera size={14} className="text-white" />}
             </button>
             <input
               ref={fileInputRef}
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={e => {
-                const f = e.target.files?.[0];
-                if (f) handleAvatarFile(f);
-              }}
+              onChange={handleFileChange}
             />
           </div>
-          <p className="text-[13px] text-[#6e6e73] mt-2">
-            {uploading ? "업로드 중..." : "프로필 사진 변경"}
-          </p>
-          {avatarUrl && !uploading && (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-[13px] text-[#0071e3] mt-2 font-medium active:opacity-60"
+          >
+            프로필 사진 {avatarUrl ? "변경" : "추가"}
+          </button>
+          {avatarUrl && (
             <button
-              onClick={() => setAvatarUrl(null)}
-              className="text-[12px] text-[#86868b] mt-1 underline active:opacity-60"
+              type="button"
+              onClick={removeAvatar}
+              className="text-[12px] text-[#86868b] mt-1 active:opacity-60"
             >
-              제거
+              사진 제거
             </button>
+          )}
+          {uploadError && (
+            <p className="text-[12px] text-[#F04452] mt-2">{uploadError}</p>
           )}
         </div>
 
@@ -170,7 +191,6 @@ export default function EditProfilePage() {
             </div>
             <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
               글 작성, 댓글, 좋아요 활동으로 레벨이 올라가요.
-              <br />다음 레벨인 <strong>터줏대감</strong>까지 글 15개 더 작성하세요!
             </p>
           </div>
         </div>

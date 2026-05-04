@@ -1,17 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle,
-  LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Heart, Sparkles, Crown,
+  ChevronRight, FileText, MessageSquare, Heart, Bell, Shield,
+  HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2,
+  Coins, Star, Pencil, Trash2, X, Check, Tag,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import { Avatar } from "@/components/ui/Avatar";
-import { posts } from "@/lib/mockData";
+import Avatar from "@/components/ui/Avatar";
 import {
   getUserProfile,
+  getOrCreateUserId,
   getMyPostCount,
   getMyCommentCount,
   getDownloadedCoupons,
@@ -24,6 +24,10 @@ import {
   type UserProfile,
   type UserGameStats,
 } from "@/lib/db/userdata";
+import { fetchMyPosts, deletePost, updatePost } from "@/lib/db/posts";
+import { fetchMyComments, deleteComment, updateComment, type DBComment } from "@/lib/db/comments";
+import type { Post } from "@/lib/types";
+import { formatRelativeTime } from "@/lib/utils";
 
 const WEEKLY_LIKES_MAX = 10;
 
@@ -65,7 +69,6 @@ const levelBadge: Record<string, string> = {
   이웃: "bg-[#EDE9FE] text-[#5B21B6]",
   터줏대감: "bg-[#FEF3C7] text-[#92400E]",
 };
-const levelPct: Record<string, number> = { 새싹: 15, 주민: 40, 이웃: 65, 터줏대감: 100 };
 
 const monthlyLevelColor: Record<string, { from: string; to: string; badge: string }> = {
   브론즈: { from: "#92400E", to: "#D97706", badge: "bg-[#FEF3C7] text-[#92400E]" },
@@ -79,32 +82,7 @@ const DEFAULT_STATS: UserGameStats = {
   completedMissions: [], redeemedRewards: [], pointHistory: [],
 };
 
-// ─── 홈과 동일한 섹션 라벨 ───────────────────────────────────
-function SectionLabel({
-  label,
-  badge,
-  href,
-  linkLabel = "전체보기",
-}: {
-  label: string;
-  badge?: React.ReactNode;
-  href?: string;
-  linkLabel?: string;
-}) {
-  return (
-    <div className="flex items-center justify-between px-4 pt-6 pb-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
-        {badge}
-      </div>
-      {href && (
-        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
-          {linkLabel} <ChevronRight size={13} />
-        </Link>
-      )}
-    </div>
-  );
-}
+type TabKey = "posts" | "comments";
 
 export default function MyPage() {
   const router = useRouter();
@@ -120,6 +98,29 @@ export default function MyPage() {
   const [storeCount, setStoreCount] = useState(0);
   const [aptCount, setAptCount] = useState(0);
 
+  // 내 글 / 내 댓글 탭
+  const [activeTab, setActiveTab] = useState<TabKey>("posts");
+  const [myPosts, setMyPosts] = useState<Post[]>([]);
+  const [myComments, setMyComments] = useState<DBComment[]>([]);
+  const [tabsLoading, setTabsLoading] = useState(true);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editPostTitle, setEditPostTitle] = useState("");
+  const [editPostContent, setEditPostContent] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null);
+  const [editCommentContent, setEditCommentContent] = useState("");
+
+  const reloadMyContent = useCallback(() => {
+    return getOrCreateUserId().then(uid =>
+      Promise.all([fetchMyPosts(uid), fetchMyComments(uid)]).then(([posts, comments]) => {
+        setMyPosts(posts);
+        setMyComments(comments);
+        setPostCount(posts.length);
+        setCommentCount(comments.length);
+        setTabsLoading(false);
+      })
+    );
+  }, []);
+
   useEffect(() => {
     getUserProfile().then(setProfile);
     getUserGameStats().then(setGameStats);
@@ -129,7 +130,8 @@ export default function MyPage() {
     getFavoriteBuses().then(b => setBusCount(b.length));
     getFavoriteStores().then(s => setStoreCount(s.length));
     getFavoriteApts().then(a => setAptCount(a.length));
-  }, []);
+    reloadMyContent();
+  }, [reloadMyContent]);
 
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
   const nextLevel = getNextLevel(monthlyLevel);
@@ -143,7 +145,8 @@ export default function MyPage() {
   const nickname = profile?.nickname ?? "검단주민";
   const level = profile?.level ?? "새싹";
   const dong = profile?.dong ?? "당하동";
-  const joinedAt = profile?.joined_at ?? new Date().toISOString().slice(0, 7);
+  const joinedAt = profile?.joined_at ?? new Date().toISOString().slice(0, 10);
+  const avatarUrl = profile?.avatar_url ?? null;
 
   const missions = MISSIONS.map(m => ({
     ...m,
@@ -157,153 +160,262 @@ export default function MyPage() {
     setGameStats(updated);
   }
 
-  const activityShortcuts = [
-    { icon: FileText,      label: "내 글",     count: postCount,    color: "#0071e3", bg: "#e8f1fd", href: "/community/" },
-    { icon: MessageSquare, label: "내 댓글",   count: commentCount, color: "#7C3AED", bg: "#F3F0FF", href: "/community/" },
-    { icon: Heart,         label: "받은 좋아요", count: profile?.like_count ?? 0, color: "#F04452", bg: "#FFE4E6", href: null },
-    { icon: Tag,           label: "쿠폰",      count: couponCount,  color: "#F59E0B", bg: "#FEF3C7", href: "/coupons/" },
-  ];
+  // 내 글 수정 / 삭제
+  const startEditPost = (p: Post) => {
+    setEditingPostId(p.id);
+    setEditPostTitle(p.title);
+    setEditPostContent(p.content);
+  };
+  const cancelEditPost = () => {
+    setEditingPostId(null);
+    setEditPostTitle("");
+    setEditPostContent("");
+  };
+  const saveEditPost = async () => {
+    if (!editingPostId || !editPostTitle.trim() || !editPostContent.trim()) return;
+    const updated = await updatePost(editingPostId, {
+      title: editPostTitle.trim(),
+      content: editPostContent.trim(),
+    });
+    if (updated) {
+      setMyPosts(prev => prev.map(p => p.id === editingPostId ? updated : p));
+      cancelEditPost();
+    }
+  };
+  const handleDeletePost = async (id: string) => {
+    if (!confirm("이 글을 삭제하시겠습니까?")) return;
+    const ok = await deletePost(id);
+    if (ok) setMyPosts(prev => prev.filter(p => p.id !== id));
+  };
 
-  const favoriteShortcuts = [
-    { icon: Star, label: "즐겨찾는 버스", badge: String(busCount),   color: "text-[#FBBF24]", href: "/transport/" },
-    { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
-    { icon: Star, label: "관심 아파트",   badge: String(aptCount),   color: "text-[#FBBF24]", href: "/community/?tab=시세" },
-  ];
-
-  const settingsShortcuts = [
-    { icon: Bell,       label: "알림 설정",       href: "/mypage/notifications/" },
-    { icon: Shield,     label: "개인정보 보호",   href: "/mypage/settings/" },
-    { icon: Settings,   label: "앱 설정",         href: "/mypage/settings/" },
-    { icon: HelpCircle, label: "고객센터 / 신고", href: null },
-  ];
+  // 내 댓글 수정 / 삭제
+  const startEditComment = (c: DBComment) => {
+    setEditingCommentId(c.id);
+    setEditCommentContent(c.content);
+  };
+  const cancelEditComment = () => {
+    setEditingCommentId(null);
+    setEditCommentContent("");
+  };
+  const saveEditComment = async () => {
+    if (!editingCommentId || !editCommentContent.trim()) return;
+    const ok = await updateComment(editingCommentId, editCommentContent.trim());
+    if (ok) {
+      setMyComments(prev => prev.map(c =>
+        c.id === editingCommentId ? { ...c, content: editCommentContent.trim() } : c
+      ));
+      cancelEditComment();
+    }
+  };
+  const handleDeleteComment = async (id: string) => {
+    if (!confirm("이 댓글을 삭제하시겠습니까?")) return;
+    const ok = await deleteComment(id);
+    if (ok) setMyComments(prev => prev.filter(c => c.id !== id));
+  };
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="마이페이지" />
 
-      {/* ── 인사 배너 ────────────────────────────────────── */}
-      <div className="px-4 pt-5 pb-2">
-        <p className="text-[12px] font-semibold text-[#86868b] mb-1 tracking-wide">
-          {dong} · {joinedAt.slice(0, 7)} 가입 · {level}
-        </p>
-        <h1 className="text-[26px] font-black text-[#1d1d1f] leading-tight tracking-tight">
-          {nickname}님, 오늘도 검단에서 빛나세요 ✨
-        </h1>
+      {/* ── 1. 프로필 카드 ─────────────────────────────────────────── */}
+      <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="h-16 bg-[#0071e3]" />
+        <div className="px-4 pb-5">
+          <div className="flex items-end justify-between -mt-10 mb-3">
+            <div className="border-4 border-white rounded-full">
+              <Avatar src={avatarUrl} size={72} alt={nickname} />
+            </div>
+            <button onClick={() => router.push("/mypage/edit/")}
+              className="h-8 px-3.5 border border-[#d2d2d7] rounded-xl text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
+              프로필 수정
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[19px] font-bold text-[#1d1d1f]">{nickname}</h2>
+            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${levelBadge[level] ?? levelBadge["새싹"]}`}>
+              {level}
+            </span>
+          </div>
+          <p className="text-[14px] text-[#6e6e73] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
+          {profile?.intro && (
+            <p className="text-[13px] text-[#86868b] mt-1.5 leading-relaxed">{profile.intro}</p>
+          )}
+        </div>
       </div>
 
-      {/* ── 프로필 히어로 카드 ──────────────────────────── */}
-      <section className="mx-4 mb-1">
-        <div className="rounded-2xl overflow-hidden shadow-sm"
-          style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
-          <div className="p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-[28px] shrink-0">
-                👤
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[18px] font-black text-white truncate">{nickname}</span>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${levelBadge[level] ?? levelBadge["새싹"]}`}>
-                    {level}
-                  </span>
-                </div>
-                <p className="text-[12px] text-white/70 mt-0.5">레벨 진행도 {levelPct[level] ?? 15}%</p>
-                <div className="h-1.5 bg-white/20 rounded-full overflow-hidden mt-1.5">
-                  <div className="h-full bg-white rounded-full transition-all"
-                    style={{ width: `${levelPct[level] ?? 15}%` }} />
-                </div>
-              </div>
-              <button onClick={() => router.push("/mypage/edit/")}
-                className="h-8 px-3 bg-white/20 backdrop-blur-sm rounded-xl text-[12px] text-white font-semibold active:bg-white/30 shrink-0">
-                프로필
-              </button>
-            </div>
+      {/* ── 2. 활동 요약 카드 그리드 ───────────────────────────────── */}
+      <div className="mx-4 mb-3 grid grid-cols-2 gap-2">
+        <DashCard icon={<FileText size={18} className="text-[#0071e3]" />} label="작성한 글" value={postCount} />
+        <DashCard icon={<MessageSquare size={18} className="text-[#8B5CF6]" />} label="작성한 댓글" value={commentCount} />
+        <DashCard icon={<Heart size={18} className="text-[#F04452]" />} label="받은 좋아요" value={profile?.like_count ?? 0} />
+        <DashCard icon={<Coins size={18} className="text-[#F59E0B]" />} label="보유 포인트" value={gameStats.points} suffix="P" />
+      </div>
 
-            {/* 활동 통계 글래스 카드 3분할 */}
-            <div className="flex mt-4 bg-white/15 backdrop-blur-sm rounded-xl overflow-hidden">
-              {([["작성 글", postCount], ["댓글", commentCount], ["받은 좋아요", profile?.like_count ?? 0]] as [string, number][])
-                .map(([l, v], i, arr) => (
-                <div key={l} className={`flex-1 py-2.5 text-center ${i !== arr.length - 1 ? "border-r border-white/15" : ""}`}>
-                  <p className="text-[19px] font-black text-white leading-tight">{v}</p>
-                  <p className="text-[11px] text-white/70 mt-0.5">{l}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* ── 3. 내 글 / 내 댓글 탭 ──────────────────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="flex border-b border-[#f5f5f7]">
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`flex-1 h-12 text-[14px] font-bold transition-colors ${
+              activeTab === "posts" ? "text-[#0071e3] border-b-2 border-[#0071e3]" : "text-[#86868b]"
+            }`}>
+            내 글 ({myPosts.length})
+          </button>
+          <button
+            onClick={() => setActiveTab("comments")}
+            className={`flex-1 h-12 text-[14px] font-bold transition-colors ${
+              activeTab === "comments" ? "text-[#0071e3] border-b-2 border-[#0071e3]" : "text-[#86868b]"
+            }`}>
+            내 댓글 ({myComments.length})
+          </button>
+        </div>
+
+        <div className="p-3">
+          {tabsLoading ? (
+            <div className="py-8 text-center text-[13px] text-[#86868b]">불러오는 중...</div>
+          ) : activeTab === "posts" ? (
+            myPosts.length === 0 ? (
+              <div className="py-8 text-center">
+                <p className="text-[13px] text-[#86868b]">아직 작성한 글이 없어요</p>
+                <button onClick={() => router.push("/community/write/")}
+                  className="mt-3 h-8 px-4 rounded-xl bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold active:opacity-70">
+                  첫 글 작성하기
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {myPosts.map(p => (
+                  <div key={p.id} className="bg-[#f9fafb] rounded-xl p-3">
+                    {editingPostId === p.id ? (
+                      <div className="space-y-2">
+                        <input value={editPostTitle} onChange={e => setEditPostTitle(e.target.value)} maxLength={50}
+                          className="w-full px-3 py-2 rounded-lg border border-[#d2d2d7] text-[14px] outline-none focus:border-[#0071e3]" />
+                        <textarea value={editPostContent} onChange={e => setEditPostContent(e.target.value)} rows={3}
+                          className="w-full px-3 py-2 rounded-lg border border-[#d2d2d7] text-[14px] outline-none focus:border-[#0071e3] resize-none" />
+                        <div className="flex gap-2 justify-end">
+                          <button onClick={cancelEditPost}
+                            className="h-8 px-3 rounded-lg border border-[#d2d2d7] text-[13px] text-[#6e6e73] active:opacity-70">
+                            <X size={12} className="inline mr-1" />취소
+                          </button>
+                          <button onClick={saveEditPost}
+                            className="h-8 px-3 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold active:opacity-80">
+                            <Check size={12} className="inline mr-1" />저장
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => router.push(`/community/detail/?id=${p.id}`)}
+                          className="w-full text-left active:opacity-60">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{p.category}</span>
+                            <span className="text-[11px] text-[#86868b]">{formatRelativeTime(p.createdAt)}</span>
+                          </div>
+                          <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
+                          <p className="text-[12px] text-[#86868b] mt-1 line-clamp-1">{p.content}</p>
+                          <div className="flex items-center gap-3 mt-2 text-[12px] text-[#86868b]">
+                            <span>♥ {p.likeCount}</span>
+                            <span>💬 {p.commentCount}</span>
+                            <span>👁 {p.viewCount}</span>
+                          </div>
+                        </button>
+                        <div className="flex gap-2 mt-2 pt-2 border-t border-[#eef0f2]">
+                          <button onClick={() => startEditPost(p)}
+                            className="flex-1 h-8 rounded-lg bg-white border border-[#d2d2d7] text-[12px] text-[#424245] font-medium active:opacity-70">
+                            <Pencil size={11} className="inline mr-1" />수정
+                          </button>
+                          <button onClick={() => handleDeletePost(p.id)}
+                            className="flex-1 h-8 rounded-lg bg-white border border-[#FECACA] text-[12px] text-[#F04452] font-medium active:opacity-70">
+                            <Trash2 size={11} className="inline mr-1" />삭제
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            myComments.length === 0 ? (
+              <div className="py-8 text-center text-[13px] text-[#86868b]">아직 작성한 댓글이 없어요</div>
+            ) : (
+              <div className="space-y-2">
+                {myComments.map(c => (
+                  <div key={c.id} className="bg-[#f9fafb] rounded-xl p-3">
+                    {editingCommentId === c.id ? (
+                      <div className="space-y-2">
+                        <textarea value={editCommentContent} onChange={e => setEditCommentContent(e.target.value)} rows={2}
+                          className="w-full px-3 py-2 rounded-lg border border-[#d2d2d7] text-[14px] outline-none focus:border-[#0071e3] resize-none" />
+                        <div className="flex gap-2 justify-end">
+                          <button onClick={cancelEditComment}
+                            className="h-8 px-3 rounded-lg border border-[#d2d2d7] text-[13px] text-[#6e6e73] active:opacity-70">
+                            <X size={12} className="inline mr-1" />취소
+                          </button>
+                          <button onClick={saveEditComment}
+                            className="h-8 px-3 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold active:opacity-80">
+                            <Check size={12} className="inline mr-1" />저장
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => router.push(`/community/detail/?id=${c.postId}`)}
+                          className="w-full text-left active:opacity-60">
+                          <p className="text-[12px] text-[#86868b] mb-1 line-clamp-1">
+                            {c.postTitle ? `↳ ${c.postTitle}` : "↳ 원글 보기"}
+                          </p>
+                          <p className="text-[14px] text-[#1d1d1f] line-clamp-2">{c.content}</p>
+                          <p className="text-[11px] text-[#86868b] mt-1">{formatRelativeTime(c.createdAt)}</p>
+                        </button>
+                        <div className="flex gap-2 mt-2 pt-2 border-t border-[#eef0f2]">
+                          <button onClick={() => startEditComment(c)}
+                            className="flex-1 h-8 rounded-lg bg-white border border-[#d2d2d7] text-[12px] text-[#424245] font-medium active:opacity-70">
+                            <Pencil size={11} className="inline mr-1" />수정
+                          </button>
+                          <button onClick={() => handleDeleteComment(c.id)}
+                            className="flex-1 h-8 rounded-lg bg-white border border-[#FECACA] text-[12px] text-[#F04452] font-medium active:opacity-70">
+                            <Trash2 size={11} className="inline mr-1" />삭제
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )
+          )}
         </div>
       </section>
 
-      {/* ── 빠른 활동 (뉴모피즘 그리드) ────────────────────── */}
-      <SectionLabel label="내 활동" />
-      <section className="px-5 mb-1">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
-          {activityShortcuts.map(({ icon: Icon, label, count, color, bg, href }) => (
-            <button key={label} onClick={() => href && router.push(href)}
-              disabled={!href}
-              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform disabled:opacity-100">
-              <div className="relative w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
-                style={{ background: "#f5f5f7", boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff" }}>
-                <div className="absolute inset-[3px] rounded-[13px] flex items-center justify-center"
-                  style={{ background: bg }}>
-                  <Icon size={20} strokeWidth={2.2} color={color} />
-                </div>
-                {count > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-[#F04452] text-white text-[10px] font-black rounded-full flex items-center justify-center border-2 border-[#f5f5f7]">
-                    {count > 99 ? "99+" : count}
-                  </span>
-                )}
-              </div>
-              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 포인트 & 월간 등급 (그라디언트 히어로) ────────── */}
-      <SectionLabel
-        label="포인트 & 등급"
-        badge={<Crown size={15} className="text-[#F59E0B]" />}
-      />
-      <section className="mx-4 mb-1">
-        <div className="rounded-2xl overflow-hidden shadow-sm"
-          style={{ background: `linear-gradient(135deg, ${mlv.from}, ${mlv.to})` }}>
-          <div className="px-5 pt-5 pb-4">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Trophy size={14} className="text-white/80" />
-                  <span className="text-[12px] font-bold text-white/80 tracking-wide">이번 달 등급</span>
-                </div>
-                <span className="text-[28px] font-black text-white leading-tight">{monthlyLevel}</span>
-              </div>
-              <div className="text-right">
-                <p className="text-[12px] text-white/70">보유 포인트</p>
-                <p className="text-[26px] font-black text-white leading-tight">{gameStats.points.toLocaleString()}P</p>
+      {/* ── 4. 포인트 & 월간 레벨 카드 ──────────────────────────────── */}
+      <div className="mx-4 mb-3 rounded-2xl overflow-hidden"
+        style={{ background: `linear-gradient(135deg, ${mlv.from}, ${mlv.to})` }}>
+        <div className="px-5 pt-5 pb-4">
+          <div className="flex items-start justify-between mb-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <Trophy size={16} className="text-white/80" />
+                <span className="text-[14px] font-bold text-white/80">이번 달 등급</span>
               </div>
             </div>
 
-            {/* 월간 레벨 진행 바 */}
-            <div className="mb-3">
-              <div className="flex justify-between mb-1.5">
-                <span className="text-[12px] text-white/70 font-semibold">{monthlyLevel}</span>
-                <span className="text-[12px] text-white/70">{nextLevel}까지 {remainToNext}P</span>
-              </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-                <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
-              </div>
+          <div className="mb-3">
+            <div className="flex justify-between mb-1.5">
+              <span className="text-[12px] text-white/70">{monthlyLevel}</span>
+              <span className="text-[12px] text-white/70">{nextLevel} (앞으로 {remainToNext}P)</span>
+            </div>
+            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
             </div>
 
-            {/* 이번 주 활동 — 글래스 카드 */}
-            <div className="flex gap-2.5">
-              <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2.5">
-                <p className="text-[11px] text-white/70 font-semibold">이번 주 좋아요</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[18px] font-black text-white">{gameStats.weeklyLikes}</span>
-                  <span className="text-[12px] text-white/60">/{WEEKLY_LIKES_MAX}</span>
-                </div>
-                <div className="h-1 bg-white/20 rounded-full mt-1.5 overflow-hidden">
-                  <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%` }} />
-                </div>
+          <div className="flex gap-3">
+            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
+              <p className="text-[12px] text-white/70">이번 주 좋아요</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[19px] font-black text-white">{gameStats.weeklyLikes}</span>
+                <span className="text-[13px] text-white/60">/{WEEKLY_LIKES_MAX}</span>
               </div>
               <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl px-3 py-2.5">
                 <p className="text-[11px] text-white/70 font-semibold">이번 주 글</p>
@@ -337,20 +449,12 @@ export default function MyPage() {
         </div>
       </section>
 
-      {/* ── 주간 미션 ─────────────────────────────────────── */}
-      <SectionLabel
-        label="주간 미션"
-        badge={<Zap size={15} className="text-[#F59E0B]" />}
-      />
-      <section className="mx-4 mb-1">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0]">
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <span className="text-[13px] font-semibold text-[#6e6e73]">
-              완료 {missions.filter(m => m.done).length}/{missions.length}
-            </span>
-            <span className="text-[12px] text-[#0071e3] font-bold">
-              +{missions.filter(m => m.done).reduce((s, m) => s + m.reward, 0)}P 달성
-            </span>
+      {/* ── 5. 주간 미션 ──────────────────────────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="flex items-center gap-1.5">
+            <Zap size={16} className="text-[#F59E0B]" />
+            <span className="text-[16px] font-bold text-[#1d1d1f]">주간 미션</span>
           </div>
           <div className="px-4 pb-4 space-y-2">
             {missions.map(m => (
@@ -382,16 +486,12 @@ export default function MyPage() {
         </div>
       </section>
 
-      {/* ── 포인트 교환 ──────────────────────────────────── */}
-      <SectionLabel
-        label="포인트 교환"
-        badge={<Gift size={15} className="text-[#0071e3]" />}
-      />
-      <section className="mx-4 mb-1">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0]">
-          <div className="flex items-center justify-between px-4 pt-4 pb-2">
-            <span className="text-[13px] font-semibold text-[#6e6e73]">전체 {REWARDS.length}개 상품</span>
-            <span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>
+      {/* ── 6. 포인트 교환 ───────────────────────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="flex items-center gap-1.5">
+            <Gift size={16} className="text-[#0071e3]" />
+            <span className="text-[16px] font-bold text-[#1d1d1f]">포인트 교환</span>
           </div>
           <div className="px-4 pb-3 space-y-2">
             {REWARDS.map(r => {
@@ -430,71 +530,58 @@ export default function MyPage() {
                     </button>
                   )}
                 </div>
-              );
-            })}
-          </div>
-          <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-3 py-2.5 flex items-start gap-2">
-            <Sparkles size={13} className="text-[#0071e3] mt-0.5 shrink-0" />
-            <p className="text-[12px] text-[#0071e3] leading-relaxed">
-              글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회)
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── 최근 작성글 ───────────────────────────────────── */}
-      <SectionLabel label="최근 작성글" href="/community/" linkLabel="전체보기" />
-      <section className="mx-4 mb-1">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0] divide-y divide-[#f5f5f7]">
-          {posts.slice(0, 3).map(p => (
-            <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
-              className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
-              <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
-                <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
+                {done ? (
+                  <div className="flex items-center gap-1 bg-[#D1FAE5] px-3 py-1.5 rounded-xl">
+                    <CheckCircle2 size={13} className="text-[#00C471]" />
+                    <span className="text-[12px] font-bold text-[#065F46]">교환완료</span>
+                  </div>
+                ) : redeemTarget === r.id ? (
+                  <div className="flex gap-1.5">
+                    <button onClick={() => setRedeemTarget(null)}
+                      className="h-8 px-2.5 bg-[#d2d2d7] rounded-xl text-[12px] font-bold text-[#424245] active:opacity-70">취소</button>
+                    <button onClick={() => handleRedeemConfirm(r)}
+                      className="h-8 px-2.5 bg-[#0071e3] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => canRedeem && setRedeemTarget(r.id)}
+                    disabled={!canRedeem}
+                    className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors ${
+                      canRedeem ? "bg-[#0071e3] text-white active:bg-[#0058b0]" : "bg-[#d2d2d7] text-[#86868b]"
+                    }`}>
+                    교환
+                  </button>
+                )}
               </div>
-              <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1.5" />
-            </button>
-          ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── 7. 즐겨찾기 / 쿠폰 빠른 메뉴 ───────────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#6e6e73]">즐겨찾기</p>
+        <div className="divide-y divide-[#f5f5f7]">
+          <MenuRow icon={<Tag size={18} className="text-[#F59E0B]" />} label="다운로드한 쿠폰" badge={couponCount} onClick={() => router.push("/coupons/")} />
+          <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="즐겨찾는 버스" badge={busCount} onClick={() => router.push("/transport/")} />
+          <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="즐겨찾는 상가" badge={storeCount} onClick={() => router.push("/stores/")} />
+          <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="관심 아파트" badge={aptCount} onClick={() => router.push("/community/?tab=시세")} />
         </div>
       </section>
 
-      {/* ── 즐겨찾기 ─────────────────────────────────────── */}
-      <SectionLabel label="즐겨찾기" />
-      <section className="mx-4 mb-1">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0] divide-y divide-[#f5f5f7]">
-          {favoriteShortcuts.map(({ icon: Icon, label, badge, color, href }) => (
-            <button key={label} onClick={() => href && router.push(href)}
-              className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
-              <Icon size={18} className={`${color} mr-3 shrink-0`} />
-              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-              {badge !== "0" && (
-                <span className="bg-[#FEF3C7] text-[#92400E] text-[12px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
-              )}
-              <ChevronRight size={16} className="text-[#d2d2d7]" />
-            </button>
-          ))}
+      {/* ── 8. 설정 ───────────────────────────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#6e6e73]">설정</p>
+        <div className="divide-y divide-[#f5f5f7]">
+          <MenuRow icon={<Bell size={18} className="text-[#6e6e73]" />} label="알림 설정" onClick={() => router.push("/mypage/notifications/")} />
+          <MenuRow icon={<Shield size={18} className="text-[#6e6e73]" />} label="개인정보 보호" onClick={() => router.push("/mypage/settings/")} />
+          <MenuRow icon={<Settings size={18} className="text-[#6e6e73]" />} label="앱 설정" onClick={() => router.push("/mypage/settings/")} />
+          <MenuRow icon={<HelpCircle size={18} className="text-[#6e6e73]" />} label="고객센터 / 신고" />
         </div>
-      </section>
+      </div>
 
-      {/* ── 설정 ─────────────────────────────────────────── */}
-      <SectionLabel label="설정" />
-      <section className="mx-4 mb-1">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0] divide-y divide-[#f5f5f7]">
-          {settingsShortcuts.map(({ icon: Icon, label, href }) => (
-            <button key={label} onClick={() => href && router.push(href)}
-              className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
-              <Icon size={18} className="text-[#6e6e73] mr-3 shrink-0" />
-              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-              <ChevronRight size={16} className="text-[#d2d2d7]" />
-            </button>
-          ))}
-        </div>
-      </section>
-
-      {/* ── 로그아웃 ─────────────────────────────────────── */}
-      <div className="mx-4 mt-6 mb-4">
+      {/* ── 9. 로그아웃 ─────────────────────────────────────────── */}
+      <div className="mx-4 mb-6">
         <button onClick={() => router.push("/login/")}
           className="w-full flex items-center justify-center gap-2 h-12 bg-white rounded-2xl border border-[#f0f0f0] shadow-sm text-[#F04452] text-[15px] font-semibold active:bg-[#FEE2E2] transition-colors">
           <LogOut size={16} />로그아웃
@@ -504,5 +591,41 @@ export default function MyPage() {
       <p className="text-center text-[12px] text-[#86868b] pb-4">검단 라이프 v1.1.0</p>
       <BottomNav />
     </div>
+  );
+}
+
+function DashCard({
+  icon, label, value, suffix = "",
+}: {
+  icon: React.ReactNode; label: string; value: number; suffix?: string;
+}) {
+  return (
+    <div className="bg-white rounded-2xl px-4 py-3.5">
+      <div className="flex items-center gap-1.5 mb-1.5">
+        {icon}
+        <span className="text-[12px] text-[#6e6e73] font-medium">{label}</span>
+      </div>
+      <p className="text-[20px] font-black text-[#1d1d1f]">
+        {value.toLocaleString()}{suffix}
+      </p>
+    </div>
+  );
+}
+
+function MenuRow({
+  icon, label, badge, onClick,
+}: {
+  icon: React.ReactNode; label: string; badge?: number; onClick?: () => void;
+}) {
+  return (
+    <button onClick={onClick}
+      className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
+      <span className="mr-3 shrink-0">{icon}</span>
+      <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
+      {badge !== undefined && badge > 0 && (
+        <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
+      )}
+      <ChevronRight size={16} className="text-[#d2d2d7]" />
+    </button>
   );
 }

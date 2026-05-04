@@ -38,30 +38,16 @@ function isConfigured(): boolean {
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
-  // joined users row: row.users = { nickname, dong, avatar_url, status }
-  const userRow = (row.users ?? null) as
-    | { nickname?: string; dong?: string; avatar_url?: string | null; status?: string }
-    | null;
-  const isAnonymous = (row.is_anonymous as boolean) ?? false;
-
-  // 비익명일 때만 최신 프로필로 덮어쓰기 — 닉네임/동네/아바타는 항상 최신값 사용
-  const author = isAnonymous
-    ? '익명'
-    : (userRow?.nickname ?? (row.author as string));
-  const authorDong = isAnonymous
-    ? (row.author_dong as string)
-    : (userRow?.dong ?? (row.author_dong as string));
-  const authorAvatar = isAnonymous ? null : (userRow?.avatar_url ?? null);
-
+  const isAnon = Boolean(row.is_anonymous);
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
     title: row.title as string,
     content: row.content as string,
-    author,
-    authorDong,
-    authorAvatar,
-    authorId: (row.user_id as string | null) ?? null,
+    author: (isAnon ? '익명' : row.author) as string,
+    authorDong: row.author_dong as string,
+    authorAvatarUrl: isAnon ? null : ((row.author_avatar_url as string | null) ?? null),
+    authorUserId: (row.user_id as string | null) ?? null,
     createdAt: row.created_at as string,
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
@@ -139,6 +125,8 @@ export interface PostInput {
   content: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  userId?: string | null;
   isAnonymous: boolean;
   userId?: string | null;
   images?: string[];
@@ -183,7 +171,16 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     imagesDropped = true;
     ({ data, error } = await supabase
       .from('community_posts')
-      .insert(base)
+      .insert({
+        category: input.category,
+        title: input.title,
+        content: input.content,
+        author: input.author,
+        author_dong: input.authorDong,
+        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
+        user_id: input.userId ?? null,
+        is_anonymous: input.isAnonymous,
+      })
       .select()
       .single());
   }
@@ -193,6 +190,24 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     throw new Error(error.message || '글 등록에 실패했습니다.');
   }
   return { post: rowToPost(data as Record<string, unknown>), imagesDropped };
+}
+
+// ── 내가 쓴 글 ─────────────────────────────────────────────────
+export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]> {
+  if (!isConfigured() || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+  } catch (e) {
+    console.error('[posts] fetchMyPosts error:', e);
+    return [];
+  }
 }
 
 // ── 수정 ─────────────────────────────────────────────────────

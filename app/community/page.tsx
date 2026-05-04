@@ -8,9 +8,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import { Avatar } from "@/components/ui/Avatar";
-import { PostMenu } from "@/components/ui/PostMenu";
-import { ReportModal } from "@/components/ui/ReportModal";
+import Avatar from "@/components/ui/Avatar";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
@@ -298,14 +296,42 @@ function CommunityTab() {
             </div>
           ))
         ) : (
-          sorted.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              router={router}
-              onHide={handleHide}
-              onReport={(id) => setReportTarget(id)}
-            />
+          filtered.map(post => (
+            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                  {post.category}
+                </span>
+                {post.isHot && (
+                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
+                    <Flame size={10} /> HOT
+                  </span>
+                )}
+              </div>
+              <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
+              <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
+              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#f5f5f7]">
+                <Avatar src={post.authorAvatarUrl} size={20} alt={post.author} />
+                <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
+                <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp size={12} className="text-[#86868b]" />
+                    <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare size={12} className="text-[#86868b]" />
+                    <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} className="text-[#86868b]" />
+                    <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
           ))
         )}
         {!loadingPosts && sorted.length === 0 && (
