@@ -46,9 +46,8 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
-  const [nickname, setNickname] = useState("검단주민");
-  const [authorDong, setAuthorDong] = useState("검단");
   const [nickname, setNickname] = useState(() => getMyNickname());
+  const [authorDong, setAuthorDong] = useState("검단");
   const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -78,34 +77,17 @@ export default function WritePage() {
     setMyNickname(finalNickname);
     try {
       const userId = await getOrCreateUserId();
-      const post = await createPost({
-        category: category as CommunityCategory,
-        title: title.trim(),
-        content: content.trim(),
-        author: nickname.trim() || "검단주민",
-        authorDong,
-        isAnonymous: anonymous,
-        userId,
-      });
-      void touchLastActive();
-      if (post) {
-        saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
-      } else {
-        // Supabase 미설정 시 목록으로 이동
-        router.push("/community/");
-      }
-    } catch {
-      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
       const { post, imagesDropped } = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
         author: finalNickname,
-        authorDong: "검단",
-        isAnonymous: false,
+        authorDong,
+        isAnonymous: anonymous,
+        userId,
         images,
       });
+      void touchLastActive();
       saveMyPostId(post.id);
       if (imagesDropped) alert("이미지는 아직 지원되지 않아 글만 등록되었어요.");
       router.replace(`/community/?refresh=${post.id}`);
@@ -226,7 +208,7 @@ export default function WritePage() {
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·혐오 표현, 개인정보 노출, 불법 정보 공유
+            광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
           </p>
         </div>
       </div>
