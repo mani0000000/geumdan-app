@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-03T21:31:41.215Z",
+  "fetchedAt": "2026-05-04T01:46:37.400Z",
   "count": 40,
   "articles": [
     {
@@ -22,11 +22,11 @@
     },
     {
       "id": "gr2-1",
-      "title": "유정복 “한국환경공단 이전 절대불가…시민과 함께 인천 지키겠다” - 서울일보",
+      "title": "국민의힘 유정복 인천시장 예비후보, 한국환경공단 이전... \"절대 안돼!\" - 투어코리아",
       "summary": "",
-      "source": "서울일보",
-      "publishedAt": "2026-05-03T08:58:02.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE1nR1V4WUQ2b3lmVVJaY3ZlU2t4NDY3dzBnekg5RGFEYkd2b0pXZHNlajY0VnlkajFhSlFxZzhfdVhiWFM1enhKUG81MGItS2V0UEJxQUIzNk9YS1V2b01KREVfUGJ6c2ZTQmVJ0gFvQVVfeXFMTjAtY1lpNUttU29wTjk5eTFUQnhqd2pHeFpqcGRwaHduMGZWRnVfNTRnal9nZVdoOHB2dmJCOU92MlZSdFhmSEpMV2p6ZzhvY1VSRUhHMlJ4Wi1SWXQ3ZTdBb2lMMnlOOV9wUTlkUVZB?oc=5",
+      "source": "투어코리아",
+      "publishedAt": "2026-05-03T11:11:08.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFAtSFd2cTFIQUxobms5NV9pZGVNVGpLZWs2ZEFKWjN5c1pwNGZlNkVqTlhJODJBNlNpZWZZaU5OeU9xOHRjTzF4djNTdi0wck02aTBnMV96Tk41Zm9STDhGcnVzeEFWX09CY1F3S0xB?oc=5",
       "type": "뉴스"
     },
     {
@@ -39,12 +39,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
-      "title": "민주 인천시당, 영종·서구·검단 등 광역·기초의원 후보 14명 확정 - v.daum.net",
+      "id": "gr2-11",
+      "title": "민주 인천시당, 영종·서구·검단 등 광역·기초의원 후보 14명 확정 - 경기일보",
       "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-05-01T13:42:26.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE9hNlRQLUxoN2xVdGdsZDNVdVEtZklIX1pnb0oxMEIxVThOQUpGbUc0RFpzOG9qWlB4OV9Yek9tbDR0Wk15dGpYMWFXUlFTT28?oc=5",
+      "source": "경기일보",
+      "publishedAt": "2026-05-01T13:42:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE5WVk0xeS1LTElzZzU0U3RJTmNOeG45cjlsTkQ0TWswX3ptX0ItWVNfbWNsT0RueHBkUndYR1JhZ3hnQ1NWeGpwRHBiV0pTaDE1MjdTNTlVUTdCSjg?oc=5",
       "type": "뉴스"
     },
     {
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-5",
       "title": "롯데캐슬 넥스티엘 372가구 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -66,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-40",
+      "id": "gr2-50",
       "title": "[지선 D-30]인천북부, 징검다리 '4선' 나올까…초대는 누구 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "검단신도시 첫 롯데캐슬 '넥스티엘' 입주 시작 - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-3",
       "title": "“검단 첫 롯데캐슬”…‘검단신도시 롯데캐슬 넥스티엘’ 입주 진행 - 미주중앙일보",
       "summary": "",
       "source": "미주중앙일보",
@@ -93,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-6",
       "title": "인천 서구 일원 '검단신도시 롯데캐슬 넥스티엘' 30일부터 입주 진행 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -108,15 +108,6 @@
       "source": "서울경제TV",
       "publishedAt": "2026-04-30T01:14:42.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE4xekdtLVgzVlZoOFYwTzdhblh6cmZFdENyeDMxQ0JFX0Z0VXVHSzY3X1JHQlVoX1lHdnZPcmdEaE0yNlBGenktczkzRHZZV2V5MjNRa0lEZXZzRU9TdVp0SDRoT0E?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-5",
-      "title": "‘검단신도시 롯데캐슬 넥스티엘’ 입주 신호탄 - 이뉴스투데이",
-      "summary": "",
-      "source": "이뉴스투데이",
-      "publishedAt": "2026-04-29T23:59:26.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9reEI1S2hMMENFOHVsanpKdV9sbmNCTFVPM2ZFcGpLWVJCRGZBSzc0UHF5TmxCRDNMdzRSREV1ZUxQR0NUV0NWLWZZdWZNQkg1Tk1KT1k0dVI3TFR4NWpTZU1VcmhHeDRKaGZLSjFmRXPSAXRBVV95cUxQeWY4LVI4Y2xINWZOUG9JdTFxV0I3WXRIYmhLXzFfdkFEbnk4OHJEUnhFWlhWMzdCRTJ4ZjlXUl96S1NiME9RclFEdXZkekFnN2F6QmFjOHFyaFFzbDZkNkZsNldFTUExQXoxTmFiT3VaQzk2QQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -147,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-10",
+      "id": "gr1-12",
       "title": "분양가 상승 기조 속 가격 경쟁력 갖춘 엘리프 검단 포레듀 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -156,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-13",
       "title": "분양가 상승 기조 속 가격 경쟁력 갖춘 엘리프 검단 포레듀 - 한경매거진&북",
       "summary": "",
       "source": "한경매거진&북",
@@ -165,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
+      "id": "gr0-17",
       "title": "'더샵 검단레이크파크' 2857가구 공급 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -174,48 +165,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-15",
+      "id": "gr3-1",
       "title": "최정규 인천교통공사 사장 “지난해 1호선 검단연장선 개통·내부고객만족도 역대 최고점 달성... 가장 의미 있는 성과” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
       "publishedAt": "2026-04-27T01:41:05.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9HajdZMmNhcE53WlJld1YyOHpJS0tCbldacy1jQjZJQmlXcVQ5LW5RMzNrc2poMTFOYzJ2SC1UU2l4bWZQcXJGdDMtSFZCX3M2Uy1EWjZzbkVFYWwyc1RHYTVJcHlPQmZVNlFJ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-16",
-      "title": "더불어민주당 남동·검단구청장 후보 확정…완성된 인천 기초단체장 대진표 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-04-26T12:18:02.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTFBrZUY2MkMzYXZHX1k4cjlIUlJzX3B3ZHNvX2pWeDJxUGhaQ2x6Ykowb0NiSHR0SnZpOEU5eUhXUmZpUkg1Q0xTQ2FKdmVEdDA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-56",
-      "title": "인프라 없는데 신도시 왜 가? ‘완성된 신도시’에만 청약 몰린다 - 문화일보",
-      "summary": "",
-      "source": "문화일보",
-      "publishedAt": "2026-04-26T12:13:51.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiUEFVX3lxTE81eFBGRmhvenMtbEtoazIyUGJ3ZDA3V3ItTm5tdFVyQ3lUQmtacFBkWUFUOUJsQVQ2Vl9LcnU2ZU9fU0xiX0xyWTluYzBXSm42?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-8",
-      "title": "인천시, 영종·검단 등 시내버스 7개 노선 신설 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-04-26T07:15:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9jUGFBWml5WWNqYmdPNXpmVUtmMjlrb0V5STQxcDA0aTh0TEFwU0tzVzFBUUgzUzdNMm9sa1RNLVlfU0p4cnBaeGhzYWRpTFcwSEE2eGxTU2pJYnkxRldicUNnbkxVUEUxTG9NVzV1dw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-86",
-      "title": "서구의회, 7월 출범 '검단구 임시청사' 현장 점검…'안정적 행정서비스 철저 준비' - 포커스인천",
-      "summary": "",
-      "source": "포커스인천",
-      "publishedAt": "2026-04-24T08:30:31.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1CNDMySWtfc3BQQzJxdlVuS3EySTBFREVsRi14Vnd5RGdfcFJ3SjZIS05WWWhWYklQZmM4dTZ4UWR0cFlPeVhqcGxFSEtVczZWTHpOdzI1V00zZlNZamJqTWdSdTd0OE5wbHB1btIBcEFVX3lxTFBzWTVnYl80NFhMZGF1SEE4WmJ0cFFod2pXUmV0dUtBZ2RCOFJ2T05xSXpuSDItemZVZS0wZG5mY2RfVkdDSkdRRVZGOXY0OU4talp6aUd0X25hNWV2Yjl2eENOcEc2clczR08zOTJHekE?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5KSFdOckpnYzhmUXRGWFFGY0lPZ2kzU3F5OVEzZldkSjlJTU9LMzRfTVdONkFVbm5RNjc0WkpaYnJGbWNaRXJnV3VqVUlST1FpREJ2aUpReV9aSFYtZHBfOTZ0cmh6RjlMaXlMMzdB?oc=5",
       "type": "뉴스"
     },
     {
@@ -255,30 +210,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-15",
-      "title": "2분기 공급 주인공은 '검단·고덕·창릉' 신도시 - v.daum.net",
+      "id": "gr1-24",
+      "title": "'검단아파트 붕괴사고' LH, GS건설 상대 1700억대 손해배상 소송 시작 - 네이트",
       "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-04-24T07:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE83bV9YQ3BnaHZPTGRXRS1VQi1YaVJXQnhkU2thd2FKSW9wNFlOQng4QXJNYzhNODJhUkRSSjNiZUxaYmttd2lyNUVTSQ?oc=5",
+      "source": "네이트",
+      "publishedAt": "2026-04-24T03:24:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9DVEVQWjVMOVBFVnlST3FGVGVLbVM1QTZTRC1pbkloNzNtV0czWjlhQk5VcVFIYUNaQk1scTFoUEZSZHRwUTcyZENnYjFDQmVKWVFV?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-36",
+      "id": "gr2-40",
       "title": "인천 서구의회 행정체제 개편에 따른 분구추진 특별위원회, 검단구 임시청사 현장 점검 실시 - 매일일보",
       "summary": "",
       "source": "매일일보",
       "publishedAt": "2026-04-23T23:41:50.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5JSmNMcHFhNERxNTRuMFdoa2VndEd2cHplajNPVXU1WWFlMUVpenFzU3FaTG1lQ2FaTHN1TWw2bjhvX05tZ1lzWVJrQ2FHWjVYUlJBOGJORVlQUzRpa2pBcUNoVFQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-88",
-      "title": "인천 서구의회 검단구 출범 앞두고 임시청사 점검 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-04-23T13:10:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE44a21MTUI5aFAtTWF5OUg1WDlnR0k5RjU5U2VMWFNrUjdacVowMkVvUjcyMHNrQ2JMSEdRVDZSVDV6SmpXcFhDQUFreUlHZnJ2clY0?oc=5",
       "type": "뉴스"
     },
     {
@@ -318,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-16",
       "title": "검단신도시 첫 '더샵' 브랜드 분양…분양가상한제 적용 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -327,7 +273,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-46",
+      "id": "gr0-24",
+      "title": "포스코이앤씨, 인천 검단신도시 '더샵 검단레이크파크' 5월 분양 - 뉴스퀘스트",
+      "summary": "",
+      "source": "뉴스퀘스트",
+      "publishedAt": "2026-04-23T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1SV2NYNG8tVnF2X1JyV01Wd3o5TGFZWE96TGNaYWFXU1VNTk1YSExIMmF6WC1CM0c0NkxFRll0c2tfUkZVQmRKc0ZZbFEycXE1cmRZeGRCN05od29jbU1ENnhUMU50THpYR09NNU5TY9IBc0FVX3lxTE5GcGM0eWIyb3VYay11RURSSmJoZWdfTkFnVHBKRTdFaU94dmNyZ09XdHRsby0wMTdEMG1HOERpX28xdE04NXRPZ2JlRWw1alJXdVhQTW11S204TUszQnMwVUN3MlBZZUF1dkYtc3dtSXptWE0?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-51",
       "title": "인천 서구의회 「행정체제 개편에 따른 분구추진 특별위원회」, 검단구 임시청사 현장 점검 실시 - sejungfocus.com",
       "summary": "",
       "source": "sejungfocus.com",
@@ -336,16 +291,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-34",
-      "title": "포스코이앤씨, 검단신도시 첫 ‘더샵’ 2857세대 공급…수변·역세권 갖춘 대단지 - 이코노미사이언스",
+      "id": "gr1-14",
+      "title": "\"검단 첫 더샵\"...포스코이앤씨, 인천 '더샵 검단레이크파크' 5월 공급 - v.daum.net",
       "summary": "",
-      "source": "이코노미사이언스",
-      "publishedAt": "2026-04-23T04:57:28.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFBqb0UtbXh2ZnRDVXppZVpldzUtOVNSNktxOXhIWFRMajhZQTBJMXB4S3kydkdHYlI4amhMeklEbDFVd2lxMEI4TWdrMTZKeGYyVHVrTkRSb25lMzNTTkdUQW40ZHdrVldJMmNUb3hBaw?oc=5",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-23T02:27:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTE5KNUlqQzRPZWpfTWx5aXd5S08xLVJkeUdGTWJJaDJUUmtvY3lSNG5zeVptb05wYkNad0lXdjB0MUU2Q3dVc0E?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-10",
       "title": "검단신도시 첫번째 '더샵'...포스코이앤씨, ‘더샵 검단레이크파크’ 내달 공급 - 스마트투데이",
       "summary": "",
       "source": "스마트투데이",
@@ -360,6 +315,51 @@
       "source": "뉴스핌",
       "publishedAt": "2026-04-22T23:03:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE1fbEZTQllicWlMaGZkUl8yMTFGYU1KLWJaMWtaekJUTzlyN2E1bzgzd0NrYklNV3RrYzltdW5jZXdoZzc1ZXJTV2lqX1djeGNXd2IwWkEzQllXRElY?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-6",
+      "title": "‘서울 생활권’ 품는 검단신도시, 쾌속 교통망으로 주거 가치 재평가 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-04-22T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5LUjRwbEUxd0hEMHBxRUtkUjVvR1lLSTFSLUpmX0JIR094SjlKenI3aHNzUnF5b0hMZGZWVFZlY094bkRhRFgzTmE1SjdFWDA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-19",
+      "title": "포스코이앤씨, 검단신도시 첫 '더샵' 브랜드 2857세대…5월 분양 - 뉴스락",
+      "summary": "",
+      "source": "뉴스락",
+      "publishedAt": "2026-04-21T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE13MENWQ0YtYkNSZWJ4eFVkTkJuNE9hNzVfRjdUeXhGU1pTMk5MbzhVdExKX0NQVFpWWjhJWjBnRnBXMUd0R0N3d3pMT3VmRXRncFhaYzFoQmF1d2s4UUJYc2F2TnBsU2E1UHdiNw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-71",
+      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2000만원에 거래 - 조선비즈 - Chosunbiz",
+      "summary": "",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-04-21T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQaXVqREk4SU43cnNYWmJFOEdSZGZkbjhDNVlERDdsUnZEWDVzbENwUGJJWUo0d3RBclBiQ1puU1hPby02WGp3SnFraWdwZDUwLVQzeGFZT00zVUZkNmFfYVpfQ2VTMzVSdTJfNERJaXhiUHVGRzZ3UlJ5OFp0Qm1YQjNJSExCQjDSAZsBQVVfeXFMTXlkb1RsbFVBaGZyUVpkaFFWVzFHRFZnV2hwN0ZJRlRzU2FVSHRlUldyS0ZGSzE3SkdzNU0tOVpDYVkwQkdtSlNwY0V1TndNdXB4LWNUTW92V0JYMXFvOU5yMGdyRnVkbV94bkJ2aTJEUDhMRjZSZzdCcTFQcTduTW9iRElUa0RVVWk4REg3M2tDLTVraTNWQVIyMjA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-9",
+      "title": "인천 서구, 지하철역 ‘찾아가는 건강상담’ 호응…정기 운영 확대 - 매일일보",
+      "summary": "",
+      "source": "매일일보",
+      "publishedAt": "2026-04-20T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE82OC1MZ1prVWcwal93Y3ZkbDRXaWh3SWlJM200NDBUR1RZNmFweXpsLVMwQUR5QzVqY2hhOGh3LVRTZURQUzNZWmZaQzB5M3BtYmw5ai1zN3lmZklXbDZ4S0tWZ1I?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr3-3",
+      "title": "강남규 검단구청장 예비후보, 검단 교통 문제 해결에 발벗고 나섰다 - 인천신문",
+      "summary": "",
+      "source": "인천신문",
+      "publishedAt": "2026-04-17T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTFB2RzBwUkJHTFRLZGdaaG5BUFNsOXFCYndsYUtERjhyMXNFOENmaEFTb1FhM3l4TXpUWm96bFRRVjdYYmpqa1hoUkwzSnVISWJJX2pzd0hWOGJUcDhIeGk3b0Z6ZlB0V0J2dkFRa1J2QmNpR3h00gF4QVVfeXFMTlBBVExyMmdFZnAwalZDenFQSWZ2ajcyWXpvSEh2UDRYdWtyWmZMVE45QnVEUzBFVXNEU2dqTmdjanp2YWk0eFBObkpkSUhsRDc3T0tJVndoX3NCemlJb3dCMnZjNlhIa0VQT1Z6NzlxcUgzSG9fc1RN?oc=5",
       "type": "뉴스"
     }
   ]
