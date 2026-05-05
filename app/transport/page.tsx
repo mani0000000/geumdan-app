@@ -17,6 +17,7 @@ import {
   fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
   searchRouteByNo, fetchRouteDetailFromTago, fetchStationsByRouteTago,
+  fetchBusLocationsTago, formatBusTime,
 } from "@/lib/api/bus";
 import {
   getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
@@ -114,16 +115,20 @@ function BusDetailSheet({
   const [loading, setLoading] = useState(true);
   const [noRouteData, setNoRouteData] = useState(false);
   const [dirTab, setDirTab] = useState<0 | 1>(0);
+  // 실시간 위치 갱신을 위해 어떤 API로 어떤 routeId를 쓰는지 기억
+  const locSourceRef = useRef<{ kind: "incheon" | "tago"; routeId: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setNoRouteData(false);
+    locSourceRef.current = null;
 
     async function load() {
       let d: RouteDetail | null = null;
       let s: RouteStation[] = [];
       let l: BusLocation[] = [];
+      let locSrc: { kind: "incheon" | "tago"; routeId: string } | null = null;
 
       // 1) 인천 routeId가 있으면 인천 API 우선 시도
       if (arrival.routeId) {
@@ -134,20 +139,31 @@ function BusDetailSheet({
         ]);
         if (cancelled) return;
         d = icDetail; s = icStations; l = icLocations;
+        if (icDetail || icStations.length > 0 || icLocations.length > 0) {
+          locSrc = { kind: "incheon", routeId: arrival.routeId };
+        }
       }
 
       // 2) 인천 API가 비어있고 routeNo가 있으면 TAGO로 보강
-      if ((!d || s.length === 0) && arrival.routeNo) {
+      if ((!d || s.length === 0 || l.length === 0) && arrival.routeNo) {
         const tagoRouteId = await searchRouteByNo(arrival.routeNo);
         if (cancelled) return;
         if (tagoRouteId) {
-          const [tagoDetail, tagoStations] = await Promise.all([
+          const [tagoDetail, tagoStations, tagoLocations] = await Promise.all([
             fetchRouteDetailFromTago(tagoRouteId),
             fetchStationsByRouteTago(tagoRouteId),
+            fetchBusLocationsTago(tagoRouteId),
           ]);
           if (cancelled) return;
           if (!d) d = tagoDetail;
           if (s.length === 0) s = tagoStations;
+          if (l.length === 0) {
+            l = tagoLocations;
+            // 인천 API 위치가 비었을 때만 TAGO를 자동갱신 소스로 사용
+            if (!locSrc || locSrc.kind === "incheon") {
+              locSrc = { kind: "tago", routeId: tagoRouteId };
+            }
+          }
         }
       }
 
@@ -155,11 +171,27 @@ function BusDetailSheet({
       setDetail(d); setStations(s); setLocations(l);
       setLoading(false);
       if (!d && s.length === 0) setNoRouteData(true);
+      else locSourceRef.current = locSrc;
     }
 
     load();
     return () => { cancelled = true; };
   }, [arrival.routeId, arrival.routeNo]);
+
+  // 30초마다 실시간 버스 위치 자동 갱신 (탭 활성 상태일 때만)
+  useEffect(() => {
+    if (loading || noRouteData) return;
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const src = locSourceRef.current;
+      if (!src) return;
+      const fetcher = src.kind === "incheon" ? fetchBusLocations : fetchBusLocationsTago;
+      fetcher(src.routeId).then(l => {
+        if (locSourceRef.current?.routeId === src.routeId) setLocations(l);
+      }).catch(() => { /* ignore */ });
+    }, 30000);
+    return () => clearInterval(id);
+  }, [loading, noRouteData]);
 
   const upStations   = stations.filter(s => s.direction === 0);
   const downStations = stations.filter(s => s.direction === 1);
@@ -211,13 +243,13 @@ function BusDetailSheet({
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
                   <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">상행 첫차/막차</p>
                   <p className="text-[13px] font-bold text-[#1d1d1f]">
-                    {detail.upFirstTime || "-"} / {detail.upLastTime || "-"}
+                    {formatBusTime(detail.upFirstTime)} / {formatBusTime(detail.upLastTime)}
                   </p>
                 </div>
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
                   <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">하행 첫차/막차</p>
                   <p className="text-[13px] font-bold text-[#1d1d1f]">
-                    {detail.downFirstTime || "-"} / {detail.downLastTime || "-"}
+                    {formatBusTime(detail.downFirstTime)} / {formatBusTime(detail.downLastTime)}
                   </p>
                 </div>
               </div>
@@ -274,40 +306,47 @@ function BusDetailSheet({
               <p className="text-[14px] text-[#6e6e73]">정류장 정보를 불러올 수 없습니다</p>
             </div>
           ) : (
-            <div className="relative">
-              {/* 수직선 */}
-              <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#d2d2d7]" />
-              <div className="space-y-0">
-                {curStations.map((st, idx) => {
-                  const hasBus = busSeqs.has(st.seq);
-                  const isFirst = idx === 0;
-                  const isLast = idx === curStations.length - 1;
-                  return (
-                    <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
-                      <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
-                        (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
-                      }`}>
-                        {hasBus && <span className="text-[8px]">🚌</span>}
-                      </div>
-                      <div className="flex-1 flex items-center justify-between">
-                        <span className={`text-[13px] ${
-                          hasBus ? "font-bold text-[#F04452]" :
-                          (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
+            <>
+              {locations.length === 0 && (
+                <div className="mb-3 rounded-xl bg-[#f5f5f7] px-3 py-2 text-center text-[12px] text-[#6e6e73]">
+                  현재 운행 중인 버스 없음
+                </div>
+              )}
+              <div className="relative">
+                {/* 수직선 */}
+                <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#d2d2d7]" />
+                <div className="space-y-0">
+                  {curStations.map((st, idx) => {
+                    const hasBus = busSeqs.has(st.seq);
+                    const isFirst = idx === 0;
+                    const isLast = idx === curStations.length - 1;
+                    return (
+                      <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
+                        <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
+                          (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
                         }`}>
-                          {st.stationName}
-                        </span>
-                        {hasBus && (
-                          <span className="text-[11px] font-bold text-white bg-[#F04452] px-2 py-0.5 rounded-full">
-                            여기
+                          {hasBus && <span className="text-[8px]">🚌</span>}
+                        </div>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className={`text-[13px] ${
+                            hasBus ? "font-bold text-[#F04452]" :
+                            (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
+                          }`}>
+                            {st.stationName}
                           </span>
-                        )}
+                          {hasBus && (
+                            <span className="text-[11px] font-bold text-white bg-[#F04452] px-2 py-0.5 rounded-full">
+                              여기
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>

@@ -33,6 +33,7 @@ const ACTIONS: Record<string, { base: string; path: string; required: string[] }
   tagoRoutes:        { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteNoList",                     required: ["cityCode", "routeNo"] },
   tagoRouteDetail:   { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoIem",                    required: ["cityCode", "routeId"] },
   tagoRouteStations: { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteAcctoThrghSttnList",         required: ["cityCode", "routeId"] },
+  tagoBusLocation:   { base: TAGO_BASE, path: "/BusLcInfoInqireService/getRouteAcctoBusLcList",                required: ["cityCode", "routeId"] },
 };
 
 export async function GET(request: NextRequest) {

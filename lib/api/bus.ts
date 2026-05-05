@@ -523,5 +523,31 @@ export async function fetchStationsByRouteTago(routeId: string, cityCode = "23")
     .sort((a, b) => a.seq - b.seq);
 }
 
+// ─── TAGO: routeId로 실시간 버스 위치 조회 ────────────────────
+export async function fetchBusLocationsTago(routeId: string, cityCode = "23"): Promise<BusLocation[]> {
+  const items = await apiFetch("tagoBusLocation", { cityCode, routeId, numOfRows: "100" });
+  return items.map(d => ({
+    plateNo: d.vehicleno ?? d.vehicleNo ?? "",
+    stationSeq: Number(d.nodeord ?? d.nodeOrd ?? "0"),
+    stationId: d.nodeid ?? d.nodeId ?? "",
+    stationName: d.nodenm ?? d.nodeNm ?? "",
+    isLowFloor: (d.routetp ?? d.routeTp ?? "").includes("저상"),
+    direction: (Number(d.updowncd ?? d.updownCd ?? "0") === 1 ? 1 : 0) as 0 | 1,
+  }));
+}
+
+// ─── HHMM(0530) / HHMMSS(053000) → HH:MM 변환 ─────────────────
+export function formatBusTime(raw: string | undefined | null): string {
+  if (!raw) return "-";
+  const s = String(raw).trim();
+  if (!s || s === "-") return "-";
+  if (/^\d{1,2}:\d{2}/.test(s)) return s.slice(0, 5);
+  const digits = s.replace(/\D/g, "");
+  if (digits.length === 4) return `${digits.slice(0, 2)}:${digits.slice(2)}`;
+  if (digits.length === 6) return `${digits.slice(0, 2)}:${digits.slice(2, 4)}`;
+  if (digits.length === 3) return `0${digits.slice(0, 1)}:${digits.slice(1)}`;
+  return s;
+}
+
 // 서버 라우트가 키를 관리하므로 클라이언트에서는 항상 활성으로 취급
 export const hasBusApiKey = () => true;
