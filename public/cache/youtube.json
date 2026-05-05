@@ -1,14 +1,14 @@
 {
-  "fetchedAt": "2026-05-04T21:51:54.888Z",
+  "fetchedAt": "2026-05-05T01:47:11.448Z",
   "count": 20,
   "videos": [
     {
       "id": "yt-0",
-      "videoId": "VHHn1bR4fgo",
-      "title": "[인천]봄기운 가득한 샤브샤브 무한리필 봄담아 검단신도시점 방문 후기",
-      "channelName": "푸드맥스",
-      "thumbnail": "https://img.youtube.com/vi/VHHn1bR4fgo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=VHHn1bR4fgo"
+      "videoId": "3TAIXUazVc0",
+      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0"
     },
     {
       "id": "yt-0",
@@ -36,11 +36,11 @@
     },
     {
       "id": "yt-1",
-      "videoId": "ZsxOcWwtDgs",
-      "title": "[인천]미친 고물가 시대에 꼭 필요했던 가성비 최고의 패밀리 레스토랑 #코지하우스 #패밀리레스토랑 #인천맛집",
-      "channelName": "푸드맥스",
-      "thumbnail": "https://img.youtube.com/vi/ZsxOcWwtDgs/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ZsxOcWwtDgs"
+      "videoId": "tqRdYmgZjUE",
+      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
     },
     {
       "id": "yt-1",
@@ -76,19 +76,19 @@
     },
     {
       "id": "yt-2",
-      "videoId": "2zbo7uQPCVo",
-      "title": "검단신도시에서 즐기는 철판스테이크와 하이볼 데판야끼 전문점 타키를 찾았습니다",
-      "channelName": "1분 전국맛집",
-      "thumbnail": "https://img.youtube.com/vi/2zbo7uQPCVo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=2zbo7uQPCVo"
+      "videoId": "krDQtxvAsR4",
+      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
+      "channelName": "실거주부동산",
+      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4"
     },
     {
       "id": "yt-2",
-      "videoId": "tyZnQFZObn4",
-      "title": "검단신도시 가볼만한 맛집과 카페｜실내 데이트 코스 추천｜임장오신 김에 들를 식도락  코",
+      "videoId": "Je3gyiFDewk",
+      "title": "신축 아파트 부엌 조명 쇼핑 여행_검단신도시 근처 조명, 맛집, 카페 소개",
       "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/tyZnQFZObn4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tyZnQFZObn4"
+      "thumbnail": "https://img.youtube.com/vi/Je3gyiFDewk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Je3gyiFDewk"
     },
     {
       "id": "yt-2",
@@ -116,19 +116,11 @@
     },
     {
       "id": "yt-3",
-      "videoId": "tqRdYmgZjUE",
-      "title": "[검단신도시맛집] 사장님한테 맡기면 완벽한 데이트를 할수있는 곳 😎 특별한 코스요리와 와인룸까지!?🍷",
-      "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "qq3ZhX3fQzY",
-      "title": "홍대의 맛집과 카페 그리고 검단신도시 아파트 탐방(금강3차)(푸글렌커피,하카타분코)",
+      "videoId": "tyZnQFZObn4",
+      "title": "검단신도시 가볼만한 맛집과 카페｜실내 데이트 코스 추천｜임장오신 김에 들를 식도락  코",
       "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/qq3ZhX3fQzY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=qq3ZhX3fQzY"
+      "thumbnail": "https://img.youtube.com/vi/tyZnQFZObn4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=tyZnQFZObn4"
     },
     {
       "id": "yt-3",
@@ -156,11 +148,19 @@
     },
     {
       "id": "yt-4",
-      "videoId": "3TAIXUazVc0",
-      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
-      "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0"
+      "videoId": "gx0Qjm93_s4",
+      "title": "인천 계양 검단 신도시 맛집, 자연 속에서 즐기는 굴림만두전골 맛집, 인천식 한우숯불 불고기, 아라뱃길 맛집",
+      "channelName": "여행하는 안젤라",
+      "thumbnail": "https://img.youtube.com/vi/gx0Qjm93_s4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=gx0Qjm93_s4"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "qq3ZhX3fQzY",
+      "title": "홍대의 맛집과 카페 그리고 검단신도시 아파트 탐방(금강3차)(푸글렌커피,하카타분코)",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/qq3ZhX3fQzY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=qq3ZhX3fQzY"
     }
   ]
 }
