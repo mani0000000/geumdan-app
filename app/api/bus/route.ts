@@ -7,7 +7,13 @@ export const maxDuration = 15;
 const BUS_BASE  = "https://apis.data.go.kr/6280000";
 const TAGO_BASE = "https://apis.data.go.kr/1613000";
 
-const STATIC_ACTIONS = new Set(["routeInfo", "routeStations", "tagoRouteStations", "tagoRouteDetail"]);
+// nearby-stops 류는 좌표가 100m 이상 변하지 않으면 사실상 정적이라 5분 TTL.
+// 노선/정류장 메타도 5분. arrivals 만 30s 라이브 캐시.
+const STATIC_ACTIONS = new Set([
+  "routeInfo", "routeStations",
+  "tagoRouteStations", "tagoRouteDetail", "tagoRoutes",
+  "tagoStations", "aroundStations",
+]);
 const STATIC_TTL_MS  = 5 * 60 * 1000;
 const DEFAULT_TTL_MS = 30 * 1000;
 

@@ -519,119 +519,148 @@ export default function TransportPage() {
   useEffect(() => { subwayListRef.current = subwayList; }, [subwayList]);
 
   // ── 정류장별 실시간 도착 조회 (소스별 API 분기) ──
+  // 우선순위: 첫 PRIORITY_N개 await → 사용자 시야 카드 먼저 채움.
+  // 나머지는 fire-and-forget → setApiStops로 점진적 업데이트.
   const fetchArrivalsForStops = useCallback(async (stops: DisplayStop[], src?: "tago"|"ic"|"osm"|"fallback"|null) => {
     const source = src ?? stopSource;
-    await Promise.allSettled(
-      stops.map(async stop => {
-        let arrivals: BusArrival[] = [];
-        if (source === "tago") {
-          arrivals = await fetchArrivalsByNodeId(stop.id);
-        } else if (source === "ic") {
-          arrivals = await fetchArrivalsByStationId(stop.id);
-        } else if (source === "osm") {
-          // OSM ref stationIds often match Incheon API stationIds — try real-time first
-          arrivals = await fetchArrivalsByStationId(stop.id);
-          if (arrivals.length === 0) arrivals = await fetchArrivalsByNodeId(stop.id);
-        } else if (source === "fallback") {
-          arrivals = await fetchArrivalsByNodeId(stop.id);
-          if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
-        }
-        if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
-          arrivals = osmRoutesToArrivals(stop.osmRoutes);
-        }
-        setApiStops(prev =>
-          prev ? prev.map(s => s.id === stop.id
-            ? { ...s, arrivals, loadingArrivals: false }
-            : s)
-          : prev
-        );
-      })
-    );
+    const PRIORITY_N = 5;
+    const dev = process.env.NODE_ENV !== "production";
+    const t0 = dev ? performance.now() : 0;
+
+    const fetchOne = async (stop: DisplayStop) => {
+      let arrivals: BusArrival[] = [];
+      if (source === "tago") {
+        arrivals = await fetchArrivalsByNodeId(stop.id);
+      } else if (source === "ic") {
+        arrivals = await fetchArrivalsByStationId(stop.id);
+      } else if (source === "osm") {
+        arrivals = await fetchArrivalsByStationId(stop.id);
+        if (arrivals.length === 0) arrivals = await fetchArrivalsByNodeId(stop.id);
+      } else if (source === "fallback") {
+        arrivals = await fetchArrivalsByNodeId(stop.id);
+        if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
+      }
+      if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
+        arrivals = osmRoutesToArrivals(stop.osmRoutes);
+      }
+      setApiStops(prev =>
+        prev ? prev.map(s => s.id === stop.id
+          ? { ...s, arrivals, loadingArrivals: false }
+          : s)
+        : prev
+      );
+    };
+
+    const priority = stops.slice(0, PRIORITY_N);
+    const rest     = stops.slice(PRIORITY_N);
+
+    await Promise.allSettled(priority.map(fetchOne));
+    if (dev) console.log(`[transport] arrivals priority(${priority.length}) ${(performance.now() - t0).toFixed(0)}ms src=${source}`);
     setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+
+    // 나머지는 fire-and-forget (UI에 점진 반영)
+    if (rest.length > 0) {
+      Promise.allSettled(rest.map(fetchOne)).then(() => {
+        if (dev) console.log(`[transport] arrivals rest(${rest.length}) total ${(performance.now() - t0).toFixed(0)}ms`);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      });
+    }
   }, [stopSource]);
 
   // ── 버스 데이터 전체 로드: GPS 기반 주변 정류장 + 도착정보 ──
+  // 1차: TAGO + 인천 + 서버 OSM 3개를 동시에 race 시작 (5s timeout)
+  //      → 첫 번째 non-empty 결과로 진행. 직렬 폴백 대비 worst-case 단축.
+  // 2차: 1차 모두 실패 시 클라이언트 OSM (15s)
+  // 3차: 그것마저 실패 시 GEUMDAN_BUS_STATIONS 하드코딩
   const loadBusData = useCallback(async (lat: number, lng: number, clearStops = true) => {
     setLoading(true);
     if (clearStops) setApiStops(null);
 
+    const dev = process.env.NODE_ENV !== "production";
+    const t0 = dev ? performance.now() : 0;
+    const since = () => (performance.now() - t0).toFixed(0);
+
     let stops: DisplayStop[] = [];
     let src: "tago"|"ic"|"osm"|"fallback" = "fallback";
 
+    type StopRow = { id: string; name: string; distM: number; lat: number; lng: number; osmRoutes: Array<{ routeNo: string; destination: string }> };
+    const toRow = (s: { stationId: string; stationName: string; distanceM: number; lat: number; lng: number; osmRoutes?: Array<{ routeNo: string; destination: string }> }): StopRow => ({
+      id: s.stationId, name: s.stationName, distM: s.distanceM,
+      lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes ?? [],
+    });
+
+    const RACE_TIMEOUT = 5000;
+    const withTimeout = <T,>(p: Promise<T>, label: string): Promise<{ src: "tago"|"ic"|"osm"; rows: StopRow[]; label: string }> => {
+      return Promise.race([
+        p.then(rows => {
+          if (dev) console.log(`[transport] race[${label}] ${since()}ms → ${(rows as unknown[]).length}`);
+          return rows;
+        }),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error(`${label}_timeout`)), RACE_TIMEOUT)),
+      ]).then(rows => ({
+        src: label as "tago"|"ic"|"osm",
+        rows: ((rows as Array<{ stationId: string; stationName: string; distanceM: number; lat: number; lng: number; osmRoutes?: Array<{ routeNo: string; destination: string }> }>) || []).map(toRow),
+        label,
+      }));
+    };
+
+    // 3개 race — 각자 5s timeout. 첫 번째 non-empty winner 채택.
+    const racers = [
+      withTimeout(fetchNearbyStopsFromTago(lat, lng), "tago"),
+      withTimeout(fetchNearbyStopsFromApi(lat, lng), "ic"),
+      withTimeout(fetchNearbyStopsFromServer(lat, lng), "osm"),
+    ];
+
     try {
-      // 1순위: TAGO 국가대중교통 API (전국 공통 stationId, 실시간 도착 연동)
-      const tagoNearby = await Promise.race([
-        fetchNearbyStopsFromTago(lat, lng),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
-      ]);
-      if (tagoNearby.length > 0) {
-        src = "tago";
-        stops = tagoNearby.slice(0, 14).map(s => ({
+      // 가장 먼저 non-empty 응답을 보내는 source 채택
+      const winner = await new Promise<{ src: "tago"|"ic"|"osm"; rows: StopRow[] }>((resolve, reject) => {
+        let pending = racers.length;
+        racers.forEach(r => {
+          r.then(result => {
+            if (result.rows.length > 0) resolve(result);
+            else if (--pending === 0) reject(new Error("all_empty"));
+          }).catch(() => {
+            if (--pending === 0) reject(new Error("all_failed"));
+          });
+        });
+      });
+      src = winner.src;
+      stops = winner.rows.slice(0, 14).map(r => ({ ...r, arrivals: [], loadingArrivals: true }));
+      if (dev) console.log(`[transport] winner=${src} ${since()}ms stops=${stops.length}`);
+    } catch {
+      // 1차 race 전부 실패 — 클라이언트 OSM 폴백
+      try {
+        const nearby = await Promise.race([
+          fetchNearbyStopsWide(lat, lng),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("client_osm_timeout")), 15000)),
+        ]);
+        if (nearby.length === 0) throw new Error("empty");
+        src = "osm";
+        stops = nearby.slice(0, 14).map(s => ({
           id: s.stationId, name: s.stationName,
           distM: s.distanceM, arrivals: [], loadingArrivals: true,
-          lat: s.lat, lng: s.lng, osmRoutes: [],
+          lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
         }));
-      } else throw new Error("tago_empty");
-    } catch {
-      try {
-        // 2순위: 인천 공공API (stationId가 도착정보 API와 일치)
-        const apiNearby = await Promise.race([
-          fetchNearbyStopsFromApi(lat, lng),
-          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
-        ]);
-        if (apiNearby.length > 0) {
-          src = "ic";
-          stops = apiNearby.slice(0, 14).map(s => ({
-            id: s.stationId, name: s.stationName,
-            distM: s.distanceM, arrivals: [], loadingArrivals: true,
-            lat: s.lat, lng: s.lng, osmRoutes: [],
-          }));
-        } else throw new Error("api_empty");
+        if (dev) console.log(`[transport] client OSM fallback ${since()}ms`);
       } catch {
-        // 3순위: 서버사이드 OSM 프록시 (1시간 캐시 → 모바일 타임아웃 방지)
-        try {
-          const nearby = await fetchNearbyStopsFromServer(lat, lng);
-          if (nearby.length === 0) throw new Error("server_osm_empty");
-          src = "osm";
-          stops = nearby.slice(0, 14).map(s => ({
-            id: s.stationId, name: s.stationName,
-            distM: s.distanceM, arrivals: [], loadingArrivals: true,
-            lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
-          }));
-        } catch {
-          // 4순위: 클라이언트 OSM Overpass 직접 호출 (느림, 모바일 폴백)
-          try {
-            const nearby = await Promise.race([
-              fetchNearbyStopsWide(lat, lng),
-              new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 15000)),
-            ]);
-            if (nearby.length === 0) throw new Error("empty");
-            src = "osm";
-            stops = nearby.slice(0, 14).map(s => ({
-              id: s.stationId, name: s.stationName,
-              distM: s.distanceM, arrivals: [], loadingArrivals: true,
-              lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
-            }));
-          } catch {
-            // 5순위: 검단신도시 하드코딩 정류장 (OSM 기반 정적 노선 정보 포함)
-            src = "fallback";
-            stops = GEUMDAN_BUS_STATIONS
-              .map(s => ({
-                id: s.stationId, name: s.name,
-                distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-                arrivals: [], loadingArrivals: true,
-                lat: s.lat, lng: s.lng,
-                osmRoutes: s.routes,
-              }))
-              .sort((a, b) => a.distM - b.distM);
-          }
-        }
+        src = "fallback";
+        stops = GEUMDAN_BUS_STATIONS
+          .map(s => ({
+            id: s.stationId, name: s.name,
+            distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+            arrivals: [], loadingArrivals: true,
+            lat: s.lat, lng: s.lng,
+            osmRoutes: s.routes,
+          }))
+          .sort((a, b) => a.distM - b.distM);
+        if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
       }
     }
 
     setStopSource(src);
     setApiStops(stops);
     setLoading(false);
+    if (dev) console.log(`[transport] stop list painted ${since()}ms`);
     await fetchArrivalsForStops(stops, src);
   }, [fetchArrivalsForStops]);
 
@@ -683,9 +712,11 @@ export default function TransportPage() {
     }
 
     setLocState("loading");
+    const tGpsStart = performance.now();
+    const dev = process.env.NODE_ENV !== "production";
 
-    // GPS가 빠르게 응답하면 그 위치로 첫 로드. 2초 안에 안 오면 DEFAULT로
-    // 우선 로드하고, 이후 GPS 도착 시 사용자 위치로 재조회.
+    // GPS가 빠르게 응답하면 그 위치로 첫 로드. 700ms 안에 안 오면 DEFAULT로
+    // 우선 로드하고, 이후 GPS 도착 시 사용자 위치로 재조회 (50m 이상 차이 시).
     let initialDispatched = false;
     const dispatchInitial = (lat: number, lng: number) => {
       if (initialDispatched) return;
@@ -695,11 +726,15 @@ export default function TransportPage() {
       loadBusData(lat, lng);
     };
 
-    const fastTimer = setTimeout(() => dispatchInitial(DEFAULT.lat, DEFAULT.lng), 2000);
+    const fastTimer = setTimeout(() => {
+      if (dev) console.log(`[transport] GPS fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
+      dispatchInitial(DEFAULT.lat, DEFAULT.lng);
+    }, 700);
 
     navigator.geolocation.getCurrentPosition(
       pos => {
         clearTimeout(fastTimer);
+        if (dev) console.log(`[transport] GPS resolved at ${(performance.now() - tGpsStart).toFixed(0)}ms`);
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setLocState("ok");
         if (initialDispatched) {

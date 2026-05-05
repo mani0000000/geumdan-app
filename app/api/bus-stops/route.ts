@@ -70,14 +70,17 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  const t0 = Date.now();
+
   // Stage 1: lightweight stops-only query (fast, ~2-4s typical).
   // Returns nearby bus stop nodes without route relations — guarantees we
   // can show stops even if Overpass is slow on the heavier query.
-  const stopsOnlyQuery = `[out:json][timeout:8];
+  const stopsOnlyQuery = `[out:json][timeout:6];
 node["highway"="bus_stop"](around:1000,${lat},${lng});
 out body;`;
 
-  const stopsOnly = await fetchOverpass(stopsOnlyQuery, 9000);
+  const stopsOnly = await fetchOverpass(stopsOnlyQuery, 7000);
+  const tStage1 = Date.now() - t0;
   if (!stopsOnly) {
     return Response.json(
       { error: "overpass_failed", message: "all overpass mirrors timed out" },
@@ -101,12 +104,14 @@ out body;`;
   // We bound to bbox around our stops which is much faster than the original
   // (.stops;._); pattern. If it times out, we still return stops without routes.
   const stopRoutes = new Map<number, Array<{ routeNo: string; destination: string }>>();
-  const routesQuery = `[out:json][timeout:10];
+  const routesQuery = `[out:json][timeout:5];
 node["highway"="bus_stop"](around:1000,${lat},${lng})->.stops;
 rel["type"="route"]["route"="bus"](bn.stops);
 out body;`;
 
-  const routesData = await fetchOverpass(routesQuery, 11000);
+  const tStage2Start = Date.now();
+  const routesData = await fetchOverpass(routesQuery, 6000);
+  const tStage2 = Date.now() - tStage2Start;
   if (routesData) {
     const routeRels = routesData.elements.filter(e => e.type === "relation");
     for (const rel of routeRels) {
@@ -147,7 +152,13 @@ out body;`;
   const result = { stops, source: "osm" as const };
   cache.set(cacheKey, { data: result, ts: Date.now() });
 
+  console.log(`[bus-stops] ${lat.toFixed(3)},${lng.toFixed(3)} stage1=${tStage1}ms stage2=${tStage2}ms stops=${stops.length} routes=${stopRoutes.size}`);
+
   return Response.json(result, {
-    headers: { "Cache-Control": "public, max-age=3600", "X-Cache": "MISS" },
+    headers: {
+      "Cache-Control": "public, max-age=3600",
+      "X-Cache": "MISS",
+      "Server-Timing": `stage1;dur=${tStage1}, stage2;dur=${tStage2}`,
+    },
   });
 }
