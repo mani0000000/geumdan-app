@@ -178,8 +178,8 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         author: input.author,
         author_dong: input.authorDong,
         author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-        user_id: input.userId ?? null,
         is_anonymous: input.isAnonymous,
+        user_id: input.userId ?? null,
       })
       .select()
       .single());
@@ -207,6 +207,25 @@ export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]>
   } catch (e) {
     console.error('[posts] fetchMyPosts error:', e);
     return [];
+  }
+}
+
+// ── 글 작성자 user_id 조회 ──────────────────────────────────
+export async function fetchPostOwner(
+  id: string,
+): Promise<{ userId: string | null; title: string | null } | null> {
+  if (!isConfigured()) return null;
+  try {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('user_id,title')
+      .eq('id', id)
+      .single();
+    if (error) return null;
+    const row = data as { user_id: string | null; title: string | null };
+    return { userId: row.user_id, title: row.title };
+  } catch {
+    return null;
   }
 }
 

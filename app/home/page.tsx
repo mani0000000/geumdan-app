@@ -45,7 +45,7 @@ import type { NewsItem } from "@/lib/types";
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
   { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/?tab=뉴스",                               color: "#E03131" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community/?tab=뉴스",                          color: "#E03131" },
   { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
   { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },

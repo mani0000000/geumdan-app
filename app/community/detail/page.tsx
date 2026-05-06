@@ -12,7 +12,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
 import {
-  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
+  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId, fetchPostOwner,
 } from "@/lib/db/posts";
 import {
   fetchComments, createComment, deleteComment, toggleCommentLike, updateComment,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
 import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
+import { createNotification } from "@/lib/db/notifications";
 import {
   fetchHiddenPostIds, hidePost, unhidePost, reportPost, reportComment,
   type ReportReason,
@@ -159,10 +160,29 @@ function DetailContent() {
 
   // 좋아요
   const toggleLike = async () => {
-    const delta = liked ? -1 : 1;
-    setLiked(!liked);
+    const wasLiked = liked;
+    const delta = wasLiked ? -1 : 1;
+    setLiked(!wasLiked);
     setLikeCount(c => c + delta);
-    if (!isMock) await togglePostLike(postId, delta);
+    if (isMock) return;
+    await togglePostLike(postId, delta);
+    if (!wasLiked) {
+      // 좋아요 추가 시 글 작성자에게 알림
+      try {
+        const owner = await fetchPostOwner(postId);
+        const myUid = await getOrCreateUserId();
+        if (owner?.userId && owner.userId !== myUid) {
+          await createNotification({
+            userId: owner.userId,
+            type: "post_like",
+            title: "내 글에 좋아요가 눌렸어요",
+            body: owner.title ?? "",
+            relatedId: postId,
+            relatedType: "post",
+          });
+        }
+      } catch { /* silent */ }
+    }
   };
 
   // 댓글 작성
@@ -183,13 +203,13 @@ function DetailContent() {
         createdAt: new Date().toISOString(),
       }]);
     } else {
-      const uid = await getOrCreateUserId();
+      const myUid = await getOrCreateUserId();
       const saved = await createComment({
         postId,
         author: meNickname,
         authorDong: meDong,
         authorAvatarUrl: meAvatar,
-        userId: uid,
+        userId: myUid,
         content: commentText.trim(),
         isAnonymous: false,
       });
@@ -199,6 +219,20 @@ function DetailContent() {
         setMyCommentIds(prev => new Set([...prev, saved.id]));
         await syncCommentCount(postId, 1);
         setPost(prev => prev ? { ...prev, commentCount: prev.commentCount + 1 } : prev);
+        // 글 작성자에게 댓글 알림
+        try {
+          const owner = await fetchPostOwner(postId);
+          if (owner?.userId && owner.userId !== myUid) {
+            await createNotification({
+              userId: owner.userId,
+              type: "post_comment",
+              title: "내 글에 새 댓글이 달렸어요",
+              body: saved.content.slice(0, 80),
+              relatedId: postId,
+              relatedType: "post",
+            });
+          }
+        } catch { /* silent */ }
       }
       void touchLastActive();
     }

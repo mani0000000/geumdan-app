@@ -1695,14 +1695,23 @@ export default function StoresPage() {
     fetchBuildingWithFloors(selectedBuildingId).then(data => setSelectedBuildingData(data));
   }, [selectedBuildingId]);
 
-  // 검색 결과
+  // 검색 결과 (매장)
   const searchResults = useMemo<SearchResult[]>(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
-    return allDbStores
+    const stores = allDbStores
       .filter(s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
       .map(s => ({ store: s, floorLabel: s.floorLabel, buildingName: s.buildingName }));
-  }, [searchQuery, allDbStores]);
+    // 지도 탭에서는 상가명도 검색하여 그 건물의 모든 매장을 결과에 포함
+    if (viewMode === "지도") {
+      const buildingMatches = allDbStores
+        .filter(s => s.buildingName.toLowerCase().includes(q))
+        .filter(s => !stores.some(r => r.store.id === s.id))
+        .map(s => ({ store: s, floorLabel: s.floorLabel, buildingName: s.buildingName }));
+      return [...stores, ...buildingMatches];
+    }
+    return stores;
+  }, [searchQuery, allDbStores, viewMode]);
 
   // 주변 건물 거리 계산
   const nearbyWithDist = useMemo<NearbyBuilding[]>(() => {
@@ -1711,6 +1720,13 @@ export default function StoresPage() {
       .map(row => rowToNearby(row, base.lat, base.lng))
       .sort((a, b) => a.km - b.km);
   }, [userPos, dbBuildings]);
+
+  // 지도 탭 검색 시: 상가명 매칭된 건물 목록
+  const buildingSearchMatches = useMemo<NearbyBuilding[]>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q || viewMode !== "지도") return [];
+    return nearbyWithDist.filter(b => b.name.toLowerCase().includes(q));
+  }, [searchQuery, viewMode, nearbyWithDist]);
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -1729,8 +1745,23 @@ export default function StoresPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="상가" />
 
-      {/* 검색바 + 토글 */}
-      <div className="bg-white px-4 pt-3 pb-3 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
+      {/* 탭 토글 (상가지도 / 매장리스트) */}
+      <div className="bg-white px-4 pt-3 pb-2 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
+        <div className="flex gap-1 bg-[#f5f5f7] rounded-2xl p-1">
+          {(["지도", "리스트"] as const).map(mode => (
+            <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); setSearchQuery(""); setSearchFocused(false); }}
+              className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
+              }`}>
+              {mode === "지도" ? <MapIcon size={14} /> : <List size={14} />}
+              {mode === "지도" ? "상가 지도" : "매장 리스트"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 검색바 — 탭 아래 (탭별 placeholder) */}
+      <div className="bg-white px-4 pt-2 pb-3 sticky top-[112px] z-30 border-b border-[#f5f5f7]">
         <div className={`flex items-center gap-2.5 rounded-2xl px-4 h-12 transition-all ${searchFocused ? "bg-white ring-2 ring-[#0071e3] shadow-sm" : "bg-[#f5f5f7]"}`}>
           <Search size={16} className={`shrink-0 transition-colors ${searchFocused ? "text-[#0071e3]" : "text-[#86868b]"}`} />
           <input
@@ -1739,7 +1770,9 @@ export default function StoresPage() {
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}
             onKeyDown={handleSearchKeyDown}
-            placeholder="매장명, 업종 검색 (예: 카페, 스타벅스)"
+            placeholder={viewMode === "지도"
+              ? "상가명, 매장명, 업종 검색"
+              : "매장명, 업종 검색 (예: 카페, 스타벅스)"}
             className="flex-1 bg-transparent text-[15px] focus:outline-none text-[#1d1d1f] placeholder:text-[#86868b]"
           />
           {(searchQuery || searchFocused) && (
@@ -1748,24 +1781,11 @@ export default function StoresPage() {
             </button>
           )}
         </div>
-        {!isSearching && !searchFocused && (
-          <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
-            {(["리스트", "지도"] as const).map(mode => (
-              <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); }}
-                className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
-                }`}>
-                {mode === "리스트" ? <List size={14} /> : <MapIcon size={14} />}
-                {mode === "리스트" ? "매장 리스트" : "상가 지도"}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* 키워드 검색 패널 */}
       {searchFocused && !isSearching && (
-        <div className="bg-white min-h-[calc(100dvh-170px)]" onMouseDown={e => e.preventDefault()}>
+        <div className="bg-white min-h-[calc(100dvh-184px)]" onMouseDown={e => e.preventDefault()}>
           {recommendedKws.length > 0 && (
             <div className="px-4 pt-5 pb-4 border-b border-[#f5f5f7]">
               <p className="text-[12px] font-bold text-[#86868b] mb-3 uppercase tracking-wide">추천 검색어</p>
@@ -1807,7 +1827,36 @@ export default function StoresPage() {
       )}
 
       {isSearching ? (
-        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+        <div>
+          {viewMode === "지도" && buildingSearchMatches.length > 0 && (
+            <div className="px-4 pt-3">
+              <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">상가 {buildingSearchMatches.length}건</p>
+              <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] mb-3">
+                {buildingSearchMatches.map(b => (
+                  <button key={b.id}
+                    onClick={() => {
+                      setViewMode("지도");
+                      setSelectedBuildingId(b.id);
+                      setSearchQuery("");
+                      setSearchFocused(false);
+                      searchInputRef.current?.blur();
+                    }}
+                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
+                    <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
+                      <Building2 size={18} className="text-[#0071e3]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{b.name}</p>
+                      <p className="text-[12px] text-[#6e6e73] truncate">{b.address} · {distLabel(b.km)}</p>
+                    </div>
+                    <ChevronRight size={16} className="text-[#86868b] shrink-0" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+        </div>
       ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
         /* ─── 건물 상세 뷰 (리스트 모드) ─── */
         <BuildingDetail
@@ -1818,20 +1867,7 @@ export default function StoresPage() {
       ) : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
         <>
-          <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
-            {/* 업종별 필터 바 */}
-            <div className="absolute top-0 left-0 right-0 z-[50] pt-2 pb-1.5"
-              style={{ background: "linear-gradient(180deg,rgba(255,255,255,.96) 70%,transparent)" }}>
-              <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-                {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
-                  <button key={cat} onClick={() => setMapCatFilter(cat)}
-                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
-                    {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
+          <div className="fixed left-0 right-0" style={{ top: 184, bottom: 58, zIndex: 10 }}>
             {/* 지도 */}
             <StoreMapView
               buildings={nearbyWithDist}
@@ -1839,6 +1875,18 @@ export default function StoresPage() {
               onSelect={id => setSelectedBuildingId(selectedBuildingId === id ? null : id)}
               dimmedIds={dimmedIds}
             />
+
+            {/* 업종별 필터 바 — 지도 위 floating */}
+            <div className="absolute top-3 left-0 right-0 z-[400] pointer-events-none">
+              <div className="flex gap-2 px-3 overflow-x-auto pointer-events-auto" style={{ scrollbarWidth: "none" }}>
+                {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
+                  <button key={cat} onClick={() => setMapCatFilter(cat)}
+                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-md transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
+                    {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
