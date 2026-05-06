@@ -1,14 +1,15 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
-import { ChevronRight, Fuel, MapPin, RefreshCw, TrendingDown } from "lucide-react";
-import type { GasStation } from "@/app/api/gas/route";
-
-interface ApiResponse {
-  stations: GasStation[];
-  source: "opinet" | "sample";
-  timestamp: string;
-  success: boolean;
-}
+import {
+  AlertTriangle,
+  ChevronRight,
+  Fuel,
+  Info,
+  MapPin,
+  RefreshCw,
+  TrendingDown,
+} from "lucide-react";
+import type { GasApiResponse, GasStation } from "@/app/api/gas/route";
 
 const won = (n: number) => n.toLocaleString("ko-KR");
 
@@ -47,7 +48,7 @@ function PriceRow({
 }
 
 export default function GasWidget() {
-  const [stations, setStations] = useState<GasStation[] | null>(null);
+  const [data, setData] = useState<GasApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -56,10 +57,16 @@ export default function GasWidget() {
       const res = await fetch(bust ? `/api/gas?t=${Date.now()}` : "/api/gas", {
         cache: bust ? "no-store" : "default",
       });
-      const data = (await res.json()) as ApiResponse;
-      setStations(data.stations ?? []);
+      const json = (await res.json()) as GasApiResponse;
+      setData(json);
     } catch {
-      setStations([]);
+      setData({
+        stations: [],
+        source: "error",
+        timestamp: new Date().toISOString(),
+        success: false,
+        error: "network",
+      });
     }
   }, []);
 
@@ -74,9 +81,12 @@ export default function GasWidget() {
     setRefreshing(false);
   }
 
+  const stations = data?.stations ?? [];
+  const source = data?.source;
+
   // 휘발유 최저가 (있는 것만 비교)
   const lowestGasoline = stations
-    ?.map(s => s.prices.gasoline)
+    .map(s => s.prices.gasoline)
     .filter((n): n is number => n != null)
     .reduce<number | undefined>((m, n) => (m == null || n < m ? n : m), undefined);
 
@@ -112,8 +122,41 @@ export default function GasWidget() {
               ))}
             </div>
           </div>
-        ) : !stations || stations.length === 0 ? (
-          <p className="px-4 text-[#86868b] text-[13px]">주유소 가격 정보를 불러오지 못했어요.</p>
+        ) : source === "no_key" ? (
+          <div className="mx-4 p-3 rounded-2xl bg-[#FFF8E1] border border-[#FFE082] flex items-start gap-2.5">
+            <Info size={16} className="text-[#B45309] mt-0.5 shrink-0" />
+            <div className="text-[12px] leading-relaxed">
+              <p className="font-bold text-[#92400E]">오피넷 API 키 미등록</p>
+              <p className="text-[#92400E] mt-0.5">
+                관리자가 환경변수{" "}
+                <code className="font-mono bg-white/70 px-1 rounded">OPINET_API_KEY</code>
+                를 설정해야 실제 검단 주변 가격이 표시됩니다.
+              </p>
+              <a
+                href="https://www.opinet.co.kr/api/info.do"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-1 text-[#0071e3] font-semibold"
+              >
+                키 발급 안내 →
+              </a>
+            </div>
+          </div>
+        ) : source === "error" ? (
+          <div className="mx-4 p-3 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] flex items-start gap-2.5">
+            <AlertTriangle size={16} className="text-[#DC2626] mt-0.5 shrink-0" />
+            <div className="text-[12px] leading-relaxed">
+              <p className="font-bold text-[#991B1B]">오피넷 API 호출 실패</p>
+              <p className="text-[#991B1B] mt-0.5">
+                잠시 후 새로고침해 주세요.
+                {data?.error ? ` (${data.error})` : ""}
+              </p>
+            </div>
+          </div>
+        ) : stations.length === 0 ? (
+          <p className="px-4 text-[#86868b] text-[13px]">
+            검단 반경 5km 내 가격 정보가 비어 있어요.
+          </p>
         ) : (
           <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
             <div className="flex gap-3" style={{ width: "max-content" }}>

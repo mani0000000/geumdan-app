@@ -3,26 +3,27 @@ import { NextResponse } from "next/server";
 /**
  * 검단 신도시 주변 주유소 가격 (Opinet 공공 API 프록시)
  *
- * - API key: env `OPINET_API_KEY`. 없으면 샘플 데이터 fallback.
- * - 검단 중심 KATEC 좌표 + 반경 5km 이내 (aroundAll.do)
- * - 휘발유·경유 가격 병합 후 가격 오름차순 정렬, 최대 8개
- * - HTTP 캐싱: 1시간 (s-maxage=3600)
+ * - API key: env `OPINET_API_KEY` (서버사이드 전용). 미설정 시 source="no_key" 반환.
+ * - 검단 중심 KATEC TM 좌표 + 반경 5km 이내 (aroundAll.do)
+ *   ※ Opinet aroundAll.do 의 x/y 는 KATEC(TM128) 좌표계 — WGS84 직접 입력 불가.
+ * - 휘발유·경유·LPG 병렬 조회 후 UNI_ID 기준 병합
+ * - HTTP 캐싱: 성공 시 1시간, no_key/empty 는 짧게 또는 no-store
  *
  * 참고: https://www.opinet.co.kr/api/
  */
 
-// 검단신도시 중심부 KATEC(TM) 좌표 (인천 서구 원당동 검단사거리 인근)
+// 검단신도시 중심부 KATEC(TM128) 좌표 (인천 서구 원당동 검단사거리 인근)
+// WGS84 약 (126.66°E, 37.60°N) → KATEC ≈ (181842, 466791)
 const GEUMDAN_KATEC = { x: 181842, y: 466791 } as const;
 const RADIUS_M = 5000;
 
 // 유종 코드
 const PRODCD = {
-  gasoline: "B027", // 휘발유
-  diesel:   "D047", // 경유
-  lpg:      "K015", // LPG (자동차 부탄)
+  gasoline: "B027",
+  diesel: "D047",
+  lpg: "K015",
 } as const;
 
-// Opinet 브랜드 코드 → 표시명/로고색
 const BRAND_META: Record<string, { name: string; color: string; bg: string; short: string }> = {
   SKE: { name: "SK에너지",     color: "#EF4444", bg: "#FEF2F2", short: "SK"   },
   GSC: { name: "GS칼텍스",     color: "#0058B0", bg: "#EFF6FF", short: "GS"   },
@@ -45,7 +46,7 @@ export interface GasStation {
   brandBg: string;
   brandShort: string;
   address: string;
-  distanceKm: number; // 검단 중심 기준 km
+  distanceKm: number;
   prices: {
     gasoline?: number;
     diesel?: number;
@@ -53,22 +54,38 @@ export interface GasStation {
   };
 }
 
-// ── Opinet 응답 타입 (필요 필드만) ──────────────────────────
+export type GasSource = "opinet" | "no_key" | "empty" | "error";
+
+export interface GasApiResponse {
+  stations: GasStation[];
+  source: GasSource;
+  timestamp: string;
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 interface OpinetStation {
-  UNI_ID: string;       // 고유 ID
-  OS_NM: string;        // 상호
-  POLL_DIV_CD: string;  // 브랜드 코드
-  PRICE: number;        // 단가
-  DISTANCE: number;     // 거리(m)
-  NEW_ADR?: string;     // 도로명 주소
-  VAN_ADR?: string;     // 지번 주소
+  UNI_ID: string;
+  OS_NM: string;
+  POLL_DIV_CD: string;
+  PRICE: number;
+  DISTANCE: number;
+  NEW_ADR?: string;
+  VAN_ADR?: string;
 }
 
 interface OpinetResponse {
   RESULT?: { OIL?: OpinetStation[] };
 }
 
-async function fetchOpinetByProduct(prodcd: string, apiKey: string): Promise<OpinetStation[]> {
+interface OpinetFetchResult {
+  stations: OpinetStation[];
+  ok: boolean;
+  error?: string;
+}
+
+async function fetchOpinetByProduct(prodcd: string, apiKey: string): Promise<OpinetFetchResult> {
   const url =
     `https://www.opinet.co.kr/api/aroundAll.do?code=${apiKey}` +
     `&x=${GEUMDAN_KATEC.x}&y=${GEUMDAN_KATEC.y}&radius=${RADIUS_M}` +
@@ -77,12 +94,39 @@ async function fetchOpinetByProduct(prodcd: string, apiKey: string): Promise<Opi
   const ctrl = new AbortController();
   const tid = setTimeout(() => ctrl.abort(), 6000);
   try {
-    const res = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
-    if (!res.ok) return [];
-    const json = (await res.json()) as OpinetResponse;
-    return json.RESULT?.OIL ?? [];
-  } catch {
-    return [];
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      cache: "no-store",
+      headers: {
+        // Opinet 서버는 일부 server-side 호출을 거부함 — 일반 브라우저 UA 로 위장
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 " +
+          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Accept: "application/json,text/plain,*/*",
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(
+        `[/api/gas] Opinet ${prodcd} HTTP ${res.status}: ${body.slice(0, 300)}`,
+      );
+      return { stations: [], ok: false, error: `http_${res.status}` };
+    }
+    const text = await res.text();
+    let json: OpinetResponse;
+    try {
+      json = JSON.parse(text) as OpinetResponse;
+    } catch {
+      console.error(
+        `[/api/gas] Opinet ${prodcd} JSON parse 실패. body=${text.slice(0, 300)}`,
+      );
+      return { stations: [], ok: false, error: "invalid_json" };
+    }
+    return { stations: json.RESULT?.OIL ?? [], ok: true };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[/api/gas] Opinet ${prodcd} fetch 실패: ${msg}`);
+    return { stations: [], ok: false, error: msg };
   } finally {
     clearTimeout(tid);
   }
@@ -116,7 +160,7 @@ function buildStations(
       brandBg: meta.bg,
       brandShort: meta.short,
       address: (s.NEW_ADR || s.VAN_ADR || "").replace(/^인천광역시\s+/, "인천 "),
-      distanceKm: Math.round((s.DISTANCE || 0) / 100) / 10, // 0.1km
+      distanceKm: Math.round((s.DISTANCE || 0) / 100) / 10,
       prices: { [fuel]: s.PRICE },
     });
   }
@@ -125,7 +169,6 @@ function buildStations(
   dieselList.forEach(s => upsert(s, "diesel"));
   lpgList.forEach(s => upsert(s, "lpg"));
 
-  // 휘발유 가격 보유 우선 → 가격 오름차순
   return Array.from(map.values())
     .filter(s => s.prices.gasoline != null || s.prices.diesel != null)
     .sort((a, b) => {
@@ -136,77 +179,64 @@ function buildStations(
     .slice(0, 8);
 }
 
-// ── 샘플 fallback ────────────────────────────────────────────
-const SAMPLE_STATIONS: GasStation[] = [
-  {
-    id: "sample-1", name: "SK 검단주유소", brandCode: "SKE",
-    brandName: "SK에너지", brandColor: "#EF4444", brandBg: "#FEF2F2", brandShort: "SK",
-    address: "인천 서구 검단로 612", distanceKm: 0.6,
-    prices: { gasoline: 1685, diesel: 1545, lpg: 1090 },
-  },
-  {
-    id: "sample-2", name: "GS칼텍스 원당셀프", brandCode: "GSC",
-    brandName: "GS칼텍스", brandColor: "#0058B0", brandBg: "#EFF6FF", brandShort: "GS",
-    address: "인천 서구 원당대로 758", distanceKm: 1.1,
-    prices: { gasoline: 1668, diesel: 1528 },
-  },
-  {
-    id: "sample-3", name: "현대오일뱅크 마전셀프", brandCode: "HDO",
-    brandName: "현대오일뱅크", brandColor: "#16A34A", brandBg: "#F0FDF4", brandShort: "현대",
-    address: "인천 서구 마전로 142", distanceKm: 1.8,
-    prices: { gasoline: 1659, diesel: 1519, lpg: 1075 },
-  },
-  {
-    id: "sample-4", name: "S-OIL 검단신도시점", brandCode: "SOL",
-    brandName: "S-OIL", brandColor: "#F59E0B", brandBg: "#FFFBEB", brandShort: "S",
-    address: "인천 서구 완정로 88", distanceKm: 2.4,
-    prices: { gasoline: 1672, diesel: 1532 },
-  },
-  {
-    id: "sample-5", name: "알뜰주유소 당하점", brandCode: "RTO",
-    brandName: "알뜰주유소", brandColor: "#6366F1", brandBg: "#EEF2FF", brandShort: "알뜰",
-    address: "인천 서구 당하로 33", distanceKm: 3.0,
-    prices: { gasoline: 1645, diesel: 1505, lpg: 1062 },
-  },
-];
-
 export async function GET() {
   const apiKey = process.env.OPINET_API_KEY?.trim();
   const timestamp = new Date().toISOString();
 
-  // API 키 없음 → 샘플 데이터
   if (!apiKey) {
-    return NextResponse.json(
-      { stations: SAMPLE_STATIONS, source: "sample", timestamp, success: true },
-      { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" } },
-    );
+    console.warn("[/api/gas] OPINET_API_KEY 미설정 — Vercel 환경변수에 키를 등록해 주세요.");
+    const body: GasApiResponse = {
+      stations: [],
+      source: "no_key",
+      timestamp,
+      success: false,
+      message: "OPINET_API_KEY 환경변수가 설정되지 않았습니다.",
+    };
+    return NextResponse.json(body, { headers: { "Cache-Control": "no-store" } });
   }
 
-  try {
-    const [gasoline, diesel, lpg] = await Promise.all([
-      fetchOpinetByProduct(PRODCD.gasoline, apiKey),
-      fetchOpinetByProduct(PRODCD.diesel,   apiKey),
-      fetchOpinetByProduct(PRODCD.lpg,      apiKey),
-    ]);
+  const [gasoline, diesel, lpg] = await Promise.all([
+    fetchOpinetByProduct(PRODCD.gasoline, apiKey),
+    fetchOpinetByProduct(PRODCD.diesel,   apiKey),
+    fetchOpinetByProduct(PRODCD.lpg,      apiKey),
+  ]);
 
-    const stations = buildStations(gasoline, diesel, lpg);
-
-    if (stations.length === 0) {
-      return NextResponse.json(
-        { stations: SAMPLE_STATIONS, source: "sample", timestamp, success: true },
-        { headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1800" } },
-      );
-    }
-
-    return NextResponse.json(
-      { stations, source: "opinet", timestamp, success: true },
-      { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" } },
-    );
-  } catch (err) {
-    console.error("[/api/gas] Error:", err);
-    return NextResponse.json(
-      { stations: SAMPLE_STATIONS, source: "sample", timestamp, success: false, error: "fetch_failed" },
-      { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900" } },
-    );
+  // 세 호출이 모두 실패했으면 명시적 error 응답 (샘플 데이터로 가짜 표시 X)
+  if (!gasoline.ok && !diesel.ok && !lpg.ok) {
+    const body: GasApiResponse = {
+      stations: [],
+      source: "error",
+      timestamp,
+      success: false,
+      error: gasoline.error ?? diesel.error ?? lpg.error ?? "fetch_failed",
+    };
+    return NextResponse.json(body, {
+      headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
+    });
   }
+
+  const stations = buildStations(gasoline.stations, diesel.stations, lpg.stations);
+
+  if (stations.length === 0) {
+    const body: GasApiResponse = {
+      stations: [],
+      source: "empty",
+      timestamp,
+      success: true,
+      message: "검단 반경 5km 내 가격 정보가 비어 있습니다.",
+    };
+    return NextResponse.json(body, {
+      headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1800" },
+    });
+  }
+
+  const body: GasApiResponse = {
+    stations,
+    source: "opinet",
+    timestamp,
+    success: true,
+  };
+  return NextResponse.json(body, {
+    headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+  });
 }
