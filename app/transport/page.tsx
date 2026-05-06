@@ -800,11 +800,11 @@ export default function TransportPage() {
     let stops: DisplayStop[] = [];
     let src: "tago"|"ic"|"osm"|"fallback" = "fallback";
 
+    // TAGO race timeout 제거: apiFetch 자체에 10s AbortSignal 있음.
+    // Vercel cold start(3-5s) + TAGO(1-3s)가 6s 초과해서 false-fallback 트리거되던
+    // 버그 수정. 클라이언트는 최대 10s 기다린 뒤 빈 배열 받으면 폴백.
     try {
-      const tagoNearby = await Promise.race([
-        fetchNearbyStopsFromTago(lat, lng),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("tago_timeout")), 6000)),
-      ]);
+      const tagoNearby = await fetchNearbyStopsFromTago(lat, lng);
       if (dev) console.log(`[transport] TAGO nearby ${since()}ms → ${tagoNearby.length}`);
       if (tagoNearby.length > 0) {
         src = "tago";

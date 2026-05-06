@@ -490,23 +490,31 @@ export async function searchRouteByNo(routeNo: string, cityCode = "23"): Promise
 }
 
 // ─── TAGO: routeId로 노선 상세 조회 ─────────────────────────
+// TAGO 응답 필드: startvehicletime / endvehicletime / intervaltime
+//   - 단방향 시각만 줌 (상행/하행 구분 없음). 왕복 운행이라 가정하고
+//     up/down에 동일 값을 채워 UI가 "첫차 0500 / 막차 2300"을 그리도록 한다.
+//   - intervalgap·upfirsttime 같은 필드는 TAGO에 존재하지 않는다 (이전 매핑 버그).
 export async function fetchRouteDetailFromTago(routeId: string, cityCode = "23"): Promise<RouteDetail | null> {
   const items = await apiFetch("tagoRouteDetail", { cityCode, routeId });
   if (!items.length) return null;
   const d = items[0];
+  const startT = d.startvehicletime ?? "-";
+  const endT   = d.endvehicletime ?? "-";
+  const routeNo = d.routeno ?? d.routeNo ?? "";
+  const routeTp = d.routetp ?? d.routeTp ?? "";
   return {
     routeId,
-    routeNo: d.routeno ?? d.routeNo ?? "",
-    routeName: d.routenm ?? d.routeName ?? "",
+    routeNo,
+    routeName: d.routenm ?? d.routeName ?? (routeTp ? `${routeNo} ${routeTp}` : routeNo),
     startStation: d.startnodenm ?? d.startNodeNm ?? "기점",
     endStation: d.endnodenm ?? d.endNodeNm ?? "종점",
-    firstTime: "",
-    lastTime: "",
-    upFirstTime: d.upfirsttime ?? d.upFirstTime ?? "-",
-    upLastTime: d.uplasttime ?? d.upLastTime ?? "-",
-    downFirstTime: d.downfirsttime ?? d.downFirstTime ?? "-",
-    downLastTime: d.downlasttime ?? d.downLastTime ?? "-",
-    interval: Number(d.intervalgap ?? d.intervalGap ?? "0"),
+    firstTime: startT,
+    lastTime: endT,
+    upFirstTime: startT,
+    upLastTime: endT,
+    downFirstTime: startT,
+    downLastTime: endT,
+    interval: Number(d.intervaltime ?? d.intervalTime ?? "0"),
   };
 }
 
