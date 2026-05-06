@@ -34,6 +34,7 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
+import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import {
   fetchUpcomingSportsMatches, fetchSportsAssets, TEAM_META, LEAGUE_STYLES, TEAM_LOGOS, LEAGUE_STANDINGS,
   DEFAULT_SPORTS_ASSETS,
@@ -625,6 +626,42 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
     ? `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
     : `https://map.kakao.com/link/search/${q}`;
 
+  const [favorited, setFavorited] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+
+  useEffect(() => {
+    isFavoritePlace(place.id).then(setFavorited);
+  }, [place.id]);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1800);
+  };
+
+  const handleToggleFav = async () => {
+    const next = !favorited;
+    setFavorited(next); // optimistic update
+    try {
+      if (next) {
+        await addFavoritePlace({
+          place_id: place.id,
+          place_name: place.name,
+          place_category: place.category,
+          place_area: place.area,
+          place_image_url: place.thumbnail_url,
+          place_address: place.address,
+        });
+        showToast("즐겨찾기에 추가됐어요 ⭐");
+      } else {
+        await removeFavoritePlace(place.id);
+        showToast("즐겨찾기에서 제거됐어요");
+      }
+    } catch {
+      setFavorited(!next); // revert
+      showToast("처리 중 오류가 발생했어요");
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[300]" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50" />
@@ -646,6 +683,12 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
               <button onClick={onClose}
                 className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
                 <X size={16} className="text-white" />
+              </button>
+              <button onClick={handleToggleFav}
+                aria-label={favorited ? "즐겨찾기 해제" : "즐겨찾기 추가"}
+                className="absolute top-3 right-12 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
+                <Star size={16} className={favorited ? "text-[#FBBF24]" : "text-white"}
+                  fill={favorited ? "#FBBF24" : "none"} />
               </button>
               <span className="absolute bottom-3 left-3 text-[12px] font-bold px-2.5 py-1 rounded-lg"
                 style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
@@ -717,6 +760,11 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
           </div>
         </div>
       </div>
+      {toast && (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-24 z-20 px-4 py-2.5 bg-black/80 text-white text-[13px] rounded-xl pointer-events-none">
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

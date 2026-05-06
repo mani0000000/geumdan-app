@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import {
   ChevronRight, FileText, MessageSquare, Heart, Bell, Shield,
   HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2,
-  Coins, Star, Pencil, Trash2, X, Check, Tag,
+  Coins, Star, Pencil, Trash2, X, Check, Tag, MapPin,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -28,6 +28,12 @@ import { fetchMyPosts, deletePost, updatePost } from "@/lib/db/posts";
 import { fetchMyComments, deleteComment, updateComment, type DBComment } from "@/lib/db/comments";
 import type { Post } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/utils";
+import {
+  getFavoritePlaces,
+  removeFavoritePlace,
+  type FavoritePlace,
+} from "@/lib/db/placeFavorites";
+import { CATEGORY_META, type PlaceCategory } from "@/lib/db/places";
 
 const WEEKLY_LIKES_MAX = 10;
 
@@ -97,6 +103,7 @@ export default function MyPage() {
   const [busCount, setBusCount] = useState(0);
   const [storeCount, setStoreCount] = useState(0);
   const [aptCount, setAptCount] = useState(0);
+  const [favPlaces, setFavPlaces] = useState<FavoritePlace[]>([]);
 
   // 내 글 / 내 댓글 탭
   const [activeTab, setActiveTab] = useState<TabKey>("posts");
@@ -130,8 +137,19 @@ export default function MyPage() {
     getFavoriteBuses().then(b => setBusCount(b.length));
     getFavoriteStores().then(s => setStoreCount(s.length));
     getFavoriteApts().then(a => setAptCount(a.length));
+    getFavoritePlaces().then(setFavPlaces);
     reloadMyContent();
   }, [reloadMyContent]);
+
+  async function handleRemoveFavPlace(placeId: string) {
+    setFavPlaces(prev => prev.filter(p => p.place_id !== placeId)); // optimistic
+    try {
+      await removeFavoritePlace(placeId);
+    } catch {
+      const list = await getFavoritePlaces();
+      setFavPlaces(list);
+    }
+  }
 
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
   const nextLevel = getNextLevel(monthlyLevel);
@@ -557,7 +575,70 @@ export default function MyPage() {
           <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="즐겨찾는 버스" badge={busCount} onClick={() => router.push("/transport/")} />
           <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="즐겨찾는 상가" badge={storeCount} onClick={() => router.push("/stores/")} />
           <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="관심 아파트" badge={aptCount} onClick={() => router.push("/community/?tab=시세")} />
+          <MenuRow icon={<Star size={18} className="text-[#FBBF24]" />} label="가볼만한 곳" badge={favPlaces.length} onClick={() => router.push("/home/")} />
         </div>
+      </div>
+
+      {/* ── 7-1. 즐겨찾기한 가볼만한 곳 카드 ───────────────────────── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="flex items-center gap-1.5">
+            <Star size={16} className="text-[#FBBF24]" fill="#FBBF24" />
+            <span className="text-[16px] font-bold text-[#1d1d1f]">가볼만한 곳</span>
+          </div>
+          <span className="text-[13px] text-[#6e6e73]">{favPlaces.length}곳</span>
+        </div>
+        {favPlaces.length === 0 ? (
+          <div className="px-4 pb-5">
+            <p className="text-[13px] text-[#86868b] text-center py-4">
+              즐겨찾기한 장소가 없습니다
+            </p>
+          </div>
+        ) : (
+          <div className="px-4 pb-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3" style={{ width: "max-content" }}>
+              {favPlaces.map(p => {
+                const meta = p.place_category
+                  ? CATEGORY_META[p.place_category as PlaceCategory]
+                  : null;
+                return (
+                  <div key={p.id}
+                    className="shrink-0 w-[180px] bg-[#f5f5f7] rounded-2xl overflow-hidden relative">
+                    <div className="w-full h-[110px] relative">
+                      {p.place_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.place_image_url} alt={p.place_name}
+                          className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-[40px]"
+                          style={{ background: meta?.bg ?? "#e8f1fd" }}>🗺️</div>
+                      )}
+                      {meta && (
+                        <span className="absolute top-2 left-2 text-[11px] font-bold px-2 py-0.5 rounded-lg"
+                          style={{ background: meta.bg, color: meta.color }}>
+                          {meta.label}
+                        </span>
+                      )}
+                      <button onClick={() => handleRemoveFavPlace(p.place_id)}
+                        aria-label="즐겨찾기 해제"
+                        className="absolute top-2 right-2 w-6 h-6 bg-black/50 rounded-full flex items-center justify-center active:opacity-70">
+                        <X size={12} className="text-white" />
+                      </button>
+                    </div>
+                    <div className="px-3 py-2.5">
+                      <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{p.place_name}</p>
+                      {p.place_area && (
+                        <p className="text-[11px] text-[#86868b] mt-0.5 flex items-center gap-1">
+                          <MapPin size={10} />{p.place_area}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── 8. 설정 ───────────────────────────────────────────── */}
