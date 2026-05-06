@@ -162,11 +162,11 @@ export function getAllSubwayStations(): SubwayStationWithDist[] {
   return STATION_DB.filter(st => !st.planned).map(st => ({ ...st, distM: 0 }));
 }
 
-// ── GPS 기반 인근 역 탐색 (미개통 제외) ──────────────────────
+// ── GPS 기반 거리 계산 + 가까운 순 정렬 (미개통 제외, 반경 제한 없음) ──
 export function findNearbySubwayStations(
   lat: number,
   lng: number,
-  radiusM = 10000,
+  radiusM = Infinity,
 ): SubwayStationWithDist[] {
   return STATION_DB
     .filter(st => !st.planned)

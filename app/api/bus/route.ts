@@ -13,6 +13,8 @@ const ACTIONS: Record<string, { base: string; path: string; required: string[] }
   routeInfo:         { base: BUS_BASE,  path: "/routeInfoService/getRouteInfo",                                required: ["routeId"] },
   routeStations:     { base: BUS_BASE,  path: "/routeInfoService/getStaionByRoute",                            required: ["routeId"] },
   aroundStations:    { base: BUS_BASE,  path: "/busStationAroundInfoService/getBusStationAroundList",          required: ["GPS_LATI", "GPS_LONG"] },
+  stationByName:     { base: BUS_BASE,  path: "/stationService/getStationByName",                              required: ["stationName"] },
+  routeList:         { base: BUS_BASE,  path: "/busRouteService/getBusRouteList",                              required: ["routeNo"] },
   // 국가대중교통 TAGO API (전국 공통 - cityCode=30 인천)
   tagoStations:      { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
   tagoArrivals:      { base: TAGO_BASE, path: "/BusArrivalService/getArrivalInfoList",                         required: ["cityCode", "nodeId"] },

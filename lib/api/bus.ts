@@ -352,6 +352,80 @@ export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30")
   };
 }
 
+// ─── 정류장 이름으로 검색 (인천 BIS) ─────────────────────────
+export async function searchStationsByName(stationName: string): Promise<NearbyStop[]> {
+  const items = await apiFetch("stationByName", { stationName, numOfRows: "30" });
+  return items
+    .map(d => {
+      const sLat = Number(d.GPS_LATI ?? d.gpsLati ?? d.gpslati ?? 0);
+      const sLng = Number(d.GPS_LONG ?? d.gpsLong ?? d.gpslong ?? 0);
+      return {
+        stationId: d.STATION_ID ?? d.stationId ?? "",
+        osmNodeId: 0,
+        stationName: d.STATION_NM ?? d.stationNm ?? d.STATION_NAME ?? "",
+        lat: sLat,
+        lng: sLng,
+        distanceM: 0,
+        osmRoutes: [],
+      };
+    })
+    .filter(s => s.stationId && s.stationName);
+}
+
+// ─── 정류장 이름으로 검색 (Overpass 폴백, 검단 광역 8km) ─────
+export async function searchStationsByNameOsm(query: string): Promise<NearbyStop[]> {
+  const center = { lat: 37.594, lng: 126.710 };
+  const escaped = query.replace(/["\\]/g, "\\$&");
+  const overpassQuery = `[out:json][timeout:20];
+node["highway"="bus_stop"]["name"~"${escaped}",i](around:8000,${center.lat},${center.lng});
+out body;`;
+  try {
+    const res = await fetch(OVERPASS, {
+      method: "POST",
+      body: overpassQuery,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return [];
+    const data: { elements: OSMElement[] } = await res.json();
+    return data.elements
+      .filter(e => e.type === "node" && e.tags?.highway === "bus_stop" && e.tags.name)
+      .map(s => ({
+        stationId: s.tags!.ref ?? String(s.id),
+        osmNodeId: s.id,
+        stationName: s.tags!.name!,
+        lat: s.lat!,
+        lng: s.lon!,
+        distanceM: Math.round(haversineM(center.lat, center.lng, s.lat!, s.lon!)),
+        osmRoutes: [],
+      }))
+      .sort((a, b) => a.distanceM - b.distanceM)
+      .slice(0, 30);
+  } catch {
+    return [];
+  }
+}
+
+// ─── 노선번호로 노선 검색 (TAGO 기반, 부분 일치) ─────────────
+export interface RouteSearchResult {
+  routeId: string;
+  routeNo: string;
+  routeName: string;
+  startStation: string;
+  endStation: string;
+}
+export async function searchRoutesByQuery(query: string, cityCode = "30"): Promise<RouteSearchResult[]> {
+  const items = await apiFetch("tagoRoutes", { cityCode, routeNo: query, numOfRows: "20" });
+  return items
+    .map(d => ({
+      routeId: d.routeid ?? d.routeId ?? "",
+      routeNo: d.routeno ?? d.routeNo ?? "",
+      routeName: d.routenm ?? d.routeName ?? "",
+      startStation: d.startnodenm ?? d.startNodeNm ?? "",
+      endStation: d.endnodenm ?? d.endNodeNm ?? "",
+    }))
+    .filter(r => r.routeId && r.routeNo);
+}
+
 // ─── TAGO: routeId로 전 정류장 목록 조회 ─────────────────────
 export async function fetchStationsByRouteTago(routeId: string, cityCode = "30"): Promise<RouteStation[]> {
   const items = await apiFetch("tagoRouteStations", { cityCode, routeId, numOfRows: "100" });
