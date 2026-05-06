@@ -8,7 +8,6 @@
  *   app/api/cron/realestate/route.ts                (Vercel Cron)
  *   app/api/admin/realestate/run-batch/route.ts     (어드민 수동 실행)
  */
-
 // ── API 엔드포인트 ──────────────────────────────────────────────
 // data.go.kr HTTPS 엔드포인트 (구 openapi.molit.go.kr는 해외에서 접근 불가)
 const TRADE_API  = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
@@ -143,7 +142,8 @@ async function callMolit(
   numOfRows: number,
 ): Promise<{ items: RawApiItem[]; totalCount: number }> {
   const params = new URLSearchParams({
-    serviceKey: apiKey,
+    // data.go.kr 포털 키는 URL 인코딩 상태 → 디코딩 후 URLSearchParams 재인코딩
+    serviceKey: apiKey.includes('%') ? decodeURIComponent(apiKey) : apiKey,
     LAWD_CD:    lawdCd,
     DEAL_YMD:   dealYmd,
     pageNo:     String(pageNo),
