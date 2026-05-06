@@ -10,8 +10,9 @@
  */
 
 // ── API 엔드포인트 ──────────────────────────────────────────────
-const TRADE_API  = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
-const RENTAL_API = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcApartRent";
+// data.go.kr HTTPS 엔드포인트 (구 openapi.molit.go.kr는 해외에서 접근 불가)
+const TRADE_API  = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
+const RENTAL_API = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcApartRent";
 
 // 인천광역시 서구 LAWD_CD (5자리 시군구 코드, 2018년 이후 적용)
 export const LAWD_CD_SEOGU = "28260";
