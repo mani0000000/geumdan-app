@@ -10,7 +10,7 @@
  */
 // ── API 엔드포인트 ──────────────────────────────────────────────
 // data.go.kr HTTPS 엔드포인트 (구 openapi.molit.go.kr는 해외에서 접근 불가)
-const TRADE_API  = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
+const TRADE_API  = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcAptTrade";
 const RENTAL_API = "https://apis.data.go.kr/1613000/RTMSOBJSvc/getRTMSDataSvcApartRent";
 
 // 인천광역시 서구 LAWD_CD (5자리 시군구 코드, 2018년 이후 적용)
@@ -218,7 +218,7 @@ function mapTrade(item: RawApiItem): TradeRow | null {
   if (!aptName || !dong || !sqm || !amount || !year || !month) return null;
 
   const cancelDateRaw = pickStr(item, "cdealDay");
-  const cancelYn      = (pickStr(item, "cdealType") === "O") || !!cancelDateRaw;
+  const cancelYn      = (pickStr(item, "cdealType", "해제여부") === "O") || !!cancelDateRaw;
 
   return {
     apt_name:     aptName,
