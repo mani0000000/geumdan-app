@@ -48,29 +48,12 @@ interface Broadcaster {
 }
 
 // ─── 헬퍼 ────────────────────────────────────────────────────
-function nameToColor(name: string): string {
-  const palette = ["#1e40af", "#6d28d9", "#be185d", "#065f46", "#b45309", "#991b1b", "#0e7490", "#4d7c0f"];
-  let h = 0;
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
-  return palette[Math.abs(h) % palette.length];
-}
-
 function getInitials(name: string): string {
   const cleaned = name.trim();
   const parts = cleaned.split(/\s+/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   if (/[가-힣]/.test(cleaned)) return cleaned.slice(0, 2);
   return cleaned.slice(0, 3).toUpperCase();
-}
-
-function darken(hex: string, amount = 0.35): string {
-  const m = hex.replace("#", "").match(/^([0-9a-f]{6})$/i);
-  if (!m) return hex;
-  const n = parseInt(m[1], 16);
-  const r = Math.max(0, Math.floor(((n >> 16) & 0xff) * (1 - amount)));
-  const g = Math.max(0, Math.floor(((n >> 8) & 0xff) * (1 - amount)));
-  const b = Math.max(0, Math.floor((n & 0xff) * (1 - amount)));
-  return `rgb(${r}, ${g}, ${b})`;
 }
 
 function formatDateBadge(iso: string): string {
@@ -98,20 +81,19 @@ function isToday(iso: string): boolean {
 }
 
 // ─── 팀 로고 ──────────────────────────────────────────────────
-function TeamCrest({ team, fallbackName, size = 52 }: { team: Team | null; fallbackName: string; size?: number }) {
+function TeamCrest({ team, fallbackName, size = 48 }: { team: Team | null; fallbackName: string; size?: number }) {
   const name = team?.name ?? fallbackName;
   const logo = team?.logo_url ?? null;
-  const bg = team?.primary_color ?? nameToColor(name);
   const abbr = team?.short_name ?? getInitials(name);
+  const fg = team?.primary_color ?? "#374151"; // gray-700 default
   return (
     <div
-      className="rounded-full flex items-center justify-center font-black overflow-hidden ring-2 ring-white/20 shadow-lg"
+      className="rounded-full bg-white border border-gray-200 flex items-center justify-center font-extrabold overflow-hidden"
       style={{
         width: size,
         height: size,
-        background: logo ? "#ffffff" : bg,
-        color: "#ffffff",
-        fontSize: Math.floor(size * 0.32),
+        fontSize: Math.floor(size * 0.3),
+        color: fg,
       }}
     >
       {logo ? (
@@ -136,22 +118,22 @@ function StatusBadge({ match }: { match: SportsMatch }) {
   }
   if (match.status === "finished") {
     return (
-      <span className="text-[10px] font-bold text-white/90 bg-white/15 px-2 py-0.5 rounded-full">종료</span>
+      <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">종료</span>
     );
   }
   if (match.status === "cancelled") {
     return (
-      <span className="text-[10px] font-bold text-white/80 bg-white/10 px-2 py-0.5 rounded-full">취소</span>
+      <span className="text-[10px] font-bold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">취소</span>
     );
   }
   if (isToday(match.match_date)) {
     return (
-      <span className="text-[10px] font-black text-white bg-blue-500 px-2 py-0.5 rounded-full">오늘</span>
+      <span className="text-[10px] font-black text-white bg-blue-500 px-1.5 py-0.5 rounded-full">오늘</span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white/85 bg-white/10 px-2 py-0.5 rounded-full">
-      <Calendar size={10} /> {formatDateBadge(match.match_date)}
+    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full">
+      <Calendar size={9} /> {formatDateBadge(match.match_date)}
     </span>
   );
 }
@@ -170,30 +152,21 @@ function MatchCard({
   league: League | null;
   broadcaster: Broadcaster | null;
 }) {
-  const baseColor = homeTeam?.primary_color ?? awayTeam?.primary_color ?? nameToColor(m.sport);
-  const gradient = `linear-gradient(135deg, ${baseColor} 0%, ${darken(baseColor, 0.55)} 100%)`;
   const hasScore = m.home_score != null && m.away_score != null;
   const showScore = hasScore && (m.status === "live" || m.status === "finished");
   const leagueName = league?.name ?? m.sport;
   const broadcastName = broadcaster?.name ?? m.broadcast;
 
   return (
-    <div
-      className="shrink-0 w-[280px] rounded-2xl overflow-hidden shadow-lg flex flex-col"
-      style={{ background: gradient }}
-    >
+    <div className="shrink-0 w-[280px] rounded-2xl overflow-hidden bg-white border border-gray-200 shadow-sm flex flex-col">
       {/* 헤더 */}
-      <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
+      <div className="px-4 pt-3 pb-2 flex items-center justify-between">
         <div className="flex items-center gap-1.5 min-w-0">
           {league?.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={league.logo_url}
-              alt={leagueName}
-              className="w-4 h-4 object-contain rounded-sm bg-white/95 p-[1px]"
-            />
+            <img src={league.logo_url} alt={leagueName} className="w-4 h-4 object-contain rounded-sm" />
           ) : null}
-          <span className="text-[11px] font-black text-white/95 tracking-wide truncate">{leagueName}</span>
+          <span className="text-[11px] font-bold text-gray-500 tracking-wide truncate">{leagueName}</span>
         </div>
         <StatusBadge match={m} />
       </div>
@@ -202,7 +175,7 @@ function MatchCard({
       <div className="px-3 pt-1 pb-3 flex items-center justify-between gap-2">
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
           <TeamCrest team={homeTeam} fallbackName={m.home_team} />
-          <p className="text-[11px] font-bold text-white text-center leading-tight line-clamp-2 max-w-[88px]">
+          <p className="text-[11px] font-semibold text-gray-900 text-center leading-tight line-clamp-2 max-w-[88px]">
             {m.home_team}
           </p>
         </div>
@@ -210,27 +183,27 @@ function MatchCard({
         <div className="flex flex-col items-center justify-center px-1 min-w-[64px]">
           {showScore ? (
             <div className="flex items-baseline gap-1.5">
-              <span className="text-[26px] font-black text-white leading-none">{m.home_score}</span>
-              <span className="text-[15px] font-black text-white/50">:</span>
-              <span className="text-[26px] font-black text-white leading-none">{m.away_score}</span>
+              <span className="text-[26px] font-black text-gray-900 leading-none">{m.home_score}</span>
+              <span className="text-[15px] font-black text-gray-300">:</span>
+              <span className="text-[26px] font-black text-gray-900 leading-none">{m.away_score}</span>
             </div>
           ) : (
             <>
-              <span className="text-[10px] font-bold text-white/70 leading-none">VS</span>
-              <span className="text-[16px] font-black text-white leading-tight mt-1">
+              <span className="text-[10px] font-bold text-gray-400 leading-none">VS</span>
+              <span className="text-[16px] font-extrabold text-gray-900 leading-tight mt-1">
                 {formatKickoffTime(m.match_date)}
               </span>
             </>
           )}
-          {m.status === "finished" && <span className="text-[9px] font-bold text-white/60 mt-1">최종</span>}
+          {m.status === "finished" && <span className="text-[9px] font-semibold text-gray-400 mt-1">최종</span>}
           {m.status === "live" && (
-            <span className="text-[9px] font-bold text-red-200 mt-1 animate-pulse">진행 중</span>
+            <span className="text-[9px] font-bold text-red-500 mt-1 animate-pulse">진행 중</span>
           )}
         </div>
 
         <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
           <TeamCrest team={awayTeam} fallbackName={m.away_team} />
-          <p className="text-[11px] font-bold text-white text-center leading-tight line-clamp-2 max-w-[88px]">
+          <p className="text-[11px] font-semibold text-gray-900 text-center leading-tight line-clamp-2 max-w-[88px]">
             {m.away_team}
           </p>
         </div>
@@ -238,15 +211,15 @@ function MatchCard({
 
       {/* 푸터 (방송사/경기장) */}
       {(broadcastName || m.venue) && (
-        <div className="mt-auto px-4 py-2.5 bg-black/25 backdrop-blur-sm flex items-center gap-2 text-[10.5px] text-white/85">
+        <div className="mt-auto px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-[10.5px] text-gray-500">
           {broadcastName && (
-            <span className="inline-flex items-center gap-1 font-semibold truncate">
+            <span className="inline-flex items-center gap-1 font-medium truncate">
               {broadcaster?.logo_url ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={broadcaster.logo_url}
                   alt={broadcastName}
-                  className="w-3.5 h-3.5 object-contain rounded-sm bg-white p-[1px]"
+                  className="w-3.5 h-3.5 object-contain rounded-sm"
                 />
               ) : (
                 <Tv size={11} />
@@ -254,7 +227,7 @@ function MatchCard({
               <span className="truncate">{broadcastName}</span>
             </span>
           )}
-          {broadcastName && m.venue && <span className="text-white/30">·</span>}
+          {broadcastName && m.venue && <span className="text-gray-300">·</span>}
           {m.venue && (
             <span className="inline-flex items-center gap-1 truncate min-w-0">
               <MapPin size={11} className="shrink-0" />
