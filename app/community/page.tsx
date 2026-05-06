@@ -5,10 +5,11 @@ import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
+  Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import Avatar from "@/components/ui/Avatar";
+import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
@@ -75,58 +76,99 @@ function PostCard({
   onHide: (id: string) => void;
   onReport: (id: string) => void;
 }) {
+  const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const images = post.images ?? [];
   return (
-    <div className="relative bg-white rounded-2xl px-4 py-4">
-      <button onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-        className="w-full text-left active:opacity-80 transition-opacity">
-        <div className="flex gap-3">
-          <Avatar src={post.authorAvatarUrl} size={32} alt={post.author} />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2 pr-8">
-              {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                {post.category}
-              </span>
-              {post.isHot && (
-                <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                  <Flame size={10} /> HOT
-                </span>
-              )}
+    <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
+      onClick={goDetail}>
+      <div className="flex gap-3">
+        <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
+        <div className="flex-1 min-w-0">
+          {/* Header: name · dong · time, with menu on the right */}
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{post.author}</span>
+              <span className="text-[13px] text-[#86868b]">· {post.authorDong}</span>
+              <span className="text-[13px] text-[#86868b]">· {formatRelativeTime(post.createdAt)}</span>
             </div>
-            <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-            <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
+            <div onClick={stop} className="shrink-0 -mt-1 -mr-1">
+              <PostMenu
+                onHide={() => onHide(post.id)}
+                onReport={() => onReport(post.id)}
+              />
+            </div>
           </div>
-          {post.images && post.images.length > 0 && (
-            <div className="shrink-0 w-[72px] h-[72px] rounded-xl overflow-hidden border border-[#e5e5ea]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+
+          {/* Category + flags */}
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            {post.isPinned && <Pin size={11} className="text-[#0071e3]" />}
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+              {post.category}
+            </span>
+            {post.isHot && (
+              <span className="flex items-center gap-0.5 text-[11px] font-bold text-[#F04452]">
+                <Flame size={10} /> HOT
+              </span>
+            )}
+          </div>
+
+          {/* Title + body */}
+          <p className="text-[15px] font-semibold text-[#1d1d1f] mt-2 leading-snug">{post.title}</p>
+          <p className="text-[14px] text-[#424245] mt-1 leading-relaxed line-clamp-3 whitespace-pre-line">
+            {post.content}
+          </p>
+
+          {/* Images */}
+          {images.length > 0 && (
+            <div
+              className={`mt-3 grid gap-1 rounded-xl overflow-hidden border border-[#e5e5ea] ${
+                images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-3"
+              }`}
+            >
+              {images.slice(0, 3).map((src, i) => (
+                <div
+                  key={i}
+                  className="relative bg-[#f5f5f7]"
+                  style={{ aspectRatio: images.length === 1 ? "16/10" : "1/1" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  {i === 2 && images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-[16px] font-bold">+{images.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
-        </div>
-        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
-          <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-          <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-          <div className="flex items-center gap-3 ml-auto">
-            <div className="flex items-center gap-1">
-              <ThumbsUp size={12} className="text-[#86868b]" />
-              <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <MessageSquare size={12} className="text-[#86868b]" />
-              <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Eye size={12} className="text-[#86868b]" />
-              <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
-            </div>
+
+          {/* Action row */}
+          <div className="flex items-center gap-1 mt-3 -ml-2">
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Heart size={17} />
+              <span className="text-[13px]">{post.likeCount}</span>
+            </button>
+            <button onClick={goDetail}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <MessageCircle size={17} />
+              <span className="text-[13px]">{post.commentCount}</span>
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Repeat2 size={17} />
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Send size={16} />
+            </button>
+            <span className="ml-auto flex items-center gap-1 text-[12px] text-[#86868b]">
+              <Eye size={12} /> {post.viewCount.toLocaleString()}
+            </span>
           </div>
         </div>
-      </button>
-      <div className="absolute top-3 right-3">
-        <PostMenu
-          onHide={() => onHide(post.id)}
-          onReport={() => onReport(post.id)}
-        />
       </div>
     </div>
   );
@@ -287,60 +329,36 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* Posts */}
-      <div className="px-4 pt-1 space-y-2">
+      {/* Posts — Threads-style flat feed */}
+      <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {loadingPosts ? (
           [1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
-              <div className="h-3 w-16 bg-[#f5f5f7] rounded-full" />
-              <div className="h-4 w-3/4 bg-[#f5f5f7] rounded" />
-              <div className="h-3 w-1/2 bg-[#f5f5f7] rounded" />
-            </div>
-          ))
-        ) : (
-          sorted.map(post => (
-            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-              <div className="flex items-center gap-2 mb-2">
-                {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                  {post.category}
-                </span>
-                {post.isHot && (
-                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                    <Flame size={10} /> HOT
-                  </span>
-                )}
-              </div>
-              <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-              <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
-              <div className="flex items-center gap-2 mt-3 pt-3 border-t border-[#f5f5f7]">
-                <Avatar src={post.authorAvatarUrl} size={20} alt={post.author} />
-                <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-                <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
-                  </div>
+            <div key={i} className="px-4 py-4 animate-pulse">
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#f5f5f7] shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 bg-[#f5f5f7] rounded" />
+                  <div className="h-4 w-3/4 bg-[#f5f5f7] rounded" />
+                  <div className="h-3 w-1/2 bg-[#f5f5f7] rounded" />
                 </div>
               </div>
-            </button>
+            </div>
           ))
-        )}
-        {!loadingPosts && sorted.length === 0 && (
-          <div className="bg-white rounded-2xl py-12 flex flex-col items-center gap-2">
+        ) : sorted.length === 0 ? (
+          <div className="py-12 flex flex-col items-center gap-2">
             <span className="text-3xl">📭</span>
             <p className="text-[14px] text-[#6e6e73]">아직 글이 없어요</p>
           </div>
+        ) : (
+          sorted.map(post => (
+            <PostCard
+              key={post.id}
+              post={post}
+              router={router}
+              onHide={handleHide}
+              onReport={id => setReportTarget(id)}
+            />
+          ))
         )}
       </div>
 

@@ -2,10 +2,11 @@
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ChevronLeft, ThumbsUp, MessageSquare, Share2,
-  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
+  ChevronLeft, Share2, Send,
+  MoreHorizontal, Flag, Bookmark, Trash2, Pencil, X, Check,
+  Heart, MessageCircle, Repeat2,
 } from "lucide-react";
-import Avatar from "@/components/ui/Avatar";
+import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import { PostMenu } from "@/components/ui/PostMenu";
@@ -356,157 +357,201 @@ function DetailContent() {
         </div>
       </div>
 
-      {/* Scrollable content */}
+      {/* Scrollable content — Threads-style */}
       <div className="flex-1 overflow-y-auto" onClick={() => setShowMenu(false)}>
-        <article className="px-5 py-5 border-b border-[#f5f5f7]">
-          <div className="flex items-center gap-2 mb-3">
-            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#0071e3]"}`}>
-              {post.category}
-            </span>
-            {post.isPinned && <span className="text-[12px] text-[#0071e3] font-medium">📌 공지</span>}
-          </div>
-
-          {/* 수정 모드 */}
-          {editMode ? (
-            <div className="space-y-3">
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={50}
-                className="w-full text-[20px] font-bold text-[#1d1d1f] outline-none border-b border-[#0071e3] pb-1" />
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                rows={6}
-                className="w-full text-[16px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-3 resize-none leading-relaxed" />
-              <div className="flex gap-2">
-                <button onClick={() => setEditMode(false)}
-                  className="flex-1 h-10 rounded-xl border border-[#d2d2d7] text-[14px] text-[#6e6e73] active:opacity-60">
-                  <X size={14} className="inline mr-1" />취소
-                </button>
-                <button onClick={saveEdit} disabled={savingEdit}
-                  className="flex-1 h-10 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
-                  <Check size={14} className="inline mr-1" />{savingEdit ? "저장 중..." : "저장"}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <>
-              <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
-              <div className="flex items-center gap-3 mb-5">
-                <Avatar src={post.authorAvatarUrl} size={36} alt={post.author} />
-                <div>
-                  <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
-                  <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
-                </div>
-              </div>
-              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-              {post.images && post.images.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {post.images.map((src, i) => (
-                    <img
-                      key={i}
-                      src={src}
-                      alt=""
-                      className="w-full rounded-xl border border-[#e5e5ea] object-cover"
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Reaction bar */}
-          {!editMode && (
-            <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
-              <button onClick={toggleLike}
-                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-                <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
-                <span className="text-[14px] font-semibold">{likeCount}</span>
-              </button>
-              <div className="flex items-center gap-1.5 text-[#6e6e73]">
-                <MessageSquare size={15} />
-                <span className="text-[14px]">{comments.length}</span>
-              </div>
-              {!isMyPost && (
-                <button
-                  onClick={() => setReportTarget({ kind: "post", id: postId })}
-                  className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60"
-                >
-                  <Flag size={14} />
-                  <span className="text-[13px]">신고</span>
-                </button>
+        {/* OP post (thread root) */}
+        <article className="px-4 pt-4 pb-2">
+          <div className="flex gap-3">
+            {/* Avatar column with thread-line extending below */}
+            <div className="flex flex-col items-center w-10 shrink-0">
+              <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
+              {!editMode && (comments.length > 0 || commentsLoading) && (
+                <div className="w-0.5 flex-1 bg-[#e5e5ea] mt-2" />
               )}
             </div>
-          )}
-        </article>
 
-        {/* Comments */}
-        <div className="px-5 py-4">
-          <p className="text-[15px] font-bold text-[#1d1d1f] mb-4">
-            {commentsLoading ? "댓글 로딩 중..." : `댓글 ${comments.length}개`}
-          </p>
-          <div className="space-y-5">
-            {comments.map(c => (
-              <div key={c.id} className="flex gap-3">
-                <Avatar src={c.authorAvatarUrl} size={32} alt={c.author} className="shrink-0" />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[14px] font-semibold text-[#1d1d1f]">{c.author}</span>
-                    <span className="text-[12px] text-[#86868b]">{c.authorDong}</span>
-                    <span className="text-[12px] text-[#86868b] ml-auto">{formatRelativeTime(c.createdAt)}</span>
-                  </div>
-                  {editCommentId === c.id ? (
-                    <div className="space-y-2">
-                      <textarea value={editCommentText} onChange={e => setEditCommentText(e.target.value)} rows={3}
-                        className="w-full text-[15px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-2 resize-none" />
-                      <div className="flex gap-2">
-                        <button onClick={() => setEditCommentId(null)}
-                          className="h-8 px-3 rounded-lg border border-[#d2d2d7] text-[13px] text-[#6e6e73] active:opacity-60">취소</button>
-                        <button
-                          onClick={async () => {
-                            if (!editCommentText.trim()) return;
-                            const ok = isMock ? true : await updateComment(c.id, editCommentText.trim());
-                            if (ok) {
-                              setComments(prev => prev.map(x => x.id === c.id ? { ...x, content: editCommentText.trim() } : x));
-                              setEditCommentId(null);
-                            }
-                          }}
-                          className="h-8 px-3 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold active:opacity-80">저장</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-[15px] text-[#1d1d1f] leading-relaxed">{c.content}</p>
-                  )}
-                  <div className="flex items-center gap-3 mt-2">
-                    <button onClick={() => handleCommentLike(c.id)} className="flex items-center gap-1 active:opacity-60">
-                      <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#0071e3] fill-[#0071e3]" : "text-[#86868b]"} />
-                      <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-                        {c.likeCount}
-                      </span>
+            <div className="flex-1 min-w-0 pb-3">
+              <div className="flex items-baseline gap-1.5 flex-wrap">
+                <span className="text-[15px] font-bold text-[#1d1d1f]">{post.author}</span>
+                <span className="text-[13px] text-[#86868b]">· {post.authorDong}</span>
+                <span className="text-[13px] text-[#86868b]">· {formatRelativeTime(post.createdAt)}</span>
+              </div>
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#0071e3]"}`}>
+                  {post.category}
+                </span>
+                {post.isPinned && <span className="text-[11px] text-[#0071e3] font-medium">📌 공지</span>}
+              </div>
+
+              {editMode ? (
+                <div className="space-y-3 mt-3">
+                  <input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={50}
+                    className="w-full text-[18px] font-bold text-[#1d1d1f] outline-none border-b border-[#0071e3] pb-1" />
+                  <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
+                    rows={6}
+                    className="w-full text-[15px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-3 resize-none leading-relaxed" />
+                  <div className="flex gap-2">
+                    <button onClick={() => setEditMode(false)}
+                      className="flex-1 h-10 rounded-xl border border-[#d2d2d7] text-[14px] text-[#6e6e73] active:opacity-60">
+                      <X size={14} className="inline mr-1" />취소
                     </button>
-                    {myCommentIds.has(c.id) && editCommentId !== c.id && (
-                      <>
-                        <button onClick={() => { setEditCommentId(c.id); setEditCommentText(c.content); }}
-                          className="flex items-center gap-0.5 text-[#86868b] active:opacity-60">
-                          <Pencil size={11} />
-                          <span className="text-[12px]">수정</span>
-                        </button>
-                        <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
-                          className="flex items-center gap-0.5 text-[#86868b] active:opacity-60 disabled:opacity-40">
-                          <Trash2 size={11} />
-                          <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
-                        </button>
-                      </>
+                    <button onClick={saveEdit} disabled={savingEdit}
+                      className="flex-1 h-10 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
+                      <Check size={14} className="inline mr-1" />{savingEdit ? "저장 중..." : "저장"}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <p className="text-[17px] font-semibold text-[#1d1d1f] mt-2 leading-snug">{post.title}</p>
+                  <p className="text-[15px] text-[#1d1d1f] leading-relaxed whitespace-pre-line mt-1.5">{post.content}</p>
+                  {post.images && post.images.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {post.images.map((src, i) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={i}
+                          src={src}
+                          alt=""
+                          className="w-full rounded-xl border border-[#e5e5ea] object-cover"
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-[12px] text-[#86868b] mt-3">조회 {post.viewCount.toLocaleString()}</p>
+
+                  {/* Action row */}
+                  <div className="flex items-center gap-1 mt-2 -ml-2">
+                    <button onClick={toggleLike}
+                      className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full active:bg-[#f5f5f7] ${liked ? "text-[#F04452]" : "text-[#6e6e73]"}`}>
+                      <Heart size={18} className={liked ? "fill-[#F04452]" : ""} />
+                      <span className="text-[13px]">{likeCount}</span>
+                    </button>
+                    <div className="flex items-center gap-1.5 px-2 py-1.5 text-[#6e6e73]">
+                      <MessageCircle size={18} />
+                      <span className="text-[13px]">{comments.length}</span>
+                    </div>
+                    <button className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+                      <Repeat2 size={18} />
+                    </button>
+                    <button className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+                      <Send size={17} />
+                    </button>
+                    {!isMyPost && (
+                      <button
+                        onClick={() => setReportTarget({ kind: "post", id: postId })}
+                        className="ml-auto flex items-center gap-1 px-2 py-1.5 rounded-full text-[#86868b] active:bg-[#f5f5f7]">
+                        <Flag size={13} />
+                        <span className="text-[12px]">신고</span>
+                      </button>
                     )}
                   </div>
-                </div>
-              </div>
-            ))}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        </article>
+
+        {/* Comments — same thread style, no indentation, connected by vertical line */}
+        {commentsLoading ? (
+          <div className="px-4 pb-4 flex gap-3 animate-pulse">
+            <div className="w-10 h-10 rounded-full bg-[#f5f5f7] shrink-0" />
+            <div className="flex-1 space-y-2 pt-1">
+              <div className="h-3 w-40 bg-[#f5f5f7] rounded" />
+              <div className="h-3 w-3/4 bg-[#f5f5f7] rounded" />
+            </div>
+          </div>
+        ) : comments.length === 0 ? (
+          <div className="px-5 pb-8 pt-2 text-center">
+            <p className="text-[13px] text-[#86868b]">아직 댓글이 없어요. 첫 댓글을 남겨보세요!</p>
+          </div>
+        ) : (
+          <div className="px-4 pb-4">
+            {comments.map((c, idx) => {
+              const isLast = idx === comments.length - 1;
+              const isLiked = commentLikes.has(c.id);
+              const isMine = myCommentIds.has(c.id);
+              const isEditing = editCommentId === c.id;
+              return (
+                <div key={c.id} className="flex gap-3">
+                  {/* Avatar column with line continuing to next comment */}
+                  <div className="flex flex-col items-center w-10 shrink-0">
+                    <ThreadAvatar name={c.author} src={c.authorAvatarUrl} size={36} />
+                    {!isLast && <div className="w-0.5 flex-1 bg-[#e5e5ea] mt-2" />}
+                  </div>
+
+                  <div className="flex-1 min-w-0 pb-4">
+                    <div className="flex items-baseline gap-1.5 flex-wrap">
+                      <span className="text-[14px] font-bold text-[#1d1d1f]">{c.author}</span>
+                      <span className="text-[12px] text-[#86868b]">· {c.authorDong}</span>
+                      <span className="text-[12px] text-[#86868b]">· {formatRelativeTime(c.createdAt)}</span>
+                    </div>
+
+                    {isEditing ? (
+                      <div className="space-y-2 mt-1.5">
+                        <textarea value={editCommentText} onChange={e => setEditCommentText(e.target.value)} rows={3}
+                          className="w-full text-[15px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-2 resize-none" />
+                        <div className="flex gap-2">
+                          <button onClick={() => setEditCommentId(null)}
+                            className="h-8 px-3 rounded-lg border border-[#d2d2d7] text-[13px] text-[#6e6e73] active:opacity-60">취소</button>
+                          <button
+                            onClick={async () => {
+                              if (!editCommentText.trim()) return;
+                              const ok = isMock ? true : await updateComment(c.id, editCommentText.trim());
+                              if (ok) {
+                                setComments(prev => prev.map(x => x.id === c.id ? { ...x, content: editCommentText.trim() } : x));
+                                setEditCommentId(null);
+                              }
+                            }}
+                            className="h-8 px-3 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold active:opacity-80">저장</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-[15px] text-[#1d1d1f] leading-relaxed mt-1 whitespace-pre-line">{c.content}</p>
+                    )}
+
+                    <div className="flex items-center gap-1 mt-1.5 -ml-2">
+                      <button onClick={() => handleCommentLike(c.id)}
+                        className={`flex items-center gap-1 px-2 py-1.5 rounded-full active:bg-[#f5f5f7] ${isLiked ? "text-[#F04452]" : "text-[#86868b]"}`}>
+                        <Heart size={14} className={isLiked ? "fill-[#F04452]" : ""} />
+                        <span className="text-[12px]">{c.likeCount}</span>
+                      </button>
+                      {isMine && !isEditing && (
+                        <>
+                          <button onClick={() => { setEditCommentId(c.id); setEditCommentText(c.content); }}
+                            className="flex items-center gap-1 px-2 py-1.5 rounded-full text-[#86868b] active:bg-[#f5f5f7]">
+                            <Pencil size={12} />
+                            <span className="text-[12px]">수정</span>
+                          </button>
+                          <button onClick={() => handleDeleteComment(c.id)} disabled={deletingCommentId === c.id}
+                            className="flex items-center gap-1 px-2 py-1.5 rounded-full text-[#86868b] active:bg-[#f5f5f7] disabled:opacity-40">
+                            <Trash2 size={12} />
+                            <span className="text-[12px]">{deletingCommentId === c.id ? "삭제 중" : "삭제"}</span>
+                          </button>
+                        </>
+                      )}
+                      {!isMine && (
+                        <button onClick={() => setReportTarget({ kind: "comment", id: c.id })}
+                          className="flex items-center gap-1 px-2 py-1.5 rounded-full text-[#86868b] active:bg-[#f5f5f7]">
+                          <Flag size={12} />
+                          <span className="text-[12px]">신고</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="h-24" />
       </div>
 
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <Avatar src={anonymous ? null : meAvatar} size={32} alt={meNickname} className="shrink-0" />
+          <ThreadAvatar name={anonymous ? "익명" : meNickname} src={anonymous ? null : meAvatar} size={32} />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
