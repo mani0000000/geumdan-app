@@ -1,20 +1,28 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
+  Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import ThreadAvatar from "@/components/ui/ThreadAvatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchDBPosts } from "@/lib/db/posts";
+import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
+import {
+  fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
-import type { CommunityCategory, NewsType } from "@/lib/types";
+import type { CommunityCategory, NewsType, Post } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────────
@@ -33,27 +41,213 @@ const catColor: Record<CommunityCategory, string> = {
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
 };
 
+type CommSortKey = "latest" | "likes" | "comments" | "views";
+const SORT_OPTS: { key: CommSortKey; label: string }[] = [
+  { key: "latest",   label: "최신순" },
+  { key: "likes",    label: "반응순" },
+  { key: "comments", label: "댓글순" },
+  { key: "views",    label: "조회수순" },
+];
+
+function hotScore(p: { viewCount: number; likeCount: number; commentCount: number }) {
+  return p.viewCount + p.likeCount * 5 + p.commentCount * 3;
+}
+
+// ─── 뉴스 조회 추적 (localStorage) ──────────────────────────
+function getNewsViews(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem("newsViews") ?? "{}") as Record<string, number>; }
+  catch { return {}; }
+}
+function trackNewsView(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const v = getNewsViews();
+    v[id] = (v[id] ?? 0) + 1;
+    localStorage.setItem("newsViews", JSON.stringify(v));
+  } catch { /* ignore */ }
+}
+
+function PostCard({
+  post, router, onHide, onReport,
+}: {
+  post: Post;
+  router: ReturnType<typeof useRouter>;
+  onHide: (id: string) => void;
+  onReport: (id: string) => void;
+}) {
+  const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const images = post.images ?? [];
+  return (
+    <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
+      onClick={goDetail}>
+      <div className="flex gap-3">
+        <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
+        <div className="flex-1 min-w-0">
+          {/* Header: name · dong · time, with menu on the right */}
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{post.author}</span>
+              <span className="text-[13px] text-[#86868b]">· {post.authorDong}</span>
+              <span className="text-[13px] text-[#86868b]">· {formatRelativeTime(post.createdAt)}</span>
+            </div>
+            <div onClick={stop} className="shrink-0 -mt-1 -mr-1">
+              <PostMenu
+                onHide={() => onHide(post.id)}
+                onReport={() => onReport(post.id)}
+              />
+            </div>
+          </div>
+
+          {/* Category + flags */}
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            {post.isPinned && <Pin size={11} className="text-[#0071e3]" />}
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+              {post.category}
+            </span>
+            {post.isHot && (
+              <span className="flex items-center gap-0.5 text-[11px] font-bold text-[#F04452]">
+                <Flame size={10} /> HOT
+              </span>
+            )}
+          </div>
+
+          {/* Title + body */}
+          <p className="text-[15px] font-semibold text-[#1d1d1f] mt-2 leading-snug">{post.title}</p>
+          <p className="text-[14px] text-[#424245] mt-1 leading-relaxed line-clamp-3 whitespace-pre-line">
+            {post.content}
+          </p>
+
+          {/* Images */}
+          {images.length > 0 && (
+            <div
+              className={`mt-3 grid gap-1 rounded-xl overflow-hidden border border-[#e5e5ea] ${
+                images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-3"
+              }`}
+            >
+              {images.slice(0, 3).map((src, i) => (
+                <div
+                  key={i}
+                  className="relative bg-[#f5f5f7]"
+                  style={{ aspectRatio: images.length === 1 ? "16/10" : "1/1" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  {i === 2 && images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-[16px] font-bold">+{images.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Action row */}
+          <div className="flex items-center gap-1 mt-3 -ml-2">
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Heart size={17} />
+              <span className="text-[13px]">{post.likeCount}</span>
+            </button>
+            <button onClick={goDetail}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <MessageCircle size={17} />
+              <span className="text-[13px]">{post.commentCount}</span>
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Repeat2 size={17} />
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-[#6e6e73] active:bg-[#f5f5f7]">
+              <Send size={16} />
+            </button>
+            <span className="ml-auto flex items-center gap-1 text-[12px] text-[#86868b]">
+              <Eye size={12} /> {post.viewCount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CommunityTab() {
   const router = useRouter();
-  const [active, setActive] = useState<CommunityCategory>("전체");
+  const searchParams = useSearchParams();
+  const refreshKey = searchParams.get("refresh");
+  const [active, setActive] = useState<CommunityCategory>(() => {
+    if (typeof window === "undefined") return "전체";
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c && (categories as string[]).includes(c)) return c as CommunityCategory;
+    return "전체";
+  });
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [sort, setSort] = useState<CommSortKey>("latest");
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
+  // 글쓰기 후 ?refresh=... 가 붙어 돌아오면 목록을 다시 가져온다.
   useEffect(() => {
     fetchDBPosts(undefined, 50).then(data => {
       setDbPosts(data);
       setLoadingPosts(false);
     });
+  }, [refreshKey]);
+
+  useEffect(() => {
+    fetchHiddenPostIds(getMyNickname()).then(setHiddenIds);
   }, []);
 
-  // DB 포스트 최신순 + 목업 포스트 (고정/HOT 우선)
-  const allPosts = [
+  const handleHide = async (id: string) => {
+    if (isMockPostId(id)) {
+      setHiddenIds(prev => new Set(prev).add(id));
+      return;
+    }
+    const ok = await hidePost(id, getMyNickname());
+    if (ok) setHiddenIds(prev => new Set(prev).add(id));
+  };
+
+  const handleReportSubmit = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    if (!isMockPostId(reportTarget)) {
+      await reportPost({
+        postId: reportTarget,
+        reporterNickname: getMyNickname(),
+        reason,
+        detail,
+      });
+    }
+  };
+
+  const allPosts: Post[] = [
     ...dbPosts,
     ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
-  ];
-  const filtered = active === "전체"
-    ? allPosts
+  ].filter(p => !hiddenIds.has(p.id));
+
+  // Top 3 hot posts across all categories (by composite score)
+  const hotPosts = [...allPosts]
+    .sort((a, b) => hotScore(b) - hotScore(a))
+    .slice(0, 3);
+
+  const hotIds = new Set(hotPosts.map(p => p.id));
+
+  // Category filter then sort — exclude hot posts from main list when on 전체
+  const categoryFiltered = active === "전체"
+    ? allPosts.filter(p => !hotIds.has(p.id))
     : allPosts.filter(p => p.category === active);
+
+  const sorted = [...categoryFiltered].sort((a, b) => {
+    if (sort === "likes")    return b.likeCount    - a.likeCount;
+    if (sort === "comments") return b.commentCount - a.commentCount;
+    if (sort === "views")    return b.viewCount    - a.viewCount;
+    return 0; // latest: DB posts already ordered by created_at desc
+  });
+
+  const rankColors = ["#F04452", "#F97316", "#F59E0B"];
 
   return (
     <div className="pb-4">
@@ -69,55 +263,111 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* Posts */}
-      <div className="px-4 pt-3 space-y-2">
-        {loadingPosts ? (
-          [1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
-              <div className="h-3 w-16 bg-[#f5f5f7] rounded-full" />
-              <div className="h-4 w-3/4 bg-[#f5f5f7] rounded" />
-              <div className="h-3 w-1/2 bg-[#f5f5f7] rounded" />
-            </div>
-          ))
-        ) : (
-          filtered.map(post => (
-            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-[#f5f5f7] transition-colors">
-              <div className="flex items-center gap-2 mb-2">
-                {post.isPinned && <Pin size={12} className="text-[#0071e3]" />}
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                  {post.category}
+      {/* HOT 인기글 — 전체 탭에서만 표시 */}
+      {active === "전체" && !loadingPosts && hotPosts.length > 0 && (
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-[#F04452]" />
+            <span className="text-[15px] font-extrabold text-[#1d1d1f]">인기글 TOP 3</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+            {hotPosts.map((post, idx) => (
+              <button key={post.id}
+                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-[#f9f9f9] transition-colors">
+                <span className="text-[18px] font-black w-6 text-center shrink-0"
+                  style={{ color: rankColors[idx] }}>
+                  {idx + 1}
                 </span>
-                {post.isHot && (
-                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-[#F04452]">
-                    <Flame size={10} /> HOT
-                  </span>
-                )}
-              </div>
-              <p className="text-[16px] font-medium text-[#1d1d1f] leading-snug">{post.title}</p>
-              <p className="text-[14px] text-[#6e6e73] mt-1 line-clamp-1">{post.content}</p>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[#f5f5f7]">
-                <span className="text-[13px] text-[#6e6e73]">{post.author} · {post.authorDong}</span>
-                <span className="text-[13px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.likeCount}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${catColor[post.category]}`}>
+                      {post.category}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.commentCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} className="text-[#86868b]" />
-                    <span className="text-[13px] text-[#86868b]">{post.viewCount.toLocaleString()}</span>
+                  <p className="text-[14px] font-semibold text-[#1d1d1f] truncate leading-snug">{post.title}</p>
+                  <div className="flex items-center gap-2.5 mt-1">
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <Eye size={10} />{post.viewCount.toLocaleString()}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <ThumbsUp size={10} />{post.likeCount}
+                    </span>
+                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
+                      <MessageSquare size={10} />{post.commentCount}
+                    </span>
+                    <span className="text-[11px] text-[#86868b] ml-auto">{formatRelativeTime(post.createdAt)}</span>
                   </div>
                 </div>
-              </div>
+                {post.images && post.images.length > 0 && (
+                  <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                    <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 정렬 필터 */}
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <span className="text-[13px] font-medium text-[#86868b] shrink-0">
+          {active === "전체" ? `전체 ${sorted.length}개` : `${active} ${sorted.length}개`}
+        </span>
+        <div className="ml-auto flex gap-1.5">
+          {SORT_OPTS.map(opt => (
+            <button key={opt.key} onClick={() => setSort(opt.key)}
+              className={`h-7 px-2.5 rounded-full text-[12px] font-semibold transition-colors ${
+                sort === opt.key
+                  ? "bg-[#1d1d1f] text-white"
+                  : "bg-[#f5f5f7] text-[#424245]"
+              }`}>
+              {opt.label}
             </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Posts — Threads-style flat feed */}
+      <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {loadingPosts ? (
+          [1,2,3].map(i => (
+            <div key={i} className="px-4 py-4 animate-pulse">
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#f5f5f7] shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-32 bg-[#f5f5f7] rounded" />
+                  <div className="h-4 w-3/4 bg-[#f5f5f7] rounded" />
+                  <div className="h-3 w-1/2 bg-[#f5f5f7] rounded" />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : sorted.length === 0 ? (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <span className="text-3xl">📭</span>
+            <p className="text-[14px] text-[#6e6e73]">아직 글이 없어요</p>
+          </div>
+        ) : (
+          sorted.map(post => (
+            <PostCard
+              key={post.id}
+              post={post}
+              router={router}
+              onHide={handleHide}
+              onReport={id => setReportTarget(id)}
+            />
           ))
         )}
       </div>
+
+      <ReportModal
+        open={!!reportTarget}
+        target="post"
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }
@@ -174,6 +424,19 @@ function NewsTab() {
 
   const instaItems = newsItems.filter(n => n.type === "인스타");
   const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
+
+  // 일주일 내 기사 중 클릭 수(localStorage) 기준 TOP 3
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const views = !loading ? getNewsViews() : {};
+  const hotNews = !loading
+    ? [...newsSource]
+        .filter(a => new Date(a.publishedAt).getTime() > oneWeekAgo)
+        .sort((a, b) => {
+          const vDiff = (views[b.id] ?? 0) - (views[a.id] ?? 0);
+          return vDiff !== 0 ? vDiff : new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        })
+        .slice(0, 3)
+    : [];
 
   return (
     <div className="pb-6">
@@ -232,6 +495,45 @@ function NewsTab() {
         </div>
       </div>
 
+      {/* ── 핫뉴스 TOP 3 ── */}
+      {!loading && hotNews.length > 0 && (
+        <div className="px-4 pt-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-[#F04452]" />
+            <span className="text-[15px] font-extrabold text-[#1d1d1f]">이번 주 핫뉴스</span>
+            <span className="text-[12px] text-[#86868b]">많이 본 기사</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] shadow-sm">
+            {hotNews.map((item, idx) => {
+              const rankColors = ["#F04452", "#F97316", "#F59E0B"];
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="flex items-center gap-3 px-4 py-3.5 active:bg-[#f9f9f9] transition-colors">
+                  <span className="text-[18px] font-black w-6 text-center shrink-0"
+                    style={{ color: rankColors[idx] }}>
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
+                      <span className="text-[11px] text-[#86868b]">·</span>
+                      <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+                    </div>
+                  </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── 뉴스 ── */}
       <div className="pt-5">
         <div className="flex items-center justify-between px-4 mb-3">
@@ -266,13 +568,21 @@ function NewsTab() {
           ) : (
             newsSource.slice(0, newsLimit).map((item) => (
               <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                className="bg-white rounded-2xl px-4 py-3.5 flex flex-col gap-1.5 active:opacity-80 shadow-sm">
-                <p className="text-[13px] font-semibold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
-                  <span className="text-[11px] text-[#86868b]">·</span>
-                  <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-                  <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
+                onClick={() => trackNewsView(item.id)}
+                className="bg-white rounded-2xl px-4 py-3.5 flex gap-3 items-center active:opacity-80 shadow-sm">
+                {item.thumbnail && (
+                  <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-[#e5e5ea]">
+                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-semibold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
+                    <span className="text-[11px] text-[#86868b]">·</span>
+                    <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+                    <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
+                  </div>
                 </div>
               </a>
             ))
@@ -960,7 +1270,7 @@ function SoikContent() {
   });
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-40">
       <Header title="소식" />
 
       {/* Main tabs */}
@@ -980,7 +1290,7 @@ function SoikContent() {
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (
         <button onClick={() => router.push("/community/write/")}
-          className="fixed bottom-[74px] right-4 w-14 h-14 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:bg-[#0058b0] z-40">
+          className="fixed bottom-[100px] right-5 w-14 h-14 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:bg-[#0058b0] z-40">
           <Plus size={24} className="text-white" />
         </button>
       )}

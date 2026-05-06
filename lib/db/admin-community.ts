@@ -8,11 +8,13 @@ export interface AdminPost {
   author: string;
   author_dong: string;
   is_anonymous: boolean;
-  view_count: number
+  view_count: number;
   like_count: number;
   comment_count: number;
+  images?: string[];
   is_pinned: boolean;
   is_hot: boolean;
+  is_hidden?: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -1,9 +1,10 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -23,8 +24,18 @@ export default function WritePage() {
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
+  const [authorDong, setAuthorDong] = useState("검단");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setNickname(p.nickname);
+      setAuthorDong(p.dong);
+      setAvatarUrl(p.avatar_url);
+    });
+  }, []);
 
   const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
@@ -33,19 +44,21 @@ export default function WritePage() {
     setSubmitting(true);
     setError("");
     try {
-      const post = await createPost({
+      const uid = await getOrCreateUserId();
+      const result = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
         author: nickname.trim() || "검단주민",
-        authorDong: "검단",
+        authorDong,
+        authorAvatarUrl: avatarUrl,
+        userId: uid,
         isAnonymous: anonymous,
       });
-      if (post) {
-        saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
+      if (result?.post) {
+        saveMyPostId(result.post.id);
+        router.push(`/community/detail/?id=${result.post.id}`);
       } else {
-        // Supabase 미설정 시 목록으로 이동
         router.push("/community/");
       }
     } catch {
