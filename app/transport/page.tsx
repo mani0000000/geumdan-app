@@ -1193,7 +1193,7 @@ export default function TransportPage() {
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
-      <Header title="교통 정보" />
+      <Header title="여행/교통" />
 
       {/* 플로팅 새로고침 버튼 — 네비(bottom-5 + h-64px = 84px) 위로 16px 여백 = 100px */}
       <button

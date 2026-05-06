@@ -5,7 +5,7 @@ import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
-  Heart, MessageCircle, Repeat2, Send,
+  Heart, MessageCircle, Repeat2, Send, Crown, Newspaper,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -247,8 +247,6 @@ function CommunityTab() {
     return 0; // latest: DB posts already ordered by created_at desc
   });
 
-  const rankColors = ["#F04452", "#F97316", "#F59E0B"];
-
   return (
     <div className="pb-4">
       {/* Category filter */}
@@ -263,47 +261,68 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* HOT 인기글 — 전체 탭에서만 표시 */}
-      {active === "전체" && !loadingPosts && hotPosts.length > 0 && (
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 mb-2.5">
+      {/* 인기 TOP3 — 전체 탭에서만 노출, 그라데이션 패널 */}
+      {active === "전체" && !loadingPosts && hotPosts.length === 3 && (
+        <div className="mx-4 mt-3 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border border-indigo-200/60 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-1.5 px-4 pt-3.5 pb-2.5">
             <Flame size={15} className="text-[#F04452]" />
-            <span className="text-[15px] font-extrabold text-[#1d1d1f]">인기글 TOP 3</span>
+            <span className="text-[13px] font-black text-[#1d1d1f] tracking-tight">인기글 TOP 3</span>
+            <span className="text-[10px] font-semibold text-[#6e6e73] bg-white/60 px-1.5 py-0.5 rounded-full">실시간</span>
           </div>
-          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-            {hotPosts.map((post, idx) => (
-              <button key={post.id}
-                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-left active:bg-[#f9f9f9] transition-colors">
-                <span className="text-[18px] font-black w-6 text-center shrink-0"
-                  style={{ color: rankColors[idx] }}>
-                  {idx + 1}
+
+          {/* 1등 — 강조 */}
+          <button
+            onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
+            className="w-full text-left px-4 pb-3 active:opacity-80"
+          >
+            <div className="bg-white rounded-2xl p-3.5 shadow-[0_2px_10px_rgba(79,70,229,0.12)] border border-white">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="flex items-center gap-1 text-[11px] font-black bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                  <Crown size={10} className="-mt-0.5" /> 1위
                 </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${catColor[post.category]}`}>
-                      {post.category}
-                    </span>
-                  </div>
-                  <p className="text-[14px] font-semibold text-[#1d1d1f] truncate leading-snug">{post.title}</p>
-                  <div className="flex items-center gap-2.5 mt-1">
-                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
-                      <Eye size={10} />{post.viewCount.toLocaleString()}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
-                      <ThumbsUp size={10} />{post.likeCount}
-                    </span>
-                    <span className="flex items-center gap-0.5 text-[11px] text-[#86868b]">
-                      <MessageSquare size={10} />{post.commentCount}
-                    </span>
-                    <span className="text-[11px] text-[#86868b] ml-auto">{formatRelativeTime(post.createdAt)}</span>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[hotPosts[0].category]}`}>
+                  {hotPosts[0].category}
+                </span>
+              </div>
+              <p className="text-[16px] font-bold text-[#1d1d1f] leading-snug line-clamp-2">{hotPosts[0].title}</p>
+              <div className="flex items-center gap-3 mt-2.5">
+                <span className="text-[12px] text-[#6e6e73]">{hotPosts[0].author}</span>
+                <div className="flex items-center gap-2.5 ml-auto">
+                  <span className="flex items-center gap-1 text-[12px] font-semibold text-[#F04452]">
+                    <ThumbsUp size={11} />{hotPosts[0].likeCount}
+                  </span>
+                  <span className="flex items-center gap-1 text-[12px] font-semibold text-[#0071e3]">
+                    <MessageSquare size={11} />{hotPosts[0].commentCount}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </button>
+
+          {/* 2~3등 */}
+          <div className="px-4 pb-3.5 space-y-1.5">
+            {[hotPosts[1], hotPosts[2]].map((post, idx) => (
+              <button
+                key={post.id}
+                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                className="w-full text-left bg-white/70 rounded-xl px-3 py-2.5 active:bg-white border border-white/60 flex items-center gap-2.5"
+              >
+                <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black ${
+                  idx === 0 ? "bg-[#94a3b8] text-white" : "bg-[#cd7f32] text-white"
+                }`}>
+                  {idx + 2}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{post.title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className={`text-[10px] font-bold px-1.5 py-0 rounded-full ${catColor[post.category]}`}>{post.category}</span>
+                    <span className="text-[11px] text-[#6e6e73]">·</span>
+                    <span className="text-[11px] text-[#86868b]">좋아요 {post.likeCount}</span>
+                    <span className="text-[11px] text-[#6e6e73]">·</span>
+                    <span className="text-[11px] text-[#86868b]">댓글 {post.commentCount}</span>
                   </div>
                 </div>
-                {post.images && post.images.length > 0 && (
-                  <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
-                    <img src={post.images[0]} alt="" className="w-full h-full object-cover" />
-                  </div>
-                )}
+                <ChevronRight size={14} className="shrink-0 text-[#86868b]" />
               </button>
             ))}
           </div>
@@ -559,33 +578,47 @@ function NewsTab() {
         <div className="px-4 space-y-2">
           {loading ? (
             [0, 1, 2].map(i => (
-              <div key={i} className="bg-white rounded-2xl px-4 py-3.5 animate-pulse space-y-2">
-                <div className="h-3.5 bg-[#d2d2d7] rounded w-full" />
-                <div className="h-3.5 bg-[#d2d2d7] rounded w-4/5" />
-                <div className="h-3 bg-[#d2d2d7] rounded w-1/3" />
+              <div key={i} className="bg-white rounded-2xl overflow-hidden flex animate-pulse">
+                <div className="flex-1 px-4 py-3.5 space-y-2">
+                  <div className="h-3.5 bg-[#d2d2d7] rounded w-full" />
+                  <div className="h-3.5 bg-[#d2d2d7] rounded w-4/5" />
+                  <div className="h-3 bg-[#d2d2d7] rounded w-1/3" />
+                </div>
+                <div className="w-[88px] bg-[#e5e5ea]" />
               </div>
             ))
           ) : (
-            newsSource.slice(0, newsLimit).map((item) => (
-              <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                onClick={() => trackNewsView(item.id)}
-                className="bg-white rounded-2xl px-4 py-3.5 flex gap-3 items-center active:opacity-80 shadow-sm">
-                {item.thumbnail && (
-                  <div className="shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-[#e5e5ea]">
-                    <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+            newsSource.slice(0, newsLimit).map((item) => {
+              const thumb = item.thumbnail;
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform shadow-sm">
+                  <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-between gap-2">
+                    <p className="text-[13.5px] font-bold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-[11px] font-bold text-[#0071e3] bg-[#e8f1fd] px-1.5 py-0.5 rounded-full">{item.source}</span>
+                      <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
+                      <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
+                    </div>
                   </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
-                  <div className="flex items-center gap-1.5 mt-1.5">
-                    <span className="text-[11px] font-medium text-[#0071e3]">{item.source}</span>
-                    <span className="text-[11px] text-[#86868b]">·</span>
-                    <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-                    <ExternalLink size={10} className="text-[#86868b] ml-auto shrink-0" />
-                  </div>
-                </div>
-              </a>
-            ))
+                  {thumb ? (
+                    <div className="shrink-0 relative bg-[#f5f5f7]" style={{ width: 92 }}>
+                      <img
+                        src={thumb}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="shrink-0 flex items-center justify-center bg-gradient-to-br from-[#f5f5f7] to-[#e8eef5]" style={{ width: 92 }}>
+                      <Newspaper size={22} className="text-[#86868b]" />
+                    </div>
+                  )}
+                </a>
+              );
+            })
           )}
           {!loading && newsSource.length > newsLimit && newsLimit < 30 && (
             <button

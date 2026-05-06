@@ -12,7 +12,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
 import {
-  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
+  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId, fetchPostOwner,
 } from "@/lib/db/posts";
 import {
   fetchComments, createComment, deleteComment, toggleCommentLike, updateComment,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
 import { getOrCreateUserId, getUserProfile, touchLastActive } from "@/lib/db/userdata";
+import { createNotification } from "@/lib/db/notifications";
 import {
   fetchHiddenPostIds, hidePost, unhidePost, reportPost, reportComment,
   type ReportReason,
@@ -100,7 +101,6 @@ function DetailContent() {
   const [meAvatar, setMeAvatar] = useState<string | null>(null);
   const [meNickname, setMeNickname] = useState("검단주민");
   const [meDong, setMeDong] = useState("검단");
-  const [anonymous, setAnonymous] = useState(false);
 
   useEffect(() => {
     getUserProfile().then(p => {
@@ -160,10 +160,29 @@ function DetailContent() {
 
   // 좋아요
   const toggleLike = async () => {
-    const delta = liked ? -1 : 1;
-    setLiked(!liked);
+    const wasLiked = liked;
+    const delta = wasLiked ? -1 : 1;
+    setLiked(!wasLiked);
     setLikeCount(c => c + delta);
-    if (!isMock) await togglePostLike(postId, delta);
+    if (isMock) return;
+    await togglePostLike(postId, delta);
+    if (!wasLiked) {
+      // 좋아요 추가 시 글 작성자에게 알림
+      try {
+        const owner = await fetchPostOwner(postId);
+        const myUid = await getOrCreateUserId();
+        if (owner?.userId && owner.userId !== myUid) {
+          await createNotification({
+            userId: owner.userId,
+            type: "post_like",
+            title: "내 글에 좋아요가 눌렸어요",
+            body: owner.title ?? "",
+            relatedId: postId,
+            relatedType: "post",
+          });
+        }
+      } catch { /* silent */ }
+    }
   };
 
   // 댓글 작성
@@ -184,15 +203,15 @@ function DetailContent() {
         createdAt: new Date().toISOString(),
       }]);
     } else {
-      const uid = await getOrCreateUserId();
+      const myUid = await getOrCreateUserId();
       const saved = await createComment({
         postId,
         author: meNickname,
         authorDong: meDong,
         authorAvatarUrl: meAvatar,
-        userId: uid,
+        userId: myUid,
         content: commentText.trim(),
-        isAnonymous: anonymous,
+        isAnonymous: false,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -200,6 +219,20 @@ function DetailContent() {
         setMyCommentIds(prev => new Set([...prev, saved.id]));
         await syncCommentCount(postId, 1);
         setPost(prev => prev ? { ...prev, commentCount: prev.commentCount + 1 } : prev);
+        // 글 작성자에게 댓글 알림
+        try {
+          const owner = await fetchPostOwner(postId);
+          if (owner?.userId && owner.userId !== myUid) {
+            await createNotification({
+              userId: owner.userId,
+              type: "post_comment",
+              title: "내 글에 새 댓글이 달렸어요",
+              body: saved.content.slice(0, 80),
+              relatedId: postId,
+              relatedType: "post",
+            });
+          }
+        } catch { /* silent */ }
       }
       void touchLastActive();
     }
@@ -551,7 +584,7 @@ function DetailContent() {
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <ThreadAvatar name={anonymous ? "익명" : meNickname} src={anonymous ? null : meAvatar} size={32} />
+          <ThreadAvatar name={meNickname} src={meAvatar} size={32} />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
@@ -562,10 +595,6 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-            익명
-          </button>
         </div>
       </div>
 
