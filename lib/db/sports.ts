@@ -418,3 +418,36 @@ export async function saveBroadcaster(b: Partial<Broadcaster> & { id?: string })
 export async function deleteBroadcaster(id: string): Promise<void> {
   await dbPost("broadcasters", "DELETE", undefined, { eq: `id=eq.${id}` });
 }
+
+// ─── 홈 위젯용 정규화 데이터 일괄 조회 ─────────────────────────
+export interface NormalizedSports {
+  teamMap: Map<string, Team>;
+  leagueMap: Map<string, League>;
+  broadcasterMap: Map<string, Broadcaster>;
+}
+
+export async function fetchNormalizedSports(): Promise<NormalizedSports> {
+  const empty: NormalizedSports = { teamMap: new Map(), leagueMap: new Map(), broadcasterMap: new Map() };
+  try {
+    const [teamsData, leaguesData, bcData] = await Promise.all([
+      dbGet<Team>("teams",        { select: "id,league_id,name,short_name,logo_url,primary_color,city,sort_order,active", eq: "active.eq.true" }),
+      dbGet<League>("leagues",    { select: "id,sport_category_id,name,type,logo_url,sort_order,active", eq: "active.eq.true" }),
+      dbGet<Broadcaster>("broadcasters", { select: "id,name,channel_number,logo_url,sort_order,active", eq: "active.eq.true" }),
+    ]);
+    return {
+      teamMap: new Map(teamsData.map(t => [t.id, t])),
+      leagueMap: new Map(leaguesData.map(l => [l.id, l])),
+      broadcasterMap: new Map(bcData.map(b => [b.id, b])),
+    };
+  } catch {
+    return empty;
+  }
+}
+
+// 매치에 정규화 ID가 함께 저장됨 (admin 폼에서 채워줌)
+export interface SportsMatchExt extends SportsMatch {
+  league_id?: string | null;
+  team_home_id?: string | null;
+  team_away_id?: string | null;
+  broadcaster_id?: string | null;
+}
