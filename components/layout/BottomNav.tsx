@@ -1,12 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Rss, Bus, Building2, User } from "lucide-react";
+import { Home, MessageCircle, Bus, ShoppingBag, User } from "lucide-react";
 import SuggestFAB from "@/components/ui/SuggestFAB";
 
 const navItems = [
-  { href: "/stores",    label: "상가",    icon: Building2, match: "/stores" },
-  { href: "/community", label: "소식",    icon: Rss,       match: ["/community", "/news", "/real-estate"] },
+  { href: "/stores",    label: "상가",    icon: ShoppingBag,   match: "/stores" },
+  { href: "/community", label: "소식",    icon: MessageCircle, match: ["/community", "/news", "/real-estate"] },
   { href: "/home",      label: "홈",      icon: Home,      match: "/home", center: true },
   { href: "/transport", label: "교통",    icon: Bus,       match: "/transport" },
   { href: "/mypage",    label: "MY",      icon: User,      match: "/mypage" },
@@ -48,13 +48,13 @@ export default function BottomNav() {
                       active
                         ? center
                           ? "text-white"
-                          : "text-[#2563EB]"
+                          : "text-black"
                         : "text-[#8e8e93]"
                     }
                   />
                 </div>
                 <span className={`text-[10px] font-medium tracking-tight transition-colors
-                  ${active ? "text-[#2563EB]" : "text-[#8e8e93]"}`}>
+                  ${active ? "text-black" : "text-[#8e8e93]"}`}>
                   {label}
                 </span>
               </Link>
