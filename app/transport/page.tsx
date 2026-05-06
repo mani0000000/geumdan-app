@@ -760,7 +760,8 @@ export default function TransportPage() {
   const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
   const [, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
+  // "far" = GPS는 잡혔지만 검단 권역 밖 → 검단 중심 좌표로 강제 검색 중
+  const [locState, setLocState] = useState<"loading" | "ok" | "far" | "denied" | "idle">("idle");
   // 버스 정류장 소스: "tago"=국가API실시간, "ic"=인천API실시간, "osm"=경유만, "fallback"=하드코딩
   const [stopSource, setStopSource] = useState<"tago"|"ic"|"osm"|"fallback"|null>(null);
   // GPS 기반으로 API에서 조회한 정류장 (null = 미조회)
@@ -876,11 +877,18 @@ export default function TransportPage() {
         }));
       } else throw new Error("tago_empty");
     } catch {
-      // TAGO 실패/빈 응답 — 검단 하드코딩 폴백
+      // TAGO 실패/빈 응답 — 검단 하드코딩 폴백.
+      // 거리 계산은 사용자 좌표가 검단에서 5km+ 떨어진 경우 검단 중심 기준으로
+      // 보정 (사용자가 서울에 있는데 "아라역 37km" 같은 무의미한 표시 방지).
       src = "fallback";
+      // 사용자 좌표가 검단에서 5km+ 멀면 검단 중심 기준으로 거리 계산 →
+      // "아라역 37km" 같은 무의미한 표시 방지.
+      const farFromGeumdan = haversineM(lat, lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng) > 5000;
+      const refLat = farFromGeumdan ? GEUMDAN_DEFAULT.lat : lat;
+      const refLng = farFromGeumdan ? GEUMDAN_DEFAULT.lng : lng;
       const all = GEUMDAN_BUS_STATIONS.map(s => ({
         ...s,
-        distanceM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+        distanceM: Math.round(haversineM(refLat, refLng, s.lat, s.lng)),
       }));
       stops = pickNearest(all).map(s => ({
         id: s.stationId, name: s.name,
@@ -888,7 +896,7 @@ export default function TransportPage() {
         lat: s.lat, lng: s.lng,
         osmRoutes: s.routes,
       }));
-      if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
+      if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms (farFromGeumdan=${farFromGeumdan})`);
     }
 
     setStopSource(src);
@@ -941,7 +949,10 @@ export default function TransportPage() {
   }, []);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
+  // 검단신도시 중심 좌표 + 권역 반경. GPS가 권역 밖이면 검단 중심으로 강제
+  // 검색해서 의미 있는 정류장을 보여준다 (이 앱은 검단 전용이므로).
   useEffect(() => {
+    const GEUMDAN_RADIUS_M = 8000;
     // 1) GPS 와 무관하게 검단 기본 좌표로 지하철 목록을 즉시 채운다.
     //    GPS 가 늦게 오거나 실패해도 사용자는 검단 인근 역 전체를 바로 본다.
     posRef.current = GEUMDAN_DEFAULT;
@@ -977,6 +988,24 @@ export default function TransportPage() {
         clearTimeout(fastTimer);
         if (dev) console.log(`[transport] GPS resolved at ${(performance.now() - tGpsStart).toFixed(0)}ms`);
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const distFromGeumdan = haversineM(p.lat, p.lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+        const inGeumdan = distFromGeumdan <= GEUMDAN_RADIUS_M;
+        if (dev) console.log(`[transport] GPS @ ${distFromGeumdan.toFixed(0)}m from 검단 (in=${inGeumdan})`);
+
+        if (!inGeumdan) {
+          // 사용자가 검단 밖 → 검단 중심 좌표로 강제 검색.
+          // userPos는 실제 위치를 기록하되 정류장 검색만 검단 기준.
+          setLocState("far");
+          setUserPos(p);
+          posRef.current = GEUMDAN_DEFAULT;
+          if (busDispatched) {
+            loadBusData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, false);
+          } else {
+            dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+          }
+          return;
+        }
+
         setLocState("ok");
         posRef.current = p;
         setUserPos(p);
@@ -1015,10 +1044,11 @@ export default function TransportPage() {
   }, [tab, fetchArrivalsForStops, refreshSubwayArrivals]);
 
   const refresh = async () => {
+    // posRef.current는 "far" 상태일 때 이미 검단 중심으로 보정되어 있음
     const p = posRef.current ?? GEUMDAN_DEFAULT;
     setRefreshing(true);
     if (tab === "버스") {
-      await loadBusData(p.lat, p.lng);
+      await loadBusData(p.lat, p.lng, false);
     } else {
       await loadSubwayData(p.lat, p.lng);
     }
@@ -1118,6 +1148,12 @@ export default function TransportPage() {
       return (
         <span className="flex items-center gap-1 text-[12px] font-bold bg-[#D1FAE5] text-[#065F46] px-2 py-0.5 rounded-full">
           <Navigation size={10} />내 위치
+        </span>
+      );
+    if (locState === "far")
+      return (
+        <span className="flex items-center gap-1 text-[12px] font-bold bg-[#FFF3E0] text-[#7C4700] px-2 py-0.5 rounded-full">
+          <MapPin size={10} />검단 권역 밖
         </span>
       );
     return <span className="text-[12px] text-[#86868b]">검단신도시 기준</span>;

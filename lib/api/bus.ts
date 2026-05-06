@@ -357,7 +357,7 @@ export interface FallbackBusStation {
 
 export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
   {
-    id: "gd-1", stationId: "89459", name: "금강펜테리움더시글로", lat: 37.5920, lng: 126.7095,
+    id: "gd-1", stationId: "ICB168001459", name: "금강펜테리움더시글로", lat: 37.5920, lng: 126.7095,
     routes: [
       { routeNo: "30", destination: "왕길동" },
       { routeNo: "78", destination: "1차풍림아이원" },
@@ -369,7 +369,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-2", stationId: "42697", name: "아라역7번출구", lat: 37.5923, lng: 126.7118,
+    id: "gd-2", stationId: "ICB168000697", name: "아라역7번출구", lat: 37.5923, lng: 126.7118,
     routes: [
       { routeNo: "30", destination: "왕길동" },
       { routeNo: "78", destination: "1차풍림아이원" },
@@ -383,7 +383,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-3", stationId: "42454", name: "아라역6번출구", lat: 37.5919, lng: 126.7122,
+    id: "gd-3", stationId: "ICB168000454", name: "아라역6번출구", lat: 37.5919, lng: 126.7122,
     routes: [
       { routeNo: "30", destination: "송내역남부" },
       { routeNo: "78", destination: "송정역" },
@@ -396,7 +396,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-4", stationId: "42449", name: "서구영어마을", lat: 37.5921, lng: 126.7053,
+    id: "gd-4", stationId: "ICB168000449", name: "서구영어마을", lat: 37.5921, lng: 126.7053,
     routes: [
       { routeNo: "30", destination: "왕길동" },
       { routeNo: "76", destination: "마전지구버스차고지" },
@@ -419,13 +419,13 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-5", stationId: "89406", name: "아라센트럴파크", lat: 37.5889, lng: 126.7101,
+    id: "gd-5", stationId: "ICB168001406", name: "아라센트럴파크", lat: 37.5889, lng: 126.7101,
     routes: [
       { routeNo: "87", destination: "드림파크수영장" },
     ],
   },
   {
-    id: "gd-6", stationId: "89405", name: "검단한신더휴캐널파크1103동", lat: 37.5895, lng: 126.7075,
+    id: "gd-6", stationId: "ICB168001405", name: "검단한신더휴캐널파크1103동", lat: 37.5895, lng: 126.7075,
     routes: [
       { routeNo: "77", destination: "마전지구버스차고지" },
       { routeNo: "87", destination: "드림파크수영장" },
@@ -435,7 +435,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-7", stationId: "42447", name: "원당사거리.검단선사박물관", lat: 37.5936, lng: 126.7000,
+    id: "gd-7", stationId: "ICB168000447", name: "원당사거리.검단선사박물관", lat: 37.5936, lng: 126.7000,
     routes: [
       { routeNo: "30", destination: "왕길동" },
       { routeNo: "77", destination: "마전지구버스차고지" },
@@ -456,7 +456,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-8", stationId: "89393", name: "호반써밋1차 3101동", lat: 37.5935, lng: 126.7079,
+    id: "gd-8", stationId: "ICB168001393", name: "호반써밋1차 3101동", lat: 37.5935, lng: 126.7079,
     routes: [
       { routeNo: "76", destination: "박촌역" },
       { routeNo: "93", destination: "인천이음초등학교" },
@@ -466,7 +466,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-9", stationId: "89432", name: "아라역8번출구", lat: 37.5935, lng: 126.7129,
+    id: "gd-9", stationId: "ICB168001432", name: "아라역8번출구", lat: 37.5935, lng: 126.7129,
     routes: [
       { routeNo: "75", destination: "귤현차량사업소" },
       { routeNo: "931", destination: "마곡나루역" },
@@ -478,7 +478,7 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
     ],
   },
   {
-    id: "gd-10", stationId: "42433", name: "발산초등학교(풍림아이원)", lat: 37.5913, lng: 126.6987,
+    id: "gd-10", stationId: "ICB168000433", name: "발산초등학교(풍림아이원)", lat: 37.5913, lng: 126.6987,
     routes: [],
   },
 ];
