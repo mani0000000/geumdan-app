@@ -6,6 +6,9 @@ import {
   Car, Phone, Globe, ChevronRight, X, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { fetchPublishedPlaces, CATEGORY_META, AREAS, type Place, type PlaceCategory, type PlaceArea } from "@/lib/db/places";
+import {
+  getFavoritePlaces, addFavoritePlace, removeFavoritePlace,
+} from "@/lib/db/placeFavorites";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -58,6 +61,17 @@ function loadFavList(key: string): string[] {
 }
 function saveFavList(key: string, list: string[]) {
   try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ }
+}
+
+// 즐겨찾기 메타데이터 (id → { name, ... }) — 마이페이지 등에서 이름 표시용
+function saveFavMeta(metaKey: string, id: string, value: Record<string, unknown> | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const map = JSON.parse(localStorage.getItem(metaKey) ?? "{}") as Record<string, Record<string, unknown>>;
+    if (value === null) delete map[id];
+    else map[id] = value;
+    localStorage.setItem(metaKey, JSON.stringify(map));
+  } catch { /* ignore */ }
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
@@ -777,6 +791,30 @@ export default function TransportPage() {
   const [placesCatFilter, setPlacesCatFilter] = useState<PlaceCategory | "all">("all");
   const [placesAreaFilter, setPlacesAreaFilter] = useState<PlaceArea | "all">("all");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [favPlaceIds, setFavPlaceIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    getFavoritePlaces().then(list => setFavPlaceIds(new Set(list.map(f => f.place_id))));
+  }, []);
+  async function togglePlaceFavorite(place: Place) {
+    if (favPlaceIds.has(place.id)) {
+      await removeFavoritePlace(place.id);
+      setFavPlaceIds(prev => {
+        const n = new Set(prev);
+        n.delete(place.id);
+        return n;
+      });
+    } else {
+      await addFavoritePlace({
+        place_id: place.id,
+        place_name: place.name,
+        place_category: place.category,
+        place_area: place.area,
+        place_image_url: place.thumbnail_url,
+        place_address: place.address ?? null,
+      });
+      setFavPlaceIds(prev => new Set(prev).add(place.id));
+    }
+  }
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
   const apiStopsRef = useRef<DisplayStop[] | null>(null);
   const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
@@ -1114,10 +1152,36 @@ export default function TransportPage() {
       return next;
     });
   }
-  const toggleStop     = makeToggle("favStops",     setFavStops);
+  const _toggleStop    = makeToggle("favStops",     setFavStops);
   const toggleRoute    = makeToggle("favRoutes",    setFavRoutes);
-  const toggleSubway   = makeToggle("favSubways",   setFavSubways);
+  const _toggleSubway  = makeToggle("favSubways",   setFavSubways);
   const toggleBusRoute = makeToggle("favBusRoutes", setFavBusRoutes);
+
+  // 메타데이터(이름 등)를 함께 저장하여 마이페이지에서 표시 가능하도록 함
+  const toggleStop = (id: string) => {
+    const wasFav = favStops.includes(id);
+    _toggleStop(id);
+    if (wasFav) {
+      saveFavMeta("favStops_meta", id, null);
+    } else {
+      const stop = stopsWithRoutes.find(s => s.id === id);
+      if (stop) saveFavMeta("favStops_meta", id, { name: stop.name });
+    }
+  };
+  const toggleSubway = (id: string) => {
+    const wasFav = favSubways.includes(id);
+    _toggleSubway(id);
+    if (wasFav) {
+      saveFavMeta("favSubways_meta", id, null);
+    } else {
+      const station = subwayList.find(s => s.id === id);
+      if (station) saveFavMeta("favSubways_meta", id, {
+        name: station.displayName,
+        line: station.line,
+        lineColor: station.lineColor,
+      });
+    }
+  };
   const moveStop       = makeMove("favStops",       setFavStops);
   const moveRoute      = makeMove("favRoutes",      setFavRoutes);
   const moveSubway     = makeMove("favSubways",     setFavSubways);
@@ -2221,11 +2285,18 @@ export default function TransportPage() {
                   <div className="absolute top-3 left-0 right-0 flex justify-center">
                     <div className="w-10 h-1 bg-white/40 rounded-full" />
                   </div>
-                  {/* 닫기 버튼 */}
-                  <button onClick={() => setSelectedPlace(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
-                    <X size={16} className="text-white" />
-                  </button>
+                  {/* 닫기 + 즐겨찾기 */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button onClick={() => togglePlaceFavorite(p)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <Star size={16}
+                        className={favPlaceIds.has(p.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-white"} />
+                    </button>
+                    <button onClick={() => setSelectedPlace(null)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <X size={16} className="text-white" />
+                    </button>
+                  </div>
                   {/* 배지 */}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5">
                     <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
