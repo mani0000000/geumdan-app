@@ -31,6 +31,7 @@ import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
+import GasWidget from "@/components/home/GasWidget";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
@@ -2962,6 +2963,7 @@ export default function HomePage() {
     places: () => <PlacesSection />,
     sports: () => <SportsSection />,
     tides: () => <TideSection />,
+    gas: () => <GasWidget />,
   };
 
   const activeWidgets = widgets.length > 0
