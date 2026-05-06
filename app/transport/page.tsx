@@ -28,6 +28,9 @@ import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/a
 
 type Tab = "가볼만한곳" | "버스" | "지하철";
 
+// 검단신도시 중심 좌표 — GPS 미취득/실패 시 폴백 기준점
+const GEUMDAN_DEFAULT = { lat: 37.5777, lng: 126.7209 } as const;
+
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
   name: string;
@@ -763,7 +766,11 @@ export default function TransportPage() {
   // GPS 기반으로 API에서 조회한 정류장 (null = 미조회)
   const [apiStops, setApiStops] = useState<DisplayStop[] | null>(null);
   // 지하철 역 + 실시간 도착정보
-  const [subwayList, setSubwayList] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
+  // 검단 기준 정렬된 역 목록으로 동기 초기화 — GPS 대기 중에도 빈 상태 노출 방지
+  const [subwayList, setSubwayList] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>(
+    () => findNearbySubwayStations(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, 25000)
+      .map(st => ({ ...st, arrivals: [], loadingArrivals: true }))
+  );
   const [subwayLoading, setSubwayLoading] = useState(false);
   const [busSearch, setBusSearch] = useState("");
   const isLive = hasBusApiKey();
@@ -905,13 +912,17 @@ export default function TransportPage() {
   }, []);
 
   // ── 지하철 데이터 로드 — GPS 기준 가까운 순 정렬 ────────────
+  // GPS 미취득/실패 시 검단신도시(GEUMDAN_DEFAULT) 기준으로 정렬 → 항상 목록 표시.
   const loadSubwayData = useCallback(async (lat?: number, lng?: number) => {
-    setSubwayLoading(true);
     const ref = lat != null && lng != null
       ? { lat, lng }
-      : (posRef.current ?? { lat: 37.594, lng: 126.710 });
-    // 김포공항역(허브)까지 포함하도록 반경 25km
-    const all = findNearbySubwayStations(ref.lat, ref.lng, 25000);
+      : (posRef.current ?? GEUMDAN_DEFAULT);
+    // 김포공항역(허브)까지 포함하도록 반경 25km. 빈 결과 방지 — 후속 안전망.
+    let all = findNearbySubwayStations(ref.lat, ref.lng, 25000);
+    if (all.length === 0) {
+      // 반경 내 결과가 없으면(이상 좌표 등) 검단 기준 전체 정렬로 폴백
+      all = findNearbySubwayStations(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, 100000);
+    }
     const initial = all.map(st => ({ ...st, arrivals: [], loadingArrivals: true }));
     setSubwayList(initial);
     setSubwayLoading(false);
@@ -931,14 +942,15 @@ export default function TransportPage() {
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
-    const DEFAULT = { lat: 37.594, lng: 126.710 };
-    loadSubwayData(DEFAULT.lat, DEFAULT.lng);
+    // 1) GPS 와 무관하게 검단 기본 좌표로 지하철 목록을 즉시 채운다.
+    //    GPS 가 늦게 오거나 실패해도 사용자는 검단 인근 역 전체를 바로 본다.
+    posRef.current = GEUMDAN_DEFAULT;
+    setUserPos(GEUMDAN_DEFAULT);
+    loadSubwayData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
 
     if (!navigator.geolocation) {
-      posRef.current = DEFAULT;
-      setUserPos(DEFAULT);
       setLocState("denied");
-      loadBusData(DEFAULT.lat, DEFAULT.lng);
+      loadBusData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
       return;
     }
 
@@ -946,20 +958,18 @@ export default function TransportPage() {
     const tGpsStart = performance.now();
     const dev = process.env.NODE_ENV !== "production";
 
-    // GPS가 빠르게 응답하면 그 위치로 첫 로드. 700ms 안에 안 오면 DEFAULT로
-    // 우선 로드하고, 이후 GPS 도착 시 사용자 위치로 재조회 (50m 이상 차이 시).
-    let initialDispatched = false;
-    const dispatchInitial = (lat: number, lng: number) => {
-      if (initialDispatched) return;
-      initialDispatched = true;
-      posRef.current = { lat, lng };
-      setUserPos({ lat, lng });
+    // 700ms 안에 GPS 응답 없으면 DEFAULT 로 버스 우선 로드. GPS 도착 시 재조회.
+    // GPS 자체 timeout 은 8초.
+    let busDispatched = false;
+    const dispatchBus = (lat: number, lng: number) => {
+      if (busDispatched) return;
+      busDispatched = true;
       loadBusData(lat, lng);
     };
 
     const fastTimer = setTimeout(() => {
       if (dev) console.log(`[transport] GPS fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
-      dispatchInitial(DEFAULT.lat, DEFAULT.lng);
+      dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
     }, 700);
 
     navigator.geolocation.getCurrentPosition(
@@ -968,23 +978,24 @@ export default function TransportPage() {
         if (dev) console.log(`[transport] GPS resolved at ${(performance.now() - tGpsStart).toFixed(0)}ms`);
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setLocState("ok");
-        if (initialDispatched) {
-          // 이미 DEFAULT로 로드됨 — 사용자 실제 위치로 다시 조회 (목록은 유지하며 교체)
-          posRef.current = p;
-          setUserPos(p);
-          if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 50) {
+        posRef.current = p;
+        setUserPos(p);
+        // 50m 이상 이동했을 때만 재조회 — 깜빡임 방지
+        if (haversineM(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, p.lat, p.lng) > 50) {
+          if (busDispatched) {
             loadBusData(p.lat, p.lng, false);
-            loadSubwayData(p.lat, p.lng);
+          } else {
+            dispatchBus(p.lat, p.lng);
           }
-        } else {
-          dispatchInitial(p.lat, p.lng);
           loadSubwayData(p.lat, p.lng);
+        } else {
+          dispatchBus(p.lat, p.lng);
         }
       },
       () => {
         clearTimeout(fastTimer);
         setLocState("denied");
-        dispatchInitial(DEFAULT.lat, DEFAULT.lng);
+        dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
       },
       { timeout: 8000, maximumAge: 60000, enableHighAccuracy: true }
     );
@@ -1004,7 +1015,7 @@ export default function TransportPage() {
   }, [tab, fetchArrivalsForStops, refreshSubwayArrivals]);
 
   const refresh = async () => {
-    const p = posRef.current ?? { lat: 37.594, lng: 126.710 };
+    const p = posRef.current ?? GEUMDAN_DEFAULT;
     setRefreshing(true);
     if (tab === "버스") {
       await loadBusData(p.lat, p.lng);
@@ -1597,7 +1608,13 @@ export default function TransportPage() {
           ) : subwayList.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
               <Train size={32} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] font-bold text-[#6e6e73]">위치를 확인하는 중입니다</p>
+              <p className="text-[14px] font-bold text-[#6e6e73]">역 목록을 불러오는 중입니다</p>
+              <button
+                onClick={() => loadSubwayData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng)}
+                className="mt-3 text-[12px] font-bold text-[#0071e3] active:opacity-60"
+              >
+                다시 시도
+              </button>
             </div>
           ) : (() => {
             const gimpoStations = subwayList.filter(s => s.groupKey === GIMPO_AIRPORT_GROUP);
