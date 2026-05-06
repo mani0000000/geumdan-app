@@ -808,12 +808,22 @@ export default function TransportPage() {
     // TAGO race timeout 제거: apiFetch 자체에 10s AbortSignal 있음.
     // Vercel cold start(3-5s) + TAGO(1-3s)가 6s 초과해서 false-fallback 트리거되던
     // 버그 수정. 클라이언트는 최대 10s 기다린 뒤 빈 배열 받으면 폴백.
+    //
+    // 정렬 정책: 반경 500m 내 가까운 순 상위 4개. 비면 최근접 1개 폴백.
+    const NEARBY_RADIUS_M = 500;
+    const NEARBY_MAX = 4;
+    const pickNearest = <T extends { distanceM: number }>(arr: T[]): T[] => {
+      const sorted = [...arr].sort((a, b) => a.distanceM - b.distanceM);
+      const within = sorted.filter(s => s.distanceM <= NEARBY_RADIUS_M).slice(0, NEARBY_MAX);
+      return within.length > 0 ? within : sorted.slice(0, 1);
+    };
+
     try {
       const tagoNearby = await fetchNearbyStopsFromTago(lat, lng);
       if (dev) console.log(`[transport] TAGO nearby ${since()}ms → ${tagoNearby.length}`);
       if (tagoNearby.length > 0) {
         src = "tago";
-        stops = tagoNearby.slice(0, 14).map(s => ({
+        stops = pickNearest(tagoNearby).map(s => ({
           id: s.stationId, name: s.stationName,
           distM: s.distanceM, arrivals: [], loadingArrivals: true,
           lat: s.lat, lng: s.lng, osmRoutes: [],
@@ -822,15 +832,16 @@ export default function TransportPage() {
     } catch {
       // TAGO 실패/빈 응답 — 검단 하드코딩 폴백
       src = "fallback";
-      stops = GEUMDAN_BUS_STATIONS
-        .map(s => ({
-          id: s.stationId, name: s.name,
-          distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-          arrivals: [], loadingArrivals: true,
-          lat: s.lat, lng: s.lng,
-          osmRoutes: s.routes,
-        }))
-        .sort((a, b) => a.distM - b.distM);
+      const all = GEUMDAN_BUS_STATIONS.map(s => ({
+        ...s,
+        distanceM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
+      }));
+      stops = pickNearest(all).map(s => ({
+        id: s.stationId, name: s.name,
+        distM: s.distanceM, arrivals: [], loadingArrivals: true,
+        lat: s.lat, lng: s.lng,
+        osmRoutes: s.routes,
+      }));
       if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
     }
 
@@ -1066,11 +1077,11 @@ export default function TransportPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="교통 정보" />
 
-      {/* 플로팅 새로고침 버튼 (하단 네비게이션 64px + 여백) */}
+      {/* 플로팅 새로고침 버튼 — 네비(bottom-5 + h-64px = 84px) 위로 16px 여백 = 100px */}
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[88px] right-4 z-50 w-12 h-12 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[100px] right-4 z-50 w-12 h-12 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
         <RefreshCw size={20} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
