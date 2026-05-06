@@ -14,7 +14,7 @@ import {
   haversineM,
   GEUMDAN_BUS_STATIONS,
   fetchNearbyStopsFromTago,
-  fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
+  fetchArrivalsByNodeId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
   searchRouteByNo, fetchRouteDetailFromTago, fetchStationsByRouteTago,
   fetchBusLocationsTago, formatBusTime,
@@ -105,9 +105,13 @@ function SkeletonStop() {
 function BusDetailSheet({
   arrival,
   onClose,
+  isFav,
+  onToggleFav,
 }: {
   arrival: BusArrival;
   onClose: () => void;
+  isFav: boolean;
+  onToggleFav: () => void;
 }) {
   const [detail, setDetail] = useState<RouteDetail | null>(null);
   const [stations, setStations] = useState<RouteStation[]>([]);
@@ -223,9 +227,16 @@ function BusDetailSheet({
                 </span>
               )}
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
-              <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={onToggleFav}
+                className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60"
+                aria-label={isFav ? "즐겨찾기 해제" : "즐겨찾기 추가"}>
+                <Star size={16} className={isFav ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#86868b]"} />
+              </button>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+                <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -699,7 +710,11 @@ export default function TransportPage() {
   const [loading, setLoading] = useState(false);
   const [favStops, setFavStops] = useState<Set<string>>(() => loadFavSet("favStops"));
   const [favRoutes, setFavRoutes] = useState<Set<string>>(() => loadFavSet("favRoutes"));
+  // 노선 자체 즐겨찾기 (key=routeNo) — 정류장 무관, 모든 정류장에서 해당 routeNo 도착정보를 모아 보여줌
+  const [favBusRoutes, setFavBusRoutes] = useState<Set<string>>(() => loadFavSet("favBusRoutes"));
   const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
+  // 가까운 N개만 기본 표시, 나머지는 "더 보기" 토글로
+  const [showAllStops, setShowAllStops] = useState(false);
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
@@ -739,19 +754,11 @@ export default function TransportPage() {
     const dev = process.env.NODE_ENV !== "production";
     const t0 = dev ? performance.now() : 0;
 
+    // production 진단: 인천 BUS_BASE arrivals API는 5자리·ICB nodeId 모두
+    // resultCode=3 거부 (활용신청 미승인). TAGO tagoArrivals만 신뢰 가능.
+    // → 모든 source에서 TAGO 도착 API 우선. 빈 응답이면 osmRoutes 정적 정보로 폴백.
     const fetchOne = async (stop: DisplayStop) => {
-      let arrivals: BusArrival[] = [];
-      if (source === "tago") {
-        arrivals = await fetchArrivalsByNodeId(stop.id);
-      } else if (source === "ic") {
-        arrivals = await fetchArrivalsByStationId(stop.id);
-      } else if (source === "osm") {
-        arrivals = await fetchArrivalsByStationId(stop.id);
-        if (arrivals.length === 0) arrivals = await fetchArrivalsByNodeId(stop.id);
-      } else if (source === "fallback") {
-        arrivals = await fetchArrivalsByNodeId(stop.id);
-        if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
-      }
+      let arrivals: BusArrival[] = await fetchArrivalsByNodeId(stop.id);
       if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
         arrivals = osmRoutesToArrivals(stop.osmRoutes);
       }
@@ -986,6 +993,16 @@ export default function TransportPage() {
       return n;
     });
   }
+  // 노선 즐겨찾기 (routeNo 단독)
+  function toggleBusRoute(routeNo: string) {
+    if (!routeNo) return;
+    setFavBusRoutes(p => {
+      const n = new Set(p);
+      if (n.has(routeNo)) n.delete(routeNo); else n.add(routeNo);
+      saveFavSet("favBusRoutes", n);
+      return n;
+    });
+  }
 
   // 즐겨찾기 노선 키: `${stationId}::${routeId||routeNo}`
   const routeFavKey = (stopId: string, a: BusArrival) =>
@@ -997,6 +1014,35 @@ export default function TransportPage() {
       .filter(a => favRoutes.has(routeFavKey(stop.id, a)))
       .map(a => ({ ...a, stopName: stop.name, stopId: stop.id }))
   );
+  // favBusRoutes (routeNo 기반): 모든 stops를 훑어 해당 routeNo의 도착 정보 중
+  // 가장 빠른(가까운) 1건만 노선당 1개씩 → "내가 자주 타는 버스" 섹션
+  const favBusRouteCards = (() => {
+    const byRouteNo = new Map<string, { arrival: BusArrival; stopName: string; stopId: string; stopDistM: number }>();
+    for (const stop of stopsWithRoutes) {
+      for (const a of stop.arrivals) {
+        if (!favBusRoutes.has(a.routeNo)) continue;
+        const existing = byRouteNo.get(a.routeNo);
+        const candidate = { arrival: a, stopName: stop.name, stopId: stop.id, stopDistM: stop.distM };
+        if (!existing) {
+          byRouteNo.set(a.routeNo, candidate);
+        } else {
+          // 더 빨리 오는(또는 더 가까운) 정류장의 카드를 채택
+          const existingMin = existing.arrival.arrivalMin;
+          const newMin = a.arrivalMin;
+          const existingLive = existingMin >= 0;
+          const newLive = newMin >= 0;
+          if ((newLive && !existingLive) ||
+              (newLive && existingLive && newMin < existingMin) ||
+              (!newLive && !existingLive && stop.distM < existing.stopDistM)) {
+            byRouteNo.set(a.routeNo, candidate);
+          }
+        }
+      }
+    }
+    return Array.from(byRouteNo.values()).sort((a, b) =>
+      a.arrival.routeNo.localeCompare(b.arrival.routeNo, "ko", { numeric: true })
+    );
+  })();
   const favSubwayList = subwayList.filter(s => favSubways.has(s.id));
 
   // 위치 상태 뱃지
@@ -1016,11 +1062,11 @@ export default function TransportPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="교통 정보" />
 
-      {/* 플로팅 새로고침 버튼 (하단) */}
+      {/* 플로팅 새로고침 버튼 (하단 네비게이션 64px + 여백) */}
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[76px] right-4 z-50 w-11 h-11 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[88px] right-4 z-50 w-11 h-11 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
         <RefreshCw size={18} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
@@ -1031,6 +1077,8 @@ export default function TransportPage() {
         <BusDetailSheet
           arrival={selectedArrival}
           onClose={() => setSelectedArrival(null)}
+          isFav={favBusRoutes.has(selectedArrival.routeNo)}
+          onToggleFav={() => toggleBusRoute(selectedArrival.routeNo)}
         />
       )}
 
@@ -1055,7 +1103,7 @@ export default function TransportPage() {
       </div>
 
       {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
-      {tab === "버스" && (favStopList.length > 0 || favRouteList.length > 0) && (
+      {tab === "버스" && (favBusRouteCards.length > 0 || favStopList.length > 0 || favRouteList.length > 0) && (
         <div className="bg-white border-b border-[#f5f5f7]">
           <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
             <div className="flex items-center gap-1.5">
@@ -1068,6 +1116,25 @@ export default function TransportPage() {
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
+            {favBusRouteCards.map(({ arrival: r, stopName, stopId }) => (
+              <button key={`favr-${r.routeNo}`}
+                onClick={() => setSelectedArrival(r)}
+                className="shrink-0 bg-[#FFFBEB] rounded-2xl px-3 py-2.5 w-[140px] border border-[#FDE68A] relative text-left active:opacity-80">
+                <button onClick={e => { e.stopPropagation(); toggleBusRoute(r.routeNo); }}
+                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-white flex items-center justify-center active:opacity-60">
+                  <Star size={11} className="text-[#FFBB00] fill-[#FFBB00]" />
+                </button>
+                <div className="flex items-center gap-1.5 mb-1 pr-5">
+                  <div className="bg-[#0071e3] rounded-lg px-2 py-0.5">
+                    <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
+                  </div>
+                  {r.isExpress && <Zap size={9} className="text-[#E65100]" />}
+                </div>
+                <p className="text-[10px] text-[#6e6e73] truncate mb-2" title={stopName}>{stopName}</p>
+                <ArrivalBadge min={r.arrivalMin} live={isLive && !r.isScheduled} />
+                <span className="sr-only">{stopId}</span>
+              </button>
+            ))}
             {favRouteList.map(r => {
               const fk = routeFavKey(r.stopId, r);
               return (
@@ -1293,8 +1360,8 @@ export default function TransportPage() {
           {/* 데이터 소스 상태 배너 */}
           {!loading && stopSource === "fallback" && (
             <div className="bg-[#FFF3E0] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-              <span className="text-[13px]">⚠️</span>
-              <p className="text-[12px] text-[#7C4700] font-medium">API 연결 불가 · 기본 검단 정류장 표시 중</p>
+              <span className="text-[13px]">📍</span>
+              <p className="text-[12px] text-[#7C4700] font-medium">주변 정류장을 못 찾았어요 · 검단 주요 정류장 표시 중</p>
             </div>
           )}
           {!loading && stopSource === "osm" && (
@@ -1319,7 +1386,8 @@ export default function TransportPage() {
               <p className="text-[12px] text-[#86868b] mt-1">다른 키워드로 검색해 보세요</p>
             </div>
           ) : (
-            filteredStops.map((stop, idx) => {
+            // 가까운 4개 우선 노출, 나머지는 "더 보기" 토글로. 검색 중이면 전체 표시.
+            (q || showAllStops ? filteredStops : filteredStops.slice(0, 4)).map((stop, idx) => {
               const open = expanded === stop.id;
               const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
               return (
@@ -1430,6 +1498,19 @@ export default function TransportPage() {
                 </div>
               );
             })
+          )}
+
+          {/* 더 보기 (가까운 4개 외 추가 정류장) — 검색 중에는 비표시 */}
+          {!loading && !q && filteredStops.length > 4 && (
+            <button onClick={() => setShowAllStops(s => !s)}
+              className="w-full bg-white rounded-2xl px-4 py-3.5 flex items-center justify-center gap-1.5 active:bg-[#f5f5f7]">
+              <span className="text-[13px] font-semibold text-[#0071e3]">
+                {showAllStops ? "가까운 정류장만 보기" : `더 보기 (${filteredStops.length - 4}개)`}
+              </span>
+              {showAllStops
+                ? <ChevronUp size={14} className="text-[#0071e3]" />
+                : <ChevronDown size={14} className="text-[#0071e3]" />}
+            </button>
           )}
 
           {/* 범례 — 실시간 연동 시에만 의미 있음 */}
