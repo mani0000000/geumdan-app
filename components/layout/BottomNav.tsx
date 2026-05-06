@@ -36,14 +36,21 @@ export default function BottomNav() {
               >
                 <div className={`flex items-center justify-center rounded-full transition-all
                   ${center ? "w-10 h-10" : "w-8 h-8"}
-                  ${active
+                  ${active && center
                     ? "bg-[#2563EB] shadow-[0_0_12px_rgba(37,99,235,0.6)]"
                     : "bg-transparent"
                   }`}>
                   <Icon
                     size={center ? 22 : 20}
                     strokeWidth={active ? 2.3 : 1.7}
-                    className={active ? "text-white" : "text-[#8e8e93]"}
+                    fill={active && !center ? "currentColor" : "none"}
+                    className={
+                      active
+                        ? center
+                          ? "text-white"
+                          : "text-[#2563EB]"
+                        : "text-[#8e8e93]"
+                    }
                   />
                 </div>
                 <span className={`text-[10px] font-medium tracking-tight transition-colors
