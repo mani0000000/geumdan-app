@@ -20,7 +20,7 @@ import {
   fetchBusLocationsTago, formatBusTime,
 } from "@/lib/api/bus";
 import {
-  getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
   estimateNextArrivals, GIMPO_AIRPORT_GROUP,
   type SubwayStationWithDist, type SubwayArrival,
 } from "@/lib/api/subway";
@@ -56,19 +56,19 @@ function saveFavSet(key: string, set: Set<string>) {
 function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
   if (!live || min === -1) {
     return (
-      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
-        <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
+      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[64px]">
+        <span className="text-[#6e6e73] text-[16px] font-bold">--</span>
       </div>
     );
   }
   const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
   return (
-    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
-      {min <= 0
-        ? <span className="text-white text-[12px] font-bold">곧도착</span>
+    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[68px]`}>
+      {min <= 1
+        ? <span className="text-white text-[13px] font-extrabold">곧 도착 예정</span>
         : <>
-            <span className="text-white text-[21px] font-black leading-none">{min}</span>
-            <span className="text-white/80 text-[11px] block leading-none mt-0.5">분 후</span>
+            <span className="text-white text-[22px] font-black leading-none">{min}</span>
+            <span className="text-white/80 text-[12px] block leading-none mt-0.5">분 후</span>
           </>
       }
     </div>
@@ -388,26 +388,20 @@ function GimpoAirportHubCard({
   if (stations.length === 0) return null;
   const active = stations.find(s => s.id === activeId) ?? stations[0];
 
-  // 실시간이 있으면 실시간, 없으면 시간표 추정으로 폴백 (방향당 3대)
+  // 실시간이 있으면 실시간, 없으면 시간표 추정으로 폴백 (방향당 최대 3대)
   const displayArrivals = active.arrivals.length > 0
     ? active.arrivals
     : estimateNextArrivals(active.timetable, 3);
   const isEstimated = active.arrivals.length === 0;
 
-  // 방향별로 분류 후 일반/급행 분리
-  const buildRows = (arr: SubwayArrival[], dir: "상행" | "하행") => {
-    const normal = arr.filter(a => !a.isExpress).slice(0, 3);
-    const express = arr.filter(a => a.isExpress).slice(0, 1);
-    return [
-      ...normal.map(a => ({ a, dir })),
-      ...express.map(a => ({ a, dir })),
-    ];
-  };
-  const upArrivals   = displayArrivals.filter(a => a.direction === "상행");
-  const downArrivals = displayArrivals.filter(a => a.direction === "하행");
-  const rows = [
-    ...buildRows(upArrivals, "상행"),
-    ...buildRows(downArrivals, "하행"),
+  // 방향별 도착 시간 오름차순으로 상위 3개씩
+  const pickTop3 = (arr: SubwayArrival[]) =>
+    [...arr].sort((a, b) => a.arrivalMin - b.arrivalMin).slice(0, 3);
+  const upArrivals   = pickTop3(displayArrivals.filter(a => a.direction === "상행"));
+  const downArrivals = pickTop3(displayArrivals.filter(a => a.direction === "하행"));
+  const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
+    ...upArrivals.map(a => ({ a, dir: "상행" as const })),
+    ...downArrivals.map(a => ({ a, dir: "하행" as const })),
   ];
 
   return (
@@ -418,8 +412,8 @@ function GimpoAirportHubCard({
           <Train size={20} className="text-[#1d1d1f]" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[16px] font-bold text-[#1d1d1f]">김포공항역</p>
-          <p className="text-[12px] text-[#86868b]">{stations.length}개 노선 환승역</p>
+          <p className="text-[18px] font-bold text-[#1d1d1f]">김포공항역</p>
+          <p className="text-[12px] text-[#86868b]">{stations.length}개 노선 환승역 · {distLabel(active.distM)}</p>
         </div>
       </div>
 
@@ -490,22 +484,26 @@ function GimpoAirportHubCard({
             )}
             {rows.map(({ a, dir }, i) => (
               <div key={`${dir}-${i}-${a.trainNo || a.arrivalMin}`}
-                className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3.5 py-3">
                 <div className="flex-1 min-w-0 mr-2">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                       dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
                     }`}>{dir}</span>
                     {a.isExpress && (
-                      <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                        a.trainTypeName === "직통"
+                          ? "bg-[#F3E8FF] text-[#7C3AED]"
+                          : "bg-[#FFF3E0] text-[#E65100]"
+                      }`}>
                         {a.trainTypeName ?? "급행"}
                       </span>
                     )}
-                    <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
+                    <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                   </div>
-                  <p className="text-[11px] text-[#6e6e73] mt-0.5">
+                  <p className="text-[12px] text-[#6e6e73] mt-0.5">
                     {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` :
-                      isEstimated ? "예정" : a.trainNo ? `열차 ${a.trainNo}` : ""}
+                      isEstimated ? "시간표 기준 예정" : a.trainNo ? `열차 ${a.trainNo}` : ""}
                   </p>
                 </div>
                 <ArrivalBadge min={a.arrivalMin} live />
@@ -648,8 +646,8 @@ function SubwayTimetableSheet({
                       const [h, m] = curTimes[nextIdx].split(":").map(Number);
                       let diff = h * 60 + m - nowMin;
                       if (diff < 0) diff += 1440;
-                      return diff === 0 ? (
-                        <span className="text-[22px] font-black text-[#F04452]">곧도착</span>
+                      return diff <= 1 ? (
+                        <span className="text-[20px] font-black text-[#F04452]">곧 도착 예정</span>
                       ) : (
                         <>
                           <span className="text-[28px] font-black text-[#0071e3]">{diff}</span>
@@ -856,10 +854,14 @@ export default function TransportPage() {
     setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
   }, []);
 
-  // ── 지하철 데이터 로드 (위치 무관, 전체 역 표시) ────────────
-  const loadSubwayData = useCallback(async () => {
+  // ── 지하철 데이터 로드 — GPS 기준 가까운 순 정렬 ────────────
+  const loadSubwayData = useCallback(async (lat?: number, lng?: number) => {
     setSubwayLoading(true);
-    const all = getAllSubwayStations();
+    const ref = lat != null && lng != null
+      ? { lat, lng }
+      : (posRef.current ?? { lat: 37.594, lng: 126.710 });
+    // 김포공항역(허브)까지 포함하도록 반경 25km
+    const all = findNearbySubwayStations(ref.lat, ref.lng, 25000);
     const initial = all.map(st => ({ ...st, arrivals: [], loadingArrivals: true }));
     setSubwayList(initial);
     setSubwayLoading(false);
@@ -880,7 +882,7 @@ export default function TransportPage() {
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
   useEffect(() => {
     const DEFAULT = { lat: 37.594, lng: 126.710 };
-    loadSubwayData();
+    loadSubwayData(DEFAULT.lat, DEFAULT.lng);
 
     if (!navigator.geolocation) {
       posRef.current = DEFAULT;
@@ -922,9 +924,11 @@ export default function TransportPage() {
           setUserPos(p);
           if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 50) {
             loadBusData(p.lat, p.lng, false);
+            loadSubwayData(p.lat, p.lng);
           }
         } else {
           dispatchInitial(p.lat, p.lng);
+          loadSubwayData(p.lat, p.lng);
         }
       },
       () => {
@@ -955,7 +959,7 @@ export default function TransportPage() {
     if (tab === "버스") {
       await loadBusData(p.lat, p.lng);
     } else {
-      await loadSubwayData();
+      await loadSubwayData(p.lat, p.lng);
     }
     setRefreshing(false);
   };
@@ -1066,10 +1070,10 @@ export default function TransportPage() {
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[88px] right-4 z-50 w-11 h-11 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[88px] right-4 z-50 w-12 h-12 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
-        <RefreshCw size={18} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
+        <RefreshCw size={20} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
       </button>
 
       {/* 버스 상세 바텀 시트 */}
@@ -1258,9 +1262,12 @@ export default function TransportPage() {
                       <Train size={20} style={{ color: st.lineColor }} />
                     </div>
                     <div>
-                      <p className="text-[17px] font-bold text-[#1d1d1f]">{st.displayName}</p>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                        style={{ background: st.lineColor }}>{st.line}</span>
+                      <p className="text-[18px] font-bold text-[#1d1d1f]">{st.displayName}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ background: st.lineColor }}>{st.line}</span>
+                        <span className="text-[11px] text-[#86868b] font-medium">{distLabel(st.distM)}</span>
+                      </div>
                     </div>
                   </div>
                   <button onClick={() => setSelectedSubway(null)}
@@ -1280,21 +1287,25 @@ export default function TransportPage() {
                     ...downArr.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
                     ...downArr.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
                   ]).map(({ a, dir }, i) => (
-                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3.5 py-3">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
                             dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
                           }`}>{dir}</span>
                           {a.isExpress && (
-                            <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                              a.trainTypeName === "직통"
+                                ? "bg-[#F3E8FF] text-[#7C3AED]"
+                                : "bg-[#FFF3E0] text-[#E65100]"
+                            }`}>
                               {a.trainTypeName ?? "급행"}
                             </span>
                           )}
-                          <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
+                          <p className="text-[16px] font-bold text-[#1d1d1f]">{a.terminalStation} 방면</p>
                         </div>
                         {!isEst && a.currentStation && (
-                          <p className="text-[11px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
+                          <p className="text-[12px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
                         )}
                       </div>
                       <ArrivalBadge min={a.arrivalMin} live />
@@ -1471,7 +1482,7 @@ export default function TransportPage() {
                                   {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
                                 </div>
                                 <p className="text-[12px] text-[#6e6e73]">
-                                  {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                                  {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착 예정"}
                                 </p>
                               </div>
                             </div>
@@ -1554,38 +1565,46 @@ export default function TransportPage() {
                 {otherStations.map((st) => {
               const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
               const isEstimated = st.arrivals.length === 0;
-              const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
-              const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+              const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
+              const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 3);
               const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
               return (
                 <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
                   {/* 역 헤더 — 라인 컬러 배경 */}
-                  <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: st.lineColor }}>
+                  <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: st.lineColor }}>
                     <button onClick={() => setTimetableStation(st)}
-                      className="flex items-center gap-2 flex-1 min-w-0 active:opacity-70 text-left">
-                      <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
-                        <span className="text-[12px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
+                      className="flex items-center gap-2.5 flex-1 min-w-0 active:opacity-70 text-left">
+                      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                        <span className="text-[13px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                       </div>
-                      <span className="text-white font-extrabold text-[15px] truncate">{st.displayName}</span>
-                      <span className="flex items-center gap-0.5 text-white/70 text-[11px] font-medium shrink-0">
-                        <Clock size={10} />시간표
-                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-extrabold text-[18px] leading-tight truncate">{st.displayName}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
+                            <Navigation size={11} />{distLabel(st.distM)}
+                          </span>
+                          <span className="text-white/50">·</span>
+                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-medium">
+                            <Clock size={11} />시간표 보기
+                          </span>
+                        </div>
+                      </div>
                     </button>
                     {!st.planned && (
-                      <button onClick={() => toggleSubway(st.id)} className="p-1 active:opacity-60 shrink-0">
-                        <Star size={18}
+                      <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60 shrink-0">
+                        <Star size={20}
                           className={favSubways.has(st.id) ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
                       </button>
                     )}
                   </div>
 
                   {/* 도착 정보 헤더 */}
-                  <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
-                    <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+                  <div className="px-4 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                    <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
                     <div className="flex items-center gap-2">
-                      {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+                      {isEstimated && <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>}
                       {st.timetable.intervalMin > 0 && (
-                        <span className="text-[10px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
+                        <span className="text-[11px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
                       )}
                     </div>
                   </div>
@@ -1593,38 +1612,44 @@ export default function TransportPage() {
                   {/* 2열 도착 */}
                   {st.loadingArrivals ? (
                     <div className="grid grid-cols-2 gap-2 p-3">
-                      {[0,1].map(i => <div key={i} className="h-16 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                      {[0,1].map(i => <div key={i} className="h-20 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
                     </div>
                   ) : displayArrivals.length === 0 ? (
-                    <p className="px-3 py-3 text-[13px] text-[#6e6e73] text-center">운행 종료</p>
+                    <p className="px-3 py-4 text-[14px] text-[#6e6e73] text-center">운행 종료</p>
                   ) : (
                     <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
                       {[
                         { label: st.timetable.upDirection, arrivals: upArrivals },
                         { label: st.timetable.downDirection, arrivals: downArrivals },
                       ].map(({ label, arrivals: dirArrivals }, col) => (
-                        <div key={col} className="px-3 py-2.5">
-                          <div className="flex items-center gap-0.5 mb-2.5 pb-1.5 border-b border-[#f5f5f7]">
-                            <span className="text-[12px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
-                            <ChevronRight size={12} className="text-[#86868b] shrink-0" />
+                        <div key={col} className="px-3 py-3">
+                          <div className="flex items-center gap-0.5 mb-2 pb-1.5 border-b border-[#f5f5f7]">
+                            <span className="text-[13px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                            <ChevronRight size={13} className="text-[#86868b] shrink-0" />
                           </div>
                           {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
-                            <div key={i} className="flex items-center justify-between py-1">
+                            <div key={i} className="flex items-center justify-between py-1.5">
                               <div className="flex-1 min-w-0 mr-1">
-                                <span className="text-[12px] text-[#424245] block truncate">{a.terminalStation}</span>
+                                <span className="text-[13px] text-[#424245] block truncate font-medium">{a.terminalStation}</span>
                                 {!isEstimated && a.currentStation && (
-                                  <span className="text-[9px] text-[#86868b]">{a.currentStation} 출발</span>
+                                  <span className="text-[10px] text-[#86868b]">{a.currentStation} 출발</span>
                                 )}
                                 {a.isExpress && (
-                                  <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
+                                  <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 ${
+                                    a.trainTypeName === "직통"
+                                      ? "bg-[#F3E8FF] text-[#7C3AED]"
+                                      : "bg-[#FFF3E0] text-[#E65100]"
+                                  }`}>
+                                    {a.trainTypeName ?? "급행"}
+                                  </span>
                                 )}
                               </div>
-                              <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
-                                {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                              <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                                {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
                               </span>
                             </div>
                           )) : (
-                            <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                            <span className="text-[12px] text-[#86868b]">정보 없음</span>
                           )}
                         </div>
                       ))}
@@ -1634,13 +1659,13 @@ export default function TransportPage() {
                   {/* 첫차/막차 */}
                   {st.timetable.upFirst !== "-" && (
                     <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
-                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
-                        <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+                        <p className="text-[11px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                        <p className="text-[13px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
                       </div>
-                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
-                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
-                        <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+                        <p className="text-[11px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                        <p className="text-[13px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
                       </div>
                     </div>
                   )}
