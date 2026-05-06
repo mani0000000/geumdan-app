@@ -151,7 +151,10 @@ async function callMolit(
   });
   const url = `${base}?${params.toString()}`;
   const res = await fetch(url, { method: "GET" });
-  if (!res.ok) throw new Error(`MOLIT HTTP ${res.status} (${dealYmd})`);
+  if (!res.ok) {
+    const errBody = await res.text().catch(() => '(no body)');
+    throw new Error(`MOLIT HTTP ${res.status} (${dealYmd}): ${errBody.substring(0, 300)}`);
+  }
   const xml = await res.text();
 
   const resultCode = extract(xml, "resultCode");
