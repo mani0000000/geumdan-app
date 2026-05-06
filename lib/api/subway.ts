@@ -51,6 +51,13 @@ export interface SubwayStationEntry {
     intervalDisplay?: string; // 표시용 배차 문자열 (예: "6~15분") — 불규칙 배차 시 사용
     upDirection: string;   // 상행 종착역 이름 (예: "서울역")
     downDirection: string; // 하행 종착역 이름 (예: "인천공항")
+    /** 급행/직통 시간표 — 일반열차와 별도 배차로 운행하는 노선 (예: 9호선 급행). */
+    expressLabel?: string;        // "급행" | "직통"
+    expressIntervalMin?: number;  // 급행/직통 배차 (분)
+    expressUpFirst?: string;
+    expressUpLast?: string;
+    expressDownFirst?: string;
+    expressDownLast?: string;
   };
 }
 
@@ -105,7 +112,15 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "seoul9",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50", intervalMin: 9, upDirection: "중앙보훈병원", downDirection: "개화" },
+    timetable: {
+      upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50",
+      intervalMin: 9, upDirection: "중앙보훈병원", downDirection: "개화",
+      // 9호선 급행: 김포공항 정차, 약 12분 배차 (출퇴근 시간엔 더 자주)
+      expressLabel: "급행",
+      expressIntervalMin: 12,
+      expressUpFirst: "05:42", expressUpLast: "23:50",
+      expressDownFirst: "05:36", expressDownLast: "23:48",
+    },
   },
   {
     id: "gimpoair-arex",
@@ -544,8 +559,12 @@ export function estimateNextArrivals(
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const calc = (first: string, last: string, direction: "상행" | "하행", destName: string): SubwayArrival[] => {
-    if (!first || first === "-") return [];
+  const calc = (
+    first: string, last: string, intervalMin: number,
+    direction: "상행" | "하행", destName: string,
+    isExpress: boolean, expressLabel?: string,
+  ): SubwayArrival[] => {
+    if (!first || first === "-" || !intervalMin) return [];
     const [fH, fM] = first.split(":").map(Number);
     const [lH, lM] = last.split(":").map(Number);
     const firstMin = fH * 60 + fM;
@@ -555,32 +574,52 @@ export function estimateNextArrivals(
     let nowAdj = nowMin;
     if (nowAdj + 1440 < firstMin) nowAdj += 1440;
 
+    const trainTypeName = isExpress ? expressLabel : undefined;
+
     // 첫차 전: 첫차까지 2시간 이내일 때만 안내
     if (nowAdj < firstMin) {
       if (firstMin - nowAdj > 120) return [];
       const out: SubwayArrival[] = [];
       for (let i = 0; i < perDirection; i++) {
-        const arr = firstMin - nowAdj + i * timetable.intervalMin;
-        if (firstMin + i * timetable.intervalMin > lastMin) break;
-        out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress: false });
+        const arr = firstMin - nowAdj + i * intervalMin;
+        if (firstMin + i * intervalMin > lastMin) break;
+        out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress, trainTypeName });
       }
       return out;
     }
     if (nowAdj > lastMin) return [];
 
-    const nextOffset = timetable.intervalMin - ((nowAdj - firstMin) % timetable.intervalMin);
-    const baseArr = nextOffset >= timetable.intervalMin ? 0 : nextOffset;
+    const nextOffset = intervalMin - ((nowAdj - firstMin) % intervalMin);
+    const baseArr = nextOffset >= intervalMin ? 0 : nextOffset;
     const out: SubwayArrival[] = [];
     for (let i = 0; i < perDirection; i++) {
-      const arr = baseArr + i * timetable.intervalMin;
+      const arr = baseArr + i * intervalMin;
       if (nowAdj + arr > lastMin) break;
-      out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress: false });
+      out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress, trainTypeName });
     }
     return out;
   };
 
-  return [
-    ...calc(timetable.upFirst,   timetable.upLast,   "상행", timetable.upDirection),
-    ...calc(timetable.downFirst, timetable.downLast, "하행", timetable.downDirection),
+  const result = [
+    ...calc(timetable.upFirst,   timetable.upLast,   timetable.intervalMin, "상행", timetable.upDirection,   false),
+    ...calc(timetable.downFirst, timetable.downLast, timetable.intervalMin, "하행", timetable.downDirection, false),
   ];
+
+  // 급행/직통 시간표가 별도로 있으면 추가
+  if (timetable.expressIntervalMin) {
+    result.push(
+      ...calc(
+        timetable.expressUpFirst ?? timetable.upFirst,
+        timetable.expressUpLast ?? timetable.upLast,
+        timetable.expressIntervalMin, "상행", timetable.upDirection, true, timetable.expressLabel,
+      ),
+      ...calc(
+        timetable.expressDownFirst ?? timetable.downFirst,
+        timetable.expressDownLast ?? timetable.downLast,
+        timetable.expressIntervalMin, "하행", timetable.downDirection, true, timetable.expressLabel,
+      ),
+    );
+  }
+
+  return result;
 }

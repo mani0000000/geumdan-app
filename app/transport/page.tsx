@@ -490,7 +490,7 @@ function GimpoAirportHubCard({
                     <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                       dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
                     }`}>{dir}</span>
-                    {a.isExpress && (
+                    {a.isExpress ? (
                       <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
                         a.trainTypeName === "직통"
                           ? "bg-[#F3E8FF] text-[#7C3AED]"
@@ -498,6 +498,13 @@ function GimpoAirportHubCard({
                       }`}>
                         {a.trainTypeName ?? "급행"}
                       </span>
+                    ) : (
+                      // 같은 카드에서 급행과 함께 보일 때 식별이 어렵지 않도록 일반 배지 표시
+                      (active.apiType === "seoul9" || active.apiType === "arex") && (
+                        <span className="text-[11px] font-bold bg-white text-[#424245] border border-[#e5e5ea] px-1.5 py-0.5 rounded shrink-0">
+                          일반
+                        </span>
+                      )
                     )}
                     <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                   </div>
@@ -545,6 +552,11 @@ function SubwayTimetableSheet({
   onClose: () => void;
 }) {
   const [dirTab, setDirTab] = useState<"up" | "down">("up");
+  // 일반/급행 토글 (급행 시간표가 별도로 있는 노선만 활성)
+  const hasExpress = !!station.timetable.expressIntervalMin;
+  const [typeTab, setTypeTab] = useState<"normal" | "express">("normal");
+  const useExpress = hasExpress && typeTab === "express";
+  const expressLabel = station.timetable.expressLabel ?? "급행";
 
   function generateTimes(first: string, last: string, interval: number): string[] {
     if (!first || first === "-" || !interval) return [];
@@ -565,10 +577,17 @@ function SubwayTimetableSheet({
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const upTimes   = generateTimes(station.timetable.upFirst,   station.timetable.upLast,   station.timetable.intervalMin);
-  const downTimes = generateTimes(station.timetable.downFirst, station.timetable.downLast, station.timetable.intervalMin);
+  const tt = station.timetable;
+  const upFirst   = useExpress ? (tt.expressUpFirst   ?? tt.upFirst)   : tt.upFirst;
+  const upLast    = useExpress ? (tt.expressUpLast    ?? tt.upLast)    : tt.upLast;
+  const downFirst = useExpress ? (tt.expressDownFirst ?? tt.downFirst) : tt.downFirst;
+  const downLast  = useExpress ? (tt.expressDownLast  ?? tt.downLast)  : tt.downLast;
+  const curIntervalMin = useExpress ? (tt.expressIntervalMin ?? tt.intervalMin) : tt.intervalMin;
+
+  const upTimes   = generateTimes(upFirst,   upLast,   curIntervalMin);
+  const downTimes = generateTimes(downFirst, downLast, curIntervalMin);
   const curTimes  = dirTab === "up" ? upTimes : downTimes;
-  const curDest   = dirTab === "up" ? station.timetable.upDirection : station.timetable.downDirection;
+  const curDest   = dirTab === "up" ? tt.upDirection : tt.downDirection;
 
   const isTimePast = (t: string) => {
     const [h, m] = t.split(":").map(Number);
@@ -609,11 +628,31 @@ function SubwayTimetableSheet({
               <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
             </button>
           </div>
-          <p className="text-[11px] text-[#86868b] mt-2 flex items-center gap-1">
-            <Clock size={11} />
-            배차 {station.timetable.intervalDisplay ?? `${station.timetable.intervalMin}분`} 기준 추정 시간표
+          <p className="text-[12px] text-[#86868b] mt-2 flex items-center gap-1">
+            <Clock size={12} />
+            배차 {useExpress
+              ? `${tt.expressIntervalMin}분 (${expressLabel})`
+              : tt.intervalDisplay ?? `${tt.intervalMin}분`} 기준 추정 시간표
           </p>
         </div>
+
+        {/* 일반/급행(직통) 탭 — 급행 시간표가 별도로 있는 노선에만 표시 */}
+        {hasExpress && (
+          <div className="shrink-0 flex border-b border-[#f5f5f7]">
+            {([
+              { v: "normal" as const,  label: "일반열차", color: "#0071e3" },
+              { v: "express" as const, label: expressLabel, color: expressLabel === "직통" ? "#7C3AED" : "#E65100" },
+            ]).map(opt => (
+              <button key={opt.v} onClick={() => setTypeTab(opt.v)}
+                className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${
+                  typeTab === opt.v ? "" : "text-[#86868b] border-transparent"
+                }`}
+                style={typeTab === opt.v ? { color: opt.color, borderColor: opt.color } : undefined}>
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* 방면 탭 */}
         <div className="shrink-0 flex border-b border-[#f5f5f7]">
@@ -622,7 +661,7 @@ function SubwayTimetableSheet({
               className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
                 dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
               }`}>
-              {dir === "up" ? `⬆ ${station.timetable.upDirection}` : `⬇ ${station.timetable.downDirection}`}
+              {dir === "up" ? `⬆ ${tt.upDirection}` : `⬇ ${tt.downDirection}`}
             </button>
           ))}
         </div>
