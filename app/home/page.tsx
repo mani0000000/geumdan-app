@@ -24,7 +24,7 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
@@ -2647,10 +2647,21 @@ function HomeTransportWidget() {
   const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
   const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
 
+  // 인천 BUS_BASE arrivals API는 production에서 모든 stationId 형식을 거부 →
+  // TAGO tagoArrivals(fetchArrivalsByNodeId)만 신뢰. 기존 favStops에 5자리 숫자
+  // stationId(89XXX/42XXX)가 저장돼 있으면 ICB 형식으로 변환해서 호출.
+  const toIcbId = (id: string): string => {
+    if (id.startsWith("ICB")) return id;
+    if (/^89\d{3}$/.test(id)) return `ICB168001${id.slice(2)}`;
+    if (/^42\d{3}$/.test(id)) return `ICB168000${id.slice(2)}`;
+    if (/^41\d{3}$/.test(id)) return `ICB167000${id.slice(2)}`;
+    return id;
+  };
+
   const refreshBusStop = useCallback(async (stopId: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
-      const data = await fetchArrivalsByStationId(stopId);
+      const data = await fetchArrivalsByNodeId(toIcbId(stopId));
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
       setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
