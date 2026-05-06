@@ -369,6 +369,8 @@ function BusDetailSheet({
 }
 
 // ─── 김포공항역 환승 통합 카드 (5호선·9호선·공항철도·서해선·김포골드라인) ────
+// 일반 역 카드와 동일한 컨테이너·헤더·도착정보 레이아웃을 사용하고,
+// 노선 탭 셀렉터만 카드 내부에 추가로 둔다.
 function GimpoAirportHubCard({
   stations,
   favSubways,
@@ -391,37 +393,38 @@ function GimpoAirportHubCard({
   if (stations.length === 0) return null;
   const active = stations.find(s => s.id === activeId) ?? stations[0];
 
-  // 실시간이 있으면 실시간, 없으면 시간표 추정으로 폴백 (방향당 최대 3대)
   const displayArrivals = active.arrivals.length > 0
     ? active.arrivals
     : estimateNextArrivals(active.timetable, 3);
   const isEstimated = active.arrivals.length === 0;
-
-  // 방향별 도착 시간 오름차순으로 상위 3개씩
-  const pickTop3 = (arr: SubwayArrival[]) =>
-    [...arr].sort((a, b) => a.arrivalMin - b.arrivalMin).slice(0, 3);
-  const upArrivals   = pickTop3(displayArrivals.filter(a => a.direction === "상행"));
-  const downArrivals = pickTop3(displayArrivals.filter(a => a.direction === "하행"));
-  const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
-    ...upArrivals.map(a => ({ a, dir: "상행" as const })),
-    ...downArrivals.map(a => ({ a, dir: "하행" as const })),
-  ];
+  const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
+  const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 3);
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden">
-      {/* 헤더 */}
-      <div className="px-4 pt-4 pb-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-[#1d1d1f]/5 flex items-center justify-center shrink-0">
-          <Train size={20} className="text-[#1d1d1f]" />
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+      {/* 역 헤더 — 활성 노선 컬러 (일반 역 카드와 동일 패턴) */}
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: active.lineColor }}>
+        <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+          <span className="text-[11px] font-black leading-none" style={{ color: active.lineColor }}>환승</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[18px] font-bold text-[#1d1d1f]">김포공항역</p>
-          <p className="text-[12px] text-[#86868b]">{stations.length}개 노선 환승역 · {distLabel(active.distM)}</p>
+          <p className="text-white font-extrabold text-[18px] leading-tight truncate">김포공항역</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
+              <Navigation size={11} />{distLabel(active.distM)}
+            </span>
+            <span className="text-white/50">·</span>
+            <span className="text-white/85 text-[12px] font-medium">{stations.length}개 노선 환승역</span>
+          </div>
         </div>
+        <button onClick={() => onToggleFav(active.id)} className="p-1.5 active:opacity-60 shrink-0">
+          <Star size={20}
+            className={favSubways.has(active.id) ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
+        </button>
       </div>
 
-      {/* 노선 탭 */}
-      <div className="flex gap-1.5 px-4 pb-3 overflow-x-auto scrollbar-hide">
+      {/* 노선 셀렉터 (카드 내부 전용) */}
+      <div className="flex gap-1.5 px-4 py-3 overflow-x-auto scrollbar-hide border-b border-[#f5f5f7]">
         {stations.map(st => {
           const isActive = st.id === activeId;
           return (
@@ -438,110 +441,91 @@ function GimpoAirportHubCard({
         })}
       </div>
 
-      {/* 활성 노선 도착 정보 */}
-      <div className="px-4 pb-4 space-y-2 border-t border-[#f5f5f7] pt-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-              style={{ background: active.lineColor }}>{active.line}</span>
-            {active.timetable.intervalMin > 0 && (
-              <span className="text-[11px] text-[#86868b]">
-                배차 {active.timetable.intervalDisplay ?? `${active.timetable.intervalMin}분`}
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-0.5">
-            <button onClick={() => onOpenTimetable(active)}
-              className="flex items-center gap-1 text-[11px] text-[#0071e3] font-medium px-2 py-1 active:opacity-60">
-              <Clock size={11} />전체 시간표
-            </button>
-            <button onClick={() => onToggleFav(active.id)} className="p-1.5 active:opacity-60">
-              <Star size={18}
-                className={favSubways.has(active.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
-            </button>
-          </div>
+      {/* 도착 정보 헤더 — 일반 역 카드와 동일 */}
+      <div className="px-4 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+        <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
+        <div className="flex items-center gap-2">
+          {isEstimated && (
+            <span className="text-[11px] text-[#86868b]">
+              ⏱ {active.apiType === "gimpogold" ? "김포골드라인 시간표" : "시간표 기준"}
+            </span>
+          )}
+          {active.timetable.intervalMin > 0 && (
+            <span className="text-[11px] text-[#86868b]">
+              배차 {active.timetable.intervalDisplay ?? `${active.timetable.intervalMin}분`}
+            </span>
+          )}
+          <button onClick={() => onOpenTimetable(active)}
+            className="flex items-center gap-1 text-[11px] text-[#0071e3] font-bold px-2 py-1 active:opacity-60">
+            <Clock size={11} />시간표
+          </button>
         </div>
+      </div>
 
-        {active.loadingArrivals ? (
-          [0, 1].map(i => (
-            <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
-              <div className="space-y-1.5">
-                <div className="h-3.5 w-20 bg-[#d2d2d7] rounded" />
-                <div className="h-3 w-14 bg-[#d2d2d7] rounded" />
-              </div>
-              <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
-            </div>
-          ))
-        ) : displayArrivals.length === 0 ? (
-          <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-            <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
-          </div>
-        ) : (
-          <>
-            {isEstimated && (
-              <div className="flex items-center gap-1.5 px-1 pb-1">
-                <span className="text-[11px] text-[#86868b]">
-                  ⏱ {active.apiType === "gimpogold" ? "김포골드라인은 시간표 기준" : "시간표 기준"} 추정 도착
+      {/* 2열 도착 — 일반 역 카드와 동일 */}
+      {active.loadingArrivals ? (
+        <div className="grid grid-cols-2 gap-2 p-3">
+          {[0,1].map(i => <div key={i} className="h-20 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+        </div>
+      ) : displayArrivals.length === 0 ? (
+        <p className="px-3 py-4 text-[14px] text-[#6e6e73] text-center">운행 종료</p>
+      ) : (
+        <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+          {[
+            { label: active.timetable.upDirection, arrivals: upArrivals },
+            { label: active.timetable.downDirection, arrivals: downArrivals },
+          ].map(({ label, arrivals: dirArrivals }, col) => (
+            <div key={col} className="px-3 py-3">
+              <div className="flex items-center gap-0.5 mb-2 pb-1.5 border-b border-[#f5f5f7]">
+                <span className="text-[13px] font-bold text-[#1d1d1f] flex-1 truncate">
+                  {label === "-" ? "운행 없음" : `${label} 방면`}
                 </span>
+                <ChevronRight size={13} className="text-[#86868b] shrink-0" />
               </div>
-            )}
-            {rows.map(({ a, dir }, i) => (
-              <div key={`${dir}-${i}-${a.trainNo || a.arrivalMin}`}
-                className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3.5 py-3">
-                <div className="flex-1 min-w-0 mr-2">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                      dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
-                    }`}>{dir}</span>
-                    {a.isExpress ? (
-                      <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+              {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5">
+                  <div className="flex-1 min-w-0 mr-1">
+                    <span className="text-[13px] text-[#424245] block truncate font-medium">{a.terminalStation}</span>
+                    {!isEstimated && a.currentStation && (
+                      <span className="text-[10px] text-[#86868b]">{a.currentStation} 출발</span>
+                    )}
+                    {a.isExpress && (
+                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 ${
                         a.trainTypeName === "직통"
                           ? "bg-[#F3E8FF] text-[#7C3AED]"
                           : "bg-[#FFF3E0] text-[#E65100]"
                       }`}>
                         {a.trainTypeName ?? "급행"}
                       </span>
-                    ) : (
-                      // 같은 카드에서 급행과 함께 보일 때 식별이 어렵지 않도록 일반 배지 표시
-                      (active.apiType === "seoul9" || active.apiType === "arex") && (
-                        <span className="text-[11px] font-bold bg-white text-[#424245] border border-[#e5e5ea] px-1.5 py-0.5 rounded shrink-0">
-                          일반
-                        </span>
-                      )
                     )}
-                    <p className="text-[16px] font-bold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                   </div>
-                  <p className="text-[12px] text-[#6e6e73] mt-0.5">
-                    {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` :
-                      isEstimated ? "시간표 기준 예정" : a.trainNo ? `열차 ${a.trainNo}` : ""}
-                  </p>
+                  <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                    {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
+                  </span>
                 </div>
-                <ArrivalBadge min={a.arrivalMin} live />
-              </div>
-            ))}
-          </>
-        )}
-
-        {/* 첫차/막차 */}
-        {active.timetable.upFirst !== "-" && (
-          <div className="flex gap-2 pt-1">
-            <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-              <p className="text-[10px] text-[#6e6e73] mb-0.5">{active.timetable.upDirection} 방면 첫차/막차</p>
-              <p className="text-[12px] font-bold text-[#1d1d1f]">
-                {active.timetable.upFirst} / {active.timetable.upLast}
-              </p>
+              )) : (
+                <span className="text-[12px] text-[#86868b]">정보 없음</span>
+              )}
             </div>
-            {active.timetable.downFirst !== "-" && (
-              <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                <p className="text-[10px] text-[#6e6e73] mb-0.5">{active.timetable.downDirection} 방면 첫차/막차</p>
-                <p className="text-[12px] font-bold text-[#1d1d1f]">
-                  {active.timetable.downFirst} / {active.timetable.downLast}
-                </p>
-              </div>
-            )}
+          ))}
+        </div>
+      )}
+
+      {/* 첫차/막차 */}
+      {active.timetable.upFirst !== "-" && (
+        <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+          <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+            <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.upDirection} 첫/막차</p>
+            <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.upFirst} / {active.timetable.upLast}</p>
           </div>
-        )}
-      </div>
+          {active.timetable.downFirst !== "-" && (
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.downDirection} 첫/막차</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.downFirst} / {active.timetable.downLast}</p>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -1206,10 +1190,10 @@ export default function TransportPage() {
       {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
       {tab === "버스" && (favBusRouteCards.length > 0 || favStopList.length > 0 || favRouteList.length > 0) && (
         <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
+          <div className="flex items-center justify-between px-4 pt-5 pb-2">
+            <div className="flex items-center gap-2">
+              <Star size={16} className="text-[#FFBB00] fill-[#FFBB00]" />
+              <span className="text-[17px] font-extrabold text-[#1d1d1f]">즐겨찾기</span>
             </div>
             <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
               <RefreshCw size={11} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
@@ -1287,9 +1271,9 @@ export default function TransportPage() {
       {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
       {tab === "지하철" && favSubwayList.length > 0 && (
         <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center px-4 pt-3 pb-1.5 gap-1.5">
-            <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-            <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
+          <div className="flex items-center px-4 pt-5 pb-2 gap-2">
+            <Star size={16} className="text-[#FFBB00] fill-[#FFBB00]" />
+            <span className="text-[17px] font-extrabold text-[#1d1d1f]">즐겨찾기</span>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
             {favSubwayList.map(st => {
@@ -1433,18 +1417,24 @@ export default function TransportPage() {
         );
       })()}
 
-      {/* 위치 상태 바 */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-[#0071e3]" />
-          <span className="text-[13px] text-[#424245] font-medium">가까운 순 정렬</span>
-          <LocBadge />
+      {/* 위치 상태 + 섹션 헤더 — 홈 SectionLabel 스타일 */}
+      {tab !== "가볼만한곳" && (
+        <div className="flex items-end justify-between px-4 pt-5 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[19px] font-extrabold text-[#1d1d1f]">
+              {tab === "버스" ? "주변 정류장" : "주변 지하철역"}
+            </span>
+            <span className="flex items-center gap-1 text-[12px] text-[#86868b]">
+              <MapPin size={11} className="text-[#0071e3]" />가까운 순
+            </span>
+            <LocBadge />
+          </div>
+          <button onClick={refresh} className="flex items-center gap-1 active:opacity-60 pb-0.5">
+            <RefreshCw size={12} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+            <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
+          </button>
         </div>
-        <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-          <RefreshCw size={13} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
-          <span className="text-[12px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
-        </button>
-      </div>
+      )}
 
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
@@ -1499,14 +1489,14 @@ export default function TransportPage() {
               const open = expanded === stop.id;
               const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
               return (
-                <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
+                <div key={stop.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
                   {/* 정류장 헤더 */}
                   <button onClick={() => setExpanded(open ? null : stop.id)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#f5f5f7]">
+                    className="w-full flex items-center justify-between px-4 py-4 active:bg-[#f5f5f7]">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
-                          <Bus size={18} className="text-[#0071e3]" />
+                        <div className="w-11 h-11 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                          <Bus size={20} className="text-[#0071e3]" />
                         </div>
                         {idx === 0 && (
                           <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
@@ -1515,7 +1505,7 @@ export default function TransportPage() {
                         )}
                       </div>
                       <div className="text-left">
-                        <p className="text-[15px] font-bold text-[#1d1d1f]">{stop.name}</p>
+                        <p className="text-[16px] font-bold text-[#1d1d1f] leading-tight">{stop.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Navigation size={10} className="text-[#0071e3]" />
                           <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
