@@ -100,7 +100,6 @@ function DetailContent() {
   const [meAvatar, setMeAvatar] = useState<string | null>(null);
   const [meNickname, setMeNickname] = useState("검단주민");
   const [meDong, setMeDong] = useState("검단");
-  const [anonymous, setAnonymous] = useState(false);
 
   useEffect(() => {
     getUserProfile().then(p => {
@@ -192,7 +191,7 @@ function DetailContent() {
         authorAvatarUrl: meAvatar,
         userId: uid,
         content: commentText.trim(),
-        isAnonymous: anonymous,
+        isAnonymous: false,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -551,7 +550,7 @@ function DetailContent() {
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
-          <ThreadAvatar name={anonymous ? "익명" : meNickname} src={anonymous ? null : meAvatar} size={32} />
+          <ThreadAvatar name={meNickname} src={meAvatar} size={32} />
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
             <input value={commentText} onChange={e => setCommentText(e.target.value)}
               onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
@@ -562,10 +561,6 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-            익명
-          </button>
         </div>
       </div>
 

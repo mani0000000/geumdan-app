@@ -883,7 +883,7 @@ const PopularCard = memo(function PopularCard({
   return (
     <Link href={`/stores/${store.id}`}
       className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.05)] border border-[#eeeef0] flex flex-col w-full">
-      <div className="relative w-full overflow-hidden" style={{ aspectRatio: "1/1" }}>
+      <div className="relative w-full overflow-hidden" style={{ aspectRatio: "5/3" }}>
         {heroThumb ? (
           <img src={heroThumb} alt={store.name}
             loading="lazy" decoding="async"
@@ -1041,9 +1041,6 @@ function StoreListView() {
           label: string; badge: string; color: string;
         }) {
           if (items.length === 0) return null;
-          const [featured, ...rest] = items;
-          const store = allStores.find(s => s.id === featured.storeId);
-          const [gFrom, gTo] = catGrads[featured.category] ?? ["#6B7280", "#4B5563"];
           return (
             <div>
               <div className="flex items-center gap-2.5 px-4 mb-3">
@@ -1054,44 +1051,35 @@ function StoreListView() {
                 <div className="flex-1 h-px bg-[#e5e5ea]" />
               </div>
               <div className="px-4 space-y-2">
-                <button onClick={() => store && setSelectedStore(store)}
-                  className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">{featured.category}</span>
-                      <span className="text-[10px] font-black bg-black/20 text-white px-2 py-0.5 rounded-full">{badge}</span>
-                    </div>
-                    <p className="text-[22px] font-black text-white leading-tight">{featured.storeName}</p>
-                    <p className="text-[13px] text-white/70 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
-                    {featured.openBenefit && (
-                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2.5">
-                        <p className="text-[12px] text-white font-semibold leading-snug">{featured.openBenefit.summary}</p>
-                      </div>
-                    )}
-                  </div>
-                </button>
-                {rest.length > 0 && (
-                  <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-                    {rest.map(o => {
-                      const s = allStores.find(x => x.id === o.storeId);
-                      return (
-                        <button key={o.id} onClick={() => s && setSelectedStore(s)}
-                          className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                          <StoreLogo name={o.storeName} category={o.category} size={42} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
-                            <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
-                            {o.openBenefit && (
-                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>
+                {items.map((o, idx) => {
+                  const s = allStores.find(x => x.id === o.storeId);
+                  const isTop = idx === 0;
+                  return (
+                    <button key={o.id} onClick={() => s && setSelectedStore(s)}
+                      className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
+                      <div className="w-[3px] shrink-0" style={{ background: color }} />
+                      <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
+                        <StoreLogo name={o.storeName} category={o.category} size={46} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
+                            {isTop && (
+                              <span className="shrink-0 text-[9px] font-black text-white px-1.5 py-0.5 rounded-full"
+                                style={{ background: color }}>
+                                {badge}
+                              </span>
                             )}
                           </div>
-                          <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                          <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.category} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                          {o.openBenefit && (
+                            <p className="text-[12px] text-[#F04452] font-semibold line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>
+                          )}
+                        </div>
+                        <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           );

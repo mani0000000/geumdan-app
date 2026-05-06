@@ -1,15 +1,15 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, MessageCircle, Bus, ShoppingBag, User } from "lucide-react";
+import { Home, Rss, Navigation, Store, User } from "lucide-react";
 import SuggestFAB from "@/components/ui/SuggestFAB";
 
 const navItems = [
-  { href: "/stores",    label: "상가",    icon: ShoppingBag,   match: "/stores" },
-  { href: "/community", label: "소식",    icon: MessageCircle, match: ["/community", "/news", "/real-estate"] },
-  { href: "/home",      label: "홈",      icon: Home,      match: "/home", center: true },
-  { href: "/transport", label: "교통",    icon: Bus,       match: "/transport" },
-  { href: "/mypage",    label: "MY",      icon: User,      match: "/mypage" },
+  { href: "/stores",    label: "상가",      icon: Store,      match: "/stores" },
+  { href: "/community", label: "소식",      icon: Rss,        match: ["/community", "/news", "/real-estate"] },
+  { href: "/home",      label: "홈",        icon: Home,       match: "/home", center: true },
+  { href: "/transport", label: "여행/교통", icon: Navigation, match: "/transport" },
+  { href: "/mypage",    label: "MY",        icon: User,       match: "/mypage" },
 ];
 
 export default function BottomNav() {
