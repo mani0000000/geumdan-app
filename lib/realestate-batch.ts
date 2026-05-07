@@ -415,10 +415,17 @@ export async function runRealestateBatch(opts: BatchOptions): Promise<BatchResul
         const row = mapTrade(it);
         if (row) tradeRows.push(row);
       }
-      detail.tradesKept = tradeRows.length;
-      if (tradeRows.length > 0) {
+      // 중복 제거 — 같은 conflict key 행이 2개 이상이면 ON CONFLICT DO UPDATE 에러
+      const tradeUniq = new Map<string, TradeRow>();
+      for (const r of tradeRows) {
+        const k = `${r.apt_name}|${r.dong}|${r.jibun}|${r.exclu_use_ar}|${r.floor_no}|${r.deal_year}|${r.deal_month}|${r.deal_day}|${r.deal_amount}`;
+        tradeUniq.set(k, r);
+      }
+      const tradeRowsDedup = Array.from(tradeUniq.values());
+      detail.tradesKept = tradeRowsDedup.length;
+      if (tradeRowsDedup.length > 0) {
         const ins = await upsertChunked(
-          supabaseUrl, supabaseKey, "apartment_trades", tradeRows,
+          supabaseUrl, supabaseKey, "apartment_trades", tradeRowsDedup,
           ["apt_name", "dong", "jibun", "exclu_use_ar", "floor_no", "deal_year", "deal_month", "deal_day", "deal_amount"],
         );
         totalTrades += ins;
@@ -437,10 +444,17 @@ export async function runRealestateBatch(opts: BatchOptions): Promise<BatchResul
         const row = mapRental(it);
         if (row) rentalRows.push(row);
       }
-      detail.rentalsKept = rentalRows.length;
-      if (rentalRows.length > 0) {
+      // 중복 제거
+      const rentalUniq = new Map<string, RentalRow>();
+      for (const r of rentalRows) {
+        const k = `${r.apt_name}|${r.dong}|${r.jibun}|${r.exclu_use_ar}|${r.floor_no}|${r.contract_year}|${r.contract_month}|${r.contract_day}|${r.deposit}|${r.monthly_rent}`;
+        rentalUniq.set(k, r);
+      }
+      const rentalRowsDedup = Array.from(rentalUniq.values());
+      detail.rentalsKept = rentalRowsDedup.length;
+      if (rentalRowsDedup.length > 0) {
         const ins = await upsertChunked(
-          supabaseUrl, supabaseKey, "apartment_rentals", rentalRows,
+          supabaseUrl, supabaseKey, "apartment_rentals", rentalRowsDedup,
           ["apt_name", "dong", "jibun", "exclu_use_ar", "floor_no", "contract_year", "contract_month", "contract_day", "deposit", "monthly_rent"],
         );
         totalRentals += ins;
