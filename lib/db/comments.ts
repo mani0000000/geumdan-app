@@ -87,23 +87,96 @@ export async function createComment(
   input: CommentInput
 ): Promise<DBComment | null> {
   if (!isConfigured()) return null;
+  const uid = typeof window !== 'undefined' ? localStorage.getItem('geumdan_uid') : null;
+  const payload: Record<string, unknown> = {
+    post_id: input.postId,
+    author: input.author,
+    author_dong: input.authorDong,
+    content: input.content,
+    is_anonymous: input.isAnonymous,
+  };
+  if (uid) payload.user_id = uid;
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .insert({
-        post_id: input.postId,
-        author: input.author,
-        author_dong: input.authorDong,
-        content: input.content,
-        is_anonymous: input.isAnonymous,
-      })
+      .insert(payload)
       .select()
       .single();
-    if (error) throw error;
+    if (error) {
+      if (error.code === 'PGRST204' && 'user_id' in payload) {
+        delete payload.user_id;
+        const retry = await supabase.from('community_comments').insert(payload).select().single();
+        if (retry.error) throw retry.error;
+        return rowToComment(retry.data as Record<string, unknown>);
+      }
+      throw error;
+    }
     return rowToComment(data as Record<string, unknown>);
   } catch (e) {
     console.error('[comments] createComment error:', e);
     return null;
+  }
+}
+
+// ── 내 댓글 (post 정보 join) ────────────────────────────────
+export interface MyCommentWithPost extends DBComment {
+  postTitle: string;
+  postCategory: string;
+}
+
+export async function fetchMyComments(
+  uid: string,
+  extraIds: string[] = []
+): Promise<MyCommentWithPost[]> {
+  if (!isConfigured() || !uid) return [];
+  try {
+    const ownRes = await supabase
+      .from('community_comments')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    const merged = new Map<string, DBComment>();
+    for (const row of (ownRes.data ?? []) as Record<string, unknown>[]) {
+      const c = rowToComment(row);
+      merged.set(c.id, c);
+    }
+
+    if (extraIds.length) {
+      const extraRes = await supabase
+        .from('community_comments')
+        .select('*')
+        .in('id', extraIds.slice(0, 100))
+        .order('created_at', { ascending: false });
+      for (const row of (extraRes.data ?? []) as Record<string, unknown>[]) {
+        const c = rowToComment(row);
+        merged.set(c.id, c);
+      }
+    }
+
+    const comments = Array.from(merged.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    if (comments.length === 0) return [];
+
+    const postIds = Array.from(new Set(comments.map(c => c.postId)));
+    const { data: posts } = await supabase
+      .from('community_posts')
+      .select('id,title,category')
+      .in('id', postIds);
+    const postMap = new Map<string, { title: string; category: string }>();
+    for (const p of (posts ?? []) as Array<{ id: string; title: string; category: string }>) {
+      postMap.set(p.id, { title: p.title, category: p.category });
+    }
+    return comments.map(c => ({
+      ...c,
+      postTitle: postMap.get(c.postId)?.title ?? '(원글 없음)',
+      postCategory: postMap.get(c.postId)?.category ?? '',
+    }));
+  } catch (e) {
+    console.error('[comments] fetchMyComments error:', e);
+    return [];
   }
 }
 

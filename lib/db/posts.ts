@@ -107,24 +107,74 @@ export interface PostInput {
 
 export async function createPost(input: PostInput): Promise<Post | null> {
   if (!isConfigured()) return null;
+  const uid = typeof window !== 'undefined' ? localStorage.getItem('geumdan_uid') : null;
+  const payload: Record<string, unknown> = {
+    category: input.category,
+    title: input.title,
+    content: input.content,
+    author: input.author,
+    author_dong: input.authorDong,
+    is_anonymous: input.isAnonymous,
+  };
+  if (uid) payload.user_id = uid;
   try {
     const { data, error } = await supabase
       .from('community_posts')
-      .insert({
-        category: input.category,
-        title: input.title,
-        content: input.content,
-        author: input.author,
-        author_dong: input.authorDong,
-        is_anonymous: input.isAnonymous,
-      })
+      .insert(payload)
       .select()
       .single();
-    if (error) throw error;
+    if (error) {
+      // user_id 컬럼 없을 시 재시도 (PGRST204)
+      if (error.code === 'PGRST204' && 'user_id' in payload) {
+        delete payload.user_id;
+        const retry = await supabase.from('community_posts').insert(payload).select().single();
+        if (retry.error) throw retry.error;
+        return rowToPost(retry.data as Record<string, unknown>);
+      }
+      throw error;
+    }
     return rowToPost(data as Record<string, unknown>);
   } catch (e) {
     console.error('[posts] createPost error:', e);
     return null;
+  }
+}
+
+// ── 내가 쓴 글 ───────────────────────────────────────────────
+export async function fetchMyPosts(uid: string, extraIds: string[] = []): Promise<Post[]> {
+  if (!isConfigured() || !uid) return [];
+  try {
+    const ownRes = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('user_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(100);
+
+    const merged = new Map<string, Post>();
+    for (const row of (ownRes.data ?? []) as Record<string, unknown>[]) {
+      const p = rowToPost(row);
+      merged.set(p.id, p);
+    }
+
+    if (extraIds.length) {
+      const extraRes = await supabase
+        .from('community_posts')
+        .select('*')
+        .in('id', extraIds.slice(0, 100))
+        .order('created_at', { ascending: false });
+      for (const row of (extraRes.data ?? []) as Record<string, unknown>[]) {
+        const p = rowToPost(row);
+        merged.set(p.id, p);
+      }
+    }
+
+    return Array.from(merged.values()).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  } catch (e) {
+    console.error('[posts] fetchMyPosts error:', e);
+    return [];
   }
 }
 

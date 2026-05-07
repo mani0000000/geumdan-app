@@ -190,6 +190,53 @@ export async function updateUserProfile(
   lsSet(PROFILE_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
+// ── 아바타 (localStorage 전용) ────────────────────────────────────
+const AVATAR_KEY = "geumdan_avatar";
+
+export function getAvatarUrl(): string | null {
+  return lsGet(AVATAR_KEY);
+}
+
+export function setAvatarUrl(dataUrlOrUrl: string | null) {
+  if (typeof window === "undefined") return;
+  if (dataUrlOrUrl) localStorage.setItem(AVATAR_KEY, dataUrlOrUrl);
+  else localStorage.removeItem(AVATAR_KEY);
+}
+
+// ── 마이페이지 요약 통계 ────────────────────────────────────────
+export interface MyPageSummary {
+  postCount: number;
+  commentCount: number;
+  favoriteCount: number;
+}
+
+function lsCount(key: string): number {
+  try {
+    const arr = JSON.parse(lsGet(key) ?? "[]");
+    return Array.isArray(arr) ? arr.length : 0;
+  } catch { return 0; }
+}
+
+export async function getMyPageSummary(): Promise<MyPageSummary> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return { postCount: 0, commentCount: 0, favoriteCount: 0 };
+  const [postCount, commentCount, buses, stores, apts] = await Promise.all([
+    getMyPostCount(),
+    getMyCommentCount(),
+    getFavoriteBuses(),
+    getFavoriteStores(),
+    getFavoriteApts(),
+  ]);
+  // user_id 컬럼 도입 전 작성 글/댓글까지 반영하려고 localStorage 보조 카운트 사용
+  const lsPosts = lsCount("myPostIds");
+  const lsComments = lsCount("myCommentIds");
+  return {
+    postCount: Math.max(postCount, lsPosts),
+    commentCount: Math.max(commentCount, lsComments),
+    favoriteCount: buses.length + stores.length + apts.length,
+  };
+}
+
 // ── 포인트 추가 (내역 기록 포함) ──────────────────────────────────────
 const HISTORY_KEY = "geumdan_point_history";
 
