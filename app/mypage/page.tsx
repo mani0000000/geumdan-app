@@ -1,442 +1,253 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ChevronRight, Bell, Shield, FileText as FileIcon,
-  Bus, Train, MapPin, Star, X, Pencil, MessageSquare,
+  Settings, ChevronRight,
+  FileText, MessageCircle, Heart,
+  Building, Bus, Store, Newspaper, UserCog, Bell, LogOut,
 } from "lucide-react";
-import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
-import { supabase } from "@/lib/supabase";
+import Avatar from "@/components/ui/Avatar";
 import {
-  getOrCreateUserId, getUserProfile, type UserProfile,
+  getUserProfile,
+  getMyPageSummary,
+  type UserProfile,
+  type MyPageSummary,
 } from "@/lib/db/userdata";
-import {
-  getFavoritePlaces, removeFavoritePlace, type FavoritePlace,
-} from "@/lib/db/placeFavorites";
-import packageJson from "../../package.json";
 
-const APP_VERSION = packageJson.version;
+const PRIMARY = "#2563EB";
 
-interface FavStop {
-  id: string;
-  name: string;
-}
-
-interface FavSubway {
-  id: string;
-  name: string;
-  line?: string;
-  lineColor?: string;
-}
-
-interface MyPost {
-  id: string;
-  title: string;
-  category: string;
-  created_at: string;
-  comment_count: number;
-  like_count: number;
-}
-
-function loadFavStops(): FavStop[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const ids: string[] = JSON.parse(localStorage.getItem("favStops") ?? "[]");
-    const meta: Record<string, { name?: string }> =
-      JSON.parse(localStorage.getItem("favStops_meta") ?? "{}");
-    return ids.map(id => ({ id, name: meta[id]?.name ?? id }));
-  } catch {
-    return [];
-  }
-}
-
-function loadFavSubways(): FavSubway[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const ids: string[] = JSON.parse(localStorage.getItem("favSubways") ?? "[]");
-    const meta: Record<string, { name?: string; line?: string; lineColor?: string }> =
-      JSON.parse(localStorage.getItem("favSubways_meta") ?? "{}");
-    return ids.map(id => ({
-      id,
-      name: meta[id]?.name ?? id,
-      line: meta[id]?.line,
-      lineColor: meta[id]?.lineColor,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-function saveFavStopIds(ids: string[]) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("favStops", JSON.stringify(ids));
-  }
-}
-
-function saveFavSubwayIds(ids: string[]) {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("favSubways", JSON.stringify(ids));
-  }
-}
-
-function deleteFavMeta(metaKey: string, id: string) {
-  if (typeof window === "undefined") return;
-  try {
-    const map = JSON.parse(localStorage.getItem(metaKey) ?? "{}");
-    delete map[id];
-    localStorage.setItem(metaKey, JSON.stringify(map));
-  } catch {}
-}
+const LEVEL_TO_NUM: Record<UserProfile["level"], number> = {
+  새싹: 1, 주민: 2, 이웃: 3, 터줏대감: 4,
+};
 
 export default function MyPage() {
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [uid, setUid] = useState<string>("");
-  const [favStops, setFavStops] = useState<FavStop[]>([]);
-  const [favSubways, setFavSubways] = useState<FavSubway[]>([]);
-  const [favPlaces, setFavPlaces] = useState<FavoritePlace[]>([]);
-  const [myPosts, setMyPosts] = useState<MyPost[]>([]);
-
-  const refreshTransport = useCallback(() => {
-    setFavStops(loadFavStops());
-    setFavSubways(loadFavSubways());
-  }, []);
-
-  const refreshPlaces = useCallback(async () => {
-    setFavPlaces(await getFavoritePlaces());
-  }, []);
-
-  const refreshMyPosts = useCallback(async (userId: string) => {
-    if (!userId) return setMyPosts([]);
-    try {
-      const { data } = await supabase
-        .from("community_posts")
-        .select("id,title,category,created_at,comment_count,like_count")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(20);
-      setMyPosts((data ?? []) as MyPost[]);
-    } catch {
-      setMyPosts([]);
-    }
-  }, []);
+  const [summary, setSummary] = useState<MyPageSummary>({
+    postCount: 0, commentCount: 0, favoriteCount: 0,
+  });
 
   useEffect(() => {
-    (async () => {
-      const id = await getOrCreateUserId();
-      setUid(id);
-      const p = await getUserProfile();
-      setProfile(p);
-      refreshTransport();
-      await Promise.all([refreshPlaces(), refreshMyPosts(id)]);
-    })();
-  }, [refreshTransport, refreshPlaces, refreshMyPosts]);
+    getUserProfile().then(setProfile);
+    getMyPageSummary().then(setSummary);
+  }, []);
 
-  function removeStop(id: string) {
-    const next = favStops.filter(s => s.id !== id);
-    setFavStops(next);
-    saveFavStopIds(next.map(s => s.id));
-    deleteFavMeta("favStops_meta", id);
-  }
-
-  function removeSubway(id: string) {
-    const next = favSubways.filter(s => s.id !== id);
-    setFavSubways(next);
-    saveFavSubwayIds(next.map(s => s.id));
-    deleteFavMeta("favSubways_meta", id);
-  }
-
-  async function handleRemovePlace(placeId: string) {
-    await removeFavoritePlace(placeId);
-    setFavPlaces(prev => prev.filter(f => f.place_id !== placeId));
-  }
+  const handleLogout = () => {
+    if (!confirm("로그아웃 하시겠어요?")) return;
+    try {
+      localStorage.removeItem("geumdan_uid");
+      localStorage.removeItem("geumdan_profile");
+    } catch { /* noop */ }
+    router.push("/login/");
+  };
 
   const nickname = profile?.nickname ?? "검단주민";
-  const dong = profile?.dong ?? "당하동";
-  const joinedAt = profile?.joined_at ?? new Date().toISOString().slice(0, 7);
-  const uidShort = uid ? uid.slice(0, 8) : "--------";
+  const handle = profile?.id ? `@${profile.id.slice(0, 8)}` : "@guest";
+  const lvNum = profile ? LEVEL_TO_NUM[profile.level] : 1;
+  const avatarUrl = profile?.avatar_url ?? null;
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
-      <Header title="마이페이지" />
+    <div className="min-h-dvh bg-[#f5f5f7] pb-32">
+      {/* 상단바: 설정 아이콘만 우상단 */}
+      <header className="sticky top-0 z-40 bg-[#f5f5f7]/80 backdrop-blur-xl">
+        <div className="flex items-center justify-between h-[52px] px-4">
+          <h1 className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">마이페이지</h1>
+          <Link
+            href="/mypage/settings/"
+            aria-label="설정"
+            className="active:opacity-50 transition-opacity"
+          >
+            <Settings size={22} className="text-[#1d1d1f]" />
+          </Link>
+        </div>
+      </header>
 
-      {/* 프로필 카드 */}
-      <section className="mx-4 mt-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-5 pt-5 pb-4 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#0071e3] to-[#38BDF8] flex items-center justify-center text-white text-[26px] font-black shrink-0">
-            {nickname.slice(0, 1)}
-          </div>
+      {/* 프로필 행 */}
+      <section className="px-5 pt-4 pb-5">
+        <div className="flex items-center gap-4">
+          <Avatar src={avatarUrl} size={64} alt={nickname} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-[18px] font-bold text-[#1d1d1f] truncate">{nickname}</h2>
+              <span className="text-[18px] font-bold text-[#1d1d1f] truncate">{nickname}</span>
+              <span className="shrink-0 text-[11px] font-bold bg-[#FFF3E0] text-[#E8741C] px-2 py-[2px] rounded-full">
+                활동 Lv.{lvNum}
+              </span>
             </div>
-            <p className="text-[12px] text-[#86868b] mt-0.5 font-mono">#{uidShort}</p>
-            <p className="text-[12px] text-[#6e6e73] mt-0.5">
-              {dong} · {joinedAt.slice(0, 7)} 가입
-            </p>
+            <p className="text-[13px] text-[#86868b] truncate mt-0.5">{handle}</p>
           </div>
-          <button
-            onClick={() => router.push("/mypage/edit/")}
-            className="shrink-0 h-9 px-3 border border-gray-200 rounded-lg text-[13px] text-[#424245] font-medium active:bg-gray-50 flex items-center gap-1"
+          <Link
+            href="/mypage/profile/"
+            className="h-8 px-3 rounded-full bg-[#f0f0f3] text-[12px] font-semibold text-[#424245] active:opacity-70 transition-opacity flex items-center"
           >
-            <Pencil size={13} />
-            <span>수정</span>
-          </button>
+            편집
+          </Link>
         </div>
       </section>
 
-      {/* 즐겨찾기 — 교통 */}
-      <section className="mx-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <Star size={15} className="text-[#FBBF24] fill-[#FBBF24]" />
-            <h3 className="text-[15px] font-bold text-[#1d1d1f]">즐겨찾는 교통</h3>
+      {/* 활동 요약 — 파란 카드 */}
+      <section className="px-5">
+        <div
+          className="rounded-3xl p-5 shadow-[0_6px_20px_rgba(37,99,235,0.18)]"
+          style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, #4F46E5 100%)` }}
+        >
+          <p className="text-[13px] font-medium text-white/85">내 활동 요약</p>
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            <SummaryBlock label="내가 쓴 글" value={summary.postCount} href="/mypage/posts/" />
+            <SummaryBlock label="즐겨찾기" value={summary.favoriteCount} href="/mypage/favorites/" />
+            <SummaryBlock label="댓글" value={summary.commentCount} href="/mypage/comments/" />
           </div>
-          <button
-            onClick={() => router.push("/transport/")}
-            className="text-[12px] text-[#0071e3] font-medium active:opacity-60"
-          >
-            전체보기
-          </button>
-        </div>
-
-        {/* 버스정류장 */}
-        <div className="px-4 pb-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Bus size={13} className="text-[#3B5BDB]" />
-            <span className="text-[12px] font-bold text-[#6e6e73]">버스정류장</span>
-            <span className="text-[11px] text-[#86868b]">{favStops.length}</span>
-          </div>
-          {favStops.length === 0 ? (
-            <p className="text-[12px] text-[#86868b] py-2">즐겨찾는 정류장이 없어요</p>
-          ) : (
-            <div className="space-y-1.5">
-              {favStops.map(stop => (
-                <div
-                  key={stop.id}
-                  className="flex items-center bg-gray-50 rounded-lg px-3 py-2.5"
-                >
-                  <button
-                    onClick={() => router.push("/transport/?tab=버스")}
-                    className="flex-1 flex items-center gap-2 text-left active:opacity-60"
-                  >
-                    <Bus size={14} className="text-[#3B5BDB] shrink-0" />
-                    <span className="text-[14px] text-[#1d1d1f] truncate">{stop.name}</span>
-                  </button>
-                  <button
-                    onClick={() => removeStop(stop.id)}
-                    className="p-1 ml-2 text-[#86868b] active:opacity-60"
-                    aria-label="즐겨찾기 해제"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 지하철역 */}
-        <div className="px-4 pb-4 border-t border-gray-100 pt-3">
-          <div className="flex items-center gap-1.5 mb-2">
-            <Train size={13} className="text-[#7048E8]" />
-            <span className="text-[12px] font-bold text-[#6e6e73]">지하철역</span>
-            <span className="text-[11px] text-[#86868b]">{favSubways.length}</span>
-          </div>
-          {favSubways.length === 0 ? (
-            <p className="text-[12px] text-[#86868b] py-2">즐겨찾는 지하철역이 없어요</p>
-          ) : (
-            <div className="space-y-1.5">
-              {favSubways.map(st => (
-                <div
-                  key={st.id}
-                  className="flex items-center bg-gray-50 rounded-lg px-3 py-2.5"
-                >
-                  <button
-                    onClick={() => router.push("/transport/?tab=지하철")}
-                    className="flex-1 flex items-center gap-2 text-left active:opacity-60"
-                  >
-                    <Train size={14} className="text-[#7048E8] shrink-0" />
-                    <span className="text-[14px] text-[#1d1d1f] truncate">{st.name}</span>
-                    {st.line && (
-                      <span
-                        className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
-                        style={{ background: st.lineColor ?? "#86868b" }}
-                      >
-                        {st.line}
-                      </span>
-                    )}
-                  </button>
-                  <button
-                    onClick={() => removeSubway(st.id)}
-                    className="p-1 ml-2 text-[#86868b] active:opacity-60"
-                    aria-label="즐겨찾기 해제"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </section>
 
-      {/* 즐겨찾기 — 가볼만한 곳 */}
-      <section className="mx-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <MapPin size={15} className="text-[#F04452]" />
-            <h3 className="text-[15px] font-bold text-[#1d1d1f]">가볼만한 곳</h3>
-            <span className="text-[12px] text-[#86868b]">{favPlaces.length}</span>
-          </div>
-          <button
-            onClick={() => router.push("/transport/?tab=가볼만한곳")}
-            className="text-[12px] text-[#0071e3] font-medium active:opacity-60"
-          >
-            전체보기
-          </button>
+      {/* 내 활동 리스트 */}
+      <section className="mt-7 px-5">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">내 활동</p>
+        <div className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <ListRow
+            icon={<FileText size={18} className="text-[#2563EB]" />}
+            title="내가 쓴 글"
+            sub={`${summary.postCount}개`}
+            href="/mypage/posts/"
+          />
+          <Divider />
+          <ListRow
+            icon={<MessageCircle size={18} className="text-[#10B981]" />}
+            title="내 댓글"
+            sub={`${summary.commentCount}개`}
+            href="/mypage/comments/"
+          />
+          <Divider />
+          <ListRow
+            icon={<Heart size={18} className="text-[#F04452]" />}
+            title="즐겨찾기"
+            sub={`${summary.favoriteCount}개 (장소·상가·교통)`}
+            href="/mypage/favorites/"
+          />
         </div>
-        {favPlaces.length === 0 ? (
-          <p className="px-4 pb-4 text-[12px] text-[#86868b]">즐겨찾는 장소가 없어요</p>
-        ) : (
-          <div className="px-4 pb-4 grid grid-cols-2 gap-2.5">
-            {favPlaces.map(p => (
-              <div
-                key={p.place_id}
-                className="relative bg-gray-50 rounded-lg overflow-hidden border border-gray-100"
-              >
-                <button
-                  onClick={() => router.push("/transport/?tab=가볼만한곳")}
-                  className="w-full text-left active:opacity-80"
-                >
-                  <div className="relative h-24 bg-gradient-to-br from-[#9CA3AF] to-[#D1D5DB]">
-                    {p.place_image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={p.place_image_url}
-                        alt={p.place_name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <MapPin size={28} className="text-white opacity-60" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="px-2.5 py-2">
-                    <p className="text-[12px] font-bold text-[#1d1d1f] truncate leading-tight">
-                      {p.place_name}
-                    </p>
-                    {p.place_area && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-[#e8f1fd] text-[#0071e3]">
-                          {p.place_area}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </button>
-                <button
-                  onClick={() => handleRemovePlace(p.place_id)}
-                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/50 flex items-center justify-center active:opacity-60 backdrop-blur-sm"
-                  aria-label="즐겨찾기 해제"
-                >
-                  <X size={11} className="text-white" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* 커뮤니티 내 글 */}
-      <section className="mx-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 pt-4 pb-3 flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <MessageSquare size={15} className="text-[#7048E8]" />
-            <h3 className="text-[15px] font-bold text-[#1d1d1f]">커뮤니티 내 글</h3>
-            <span className="text-[12px] text-[#86868b]">{myPosts.length}</span>
-          </div>
-          <button
-            onClick={() => router.push("/community/")}
-            className="text-[12px] text-[#0071e3] font-medium active:opacity-60"
-          >
-            커뮤니티
-          </button>
+      {/* 추천 메뉴 — 2컬럼 그리드 */}
+      <section className="mt-7 px-5">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">바로가기</p>
+        <div className="grid grid-cols-2 gap-3">
+          <GridCard
+            icon={<Building size={22} className="text-[#2563EB]" />}
+            title="부동산 시세"
+            sub="검단 아파트 시세"
+            href="/community/?tab=시세"
+          />
+          <GridCard
+            icon={<Bus size={22} className="text-[#10B981]" />}
+            title="교통 즐겨찾기"
+            sub="자주 타는 노선"
+            href="/mypage/favorites/?tab=bus"
+          />
+          <GridCard
+            icon={<Store size={22} className="text-[#F59E0B]" />}
+            title="즐겨찾기 상가"
+            sub="찜한 매장"
+            href="/mypage/favorites/?tab=store"
+          />
+          <GridCard
+            icon={<Newspaper size={22} className="text-[#8B5CF6]" />}
+            title="관심 소식"
+            sub="검단 뉴스/소식"
+            href="/news/"
+          />
+          <GridCard
+            icon={<Bell size={22} className="text-[#EF4444]" />}
+            title="알림 설정"
+            sub="푸시 on/off"
+            href="/mypage/notifications/"
+          />
+          <GridCard
+            icon={<UserCog size={22} className="text-[#0EA5E9]" />}
+            title="프로필 수정"
+            sub="닉네임·아바타"
+            href="/mypage/profile/"
+          />
         </div>
-        {myPosts.length === 0 ? (
-          <p className="px-4 pb-4 text-[12px] text-[#86868b]">작성한 글이 없어요</p>
-        ) : (
-          <div className="divide-y divide-gray-100">
-            {myPosts.map(post => (
-              <button
-                key={post.id}
-                onClick={() => router.push(`/community/detail?id=${post.id}`)}
-                className="w-full px-4 py-3 flex items-start gap-2.5 text-left active:bg-gray-50"
-              >
-                <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
-                  {post.category}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-medium text-[#1d1d1f] truncate">
-                    {post.title}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#86868b]">
-                    <span>{post.created_at?.slice(0, 10)}</span>
-                    <span>·</span>
-                    <span>♥ {post.like_count ?? 0}</span>
-                    <span>·</span>
-                    <span>💬 {post.comment_count ?? 0}</span>
-                  </div>
-                </div>
-                <ChevronRight size={14} className="text-[#d2d2d7] mt-1.5 shrink-0" />
-              </button>
-            ))}
-          </div>
-        )}
       </section>
 
-      {/* 설정 */}
-      <section className="mx-4 mb-3 bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <h3 className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">설정</h3>
-        <div className="divide-y divide-gray-100">
+      {/* 설정/로그아웃 */}
+      <section className="mt-7 px-5">
+        <div className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+          <ListRow
+            icon={<Settings size={18} className="text-[#6e6e73]" />}
+            title="설정"
+            sub="앱 환경설정"
+            href="/mypage/settings/"
+          />
+          <Divider />
           <button
-            onClick={() => router.push("/notifications/")}
-            className="w-full flex items-center px-4 py-3.5 active:bg-gray-50"
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors text-left"
           >
-            <Bell size={17} className="text-[#0071e3] mr-3" />
-            <span className="flex-1 text-[14px] text-[#1d1d1f] text-left">알림 설정</span>
-            <ChevronRight size={15} className="text-[#d2d2d7]" />
+            <span className="w-9 h-9 rounded-full bg-[#FEE2E2] flex items-center justify-center">
+              <LogOut size={18} className="text-[#EF4444]" />
+            </span>
+            <span className="flex-1 text-[15px] font-semibold text-[#EF4444]">로그아웃</span>
+            <ChevronRight size={18} className="text-[#c7c7cc]" />
           </button>
-          <a
-            href="https://geumdan.app/privacy"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center px-4 py-3.5 active:bg-gray-50"
-          >
-            <Shield size={17} className="text-[#6e6e73] mr-3" />
-            <span className="flex-1 text-[14px] text-[#1d1d1f] text-left">개인정보 처리방침</span>
-            <ChevronRight size={15} className="text-[#d2d2d7]" />
-          </a>
-          <a
-            href="https://geumdan.app/terms"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-full flex items-center px-4 py-3.5 active:bg-gray-50"
-          >
-            <FileIcon size={17} className="text-[#6e6e73] mr-3" />
-            <span className="flex-1 text-[14px] text-[#1d1d1f] text-left">이용약관</span>
-            <ChevronRight size={15} className="text-[#d2d2d7]" />
-          </a>
-          <div className="flex items-center px-4 py-3.5">
-            <span className="flex-1 text-[14px] text-[#6e6e73] text-left">앱 버전</span>
-            <span className="text-[13px] text-[#86868b] font-mono">v{APP_VERSION}</span>
-          </div>
         </div>
       </section>
 
       <BottomNav />
     </div>
+  );
+}
+
+function SummaryBlock({ label, value, href }: { label: string; value: number; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center justify-center rounded-2xl bg-white/15 hover:bg-white/20 active:bg-white/25 transition-colors py-3"
+    >
+      <span className="text-[22px] font-extrabold text-white tracking-tight leading-none">{value}</span>
+      <span className="mt-1.5 text-[11px] font-medium text-white/85">{label}</span>
+    </Link>
+  );
+}
+
+function ListRow({
+  icon, title, sub, href,
+}: { icon: React.ReactNode; title: string; sub?: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors"
+    >
+      <span className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center shrink-0">
+        {icon}
+      </span>
+      <div className="flex-1 min-w-0">
+        <p className="text-[15px] font-semibold text-[#1d1d1f]">{title}</p>
+        {sub && <p className="text-[12px] text-[#86868b] mt-0.5">{sub}</p>}
+      </div>
+      <ChevronRight size={18} className="text-[#c7c7cc]" />
+    </Link>
+  );
+}
+
+function Divider() {
+  return <div className="h-px bg-[#f0f0f3] mx-4" />;
+}
+
+function GridCard({
+  icon, title, sub, href,
+}: { icon: React.ReactNode; title: string; sub: string; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="bg-white rounded-2xl p-4 shadow-[0_1px_3px_rgba(0,0,0,0.04)] active:bg-[#f5f5f7] transition-colors"
+    >
+      <span className="inline-flex w-10 h-10 rounded-xl bg-[#f5f5f7] items-center justify-center">
+        {icon}
+      </span>
+      <p className="mt-3 text-[15px] font-bold text-[#1d1d1f]">{title}</p>
+      <p className="text-[12px] text-[#86868b] mt-0.5">{sub}</p>
+    </Link>
   );
 }

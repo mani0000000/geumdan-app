@@ -371,6 +371,28 @@ export async function getMyCommentCount(): Promise<number> {
   return count ?? 0;
 }
 
+// ── 마이페이지 요약 (글/댓글/즐겨찾기 합계) ──────────────────────
+export interface MyPageSummary {
+  postCount: number;
+  commentCount: number;
+  favoriteCount: number;
+}
+
+export async function getMyPageSummary(): Promise<MyPageSummary> {
+  const [postCount, commentCount, buses, stores, apts] = await Promise.all([
+    getMyPostCount(),
+    getMyCommentCount(),
+    getFavoriteBuses(),
+    getFavoriteStores(),
+    getFavoriteApts(),
+  ]);
+  return {
+    postCount,
+    commentCount,
+    favoriteCount: buses.length + stores.length + apts.length,
+  };
+}
+
 // ── 쿠폰 ─────────────────────────────────────────────────────────────
 const COUPONS_KEY = "geumdan_coupons";
 

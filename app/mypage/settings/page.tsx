@@ -1,147 +1,112 @@
 "use client";
-import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getUserSettings, updateUserSettings } from "@/lib/db/userdata";
+import Link from "next/link";
+import { ChevronLeft, ChevronRight, Bell, Shield, FileText, ExternalLink, LogOut, UserMinus } from "lucide-react";
+import packageJson from "../../../package.json";
 
-function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      className={`relative w-12 h-6 rounded-full transition-colors ${on ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`}
-    >
-      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${on ? "translate-x-6" : "translate-x-0.5"}`} />
-    </button>
-  );
-}
+const APP_VERSION = packageJson.version;
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [pushAll, setPushAll] = useState(true);
-  const [pushComment, setPushComment] = useState(true);
-  const [pushLike, setPushLike] = useState(false);
-  const [pushNotice, setPushNotice] = useState(true);
-  const [pushMarketing, setPushMarketing] = useState(false);
-  const [locationOn, setLocationOn] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
 
-  useEffect(() => {
-    getUserSettings().then(s => {
-      setPushAll(s.push_all);
-      setPushComment(s.push_comment);
-      setPushLike(s.push_like);
-      setPushNotice(s.push_notice);
-      setPushMarketing(s.push_marketing);
-      setLocationOn(s.location_on);
-    });
-  }, []);
+  const handleLogout = () => {
+    if (!confirm("로그아웃 하시겠어요?")) return;
+    try {
+      localStorage.removeItem("geumdan_uid");
+      localStorage.removeItem("geumdan_profile");
+    } catch { /* noop */ }
+    router.push("/login/");
+  };
 
-  function toggle(key: "push_all" | "push_comment" | "push_like" | "push_notice" | "push_marketing" | "location_on", value: boolean) {
-    updateUserSettings({ [key]: value });
-  }
+  const handleWithdraw = () => {
+    if (!confirm("정말 회원에서 탈퇴하시겠어요?\n계정 정보는 30일 후 영구 삭제돼요.")) return;
+    alert("회원 탈퇴 신청이 접수됐어요. 고객센터에서 처리해 드릴게요.");
+  };
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7]">
-      {/* Header */}
-      <div className="flex items-center gap-2 px-4 h-14 border-b border-[#f5f5f7] bg-white sticky top-0 z-10">
-        <button onClick={() => router.back()} className="active:opacity-60">
-          <ChevronLeft size={24} className="text-[#1d1d1f]" />
-        </button>
-        <h1 className="text-[18px] font-bold text-[#1d1d1f]">앱 설정</h1>
-      </div>
+      <header className="sticky top-0 z-40 bg-white/85 backdrop-blur-xl border-b border-black/5">
+        <div className="flex items-center gap-2 h-[52px] px-4">
+          <button onClick={() => router.back()} aria-label="뒤로" className="active:opacity-60">
+            <ChevronLeft size={24} className="text-[#1d1d1f]" />
+          </button>
+          <h1 className="text-[18px] font-bold text-[#1d1d1f]">설정</h1>
+        </div>
+      </header>
 
-      <div className="mt-3 space-y-3">
-        {/* Push notifications */}
-        <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">알림 설정</p>
+      <div className="px-5 pt-5 pb-10 space-y-5">
+        {/* 알림 */}
+        <div className="bg-white rounded-2xl overflow-hidden">
+          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#86868b]">알림</p>
+          <Link
+            href="/mypage/notifications/"
+            className="flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#FEF3C7] flex items-center justify-center">
+              <Bell size={18} className="text-[#F59E0B]" />
+            </span>
+            <span className="flex-1 text-[14px] font-semibold text-[#1d1d1f]">알림 설정</span>
+            <ChevronRight size={18} className="text-[#c7c7cc]" />
+          </Link>
+        </div>
+
+        {/* 약관 / 정책 */}
+        <div className="bg-white rounded-2xl overflow-hidden">
+          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#86868b]">약관 및 정책</p>
           {[
-            {
-              label: "전체 알림", sub: "모든 알림 on/off", value: pushAll,
-              onToggle: () => { const v = !pushAll; setPushAll(v); toggle("push_all", v); },
-            },
-            {
-              label: "댓글·답글 알림", sub: "내 글/댓글에 새 반응", value: pushComment,
-              onToggle: () => { const v = !pushComment; setPushComment(v); toggle("push_comment", v); },
-            },
-            {
-              label: "좋아요 알림", sub: "내 글·댓글 좋아요", value: pushLike,
-              onToggle: () => { const v = !pushLike; setPushLike(v); toggle("push_like", v); },
-            },
-            {
-              label: "공지사항 알림", sub: "검단 라이프 공지", value: pushNotice,
-              onToggle: () => { const v = !pushNotice; setPushNotice(v); toggle("push_notice", v); },
-            },
-            {
-              label: "마케팅 알림", sub: "이벤트 및 혜택 소식", value: pushMarketing,
-              onToggle: () => { const v = !pushMarketing; setPushMarketing(v); toggle("push_marketing", v); },
-            },
-          ].map(({ label, sub, value, onToggle }, i, arr) => (
-            <div key={label} className={`flex items-center px-4 py-4 ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
-              <div className="flex-1">
-                <p className="text-[15px] text-[#1d1d1f] font-medium">{label}</p>
-                <p className="text-[13px] text-[#6e6e73] mt-0.5">{sub}</p>
-              </div>
-              <Toggle on={value} onToggle={onToggle} />
-            </div>
+            { label: "이용약관",       href: "https://geumdan.app/terms",   icon: <FileText size={18} className="text-[#6e6e73]" /> },
+            { label: "개인정보 처리방침", href: "https://geumdan.app/privacy", icon: <Shield   size={18} className="text-[#6e6e73]" /> },
+            { label: "위치기반 서비스 이용약관", href: "https://geumdan.app/location", icon: <FileText size={18} className="text-[#6e6e73]" /> },
+          ].map((row, i, arr) => (
+            <a
+              key={row.label}
+              href={row.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors ${
+                i !== arr.length - 1 ? "border-b border-[#f0f0f3]" : ""
+              }`}
+            >
+              <span className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center">
+                {row.icon}
+              </span>
+              <span className="flex-1 text-[14px] font-semibold text-[#1d1d1f]">{row.label}</span>
+              <ExternalLink size={16} className="text-[#c7c7cc]" />
+            </a>
           ))}
         </div>
 
-        {/* Privacy */}
-        <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">개인정보 보호</p>
-          <div className="flex items-center px-4 py-4 border-b border-[#f5f5f7]">
-            <div className="flex-1">
-              <p className="text-[15px] text-[#1d1d1f] font-medium">위치 정보 사용</p>
-              <p className="text-[13px] text-[#6e6e73] mt-0.5">버스·상가 내 위치 기반 서비스</p>
-            </div>
-            <Toggle on={locationOn} onToggle={() => { const v = !locationOn; setLocationOn(v); toggle("location_on", v); }} />
-          </div>
-          {[
-            { label: "개인정보 처리방침", href: "#" },
-            { label: "서비스 이용약관", href: "#" },
-            { label: "위치기반 서비스 이용약관", href: "#" },
-          ].map(({ label }, i, arr) => (
-            <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#f5f5f7] transition-colors ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
-              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-              <ChevronRight size={16} className="text-[#d2d2d7]" />
-            </button>
-          ))}
-        </div>
-
-        {/* Display */}
-        <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">화면 설정</p>
+        {/* 앱 정보 */}
+        <div className="bg-white rounded-2xl overflow-hidden">
+          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#86868b]">앱 정보</p>
           <div className="flex items-center px-4 py-4">
-            <div className="flex-1">
-              <p className="text-[15px] text-[#1d1d1f] font-medium">다크 모드</p>
-              <p className="text-[13px] text-[#6e6e73] mt-0.5">준비 중인 기능이에요</p>
-            </div>
-            <Toggle on={darkMode} onToggle={() => setDarkMode(!darkMode)} />
+            <span className="flex-1 text-[14px] font-semibold text-[#1d1d1f]">앱 버전</span>
+            <span className="text-[13px] text-[#86868b] font-mono">v{APP_VERSION}</span>
           </div>
         </div>
 
-        {/* App info */}
-        <div className="bg-white">
-          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">앱 정보</p>
-          {[
-            { label: "버전 정보", value: "v1.0.0 (최신)" },
-            { label: "캐시 초기화", value: "12.3 MB" },
-            { label: "오픈소스 라이선스", value: "" },
-          ].map(({ label, value }, i, arr) => (
-            <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#f5f5f7] transition-colors ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
-              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-              <div className="flex items-center gap-1">
-                {value && <span className="text-[14px] text-[#6e6e73]">{value}</span>}
-                <ChevronRight size={16} className="text-[#d2d2d7]" />
-              </div>
-            </button>
-          ))}
-        </div>
-
-        {/* Delete account */}
-        <div className="mx-4 mb-6">
-          <button className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
-            회원 탈퇴
+        {/* 계정 */}
+        <div className="bg-white rounded-2xl overflow-hidden">
+          <p className="px-4 pt-4 pb-2 text-[12px] font-bold text-[#86868b]">계정</p>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors text-left border-b border-[#f0f0f3]"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#FEE2E2] flex items-center justify-center">
+              <LogOut size={18} className="text-[#EF4444]" />
+            </span>
+            <span className="flex-1 text-[14px] font-semibold text-[#EF4444]">로그아웃</span>
+            <ChevronRight size={18} className="text-[#c7c7cc]" />
+          </button>
+          <button
+            onClick={handleWithdraw}
+            className="w-full flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors text-left"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center">
+              <UserMinus size={18} className="text-[#86868b]" />
+            </span>
+            <span className="flex-1 text-[14px] font-semibold text-[#6e6e73]">회원 탈퇴</span>
+            <ChevronRight size={18} className="text-[#c7c7cc]" />
           </button>
         </div>
       </div>

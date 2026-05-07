@@ -140,12 +140,17 @@ export async function updateComment(id: string, content: string): Promise<boolea
 }
 
 // ── 내가 쓴 댓글 ────────────────────────────────────────────
-export async function fetchMyComments(userId: string, limit = 100): Promise<DBComment[]> {
+export interface MyCommentWithPost extends DBComment {
+  postTitle: string;
+  postCategory: string;
+}
+
+export async function fetchMyComments(userId: string, limit = 100): Promise<MyCommentWithPost[]> {
   if (!isConfigured() || !userId) return [];
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .select('*, community_posts!inner(title)')
+      .select('*, community_posts!inner(title,category)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -153,8 +158,12 @@ export async function fetchMyComments(userId: string, limit = 100): Promise<DBCo
     return (data ?? []).map(row => {
       const r = row as Record<string, unknown>;
       const c = rowToComment(r);
-      const post = r.community_posts as { title?: string } | null;
-      return { ...c, postTitle: post?.title };
+      const post = r.community_posts as { title?: string; category?: string } | null;
+      return {
+        ...c,
+        postTitle: post?.title ?? '(원글 없음)',
+        postCategory: post?.category ?? '',
+      };
     });
   } catch (e) {
     console.error('[comments] fetchMyComments error:', e);
