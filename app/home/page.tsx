@@ -443,54 +443,39 @@ function NewOpeningsSection() {
 // ─── 커뮤니티 위젯 ────────────────────────────────────────────
 function CommunityWidget() {
   const router = useRouter();
-  const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
+  const hotPosts = posts.filter(p => p.isHot).slice(0, 3);
   if (hotPosts.length === 0) return null;
   return (
-    <section className="mx-4 mb-1 space-y-2">
-      <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
-        className="w-full text-left rounded-2xl overflow-hidden active:opacity-90"
-        style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
-        <div className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
-              {hotPosts[0].category}
-            </span>
-            <span className="flex items-center gap-1 text-[11px] text-orange-300 font-bold">
-              <Flame size={10} />HOT
-            </span>
-          </div>
-          <p className="text-[18px] font-black text-white leading-snug mb-3 line-clamp-2">
-            {hotPosts[0].title}
-          </p>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-[12px] text-white/60">{hotPosts[0].authorDong}</span>
-              <span className="text-[12px] text-white/40">·</span>
-              <span className="text-[12px] text-white/60">{formatRelativeTime(hotPosts[0].createdAt)}</span>
-            </div>
-            <span className="text-[13px] font-bold text-white">❤️ {hotPosts[0].likeCount}</span>
-          </div>
-        </div>
-      </button>
-      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-        {hotPosts.slice(1).map(post => (
+    <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
+        {hotPosts.map((post, idx) => (
           <button key={post.id}
             onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#f5f5f7] text-left">
-            <span className="text-[11px] font-bold bg-[#F3F0FF] text-[#7C3AED] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
-              {post.category}
+            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
+            <span className={`shrink-0 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center ${
+              idx === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
+            }`}>
+              {idx + 1}
             </span>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{post.title}</p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-[12px] text-[#6e6e73]">{post.authorDong}</span>
-                <span className="text-[12px] text-[#86868b] ml-auto">❤️ {post.likeCount}</span>
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <span className="text-[11px] font-semibold text-gray-500">{post.category}</span>
+                <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
+                  <Flame size={9} />HOT
+                </span>
+              </div>
+              <p className="text-[14px] font-medium text-gray-900 leading-snug truncate">{post.title}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[12px] text-gray-400">{post.authorDong}</span>
+                <span className="text-[12px] text-gray-300">·</span>
+                <span className="text-[12px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
+                <span className="text-[12px] text-gray-400 ml-auto">❤️ {post.likeCount}</span>
               </div>
             </div>
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-blue-600 font-semibold active:bg-gray-50">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
