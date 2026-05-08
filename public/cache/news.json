@@ -1,9 +1,9 @@
 {
-  "fetchedAt": "2026-05-08T13:05:06.999Z",
+  "fetchedAt": "2026-05-08T16:07:58.359Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-2",
+      "id": "gr2-1",
       "title": "인천 서구, 38년 만에 ‘서해구’로 새 출발…명칭 변경안 국회 통과 - 뷰티경제",
       "summary": "",
       "source": "뷰티경제",
@@ -12,7 +12,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-1",
+      "id": "gr3-2",
       "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 이데일리",
       "summary": "",
       "source": "이데일리",
@@ -30,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-6",
       "title": "“방위 명칭 벗고 서해 거점 도시로”… 인천 서구, ‘서해구’ 확정 - 복지투데이",
       "summary": "",
       "source": "복지투데이",
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-5",
       "title": "“요즘 아파트는 슬세권이지”…신도시 분양, 중심 상업지 접근성이 ‘최우선’ - 매일경제",
       "summary": "",
       "source": "매일경제",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-7",
       "title": "인천 서구, 38년 만에 '서해구'로 새 출발 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -66,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-17",
       "title": "[인물포커스] 강범석, '검단구 분구·GTX-D' 전면에…서구청장 3선 승부수 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "‘교통이 도시 가치 바꾼다’… 검단신도시, 수도권 서북부 다크호스 부상 - 국토일보",
       "summary": "",
       "source": "국토일보",
@@ -102,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-1",
+      "id": "gr2-4",
       "title": "인천 서구, 38년 만에 '서해구' 전환…검단 분구와 행정판 다시 짠다 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-10",
       "title": "인천 서구, 38년 만에 ‘서해구’로 명칭 변경 확정 - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -120,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-2",
       "title": "검단구 분리되는 인천 서구… ‘서해구’ 출범 확정 - 천지일보",
       "summary": "",
       "source": "천지일보",
@@ -138,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-5",
       "title": "인천 서구, 38년 만에 ‘서해구’로 바뀐다…명칭 변경 법안 통과 - 조선일보",
       "summary": "",
       "source": "조선일보",
@@ -147,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-9",
       "title": "인천 서구 새 명칭 '서해구' 확정…\"7월1일부터 적용\" - newsis.com",
       "summary": "",
       "source": "newsis.com",
@@ -174,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-13",
       "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 76㎡ 5억8300만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
@@ -192,12 +192,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-24",
+      "id": "gr2-23",
       "title": "\"검단구 출범 흔든 건 인천시\"…유정복 인천시장 책임론 정면 비판 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-07T02:47:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE0tU1Nka3cwRzcwMk9FVGd1Y1labjNQREVkR3B5YzNIYUM2bmRZOFAzZkxsZFNQNDRLZklzNlRORzlJYlgzLXVNNXNTNG9IVE9iaTFV?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-15",
+      "title": "2857가구 대단지 ‘더샵 검단레이크파크’ 5월 분양 - 스포츠경향",
+      "summary": "",
+      "source": "스포츠경향",
+      "publishedAt": "2026-05-07T01:10:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE1LeGg3ajhod0lzdG9JTFFDbkgxVFRIdmtFMm5sdGxKcVRCRjNqa0NtUVRyajhhdlEzNnRjSl9faUhfMzY3LUZuVVg2NVpGTlQwcXdhNVM3ZC1iQTVGaWfSAWNBVV95cUxNdGNTNjc2RkI1OERDR0VQZEsweVUxVE5SbjZYVmdCODV4SjlNYnA0OXg0LXYwZU1ZMDJVWDhIak9EbXlacEpGampUYjhZaDh4MTN5US1XbzZPZ3p4X1BsWXIyMG8?oc=5",
       "type": "뉴스"
     },
     {
@@ -210,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-26",
+      "id": "gr2-25",
       "title": "이영철 서구의원, ‘인천시는 검단구 출범을 흔드는 행정개입을 즉각 중단하라’ - 중도일보",
       "summary": "",
       "source": "중도일보",
@@ -255,12 +264,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-14",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 76㎡ 5억7800만원에 거래 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-05T09:03:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE84NDZVQ24wSzJHZ2xkY2xQMWNIa0Ztc1lWSG5hcXFvOHNhbDRyTkItdHQxQWI3dEhiRERSdEZBbEJqVnlNVFVqdzlXWU9Wd2JPTXM4?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-12",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억1000만원에 거래 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-05-05T08:58:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9DSDloWEFfRnowSWxkQmNVam5PT1FibDZkSnFlMFZJYkVFcVpmZFVEazhtUVdvSEJCbGMyZWdlLTNfWEpZTVNOcWpQMGNmX0V3LTRv?oc=5",
       "type": "뉴스"
     },
     {
@@ -291,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-18",
       "title": "인천 서구 검단구출범준비단, 축제서 홍보부스 운영 ‘성황’ - 뉴스타운",
       "summary": "",
       "source": "뉴스타운",
@@ -309,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-25",
+      "id": "gr2-24",
       "title": "인천 서구 검단구출범준비단, 아동 축제서 홍보부스 운영 성황 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -342,24 +360,6 @@
       "source": "경향신문",
       "publishedAt": "2026-05-03T12:17:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE85Mk85MkN1RnJqZTZKU2p0QjBtWWFsN3hfQ0dLcmNqWTM5ZHNBS1pwb05pMHUyQk9YWC1fTUtlWE5UaWcxOXJFUFNkeDVLNXRkNlVCZzNpZnNXZ9IBX0FVX3lxTE5qN2VZbU52UmFQdFFUVENTV1NKU0YwdzZ5aFJ6dzFYek5YaFNrUFFuR2dvTmZZMUxZV0d0Z2hnUmVKWUxCTVJWRmhwc1pZZUdJTU5KT1BzWlRQSTVDeXB3?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-28",
-      "title": "국민의힘 유정복 인천시장 예비후보, 한국환경공단 이전... \"절대 안돼!\" - 투어코리아",
-      "summary": "",
-      "source": "투어코리아",
-      "publishedAt": "2026-05-03T11:11:08.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFAtSFd2cTFIQUxobms5NV9pZGVNVGpLZWs2ZEFKWjN5c1pwNGZlNkVqTlhJODJBNlNpZWZZaU5OeU9xOHRjTzF4djNTdi0wck02aTBnMV96Tk41Zm9STDhGcnVzeEFWX09CY1F3S0xB?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-21",
-      "title": "인천 서구, 도서관에 상주작가 초빙…주민 문학 향유·창작 지원 - 경기일보",
-      "summary": "",
-      "source": "경기일보",
-      "publishedAt": "2026-05-03T06:22:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE9HRHNYdmpTc1lEdmRKXzhqV090NTJQZ015VVJicEFFWFBoWE5tMjNqWHZjSEdiSFpNYzVITl9ybmFsa1lDRVNRZVZPRndXTDY0Y1E2cl9PUGhTNjA?oc=5",
       "type": "뉴스"
     }
   ]
