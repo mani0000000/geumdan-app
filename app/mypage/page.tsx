@@ -3,9 +3,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Settings, ChevronRight,
+  ChevronRight,
   FileText, MessageCircle, Heart,
   Building, Bus, Store, Newspaper, UserCog, Bell, LogOut,
+  Shield, ExternalLink, UserMinus,
 } from "lucide-react";
 import BottomNav from "@/components/layout/BottomNav";
 import Avatar from "@/components/ui/Avatar";
@@ -15,8 +16,10 @@ import {
   type UserProfile,
   type MyPageSummary,
 } from "@/lib/db/userdata";
+import packageJson from "../../package.json";
 
 const PRIMARY = "#2563EB";
+const APP_VERSION = `v${packageJson.version}`;
 
 const LEVEL_TO_NUM: Record<UserProfile["level"], number> = {
   새싹: 1, 주민: 2, 이웃: 3, 터줏대감: 4,
@@ -43,6 +46,11 @@ export default function MyPage() {
     router.push("/login/");
   };
 
+  const handleDeleteAccount = () => {
+    if (!confirm("정말 회원 탈퇴 하시겠어요? 이 작업은 되돌릴 수 없어요.")) return;
+    alert("회원 탈퇴는 준비 중인 기능이에요.");
+  };
+
   const nickname = profile?.nickname ?? "검단주민";
   const handle = profile?.id ? `@${profile.id.slice(0, 8)}` : "@guest";
   const lvNum = profile ? LEVEL_TO_NUM[profile.level] : 1;
@@ -50,17 +58,10 @@ export default function MyPage() {
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-32">
-      {/* 상단바: 설정 아이콘만 우상단 */}
+      {/* 상단바 */}
       <header className="sticky top-0 z-40 bg-[#f5f5f7]/80 backdrop-blur-xl">
-        <div className="flex items-center justify-between h-[52px] px-4">
+        <div className="flex items-center h-[52px] px-4">
           <h1 className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">마이페이지</h1>
-          <Link
-            href="/mypage/settings/"
-            aria-label="설정"
-            className="active:opacity-50 transition-opacity"
-          >
-            <Settings size={22} className="text-[#1d1d1f]" />
-          </Link>
         </div>
       </header>
 
@@ -171,24 +172,76 @@ export default function MyPage() {
         </div>
       </section>
 
-      {/* 설정/로그아웃 */}
+      {/* 알림 */}
       <section className="mt-7 px-5">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">알림</p>
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           <ListRow
-            icon={<Settings size={18} className="text-[#6e6e73]" />}
-            title="설정"
-            sub="앱 환경설정"
-            href="/mypage/settings/"
+            icon={<Bell size={18} className="text-[#EF4444]" />}
+            title="알림 설정"
+            href="/mypage/notifications/"
+          />
+        </div>
+      </section>
+
+      {/* 약관 및 정책 */}
+      <section className="mt-7 px-5">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">약관 및 정책</p>
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <ExternalRow
+            icon={<FileText size={18} className="text-[#6e6e73]" />}
+            title="이용약관"
+            href="https://geumdan.app/terms"
           />
           <Divider />
+          <ExternalRow
+            icon={<Shield size={18} className="text-[#6e6e73]" />}
+            title="개인정보 처리방침"
+            href="https://geumdan.app/privacy"
+          />
+          <Divider />
+          <ExternalRow
+            icon={<FileText size={18} className="text-[#6e6e73]" />}
+            title="위치기반 서비스 이용약관"
+            href="https://geumdan.app/location"
+          />
+        </div>
+      </section>
+
+      {/* 앱 정보 */}
+      <section className="mt-7 px-5">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">앱 정보</p>
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
+          <div className="flex items-center gap-3 px-4 py-4">
+            <span className="flex-1 text-[15px] font-semibold text-[#1d1d1f]">앱 버전</span>
+            <span className="text-[13px] text-[#86868b] font-mono">{APP_VERSION}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* 계정 */}
+      <section className="mt-7 px-5">
+        <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">계정</p>
+        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors text-left"
           >
-            <span className="w-9 h-9 rounded-full bg-[#FEE2E2] flex items-center justify-center">
+            <span className="w-9 h-9 rounded-full bg-[#FEE2E2] flex items-center justify-center shrink-0">
               <LogOut size={18} className="text-[#EF4444]" />
             </span>
             <span className="flex-1 text-[15px] font-semibold text-[#EF4444]">로그아웃</span>
+            <ChevronRight size={18} className="text-[#c7c7cc]" />
+          </button>
+          <Divider />
+          <button
+            onClick={handleDeleteAccount}
+            className="w-full flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors text-left"
+          >
+            <span className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center shrink-0">
+              <UserMinus size={18} className="text-[#6e6e73]" />
+            </span>
+            <span className="flex-1 text-[15px] font-semibold text-[#6e6e73]">회원 탈퇴</span>
             <ChevronRight size={18} className="text-[#c7c7cc]" />
           </button>
         </div>
@@ -233,6 +286,25 @@ function ListRow({
 
 function Divider() {
   return <div className="h-px bg-[#f0f0f3] mx-4" />;
+}
+
+function ExternalRow({
+  icon, title, href,
+}: { icon: React.ReactNode; title: string; href: string }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-3 px-4 py-4 active:bg-[#f5f5f7] transition-colors"
+    >
+      <span className="w-9 h-9 rounded-full bg-[#f5f5f7] flex items-center justify-center shrink-0">
+        {icon}
+      </span>
+      <span className="flex-1 text-[15px] font-semibold text-[#1d1d1f]">{title}</span>
+      <ExternalLink size={16} className="text-[#c7c7cc]" />
+    </a>
+  );
 }
 
 function GridCard({
