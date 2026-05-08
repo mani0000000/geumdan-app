@@ -5,7 +5,7 @@ import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
-  Heart, MessageCircle, Repeat2, Send, Crown, Newspaper,
+  Heart, MessageCircle, Repeat2, Send, Newspaper,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -263,68 +263,46 @@ function CommunityTab() {
 
       {/* 인기 TOP3 — 전체 탭에서만 노출 */}
       {active === "전체" && !loadingPosts && hotPosts.length === 3 && (
-        <div className="mx-4 mt-3 rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-1.5 px-4 pt-3.5 pb-2.5">
+        <div className="mx-4 mt-3 rounded-2xl bg-blue-50 p-3">
+          <div className="flex items-center gap-1.5 px-1 pt-0.5 pb-2.5">
             <Flame size={15} className="text-red-500" />
             <span className="text-[13px] font-bold text-gray-900 tracking-tight">인기글 TOP 3</span>
-            <span className="text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">실시간</span>
+            <span className="text-[10px] font-semibold text-red-500 bg-white px-1.5 py-0.5 rounded-full">실시간</span>
           </div>
 
-          {/* 1등 — 강조 */}
-          <button
-            onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
-            className="w-full text-left px-4 pb-3 active:bg-gray-50"
-          >
-            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100">
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex items-center gap-1 text-[11px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
-                  <Crown size={10} className="-mt-0.5" /> 1위
-                </span>
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[hotPosts[0].category]}`}>
-                  {hotPosts[0].category}
-                </span>
-              </div>
-              <p className="text-[16px] font-semibold text-gray-900 leading-snug line-clamp-2">{hotPosts[0].title}</p>
-              <div className="flex items-center gap-3 mt-2.5">
-                <span className="text-xs text-gray-400">{hotPosts[0].author}</span>
-                <div className="flex items-center gap-2.5 ml-auto">
-                  <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
-                    <ThumbsUp size={11} />{hotPosts[0].likeCount}
+          <div className="space-y-2">
+            {hotPosts.map((post, idx) => {
+              const rankBg = idx === 0 ? "bg-amber-400" : idx === 1 ? "bg-gray-400" : "bg-orange-400";
+              return (
+                <button
+                  key={post.id}
+                  onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                  className="w-full text-left bg-white rounded-xl shadow-sm p-3.5 active:bg-gray-50 flex items-center gap-3"
+                >
+                  <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white ${rankBg}`}>
+                    {idx + 1}
                   </span>
-                  <span className="flex items-center gap-1 text-xs font-semibold text-blue-600">
-                    <MessageSquare size={11} />{hotPosts[0].commentCount}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </button>
-
-          {/* 2~3등 */}
-          <div className="px-4 pb-3.5 space-y-1.5">
-            {[hotPosts[1], hotPosts[2]].map((post, idx) => (
-              <button
-                key={post.id}
-                onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-                className="w-full text-left bg-white rounded-xl px-3 py-2.5 active:bg-gray-50 border border-gray-100 shadow-sm flex items-center gap-2.5"
-              >
-                <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                  idx === 0 ? "bg-gray-100 text-gray-500" : "bg-gray-100 text-gray-400"
-                }`}>
-                  {idx + 2}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-semibold text-gray-900 truncate">{post.title}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`text-[10px] font-bold px-1.5 py-0 rounded-full ${catColor[post.category]}`}>{post.category}</span>
-                    <span className="text-xs text-gray-400">·</span>
-                    <span className="text-xs text-gray-400">좋아요 {post.likeCount}</span>
-                    <span className="text-xs text-gray-400">·</span>
-                    <span className="text-xs text-gray-400">댓글 {post.commentCount}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catColor[post.category]}`}>
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-gray-400 truncate">{post.author}</span>
+                    </div>
+                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{post.title}</p>
+                    <div className="flex items-center gap-2.5 mt-1.5">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
+                        <ThumbsUp size={11} />{post.likeCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-blue-600">
+                        <MessageSquare size={11} />{post.commentCount}
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <ChevronRight size={14} className="shrink-0 text-gray-400" />
-              </button>
-            ))}
+                  <ChevronRight size={14} className="shrink-0 text-gray-400" />
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
