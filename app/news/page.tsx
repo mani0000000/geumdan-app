@@ -6,7 +6,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { fetchNewsFromApi, fetchYouTubeVideos, type NewsArticle, type NewsCategory, type YouTubeVideo } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
@@ -14,8 +14,6 @@ import type { NewsType } from "@/lib/types";
 
 const tabs: NewsType[] = ["뉴스", "유튜브", "인스타"];
 const tabIcon: Record<NewsType, string> = { 뉴스: "📰", 유튜브: "▶️", 인스타: "📷" };
-
-const newsCategories: NewsCategory[] = ["검단신도시", "인천", "부동산", "교통"];
 
 // Gradient palettes for card news
 const cardGradients = [
@@ -44,7 +42,7 @@ function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index:
   const typeTag = item.type === "유튜브" ? "▶ 유튜브" : item.type === "인스타" ? "📷 인스타" : "📰 뉴스";
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
-      className="shrink-0 w-[280px] rounded-2xl overflow-hidden active:opacity-80"
+      className="shrink-0 w-[280px] rounded-2xl overflow-hidden active:opacity-80 shadow-sm"
       style={{ minHeight: 320 }}>
       {/* Image area */}
       <div className="relative w-full" style={{ height: 180 }}>
@@ -54,9 +52,7 @@ function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index:
         ) : (
           <div className={`w-full h-full bg-gradient-to-br ${gradient}`} />
         )}
-        {/* Dark overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        {/* Type badge */}
         <span className="absolute top-3 left-3 text-[12px] font-bold bg-black/40 text-white px-2.5 py-1 rounded-full backdrop-blur-sm">
           {typeTag}
         </span>
@@ -66,14 +62,14 @@ function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index:
       </div>
       {/* Text area */}
       <div className="bg-white px-4 py-3 flex flex-col gap-1" style={{ minHeight: 140 }}>
-        <p className="text-[16px] font-bold text-[#1d1d1f] leading-snug line-clamp-3">{item.title}</p>
+        <p className="text-[15px] font-semibold text-gray-900 leading-snug line-clamp-3">{item.title}</p>
         {item.summary && (
-          <p className="text-[13px] text-[#6e6e73] line-clamp-2 mt-0.5">{item.summary}</p>
+          <p className="text-[13px] text-gray-500 line-clamp-2 mt-0.5">{item.summary}</p>
         )}
         <div className="flex items-center justify-between mt-auto pt-2">
-          <span className="text-[12px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-          <div className="w-7 h-7 bg-[#e8f1fd] rounded-full flex items-center justify-center">
-            <ExternalLink size={13} className="text-[#0071e3]" />
+          <span className="text-[12px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+          <div className="w-7 h-7 bg-blue-50 rounded-full flex items-center justify-center">
+            <ExternalLink size={13} className="text-blue-600" />
           </div>
         </div>
       </div>
@@ -128,10 +124,10 @@ function YouTubeGrid({ videos, loading, onSelect }: {
       <div className="px-4 grid grid-cols-2 gap-3 mt-2">
         {[0,1,2,3].map(i => (
           <div key={i} className="rounded-2xl overflow-hidden animate-pulse">
-            <div className="w-full bg-[#d2d2d7]" style={{ aspectRatio: "16/9" }} />
+            <div className="w-full bg-gray-200" style={{ aspectRatio: "16/9" }} />
             <div className="bg-white px-3 py-2.5 space-y-1.5">
-              <div className="h-3 bg-[#d2d2d7] rounded w-full" />
-              <div className="h-3 bg-[#d2d2d7] rounded w-2/3" />
+              <div className="h-3 bg-gray-200 rounded w-full" />
+              <div className="h-3 bg-gray-200 rounded w-2/3" />
             </div>
           </div>
         ))}
@@ -141,9 +137,11 @@ function YouTubeGrid({ videos, loading, onSelect }: {
   if (videos.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center pt-20 text-center px-8">
-        <span className="text-5xl mb-4">📹</span>
-        <p className="text-[17px] font-bold text-[#1d1d1f]">영상을 불러오는 중이에요</p>
-        <p className="text-[14px] text-[#6e6e73] mt-2">잠시 후 다시 확인해보세요</p>
+        <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <span className="text-3xl">📹</span>
+        </div>
+        <p className="text-[16px] font-semibold text-gray-800">영상을 불러오는 중이에요</p>
+        <p className="text-[13px] text-gray-500 mt-1.5">잠시 후 다시 확인해보세요</p>
       </div>
     );
   }
@@ -179,10 +177,10 @@ function YouTubeGrid({ videos, loading, onSelect }: {
           </div>
           {/* 제목 */}
           <div className="px-2.5 py-2">
-            <p className="text-[13px] font-semibold text-[#1d1d1f] line-clamp-2 leading-snug">
+            <p className="text-[13px] font-semibold text-gray-900 line-clamp-2 leading-snug">
               {video.title}
             </p>
-            <p className="text-[11px] text-[#6e6e73] mt-1 truncate">{video.channelName}</p>
+            <p className="text-[11px] text-gray-500 mt-1 truncate">{video.channelName}</p>
           </div>
         </button>
       ))}
@@ -214,7 +212,7 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
     return (
       <div className="flex gap-3 px-4 overflow-hidden">
         {[0, 1].map(i => (
-          <div key={i} className="shrink-0 w-[280px] h-[180px] bg-[#d2d2d7] rounded-2xl animate-pulse" />
+          <div key={i} className="shrink-0 w-[280px] h-[180px] bg-gray-200 rounded-2xl animate-pulse" />
         ))}
       </div>
     );
@@ -237,14 +235,14 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
       {/* Nav arrows - desktop helper */}
       {canLeft && (
         <button onClick={() => scroll("left")}
-          className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 w-9 h-9 bg-white shadow-lg rounded-full items-center justify-center active:opacity-70">
-          <ChevronLeft size={18} className="text-[#1d1d1f]" />
+          className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 w-9 h-9 bg-white shadow-md rounded-full items-center justify-center active:opacity-70">
+          <ChevronLeft size={18} className="text-gray-700" />
         </button>
       )}
       {canRight && (
         <button onClick={() => scroll("right")}
-          className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 bg-white shadow-lg rounded-full items-center justify-center active:opacity-70">
-          <ChevronRight size={18} className="text-[#1d1d1f]" />
+          className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 w-9 h-9 bg-white shadow-md rounded-full items-center justify-center active:opacity-70">
+          <ChevronRight size={18} className="text-gray-700" />
         </button>
       )}
 
@@ -252,7 +250,7 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
       {items.length > 1 && (
         <div className="flex justify-center gap-1.5 mt-3">
           {items.slice(0, 8).map((_, i) => (
-            <div key={i} className={`rounded-full transition-all ${i === current ? "w-4 h-1.5 bg-[#0071e3]" : "w-1.5 h-1.5 bg-[#d2d2d7]"}`} />
+            <div key={i} className={`rounded-full transition-all ${i === current ? "w-4 h-1.5 bg-blue-600" : "w-1.5 h-1.5 bg-gray-300"}`} />
           ))}
         </div>
       )}
@@ -263,29 +261,36 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
 function NewsListItem({ item }: { item: CardItem }) {
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
-      className="bg-white rounded-2xl px-4 py-4 flex items-start gap-3 active:bg-[#f5f5f7] transition-colors block">
-      <div className="w-[48px] h-[48px] rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">
+      className="bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 active:bg-gray-50 transition-colors block shadow-sm">
+      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-lg shrink-0">
         {tabIcon[item.type]}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[15px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
+        <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
         {item.summary && (
-          <p className="text-[13px] text-[#6e6e73] mt-1 line-clamp-1">{item.summary}</p>
+          <p className="text-[12px] text-gray-500 mt-0.5 line-clamp-1">{item.summary}</p>
         )}
         <div className="flex items-center gap-2 mt-1.5">
-          <span className="text-[12px] font-medium text-[#0071e3]">{item.source}</span>
-          <span className="text-[12px] text-[#86868b]">·</span>
-          <span className="text-[12px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-          <ExternalLink size={10} className="text-[#86868b] ml-auto" />
+          <span className="text-[12px] font-medium text-blue-600">{item.source}</span>
+          <span className="text-[12px] text-gray-300">·</span>
+          <span className="text-[12px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+          <ExternalLink size={10} className="text-gray-400 ml-auto" />
         </div>
       </div>
     </a>
   );
 }
 
+interface ApiNews {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  description: string;
+}
+
 export default function NewsPage() {
   const [active, setActive] = useState<NewsType>("뉴스");
-  const [category, setCategory] = useState<NewsCategory>("검단신도시");
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [dbItems, setDbItems] = useState(newsItems);
   const [instaItems, setInstaItems] = useState<import("@/lib/types").NewsItem[]>([]);
@@ -295,17 +300,34 @@ export default function NewsPage() {
   const [ytLoading, setYtLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
 
-  const loadNews = async (cat: NewsCategory = category) => {
+  const loadNews = async () => {
     setLoading(true);
-    const [result, dbNews, insta] = await Promise.all([
-      fetchNewsFromApi(cat),
+    try {
+      const apiRes = await fetch("/api/news");
+      const apiData = await apiRes.json();
+
+      let newsArticles: NewsArticle[] = [];
+      if (apiData.items && Array.isArray(apiData.items) && apiData.items.length > 0) {
+        newsArticles = apiData.items.map((item: ApiNews, idx: number) => ({
+          id: `api-${idx}`,
+          title: item.title,
+          summary: item.description,
+          source: item.source,
+          publishedAt: item.pubDate,
+          url: item.link,
+          type: "뉴스" as const,
+        }));
+        setRealNews(newsArticles);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      }
+    } catch (error) {
+      console.error("Failed to fetch from /api/news:", error);
+    }
+
+    const [dbNews, insta] = await Promise.all([
       fetchNewsArticles(undefined, 50),
       fetchInstagramPosts(),
     ]);
-    setRealNews(result.articles);
-    if (result.articles.length > 0) {
-      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
-    }
     if (dbNews.length > 0) setDbItems(dbNews);
     setInstaItems(insta);
     setLoading(false);
@@ -326,7 +348,7 @@ export default function NewsPage() {
     setYtLoading(false);
   };
 
-  useEffect(() => { loadNews(category); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [category]);
+  useEffect(() => { loadNews(); }, []);
 
   // 유튜브 탭 선택 시 자동 로드
   useEffect(() => {
@@ -346,53 +368,41 @@ export default function NewsPage() {
   const rest = newsSource.slice(8);
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
-      <Header title="검단 뉴스" />
+    <div className="min-h-dvh bg-gray-50 pb-28">
+      <Header title="검단 소식" />
 
-      {/* Tabs */}
-      <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] flex">
-        {tabs.map(tab => (
-          <button key={tab} onClick={() => setActive(tab)}
-            className={`flex-1 h-11 flex items-center justify-center gap-1.5 text-[15px] font-semibold border-b-2 transition-colors active:opacity-70 ${active === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"}`}>
-            <span>{tabIcon[tab]}</span>{tab}
-          </button>
-        ))}
+      {/* Tabs — pill style matching mypage tone */}
+      <div className="bg-white sticky top-[56px] z-30 border-b border-gray-100 px-4 py-2">
+        <div className="flex gap-2">
+          {tabs.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActive(tab)}
+              className={`flex-1 h-9 flex items-center justify-center gap-1.5 text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${
+                active === tab
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "bg-gray-100 text-gray-500"
+              }`}
+            >
+              <span>{tabIcon[tab]}</span>{tab}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 카테고리 서브탭 (뉴스 탭에서만) */}
-      {active === "뉴스" && (
-        <div className="bg-white sticky top-[100px] z-20 border-b border-[#f5f5f7]">
-          <div className="flex gap-2 px-4 py-2.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-            {newsCategories.map(cat => (
-              <button
-                key={cat}
-                onClick={() => setCategory(cat)}
-                className={`shrink-0 h-8 px-3.5 rounded-full text-[13px] font-semibold transition-colors ${
-                  category === cat
-                    ? "bg-[#0071e3] text-white"
-                    : "bg-[#f5f5f7] text-[#424245] active:bg-[#e8e8ed]"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Status */}
+      {/* Status bar */}
       {active !== "유튜브" && (
         <div className="flex items-center justify-between px-4 py-2.5">
           {realNews.length > 0 && active === "뉴스"
             ? <div className="flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#00C471] animate-pulse" />
-                <span className="text-[13px] text-[#424245]">실시간 {category} 뉴스 {realNews.length}건</span>
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[12px] text-gray-500">실시간 검단 뉴스 {realNews.length}건</span>
               </div>
-            : <span className="text-[13px] text-[#6e6e73]">검단 신도시 소식</span>
+            : <span className="text-[12px] text-gray-500">검단 신도시 소식</span>
           }
-          <button onClick={() => loadNews(category)} className="flex items-center gap-1 active:opacity-60">
-            <RefreshCw size={12} className={`text-[#6e6e73] ${loading ? "animate-spin" : ""}`} />
-            {lastUpdated && <span className="text-[12px] text-[#86868b]">{lastUpdated}</span>}
+          <button onClick={loadNews} className="flex items-center gap-1 active:opacity-60">
+            <RefreshCw size={12} className={`text-gray-400 ${loading ? "animate-spin" : ""}`} />
+            {lastUpdated && <span className="text-[11px] text-gray-400">{lastUpdated}</span>}
           </button>
         </div>
       )}
@@ -402,11 +412,11 @@ export default function NewsPage() {
         <>
           <div className="flex items-center justify-between px-4 py-2.5">
             <div className="flex items-center gap-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#FF0000] animate-pulse" />
-              <span className="text-[13px] text-[#424245]">검단신도시 유튜브 영상</span>
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-[12px] text-gray-500">검단신도시 유튜브 영상</span>
             </div>
             <button onClick={() => { setYtVideos([]); loadYouTube(); }} className="active:opacity-60">
-              <RefreshCw size={12} className={`text-[#6e6e73] ${ytLoading ? "animate-spin" : ""}`} />
+              <RefreshCw size={12} className={`text-gray-400 ${ytLoading ? "animate-spin" : ""}`} />
             </button>
           </div>
           <YouTubeGrid videos={ytVideos} loading={ytLoading} onSelect={setSelectedVideo} />
@@ -423,7 +433,7 @@ export default function NewsPage() {
       {/* Rest as list */}
       {active !== "유튜브" && rest.length > 0 && (
         <div className="px-4 space-y-2">
-          <p className="text-[14px] font-bold text-[#6e6e73] mb-1">더 보기</p>
+          <p className="text-xs font-medium text-gray-500 mb-2 px-1">더 보기</p>
           {rest.map(item => (
             <NewsListItem key={item.id} item={item} />
           ))}
@@ -432,9 +442,11 @@ export default function NewsPage() {
 
       {!loading && newsSource.length === 0 && (
         <div className="flex flex-col items-center justify-center pt-20 text-center px-8">
-          <span className="text-5xl mb-4">📭</span>
-          <p className="text-[17px] font-bold text-[#1d1d1f]">뉴스가 없어요</p>
-          <p className="text-[14px] text-[#6e6e73] mt-2">잠시 후 다시 확인해보세요</p>
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <span className="text-3xl">📭</span>
+          </div>
+          <p className="text-[16px] font-semibold text-gray-800">뉴스가 없어요</p>
+          <p className="text-[13px] text-gray-500 mt-1.5">잠시 후 다시 확인해보세요</p>
         </div>
       )}
 
