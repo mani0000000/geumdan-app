@@ -261,37 +261,37 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* 인기 TOP3 — 전체 탭에서만 노출, 그라데이션 패널 */}
+      {/* 인기 TOP3 — 전체 탭에서만 노출 */}
       {active === "전체" && !loadingPosts && hotPosts.length === 3 && (
-        <div className="mx-4 mt-3 rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-indigo-100 border border-indigo-200/60 shadow-sm overflow-hidden">
+        <div className="mx-4 mt-3 rounded-2xl bg-white border border-gray-100 shadow-sm overflow-hidden">
           <div className="flex items-center gap-1.5 px-4 pt-3.5 pb-2.5">
             <Flame size={15} className="text-red-500" />
-            <span className="text-[13px] font-black text-gray-900 tracking-tight">인기글 TOP 3</span>
-            <span className="text-[10px] font-semibold text-gray-500 bg-white/60 px-1.5 py-0.5 rounded-full">실시간</span>
+            <span className="text-[13px] font-bold text-gray-900 tracking-tight">인기글 TOP 3</span>
+            <span className="text-[10px] font-semibold text-red-500 bg-red-50 px-1.5 py-0.5 rounded-full">실시간</span>
           </div>
 
           {/* 1등 — 강조 */}
           <button
             onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
-            className="w-full text-left px-4 pb-3 active:opacity-80"
+            className="w-full text-left px-4 pb-3 active:bg-gray-50"
           >
-            <div className="bg-white rounded-2xl p-3.5 shadow-[0_2px_10px_rgba(79,70,229,0.12)] border border-white">
+            <div className="bg-white rounded-2xl p-3.5 shadow-sm border border-gray-100">
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="flex items-center gap-1 text-[11px] font-black bg-gradient-to-r from-amber-400 to-orange-500 text-white px-2 py-0.5 rounded-full shadow-sm">
+                <span className="flex items-center gap-1 text-[11px] font-bold bg-blue-600 text-white px-2 py-0.5 rounded-full">
                   <Crown size={10} className="-mt-0.5" /> 1위
                 </span>
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[hotPosts[0].category]}`}>
                   {hotPosts[0].category}
                 </span>
               </div>
-              <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{hotPosts[0].title}</p>
+              <p className="text-[16px] font-semibold text-gray-900 leading-snug line-clamp-2">{hotPosts[0].title}</p>
               <div className="flex items-center gap-3 mt-2.5">
-                <span className="text-[12px] text-gray-500">{hotPosts[0].author}</span>
+                <span className="text-xs text-gray-400">{hotPosts[0].author}</span>
                 <div className="flex items-center gap-2.5 ml-auto">
-                  <span className="flex items-center gap-1 text-[12px] font-semibold text-red-500">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
                     <ThumbsUp size={11} />{hotPosts[0].likeCount}
                   </span>
-                  <span className="flex items-center gap-1 text-[12px] font-semibold text-blue-600">
+                  <span className="flex items-center gap-1 text-xs font-semibold text-blue-600">
                     <MessageSquare size={11} />{hotPosts[0].commentCount}
                   </span>
                 </div>
@@ -305,21 +305,21 @@ function CommunityTab() {
               <button
                 key={post.id}
                 onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-                className="w-full text-left bg-white/70 rounded-xl px-3 py-2.5 active:bg-white border border-white/60 flex items-center gap-2.5"
+                className="w-full text-left bg-white rounded-xl px-3 py-2.5 active:bg-gray-50 border border-gray-100 shadow-sm flex items-center gap-2.5"
               >
-                <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black ${
-                  idx === 0 ? "bg-[#94a3b8] text-white" : "bg-[#cd7f32] text-white"
+                <span className={`shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                  idx === 0 ? "bg-gray-100 text-gray-500" : "bg-gray-100 text-gray-400"
                 }`}>
                   {idx + 2}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13px] font-bold text-gray-900 truncate">{post.title}</p>
+                  <p className="text-[13px] font-semibold text-gray-900 truncate">{post.title}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className={`text-[10px] font-bold px-1.5 py-0 rounded-full ${catColor[post.category]}`}>{post.category}</span>
-                    <span className="text-[11px] text-gray-500">·</span>
-                    <span className="text-[11px] text-gray-400">좋아요 {post.likeCount}</span>
-                    <span className="text-[11px] text-gray-500">·</span>
-                    <span className="text-[11px] text-gray-400">댓글 {post.commentCount}</span>
+                    <span className="text-xs text-gray-400">·</span>
+                    <span className="text-xs text-gray-400">좋아요 {post.likeCount}</span>
+                    <span className="text-xs text-gray-400">·</span>
+                    <span className="text-xs text-gray-400">댓글 {post.commentCount}</span>
                   </div>
                 </div>
                 <ChevronRight size={14} className="shrink-0 text-gray-400" />
