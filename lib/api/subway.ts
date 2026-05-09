@@ -31,6 +31,7 @@ export type SubwayApiType = "ic1" | "ic2" | "arex" | "seoul5" | "seoul9" | "seoh
 // 같은 좌표·같은 역사를 공유하는 노선들에만 적용한다.
 export const GIMPO_AIRPORT_GROUP = "gimpoair";
 export const GYEYANG_GROUP = "gyeyang";
+export const GEOMAM_GROUP = "geomam";
 
 export interface SubwayStationEntry {
   id: string;
@@ -74,10 +75,12 @@ const STATION_DB: SubwayStationEntry[] = [
     id: "arex-geomam",
     displayName: "검암역",
     line: "공항철도",
+    shortLineLabel: "공항철도",
     lineColor: "#0065B3",
-    lat: 37.5575, lng: 126.6721,
+    lat: 37.5569, lng: 126.6719,
     apiType: "arex",
     stationCode: "검암",
+    groupKey: GEOMAM_GROUP,
     timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
@@ -324,12 +327,14 @@ const STATION_DB: SubwayStationEntry[] = [
   },
   {
     id: "ic2-geomam",
-    displayName: "검암역(인천2호선)",
+    displayName: "검암역",
     line: "인천2호선",
+    shortLineLabel: "인천2호선",
     lineColor: "#ED8B00",
-    lat: 37.5688, lng: 126.6731,
+    lat: 37.5569, lng: 126.6719,
     apiType: "ic2",
     stationCode: "I207",
+    groupKey: GEOMAM_GROUP,
     timetable: { upFirst: "05:42", upLast: "24:25", downFirst: "05:30", downLast: "24:53", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
   {
