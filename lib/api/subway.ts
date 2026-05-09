@@ -27,8 +27,10 @@ export interface SubwayArrival {
 // "ic1"/"ic2" 는 호선 표시 구분이며, 모두 동일 엔드포인트로 호출된다.
 export type SubwayApiType = "ic1" | "ic2" | "arex" | "seoul5" | "seoul9" | "seohae" | "gimpogold" | "planned";
 
-// 김포공항역 통합 그룹 — 같은 groupKey의 entry는 노선 탭 UI로 묶어서 표시
+// 환승역 통합 그룹 — 같은 groupKey의 entry는 환승 카드로 묶어서 표시
+// 같은 좌표·같은 역사를 공유하는 노선들에만 적용한다.
 export const GIMPO_AIRPORT_GROUP = "gimpoair";
+export const GYEYANG_GROUP = "gyeyang";
 
 export interface SubwayStationEntry {
   id: string;
@@ -80,12 +82,14 @@ const STATION_DB: SubwayStationEntry[] = [
   },
   {
     id: "arex-gyeyang",
-    displayName: "계양역(공항철도)",
+    displayName: "계양역",
     line: "공항철도",
+    shortLineLabel: "공항철도",
     lineColor: "#0065B3",
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
+    groupKey: GYEYANG_GROUP,
     timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
@@ -162,12 +166,14 @@ const STATION_DB: SubwayStationEntry[] = [
   // 인천1호선
   {
     id: "ic1-gyeyang",
-    displayName: "계양역(인천1호선)",
+    displayName: "계양역",
     line: "인천1호선",
+    shortLineLabel: "인천1호선",
     lineColor: "#759CCE",
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
     stationCode: "I023",
+    groupKey: GYEYANG_GROUP,
     timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {

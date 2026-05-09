@@ -26,7 +26,7 @@ import {
 } from "@/lib/api/bus";
 import {
   findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
-  estimateNextArrivals, GIMPO_AIRPORT_GROUP,
+  estimateNextArrivals,
   type SubwayStationWithDist, type SubwayArrival,
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation, NearbyStop } from "@/lib/api/bus";
@@ -387,162 +387,105 @@ function BusDetailSheet({
   );
 }
 
-// ─── 김포공항역 환승 통합 카드 (5호선·9호선·공항철도·서해선·김포골드라인) ────
-// 일반 역 카드와 동일한 컨테이너·헤더·도착정보 레이아웃을 사용하고,
-// 노선 탭 셀렉터만 카드 내부에 추가로 둔다.
-function GimpoAirportHubCard({
+// ─── 환승역 통합 카드 (김포공항·계양 등 — 같은 groupKey 의 노선을 한 카드로) ────
+// 노선별 다음 도착을 한 줄로 요약 표시한다. 자세한 시간표는 칩 탭 → 시간표 시트.
+function TransferHubCard({
+  hubName,
   stations,
   favSubways,
   onToggleFav,
   onOpenTimetable,
 }: {
+  hubName: string;
   stations: (SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[];
   favSubways: string[];
   onToggleFav: (id: string) => void;
   onOpenTimetable: (st: SubwayStationWithDist) => void;
 }) {
-  const [activeId, setActiveId] = useState<string>(stations[0]?.id ?? "");
-
-  useEffect(() => {
-    if (stations.length > 0 && !stations.find(s => s.id === activeId)) {
-      setActiveId(stations[0].id);
-    }
-  }, [stations, activeId]);
-
   if (stations.length === 0) return null;
-  const active = stations.find(s => s.id === activeId) ?? stations[0];
+  const primary = stations[0];
+  const minDistM = stations.reduce((m, s) => Math.min(m, s.distM), Infinity);
 
-  const displayArrivals = active.arrivals.length > 0
-    ? active.arrivals
-    : estimateNextArrivals(active.timetable, 3);
-  const isEstimated = active.arrivals.length === 0;
-  const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
-  const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 3);
+  // 노선별 다음 1대 도착 (방향 무관, 가장 빠른 것)
+  const lineSummaries = stations.map(st => {
+    const arrivals = st.arrivals.length > 0
+      ? st.arrivals
+      : estimateNextArrivals(st.timetable, 1);
+    const next = arrivals.slice().sort((a, b) => a.arrivalMin - b.arrivalMin)[0];
+    return {
+      st,
+      label: st.shortLineLabel ?? st.line,
+      lineColor: st.lineColor,
+      arrivalMin: next?.arrivalMin ?? null,
+      isEstimated: st.arrivals.length === 0,
+      loading: st.loadingArrivals,
+    };
+  });
+
+  const anyLoading = lineSummaries.some(s => s.loading);
+  const anyEstimated = lineSummaries.some(s => s.isEstimated && !s.loading);
+  const isFav = favSubways.includes(primary.id);
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-      {/* 역 헤더 — 활성 노선 컬러 (일반 역 카드와 동일 패턴) */}
-      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: active.lineColor }}>
+      {/* 헤더 — 대표 노선 컬러 (일반 역 카드와 동일한 톤) */}
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: primary.lineColor }}>
         <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
-          <span className="text-[11px] font-black leading-none" style={{ color: active.lineColor }}>환승</span>
+          <span className="text-[11px] font-black leading-none" style={{ color: primary.lineColor }}>환승</span>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-white font-extrabold text-[18px] leading-tight truncate">김포공항역</p>
+          <p className="text-white font-extrabold text-[18px] leading-tight truncate">{hubName}</p>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
-              <Navigation size={11} />{distLabel(active.distM)}
+              <Navigation size={11} />{distLabel(minDistM)}
             </span>
             <span className="text-white/50">·</span>
             <span className="text-white/85 text-[12px] font-medium">{stations.length}개 노선 환승역</span>
           </div>
         </div>
-        <button onClick={() => onToggleFav(active.id)} className="p-1.5 active:opacity-60 shrink-0">
+        <button onClick={() => onToggleFav(primary.id)} className="p-1.5 active:opacity-60 shrink-0">
           <Star size={20}
-            className={favSubways.includes(active.id) ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
+            className={isFav ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
         </button>
       </div>
 
-      {/* 노선 셀렉터 (카드 내부 전용) */}
-      <div className="flex gap-1.5 px-4 py-3 overflow-x-auto scrollbar-hide border-b border-[#f5f5f7]">
-        {stations.map(st => {
-          const isActive = st.id === activeId;
-          return (
-            <button key={st.id} onClick={() => setActiveId(st.id)}
-              className={`shrink-0 px-3 h-8 rounded-full text-[12px] font-bold transition-all flex items-center gap-1.5 ${
-                isActive ? "text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"
-              }`}
-              style={isActive ? { background: st.lineColor } : {}}>
-              <span className="w-2 h-2 rounded-full"
-                style={{ background: isActive ? "rgba(255,255,255,0.9)" : st.lineColor }} />
-              {st.shortLineLabel ?? st.line}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 도착 정보 헤더 — 일반 역 카드와 동일 */}
+      {/* 도착 정보 헤더 */}
       <div className="px-4 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
         <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
-        <div className="flex items-center gap-2">
-          {isEstimated && (
-            <span className="text-[11px] text-[#86868b]">
-              ⏱ {active.apiType === "gimpogold" ? "김포골드라인 시간표" : "시간표 기준"}
-            </span>
-          )}
-          {active.timetable.intervalMin > 0 && (
-            <span className="text-[11px] text-[#86868b]">
-              배차 {active.timetable.intervalDisplay ?? `${active.timetable.intervalMin}분`}
-            </span>
-          )}
-          <button onClick={() => onOpenTimetable(active)}
-            className="flex items-center gap-1 text-[11px] text-[#0071e3] font-bold px-2 py-1 active:opacity-60">
-            <Clock size={11} />시간표
-          </button>
-        </div>
+        {anyEstimated && (
+          <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>
+        )}
       </div>
 
-      {/* 2열 도착 — 일반 역 카드와 동일 */}
-      {active.loadingArrivals ? (
-        <div className="grid grid-cols-2 gap-2 p-3">
-          {[0,1].map(i => <div key={i} className="h-20 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+      {/* 노선별 1줄 요약 — 칩 탭 → 시간표 시트 */}
+      {anyLoading ? (
+        <div className="px-4 py-3">
+          <div className="h-6 bg-[#f5f5f7] rounded animate-pulse" />
         </div>
-      ) : displayArrivals.length === 0 ? (
-        <p className="px-3 py-4 text-[14px] text-[#6e6e73] text-center">운행 종료</p>
       ) : (
-        <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
-          {[
-            { label: active.timetable.upDirection, arrivals: upArrivals },
-            { label: active.timetable.downDirection, arrivals: downArrivals },
-          ].map(({ label, arrivals: dirArrivals }, col) => (
-            <div key={col} className="px-3 py-3">
-              <div className="flex items-center gap-0.5 mb-2 pb-1.5 border-b border-[#f5f5f7]">
-                <span className="text-[13px] font-bold text-[#1d1d1f] flex-1 truncate">
-                  {label === "-" ? "운행 없음" : `${label} 방면`}
-                </span>
-                <ChevronRight size={13} className="text-[#86868b] shrink-0" />
-              </div>
-              {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
-                <div key={i} className="flex items-center justify-between py-1.5">
-                  <div className="flex-1 min-w-0 mr-1">
-                    <span className="text-[13px] text-[#424245] block truncate font-medium">{a.terminalStation}</span>
-                    {!isEstimated && a.currentStation && (
-                      <span className="text-[10px] text-[#86868b]">{a.currentStation} 출발</span>
-                    )}
-                    {a.isExpress && (
-                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 ${
-                        a.trainTypeName === "직통"
-                          ? "bg-[#F3E8FF] text-[#7C3AED]"
-                          : "bg-[#FFF3E0] text-[#E65100]"
-                      }`}>
-                        {a.trainTypeName ?? "급행"}
-                      </span>
-                    )}
-                  </div>
-                  <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
-                    {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
-                  </span>
-                </div>
-              )) : (
-                <span className="text-[12px] text-[#86868b]">정보 없음</span>
+        <div className="px-4 py-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+          {lineSummaries.map((s, idx) => (
+            <button
+              key={s.st.id}
+              onClick={() => onOpenTimetable(s.st)}
+              className="flex items-center gap-1 active:opacity-60"
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: s.lineColor }} />
+              <span className="text-[13px] font-bold text-[#1d1d1f]">{s.label}</span>
+              <span className={`text-[13px] font-black ${
+                s.arrivalMin === null
+                  ? "text-[#86868b]"
+                  : s.arrivalMin <= 1
+                    ? "text-[#F04452]"
+                    : "text-[#0071e3]"
+              }`}>
+                {s.arrivalMin === null ? "운행종료" : s.arrivalMin <= 1 ? "곧" : `${s.arrivalMin}분`}
+              </span>
+              {idx < lineSummaries.length - 1 && (
+                <span className="text-[#d2d2d7] ml-0.5">·</span>
               )}
-            </div>
+            </button>
           ))}
-        </div>
-      )}
-
-      {/* 첫차/막차 */}
-      {active.timetable.upFirst !== "-" && (
-        <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
-          <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-            <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.upDirection} 첫/막차</p>
-            <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.upFirst} / {active.timetable.upLast}</p>
-          </div>
-          {active.timetable.downFirst !== "-" && (
-            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.downDirection} 첫/막차</p>
-              <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.downFirst} / {active.timetable.downLast}</p>
-            </div>
-          )}
         </div>
       )}
     </div>
@@ -1933,19 +1876,50 @@ export default function TransportPage() {
               </button>
             </div>
           ) : (() => {
-            const gimpoStations = subwayList.filter(s => s.groupKey === GIMPO_AIRPORT_GROUP);
-            const otherStations = subwayList.filter(s => s.groupKey !== GIMPO_AIRPORT_GROUP);
+            // 환승역(같은 groupKey)은 한 카드로 묶고, 일반 역과 함께 거리 오름차순으로 정렬한다.
+            type SubwayItem = typeof subwayList[number];
+            type DisplayItem =
+              | { kind: "group"; key: string; stations: SubwayItem[]; distM: number; hubName: string }
+              | { kind: "single"; station: SubwayItem; distM: number };
+
+            const groupMap = new Map<string, SubwayItem[]>();
+            const singles: SubwayItem[] = [];
+            for (const st of subwayList) {
+              if (st.groupKey) {
+                const arr = groupMap.get(st.groupKey) ?? [];
+                arr.push(st);
+                groupMap.set(st.groupKey, arr);
+              } else {
+                singles.push(st);
+              }
+            }
+            const items: DisplayItem[] = [
+              ...Array.from(groupMap.entries()).map(([key, sts]): DisplayItem => ({
+                kind: "group",
+                key,
+                stations: sts,
+                distM: sts.reduce((m, s) => Math.min(m, s.distM), Infinity),
+                hubName: sts[0].displayName.replace(/\(.+?\)/g, "").trim(),
+              })),
+              ...singles.map((st): DisplayItem => ({ kind: "single", station: st, distM: st.distM })),
+            ].sort((a, b) => a.distM - b.distM);
+
             return (
               <>
-                {gimpoStations.length > 0 && (
-                  <GimpoAirportHubCard
-                    stations={gimpoStations}
+                {items.map(item => {
+              if (item.kind === "group") {
+                return (
+                  <TransferHubCard
+                    key={`group-${item.key}`}
+                    hubName={item.hubName}
+                    stations={item.stations}
                     favSubways={favSubways}
                     onToggleFav={toggleSubway}
                     onOpenTimetable={(st) => setTimetableStation(st)}
                   />
-                )}
-                {otherStations.map((st) => {
+                );
+              }
+              const st = item.station;
               const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
               const isEstimated = st.arrivals.length === 0;
               const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
