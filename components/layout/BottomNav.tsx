@@ -1,10 +1,15 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Rss, Navigation, Store, User } from "lucide-react";
+import { Home, Navigation, Store, User } from "lucide-react";
 import SuggestFAB from "@/components/ui/SuggestFAB";
 
-type IconProps = { size?: number; className?: string };
+type IconProps = {
+  size?: number;
+  className?: string;
+  strokeWidth?: number;
+  fill?: string;
+};
 
 function StoreSolid({ size = 20, className = "" }: IconProps) {
   return (
@@ -15,24 +20,20 @@ function StoreSolid({ size = 20, className = "" }: IconProps) {
   );
 }
 
-function NewspaperSolid({ size = 20, className = "" }: IconProps) {
+function MessageCircleSolid({ size = 20, className = "" }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
-      <path
-        fillRule="evenodd"
-        clipRule="evenodd"
-        d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h13a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2H5Zm1 3.5A.5.5 0 0 1 6.5 6h6a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5h-6a.5.5 0 0 1-.5-.5v-4Zm9 0a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Zm0 2.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5Zm-9 4.25c0-.41.34-.75.75-.75h10.5a.75.75 0 0 1 0 1.5H6.75a.75.75 0 0 1-.75-.75Zm.75 2.25a.75.75 0 0 0 0 1.5h10.5a.75.75 0 0 0 0-1.5H6.75Z"
-      />
+      <path d="M12 2C6.477 2 2 6.029 2 11c0 2.526 1.165 4.808 3.038 6.439L4 22l4.997-2.058A11.05 11.05 0 0 0 12 20c5.523 0 10-4.029 10-9s-4.477-9-10-9Z" />
     </svg>
   );
 }
 
 const navItems = [
-  { href: "/stores",    label: "상가",      icon: Store,      iconActive: StoreSolid,     match: "/stores" },
-  { href: "/community", label: "소식",      icon: Rss,        iconActive: NewspaperSolid, match: ["/community", "/news", "/real-estate"] },
-  { href: "/home",      label: "홈",        icon: Home,       match: "/home", center: true },
-  { href: "/transport", label: "여행/교통", icon: Navigation, match: "/transport" },
-  { href: "/mypage",    label: "MY",        icon: User,       match: "/mypage" },
+  { href: "/stores",    label: "상가",      icon: Store,              iconActive: StoreSolid,         match: "/stores" },
+  { href: "/community", label: "소식",      icon: MessageCircleSolid, iconActive: MessageCircleSolid, match: ["/community", "/news", "/real-estate"] },
+  { href: "/home",      label: "홈",        icon: Home,               match: "/home", center: true },
+  { href: "/transport", label: "여행/교통", icon: Navigation,         match: "/transport" },
+  { href: "/mypage",    label: "MY",        icon: User,               match: "/mypage" },
 ];
 
 export default function BottomNav() {
@@ -66,22 +67,24 @@ export default function BottomNav() {
                 href={href}
                 className="flex-1 flex flex-col items-center justify-center gap-[3px] active:scale-90 transition-transform"
               >
-                <div className={`flex items-center justify-center rounded-full transition-all
-                  ${center ? "w-10 h-10" : "w-8 h-8"}
-                  ${active && center
-                    ? "bg-[#2563EB] shadow-[0_0_12px_rgba(37,99,235,0.6)]"
-                    : "bg-transparent"
-                  }`}>
-                  {useSolid ? (
-                    <IconActive size={iconSize} className={iconColor} />
-                  ) : (
-                    <Icon
-                      size={iconSize}
-                      strokeWidth={active ? 2.3 : 1.7}
-                      fill={active && !center ? "currentColor" : "none"}
-                      className={iconColor}
-                    />
-                  )}
+                <div className="h-10 flex items-center justify-center">
+                  <div className={`flex items-center justify-center rounded-full transition-all
+                    ${center ? "w-10 h-10" : "w-8 h-8"}
+                    ${active && center
+                      ? "bg-[#2563EB] shadow-[0_0_12px_rgba(37,99,235,0.6)]"
+                      : "bg-transparent"
+                    }`}>
+                    {useSolid ? (
+                      <IconActive size={iconSize} className={iconColor} />
+                    ) : (
+                      <Icon
+                        size={iconSize}
+                        strokeWidth={active ? 2.3 : 1.7}
+                        fill={active && !center ? "currentColor" : "none"}
+                        className={iconColor}
+                      />
+                    )}
+                  </div>
                 </div>
                 <span className={`text-[10px] font-medium tracking-tight transition-colors
                   ${active ? "text-black" : "text-[#8e8e93]"}`}>
