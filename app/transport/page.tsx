@@ -803,184 +803,215 @@ export default function TransportPage() {
         ))}
       </div>
 
-      {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
-      {tab === "버스" && (favStopList.length > 0 || favRouteList.length > 0) && (
-        <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center justify-between px-4 pt-3.5 pb-2">
+      {/* ══ 버스 즐겨찾기 (버스 탭 전용) ══════════════════════════ */}
+      {tab === "버스" && favStopList.length > 0 && (
+        <div className="px-4 pt-3 pb-1 space-y-3">
+          {/* 섹션 헤더 */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[13px] font-bold text-[#1d1d1f]">즐겨찾기</span>
+              <span className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기</span>
             </div>
             <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
               <RefreshCw size={12} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
               {lastUpdated && <span className="text-[11px] text-[#86868b]">{lastUpdated}</span>}
             </button>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto px-4 pb-3.5" style={{ scrollbarWidth: "none" }}>
-            {/* 노선 즐겨찾기 */}
-            {favRouteList.map(r => {
-              const fk = routeFavKey(r.stopId, r);
-              const min = r.arrivalMin;
-              const badgeBg = !isLive || min === -1 ? "#d2d2d7" : min <= 3 ? "#F04452" : min <= 7 ? "#FF9500" : "#0071e3";
-              return (
-                <div key={fk} className="shrink-0 relative w-[148px]">
-                  <button onClick={() => toggleRoute(fk)}
-                    className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#e5e5ea] flex items-center justify-center active:opacity-60">
-                    <X size={10} className="text-[#6e6e73]" />
-                  </button>
-                  <div className="bg-white border border-[#e5e5ea] rounded-2xl px-3.5 py-3 h-full">
-                    {/* 노선 번호 */}
-                    <div className="flex items-center gap-1.5 mb-2 pr-5">
-                      <div className="bg-[#0071e3] rounded-lg px-2.5 py-1">
-                        <span className="text-white text-[16px] font-black leading-none">{r.routeNo}</span>
+          {/* 즐겨찾기 정류장 카드 — 메인 UI와 동일 */}
+          {favStopList.map(stop => {
+            const open = expanded === stop.id;
+            const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
+            return (
+              <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
+                <button onClick={() => setExpanded(open ? null : stop.id)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#f5f5f7]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                      <Bus size={18} className="text-[#0071e3]" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[15px] font-bold text-[#1d1d1f]">{stop.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Navigation size={10} className="text-[#0071e3]" />
+                        <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
+                        {!stop.loadingArrivals && stop.arrivals.length > 0 && (
+                          <span className="text-[12px] text-[#86868b]">· 노선 {stop.arrivals.length}개</span>
+                        )}
                       </div>
-                      {r.isExpress && (
-                        <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1.5 py-0.5 rounded-md">급행</span>
-                      )}
-                    </div>
-                    {/* 정류장명 */}
-                    <p className="text-[12px] text-[#424245] font-medium truncate mb-2.5">{r.stopName}</p>
-                    {/* 도착 시간 */}
-                    <div className="flex items-end justify-between">
-                      <span className="text-[11px] text-[#86868b]">도착</span>
-                      {!isLive || min === -1 ? (
-                        <span className="text-[13px] font-bold text-[#86868b]">--</span>
-                      ) : min <= 0 ? (
-                        <span className="text-[13px] font-black" style={{ color: badgeBg }}>곧도착</span>
-                      ) : (
-                        <span className="text-[22px] font-black leading-none" style={{ color: badgeBg }}>
-                          {min}<span className="text-[12px] font-semibold text-[#86868b] ml-0.5">분</span>
-                        </span>
-                      )}
                     </div>
                   </div>
-                </div>
-              );
-            })}
-            {/* 정류장 즐겨찾기 */}
-            {favStopList.map(stop => (
-              <div key={stop.id} className="shrink-0 relative w-[148px]">
-                <button onClick={() => toggleStop(stop.id)}
-                  className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#e5e5ea] flex items-center justify-center active:opacity-60">
-                  <X size={10} className="text-[#6e6e73]" />
+                  <div className="flex items-center gap-1.5">
+                    <button onClick={e => { e.stopPropagation(); toggleStop(stop.id); }}
+                      className="p-1.5 active:opacity-60">
+                      <Star size={18} className="text-[#FFBB00] fill-[#FFBB00]" />
+                    </button>
+                    {open ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
+                  </div>
                 </button>
-                <div className="bg-white border border-[#e5e5ea] rounded-2xl px-3.5 py-3 h-full">
-                  {/* 정류장 이름 */}
-                  <div className="flex items-center gap-1 mb-0.5 pr-5">
-                    <MapPin size={11} className="text-[#0071e3] shrink-0" />
-                    <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{stop.name}</span>
-                  </div>
-                  <p className="text-[11px] text-[#86868b] mb-2.5">{distLabel(stop.distM)}</p>
-                  {/* 경유 노선 */}
+                <div className="px-4 pb-4 space-y-2">
                   {stop.loadingArrivals ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {[1,2].map(i => <div key={i} className="h-6 w-12 bg-[#f5f5f7] rounded-lg animate-pulse" />)}
-                    </div>
-                  ) : stop.arrivals.length > 0 ? (
-                    <div className="flex gap-1 flex-wrap">
-                      {stop.arrivals.slice(0, 4).map((a, i) => (
-                        <div key={i} className="bg-[#0071e3] rounded-lg px-2 py-1">
-                          <span className="text-white text-[12px] font-bold">{a.routeNo}</span>
+                    [1, 2].map(i => (
+                      <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-10 h-8 bg-[#d2d2d7] rounded-lg" />
+                          <div className="space-y-1.5">
+                            <div className="h-3.5 w-28 bg-[#d2d2d7] rounded" />
+                            <div className="h-3 w-16 bg-[#d2d2d7] rounded" />
+                          </div>
                         </div>
-                      ))}
-                      {stop.arrivals.length > 4 && (
-                        <div className="bg-[#f5f5f7] rounded-lg px-2 py-1">
-                          <span className="text-[#6e6e73] text-[12px] font-bold">+{stop.arrivals.length - 4}</span>
-                        </div>
-                      )}
+                        <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
+                      </div>
+                    ))
+                  ) : stop.arrivals.length === 0 ? (
+                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
+                      <p className="text-[12px] text-[#86868b]">운행 정보 없음</p>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-[#86868b]">도착 정보 없음</p>
+                    <>
+                      {displayArrivals.map((a, i) => (
+                        <div key={i}
+                          className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
+                          onClick={() => setSelectedArrival(a)}>
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
+                              <span className="text-white text-[14px] font-black">{a.routeNo}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
+                                {a.isExpress && (
+                                  <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                                    <Zap size={9} />급행
+                                  </span>
+                                )}
+                                {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+                              </div>
+                              <p className="text-[12px] text-[#6e6e73]">
+                                {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
+                        </div>
+                      ))}
+                      {!open && stop.arrivals.length > 3 && (
+                        <button onClick={() => setExpanded(stop.id)}
+                          className="w-full text-[13px] text-[#0071e3] text-center py-1">
+                          {stop.arrivals.length - 3}개 노선 더 보기
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
+          <div className="h-1 border-b border-[#e5e5ea]" />
         </div>
       )}
 
-      {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
+      {/* ══ 지하철 즐겨찾기 (지하철 탭 전용) ══════════════════════ */}
       {tab === "지하철" && favSubwayList.length > 0 && (
-        <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center px-4 pt-3.5 pb-2 gap-1.5">
+        <div className="px-4 pt-3 pb-1 space-y-3">
+          <div className="flex items-center gap-1.5">
             <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
-            <span className="text-[13px] font-bold text-[#1d1d1f]">즐겨찾기</span>
+            <span className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기</span>
           </div>
-          <div className="flex gap-2.5 overflow-x-auto px-4 pb-3.5" style={{ scrollbarWidth: "none" }}>
-            {favSubwayList.map(st => {
-              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
-              const nextUp   = displayArrivals.find(a => a.direction === "상행");
-              const nextDown = displayArrivals.find(a => a.direction === "하행");
-              const minUp   = nextUp?.arrivalMin ?? -1;
-              const minDown = nextDown?.arrivalMin ?? -1;
-              const arrColor = (m: number) => m <= 3 ? "#F04452" : m <= 7 ? "#FF9500" : "#0071e3";
-              return (
-                <div key={st.id} className="shrink-0 relative w-[176px]">
-                  <button onClick={() => toggleSubway(st.id)}
-                    className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#e5e5ea] flex items-center justify-center active:opacity-60">
-                    <X size={10} className="text-[#6e6e73]" />
-                  </button>
-                  <button onClick={() => setSelectedSubway(st)}
-                    className="w-full bg-white border border-[#e5e5ea] rounded-2xl px-3.5 py-3 text-left active:bg-[#f9f9f9] transition-colors">
-                    {/* 역명 + 노선 */}
-                    <div className="flex items-center gap-2 mb-2 pr-5">
-                      <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ background: st.lineColor + "22" }}>
-                        <Train size={14} style={{ color: st.lineColor }} />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[15px] font-bold text-[#1d1d1f] truncate leading-tight">{st.displayName}</p>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block"
-                          style={{ background: st.lineColor }}>{st.line}</span>
-                      </div>
+          {/* 즐겨찾기 역 카드 — 메인 UI와 동일 */}
+          {favSubwayList.map(st => {
+            const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+            const isEstimated = st.arrivals.length === 0;
+            const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
+            const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+            const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
+            return (
+              <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                {/* 역 헤더 — 라인 컬러 배경 (메인과 동일) */}
+                <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: st.lineColor }}>
+                  <button onClick={() => setTimetableStation(st)}
+                    className="flex items-center gap-2 flex-1 min-w-0 active:opacity-70 text-left">
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                     </div>
-                    {/* 도착 정보 */}
-                    {st.loadingArrivals ? (
-                      <div className="space-y-1.5">
-                        <div className="h-5 bg-[#f5f5f7] rounded-lg animate-pulse" />
-                        <div className="h-5 bg-[#f5f5f7] rounded-lg animate-pulse" />
-                      </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        {/* 상행 */}
-                        <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-2.5 py-1.5">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-[10px] text-[#86868b] shrink-0">↑</span>
-                            <span className="text-[12px] font-medium text-[#424245] truncate">
-                              {nextUp ? nextUp.terminalStation : st.timetable.upDirection}
-                            </span>
-                          </div>
-                          {nextUp && minUp !== -1 ? (
-                            minUp <= 0
-                              ? <span className="text-[11px] font-black text-[#F04452] shrink-0">곧도착</span>
-                              : <span className="text-[14px] font-black shrink-0" style={{ color: arrColor(minUp) }}>{minUp}<span className="text-[10px] font-medium text-[#86868b]">분</span></span>
-                          ) : (
-                            <span className="text-[12px] font-bold text-[#c7c7cc] shrink-0">--</span>
-                          )}
-                        </div>
-                        {/* 하행 */}
-                        <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-2.5 py-1.5">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span className="text-[10px] text-[#86868b] shrink-0">↓</span>
-                            <span className="text-[12px] font-medium text-[#424245] truncate">
-                              {nextDown ? nextDown.terminalStation : st.timetable.downDirection}
-                            </span>
-                          </div>
-                          {nextDown && minDown !== -1 ? (
-                            minDown <= 0
-                              ? <span className="text-[11px] font-black text-[#F04452] shrink-0">곧도착</span>
-                              : <span className="text-[14px] font-black shrink-0" style={{ color: arrColor(minDown) }}>{minDown}<span className="text-[10px] font-medium text-[#86868b]">분</span></span>
-                          ) : (
-                            <span className="text-[12px] font-bold text-[#c7c7cc] shrink-0">--</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
+                    <span className="text-white font-extrabold text-[15px] truncate">{st.displayName}</span>
+                    <span className="flex items-center gap-0.5 text-white/70 text-[11px] font-medium shrink-0">
+                      <Clock size={10} />시간표
+                    </span>
+                  </button>
+                  <button onClick={() => toggleSubway(st.id)} className="p-1 active:opacity-60 shrink-0">
+                    <Star size={18} className="text-yellow-300 fill-yellow-300" />
                   </button>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* 도착 정보 헤더 */}
+                <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                  <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+                  <div className="flex items-center gap-2">
+                    {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+                    {st.timetable.intervalMin > 0 && (
+                      <span className="text-[10px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2열 도착 (메인과 동일) */}
+                {st.loadingArrivals ? (
+                  <div className="grid grid-cols-2 gap-2 p-3">
+                    {[0,1].map(i => <div key={i} className="h-16 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                  </div>
+                ) : displayArrivals.length === 0 ? (
+                  <p className="px-3 py-3 text-[13px] text-[#6e6e73] text-center">운행 종료</p>
+                ) : (
+                  <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                    {[
+                      { label: st.timetable.upDirection, arrivals: upArrivals },
+                      { label: st.timetable.downDirection, arrivals: downArrivals },
+                    ].map(({ label, arrivals: dirArrivals }, col) => (
+                      <div key={col} className="px-3 py-2.5">
+                        <div className="flex items-center gap-0.5 mb-2.5 pb-1.5 border-b border-[#f5f5f7]">
+                          <span className="text-[12px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                          <ChevronRight size={12} className="text-[#86868b] shrink-0" />
+                        </div>
+                        {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between py-1">
+                            <div className="flex-1 min-w-0 mr-1">
+                              <span className="text-[12px] text-[#424245] block truncate">{a.terminalStation}</span>
+                              {!isEstimated && a.currentStation && (
+                                <span className="text-[9px] text-[#86868b]">{a.currentStation} 출발</span>
+                              )}
+                              {a.isExpress && (
+                                <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
+                              )}
+                            </div>
+                            <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                              {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                            </span>
+                          </div>
+                        )) : (
+                          <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 첫차/막차 */}
+                {st.timetable.upFirst !== "-" && (
+                  <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                    </div>
+                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className="h-1 border-b border-[#e5e5ea]" />
         </div>
       )}
 
