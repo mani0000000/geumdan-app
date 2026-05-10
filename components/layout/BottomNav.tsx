@@ -28,7 +28,7 @@ export default function BottomNav() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-[3px] active:scale-90 transition-transform"
+              className="flex-1 flex flex-col items-center justify-center gap-[2px] active:scale-90 transition-transform"
             >
               <div className={`flex items-center justify-center rounded-full transition-all
                 ${center ? "w-10 h-10" : "w-8 h-8"}
@@ -38,11 +38,11 @@ export default function BottomNav() {
                 }`}>
                 <Icon
                   size={center ? 22 : 20}
-                  strokeWidth={active ? 2.3 : 1.7}
+                  strokeWidth={active ? 2.5 : 1.4}
                   className={active ? "text-white" : "text-[#8e8e93]"}
                 />
               </div>
-              <span className={`text-[10px] font-medium tracking-tight transition-colors
+              <span className={`text-[10px] leading-none font-medium tracking-tight transition-colors
                 ${active ? "text-[#2563EB]" : "text-[#8e8e93]"}`}>
                 {label}
               </span>
