@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-11T17:17:18.876Z",
+  "fetchedAt": "2026-05-11T19:25:09.683Z",
   "count": 40,
   "articles": [
     {
@@ -12,7 +12,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-12",
+      "id": "gr2-13",
       "title": "[인천 기초단체장 후보 공약 점검] 김진규 검단구청장 후보 “광역교통망 반드시 구축” - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -39,6 +39,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-17",
+      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
+      "summary": "",
+      "source": "인천일보",
+      "publishedAt": "2026-05-11T09:25:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr0-6",
       "title": "도성훈 인천교육감 예비후보, 검단신도시 \"학교 부족\" 해법 제시 - 뉴스티앤티",
       "summary": "",
@@ -48,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-6",
       "title": "제23회 한국청소년 육성회 서구지구회장배 길거리 농구대회 성료 - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -84,12 +93,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-4",
       "title": "브랜드 아파트 선호 지속… 검단신도시 신축 단지 관심 확대 - E동아",
       "summary": "",
       "source": "E동아",
       "publishedAt": "2026-05-11T00:39:32.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE53NXJIM2VtcUVGZzlCV2R2WGJ3dlFSLUsxNWhYbzlGNjRyMTF2RHdVejBOeC1uS2FvZ3Y1RmZ6OGVwRkljdEVhQzFpbUthUXFoZ0lrVUNRRDg0YTZUSWlQcVM4eGZ4Nnc?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-14",
+      "title": "검단신도시 분양가상한제 적용 단지… 잔여 세대 선착순 계약 진행 - E동아",
+      "summary": "",
+      "source": "E동아",
+      "publishedAt": "2026-05-11T00:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE5VNHA0VldZamhRZXFmcThLUnczSm5oa0ZEZ3JMQ2Z5ZGMweElZV0lCU0ZXY3NrTGlVN3ZZSTdIb2tha2hIRXpRRWZKT1pWdmxwdlM5alM0RF9WYkIxOGdEYTF2RkRaZ0U?oc=5",
       "type": "뉴스"
     },
     {
@@ -111,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-5",
       "title": "인천 서해구 검단구 영종구 제물포구 7월 출범 - 시니어오늘",
       "summary": "",
       "source": "시니어오늘",
@@ -120,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-3",
       "title": "[도로투데이] 인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -129,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-27",
+      "id": "gr2-28",
       "title": "인천 검단구 출범 앞두고 임시청사 건립 막바지…6년간 임차 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -147,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-10",
       "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 이데일리",
       "summary": "",
       "source": "이데일리",
@@ -156,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-20",
+      "id": "gr2-22",
       "title": "“방위 명칭 벗고 서해 거점 도시로”… 인천 서구, ‘서해구’ 확정 - 복지투데이",
       "summary": "",
       "source": "복지투데이",
@@ -174,16 +192,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
-      "title": "“요즘 아파트는 슬세권이지”…신도시 분양, 중심 상업지 접근성이 ‘최우선’ - 매일경제",
+      "id": "gr0-23",
+      "title": "\"요즘 아파트는 슬세권이지\"…신도시 분양, 중심 상업지 접근성이 '최우선' - 네이트",
       "summary": "",
-      "source": "매일경제",
-      "publishedAt": "2026-05-08T02:23:01.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1JaWo3YmUwd0lqbzZscVJ3Y1pNNTZBNlJQaXlPMDZsTF84YjlaYkVYUjY5VFdXb2hPTkpTN1lPLW52V2dsS1JxNzRQUWhhamNxTFFTODhaODU?oc=5",
+      "source": "네이트",
+      "publishedAt": "2026-05-08T02:24:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE0wXzlyYWFONFRlVTduX3pOcjlZRHYwRURNbXU3dU5UVlpFa21qaVFOYll0bU0yQ01NTU9ZTmc1OWNsQ3NvSDJuVzZaSEhuMm5lRUxz?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-15",
+      "id": "gr2-20",
       "title": "인천 서구, 38년 만에 '서해구'로 새 출발 - 파이낸셜뉴스",
       "summary": "",
       "source": "파이낸셜뉴스",
@@ -192,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-21",
+      "id": "gr2-23",
       "title": "[인물포커스] 강범석, '검단구 분구·GTX-D' 전면에…서구청장 3선 승부수 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -264,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-12",
       "title": "인천 서구 새 명칭 '서해구' 확정…\"7월1일부터 적용\" - newsis.com",
       "summary": "",
       "source": "newsis.com",
@@ -278,11 +296,11 @@
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-07T07:37:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5LWDlUeGtDYl9XZG8xMzN3dW02UUxTSTh5d04zOVZuNkNYUE9PRVRpb0lZeDlDTVJZcjVvYlQxVDRQbVpiUXl2MV9yTFVxbEtyQm1R?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBGX3R1QjZ5Q3dnc1dxZ2JKZzJnMGdrcjRza0VGZmFsMmZQMkstcW5ieVpwV05VVGk3UFJVVFp3M0ZJbkRQLVNSWTRQTnhTQWZuT0UxZjZKRG5OYkhxZXd6V05jSm9lWDFrVGdsNnVB?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-13",
       "title": "인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -291,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-11",
+      "id": "gr1-10",
       "title": "“검단구 출범 흔든 건 인천시”… 유정복 인천시장 책임론 정면 비판 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -300,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-25",
+      "id": "gr2-26",
       "title": "“검단구 출범 흔든 건 인천시”… 유정복 인천시장 책임론 정면 비판 - 헤럴드경제",
       "summary": "",
       "source": "헤럴드경제",
@@ -309,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-21",
       "title": "2857가구 대단지 ‘더샵 검단레이크파크’ 5월 분양 - 스포츠경향",
       "summary": "",
       "source": "스포츠경향",
@@ -318,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-22",
+      "id": "gr2-24",
       "title": "이영철 인천 서구의원, 인천시 재의 요구 ‘과도 개입’ 비판 - 중부일보",
       "summary": "",
       "source": "중부일보",
@@ -342,24 +360,6 @@
       "source": "한경매거진&북",
       "publishedAt": "2026-05-06T05:36:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9Zc3hkMDFUU1l1amVuRHU0YlpCUjNmZy11UE16dk9QNHlONlMtbFhabGNMdmlkZjVxQ3hvMTItSnNUTGJjU0dERUoyb0VvQWh5Q3dzUGdVdHEtamRjNkIzU1M5a0QwX0RXN0hvYw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-10",
-      "title": "[인지넷 기획-인천 권역별 현안] ③ 서북권, 검단 '산업 부재'·서해 '소각장 폐쇄'·계양 '테크노밸리 교통' 골머리 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-05-05T09:50:01.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5wV1JoTGd1d1NBcTVpQ0JHaHlOYWpSLUM3dDdLTHJ4dklSdjUtc2dpS3R6S0ZSOURwZ3o3QW5uaHFadGNXTW1wbTQ5c2ZBOFU?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-18",
-      "title": "[인지넷 기획-인천 권역별 현안] ③ 서북권, 검단 '산업 부재'·서해 '소각장 폐쇄'·계양 '테크노밸리 교통' 골머리 - 인천일보",
-      "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-05-05T09:22:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBGeTNHQnRpVTVhMFhUd2lIWEVZVklObFZKdGhVa1NJVWU3bE9IOWd3ZnFjQnMxYkwzNUZISGdLVUE3eWtJQ2QteDBRUFNqM0s0cnZKMUpkU19DdElMODZlQjlZZWxqWFB3NlpjWWlERXg?oc=5",
       "type": "뉴스"
     }
   ]
