@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import type { GasStation, GasSource, GasApiResponse } from "@/lib/types";
 
 /**
  * 검단 신도시 주변 주유소 가격 (Opinet 공공 API 프록시)
@@ -36,34 +37,6 @@ const BRAND_META: Record<string, { name: string; color: string; bg: string; shor
   SKG: { name: "SK가스",       color: "#EF4444", bg: "#FEF2F2", short: "SK"   },
   ETC: { name: "자가상표",     color: "#6B7280", bg: "#F3F4F6", short: "기타" },
 };
-
-export interface GasStation {
-  id: string;
-  name: string;
-  brandCode: string;
-  brandName: string;
-  brandColor: string;
-  brandBg: string;
-  brandShort: string;
-  address: string;
-  distanceKm: number;
-  prices: {
-    gasoline?: number;
-    diesel?: number;
-    lpg?: number;
-  };
-}
-
-export type GasSource = "opinet" | "no_key" | "empty" | "error";
-
-export interface GasApiResponse {
-  stations: GasStation[];
-  source: GasSource;
-  timestamp: string;
-  success: boolean;
-  message?: string;
-  error?: string;
-}
 
 interface OpinetStation {
   UNI_ID: string;
