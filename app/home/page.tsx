@@ -604,9 +604,7 @@ function InstagramSection() {
 function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => void }) {
   const meta = CATEGORY_META[place.category];
   const q = encodeURIComponent(place.address || place.name);
-  const mapUrl = place.lat && place.lng
-    ? `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
-    : `https://map.kakao.com/link/search/${q}`;
+  const mapUrl = `https://map.kakao.com/link/search/${q}`;
 
   const [favorited, setFavorited] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -1529,19 +1527,12 @@ interface MapTarget { name: string; address: string; lat?: number; lng?: number;
 
 function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onClose: () => void }) {
   const q = encodeURIComponent(address || name);
-  const n = encodeURIComponent(name);
 
-  const kakaoUrl = lat && lng
-    ? `https://map.kakao.com/link/map/${n},${lat},${lng}`
-    : `https://map.kakao.com/link/search/${q}`;
-  const naverUrl = lat && lng
-    ? `https://map.naver.com/v5/search/${q}`
-    : `https://map.naver.com/v5/search/${q}`;
+  const kakaoUrl = `https://map.kakao.com/link/search/${q}`;
+  const naverUrl = `https://map.naver.com/v5/search/${q}`;
   const tmapUrl  = `https://tmap.life/search?query=${q}`;
 
-  const embedUrl = lat && lng
-    ? `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed&hl=ko`
-    : `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
+  const embedUrl = `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
 
   const apps = [
     { label: "카카오맵", url: kakaoUrl, icon: "/icons/kakaomap.svg" },
