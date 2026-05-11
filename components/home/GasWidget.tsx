@@ -9,7 +9,7 @@ import {
   RefreshCw,
   TrendingDown,
 } from "lucide-react";
-import type { GasApiResponse, GasStation } from "@/app/api/gas/route";
+import type { GasApiResponse, GasStation } from "@/lib/types";
 
 const won = (n: number) => n.toLocaleString("ko-KR");
 

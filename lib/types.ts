@@ -254,6 +254,35 @@ export interface Listing {
   isNew: boolean;
 }
 
+// Gas
+export interface GasStation {
+  id: string;
+  name: string;
+  brandCode: string;
+  brandName: string;
+  brandColor: string;
+  brandBg: string;
+  brandShort: string;
+  address: string;
+  distanceKm: number;
+  prices: {
+    gasoline?: number;
+    diesel?: number;
+    lpg?: number;
+  };
+}
+
+export type GasSource = "opinet" | "no_key" | "empty" | "error";
+
+export interface GasApiResponse {
+  stations: GasStation[];
+  source: GasSource;
+  timestamp: string;
+  success: boolean;
+  message?: string;
+  error?: string;
+}
+
 export interface Store {
   id: string;
   name: string;
