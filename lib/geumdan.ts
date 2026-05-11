@@ -69,6 +69,31 @@ export const DONG_COORDS: Record<LegalDong, { lat: number; lng: number }> = {
 // ─── 검단신도시 중심 좌표 ────────────────────────────────────────
 export const GEUMDAN_CENTER = { lat: 37.5446, lng: 126.6861 };
 
+// ─── 검단신도시 서비스 권역 ──────────────────────────────────────
+// 버스 정류장·생활 정보 등 위치 기반 데이터의 서비스 제공 범위.
+// 검단동~아라1동까지 모두 커버하도록 약간 북동쪽으로 보정한 중심점 사용.
+export const GEUMDAN_SERVICE_AREA = {
+  center: { lat: 37.570, lng: 126.695 },
+  radiusM: 5000,
+} as const;
+
+function haversineMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export function isInGeumdanServiceArea(lat: number, lng: number): boolean {
+  const { center, radiusM } = GEUMDAN_SERVICE_AREA;
+  return haversineMeters(lat, lng, center.lat, center.lng) <= radiusM;
+}
+
 // ─── 권역 내 주요 도로 ─────────────────────────────────────────
 export const MAIN_ROADS = [
   "검단로", "당하로", "마전로", "원당대로", "오류도서로",
