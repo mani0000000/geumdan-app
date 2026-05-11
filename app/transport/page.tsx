@@ -811,10 +811,14 @@ export default function TransportPage() {
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
   const apiStopsRef = useRef<DisplayStop[] | null>(null);
   const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
+  // 즐겨찾기 정류장 중 apiStops에 없는 것을 추가 로드할 때 중복 방지용
+  const favStopsAddedRef = useRef<Set<string>>(new Set());
 
   // ref 동기화
   useEffect(() => { apiStopsRef.current = apiStops; }, [apiStops]);
   useEffect(() => { subwayListRef.current = subwayList; }, [subwayList]);
+  // 새 로드 시작 시 추가 즐겨찾기 추적 초기화
+  useEffect(() => { if (loading) favStopsAddedRef.current = new Set(); }, [loading]);
 
   // ── 정류장별 실시간 도착 조회 (소스별 API 분기) ──
   // 우선순위: 첫 PRIORITY_N개 await → 사용자 시야 카드 먼저 채움.
@@ -1056,6 +1060,39 @@ export default function TransportPage() {
     );
   }, [loadBusData, loadSubwayData]);
 
+  // ── 즐겨찾기 정류장 보강 로드 ────────────────────────────────
+  // apiStops에 없는 즐겨찾기 정류장을 메타데이터로 복원하고 도착 정보를 별도 조회.
+  // 권역 밖에 있어도 저장된 검단 정류장 즐겨찾기가 항상 보이도록 한다.
+  useEffect(() => {
+    if (loading || !apiStops) return;
+    type FavMeta = { name: string; lat?: number; lng?: number };
+    let meta: Record<string, FavMeta> = {};
+    try { meta = JSON.parse(localStorage.getItem("favStops_meta") ?? "{}"); } catch { /* ignore */ }
+
+    const missing = favStops.filter(id =>
+      !apiStops.some(s => s.id === id) &&
+      meta[id]?.name &&
+      !favStopsAddedRef.current.has(id)
+    );
+    if (missing.length === 0) return;
+
+    missing.forEach(id => favStopsAddedRef.current.add(id));
+    const ref = posRef.current ?? GEUMDAN_DEFAULT;
+    const stubs: DisplayStop[] = missing.map(id => ({
+      id,
+      name: meta[id].name,
+      distM: meta[id].lat != null && meta[id].lng != null
+        ? Math.round(haversineM(ref.lat, ref.lng, meta[id].lat!, meta[id].lng!))
+        : 0,
+      arrivals: [],
+      loadingArrivals: true,
+      lat: meta[id].lat,
+      lng: meta[id].lng,
+    }));
+    setApiStops(prev => prev ? [...prev, ...stubs] : stubs);
+    fetchArrivalsForStops(stubs);
+  }, [apiStops, favStops, loading, fetchArrivalsForStops]);
+
   // ── 30초 자동 갱신 (도착정보만, 정류장 목록은 재조회 안 함) ──
   useEffect(() => {
     const id = setInterval(() => {
@@ -1158,7 +1195,7 @@ export default function TransportPage() {
       saveFavMeta("favStops_meta", id, null);
     } else {
       const stop = stopsWithRoutes.find(s => s.id === id);
-      if (stop) saveFavMeta("favStops_meta", id, { name: stop.name });
+      if (stop) saveFavMeta("favStops_meta", id, { name: stop.name, lat: stop.lat, lng: stop.lng });
     }
   };
   const toggleSubway = (id: string) => {
@@ -1291,6 +1328,17 @@ export default function TransportPage() {
           </button>
         ))}
       </div>
+
+      {/* ══ 권역 밖 안내 배너 ══════════════════════════════════════ */}
+      {tab === "버스" && locState === "far" && (
+        <div className="mx-4 mt-3 px-4 py-3 bg-[#FFF8E1] rounded-2xl flex items-start gap-2.5">
+          <MapPin size={15} className="text-[#F59E0B] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[13px] font-bold text-[#92400E]">검단 신도시 권역 밖</p>
+            <p className="text-[12px] text-[#92400E]/80 mt-0.5">현재 위치에서 벗어나 있어요. 저장된 즐겨찾기 정류장 기준으로 표시합니다.</p>
+          </div>
+        </div>
+      )}
 
       {/* ══ 버스 즐겨찾기 (버스 탭 전용) ══════════════════════════ */}
       {tab === "버스" && favStopList.length > 0 && (
