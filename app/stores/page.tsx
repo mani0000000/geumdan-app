@@ -1043,12 +1043,10 @@ function StoreListView() {
           if (items.length === 0) return null;
           return (
             <div>
-              <div className="flex items-center gap-2.5 px-4 mb-3">
-                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ background: color }} />
-                <span className="text-[16px] font-black text-[#1d1d1f]">{label}</span>
+              <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+                <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white" style={{ background: color }}>{badge}</span>
                 <span className="text-[11px] text-[#86868b]">{items.length}개</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
               </div>
               <div className="px-4 space-y-2">
                 {items.map((o, idx) => {
@@ -1086,7 +1084,7 @@ function StoreListView() {
         }
 
         return (
-          <div className="pt-4 pb-3 space-y-5">
+          <div className="pb-3 space-y-5">
             <OpeningGroup items={weekOpenings} label="이번 주 신규 오픈" badge="NEW" color="#F04452" />
             <OpeningGroup items={monthOpenings} label="이번달 오픈" badge="이달" color="#FF9500" />
           </div>
@@ -1110,12 +1108,10 @@ function StoreListView() {
         }
 
         return (
-          <div className="pt-1 pb-3">
-            <div className="flex items-center gap-3 px-4 mb-3">
-              <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
-              <span className="text-[16px] font-black text-[#1d1d1f]">이번 주 쿠폰</span>
+          <div className="pb-3">
+            <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+              <span className="text-[19px] font-extrabold text-[#1d1d1f]">이번 주 쿠폰</span>
               <span className="text-[11px] font-bold bg-[#FEE2E2] text-[#F04452] px-2 py-0.5 rounded-full">{validCoupons.length}장</span>
-              <div className="flex-1 h-px bg-[#e5e5ea]" />
             </div>
             <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
               {validCoupons.map(c => (
@@ -1133,12 +1129,10 @@ function StoreListView() {
 
       {/* ── 🔥 인기 매장 — 상단 고정 가로 스크롤 섹션 ── */}
       {popularStores.length > 0 && (
-        <div className="pt-3 pb-2">
-          <div className="flex items-center gap-2.5 px-4 mb-3">
-            <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
-            <span className="text-[16px] font-black text-[#1d1d1f]">🔥 인기 매장</span>
+        <div className="pb-2">
+          <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+            <span className="text-[19px] font-extrabold text-[#1d1d1f]">🔥 인기 매장</span>
             <span className="text-[11px] font-bold bg-[#FFF0F0] text-[#F04452] px-2 py-0.5 rounded-full">TOP {popularStores.length}</span>
-            <div className="flex-1 h-px bg-[#e5e5ea]" />
           </div>
           <div className="flex gap-2.5 overflow-x-auto px-4 pb-2 snap-x" style={{ scrollbarWidth: "none" }}>
             {popularStores.map(s => (
@@ -1155,12 +1149,10 @@ function StoreListView() {
       )}
 
       {/* ── 매장 목록 — 업종 필터 + Lazy Load ── */}
-      <div className="pt-3 pb-1">
-        <div className="flex items-center gap-3 px-4 mb-3">
-          <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
+      <div className="pb-1">
+        <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+          <span className="text-[19px] font-extrabold text-[#1d1d1f]">전체 매장</span>
           <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
-          <div className="flex-1 h-px bg-[#e5e5ea]" />
         </div>
 
         {/* 업종 필터 */}
