@@ -335,8 +335,12 @@ function BusDetailSheet({
               <p className="text-[11px] text-[#a1a1a6] mt-0.5">잠시 후 새로고침해 주세요</p>
             </div>
           ) : curStations.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-[14px] text-[#6e6e73]">정류장 정보를 불러올 수 없습니다</p>
+            <div className="py-16 flex flex-col items-center gap-2">
+              <Bus size={32} className="text-[#D1D5DB]" />
+              <p className="text-[15px] font-semibold text-[#6e6e73]">
+                {dirTab === 1 ? "하행 방면" : "상행 방면"} 버스 정보 없음
+              </p>
+              <p className="text-[12px] text-[#86868b]">이 방향의 정류장 정보가 제공되지 않습니다</p>
             </div>
           ) : (
             <>
@@ -1288,193 +1292,215 @@ export default function TransportPage() {
         ))}
       </div>
 
-      {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
-      {tab === "버스" && (favBusRouteCards.length > 0 || favStopList.length > 0 || favRouteList.length > 0) && (
-        <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center justify-between mb-2">
+      {/* ══ 버스 즐겨찾기 (버스 탭 전용) ══════════════════════════ */}
+      {tab === "버스" && favStopList.length > 0 && (
+        <div className="px-4 pt-3 pb-1 space-y-3">
+          {/* 섹션 헤더 */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5">
-              <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
+              <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
+              <span className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기</span>
             </div>
             <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-              <RefreshCw size={11} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
-              <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
+              <RefreshCw size={12} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+              {lastUpdated && <span className="text-[11px] text-[#86868b]">{lastUpdated}</span>}
             </button>
           </div>
-          <div className="space-y-2">
-            {favBusRouteCards.map(({ arrival: r, stopName }, idx) => (
-              <div key={`favr-${r.routeNo}`}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2.5">
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <button onClick={() => moveBusRoute(r.routeNo, -1)} disabled={idx === 0}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowUp size={11} className="text-[#6e6e73]" />
-                  </button>
-                  <button onClick={() => moveBusRoute(r.routeNo, 1)} disabled={idx === favBusRouteCards.length - 1}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowDown size={11} className="text-[#6e6e73]" />
-                  </button>
-                </div>
-                <button onClick={() => setSelectedArrival(r)}
-                  className="flex items-center gap-2.5 flex-1 min-w-0 text-left active:opacity-70">
-                  <div className="bg-[#0071e3] rounded-lg px-2 py-1 min-w-[44px] text-center shrink-0">
-                    <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{r.destination} 방면</p>
-                      {r.isExpress && <Zap size={10} className="text-[#E65100] shrink-0" />}
+          {/* 즐겨찾기 정류장 카드 — 메인 UI와 동일 */}
+          {favStopList.map(stop => {
+            const open = expanded === stop.id;
+            const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
+            return (
+              <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
+                <button onClick={() => setExpanded(open ? null : stop.id)}
+                  className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#f5f5f7]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                      <Bus size={18} className="text-[#0071e3]" />
                     </div>
-                    <p className="text-[11px] text-[#86868b] truncate">{stopName}</p>
+                    <div className="text-left">
+                      <p className="text-[15px] font-bold text-[#1d1d1f]">{stop.name}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <Navigation size={10} className="text-[#0071e3]" />
+                        <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
+                        {!stop.loadingArrivals && stop.arrivals.length > 0 && (
+                          <span className="text-[12px] text-[#86868b]">· 노선 {stop.arrivals.length}개</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <ArrivalBadge min={r.arrivalMin} live={isLive && !r.isScheduled} />
-                </button>
-                <button onClick={() => toggleBusRoute(r.routeNo)}
-                  className="w-6 h-6 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60 shrink-0">
-                  <X size={11} className="text-[#6e6e73]" />
-                </button>
-              </div>
-            ))}
-            {favRouteList.map((r, idx) => (
-              <div key={r.favKey}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2.5">
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <button onClick={() => moveRoute(r.favKey, -1)} disabled={idx === 0}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowUp size={11} className="text-[#6e6e73]" />
-                  </button>
-                  <button onClick={() => moveRoute(r.favKey, 1)} disabled={idx === favRouteList.length - 1}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowDown size={11} className="text-[#6e6e73]" />
-                  </button>
-                </div>
-                <div className="bg-[#0071e3] rounded-lg px-2 py-1 min-w-[44px] text-center shrink-0">
-                  <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
-                </div>
-                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{r.destination} 방면</p>
-                    {r.isExpress && <Zap size={10} className="text-[#E65100] shrink-0" />}
+                    <button onClick={e => { e.stopPropagation(); toggleStop(stop.id); }}
+                      className="p-1.5 active:opacity-60">
+                      <Star size={18} className="text-[#FFBB00] fill-[#FFBB00]" />
+                    </button>
+                    {open ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
                   </div>
-                  <p className="text-[11px] text-[#86868b] truncate">{r.stopName}</p>
-                </div>
-                <ArrivalBadge min={r.arrivalMin} live={isLive} />
-                <button onClick={() => toggleRoute(r.favKey)}
-                  className="w-6 h-6 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60 shrink-0">
-                  <X size={11} className="text-[#6e6e73]" />
                 </button>
+                <div className="px-4 pb-4 space-y-2">
+                  {stop.loadingArrivals ? (
+                    [1, 2].map(i => (
+                      <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-10 h-8 bg-[#d2d2d7] rounded-lg" />
+                          <div className="space-y-1.5">
+                            <div className="h-3.5 w-28 bg-[#d2d2d7] rounded" />
+                            <div className="h-3 w-16 bg-[#d2d2d7] rounded" />
+                          </div>
+                        </div>
+                        <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
+                      </div>
+                    ))
+                  ) : stop.arrivals.length === 0 ? (
+                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
+                      <p className="text-[12px] text-[#86868b]">운행 정보 없음</p>
+                    </div>
+                  ) : (
+                    <>
+                      {displayArrivals.map((a, i) => (
+                        <div key={i}
+                          className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
+                          onClick={() => setSelectedArrival(a)}>
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
+                              <span className="text-white text-[14px] font-black">{a.routeNo}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
+                                {a.isExpress && (
+                                  <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                                    <Zap size={9} />급행
+                                  </span>
+                                )}
+                                {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+                              </div>
+                              <p className="text-[12px] text-[#6e6e73]">
+                                {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                              </p>
+                            </div>
+                          </div>
+                          <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
+                        </div>
+                      ))}
+                      {!open && stop.arrivals.length > 3 && (
+                        <button onClick={() => setExpanded(stop.id)}
+                          className="w-full text-[13px] text-[#0071e3] text-center py-1">
+                          {stop.arrivals.length - 3}개 노선 더 보기
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            ))}
-            {favStopList.map((stop, idx) => (
-              <div key={stop.id}
-                className="bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2.5">
-                <div className="flex flex-col gap-0.5 shrink-0">
-                  <button onClick={() => moveStop(stop.id, -1)} disabled={idx === 0}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowUp size={11} className="text-[#6e6e73]" />
-                  </button>
-                  <button onClick={() => moveStop(stop.id, 1)} disabled={idx === favStopList.length - 1}
-                    className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                    <ArrowDown size={11} className="text-[#6e6e73]" />
-                  </button>
-                </div>
-                <div className="w-9 h-9 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Bus size={16} className="text-[#0071e3]" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{stop.name}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Navigation size={9} className="text-[#0071e3]" />
-                    <span className="text-[11px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
-                    <span className="text-[11px] text-[#86868b]"> · 노선 {stop.arrivals.length}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {stop.arrivals.slice(0, 5).map((a, i) => (
-                      <span key={i} className="bg-[#0071e3] rounded px-1.5 py-0.5 text-white text-[10px] font-bold">
-                        {a.routeNo}
-                      </span>
-                    ))}
-                    {stop.loadingArrivals && (
-                      <span className="bg-[#d2d2d7] rounded px-4 py-1 animate-pulse" />
-                    )}
-                  </div>
-                </div>
-                <button onClick={() => toggleStop(stop.id)}
-                  className="w-6 h-6 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60 shrink-0">
-                  <X size={11} className="text-[#6e6e73]" />
-                </button>
-              </div>
-            ))}
-          </div>
+            );
+          })}
+          <div className="h-1 border-b border-[#e5e5ea]" />
         </div>
       )}
 
-      {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
+      {/* ══ 지하철 즐겨찾기 (지하철 탭 전용) ══════════════════════ */}
       {tab === "지하철" && favSubwayList.length > 0 && (
-        <div className="px-4 pt-3 pb-1">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
-            </div>
-            <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-              <RefreshCw size={11} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
-              <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
-            </button>
+        <div className="px-4 pt-3 pb-1 space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
+            <span className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기</span>
           </div>
-          <div className="space-y-2">
-            {favSubwayList.map((st, idx) => {
-              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
-              const nextUp   = displayArrivals.find(a => a.direction === "상행");
-              const nextDown = displayArrivals.find(a => a.direction === "하행");
-              return (
-                <div key={st.id}
-                  className="bg-white border border-gray-200 rounded-xl shadow-sm px-3 py-2.5 flex items-center gap-2.5">
-                  <div className="flex flex-col gap-0.5 shrink-0">
-                    <button onClick={() => moveSubway(st.id, -1)} disabled={idx === 0}
-                      className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                      <ArrowUp size={11} className="text-[#6e6e73]" />
-                    </button>
-                    <button onClick={() => moveSubway(st.id, 1)} disabled={idx === favSubwayList.length - 1}
-                      className="w-6 h-5 rounded bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-30">
-                      <ArrowDown size={11} className="text-[#6e6e73]" />
-                    </button>
-                  </div>
-                  <button onClick={() => setSelectedSubway(st)}
-                    className="flex-1 flex items-center gap-2.5 min-w-0 text-left active:opacity-70">
-                    <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                      style={{ background: st.lineColor + "22" }}>
-                      <Train size={16} style={{ color: st.lineColor }} />
+          {/* 즐겨찾기 역 카드 — 메인 UI와 동일 */}
+          {favSubwayList.map(st => {
+            const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+            const isEstimated = st.arrivals.length === 0;
+            const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
+            const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+            const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
+            return (
+              <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                {/* 역 헤더 — 라인 컬러 배경 (메인과 동일) */}
+                <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: st.lineColor }}>
+                  <button onClick={() => setTimetableStation(st)}
+                    className="flex items-center gap-2 flex-1 min-w-0 active:opacity-70 text-left">
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{st.displayName}</p>
-                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
-                          style={{ background: st.lineColor }}>{st.line}</span>
-                      </div>
-                      {st.loadingArrivals ? (
-                        <div className="h-3 w-24 bg-[#d2d2d7] rounded animate-pulse mt-1" />
-                      ) : (
-                        <div className="flex items-center gap-2 mt-0.5 text-[11px] text-[#6e6e73]">
-                          {nextUp && (
-                            <span className="truncate">↑ {nextUp.terminalStation} {nextUp.arrivalMin <= 0 ? "곧" : `${nextUp.arrivalMin}분`}</span>
-                          )}
-                          {nextDown && (
-                            <span className="truncate">↓ {nextDown.terminalStation} {nextDown.arrivalMin <= 0 ? "곧" : `${nextDown.arrivalMin}분`}</span>
-                          )}
-                          {!nextUp && !nextDown && <span>운행 종료</span>}
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-white font-extrabold text-[15px] truncate">{st.displayName}</span>
+                    <span className="flex items-center gap-0.5 text-white/70 text-[11px] font-medium shrink-0">
+                      <Clock size={10} />시간표
+                    </span>
                   </button>
-                  <button onClick={() => toggleSubway(st.id)}
-                    className="w-6 h-6 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60 shrink-0">
-                    <X size={11} className="text-[#6e6e73]" />
+                  <button onClick={() => toggleSubway(st.id)} className="p-1 active:opacity-60 shrink-0">
+                    <Star size={18} className="text-yellow-300 fill-yellow-300" />
                   </button>
                 </div>
-              );
-            })}
-          </div>
+
+                {/* 도착 정보 헤더 */}
+                <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                  <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+                  <div className="flex items-center gap-2">
+                    {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+                    {st.timetable.intervalMin > 0 && (
+                      <span className="text-[10px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* 2열 도착 (메인과 동일) */}
+                {st.loadingArrivals ? (
+                  <div className="grid grid-cols-2 gap-2 p-3">
+                    {[0,1].map(i => <div key={i} className="h-16 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                  </div>
+                ) : displayArrivals.length === 0 ? (
+                  <p className="px-3 py-3 text-[13px] text-[#6e6e73] text-center">운행 종료</p>
+                ) : (
+                  <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                    {[
+                      { label: st.timetable.upDirection, arrivals: upArrivals },
+                      { label: st.timetable.downDirection, arrivals: downArrivals },
+                    ].map(({ label, arrivals: dirArrivals }, col) => (
+                      <div key={col} className="px-3 py-2.5">
+                        <div className="flex items-center gap-0.5 mb-2.5 pb-1.5 border-b border-[#f5f5f7]">
+                          <span className="text-[12px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                          <ChevronRight size={12} className="text-[#86868b] shrink-0" />
+                        </div>
+                        {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between py-1">
+                            <div className="flex-1 min-w-0 mr-1">
+                              <span className="text-[12px] text-[#424245] block truncate">{a.terminalStation}</span>
+                              {!isEstimated && a.currentStation && (
+                                <span className="text-[9px] text-[#86868b]">{a.currentStation} 출발</span>
+                              )}
+                              {a.isExpress && (
+                                <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
+                              )}
+                            </div>
+                            <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                              {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                            </span>
+                          </div>
+                        )) : (
+                          <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 첫차/막차 */}
+                {st.timetable.upFirst !== "-" && (
+                  <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                    </div>
+                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          <div className="h-1 border-b border-[#e5e5ea]" />
         </div>
       )}
 

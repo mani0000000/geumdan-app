@@ -65,7 +65,7 @@ export default function BottomNav() {
               <Link
                 key={href}
                 href={href}
-                className="flex-1 flex flex-col items-center justify-center gap-[3px] active:scale-90 transition-transform"
+                className="flex-1 flex flex-col items-center justify-center gap-[2px] active:scale-90 transition-transform"
               >
                 <div className="h-10 flex items-center justify-center">
                   <div className={`flex items-center justify-center rounded-full transition-all
@@ -86,7 +86,7 @@ export default function BottomNav() {
                     )}
                   </div>
                 </div>
-                <span className={`text-[10px] font-medium tracking-tight transition-colors
+                <span className={`text-[10px] leading-none font-medium tracking-tight transition-colors
                   ${active ? "text-black" : "text-[#8e8e93]"}`}>
                   {label}
                 </span>
