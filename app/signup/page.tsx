@@ -38,13 +38,20 @@ export default function SignupPage() {
     } else setStep(s => s + 1);
   };
 
-  const CheckRow = ({ k, label }: { k: keyof typeof agree; label: string }) => (
-    <button onClick={() => toggle(k)} className="w-full flex items-center gap-3 py-3 active:opacity-70">
-      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${agree[k] ? "bg-[#0071e3] border-[#0071e3]" : "border-[#d2d2d7]"}`}>
-        {agree[k] && <Check size={11} className="text-white" strokeWidth={3} />}
-      </div>
-      <span className="text-[15px] text-[#1d1d1f]">{label}</span>
-    </button>
+  const CheckRow = ({ k, label, detailType }: { k: keyof typeof agree; label: string; detailType?: string }) => (
+    <div className="flex items-center gap-3 py-3">
+      <button onClick={() => toggle(k)} className="flex items-center gap-3 flex-1 active:opacity-70 text-left">
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${agree[k] ? "bg-[#0071e3] border-[#0071e3]" : "border-[#d2d2d7]"}`}>
+          {agree[k] && <Check size={11} className="text-white" strokeWidth={3} />}
+        </div>
+        <span className="text-[15px] text-[#1d1d1f]">{label}</span>
+      </button>
+      {detailType && (
+        <Link href={`/terms/${detailType}`} className="text-[13px] text-[#0071e3] font-semibold shrink-0 active:opacity-60">
+          보기
+        </Link>
+      )}
+    </div>
   );
 
   return (
@@ -82,10 +89,10 @@ export default function SignupPage() {
               <span className="text-[16px] font-bold text-[#1d1d1f]">전체 동의</span>
             </button>
             <div className="mt-2 px-1">
-              <CheckRow k="terms" label="[필수] 이용약관" />
-              <CheckRow k="privacy" label="[필수] 개인정보처리방침" />
-              <CheckRow k="location" label="[필수] 위치정보 이용약관" />
-              <CheckRow k="marketing" label="[선택] 마케팅 정보 수신" />
+              <CheckRow k="terms" label="[필수] 이용약관" detailType="service" />
+              <CheckRow k="privacy" label="[필수] 개인정보처리방침" detailType="privacy" />
+              <CheckRow k="location" label="[필수] 위치정보 이용약관" detailType="location" />
+              <CheckRow k="marketing" label="[선택] 마케팅 정보 수신" detailType="marketing" />
             </div>
           </div>
         )}

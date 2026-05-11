@@ -188,22 +188,22 @@ export default function MyPage() {
       <section className="mt-7 px-5">
         <p className="text-[13px] font-bold text-[#86868b] mb-3 px-1">약관 및 정책</p>
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-          <ExternalRow
+          <ListRow
             icon={<FileText size={18} className="text-[#6e6e73]" />}
             title="이용약관"
-            href="https://geumdan.app/terms"
+            href="/terms/service"
           />
           <Divider />
-          <ExternalRow
+          <ListRow
             icon={<Shield size={18} className="text-[#6e6e73]" />}
             title="개인정보 처리방침"
-            href="https://geumdan.app/privacy"
+            href="/terms/privacy"
           />
           <Divider />
-          <ExternalRow
+          <ListRow
             icon={<FileText size={18} className="text-[#6e6e73]" />}
             title="위치기반 서비스 이용약관"
-            href="https://geumdan.app/location"
+            href="/terms/location"
           />
         </div>
       </section>
