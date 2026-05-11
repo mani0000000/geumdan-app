@@ -1,9 +1,18 @@
 {
-  "fetchedAt": "2026-05-11T19:25:09.683Z",
+  "fetchedAt": "2026-05-11T21:59:42.625Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-2",
+      "id": "gr3-0",
+      "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-05-11T10:10:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTE5wb1NnVXNkd256RS1ZM2R4b1pMaDJhMXpWc0dsbFhrRmlLS1poOWlPekpxem5EQ01yMXYyeVJDOWhrZS1QbnJNNllGcw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-3",
       "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -12,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-14",
       "title": "[인천 기초단체장 후보 공약 점검] 김진규 검단구청장 후보 “광역교통망 반드시 구축” - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -84,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-1",
       "title": "[궁금해집] 다양한 인프라 곁에…검단신도시 첫 '더샵' 아파트 - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -120,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-9",
       "title": "인천 검단선사박물관, 어린이 특별체험전 5월 31일까지 연장 운영 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -138,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "[도로투데이] 인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -147,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-28",
+      "id": "gr2-29",
       "title": "인천 검단구 출범 앞두고 임시청사 건립 막바지…6년간 임차 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -156,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-13",
       "title": "인천 서구, 38년 만에 ‘서해구’로 새 출발…명칭 변경안 국회 통과 - 뷰티경제",
       "summary": "",
       "source": "뷰티경제",
@@ -192,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-27",
       "title": "\"요즘 아파트는 슬세권이지\"…신도시 분양, 중심 상업지 접근성이 '최우선' - 네이트",
       "summary": "",
       "source": "네이트",
@@ -273,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-8",
       "title": "인천 서구, 38년 만에 ‘서해구’로 바뀐다…명칭 변경 법안 통과 - 조선일보",
       "summary": "",
       "source": "조선일보",
@@ -291,12 +300,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-4",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 76㎡ 5억8300만원에 거래 - 네이트",
+      "id": "gr1-17",
+      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 76㎡ 5억8300만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-07T07:37:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBGX3R1QjZ5Q3dnc1dxZ2JKZzJnMGdrcjRza0VGZmFsMmZQMkstcW5ieVpwV05VVGk3UFJVVFp3M0ZJbkRQLVNSWTRQTnhTQWZuT0UxZjZKRG5OYkhxZXd6V05jSm9lWDFrVGdsNnVB?oc=5",
+      "source": "Chosunbiz",
+      "publishedAt": "2026-05-07T07:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNTk1qR0I3LVNJZUN1NWdkQlRVc3YzQUxvTkloNVF1aFhFU2V4WTZJZWF6blphUjR6MmNTa0lHTmNUcV9iSXFNVmRqV3ctSkxiS3d4aGc3UWl2SVhmWWFHTFRsU1QtY2JSZkRxVGNKaU8yM0RjR3R0aW9mQWNLbkRmSjRPVnJ5Q0HSAZsBQVVfeXFMTjZuclpsb2VSUkZyUzQzZkpCRWg5WTBrdFptejk3V2tuR090SGlnYk9GcE1SbzRTRGRQaXZIRk5KM1owem90cWRCVGVLTEM5WkJFWlJZTzR5WDAtUDhJYXJGbWk3ak1ZNTIzeU5xUjNJV2pEVEFrWFBJcFk1LW5Bb1VjdlVQQ2gwMmh6OEVpN2ZCUjIxYkgxci00ZGs?oc=5",
       "type": "뉴스"
     },
     {
@@ -309,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-10",
+      "id": "gr1-13",
       "title": "“검단구 출범 흔든 건 인천시”… 유정복 인천시장 책임론 정면 비판 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -318,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-26",
+      "id": "gr2-27",
       "title": "“검단구 출범 흔든 건 인천시”… 유정복 인천시장 책임론 정면 비판 - 헤럴드경제",
       "summary": "",
       "source": "헤럴드경제",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-23",
       "title": "2857가구 대단지 ‘더샵 검단레이크파크’ 5월 분양 - 스포츠경향",
       "summary": "",
       "source": "스포츠경향",
@@ -351,15 +360,6 @@
       "source": "v.daum.net",
       "publishedAt": "2026-05-06T05:38:11.000Z",
       "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTFAyNXJ1OTlJSG1GaEVwUHZ1cDVhMGMwdjNXdk9mWnJaRlVTcnVIcTNzNVM0OFV4dVBPQkQ0elRlOTVvUHVieXc?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-3",
-      "title": "검단신도시 2,857세대 '더샵 검단레이크파크' 5월 공급 예정 - 한경매거진&북",
-      "summary": "",
-      "source": "한경매거진&북",
-      "publishedAt": "2026-05-06T05:36:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9Zc3hkMDFUU1l1amVuRHU0YlpCUjNmZy11UE16dk9QNHlONlMtbFhabGNMdmlkZjVxQ3hvMTItSnNUTGJjU0dERUoyb0VvQWh5Q3dzUGdVdHEtamRjNkIzU1M5a0QwX0RXN0hvYw?oc=5",
       "type": "뉴스"
     }
   ]
