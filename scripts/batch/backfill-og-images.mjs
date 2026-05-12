@@ -65,7 +65,7 @@ async function fetchOgImage(url) {
       },
     });
     if (!res.ok) return null;
-    const html = (await res.text()).slice(0, 64_000);
+    const html = (await res.text()).slice(0, 1_000_000);
     const m =
       html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||

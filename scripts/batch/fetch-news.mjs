@@ -65,7 +65,9 @@ async function fetchOgImage(url, timeoutMs = 6000) {
       },
     });
     if (!res.ok) return null;
-    const html = (await res.text()).slice(0, 64_000);
+    // Google News redirect pages put og:image near the END of a ~600KB doc,
+    // so we have to scan much more than a typical <head>.
+    const html = (await res.text()).slice(0, 1_000_000);
     const m =
       html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
