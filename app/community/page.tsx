@@ -5,7 +5,7 @@ import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
-  Heart, MessageCircle, Repeat2, Send, Newspaper,
+  Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -370,6 +370,60 @@ function CommunityTab() {
 }
 
 // ─── News ─────────────────────────────────────────────────────
+// 매체별 accent — 카드 보더, 배지, hero gradient, 이니셜 원에 공통 적용.
+// 클래스명은 Tailwind JIT 가 스캔할 수 있도록 모두 리터럴로 작성한다.
+type NewsAccent = {
+  bg: string;        // solid badge / initial
+  soft: string;      // pastel badge background
+  text: string;      // accented text
+  border: string;    // 좌측 4px 보더 (border-{color}-500)
+  gradient: string;  // hero card gradient (from-..-500 to-..-700)
+};
+
+const SOURCE_ACCENT_MAP: Array<{ match: RegExp; accent: NewsAccent }> = [
+  { match: /헤럴드/,        accent: { bg: "bg-rose-500",     soft: "bg-rose-50",     text: "text-rose-700",     border: "border-rose-500",     gradient: "from-rose-500 to-rose-700" } },
+  { match: /인천일보/,      accent: { bg: "bg-cyan-600",     soft: "bg-cyan-50",     text: "text-cyan-700",     border: "border-cyan-500",     gradient: "from-cyan-500 to-cyan-700" } },
+  { match: /연합/,          accent: { bg: "bg-emerald-600",  soft: "bg-emerald-50",  text: "text-emerald-700",  border: "border-emerald-500",  gradient: "from-emerald-500 to-emerald-700" } },
+  { match: /KBS/,           accent: { bg: "bg-blue-600",     soft: "bg-blue-50",     text: "text-blue-700",     border: "border-blue-500",     gradient: "from-blue-500 to-blue-700" } },
+  { match: /MBC/,           accent: { bg: "bg-amber-500",    soft: "bg-amber-50",    text: "text-amber-700",    border: "border-amber-500",    gradient: "from-amber-500 to-amber-700" } },
+  { match: /SBS/,           accent: { bg: "bg-orange-500",   soft: "bg-orange-50",   text: "text-orange-700",   border: "border-orange-500",   gradient: "from-orange-500 to-orange-700" } },
+  { match: /JTBC/,          accent: { bg: "bg-violet-600",   soft: "bg-violet-50",   text: "text-violet-700",   border: "border-violet-500",   gradient: "from-violet-500 to-violet-700" } },
+  { match: /YTN/,           accent: { bg: "bg-sky-600",      soft: "bg-sky-50",      text: "text-sky-700",      border: "border-sky-500",      gradient: "from-sky-500 to-sky-700" } },
+  { match: /매일경제|매경/, accent: { bg: "bg-red-600",      soft: "bg-red-50",      text: "text-red-700",      border: "border-red-500",      gradient: "from-red-500 to-red-700" } },
+  { match: /한국경제|한경/, accent: { bg: "bg-indigo-600",   soft: "bg-indigo-50",   text: "text-indigo-700",   border: "border-indigo-500",   gradient: "from-indigo-500 to-indigo-700" } },
+  { match: /조선/,          accent: { bg: "bg-slate-700",    soft: "bg-slate-100",   text: "text-slate-700",    border: "border-slate-500",    gradient: "from-slate-600 to-slate-800" } },
+  { match: /중앙/,          accent: { bg: "bg-stone-700",    soft: "bg-stone-100",   text: "text-stone-700",    border: "border-stone-500",    gradient: "from-stone-600 to-stone-800" } },
+  { match: /동아/,          accent: { bg: "bg-zinc-700",     soft: "bg-zinc-100",    text: "text-zinc-700",     border: "border-zinc-500",     gradient: "from-zinc-600 to-zinc-800" } },
+  { match: /경기일보|경기/, accent: { bg: "bg-teal-600",     soft: "bg-teal-50",     text: "text-teal-700",     border: "border-teal-500",     gradient: "from-teal-500 to-teal-700" } },
+  { match: /부동산/,        accent: { bg: "bg-fuchsia-600",  soft: "bg-fuchsia-50",  text: "text-fuchsia-700",  border: "border-fuchsia-500",  gradient: "from-fuchsia-500 to-fuchsia-700" } },
+];
+
+// 미지정 매체용 안정 fallback — 매체명 해시로 같은 매체는 항상 같은 색을 받는다.
+const FALLBACK_ACCENTS: NewsAccent[] = [
+  { bg: "bg-blue-600",    soft: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-400",    gradient: "from-blue-500 to-blue-700" },
+  { bg: "bg-emerald-600", soft: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-400", gradient: "from-emerald-500 to-emerald-700" },
+  { bg: "bg-violet-600",  soft: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-400",  gradient: "from-violet-500 to-violet-700" },
+  { bg: "bg-amber-600",   soft: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-400",   gradient: "from-amber-500 to-amber-700" },
+  { bg: "bg-rose-600",    soft: "bg-rose-50",    text: "text-rose-700",    border: "border-rose-400",    gradient: "from-rose-500 to-rose-700" },
+  { bg: "bg-cyan-600",    soft: "bg-cyan-50",    text: "text-cyan-700",    border: "border-cyan-400",    gradient: "from-cyan-500 to-cyan-700" },
+  { bg: "bg-fuchsia-600", soft: "bg-fuchsia-50", text: "text-fuchsia-700", border: "border-fuchsia-400", gradient: "from-fuchsia-500 to-fuchsia-700" },
+  { bg: "bg-teal-600",    soft: "bg-teal-50",    text: "text-teal-700",    border: "border-teal-400",    gradient: "from-teal-500 to-teal-700" },
+];
+
+function getSourceAccent(source: string): NewsAccent {
+  for (const { match, accent } of SOURCE_ACCENT_MAP) {
+    if (match.test(source)) return accent;
+  }
+  let h = 0;
+  for (let i = 0; i < source.length; i++) h = (h * 31 + source.charCodeAt(i)) >>> 0;
+  return FALLBACK_ACCENTS[h % FALLBACK_ACCENTS.length];
+}
+
+function sourceInitial(s: string): string {
+  const t = (s ?? "").trim();
+  return t ? t.charAt(0).toUpperCase() : "?";
+}
+
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [newsSource2, setNewsSource2] = useState("");
@@ -553,47 +607,136 @@ function NewsTab() {
             {lastUpdated && <span className="text-[11px] text-gray-400 ml-0.5">{lastUpdated}</span>}
           </button>
         </div>
-        <div className="px-4 space-y-2">
+        <div className="px-4 space-y-2.5">
           {loading ? (
-            [0, 1, 2].map(i => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden flex animate-pulse">
-                <div className="flex-1 px-4 py-3.5 space-y-2">
-                  <div className="h-3.5 bg-gray-200 rounded w-full" />
-                  <div className="h-3.5 bg-gray-200 rounded w-4/5" />
-                  <div className="h-3 bg-gray-200 rounded w-1/3" />
+            <>
+              {/* Hero skeleton */}
+              <div className="rounded-2xl bg-gray-200 animate-pulse" style={{ aspectRatio: "16/10" }} />
+              {/* Image card skeletons */}
+              {[0, 1].map(i => (
+                <div key={`sk-img-${i}`} className="bg-white rounded-2xl overflow-hidden flex animate-pulse shadow-sm">
+                  <div className="w-[108px] bg-gray-200 shrink-0" />
+                  <div className="flex-1 px-3.5 py-3 space-y-2">
+                    <div className="h-3 bg-gray-200 rounded w-1/3" />
+                    <div className="h-3.5 bg-gray-200 rounded w-full" />
+                    <div className="h-3.5 bg-gray-200 rounded w-4/5" />
+                  </div>
                 </div>
-                <div className="w-[88px] bg-[#e5e5ea]" />
-              </div>
-            ))
+              ))}
+              {/* Text card skeletons */}
+              {[0, 1].map(i => (
+                <div key={`sk-txt-${i}`} className="bg-white rounded-2xl overflow-hidden flex animate-pulse shadow-sm border-l-[4px] border-gray-200">
+                  <div className="flex-1 px-3.5 py-3 flex gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-1/3" />
+                      <div className="h-3.5 bg-gray-200 rounded w-full" />
+                      <div className="h-3.5 bg-gray-200 rounded w-3/4" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </>
           ) : (
-            newsSource.slice(0, newsLimit).map((item) => {
-              const thumb = item.thumbnail;
+            newsSource.slice(0, newsLimit).map((item, idx) => {
+              const accent = getSourceAccent(item.source);
+              const hasThumb = Boolean(item.thumbnail);
+              const isHero = idx === 0;
+
+              // Hero — 첫 기사
+              if (isHero) {
+                return hasThumb ? (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className="block relative rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform bg-gray-200">
+                    <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
+                      <img
+                        src={item.thumbnail!}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 p-4">
+                        <span className={`inline-flex items-center text-[11px] font-extrabold ${accent.bg} text-white px-2 py-0.5 rounded-full mb-2 shadow-sm`}>
+                          {item.source}
+                        </span>
+                        <p className="text-white text-[17px] font-extrabold leading-tight line-clamp-3 drop-shadow-sm">{item.title}</p>
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <span className="text-white/85 text-[11px] font-medium">{formatRelativeTime(item.publishedAt)}</span>
+                          <ExternalLink size={11} className="text-white/70" />
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ) : (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className={`block relative rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform bg-gradient-to-br ${accent.gradient}`}>
+                    <div className="p-5 min-h-[148px] flex flex-col justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="w-9 h-9 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white text-[14px] font-extrabold ring-1 ring-white/40">
+                          {sourceInitial(item.source)}
+                        </div>
+                        <span className="text-white text-[12px] font-extrabold tracking-wide">{item.source}</span>
+                      </div>
+                      <p className="text-white text-[17px] font-extrabold leading-tight line-clamp-3 mt-4 drop-shadow-sm">{item.title}</p>
+                      <div className="flex items-center gap-1.5 mt-3">
+                        <span className="text-white/85 text-[11px] font-medium">{formatRelativeTime(item.publishedAt)}</span>
+                        <ExternalLink size={11} className="text-white/70" />
+                      </div>
+                    </div>
+                  </a>
+                );
+              }
+
+              // Apple News 스타일 — 좌측 이미지 + 우측 텍스트
+              if (hasThumb) {
+                return (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className="bg-white rounded-2xl overflow-hidden flex items-stretch shadow-sm active:scale-[0.99] transition-transform">
+                    <div className="shrink-0 relative bg-gray-100" style={{ width: 108 }}>
+                      <img
+                        src={item.thumbnail!}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 px-3.5 py-3 flex flex-col justify-between gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className={`text-[10.5px] font-extrabold ${accent.soft} ${accent.text} px-1.5 py-0.5 rounded-full`}>{item.source}</span>
+                      </div>
+                      <p className="text-[13.5px] font-bold text-gray-900 leading-snug line-clamp-3">{item.title}</p>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+                        <ExternalLink size={10} className="text-gray-300 ml-auto shrink-0" />
+                      </div>
+                    </div>
+                  </a>
+                );
+              }
+
+              // 인스타그램 스타일 — accent 좌측 보더 + 이니셜 배지
               return (
                 <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
                   onClick={() => trackNewsView(item.id)}
-                  className="bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform shadow-sm">
-                  <div className="flex-1 min-w-0 px-4 py-3 flex flex-col justify-between gap-2">
-                    <p className="text-[13.5px] font-bold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">{item.source}</span>
-                      <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
-                      <ExternalLink size={10} className="text-gray-400 ml-auto shrink-0" />
+                  className={`bg-white rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform border-l-[4px] ${accent.border} flex items-stretch`}>
+                  <div className="flex-1 min-w-0 px-3.5 py-3 flex gap-3">
+                    <div className={`shrink-0 w-10 h-10 rounded-full ${accent.bg} text-white flex items-center justify-center text-[14px] font-extrabold shadow-sm`}>
+                      {sourceInitial(item.source)}
+                    </div>
+                    <div className="flex-1 min-w-0 flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[11px] font-extrabold ${accent.text}`}>{item.source}</span>
+                        <span className="text-[11px] text-gray-300">·</span>
+                        <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+                        <ExternalLink size={10} className="text-gray-300 ml-auto shrink-0" />
+                      </div>
+                      <p className="text-[13.5px] font-bold text-gray-900 leading-snug line-clamp-3">{item.title}</p>
                     </div>
                   </div>
-                  {thumb ? (
-                    <div className="shrink-0 relative bg-gray-100" style={{ width: 92 }}>
-                      <img
-                        src={thumb}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={e => { (e.currentTarget.parentElement as HTMLElement).style.display = "none"; }}
-                      />
-                    </div>
-                  ) : (
-                    <div className="shrink-0 flex items-center justify-center bg-gradient-to-br from-[#f5f5f7] to-[#e8eef5]" style={{ width: 92 }}>
-                      <Newspaper size={22} className="text-gray-400" />
-                    </div>
-                  )}
                 </a>
               );
             })
