@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
   "buildCommand": "next build",
-  "installCommand": "npm ci"
+  "installCommand": "npm ci",
+  "crons": [
+    {
+      "path": "/api/cron/realestate",
+      "schedule": "0 2 * * *"
+    }
+  ]
 }

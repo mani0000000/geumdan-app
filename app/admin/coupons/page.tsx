@@ -7,7 +7,11 @@ import {
 } from "@/lib/db/admin-stores";
 import type { StoreCategory } from "@/lib/types";
 
-const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "기타"];
+const CATS: StoreCategory[] = [
+  "카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트",
+  "베이커리", "부동산", "스터디카페", "안경원", "꽃집",
+  "기타",
+];
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
 
