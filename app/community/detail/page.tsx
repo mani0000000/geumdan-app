@@ -305,6 +305,21 @@ function DetailContent() {
                 </div>
               </div>
               <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+
+              {post.videos && post.videos.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  {post.videos.map((src, i) => (
+                    <video
+                      key={i}
+                      src={src}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full rounded-xl bg-black aspect-video"
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
 

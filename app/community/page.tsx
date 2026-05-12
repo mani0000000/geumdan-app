@@ -79,6 +79,7 @@ function PostCard({
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
+  const videos = post.videos ?? [];
   return (
     <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
@@ -141,6 +142,29 @@ function PostCard({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Videos */}
+          {videos.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {videos.slice(0, 1).map((src, i) => (
+                <video
+                  key={i}
+                  src={src}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controls
+                  onClick={stop}
+                  className="w-full rounded-xl bg-black aspect-video border border-[#e5e5ea]"
+                />
+              ))}
+              {videos.length > 1 && (
+                <p className="text-[12px] text-[#86868b]">
+                  + 영상 {videos.length - 1}개 더보기
+                </p>
+              )}
             </div>
           )}
 

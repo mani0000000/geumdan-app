@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -23,6 +24,7 @@ export default function WritePage() {
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
+  const [videos, setVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -40,6 +42,7 @@ export default function WritePage() {
         author: nickname.trim() || "검단주민",
         authorDong: "검단",
         isAnonymous: anonymous,
+        videos,
       });
       if (post) {
         saveMyPostId(post.id);
@@ -108,11 +111,19 @@ export default function WritePage() {
         </div>
 
         {/* Content */}
-        <div className="flex-1 border-b border-[#f5f5f7]">
+        <div className="border-b border-[#f5f5f7]">
           <textarea value={content} onChange={e => setContent(e.target.value)}
             placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
-            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
+            className="w-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
+
+        {/* Video upload */}
+        <div className="border-b border-[#f5f5f7] px-5 py-4 space-y-2">
+          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
+          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
+        </div>
+
+        <div className="flex-1" />
 
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
