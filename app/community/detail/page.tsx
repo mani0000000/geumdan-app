@@ -451,6 +451,12 @@ function DetailContent() {
                       ))}
                     </div>
                   )}
+                  {post.videoUrl && (
+                    <div className="mt-3 rounded-xl overflow-hidden bg-black">
+                      <video src={post.videoUrl} controls playsInline preload="metadata"
+                        className="w-full max-h-[520px] object-contain bg-black" />
+                    </div>
+                  )}
                   <p className="text-[12px] text-[#86868b] mt-3">조회 {post.viewCount.toLocaleString()}</p>
 
                   {/* Action row */}

@@ -144,6 +144,20 @@ function PostCard({
             </div>
           )}
 
+          {/* Video */}
+          {post.videoUrl && (
+            <div className="mt-3 rounded-xl overflow-hidden bg-black border border-[#e5e5ea]"
+              onClick={stop}>
+              <video
+                src={post.videoUrl}
+                controls
+                playsInline
+                preload="metadata"
+                className="w-full max-h-[420px] object-contain bg-black"
+              />
+            </div>
+          )}
+
           {/* Action row */}
           <div className="flex items-center gap-1 mt-3 -ml-2">
             <button onClick={stop}
