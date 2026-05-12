@@ -3,8 +3,8 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
-  TrendingUp, TrendingDown, MapPin,
-  ChevronRight, ChevronUp, ChevronDown, Search, X, SlidersHorizontal,
+  RefreshCw, TrendingUp, TrendingDown, MapPin,
+  ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
   Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -12,14 +12,16 @@ import BottomNav from "@/components/layout/BottomNav";
 import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { PostMenu } from "@/components/ui/PostMenu";
 import { ReportModal } from "@/components/ui/ReportModal";
-import { posts, apartments } from "@/lib/mockData";
+import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
 import {
   fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
 } from "@/lib/db/reports";
 import { getMyNickname } from "@/lib/identity";
-import type { NewsArticle } from "@/lib/api/news";
+import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
+import { fetchNewsFromDB } from "@/lib/db/news";
 import type { CommunityCategory, NewsType, Post } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -49,6 +51,21 @@ const SORT_OPTS: { key: CommSortKey; label: string }[] = [
 
 function hotScore(p: { viewCount: number; likeCount: number; commentCount: number }) {
   return p.viewCount + p.likeCount * 5 + p.commentCount * 3;
+}
+
+// ─── 뉴스 조회 추적 (localStorage) ──────────────────────────
+function getNewsViews(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem("newsViews") ?? "{}") as Record<string, number>; }
+  catch { return {}; }
+}
+function trackNewsView(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const v = getNewsViews();
+    v[id] = (v[id] ?? 0) + 1;
+    localStorage.setItem("newsViews", JSON.stringify(v));
+  } catch { /* ignore */ }
 }
 
 function PostCard({
@@ -376,72 +393,305 @@ function CommunityTab() {
 
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
-  const [items, setItems] = useState<NewsArticle[]>([]);
+  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [newsSource2, setNewsSource2] = useState("");
+  const [newsMs, setNewsMs] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState("");
+  const [ytVideos, setYtVideos] = useState<YouTubeVideo[]>([]);
+  const [ytSource, setYtSource] = useState("");
+  const [ytMs, setYtMs] = useState(0);
+  const [ytLoading, setYtLoading] = useState(true);
+  const [newsLimit, setNewsLimit] = useState(10);
+
+  const refresh = async () => {
+    setLoading(true);
+    // 1. Supabase DB 우선 (실제 기사 URL 보장)
+    const dbResult = await fetchNewsFromDB(30);
+    if (dbResult.articles.length > 0) {
+      setRealNews(dbResult.articles);
+      setNewsSource2(dbResult.source);
+      setNewsMs(dbResult.ms);
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      setLoading(false);
+      return;
+    }
+    // 2. Supabase 없으면 캐시/라이브 API fallback
+    const result = await fetchGeumdanNews();
+    if (result.articles.length > 0) {
+      const sorted = [...result.articles].sort(
+        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
+      setRealNews(sorted);
+      setNewsSource2(result.source);
+      setNewsMs(result.ms);
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    fetch("/api/news?limit=20")
-      .then(r => r.json())
-      .then(data => { setItems((data.articles ?? data.items ?? []) as NewsArticle[]); setLoading(false); })
-      .catch(() => setLoading(false));
+    refresh();
+    setYtLoading(true);
+    fetchYouTubeVideosFromDB(200).then(result => {
+      setYtVideos(result.videos);
+      setYtSource(result.source);
+      setYtMs(result.ms);
+      setYtLoading(false);
+    });
   }, []);
 
-  if (loading) return (
-    <div className="bg-white">
-      <div className="p-4 animate-pulse">
-        <div className="w-full aspect-video bg-gray-100 rounded-lg mb-3" />
-        <div className="h-3 w-24 bg-gray-100 rounded mb-2" />
-        <div className="h-5 w-full bg-gray-100 rounded mb-1" />
-        <div className="h-5 w-3/4 bg-gray-100 rounded" />
-      </div>
-      <div className="border-t border-gray-100" />
-      {[1,2,3,4,5].map(i => (
-        <div key={i} className="flex items-start gap-3 px-4 py-3 animate-pulse border-b border-gray-100">
-          <div className="flex-1 space-y-2">
-            <div className="h-3 w-20 bg-gray-100 rounded" />
-            <div className="h-4 w-full bg-gray-100 rounded" />
-            <div className="h-4 w-2/3 bg-gray-100 rounded" />
-          </div>
-          <div className="w-[72px] h-[72px] bg-gray-100 rounded-lg shrink-0" />
-        </div>
-      ))}
-    </div>
-  );
+  const instaItems = newsItems.filter(n => n.type === "인스타");
+  const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
-  if (!items.length) return (
-    <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
-      뉴스를 불러올 수 없습니다
-    </div>
-  );
-
-  const [first, ...rest] = items;
+  // 일주일 내 기사 중 클릭 수(localStorage) 기준 TOP 3
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const views = !loading ? getNewsViews() : {};
+  const hotNews = !loading
+    ? [...newsSource]
+        .filter(a => new Date(a.publishedAt).getTime() > oneWeekAgo)
+        .sort((a, b) => {
+          const vDiff = (views[b.id] ?? 0) - (views[a.id] ?? 0);
+          return vDiff !== 0 ? vDiff : new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        })
+        .slice(0, 3)
+    : [];
 
   return (
-    <div className="bg-white">
-      <a href={first.url} target="_blank" rel="noopener noreferrer" className="block p-4 active:bg-gray-50">
-        {first.thumbnail ? (
-          <div className="relative w-full aspect-video rounded-lg overflow-hidden mb-3 bg-gray-100">
-            <img src={first.thumbnail} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+    <div className="pb-6">
+
+      {/* ── 유튜브 ── */}
+      <div className="pt-4">
+        <div className="flex items-center gap-2 px-4 mb-3">
+          <div className="w-6 h-6 bg-[#FF0000] rounded-lg flex items-center justify-center shrink-0">
+            <Play size={11} fill="white" className="text-white ml-0.5" />
           </div>
-        ) : null}
-        <p className="text-xs text-gray-400 mb-1">{first.source} · {formatRelativeTime(first.publishedAt)}</p>
-        <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{first.title}</p>
-      </a>
-      <div className="border-t border-gray-100" />
-      {rest.map(item => (
-        <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-          className="flex items-start gap-3 px-4 py-3 border-b border-gray-100 active:bg-gray-50">
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-400 mb-1">{item.source} · {formatRelativeTime(item.publishedAt)}</p>
-            <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
-          </div>
-          {item.thumbnail && (
-            <div className="w-[72px] h-[72px] shrink-0 rounded-lg overflow-hidden bg-gray-100">
-              <img src={item.thumbnail} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLElement).parentElement!.style.display = "none"; }} />
-            </div>
+          <span className="text-[15px] font-bold text-gray-900">유튜브</span>
+          <span className="text-[12px] text-gray-500">검단 관련 영상</span>
+          {!ytLoading && ytMs > 0 && (
+            <span className="ml-auto text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
+              {ytSource} {ytMs < 1000 ? `${ytMs}ms` : `${(ytMs/1000).toFixed(1)}s`}
+            </span>
           )}
-        </a>
-      ))}
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {ytLoading ? (
+            [0,1,2].map(i => (
+              <div key={i} className="shrink-0 w-[220px] rounded-2xl overflow-hidden animate-pulse">
+                <div className="w-full bg-gray-200" style={{ aspectRatio: "16/9" }} />
+                <div className="bg-white px-3 py-2.5 space-y-1.5">
+                  <div className="h-3 bg-gray-200 rounded w-full" />
+                  <div className="h-3 bg-gray-200 rounded w-2/3" />
+                </div>
+              </div>
+            ))
+          ) : ytVideos.length > 0 ? (
+            ytVideos.map(video => (
+              <a key={video.id} href={video.url} target="_blank" rel="noopener noreferrer"
+                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
+                <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
+                    onError={e => {
+                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+                    }} />
+                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+                      <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
+                    </div>
+                  </div>
+                  <span className="absolute bottom-1.5 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                    YouTube
+                  </span>
+                </div>
+                <div className="px-3 pt-2.5 pb-3">
+                  <p className="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2">{video.title}</p>
+                  <p className="text-[11px] text-gray-500 mt-1.5">{video.channelName}</p>
+                </div>
+              </a>
+            ))
+          ) : null}
+          <div className="shrink-0 w-2" />
+        </div>
+      </div>
+
+      {/* ── 핫뉴스 TOP 3 ── */}
+      {!loading && hotNews.length > 0 && (
+        <div className="px-4 pt-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-red-500" />
+            <span className="text-[15px] font-extrabold text-gray-900">이번 주 핫뉴스</span>
+            <span className="text-[12px] text-gray-400">많이 본 기사</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] shadow-sm">
+            {hotNews.map((item, idx) => {
+              const rankColors = ["#F04452", "#F97316", "#F59E0B"];
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="flex items-center gap-3 px-4 py-3.5 active:bg-[#f9f9f9] transition-colors">
+                  <span className="text-[18px] font-black w-6 text-center shrink-0"
+                    style={{ color: rankColors[idx] }}>
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-gray-900 line-clamp-2 leading-snug">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-blue-600">{item.source}</span>
+                      <span className="text-[11px] text-gray-400">·</span>
+                      <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+                    </div>
+                  </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── 뉴스 ── */}
+      <div className="pt-5">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-[15px] font-bold text-gray-900">뉴스</span>
+            {realNews.length > 0 && (
+              <div className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-[12px] text-gray-500">{realNews.length}건</span>
+              </div>
+            )}
+          </div>
+          <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
+            <RefreshCw size={13} className={`text-gray-400 ${loading ? "animate-spin" : ""}`} />
+            {lastUpdated && <span className="text-[11px] text-gray-400 ml-0.5">{lastUpdated}</span>}
+          </button>
+        </div>
+
+        {/* 뉴스 목록 — 네이버 스타일 */}
+        <div className="bg-white">
+          {loading ? (
+            /* 스켈레톤 */
+            [0, 1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 animate-pulse">
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  <div className="h-4 bg-gray-100 rounded w-full" />
+                  <div className="h-4 bg-gray-100 rounded w-4/5" />
+                </div>
+                <div className="shrink-0 w-[72px] h-[72px] bg-gray-100 rounded-lg" />
+              </div>
+            ))
+          ) : newsSource.length === 0 ? null : (
+            <>
+              {/* 첫 번째 아이템: 피처드 (16:9 썸네일 + 제목 크게) */}
+              {(() => {
+                const first = newsSource[0];
+                return (
+                  <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(first.id)}
+                    className="block px-4 pt-3 pb-4 border-b border-gray-100 active:bg-gray-50">
+                    {first.thumbnail && (
+                      <div className="w-full rounded-xl overflow-hidden mb-3 bg-gray-100" style={{ aspectRatio: "16/9" }}>
+                        <img src={first.thumbnail} alt="" className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 mb-1.5">
+                      <span className="text-[12px] text-gray-500">{first.source}</span>
+                      <span className="text-gray-300 text-[10px]">·</span>
+                      <span className="text-[12px] text-gray-500">{formatRelativeTime(first.publishedAt)}</span>
+                    </div>
+                    <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{first.title}</p>
+                  </a>
+                );
+              })()}
+
+              {/* 나머지: 네이버 리스트 스타일 (오른쪽 썸네일 72px) */}
+              {newsSource.slice(1, newsLimit).map(item => (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 active:bg-gray-50">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
+                      <span className="text-gray-300 text-[10px] shrink-0">·</span>
+                      <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
+                    </div>
+                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                  </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gray-100">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
+                    </div>
+                  )}
+                </a>
+              ))}
+
+              {/* 더보기 버튼 */}
+              {newsSource.length > newsLimit && newsLimit < 30 && (
+                <button
+                  onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
+                  className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
+                  <ChevronDown size={14} className="text-gray-400" />
+                  더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── 인스타그램 ── */}
+      <div className="pt-5">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
+              <span className="text-white text-[11px] font-bold">IG</span>
+            </div>
+            <span className="text-[15px] font-bold text-gray-900">인스타그램</span>
+            <span className="text-[12px] text-gray-500">검단 피드</span>
+          </div>
+          <a href="https://www.instagram.com/explore/tags/검단신도시/"
+            target="_blank" rel="noopener noreferrer"
+            className="text-[12px] text-blue-600 font-medium active:opacity-70">
+            더보기
+          </a>
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+          {instaItems.map(item => (
+            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+              className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
+              <div className="w-full" style={{ aspectRatio: "1/1" }}>
+                <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+              </div>
+              <div className="px-2.5 pt-2 pb-2.5">
+                <p className="text-[11px] font-bold text-pink-600">{item.source}</p>
+                <p className="text-[12px] text-gray-900 leading-snug line-clamp-2 mt-0.5">{item.title}</p>
+                <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(item.publishedAt)}</p>
+              </div>
+            </a>
+          ))}
+          {/* 인스타 API 연동 안내 */}
+          <a href="https://www.instagram.com/explore/tags/검단신도시/"
+            target="_blank" rel="noopener noreferrer"
+            className="shrink-0 w-[120px] rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 py-6 active:opacity-70">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
+              <span className="text-white text-[14px]">📷</span>
+            </div>
+            <p className="text-[11px] text-gray-500 text-center px-2">인스타<br/>더보기</p>
+          </a>
+          <div className="shrink-0 w-2" />
+        </div>
+      </div>
+
     </div>
   );
 }
