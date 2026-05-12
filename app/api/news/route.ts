@@ -185,32 +185,32 @@ export async function GET(request: NextRequest) {
   const queries = QUERIES[category];
   const t0 = Date.now();
 
-  const results = await Promise.all(
-    queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
-  );
+  let articles: NewsArticle[] = [];
+  let source = "supabase";
 
-  const seen = new Set<string>();
-  const merged: NewsArticle[] = [];
-  for (const arr of results) {
-    for (const a of arr) {
-      const key = a.url !== "#" ? a.url : a.title;
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(a);
+  // Supabase 우선: 배치 sync 단계에서 og:image까지 채워두므로 썸네일 노출에 유리
+  const fromDb = await fetchSupabaseFallback();
+  if (fromDb.length > 0) {
+    articles = fromDb;
+  } else {
+    const results = await Promise.all(
+      queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
+    );
+
+    const seen = new Set<string>();
+    const merged: NewsArticle[] = [];
+    for (const arr of results) {
+      for (const a of arr) {
+        const key = a.url !== "#" ? a.url : a.title;
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(a);
+        }
       }
     }
-  }
-  merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-
-  let articles = merged.slice(0, 30);
-  let source = "google-news-rss";
-
-  if (articles.length === 0) {
-    const fallback = await fetchSupabaseFallback();
-    if (fallback.length > 0) {
-      articles = fallback;
-      source = "supabase";
-    }
+    merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    articles = merged.slice(0, 30);
+    source = "google-news-rss";
   }
 
   return Response.json(
