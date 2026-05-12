@@ -87,12 +87,6 @@ export default function LoginPage() {
         >
           <span className="text-xl">💬</span> 카카오로 시작하기
         </button>
-        <button
-          onClick={handleSocial}
-          className="w-full h-[52px] rounded-xl bg-[#03C75A] text-white text-[16px] font-bold flex items-center justify-center gap-2 active:opacity-80 transition-opacity"
-        >
-          <span className="font-black text-lg">N</span> 네이버로 시작하기
-        </button>
       </div>
 
       {/* Bottom Links */}

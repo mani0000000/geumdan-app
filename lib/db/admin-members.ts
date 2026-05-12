@@ -213,3 +213,22 @@ export async function adminFetchMemberComments(userId: string, limit = 5): Promi
     limit,
   });
 }
+
+export interface AdminMemberLoginHistory {
+  id: string;
+  user_id: string;
+  login_at: string;
+  ip_address: string | null;
+  login_type: string;
+  success: boolean;
+  fail_reason: string | null;
+}
+
+export async function adminFetchMemberLoginHistory(userId: string, limit = 10): Promise<AdminMemberLoginHistory[]> {
+  return adminApiGet<AdminMemberLoginHistory>("user_login_history", {
+    select: "id,user_id,login_at,ip_address,login_type,success,fail_reason",
+    order: "login_at.desc",
+    eq: `user_id=eq.${userId}`,
+    limit,
+  });
+}
