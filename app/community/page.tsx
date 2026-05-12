@@ -79,6 +79,7 @@ function PostCard({
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
+  const videos = post.videos ?? [];
   return (
     <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
@@ -141,6 +142,29 @@ function PostCard({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Videos */}
+          {videos.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {videos.slice(0, 1).map((src, i) => (
+                <video
+                  key={i}
+                  src={src}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controls
+                  onClick={stop}
+                  className="w-full rounded-xl bg-black aspect-video border border-[#e5e5ea]"
+                />
+              ))}
+              {videos.length > 1 && (
+                <p className="text-[12px] text-[#86868b]">
+                  + 영상 {videos.length - 1}개 더보기
+                </p>
+              )}
             </div>
           )}
 
@@ -330,10 +354,13 @@ function CommunityTab() {
       <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {loadingPosts ? (
           [1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
-              <div className="h-3 w-16 bg-gray-100 rounded-full" />
-              <div className="h-4 w-3/4 bg-gray-100 rounded" />
-              <div className="h-3 w-1/2 bg-gray-100 rounded" />
+            <div key={i} className="px-4 py-4 flex gap-3 animate-pulse">
+              <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-32 bg-gray-100 rounded" />
+                <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                <div className="h-3 w-1/2 bg-gray-100 rounded" />
+              </div>
             </div>
           ))
         ) : sorted.length === 0 ? (
@@ -608,9 +635,9 @@ function NewsTab() {
       )}
 
       {/* ── 뉴스 ── */}
-      <div className="pt-5">
+      <div className="pt-5 pb-5 bg-gray-50">
         {/* 헤더 */}
-        <div className="flex items-center justify-between px-4 mb-2">
+        <div className="flex items-center justify-between px-4 mb-3">
           <div className="flex items-center gap-2">
             <span className="text-[15px] font-bold text-gray-900">뉴스</span>
             {realNews.length > 0 && (
@@ -626,77 +653,136 @@ function NewsTab() {
           </button>
         </div>
 
-        {/* 뉴스 목록 — 네이버 스타일 */}
-        <div className="bg-white">
-          {loading ? (
-            /* 스켈레톤 */
-            [0, 1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 animate-pulse">
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-1/3" />
-                  <div className="h-4 bg-gray-100 rounded w-full" />
-                  <div className="h-4 bg-gray-100 rounded w-4/5" />
-                </div>
-                <div className="shrink-0 w-[72px] h-[72px] bg-gray-100 rounded-lg" />
+        {loading ? (
+          /* 스켈레톤 */
+          <div className="px-4 space-y-3">
+            <div className="rounded-xl overflow-hidden bg-white shadow-sm animate-pulse">
+              <div className="w-full bg-gray-200" style={{ aspectRatio: "16/9" }} />
+              <div className="p-3 space-y-2">
+                <div className="h-3 w-1/3 bg-gray-100 rounded" />
+                <div className="h-4 w-full bg-gray-100 rounded" />
               </div>
-            ))
-          ) : newsSource.length === 0 ? null : (
-            <>
-              {/* 첫 번째 아이템: 피처드 (16:9 썸네일 + 제목 크게) */}
-              {(() => {
-                const first = newsSource[0];
-                return (
-                  <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
-                    className="block px-4 pt-3 pb-4 border-b border-gray-100 active:bg-gray-50">
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1].map(i => (
+                <div key={i} className="rounded-xl overflow-hidden bg-white shadow-sm animate-pulse">
+                  <div className="w-full bg-gray-200" style={{ aspectRatio: "4/3" }} />
+                  <div className="p-3 space-y-1.5">
+                    <div className="h-3 w-1/2 bg-gray-100 rounded" />
+                    <div className="h-3 w-full bg-gray-100 rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : newsSource.length === 0 ? null : (
+          <>
+            {/* 1. 헤드라인 카드 (뉴스[0]) — 16:9 이미지 + 그라디언트 오버레이 */}
+            {(() => {
+              const first = newsSource[0];
+              return (
+                <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(first.id)}
+                  className="block mx-4 mb-3 rounded-xl overflow-hidden shadow-md active:opacity-90 relative bg-gradient-to-br from-gray-700 to-gray-900">
+                  <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+                    {/* fallback: 출처명 큼직하게 */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-[32px] font-black text-white/15 tracking-tight">{first.source}</span>
+                    </div>
                     {first.thumbnail && (
-                      <div className="w-full rounded-xl overflow-hidden mb-3 bg-gray-100" style={{ aspectRatio: "16/9" }}>
-                        <img src={first.thumbnail} alt="" className="w-full h-full object-cover"
+                      <img src={first.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                    )}
+                    {/* 그라디언트 오버레이 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    {/* 텍스트 */}
+                    <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+                      <div className="flex items-center gap-1.5 mb-1.5">
+                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>
+                        <span className="text-[12px] text-white/90 font-medium">{first.source}</span>
+                        <span className="text-white/40 text-[10px]">·</span>
+                        <span className="text-[12px] text-white/80">{formatRelativeTime(first.publishedAt)}</span>
+                      </div>
+                      <p className="text-[18px] font-bold text-white leading-snug line-clamp-2">{first.title}</p>
+                    </div>
+                  </div>
+                </a>
+              );
+            })()}
+
+            {/* 2. 2열 카드 그리드 (뉴스[1]~[4]) */}
+            {newsSource.length > 1 && (
+              <div className="grid grid-cols-2 gap-3 px-4 mb-4">
+                {newsSource.slice(1, 5).map(item => (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:opacity-80 flex flex-col">
+                    <div className="relative w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" style={{ aspectRatio: "4/3" }}>
+                      <span className="text-gray-400 text-[12px] font-bold px-2 text-center line-clamp-1">{item.source}</span>
+                      {item.thumbnail && (
+                        <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      )}
+                    </div>
+                    <div className="p-3 flex-1 flex flex-col">
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[11px] text-gray-500 truncate">{item.source}</span>
+                        <span className="text-gray-300 text-[9px] shrink-0">·</span>
+                        <span className="text-[11px] text-gray-400 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
+                      </div>
+                      <p className="text-[13.5px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* 3. 구분선 + "더 많은 뉴스" 라벨 */}
+            {newsSource.length > 5 && (
+              <div className="flex items-center gap-3 px-4 mb-2 mt-1">
+                <div className="h-px flex-1 bg-gray-200" />
+                <span className="text-[11px] font-bold text-gray-400 tracking-[0.1em]">더 많은 뉴스</span>
+                <div className="h-px flex-1 bg-gray-200" />
+              </div>
+            )}
+
+            {/* 4. 일반 리스트 (뉴스[5]~끝) */}
+            {newsSource.length > 5 && (
+              <div className="bg-white mx-4 rounded-xl overflow-hidden border border-gray-100">
+                {newsSource.slice(5, newsLimit).map((item, idx, arr) => (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className={`flex items-center gap-3 px-4 py-3.5 active:bg-gray-50 ${idx < arr.length - 1 ? "border-b border-gray-100" : ""}`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
+                        <span className="text-gray-300 text-[10px] shrink-0">·</span>
+                        <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
+                      </div>
+                      <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                    </div>
+                    {item.thumbnail && (
+                      <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gray-100">
+                        <img src={item.thumbnail} alt="" className="w-full h-full object-cover"
                           onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
                       </div>
                     )}
-                    <div className="flex items-center gap-1 mb-1.5">
-                      <span className="text-[12px] text-gray-500">{first.source}</span>
-                      <span className="text-gray-300 text-[10px]">·</span>
-                      <span className="text-[12px] text-gray-500">{formatRelativeTime(first.publishedAt)}</span>
-                    </div>
-                    <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{first.title}</p>
                   </a>
-                );
-              })()}
+                ))}
 
-              {/* 나머지: 네이버 리스트 스타일 (오른쪽 썸네일 72px) */}
-              {newsSource.slice(1, newsLimit).map(item => (
-                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 active:bg-gray-50">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
-                      <span className="text-gray-300 text-[10px] shrink-0">·</span>
-                      <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
-                    </div>
-                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
-                  </div>
-                  {item.thumbnail && (
-                    <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gray-100">
-                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
-                    </div>
-                  )}
-                </a>
-              ))}
-
-              {/* 더보기 버튼 */}
-              {newsSource.length > newsLimit && newsLimit < 30 && (
-                <button
-                  onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
-                  className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
-                  <ChevronDown size={14} className="text-gray-400" />
-                  더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                {/* 더보기 버튼 */}
+                {newsSource.length > newsLimit && newsLimit < 30 && (
+                  <button
+                    onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
+                    className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
+                    <ChevronDown size={14} className="text-gray-400" />
+                    더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ── 인스타그램 ── */}
@@ -1395,7 +1481,7 @@ function SoikContent() {
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (
         <button onClick={() => router.push("/community/write/")}
-          className="fixed bottom-[74px] right-4 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
+          className="fixed bottom-[120px] right-5 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
           <Plus size={24} className="text-white" />
         </button>
       )}

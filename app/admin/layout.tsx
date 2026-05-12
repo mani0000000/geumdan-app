@@ -24,6 +24,7 @@ const NAV = [
   { href: "/admin/sports",      icon: Trophy,        label: "스포츠 관리"   },
   { href: "/admin/instagram",  icon: Camera,        label: "인스타그램 관리"},
   { href: "/admin/settings",   icon: Settings,      label: "앱 설정"       },
+  { href: "/admin/terms",      icon: FileText,      label: "약관 관리"      },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
