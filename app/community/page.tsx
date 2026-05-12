@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
-  ExternalLink, RefreshCw, TrendingUp, TrendingDown, MapPin,
+  RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
   Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
@@ -330,15 +330,10 @@ function CommunityTab() {
       <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {loadingPosts ? (
           [1,2,3].map(i => (
-            <div key={i} className="px-4 py-4 animate-pulse">
-              <div className="flex gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 w-32 bg-gray-100 rounded" />
-                  <div className="h-4 w-3/4 bg-gray-100 rounded" />
-                  <div className="h-3 w-1/2 bg-gray-100 rounded" />
-                </div>
-              </div>
+            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
+              <div className="h-3 w-16 bg-gray-100 rounded-full" />
+              <div className="h-4 w-3/4 bg-gray-100 rounded" />
+              <div className="h-3 w-1/2 bg-gray-100 rounded" />
             </div>
           ))
         ) : sorted.length === 0 ? (
@@ -347,14 +342,41 @@ function CommunityTab() {
             <p className="text-[14px] text-gray-500">아직 글이 없어요</p>
           </div>
         ) : (
-          sorted.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              router={router}
-              onHide={handleHide}
-              onReport={id => setReportTarget(id)}
-            />
+          filtered.map(post => (
+            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-gray-50 transition-colors shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                {post.isPinned && <Pin size={12} className="text-blue-600" />}
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                  {post.category}
+                </span>
+                {post.isHot && (
+                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-red-500">
+                    <Flame size={10} /> HOT
+                  </span>
+                )}
+              </div>
+              <p className="text-[15px] font-semibold text-gray-900 leading-snug">{post.title}</p>
+              <p className="text-[14px] text-gray-500 mt-1 line-clamp-1">{post.content}</p>
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                <span className="text-[13px] text-gray-500">{post.author} · {post.authorDong}</span>
+                <span className="text-[13px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.likeCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.commentCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.viewCount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
           ))
         )}
       </div>
@@ -587,167 +609,92 @@ function NewsTab() {
 
       {/* ── 뉴스 ── */}
       <div className="pt-5">
-        <div className="flex items-center justify-between px-4 mb-3">
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 mb-2">
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-bold text-gray-900">📰 뉴스</span>
+            <span className="text-[15px] font-bold text-gray-900">뉴스</span>
             {realNews.length > 0 && (
               <div className="flex items-center gap-1">
                 <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                <span className="text-[12px] text-gray-700">실시간 {realNews.length}건</span>
+                <span className="text-[12px] text-gray-500">{realNews.length}건</span>
               </div>
-            )}
-            {!loading && newsMs > 0 && (
-              <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">
-                {newsSource2} {newsMs < 1000 ? `${newsMs}ms` : `${(newsMs/1000).toFixed(1)}s`}
-              </span>
             )}
           </div>
           <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-            <RefreshCw size={13} className={`text-gray-500 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw size={13} className={`text-gray-400 ${loading ? "animate-spin" : ""}`} />
             {lastUpdated && <span className="text-[11px] text-gray-400 ml-0.5">{lastUpdated}</span>}
           </button>
         </div>
-        <div className="px-4 space-y-2.5">
+
+        {/* 뉴스 목록 — 네이버 스타일 */}
+        <div className="bg-white">
           {loading ? (
+            /* 스켈레톤 */
+            [0, 1, 2, 3].map(i => (
+              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 animate-pulse">
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-1/3" />
+                  <div className="h-4 bg-gray-100 rounded w-full" />
+                  <div className="h-4 bg-gray-100 rounded w-4/5" />
+                </div>
+                <div className="shrink-0 w-[72px] h-[72px] bg-gray-100 rounded-lg" />
+              </div>
+            ))
+          ) : newsSource.length === 0 ? null : (
             <>
-              {/* Hero skeleton */}
-              <div className="rounded-2xl bg-gray-200 animate-pulse" style={{ aspectRatio: "16/10" }} />
-              {/* Image card skeletons */}
-              {[0, 1].map(i => (
-                <div key={`sk-img-${i}`} className="bg-white rounded-2xl overflow-hidden flex animate-pulse shadow-sm">
-                  <div className="w-[108px] bg-gray-200 shrink-0" />
-                  <div className="flex-1 px-3.5 py-3 space-y-2">
-                    <div className="h-3 bg-gray-200 rounded w-1/3" />
-                    <div className="h-3.5 bg-gray-200 rounded w-full" />
-                    <div className="h-3.5 bg-gray-200 rounded w-4/5" />
-                  </div>
-                </div>
-              ))}
-              {/* Text card skeletons */}
-              {[0, 1].map(i => (
-                <div key={`sk-txt-${i}`} className="bg-white rounded-2xl overflow-hidden flex animate-pulse shadow-sm border-l-[4px] border-gray-200">
-                  <div className="flex-1 px-3.5 py-3 flex gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-gray-200 rounded w-1/3" />
-                      <div className="h-3.5 bg-gray-200 rounded w-full" />
-                      <div className="h-3.5 bg-gray-200 rounded w-3/4" />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            newsSource.slice(0, newsLimit).map((item, idx) => {
-              const accent = getSourceAccent(item.source);
-              const hasThumb = Boolean(item.thumbnail);
-              const isHero = idx === 0;
-
-              // Hero — 첫 기사
-              if (isHero) {
-                return hasThumb ? (
-                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                    onClick={() => trackNewsView(item.id)}
-                    className="block relative rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform bg-gray-200">
-                    <div className="relative w-full" style={{ aspectRatio: "16/10" }}>
-                      <img
-                        src={item.thumbnail!}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                      <div className="absolute inset-x-0 bottom-0 p-4">
-                        <span className={`inline-flex items-center text-[11px] font-extrabold ${accent.bg} text-white px-2 py-0.5 rounded-full mb-2 shadow-sm`}>
-                          {item.source}
-                        </span>
-                        <p className="text-white text-[17px] font-extrabold leading-tight line-clamp-3 drop-shadow-sm">{item.title}</p>
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <span className="text-white/85 text-[11px] font-medium">{formatRelativeTime(item.publishedAt)}</span>
-                          <ExternalLink size={11} className="text-white/70" />
-                        </div>
-                      </div>
-                    </div>
-                  </a>
-                ) : (
-                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                    onClick={() => trackNewsView(item.id)}
-                    className={`block relative rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform bg-gradient-to-br ${accent.gradient}`}>
-                    <div className="p-5 min-h-[148px] flex flex-col justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="w-9 h-9 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center text-white text-[14px] font-extrabold ring-1 ring-white/40">
-                          {sourceInitial(item.source)}
-                        </div>
-                        <span className="text-white text-[12px] font-extrabold tracking-wide">{item.source}</span>
-                      </div>
-                      <p className="text-white text-[17px] font-extrabold leading-tight line-clamp-3 mt-4 drop-shadow-sm">{item.title}</p>
-                      <div className="flex items-center gap-1.5 mt-3">
-                        <span className="text-white/85 text-[11px] font-medium">{formatRelativeTime(item.publishedAt)}</span>
-                        <ExternalLink size={11} className="text-white/70" />
-                      </div>
-                    </div>
-                  </a>
-                );
-              }
-
-              // Apple News 스타일 — 좌측 이미지 + 우측 텍스트
-              if (hasThumb) {
+              {/* 첫 번째 아이템: 피처드 (16:9 썸네일 + 제목 크게) */}
+              {(() => {
+                const first = newsSource[0];
                 return (
-                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                    onClick={() => trackNewsView(item.id)}
-                    className="bg-white rounded-2xl overflow-hidden flex items-stretch shadow-sm active:scale-[0.99] transition-transform">
-                    <div className="shrink-0 relative bg-gray-100" style={{ width: 108 }}>
-                      <img
-                        src={item.thumbnail!}
-                        alt=""
-                        className="absolute inset-0 w-full h-full object-cover"
-                        onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 px-3.5 py-3 flex flex-col justify-between gap-1.5">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className={`text-[10.5px] font-extrabold ${accent.soft} ${accent.text} px-1.5 py-0.5 rounded-full`}>{item.source}</span>
+                  <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
+                    className="block px-4 pt-3 pb-4 border-b border-gray-100 active:bg-gray-50">
+                    {first.thumbnail && (
+                      <div className="w-full rounded-xl overflow-hidden mb-3 bg-gray-100" style={{ aspectRatio: "16/9" }}>
+                        <img src={first.thumbnail} alt="" className="w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
                       </div>
-                      <p className="text-[13.5px] font-bold text-gray-900 leading-snug line-clamp-3">{item.title}</p>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
-                        <ExternalLink size={10} className="text-gray-300 ml-auto shrink-0" />
-                      </div>
+                    )}
+                    <div className="flex items-center gap-1 mb-1.5">
+                      <span className="text-[12px] text-gray-500">{first.source}</span>
+                      <span className="text-gray-300 text-[10px]">·</span>
+                      <span className="text-[12px] text-gray-500">{formatRelativeTime(first.publishedAt)}</span>
                     </div>
+                    <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{first.title}</p>
                   </a>
                 );
-              }
+              })()}
 
-              // 인스타그램 스타일 — accent 좌측 보더 + 이니셜 배지
-              return (
+              {/* 나머지: 네이버 리스트 스타일 (오른쪽 썸네일 72px) */}
+              {newsSource.slice(1, newsLimit).map(item => (
                 <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                  onClick={() => trackNewsView(item.id)}
-                  className={`bg-white rounded-2xl overflow-hidden shadow-sm active:scale-[0.99] transition-transform border-l-[4px] ${accent.border} flex items-stretch`}>
-                  <div className="flex-1 min-w-0 px-3.5 py-3 flex gap-3">
-                    <div className={`shrink-0 w-10 h-10 rounded-full ${accent.bg} text-white flex items-center justify-center text-[14px] font-extrabold shadow-sm`}>
-                      {sourceInitial(item.source)}
+                  className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 active:bg-gray-50">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1 mb-1">
+                      <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
+                      <span className="text-gray-300 text-[10px] shrink-0">·</span>
+                      <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
                     </div>
-                    <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-[11px] font-extrabold ${accent.text}`}>{item.source}</span>
-                        <span className="text-[11px] text-gray-300">·</span>
-                        <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
-                        <ExternalLink size={10} className="text-gray-300 ml-auto shrink-0" />
-                      </div>
-                      <p className="text-[13.5px] font-bold text-gray-900 leading-snug line-clamp-3">{item.title}</p>
-                    </div>
+                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
                   </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gray-100">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover"
+                        onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
+                    </div>
+                  )}
                 </a>
-              );
-            })
-          )}
-          {!loading && newsSource.length > newsLimit && newsLimit < 30 && (
-            <button
-              onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
-              className="w-full py-3 rounded-2xl bg-white text-[13px] font-medium text-gray-700 shadow-sm active:opacity-70 flex items-center justify-center gap-1">
-              <ChevronDown size={15} className="text-gray-500" />
-              더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
-            </button>
+              ))}
+
+              {/* 더보기 버튼 */}
+              {newsSource.length > newsLimit && newsLimit < 30 && (
+                <button
+                  onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
+                  className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
+                  <ChevronDown size={14} className="text-gray-400" />
+                  더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
+                </button>
+              )}
+            </>
           )}
         </div>
       </div>
@@ -813,7 +760,7 @@ function PriceTag({ curr, prev }: { curr: number; prev: number }) {
 
 // ── SVG 라인 차트 ──────────────────────────────────────────────
 function LineChart({
-  data, color = "#0071e3", height = 72, showLabels = false, showDots = true,
+  data, color = "#2563eb", height = 72, showLabels = false, showDots = true,
 }: {
   data: { date: string; price: number }[];
   color?: string;
@@ -1040,7 +987,7 @@ function SiseTab() {
               {/* 펼쳐진 상태: 라인 차트 */}
               {myChartOpen && (
                 <div className="mt-2">
-                  <LineChart data={myH} color="#0071e3" height={80} showLabels showDots />
+                  <LineChart data={myH} color="#2563eb" height={80} showLabels showDots />
                 </div>
               )}
             </button>
@@ -1150,7 +1097,7 @@ function SiseTab() {
         <div className="flex items-center gap-2">
           <div className="flex gap-1.5 flex-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
             <button onClick={() => setPyeongFilter(null)}
-              className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors ${!pyeongFilter ? "bg-[#1d1d1f] text-white border-transparent" : "bg-white text-gray-700 border-gray-200"}`}>
+              className={`shrink-0 h-8 px-3 rounded-full text-[12px] font-semibold border transition-colors ${!pyeongFilter ? "bg-gray-900 text-white border-transparent" : "bg-white text-gray-700 border-gray-200"}`}>
               전체
             </button>
             {allPyeong.map(p => (
@@ -1178,7 +1125,9 @@ function SiseTab() {
       <div className="px-4 space-y-3">
         {filtered.length === 0 ? (
           <div className="bg-white rounded-2xl py-12 flex flex-col items-center gap-2">
-            <span className="text-3xl">🔍</span>
+            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center">
+              <span className="text-2xl">🔍</span>
+            </div>
             <p className="text-[14px] text-gray-500">검색 결과가 없어요</p>
           </div>
         ) : filtered.map(apt => {
@@ -1204,9 +1153,9 @@ function SiseTab() {
                     <div className="flex items-center gap-1 mt-0.5 flex-wrap">
                       <MapPin size={11} className="text-gray-500 shrink-0" />
                       <span className="text-[12px] text-gray-500">{apt.dong}</span>
-                      <span className="text-[#d2d2d7]">·</span>
+                      <span className="text-gray-200">·</span>
                       <span className="text-[12px] text-gray-500">{apt.built}년</span>
-                      <span className="text-[#d2d2d7]">·</span>
+                      <span className="text-gray-200">·</span>
                       <span className="text-[12px] text-gray-500">{apt.households.toLocaleString()}세대</span>
                     </div>
                   </div>
@@ -1290,7 +1239,7 @@ function SiseTab() {
                   <div className="bg-white rounded-xl p-2 mb-3">
                     <LineChart
                       data={siseSubTab === "매매" ? h : jeonseHistory}
-                      color={siseSubTab === "매매" ? "#10B981" : "#0071e3"}
+                      color={siseSubTab === "매매" ? "#059669" : "#2563eb"}
                       height={88} showLabels showDots
                     />
                   </div>
@@ -1424,10 +1373,10 @@ function SoikContent() {
   });
 
   return (
-    <div className="min-h-dvh bg-gray-50 pb-40">
+    <div className="min-h-dvh bg-gray-50 pb-28">
       <Header title="소식" />
 
-      {/* Main tabs */}
+      {/* Main tabs — pill style */}
       <div className="bg-white sticky top-[56px] z-30 border-b border-gray-100 px-4 py-2">
         <div className="flex gap-2">
           {mainTabs.map(t => (
@@ -1446,7 +1395,7 @@ function SoikContent() {
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (
         <button onClick={() => router.push("/community/write/")}
-          className="fixed bottom-[100px] right-5 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
+          className="fixed bottom-[74px] right-4 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
           <Plus size={24} className="text-white" />
         </button>
       )}
