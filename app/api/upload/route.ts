@@ -7,6 +7,10 @@ const BUCKET = "admin-images";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
 const DEFAULT_ANON  = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
 const MAX_BASE64_BYTES = 8 * 1024 * 1024; // 8MB — data URL 폴백 허용 상한
+const MAX_VIDEO_BYTES  = 100 * 1024 * 1024; // 100MB — 동영상 최대 크기
+
+const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","avif","svg"];
+const VIDEO_EXTS = ["mp4","mov","m4v","webm"];
 
 function candidateKeys(): string[] {
   return [
@@ -62,11 +66,21 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    if (!["jpg","jpeg","png","gif","webp","avif","svg"].includes(ext)) {
+    const isVideo = VIDEO_EXTS.includes(ext);
+    if (!IMAGE_EXTS.includes(ext) && !isVideo) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
 
     const bytes = await file.arrayBuffer();
+
+    // 동영상 크기 제한 (100MB)
+    if (isVideo && bytes.byteLength > MAX_VIDEO_BYTES) {
+      return NextResponse.json(
+        { error: `동영상은 최대 ${MAX_VIDEO_BYTES / 1024 / 1024}MB까지 업로드할 수 있어요.` },
+        { status: 400 },
+      );
+    }
+
     const contentType = file.type || "application/octet-stream";
     const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
     const keys = candidateKeys();
@@ -91,9 +105,9 @@ export async function POST(req: NextRequest) {
       if (result.status !== 401 && result.status !== 403) break;
     }
 
-    // ── 2. Storage 실패 → base64 data URL 폴백 ───────────────
-    // <img src="data:..."> 는 일반 URL과 동일하게 작동
-    if (bytes.byteLength <= MAX_BASE64_BYTES) {
+    // ── 2. Storage 실패 → base64 data URL 폴백 (이미지만) ────
+    // 동영상은 base64 폴백을 쓰지 않는다 — payload가 너무 커서 DB/네트워크에 부담
+    if (!isVideo && bytes.byteLength <= MAX_BASE64_BYTES) {
       const base64 = Buffer.from(bytes).toString("base64");
       const dataUrl = `data:${contentType};base64,${base64}`;
       console.log("[upload] base64 폴백 사용:", file.name, bytes.byteLength, "bytes");
@@ -102,7 +116,7 @@ export async function POST(req: NextRequest) {
 
     // 파일이 너무 커서 폴백도 불가
     return NextResponse.json(
-      { error: `파일이 너무 큽니다 (${(bytes.byteLength / 1024 / 1024).toFixed(1)}MB). Storage 설정을 확인해 주세요.` },
+      { error: `업로드에 실패했어요. ${isVideo ? "동영상은 Supabase Storage 설정이 필요합니다." : `파일이 너무 큽니다 (${(bytes.byteLength / 1024 / 1024).toFixed(1)}MB).`}` },
       { status: 500 },
     );
   } catch (err) {
