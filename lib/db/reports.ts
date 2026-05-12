@@ -1,0 +1,60 @@
+/**
+ * lib/db/reports.ts
+ * Post hide & report actions backed by Supabase.
+ * Falls back to localStorage for hiding when Supabase is unavailable.
+ */
+
+import { supabase } from '@/lib/supabase';
+
+export type ReportReason =
+  | '스팸/광고'
+  | '욕설/혐오'
+  | '음란물'
+  | '개인정보 노출'
+  | '허위정보'
+  | '기타';
+
+// ─── Hide ────────────────────────────────────────────────────────────────
+
+const HIDDEN_KEY = 'gd_hidden_posts';
+
+export async function fetchHiddenPostIds(nickname: string): Promise<Set<string>> {
+  const local = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]') as string[];
+  return new Set(local);
+}
+
+export async function hidePost(postId: string, nickname: string): Promise<boolean> {
+  try {
+    const current = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]') as string[];
+    if (!current.includes(postId)) {
+      localStorage.setItem(HIDDEN_KEY, JSON.stringify([...current, postId]));
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// ─── Report ──────────────────────────────────────────────────────────────
+
+export async function reportPost(params: {
+  postId: string;
+  reporterNickname: string;
+  reason: ReportReason;
+  detail?: string;
+}): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('post_reports')
+      .insert({
+        post_id: params.postId,
+        reporter_nickname: params.reporterNickname,
+        reason: params.reason,
+        detail: params.detail ?? '',
+        created_at: new Date().toISOString(),
+      });
+    return !error;
+  } catch {
+    return false;
+  }
+}

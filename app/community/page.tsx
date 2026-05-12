@@ -1,20 +1,28 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Plus, ThumbsUp, MessageSquare, Eye, Flame, Pin,
   RefreshCw, TrendingUp, TrendingDown, MapPin,
   ChevronRight, ChevronUp, ChevronDown, Play, Search, X, SlidersHorizontal,
+  Heart, MessageCircle, Repeat2, Send,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import ThreadAvatar from "@/components/ui/ThreadAvatar";
+import { PostMenu } from "@/components/ui/PostMenu";
+import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchDBPosts } from "@/lib/db/posts";
+import { fetchDBPosts, isMockPostId } from "@/lib/db/posts";
+import {
+  fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
+} from "@/lib/db/reports";
+import { getMyNickname } from "@/lib/identity";
 import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
-import type { CommunityCategory, NewsType } from "@/lib/types";
+import type { CommunityCategory, NewsType, Post } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
 // ─── Types ───────────────────────────────────────────────────
@@ -33,27 +41,211 @@ const catColor: Record<CommunityCategory, string> = {
   소모임: "bg-purple-50 text-purple-800",
 };
 
+type CommSortKey = "latest" | "likes" | "comments" | "views";
+const SORT_OPTS: { key: CommSortKey; label: string }[] = [
+  { key: "latest",   label: "최신순" },
+  { key: "likes",    label: "반응순" },
+  { key: "comments", label: "댓글순" },
+  { key: "views",    label: "조회수순" },
+];
+
+function hotScore(p: { viewCount: number; likeCount: number; commentCount: number }) {
+  return p.viewCount + p.likeCount * 5 + p.commentCount * 3;
+}
+
+// ─── 뉴스 조회 추적 (localStorage) ──────────────────────────
+function getNewsViews(): Record<string, number> {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem("newsViews") ?? "{}") as Record<string, number>; }
+  catch { return {}; }
+}
+function trackNewsView(id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const v = getNewsViews();
+    v[id] = (v[id] ?? 0) + 1;
+    localStorage.setItem("newsViews", JSON.stringify(v));
+  } catch { /* ignore */ }
+}
+
+function PostCard({
+  post, router, onHide, onReport,
+}: {
+  post: Post;
+  router: ReturnType<typeof useRouter>;
+  onHide: (id: string) => void;
+  onReport: (id: string) => void;
+}) {
+  const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
+  const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const images = post.images ?? [];
+  return (
+    <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
+      onClick={goDetail}>
+      <div className="flex gap-3">
+        <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
+        <div className="flex-1 min-w-0">
+          {/* Header: name · dong · time, with menu on the right */}
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[14px] font-bold text-gray-900 truncate">{post.author}</span>
+              <span className="text-[13px] text-gray-400">· {post.authorDong}</span>
+              <span className="text-[13px] text-gray-400">· {formatRelativeTime(post.createdAt)}</span>
+            </div>
+            <div onClick={stop} className="shrink-0 -mt-1 -mr-1">
+              <PostMenu
+                onHide={() => onHide(post.id)}
+                onReport={() => onReport(post.id)}
+              />
+            </div>
+          </div>
+
+          {/* Category + flags */}
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            {post.isPinned && <Pin size={11} className="text-blue-600" />}
+            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+              {post.category}
+            </span>
+            {post.isHot && (
+              <span className="flex items-center gap-0.5 text-[11px] font-bold text-red-500">
+                <Flame size={10} /> HOT
+              </span>
+            )}
+          </div>
+
+          {/* Title + body */}
+          <p className="text-[15px] font-semibold text-gray-900 mt-2 leading-snug">{post.title}</p>
+          <p className="text-[14px] text-gray-700 mt-1 leading-relaxed line-clamp-3 whitespace-pre-line">
+            {post.content}
+          </p>
+
+          {/* Images */}
+          {images.length > 0 && (
+            <div
+              className={`mt-3 grid gap-1 rounded-xl overflow-hidden border border-[#e5e5ea] ${
+                images.length === 1 ? "grid-cols-1" : images.length === 2 ? "grid-cols-2" : "grid-cols-3"
+              }`}
+            >
+              {images.slice(0, 3).map((src, i) => (
+                <div
+                  key={i}
+                  className="relative bg-gray-100"
+                  style={{ aspectRatio: images.length === 1 ? "16/10" : "1/1" }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  {i === 2 && images.length > 3 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-[16px] font-bold">+{images.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Action row */}
+          <div className="flex items-center gap-1 mt-3 -ml-2">
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
+              <Heart size={17} />
+              <span className="text-[13px]">{post.likeCount}</span>
+            </button>
+            <button onClick={goDetail}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
+              <MessageCircle size={17} />
+              <span className="text-[13px]">{post.commentCount}</span>
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
+              <Repeat2 size={17} />
+            </button>
+            <button onClick={stop}
+              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
+              <Send size={16} />
+            </button>
+            <span className="ml-auto flex items-center gap-1 text-[12px] text-gray-400">
+              <Eye size={12} /> {post.viewCount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CommunityTab() {
   const router = useRouter();
-  const [active, setActive] = useState<CommunityCategory>("전체");
+  const searchParams = useSearchParams();
+  const refreshKey = searchParams.get("refresh");
+  const [active, setActive] = useState<CommunityCategory>(() => {
+    if (typeof window === "undefined") return "전체";
+    const c = new URLSearchParams(window.location.search).get("category");
+    if (c && (categories as string[]).includes(c)) return c as CommunityCategory;
+    return "전체";
+  });
   const [dbPosts, setDbPosts] = useState<typeof posts>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [sort, setSort] = useState<CommSortKey>("latest");
+  const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+  const [reportTarget, setReportTarget] = useState<string | null>(null);
 
+  // 글쓰기 후 ?refresh=... 가 붙어 돌아오면 목록을 다시 가져온다.
   useEffect(() => {
     fetchDBPosts(undefined, 50).then(data => {
       setDbPosts(data);
       setLoadingPosts(false);
     });
+  }, [refreshKey]);
+
+  useEffect(() => {
+    fetchHiddenPostIds(getMyNickname()).then(setHiddenIds);
   }, []);
 
-  // DB 포스트 최신순 + 목업 포스트 (고정/HOT 우선)
-  const allPosts = [
+  const handleHide = async (id: string) => {
+    if (isMockPostId(id)) {
+      setHiddenIds(prev => new Set(prev).add(id));
+      return;
+    }
+    const ok = await hidePost(id, getMyNickname());
+    if (ok) setHiddenIds(prev => new Set(prev).add(id));
+  };
+
+  const handleReportSubmit = async (reason: ReportReason, detail: string) => {
+    if (!reportTarget) return;
+    if (!isMockPostId(reportTarget)) {
+      await reportPost({
+        postId: reportTarget,
+        reporterNickname: getMyNickname(),
+        reason,
+        detail,
+      });
+    }
+  };
+
+  const allPosts: Post[] = [
     ...dbPosts,
     ...posts.filter(p => !dbPosts.some(d => d.id === p.id)),
-  ];
-  const filtered = active === "전체"
-    ? allPosts
+  ].filter(p => !hiddenIds.has(p.id));
+
+  // Top 3 hot posts across all categories (by composite score)
+  const hotPosts = [...allPosts]
+    .sort((a, b) => hotScore(b) - hotScore(a))
+    .slice(0, 3);
+
+  const hotIds = new Set(hotPosts.map(p => p.id));
+
+  // Category filter then sort — exclude hot posts from main list when on 전체
+  const categoryFiltered = active === "전체"
+    ? allPosts.filter(p => !hotIds.has(p.id))
     : allPosts.filter(p => p.category === active);
+
+  const sorted = [...categoryFiltered].sort((a, b) => {
+    if (sort === "likes")    return b.likeCount    - a.likeCount;
+    if (sort === "comments") return b.commentCount - a.commentCount;
+    if (sort === "views")    return b.viewCount    - a.viewCount;
+    return 0; // latest: DB posts already ordered by created_at desc
+  });
 
   return (
     <div className="pb-4">
@@ -69,8 +261,73 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* Posts */}
-      <div className="px-4 pt-3 space-y-2">
+      {/* 인기 TOP3 — 전체 탭에서만 노출 */}
+      {active === "전체" && !loadingPosts && hotPosts.length === 3 && (
+        <div className="mx-4 mt-3 rounded-2xl bg-blue-50 p-3">
+          <div className="flex items-center gap-1.5 px-1 pt-0.5 pb-2.5">
+            <Flame size={15} className="text-red-500" />
+            <span className="text-[13px] font-bold text-gray-900 tracking-tight">인기글 TOP 3</span>
+            <span className="text-[10px] font-semibold text-red-500 bg-white px-1.5 py-0.5 rounded-full">실시간</span>
+          </div>
+
+          <div className="space-y-2">
+            {hotPosts.map((post, idx) => {
+              const rankBg = idx === 0 ? "bg-amber-400" : idx === 1 ? "bg-gray-400" : "bg-orange-400";
+              return (
+                <button
+                  key={post.id}
+                  onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+                  className="w-full text-left bg-white rounded-xl shadow-sm p-3.5 active:bg-gray-50 flex items-center gap-3"
+                >
+                  <span className={`shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold text-white ${rankBg}`}>
+                    {idx + 1}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catColor[post.category]}`}>
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-gray-400 truncate">{post.author}</span>
+                    </div>
+                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{post.title}</p>
+                    <div className="flex items-center gap-2.5 mt-1.5">
+                      <span className="flex items-center gap-1 text-xs font-semibold text-red-500">
+                        <ThumbsUp size={11} />{post.likeCount}
+                      </span>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-blue-600">
+                        <MessageSquare size={11} />{post.commentCount}
+                      </span>
+                    </div>
+                  </div>
+                  <ChevronRight size={14} className="shrink-0 text-gray-400" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 정렬 필터 */}
+      <div className="flex items-center gap-2 px-4 pt-3 pb-1">
+        <span className="text-[13px] font-medium text-gray-400 shrink-0">
+          {active === "전체" ? `전체 ${sorted.length}개` : `${active} ${sorted.length}개`}
+        </span>
+        <div className="ml-auto flex gap-1.5">
+          {SORT_OPTS.map(opt => (
+            <button key={opt.key} onClick={() => setSort(opt.key)}
+              className={`h-7 px-2.5 rounded-full text-[12px] font-semibold transition-colors ${
+                sort === opt.key
+                  ? "bg-[#1d1d1f] text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Posts — Threads-style flat feed */}
+      <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {loadingPosts ? (
           [1,2,3].map(i => (
             <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
@@ -79,8 +336,13 @@ function CommunityTab() {
               <div className="h-3 w-1/2 bg-gray-100 rounded" />
             </div>
           ))
+        ) : sorted.length === 0 ? (
+          <div className="py-12 flex flex-col items-center gap-2">
+            <span className="text-3xl">📭</span>
+            <p className="text-[14px] text-gray-500">아직 글이 없어요</p>
+          </div>
         ) : (
-          filtered.map(post => (
+          sorted.map(post => (
             <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
               className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-gray-50 transition-colors shadow-sm">
               <div className="flex items-center gap-2 mb-2">
@@ -118,11 +380,72 @@ function CommunityTab() {
           ))
         )}
       </div>
+
+      <ReportModal
+        open={!!reportTarget}
+        target="post"
+        onClose={() => setReportTarget(null)}
+        onSubmit={handleReportSubmit}
+      />
     </div>
   );
 }
 
 // ─── News ─────────────────────────────────────────────────────
+// 매체별 accent — 카드 보더, 배지, hero gradient, 이니셜 원에 공통 적용.
+// 클래스명은 Tailwind JIT 가 스캔할 수 있도록 모두 리터럴로 작성한다.
+type NewsAccent = {
+  bg: string;        // solid badge / initial
+  soft: string;      // pastel badge background
+  text: string;      // accented text
+  border: string;    // 좌측 4px 보더 (border-{color}-500)
+  gradient: string;  // hero card gradient (from-..-500 to-..-700)
+};
+
+const SOURCE_ACCENT_MAP: Array<{ match: RegExp; accent: NewsAccent }> = [
+  { match: /헤럴드/,        accent: { bg: "bg-rose-500",     soft: "bg-rose-50",     text: "text-rose-700",     border: "border-rose-500",     gradient: "from-rose-500 to-rose-700" } },
+  { match: /인천일보/,      accent: { bg: "bg-cyan-600",     soft: "bg-cyan-50",     text: "text-cyan-700",     border: "border-cyan-500",     gradient: "from-cyan-500 to-cyan-700" } },
+  { match: /연합/,          accent: { bg: "bg-emerald-600",  soft: "bg-emerald-50",  text: "text-emerald-700",  border: "border-emerald-500",  gradient: "from-emerald-500 to-emerald-700" } },
+  { match: /KBS/,           accent: { bg: "bg-blue-600",     soft: "bg-blue-50",     text: "text-blue-700",     border: "border-blue-500",     gradient: "from-blue-500 to-blue-700" } },
+  { match: /MBC/,           accent: { bg: "bg-amber-500",    soft: "bg-amber-50",    text: "text-amber-700",    border: "border-amber-500",    gradient: "from-amber-500 to-amber-700" } },
+  { match: /SBS/,           accent: { bg: "bg-orange-500",   soft: "bg-orange-50",   text: "text-orange-700",   border: "border-orange-500",   gradient: "from-orange-500 to-orange-700" } },
+  { match: /JTBC/,          accent: { bg: "bg-violet-600",   soft: "bg-violet-50",   text: "text-violet-700",   border: "border-violet-500",   gradient: "from-violet-500 to-violet-700" } },
+  { match: /YTN/,           accent: { bg: "bg-sky-600",      soft: "bg-sky-50",      text: "text-sky-700",      border: "border-sky-500",      gradient: "from-sky-500 to-sky-700" } },
+  { match: /매일경제|매경/, accent: { bg: "bg-red-600",      soft: "bg-red-50",      text: "text-red-700",      border: "border-red-500",      gradient: "from-red-500 to-red-700" } },
+  { match: /한국경제|한경/, accent: { bg: "bg-indigo-600",   soft: "bg-indigo-50",   text: "text-indigo-700",   border: "border-indigo-500",   gradient: "from-indigo-500 to-indigo-700" } },
+  { match: /조선/,          accent: { bg: "bg-slate-700",    soft: "bg-slate-100",   text: "text-slate-700",    border: "border-slate-500",    gradient: "from-slate-600 to-slate-800" } },
+  { match: /중앙/,          accent: { bg: "bg-stone-700",    soft: "bg-stone-100",   text: "text-stone-700",    border: "border-stone-500",    gradient: "from-stone-600 to-stone-800" } },
+  { match: /동아/,          accent: { bg: "bg-zinc-700",     soft: "bg-zinc-100",    text: "text-zinc-700",     border: "border-zinc-500",     gradient: "from-zinc-600 to-zinc-800" } },
+  { match: /경기일보|경기/, accent: { bg: "bg-teal-600",     soft: "bg-teal-50",     text: "text-teal-700",     border: "border-teal-500",     gradient: "from-teal-500 to-teal-700" } },
+  { match: /부동산/,        accent: { bg: "bg-fuchsia-600",  soft: "bg-fuchsia-50",  text: "text-fuchsia-700",  border: "border-fuchsia-500",  gradient: "from-fuchsia-500 to-fuchsia-700" } },
+];
+
+// 미지정 매체용 안정 fallback — 매체명 해시로 같은 매체는 항상 같은 색을 받는다.
+const FALLBACK_ACCENTS: NewsAccent[] = [
+  { bg: "bg-blue-600",    soft: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-400",    gradient: "from-blue-500 to-blue-700" },
+  { bg: "bg-emerald-600", soft: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-400", gradient: "from-emerald-500 to-emerald-700" },
+  { bg: "bg-violet-600",  soft: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-400",  gradient: "from-violet-500 to-violet-700" },
+  { bg: "bg-amber-600",   soft: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-400",   gradient: "from-amber-500 to-amber-700" },
+  { bg: "bg-rose-600",    soft: "bg-rose-50",    text: "text-rose-700",    border: "border-rose-400",    gradient: "from-rose-500 to-rose-700" },
+  { bg: "bg-cyan-600",    soft: "bg-cyan-50",    text: "text-cyan-700",    border: "border-cyan-400",    gradient: "from-cyan-500 to-cyan-700" },
+  { bg: "bg-fuchsia-600", soft: "bg-fuchsia-50", text: "text-fuchsia-700", border: "border-fuchsia-400", gradient: "from-fuchsia-500 to-fuchsia-700" },
+  { bg: "bg-teal-600",    soft: "bg-teal-50",    text: "text-teal-700",    border: "border-teal-400",    gradient: "from-teal-500 to-teal-700" },
+];
+
+function getSourceAccent(source: string): NewsAccent {
+  for (const { match, accent } of SOURCE_ACCENT_MAP) {
+    if (match.test(source)) return accent;
+  }
+  let h = 0;
+  for (let i = 0; i < source.length; i++) h = (h * 31 + source.charCodeAt(i)) >>> 0;
+  return FALLBACK_ACCENTS[h % FALLBACK_ACCENTS.length];
+}
+
+function sourceInitial(s: string): string {
+  const t = (s ?? "").trim();
+  return t ? t.charAt(0).toUpperCase() : "?";
+}
+
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [newsSource2, setNewsSource2] = useState("");
@@ -174,6 +497,19 @@ function NewsTab() {
 
   const instaItems = newsItems.filter(n => n.type === "인스타");
   const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
+
+  // 일주일 내 기사 중 클릭 수(localStorage) 기준 TOP 3
+  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const views = !loading ? getNewsViews() : {};
+  const hotNews = !loading
+    ? [...newsSource]
+        .filter(a => new Date(a.publishedAt).getTime() > oneWeekAgo)
+        .sort((a, b) => {
+          const vDiff = (views[b.id] ?? 0) - (views[a.id] ?? 0);
+          return vDiff !== 0 ? vDiff : new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+        })
+        .slice(0, 3)
+    : [];
 
   return (
     <div className="pb-6">
@@ -231,6 +567,45 @@ function NewsTab() {
           <div className="shrink-0 w-2" />
         </div>
       </div>
+
+      {/* ── 핫뉴스 TOP 3 ── */}
+      {!loading && hotNews.length > 0 && (
+        <div className="px-4 pt-5">
+          <div className="flex items-center gap-2 mb-2.5">
+            <Flame size={15} className="text-red-500" />
+            <span className="text-[15px] font-extrabold text-gray-900">이번 주 핫뉴스</span>
+            <span className="text-[12px] text-gray-400">많이 본 기사</span>
+          </div>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] shadow-sm">
+            {hotNews.map((item, idx) => {
+              const rankColors = ["#F04452", "#F97316", "#F59E0B"];
+              return (
+                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(item.id)}
+                  className="flex items-center gap-3 px-4 py-3.5 active:bg-[#f9f9f9] transition-colors">
+                  <span className="text-[18px] font-black w-6 text-center shrink-0"
+                    style={{ color: rankColors[idx] }}>
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-gray-900 line-clamp-2 leading-snug">{item.title}</p>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[11px] font-medium text-blue-600">{item.source}</span>
+                      <span className="text-[11px] text-gray-400">·</span>
+                      <span className="text-[11px] text-gray-400">{formatRelativeTime(item.publishedAt)}</span>
+                    </div>
+                  </div>
+                  {item.thumbnail && (
+                    <div className="shrink-0 w-12 h-12 rounded-lg overflow-hidden border border-[#e5e5ea]">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                </a>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* ── 뉴스 ── */}
       <div className="pt-5">
