@@ -342,7 +342,7 @@ function CommunityTab() {
             <p className="text-[14px] text-gray-500">아직 글이 없어요</p>
           </div>
         ) : (
-          filtered.map(post => (
+          sorted.map(post => (
             <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
               className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-gray-50 transition-colors shadow-sm">
               <div className="flex items-center gap-2 mb-2">
