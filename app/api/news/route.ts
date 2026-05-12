@@ -56,6 +56,35 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
+// RSS 표준 이미지 태그(<media:thumbnail>, <media:content medium="image">, <enclosure type="image/...">)만 허용.
+// description HTML 안의 <img>나 페이지 크롤링은 사용하지 않는다.
+function extractMediaImage(item: string): string | undefined {
+  const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
+  if (thumb?.[1]) return thumb[1];
+
+  const mediaContents = item.matchAll(/<media:content\b([^>]*)\/?>(?:[\s\S]*?<\/media:content>)?/gi);
+  for (const m of mediaContents) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (medium === "image" || (type && type.startsWith("image/")) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
+      return url;
+    }
+  }
+
+  const enclosures = item.matchAll(/<enclosure\b([^>]*)\/?>/gi);
+  for (const m of enclosures) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (type?.startsWith("image/")) return url;
+  }
+  return undefined;
+}
+
 function parseRssXml(xml: string, prefix: string): NewsArticle[] {
   if (!xml.includes("<item>")) return [];
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
@@ -66,6 +95,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
       const desc  = stripXml(tagVal(raw, "description")).slice(0, 160);
       const pub   = tagVal(raw, "pubDate");
       const src   = stripXml(tagVal(raw, "source")) || extractSource(title);
+      const thumb = extractMediaImage(raw);
       return {
         id: `${prefix}-${i}`,
         title,
@@ -73,7 +103,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
         source: src,
         publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
         url: link || "#",
-        thumbnail: undefined,
+        thumbnail: thumb,
         type: "뉴스" as const,
       };
     })
