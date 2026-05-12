@@ -327,7 +327,7 @@ function CommunityTab() {
       </div>
 
       {/* Posts — Threads-style flat feed */}
-      <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+      <div className="bg-white mt-2 divide-y divide-[#f0f0f3]">
         {loadingPosts ? (
           [1,2,3].map(i => (
             <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
@@ -1400,7 +1400,7 @@ function SoikContent() {
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (
         <button onClick={() => router.push("/community/write/")}
-          className="fixed bottom-[74px] right-4 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
+          className="fixed bottom-[120px] right-5 w-14 h-14 bg-blue-600 rounded-full shadow-lg flex items-center justify-center active:bg-blue-700 z-40">
           <Plus size={24} className="text-white" />
         </button>
       )}
