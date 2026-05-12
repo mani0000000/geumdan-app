@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-12T19:26:25.856Z",
+  "fetchedAt": "2026-05-12T22:01:21.911Z",
   "count": 40,
   "articles": [
     {
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-9",
       "title": "더불어민주당 인천 서구병, 검단 원팀 선거대책위원회 발대식 개최 - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -102,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-17",
       "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -120,24 +120,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-23",
-      "title": "제23회 한국청소년 육성회 서구지구회장배 길거리 농구대회 성료 - 매일뉴스",
-      "summary": "",
-      "source": "매일뉴스",
-      "publishedAt": "2026-05-11T07:58:37.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBFZEdTZkFHNVVXcDhxWXdvd0JTRUpiYW1KclY0RXlkb3JQX1RUSUNObkRNWWRrbkcta1NYeEhtb0RHdUxNQ1RhaXNGSW5UbXM1VXZheGhTQ25KLUZmdzhWcw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-22",
-      "title": "서구문화재단, 문화공간 터·틀(검단) 기획공연 ‘어린이 상상놀이극 〈거인의 책상〉’ 개최 - sejungfocus.com",
-      "summary": "",
-      "source": "sejungfocus.com",
-      "publishedAt": "2026-05-11T06:47:36.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTFB3aEFTNDMtNkVNTlZ3dnhCSzdmNkZsU0UyblR4Vk1zUy1JaEY3WnFyUlcxU3podmhaRmt6aHEtSXppenFHQVgzQnZsV29oZ04wZ3FVbWlQWEItcnN6T3ZkZVVjSzBBaGhJUzhheQ?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr0-10",
       "title": "교육 인프라 갖춘 ‘더샵 검단레이크파크’ 5월 공급 예정 - 헤럴드경제",
       "summary": "",
@@ -147,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-2",
       "title": "[궁금해집] 다양한 인프라 곁에…검단신도시 첫 '더샵' 아파트 - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -183,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-7",
       "title": "인천 서해구 검단구 영종구 제물포구 7월 출범 - 시니어오늘",
       "summary": "",
       "source": "시니어오늘",
@@ -192,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
       "title": "[도로투데이] 인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -210,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-18",
       "title": "인천 서구, 38년 만에 ‘서해구’로 새 출발…명칭 변경안 국회 통과 - 뷰티경제",
       "summary": "",
       "source": "뷰티경제",
@@ -219,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-17",
       "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 이데일리",
       "summary": "",
       "source": "이데일리",
@@ -237,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-33",
       "title": "\"요즘 아파트는 슬세권이지\"…신도시 분양, 중심 상업지 접근성이 '최우선' - 네이트",
       "summary": "",
       "source": "네이트",
@@ -255,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-25",
+      "id": "gr2-23",
       "title": "[인물포커스] 강범석, '검단구 분구·GTX-D' 전면에…서구청장 3선 승부수 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -273,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-6",
       "title": "인천 서구, 38년 만에 ‘서해구’ 명칭 변경...7월1일부터 검단구 분구 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -282,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-8",
       "title": "인천 서구, 38년 만에 '서해구' 전환…검단 분구와 행정판 다시 짠다 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -309,7 +291,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr2-28",
+      "title": "인천 서구 새 명칭 '서해구' 확정…\"7월1일부터 적용\" - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-05-07T09:06:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE1ZVnN2RE83RkJTZWVsRUkwN1FMblZIcUlCaVpneHcwWlBBWWVYYTRyNXBEMExzZnVSRjRSbnRUaEtTczVuVnJJUTZtd0dpWUxZOTgw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-15",
       "title": "인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -318,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-24",
+      "id": "gr0-34",
       "title": "2857가구 대단지 ‘더샵 검단레이크파크’ 5월 분양 - 스포츠경향",
       "summary": "",
       "source": "스포츠경향",
@@ -336,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-6",
+      "id": "gr1-4",
       "title": "검단신도시 2,857세대 '더샵 검단레이크파크' 5월 공급 예정 - 한경매거진&북",
       "summary": "",
       "source": "한경매거진&북",
@@ -354,12 +345,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-9",
+      "id": "gr3-11",
       "title": "[인지넷 기획-인천 권역별 현안] ③ 서북권, 검단 '산업 부재'·서해 '소각장 폐쇄'·계양 '테크노밸리 교통' 골머리 - 인천일보",
       "summary": "",
       "source": "인천일보",
       "publishedAt": "2026-05-05T09:22:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBGeTNHQnRpVTVhMFhUd2lIWEVZVklObFZKdGhVa1NJVWU3bE9IOWd3ZnFjQnMxYkwzNUZISGdLVUE3eWtJQ2QteDBRUFNqM0s0cnZKMUpkU19DdElMODZlQjlZZWxqWFB3NlpjWWlERXg?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-28",
+      "title": "'검단·회천·동탄' 분양 호조…라인건설 대기업 반열에 - 한국경제",
+      "summary": "",
+      "source": "한국경제",
+      "publishedAt": "2026-05-05T08:04:17.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5XdXZGeXJIaWc4Zk5kcENpTzUzaDc0TUNEM2JGTkhtZGF4T2hUSWNQNzFLdjhwYkVOQXJTam9nQndOb0ZkdnNNblZGcnFDUnlhLW4wRjRYTTl0Z9IBVEFVX3lxTE5DSkFnS211Rm53SDVRcWduWUx2TGFXM1dvdURhVWdSVXZhbnRtVGVRZS1keDQ3QlhNalVYSGFYaHEyMVlmajBsYjUwLWo4eGtRQjBhMA?oc=5",
       "type": "뉴스"
     }
   ]
