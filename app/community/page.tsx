@@ -392,6 +392,60 @@ function CommunityTab() {
 }
 
 // ─── News ─────────────────────────────────────────────────────
+// 매체별 accent — 카드 보더, 배지, hero gradient, 이니셜 원에 공통 적용.
+// 클래스명은 Tailwind JIT 가 스캔할 수 있도록 모두 리터럴로 작성한다.
+type NewsAccent = {
+  bg: string;        // solid badge / initial
+  soft: string;      // pastel badge background
+  text: string;      // accented text
+  border: string;    // 좌측 4px 보더 (border-{color}-500)
+  gradient: string;  // hero card gradient (from-..-500 to-..-700)
+};
+
+const SOURCE_ACCENT_MAP: Array<{ match: RegExp; accent: NewsAccent }> = [
+  { match: /헤럴드/,        accent: { bg: "bg-rose-500",     soft: "bg-rose-50",     text: "text-rose-700",     border: "border-rose-500",     gradient: "from-rose-500 to-rose-700" } },
+  { match: /인천일보/,      accent: { bg: "bg-cyan-600",     soft: "bg-cyan-50",     text: "text-cyan-700",     border: "border-cyan-500",     gradient: "from-cyan-500 to-cyan-700" } },
+  { match: /연합/,          accent: { bg: "bg-emerald-600",  soft: "bg-emerald-50",  text: "text-emerald-700",  border: "border-emerald-500",  gradient: "from-emerald-500 to-emerald-700" } },
+  { match: /KBS/,           accent: { bg: "bg-blue-600",     soft: "bg-blue-50",     text: "text-blue-700",     border: "border-blue-500",     gradient: "from-blue-500 to-blue-700" } },
+  { match: /MBC/,           accent: { bg: "bg-amber-500",    soft: "bg-amber-50",    text: "text-amber-700",    border: "border-amber-500",    gradient: "from-amber-500 to-amber-700" } },
+  { match: /SBS/,           accent: { bg: "bg-orange-500",   soft: "bg-orange-50",   text: "text-orange-700",   border: "border-orange-500",   gradient: "from-orange-500 to-orange-700" } },
+  { match: /JTBC/,          accent: { bg: "bg-violet-600",   soft: "bg-violet-50",   text: "text-violet-700",   border: "border-violet-500",   gradient: "from-violet-500 to-violet-700" } },
+  { match: /YTN/,           accent: { bg: "bg-sky-600",      soft: "bg-sky-50",      text: "text-sky-700",      border: "border-sky-500",      gradient: "from-sky-500 to-sky-700" } },
+  { match: /매일경제|매경/, accent: { bg: "bg-red-600",      soft: "bg-red-50",      text: "text-red-700",      border: "border-red-500",      gradient: "from-red-500 to-red-700" } },
+  { match: /한국경제|한경/, accent: { bg: "bg-indigo-600",   soft: "bg-indigo-50",   text: "text-indigo-700",   border: "border-indigo-500",   gradient: "from-indigo-500 to-indigo-700" } },
+  { match: /조선/,          accent: { bg: "bg-slate-700",    soft: "bg-slate-100",   text: "text-slate-700",    border: "border-slate-500",    gradient: "from-slate-600 to-slate-800" } },
+  { match: /중앙/,          accent: { bg: "bg-stone-700",    soft: "bg-stone-100",   text: "text-stone-700",    border: "border-stone-500",    gradient: "from-stone-600 to-stone-800" } },
+  { match: /동아/,          accent: { bg: "bg-zinc-700",     soft: "bg-zinc-100",    text: "text-zinc-700",     border: "border-zinc-500",     gradient: "from-zinc-600 to-zinc-800" } },
+  { match: /경기일보|경기/, accent: { bg: "bg-teal-600",     soft: "bg-teal-50",     text: "text-teal-700",     border: "border-teal-500",     gradient: "from-teal-500 to-teal-700" } },
+  { match: /부동산/,        accent: { bg: "bg-fuchsia-600",  soft: "bg-fuchsia-50",  text: "text-fuchsia-700",  border: "border-fuchsia-500",  gradient: "from-fuchsia-500 to-fuchsia-700" } },
+];
+
+// 미지정 매체용 안정 fallback — 매체명 해시로 같은 매체는 항상 같은 색을 받는다.
+const FALLBACK_ACCENTS: NewsAccent[] = [
+  { bg: "bg-blue-600",    soft: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-400",    gradient: "from-blue-500 to-blue-700" },
+  { bg: "bg-emerald-600", soft: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-400", gradient: "from-emerald-500 to-emerald-700" },
+  { bg: "bg-violet-600",  soft: "bg-violet-50",  text: "text-violet-700",  border: "border-violet-400",  gradient: "from-violet-500 to-violet-700" },
+  { bg: "bg-amber-600",   soft: "bg-amber-50",   text: "text-amber-700",   border: "border-amber-400",   gradient: "from-amber-500 to-amber-700" },
+  { bg: "bg-rose-600",    soft: "bg-rose-50",    text: "text-rose-700",    border: "border-rose-400",    gradient: "from-rose-500 to-rose-700" },
+  { bg: "bg-cyan-600",    soft: "bg-cyan-50",    text: "text-cyan-700",    border: "border-cyan-400",    gradient: "from-cyan-500 to-cyan-700" },
+  { bg: "bg-fuchsia-600", soft: "bg-fuchsia-50", text: "text-fuchsia-700", border: "border-fuchsia-400", gradient: "from-fuchsia-500 to-fuchsia-700" },
+  { bg: "bg-teal-600",    soft: "bg-teal-50",    text: "text-teal-700",    border: "border-teal-400",    gradient: "from-teal-500 to-teal-700" },
+];
+
+function getSourceAccent(source: string): NewsAccent {
+  for (const { match, accent } of SOURCE_ACCENT_MAP) {
+    if (match.test(source)) return accent;
+  }
+  let h = 0;
+  for (let i = 0; i < source.length; i++) h = (h * 31 + source.charCodeAt(i)) >>> 0;
+  return FALLBACK_ACCENTS[h % FALLBACK_ACCENTS.length];
+}
+
+function sourceInitial(s: string): string {
+  const t = (s ?? "").trim();
+  return t ? t.charAt(0).toUpperCase() : "?";
+}
+
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
   const [newsSource2, setNewsSource2] = useState("");
