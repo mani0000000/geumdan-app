@@ -572,79 +572,123 @@ function NewsTab() {
           </button>
         </div>
 
-        {/* 뉴스 목록 — 네이버 스타일 */}
-        <div className="bg-white">
-          {loading ? (
-            /* 스켈레톤 */
-            [0, 1, 2, 3].map(i => (
-              <div key={i} className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 animate-pulse">
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-1/3" />
-                  <div className="h-4 bg-gray-100 rounded w-full" />
-                  <div className="h-4 bg-gray-100 rounded w-4/5" />
-                </div>
-                <div className="shrink-0 w-[72px] h-[72px] bg-gray-100 rounded-lg" />
-              </div>
-            ))
-          ) : newsSource.length === 0 ? null : (
-            <>
-              {/* 첫 번째 아이템: 피처드 (16:9 썸네일 + 제목 크게) */}
-              {(() => {
-                const first = newsSource[0];
-                return (
-                  <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
-                    onClick={() => trackNewsView(first.id)}
-                    className="block px-4 pt-3 pb-4 border-b border-gray-100 active:bg-gray-50">
-                    {first.thumbnail && (
-                      <div className="w-full rounded-xl overflow-hidden mb-3 bg-gray-100" style={{ aspectRatio: "16/9" }}>
-                        <img src={first.thumbnail} alt="" className="w-full h-full object-cover"
-                          onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1 mb-1.5">
-                      <span className="text-[12px] text-gray-500">{first.source}</span>
-                      <span className="text-gray-300 text-[10px]">·</span>
-                      <span className="text-[12px] text-gray-500">{formatRelativeTime(first.publishedAt)}</span>
-                    </div>
-                    <p className="text-[16px] font-bold text-gray-900 leading-snug line-clamp-2">{first.title}</p>
-                  </a>
-                );
-              })()}
-
-              {/* 나머지: 네이버 리스트 스타일 (오른쪽 썸네일 72px) */}
-              {newsSource.slice(1, newsLimit).map(item => (
-                <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                  onClick={() => trackNewsView(item.id)}
-                  className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 active:bg-gray-50">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-1">
-                      <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
-                      <span className="text-gray-300 text-[10px] shrink-0">·</span>
-                      <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
-                    </div>
-                    <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+        {/* 뉴스 목록 — 매거진 카드 스타일 */}
+        {loading ? (
+          <div className="px-4 space-y-3">
+            {/* 히어로 스켈레톤 */}
+            <div className="w-full rounded-2xl bg-gray-100 animate-pulse" style={{ aspectRatio: "16/9" }} />
+            {/* 그리드 스켈레톤 */}
+            <div className="grid grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map(i => (
+                <div key={i} className="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+                  <div className="w-full bg-gray-100" style={{ aspectRatio: "4/3" }} />
+                  <div className="p-2.5 space-y-1.5">
+                    <div className="h-3 bg-gray-100 rounded w-1/3" />
+                    <div className="h-3 bg-gray-100 rounded w-full" />
                   </div>
-                  {item.thumbnail && (
-                    <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gray-100">
-                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).parentElement!.style.display = "none"; }} />
-                    </div>
-                  )}
-                </a>
+                </div>
               ))}
+            </div>
+          </div>
+        ) : newsSource.length === 0 ? null : (
+          <>
+            {/* ① 히어로: 16:9 이미지 + 그라디언트 오버레이 */}
+            {(() => {
+              const first = newsSource[0];
+              if (!first) return null;
+              return (
+                <a href={first.url} target="_blank" rel="noopener noreferrer"
+                  onClick={() => trackNewsView(first.id)}
+                  className="relative block mx-4 mb-4 rounded-2xl overflow-hidden shadow-sm bg-gradient-to-br from-gray-300 to-gray-500 active:opacity-90"
+                  style={{ aspectRatio: "16/9" }}>
+                  {first.thumbnail && (
+                    <img src={first.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
+                      onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  )}
+                  {/* 그라디언트 오버레이 */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/10" />
+                  {/* NEW 배지 */}
+                  <span className="absolute top-3 right-3 text-[10px] font-bold text-white bg-red-500 px-2 py-0.5 rounded-full shadow-sm">NEW</span>
+                  {/* 텍스트 */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4">
+                    <div className="flex items-center gap-1 mb-1.5">
+                      <span className="text-[11px] text-white/95 font-medium">{first.source}</span>
+                      <span className="text-white/60 text-[10px]">·</span>
+                      <span className="text-[11px] text-white/90">{formatRelativeTime(first.publishedAt)}</span>
+                    </div>
+                    <p className="text-[18px] font-bold text-white leading-snug line-clamp-2">{first.title}</p>
+                  </div>
+                </a>
+              );
+            })()}
 
-              {/* 더보기 버튼 */}
-              {newsSource.length > newsLimit && newsLimit < 30 && (
-                <button
-                  onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
-                  className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
-                  <ChevronDown size={14} className="text-gray-400" />
-                  더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
-                </button>
-              )}
-            </>
-          )}
-        </div>
+            {/* ② 2~5번: 2열 그리드 카드 */}
+            {newsSource.length > 1 && (
+              <div className="grid grid-cols-2 gap-3 px-4 mb-4">
+                {newsSource.slice(1, 5).map(item => (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className="bg-white rounded-xl shadow-sm overflow-hidden active:opacity-80">
+                    <div className="w-full bg-gradient-to-br from-gray-100 to-gray-200 relative" style={{ aspectRatio: "4/3" }}>
+                      {item.thumbnail ? (
+                        <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[11px] text-gray-400 font-medium">검단 뉴스</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="px-2.5 pt-2 pb-2.5">
+                      <p className="text-[10px] text-gray-500 font-medium truncate">{item.source}</p>
+                      <p className="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2 mt-0.5">{item.title}</p>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            )}
+
+            {/* ③ 6번 이후: 네이버 스타일 리스트 (오른쪽 72px 썸네일) */}
+            {newsSource.length > 5 && (
+              <div className="bg-white">
+                {newsSource.slice(5, newsLimit).map(item => (
+                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                    onClick={() => trackNewsView(item.id)}
+                    className="flex items-center gap-3 px-4 py-3.5 border-b border-gray-100 last:border-b-0 active:bg-gray-50">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1 mb-1">
+                        <span className="text-[12px] text-gray-500 truncate max-w-[80px]">{item.source}</span>
+                        <span className="text-gray-300 text-[10px] shrink-0">·</span>
+                        <span className="text-[12px] text-gray-500 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
+                      </div>
+                      <p className="text-[14px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
+                    </div>
+                    <div className="shrink-0 w-[72px] h-[72px] rounded-lg overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                      {item.thumbnail ? (
+                        <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
+                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      ) : (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-[9px] text-gray-400">검단</span>
+                        </div>
+                      )}
+                    </div>
+                  </a>
+                ))}
+
+                {/* 더보기 버튼 */}
+                {newsSource.length > newsLimit && newsLimit < 30 && (
+                  <button
+                    onClick={() => setNewsLimit(prev => Math.min(prev + 10, 30))}
+                    className="w-full py-3.5 text-[13px] font-medium text-gray-500 border-t border-gray-100 active:bg-gray-50 flex items-center justify-center gap-1">
+                    <ChevronDown size={14} className="text-gray-400" />
+                    더보기 ({Math.min(newsSource.length - newsLimit, 10)}건)
+                  </button>
+                )}
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* ── 인스타그램 ── */}
