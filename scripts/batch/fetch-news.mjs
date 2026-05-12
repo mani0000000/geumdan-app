@@ -74,11 +74,15 @@ async function fetchOgImage(url, timeoutMs = 6000) {
       html.match(/<meta[^>]+name=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
       html.match(/<meta[^>]+name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
     if (!m) return null;
+    let resolved;
     try {
-      return new URL(m[1], url).href;
+      resolved = new URL(m[1], url).href;
     } catch {
       return null;
     }
+    // Reject the Google News redirect logo — it isn't an article image.
+    if (/(^|\.)google\.com\//i.test(resolved) || /gstatic\.com\//i.test(resolved)) return null;
+    return resolved;
   } catch {
     return null;
   } finally {
@@ -94,11 +98,17 @@ async function enrichWithOgImages(rows, concurrency = 4) {
       const i = cursor++;
       if (i >= rows.length) return;
       const row = rows[i];
-      if (row.thumbnail || !row.url) continue;
+      // Re-fetch when thumbnail is missing OR is a Google asset (logo).
+      if (!row.url) continue;
+      if (row.thumbnail && !/google|gstatic/i.test(row.thumbnail)) continue;
       const og = await fetchOgImage(row.url);
       if (og) {
         row.thumbnail = og;
         hits++;
+      } else if (row.thumbnail && /google|gstatic/i.test(row.thumbnail)) {
+        // Clear the bad google-logo thumbnail so the row at least falls back
+        // to the gradient placeholder instead of showing a wrong image.
+        row.thumbnail = null;
       }
     }
   });
