@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -64,13 +64,7 @@ export default function WritePage() {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [nickname, setNickname] = useState("검단주민");
-  const [anonymous, setAnonymous] = useState(false);
-  const [authorDong, setAuthorDong] = useState("검단");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [images, setImages] = useState<string[]>([]);
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [uploading, setUploading] = useState<"image" | "video" | null>(null);
-  const [uploadProgress, setUploadProgress] = useState(0);
+  const [videos, setVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -181,12 +175,9 @@ export default function WritePage() {
         title: title.trim(),
         content: content.trim(),
         author: nickname.trim() || "검단주민",
-        authorDong,
-        authorAvatarUrl: avatarUrl,
-        userId: uid,
-        isAnonymous: false,
-        images: images.length > 0 ? images : undefined,
-        videoUrl: videoUrl ?? undefined,
+        authorDong: "검단",
+        isAnonymous: anonymous,
+        videos,
       });
       if (result?.post) {
         saveMyPostId(result.post.id);
@@ -260,43 +251,13 @@ export default function WritePage() {
             className="w-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
-        {/* Media previews */}
-        {(images.length > 0 || videoUrl || uploading) && (
-          <div className="px-5 py-3 border-b border-[#f5f5f7] space-y-3">
-            {images.length > 0 && (
-              <div className="grid grid-cols-4 gap-2">
-                {images.map((src, i) => (
-                  <div key={i} className="relative aspect-square rounded-xl overflow-hidden bg-[#f5f5f7]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={src} alt="" className="w-full h-full object-cover" />
-                    <button onClick={() => removeImage(i)} aria-label="이미지 삭제"
-                      className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center active:bg-black/80">
-                      <X size={14} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+        {/* Video upload */}
+        <div className="border-b border-[#f5f5f7] px-5 py-4 space-y-2">
+          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
+          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
+        </div>
 
-            {videoUrl && (
-              <div className="relative rounded-xl overflow-hidden bg-black">
-                <video src={videoUrl} controls playsInline
-                  className="w-full max-h-[360px] object-contain bg-black" />
-                <button onClick={removeVideo} aria-label="동영상 삭제"
-                  className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 text-white flex items-center justify-center active:bg-black/90">
-                  <X size={15} />
-                </button>
-              </div>
-            )}
-
-            {uploading && (
-              <div className="flex items-center gap-2 text-[13px] text-[#0071e3]">
-                <Loader2 size={14} className="animate-spin" />
-                <span>{uploading === "image" ? "이미지" : "동영상"} 업로드 중… {uploadProgress}%</span>
-              </div>
-            )}
-          </div>
-        )}
+        <div className="flex-1" />
 
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">

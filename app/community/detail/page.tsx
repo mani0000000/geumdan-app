@@ -415,6 +415,24 @@ function DetailContent() {
                 </span>
                 {post.isPinned && <span className="text-[11px] text-[#0071e3] font-medium">📌 공지</span>}
               </div>
+              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+
+              {post.videos && post.videos.length > 0 && (
+                <div className="mt-4 space-y-3">
+                  {post.videos.map((src, i) => (
+                    <video
+                      key={i}
+                      src={src}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full rounded-xl bg-black aspect-video"
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
 
               {editMode ? (
                 <div className="space-y-3 mt-3">

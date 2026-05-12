@@ -79,6 +79,7 @@ function PostCard({
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
+  const videos = post.videos ?? [];
   return (
     <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
@@ -144,17 +145,26 @@ function PostCard({
             </div>
           )}
 
-          {/* Video */}
-          {post.videoUrl && (
-            <div className="mt-3 rounded-xl overflow-hidden bg-black border border-[#e5e5ea]"
-              onClick={stop}>
-              <video
-                src={post.videoUrl}
-                controls
-                playsInline
-                preload="metadata"
-                className="w-full max-h-[420px] object-contain bg-black"
-              />
+          {/* Videos */}
+          {videos.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 gap-2">
+              {videos.slice(0, 1).map((src, i) => (
+                <video
+                  key={i}
+                  src={src}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  controls
+                  onClick={stop}
+                  className="w-full rounded-xl bg-black aspect-video border border-[#e5e5ea]"
+                />
+              ))}
+              {videos.length > 1 && (
+                <p className="text-[12px] text-[#86868b]">
+                  + 영상 {videos.length - 1}개 더보기
+                </p>
+              )}
             </div>
           )}
 
@@ -340,8 +350,8 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* Posts — Threads-style flat thread feed */}
-      <div className="bg-white mt-2 divide-y divide-gray-100">
+      {/* Posts — Threads-style flat feed */}
+      <div className="bg-white mt-2 mx-4 rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {loadingPosts ? (
           [1,2,3].map(i => (
             <div key={i} className="px-4 py-4 flex gap-3 animate-pulse">
@@ -360,13 +370,40 @@ function CommunityTab() {
           </div>
         ) : (
           sorted.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              router={router}
-              onHide={handleHide}
-              onReport={(id) => setReportTarget(id)}
-            />
+            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
+              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-gray-50 transition-colors shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                {post.isPinned && <Pin size={12} className="text-blue-600" />}
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
+                  {post.category}
+                </span>
+                {post.isHot && (
+                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-red-500">
+                    <Flame size={10} /> HOT
+                  </span>
+                )}
+              </div>
+              <p className="text-[15px] font-semibold text-gray-900 leading-snug">{post.title}</p>
+              <p className="text-[14px] text-gray-500 mt-1 line-clamp-1">{post.content}</p>
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+                <span className="text-[13px] text-gray-500">{post.author} · {post.authorDong}</span>
+                <span className="text-[13px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
+                <div className="flex items-center gap-3 ml-auto">
+                  <div className="flex items-center gap-1">
+                    <ThumbsUp size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.likeCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MessageSquare size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.commentCount}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Eye size={12} className="text-gray-400" />
+                    <span className="text-[13px] text-gray-400">{post.viewCount.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </button>
           ))
         )}
       </div>

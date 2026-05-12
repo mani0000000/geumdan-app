@@ -16,8 +16,7 @@
  *   comment_count INTEGER DEFAULT 0,
  *   is_pinned   BOOLEAN DEFAULT FALSE,
  *   is_hot      BOOLEAN DEFAULT FALSE,
- *   image_urls  TEXT[] NOT NULL DEFAULT '{}'::TEXT[],
- *   video_url   TEXT,
+ *   videos      TEXT[],
  *   created_at  TIMESTAMPTZ DEFAULT NOW(),
  *   updated_at  TIMESTAMPTZ DEFAULT NOW()
  * );
@@ -62,8 +61,7 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
-    images,
-    videoUrl,
+    videos: Array.isArray(row.videos) ? (row.videos as string[]) : undefined,
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
     isHidden: (row.is_hidden as boolean) ?? false,
@@ -139,8 +137,7 @@ export interface PostInput {
   authorAvatarUrl?: string | null;
   userId?: string | null;
   isAnonymous: boolean;
-  images?: string[];
-  videoUrl?: string | null;
+  videos?: string[];
 }
 
 export interface CreatePostResult {
@@ -196,8 +193,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         author_dong: input.authorDong,
         author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
         is_anonymous: input.isAnonymous,
-        user_id: input.userId ?? null,
-        ...(input.videoUrl ? { video_url: input.videoUrl } : {}),
+        videos: input.videos && input.videos.length > 0 ? input.videos : null,
       })
       .select()
       .single());

@@ -28,14 +28,13 @@ export interface Post {
   content: string;
   author: string;
   authorDong: string;
-  authorAvatarUrl?: string | null;
-  authorUserId?: string | null;
+  authorAvatarUrl?: string;
   createdAt: string;
   viewCount: number;
   likeCount: number;
   commentCount: number;
   images?: string[];
-  videoUrl?: string;
+  videos?: string[];
   isPinned?: boolean;
   isHot?: boolean;
   isHidden?: boolean;

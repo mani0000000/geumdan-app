@@ -1,26 +1,17 @@
-const KEY = "myNickname";
-const DEFAULT = "검단주민";
+/**
+ * lib/identity.ts
+ * Lightweight user identity helpers using localStorage.
+ */
 
-function randomSuffix(): string {
-  return Math.random().toString(36).slice(2, 6);
-}
+const NICKNAME_KEY = 'gd_nickname';
+const DEFAULT_NICKNAME = '검단주민';
 
 export function getMyNickname(): string {
-  if (typeof window === "undefined") return DEFAULT;
-  try {
-    const v = localStorage.getItem(KEY);
-    if (v && v.trim()) return v;
-    const generated = `${DEFAULT}_${randomSuffix()}`;
-    localStorage.setItem(KEY, generated);
-    return generated;
-  } catch {
-    return DEFAULT;
-  }
+  if (typeof window === 'undefined') return DEFAULT_NICKNAME;
+  return localStorage.getItem(NICKNAME_KEY) || DEFAULT_NICKNAME;
 }
 
-export function setMyNickname(nickname: string) {
-  if (typeof window === "undefined") return;
-  const v = nickname.trim();
-  if (!v) return;
-  try { localStorage.setItem(KEY, v); } catch { /* ignore */ }
+export function setMyNickname(nickname: string): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(NICKNAME_KEY, nickname);
 }
