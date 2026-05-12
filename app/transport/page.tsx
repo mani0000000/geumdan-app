@@ -25,9 +25,9 @@ import {
   type RouteSearchResult,
 } from "@/lib/api/bus";
 import {
-  findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
-  estimateNextArrivals,
-  type SubwayStationWithDist, type SubwayArrival,
+  getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  estimateNextArrivals, currentDayType, dayTimetable,
+  type SubwayStationWithDist, type SubwayArrival, type SubwayDayType,
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation, NearbyStop } from "@/lib/api/bus";
 
@@ -551,11 +551,7 @@ function SubwayTimetableSheet({
   onClose: () => void;
 }) {
   const [dirTab, setDirTab] = useState<"up" | "down">("up");
-  // 일반/급행 토글 (급행 시간표가 별도로 있는 노선만 활성)
-  const hasExpress = !!station.timetable.expressIntervalMin;
-  const [typeTab, setTypeTab] = useState<"normal" | "express">("normal");
-  const useExpress = hasExpress && typeTab === "express";
-  const expressLabel = station.timetable.expressLabel ?? "급행";
+  const [dayTab, setDayTab] = useState<SubwayDayType>(currentDayType());
 
   function generateTimes(first: string, last: string, interval: number): string[] {
     if (!first || first === "-" || !interval) return [];
@@ -575,20 +571,16 @@ function SubwayTimetableSheet({
 
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
+  const today = dayTimetable(station.timetable, dayTab);
 
-  const tt = station.timetable;
-  const upFirst   = useExpress ? (tt.expressUpFirst   ?? tt.upFirst)   : tt.upFirst;
-  const upLast    = useExpress ? (tt.expressUpLast    ?? tt.upLast)    : tt.upLast;
-  const downFirst = useExpress ? (tt.expressDownFirst ?? tt.downFirst) : tt.downFirst;
-  const downLast  = useExpress ? (tt.expressDownLast  ?? tt.downLast)  : tt.downLast;
-  const curIntervalMin = useExpress ? (tt.expressIntervalMin ?? tt.intervalMin) : tt.intervalMin;
-
-  const upTimes   = generateTimes(upFirst,   upLast,   curIntervalMin);
-  const downTimes = generateTimes(downFirst, downLast, curIntervalMin);
+  const upTimes   = generateTimes(today.upFirst,   today.upLast,   today.intervalMin);
+  const downTimes = generateTimes(today.downFirst, today.downLast, today.intervalMin);
   const curTimes  = dirTab === "up" ? upTimes : downTimes;
-  const curDest   = dirTab === "up" ? tt.upDirection : tt.downDirection;
+  const curDest   = dirTab === "up" ? station.timetable.upDirection : station.timetable.downDirection;
+  const isToday   = dayTab === currentDayType();
 
   const isTimePast = (t: string) => {
+    if (!isToday) return false; // 다른 요일 탭에서는 "지난 열차" 음영 없음
     const [h, m] = t.split(":").map(Number);
     const tMin = h * 60 + m;
     if (tMin < 300 && nowMin > 1200) return false; // 새벽 시간은 미래로 처리
@@ -627,31 +619,26 @@ function SubwayTimetableSheet({
               <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
             </button>
           </div>
-          <p className="text-[12px] text-[#86868b] mt-2 flex items-center gap-1">
-            <Clock size={12} />
-            배차 {useExpress
-              ? `${tt.expressIntervalMin}분 (${expressLabel})`
-              : tt.intervalDisplay ?? `${tt.intervalMin}분`} 기준 추정 시간표
+          <p className="text-[11px] text-[#86868b] mt-2 flex items-center gap-1">
+            <Clock size={11} />
+            배차 {today.intervalDisplay ?? `${today.intervalMin}분`} 기준 추정 시간표
           </p>
         </div>
 
-        {/* 일반/급행(직통) 탭 — 급행 시간표가 별도로 있는 노선에만 표시 */}
-        {hasExpress && (
-          <div className="shrink-0 flex border-b border-[#f5f5f7]">
-            {([
-              { v: "normal" as const,  label: "일반열차", color: "#0071e3" },
-              { v: "express" as const, label: expressLabel, color: expressLabel === "직통" ? "#7C3AED" : "#E65100" },
-            ]).map(opt => (
-              <button key={opt.v} onClick={() => setTypeTab(opt.v)}
-                className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${
-                  typeTab === opt.v ? "" : "text-[#86868b] border-transparent"
-                }`}
-                style={typeTab === opt.v ? { color: opt.color, borderColor: opt.color } : undefined}>
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* 요일 탭 (평일 / 휴일) */}
+        <div className="shrink-0 flex border-b border-[#f5f5f7] bg-[#fafafa]">
+          {(["weekday", "holiday"] as const).map(day => (
+            <button key={day} onClick={() => setDayTab(day)}
+              className={`flex-1 h-9 text-[12px] font-semibold transition-colors ${
+                dayTab === day ? "text-[#1d1d1f] bg-white" : "text-[#86868b]"
+              }`}>
+              {day === "weekday" ? "평일" : "토·일·공휴일"}
+              {dayTab === day && currentDayType() === day && (
+                <span className="ml-1 text-[10px] text-[#0071e3]">·오늘</span>
+              )}
+            </button>
+          ))}
+        </div>
 
         {/* 방면 탭 */}
         <div className="shrink-0 flex border-b border-[#f5f5f7]">
@@ -668,11 +655,15 @@ function SubwayTimetableSheet({
         {/* 시간표 그리드 */}
         <div className="overflow-y-auto flex-1 px-4 py-4">
           {curTimes.length === 0 ? (
-            <p className="text-[13px] text-[#86868b] text-center py-10">시간표 정보 없음</p>
+            <p className="text-[13px] text-[#86868b] text-center py-10">
+              {dirTab === "up" && station.timetable.upDirection === "송도달빛축제공원" && today.upFirst === "-"
+                ? "이 방향은 종착역입니다"
+                : "시간표 정보 없음"}
+            </p>
           ) : (
             <>
-              {/* 다음 열차 안내 */}
-              {nextIdx >= 0 && (
+              {/* 다음 열차 안내 (오늘 요일 탭에서만) */}
+              {isToday && nextIdx >= 0 && (
                 <div className="bg-[#e8f1fd] rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-[11px] text-[#0071e3] font-medium">다음 열차</p>
@@ -1630,18 +1621,29 @@ export default function TransportPage() {
                   )}
                 </div>
 
-                {st.timetable.upFirst !== "-" && (
-                  <div className="flex gap-2 mt-3">
-                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 첫차/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                {(() => {
+                  const t = dayTimetable(st.timetable);
+                  const dayLabel = currentDayType() === "holiday" ? "휴일" : "평일";
+                  return (
+                    <div className="mt-3">
+                      <p className="text-[10px] text-[#86868b] mb-1.5">{dayLabel} 시간표</p>
+                      <div className="flex gap-2">
+                        {t.upFirst !== "-" && (
+                          <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                            <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 첫차/막차</p>
+                            <p className="text-[12px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+                          </div>
+                        )}
+                        {t.downFirst !== "-" && (
+                          <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                            <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 첫차/막차</p>
+                            <p className="text-[12px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 첫차/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </>
@@ -2054,17 +2056,16 @@ export default function TransportPage() {
                       <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
                         <span className="text-[13px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-white font-extrabold text-[18px] leading-tight truncate">{st.displayName}</p>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
-                            <Navigation size={11} />{distLabel(st.distM)}
-                          </span>
-                          <span className="text-white/50">·</span>
-                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-medium">
-                            <Clock size={11} />시간표 보기
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {(() => {
+                          const t = dayTimetable(st.timetable);
+                          return t.intervalMin > 0 ? (
+                            <p className="text-[12px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</p>
+                          ) : null;
+                        })()}
+                        <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
+                          <Clock size={10} />시간표
+                        </span>
                       </div>
                     </button>
                     {!st.planned && (
@@ -2125,27 +2126,43 @@ export default function TransportPage() {
                                 {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
                               </span>
                             </div>
-                          )) : (
-                            <span className="text-[12px] text-[#86868b]">정보 없음</span>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                            <ArrivalBadge min={a.arrivalMin} live />
+                          </div>
+                        ))}
+                      </>
+                      );
+                    })()}
 
-                  {/* 첫차/막차 */}
-                  {st.timetable.upFirst !== "-" && (
-                    <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
-                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-                        <p className="text-[11px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
-                        <p className="text-[13px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
-                      </div>
-                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-                        <p className="text-[11px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
-                        <p className="text-[13px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
-                      </div>
-                    </div>
-                  )}
+                    {/* 첫차/막차 (오늘 요일 기준) */}
+                    {(() => {
+                      const t = dayTimetable(st.timetable);
+                      const dayLabel = currentDayType() === "holiday" ? "휴일" : "평일";
+                      if (t.upFirst === "-" && t.downFirst === "-") return null;
+                      return (
+                        <div className="pt-1">
+                          <p className="text-[10px] text-[#86868b] mb-1.5 px-1">{dayLabel} 첫차/막차</p>
+                          <div className="flex gap-2">
+                            {t.upFirst !== "-" && (
+                              <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                                <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 방면</p>
+                                <p className="text-[12px] font-bold text-[#1d1d1f]">
+                                  {t.upFirst} / {t.upLast}
+                                </p>
+                              </div>
+                            )}
+                            {t.downFirst !== "-" && (
+                              <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                                <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 방면</p>
+                                <p className="text-[12px] font-bold text-[#1d1d1f]">
+                                  {t.downFirst} / {t.downLast}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
               );
             })}
