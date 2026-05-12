@@ -56,6 +56,58 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
+// 이미지 추출 우선순위:
+//   1) <media:thumbnail url>
+//   2) <media:content url medium=image | type=image/* | 확장자가 이미지>
+//   3) <enclosure url type=image/*>
+//   4) <content:encoded> 안의 첫 <img src>
+//   5) <description> 안의 첫 <img src>
+// 페이지 크롤링(og:image)은 라우트에서 하지 않고 Supabase sync 배치에서만 수행한다.
+function firstImgSrc(html: string): string | undefined {
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?.[1];
+}
+
+function extractMediaImage(item: string): string | undefined {
+  const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
+  if (thumb?.[1]) return thumb[1];
+
+  const mediaContents = item.matchAll(/<media:content\b([^>]*)\/?>(?:[\s\S]*?<\/media:content>)?/gi);
+  for (const m of mediaContents) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (medium === "image" || (type && type.startsWith("image/")) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
+      return url;
+    }
+  }
+
+  const enclosures = item.matchAll(/<enclosure\b([^>]*)\/?>/gi);
+  for (const m of enclosures) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (type?.startsWith("image/")) return url;
+  }
+
+  const ce = item.match(/<content:encoded[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
+  if (ce?.[1]) {
+    const src = firstImgSrc(decodeEntities(ce[1]));
+    if (src) return src;
+  }
+
+  const dm = item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+  if (dm?.[1]) {
+    const src = firstImgSrc(decodeEntities(dm[1]));
+    if (src) return src;
+  }
+
+  return undefined;
+}
+
 function parseRssXml(xml: string, prefix: string): NewsArticle[] {
   if (!xml.includes("<item>")) return [];
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
@@ -66,6 +118,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
       const desc  = stripXml(tagVal(raw, "description")).slice(0, 160);
       const pub   = tagVal(raw, "pubDate");
       const src   = stripXml(tagVal(raw, "source")) || extractSource(title);
+      const thumb = extractMediaImage(raw);
       return {
         id: `${prefix}-${i}`,
         title,
@@ -73,7 +126,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
         source: src,
         publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
         url: link || "#",
-        thumbnail: undefined,
+        thumbnail: thumb,
         type: "뉴스" as const,
       };
     })
@@ -132,32 +185,32 @@ export async function GET(request: NextRequest) {
   const queries = QUERIES[category];
   const t0 = Date.now();
 
-  const results = await Promise.all(
-    queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
-  );
+  let articles: NewsArticle[] = [];
+  let source = "supabase";
 
-  const seen = new Set<string>();
-  const merged: NewsArticle[] = [];
-  for (const arr of results) {
-    for (const a of arr) {
-      const key = a.url !== "#" ? a.url : a.title;
-      if (!seen.has(key)) {
-        seen.add(key);
-        merged.push(a);
+  // Supabase 우선: 배치 sync 단계에서 og:image까지 채워두므로 썸네일 노출에 유리
+  const fromDb = await fetchSupabaseFallback();
+  if (fromDb.length > 0) {
+    articles = fromDb;
+  } else {
+    const results = await Promise.all(
+      queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
+    );
+
+    const seen = new Set<string>();
+    const merged: NewsArticle[] = [];
+    for (const arr of results) {
+      for (const a of arr) {
+        const key = a.url !== "#" ? a.url : a.title;
+        if (!seen.has(key)) {
+          seen.add(key);
+          merged.push(a);
+        }
       }
     }
-  }
-  merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-
-  let articles = merged.slice(0, 30);
-  let source = "google-news-rss";
-
-  if (articles.length === 0) {
-    const fallback = await fetchSupabaseFallback();
-    if (fallback.length > 0) {
-      articles = fallback;
-      source = "supabase";
-    }
+    merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
+    articles = merged.slice(0, 30);
+    source = "google-news-rss";
   }
 
   return Response.json(
