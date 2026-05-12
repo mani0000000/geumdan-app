@@ -6,12 +6,16 @@
 import { supabase } from "@/lib/supabase";
 
 // ── 타입 ────────────────────────────────────────────────────────────
+export type UserStatus = "active" | "suspended" | "withdrawn";
+
 export interface UserProfile {
   id: string;
   nickname: string;
   dong: string;
   intro: string;
+  avatar_url: string | null;
   level: "새싹" | "주민" | "이웃" | "터줏대감";
+  status: UserStatus;
   post_count: number;
   comment_count: number;
   like_count: number;
@@ -87,7 +91,9 @@ const DEFAULT_PROFILE: Omit<UserProfile, "id"> = {
   nickname: "검단주민",
   dong: "당하동",
   intro: "",
+  avatar_url: null,
   level: "새싹",
+  status: "active",
   post_count: 0,
   comment_count: 0,
   like_count: 0,
@@ -151,7 +157,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     try {
       const { data } = await supabase
         .from("users")
-        .select("id,nickname,dong,intro,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
+        .select("id,nickname,dong,intro,avatar_url,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
         .eq("id", uid)
         .single();
       if (data) {
@@ -174,7 +180,7 @@ export async function getUserProfile(): Promise<UserProfile> {
 }
 
 export async function updateUserProfile(
-  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro">>
+  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro" | "avatar_url">>
 ): Promise<void> {
   const uid = await getOrCreateUserId();
 
@@ -188,6 +194,19 @@ export async function updateUserProfile(
   const cached = lsGet(PROFILE_KEY);
   const prev = cached ? (JSON.parse(cached) as UserProfile) : { id: uid, ...DEFAULT_PROFILE };
   lsSet(PROFILE_KEY, JSON.stringify({ ...prev, ...patch }));
+}
+
+// ── 마지막 활동 시간 갱신 ────────────────────────────────────────────
+//   페이지 진입 / 글·댓글 작성 시 호출 (실패 무시)
+export async function touchLastActive(): Promise<void> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) return;
+  try {
+    await supabase
+      .from("users")
+      .update({ last_active_at: new Date().toISOString() })
+      .eq("id", uid);
+  } catch { /* silent */ }
 }
 
 // ── 포인트 추가 (내역 기록 포함) ──────────────────────────────────────
@@ -350,6 +369,28 @@ export async function getMyCommentCount(): Promise<number> {
     .select("*", { count: "exact", head: true })
     .eq("user_id", uid);
   return count ?? 0;
+}
+
+// ── 마이페이지 요약 (글/댓글/즐겨찾기 합계) ──────────────────────
+export interface MyPageSummary {
+  postCount: number;
+  commentCount: number;
+  favoriteCount: number;
+}
+
+export async function getMyPageSummary(): Promise<MyPageSummary> {
+  const [postCount, commentCount, buses, stores, apts] = await Promise.all([
+    getMyPostCount(),
+    getMyCommentCount(),
+    getFavoriteBuses(),
+    getFavoriteStores(),
+    getFavoriteApts(),
+  ]);
+  return {
+    postCount,
+    commentCount,
+    favoriteCount: buses.length + stores.length + apts.length,
+  };
 }
 
 // ── 쿠폰 ─────────────────────────────────────────────────────────────

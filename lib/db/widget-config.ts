@@ -26,6 +26,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "places",     label: "가볼만한곳",  enabled: true, sort_order: 15 },
   { id: "sports",     label: "스포츠 경기", enabled: true, sort_order: 16 },
   { id: "tides",      label: "서해안 조석·해루질·낚시", enabled: true, sort_order: 17 },
+  { id: "gas",        label: "주유소 가격",  enabled: true, sort_order: 18 },
 ];
 
 export async function fetchWidgetConfig(): Promise<WidgetConfig[]> {

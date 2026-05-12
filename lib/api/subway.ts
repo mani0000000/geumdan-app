@@ -27,7 +27,15 @@ export interface SubwayArrival {
   trainTypeName?: string;  // "직통", "급행" 등
 }
 
-export type SubwayApiType = "ic1" | "arex" | "seoul9" | "planned";
+// 인천교통공사 IcSubwayInfoService 는 1·2호선을 동일 엔드포인트로 제공한다.
+// "ic1"/"ic2" 는 호선 표시 구분이며, 모두 동일 엔드포인트로 호출된다.
+export type SubwayApiType = "ic1" | "ic2" | "arex" | "seoul5" | "seoul9" | "seohae" | "gimpogold" | "planned";
+
+// 환승역 통합 그룹 — 같은 groupKey의 entry는 환승 카드로 묶어서 표시
+// 같은 좌표·같은 역사를 공유하는 노선들에만 적용한다.
+export const GIMPO_AIRPORT_GROUP = "gimpoair";
+export const GYEYANG_GROUP = "gyeyang";
+export const GEOMAM_GROUP = "geomam";
 
 export type SubwayDayType = "weekday" | "holiday";
 
@@ -47,7 +55,11 @@ export interface SubwayStationEntry {
   lng: number;
   apiType: SubwayApiType;
   stationCode: string;
+  /** TAGO SubwayInfoService 호출용 subwayStationId (MTRS 접두). 서울/공항철도/서해선/김포골드라인용 — 미제공 시 시간표 폴백 */
+  tagoStationId?: string;
   planned?: boolean;
+  groupKey?: string; // 같은 그룹(예: 김포공항역의 여러 노선)을 통합 카드로 묶을 때 사용
+  shortLineLabel?: string; // 통합 카드 노선 탭에 표시할 짧은 라벨 (예: "5호선", "공항철도")
   timetable: {
     upDirection: string;   // 상행 종착역 이름 (예: "서울역")
     downDirection: string; // 하행 종착역 이름 (예: "인천공항")
@@ -104,8 +116,9 @@ const STATION_DB: SubwayStationEntry[] = [
     id: "arex-geomam",
     displayName: "검암역",
     line: "공항철도",
+    shortLineLabel: "공항철도",
     lineColor: "#0065B3",
-    lat: 37.5575, lng: 126.6721,
+    lat: 37.5569, lng: 126.6719,
     apiType: "arex",
     stationCode: "검암",
     timetable: {
@@ -117,8 +130,9 @@ const STATION_DB: SubwayStationEntry[] = [
   },
   {
     id: "arex-gyeyang",
-    displayName: "계양역(공항철도)",
+    displayName: "계양역",
     line: "공항철도",
+    shortLineLabel: "공항철도",
     lineColor: "#0065B3",
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
@@ -134,9 +148,10 @@ const STATION_DB: SubwayStationEntry[] = [
   // ── 서울 9호선 ────────────────────────────────────────────────
   // 출처: https://korailinfo.com/bbs/board.php?bo_table=line09&wr_id=37
   {
-    id: "seoul9-gimpo",
-    displayName: "김포공항역(9호선)",
+    id: "gimpoair-9",
+    displayName: "김포공항역",
     line: "9호선",
+    shortLineLabel: "9호선",
     lineColor: "#BDB048",
     lat: 37.5625, lng: 126.8013,
     apiType: "seoul9",
@@ -154,8 +169,9 @@ const STATION_DB: SubwayStationEntry[] = [
   // 상행(up) = 송도달빛축제공원 방면, 하행(down) = 검단호수공원 방면
   {
     id: "ic1-gyeyang",
-    displayName: "계양역(인천1호선)",
+    displayName: "계양역",
     line: "인천1호선",
+    shortLineLabel: "인천1호선",
     lineColor: "#759CCE",
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
@@ -219,7 +235,7 @@ const STATION_DB: SubwayStationEntry[] = [
     displayName: "신검단중앙역",
     line: "인천1호선",
     lineColor: "#759CCE",
-    lat: 37.5930, lng: 126.7095,
+    lat: 37.6048, lng: 126.7024,
     apiType: "ic1",
     stationCode: "I050",
     timetable: {
@@ -234,7 +250,7 @@ const STATION_DB: SubwayStationEntry[] = [
     displayName: "검단호수공원역",
     line: "인천1호선",
     lineColor: "#759CCE",
-    lat: 37.5870, lng: 126.7025,
+    lat: 37.6025, lng: 126.6881,
     apiType: "ic1",
     stationCode: "I051",
     timetable: {
@@ -250,7 +266,7 @@ const STATION_DB: SubwayStationEntry[] = [
     displayName: "아라역",
     line: "인천1호선",
     lineColor: "#759CCE",
-    lat: 37.5778, lng: 126.6932,
+    lat: 37.5922, lng: 126.7133,
     apiType: "ic1",
     stationCode: "I052",
     timetable: {
@@ -267,11 +283,11 @@ export function getAllSubwayStations(): SubwayStationWithDist[] {
   return STATION_DB.filter(st => !st.planned).map(st => ({ ...st, distM: 0 }));
 }
 
-// ── GPS 기반 인근 역 탐색 (미개통 제외) ──────────────────────
+// ── GPS 기반 거리 계산 + 가까운 순 정렬 (미개통 제외, 반경 제한 없음) ──
 export function findNearbySubwayStations(
   lat: number,
   lng: number,
-  radiusM = 10000,
+  radiusM = Infinity,
 ): SubwayStationWithDist[] {
   return STATION_DB
     .filter(st => !st.planned)
@@ -328,33 +344,36 @@ async function fetchIc1Arrivals(stationCode: string): Promise<SubwayArrival[]> {
   }
 }
 
-// ── 서울 열린데이터 지하철 공통 ───────────────────────────────
-async function fetchSeoulSubwayArrivals(
-  stationName: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  lineFilter: (item: any) => boolean,
-): Promise<SubwayArrival[]> {
+// ── TAGO 실시간 도착정보 (제공 노선만) ────────────────────────
+//   ※ TAGO SubwayInfoService 가 실시간을 미제공하면 빈 배열 → 시간표 폴백.
+async function fetchTagoArrivals(subwayStationId: string): Promise<SubwayArrival[]> {
+  if (!subwayStationId) return [];
   try {
     const res = await fetch(
-      `/api/subway?type=seoul&stationName=${encodeURIComponent(stationName)}`,
+      `/api/subway?type=tagoArvl&subwayStationId=${encodeURIComponent(subwayStationId)}`,
       { signal: AbortSignal.timeout(10000) },
     );
     if (!res.ok) return [];
     const data = await res.json();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const list: any[] = data?.realtimeArrivalList ?? [];
-    return list.filter(lineFilter).map(item => {
-      const typeStr = String(item.btrainSttus ?? "");
+    const raw = data?.response?.body?.items?.item as any[] | undefined;
+    if (!raw) return [];
+    const arr = Array.isArray(raw) ? raw : [raw];
+    return arr.map(item => {
+      const upDown = String(item.upDownTypeCode ?? item.upDown ?? "").toUpperCase();
+      const direction = upDown === "U" ? "상행" as const : "하행" as const;
+      const arrTime = Number(item.arrTime ?? item.arvlTime ?? 0);
+      const typeStr = String(item.trainTypeNm ?? item.trainType ?? "");
       const isExpress = typeStr.includes("급행") || typeStr.includes("직통");
       const trainTypeName = typeStr.includes("직통") ? "직통"
         : typeStr.includes("급행") ? "급행"
         : undefined;
       return {
-        direction: String(item.updnLine ?? "").includes("상") ? "상행" as const : "하행" as const,
-        terminalStation: String(item.bstatnNm ?? "종착"),
-        arrivalMin: Math.max(0, Math.round(Number(item.barvlDt ?? 0) / 60)),
-        trainNo: String(item.btrainNo ?? ""),
-        currentStation: String(item.arvlMsg3 ?? ""),
+        direction,
+        terminalStation: String(item.endSubwayStationNm ?? item.terminalSubwayStationNm ?? "종착"),
+        arrivalMin: Math.max(0, Math.round(arrTime / 60)),
+        trainNo: String(item.trainNo ?? ""),
+        currentStation: String(item.subwayStationNm ?? ""),
         isExpress,
         trainTypeName,
       };
@@ -364,48 +383,38 @@ async function fetchSeoulSubwayArrivals(
   }
 }
 
-async function fetchArexArrivals(stationName: string): Promise<SubwayArrival[]> {
-  // 직통열차(급행)는 검암·계양 등 중간역에 정차하지 않으므로 필터링
-  const NON_STOP_STATIONS = new Set(["검암", "계양", "청라국제도시", "영종도", "영종"]);
-  const skipExpress = NON_STOP_STATIONS.has(stationName);
-
-  const arrivals = await fetchSeoulSubwayArrivals(stationName, item =>
-    String(item.trainLineNm ?? "").includes("공항철도") ||
-    String(item.subwayId ?? "") === "1065"
-  );
-  return skipExpress ? arrivals.filter(a => !a.isExpress) : arrivals;
-}
-
-async function fetchSeoul9Arrivals(stationName: string): Promise<SubwayArrival[]> {
-  return fetchSeoulSubwayArrivals(stationName, item =>
-    String(item.trainLineNm ?? "").includes("9호선") ||
-    String(item.subwayId ?? "") === "1009"
-  );
-}
-
 // ── 공통 도착정보 조회 ────────────────────────────────────────
 export async function fetchSubwayArrivals(
   station: SubwayStationWithDist,
 ): Promise<SubwayArrival[]> {
   // 운행 시간 외 → 시간표 추정으로 폴백 (스테일 실시간 데이터 방지)
   if (!isInServiceHours(station.timetable)) return [];
-  if (station.apiType === "ic1")    return fetchIc1Arrivals(station.stationCode);
-  if (station.apiType === "arex")   return fetchArexArrivals(station.stationCode);
-  if (station.apiType === "seoul9") return fetchSeoul9Arrivals(station.stationCode);
+  // 인천 1·2호선은 인천교통공사 실시간 (검증된 동작 노선)
+  if (station.apiType === "ic1" || station.apiType === "ic2") {
+    return fetchIc1Arrivals(station.stationCode);
+  }
+  // 그 외 노선은 TAGO 실시간 시도 → 미제공이면 시간표 폴백
+  if (station.tagoStationId) return fetchTagoArrivals(station.tagoStationId);
   return [];
 }
 
 // ── 시간표 기반 다음 열차 추정 (실시간 API 미설정 시 폴백) ────
+// perDirection: 방향당 반환할 열차 수 (기본 1대)
 export function estimateNextArrivals(
   timetable: SubwayStationEntry["timetable"],
+  perDirection = 1,
 ): SubwayArrival[] {
   const today = dayTimetable(timetable);
   if (!today.intervalMin) return [];
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const calc = (first: string, last: string, direction: "상행" | "하행", destName: string): SubwayArrival | null => {
-    if (!first || first === "-") return null;
+  const calc = (
+    first: string, last: string, intervalMin: number,
+    direction: "상행" | "하행", destName: string,
+    isExpress: boolean, expressLabel?: string,
+  ): SubwayArrival[] => {
+    if (!first || first === "-" || !intervalMin) return [];
     const [fH, fM] = first.split(":").map(Number);
     const [lH, lM] = last.split(":").map(Number);
     const firstMin = fH * 60 + fM;
@@ -415,11 +424,20 @@ export function estimateNextArrivals(
     let nowAdj = nowMin;
     if (nowAdj + 1440 < firstMin) nowAdj += 1440;
 
+    const trainTypeName = isExpress ? expressLabel : undefined;
+
+    // 첫차 전: 첫차까지 2시간 이내일 때만 안내
     if (nowAdj < firstMin) {
-      if (firstMin - nowAdj > 120) return null;
-      return { direction, terminalStation: destName, arrivalMin: firstMin - nowAdj, trainNo: "", currentStation: "시간표", isExpress: false };
+      if (firstMin - nowAdj > 120) return [];
+      const out: SubwayArrival[] = [];
+      for (let i = 0; i < perDirection; i++) {
+        const arr = firstMin - nowAdj + i * intervalMin;
+        if (firstMin + i * intervalMin > lastMin) break;
+        out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress, trainTypeName });
+      }
+      return out;
     }
-    if (nowAdj > lastMin) return null;
+    if (nowAdj > lastMin) return [];
 
     const nextOffset = today.intervalMin - ((nowAdj - firstMin) % today.intervalMin);
     return {
