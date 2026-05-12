@@ -1,10 +1,17 @@
 /**
  * lib/api/subway.ts
- * 인천1호선 + 공항철도 + 서울9호선 실시간 도착정보
+ * 인천1호선 + 공항철도 + 서울9호선 실시간 도착정보 + 시간표
  *
  * 서버 라우트 /api/subway 를 통해 공공API를 호출한다.
  *   ic1   — 인천교통공사 도시철도 (공공데이터포털 6280000, DATA_GO_KR_API_KEY)
  *   seoul — 서울 열린데이터광장 (공항철도·9호선 도착정보, SEOUL_SUBWAY_KEY)
+ *
+ * 시간표 출처(2026-05 기준):
+ *   인천1호선  https://www.ictr.or.kr/main/railway/guidance/timetable1_se.jsp
+ *   공항철도   https://www.airportrailroad.com/train/normal/info/{역코드}/0|1
+ *   9호선      https://www.metro9.co.kr / korailinfo.com
+ *
+ *   공식 시간표가 평일 / 휴일(토·일·공휴일) 2분류로만 공시되므로 본 모듈도 2분류만 다룬다.
  */
 
 import { haversineM } from "./bus";
@@ -22,6 +29,15 @@ export interface SubwayArrival {
 
 export type SubwayApiType = "ic1" | "arex" | "seoul9" | "planned";
 
+export type SubwayDayType = "weekday" | "holiday";
+
+export interface DayTimetable {
+  upFirst: string; upLast: string;
+  downFirst: string; downLast: string;
+  intervalMin: number;
+  intervalDisplay?: string; // 표시용 배차 문자열 (예: "5~9분") — 불규칙 배차 시 사용
+}
+
 export interface SubwayStationEntry {
   id: string;
   displayName: string;
@@ -33,12 +49,10 @@ export interface SubwayStationEntry {
   stationCode: string;
   planned?: boolean;
   timetable: {
-    upFirst: string; upLast: string;
-    downFirst: string; downLast: string;
-    intervalMin: number;
-    intervalDisplay?: string; // 표시용 배차 문자열 (예: "6~15분") — 불규칙 배차 시 사용
     upDirection: string;   // 상행 종착역 이름 (예: "서울역")
     downDirection: string; // 하행 종착역 이름 (예: "인천공항")
+    weekday: DayTimetable; // 평일
+    holiday: DayTimetable; // 휴일(토·일·공휴일)
   };
 }
 
@@ -46,9 +60,46 @@ export interface SubwayStationWithDist extends SubwayStationEntry {
   distM: number;
 }
 
+// ── 한국 공휴일 (간이) ────────────────────────────────────────
+// 공식 시간표가 토·일·공휴일을 모두 "휴일"로 동일 취급하므로 주요 공휴일만 등록
+const KR_HOLIDAYS_2026 = new Set([
+  "2026-01-01", // 신정
+  "2026-02-16", "2026-02-17", "2026-02-18", // 설 연휴
+  "2026-03-01", "2026-03-02", // 삼일절 대체
+  "2026-05-05", // 어린이날
+  "2026-05-25", // 부처님오신날 대체
+  "2026-06-03", // 21대 대선
+  "2026-06-06", // 현충일
+  "2026-08-15", // 광복절
+  "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", // 추석 연휴
+  "2026-10-03", // 개천절
+  "2026-10-05", // 개천절 대체
+  "2026-10-09", // 한글날
+  "2026-12-25", // 성탄절
+]);
+
+export function currentDayType(now: Date = new Date()): SubwayDayType {
+  const day = now.getDay(); // 0=일, 6=토
+  if (day === 0 || day === 6) return "holiday";
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return KR_HOLIDAYS_2026.has(`${yyyy}-${mm}-${dd}`) ? "holiday" : "weekday";
+}
+
+export function dayTimetable(
+  t: SubwayStationEntry["timetable"],
+  dayType: SubwayDayType = currentDayType(),
+): DayTimetable {
+  return dayType === "holiday" ? t.holiday : t.weekday;
+}
+
 // ── 역 데이터베이스 ───────────────────────────────────────────
+// 인천1호선: 상행 = 송도달빛축제공원 방면(남쪽 종점), 하행 = 검단호수공원 방면(북쪽 종점)
+//   (실시간 도착정보 API의 UPDOWN 라벨 및 ICTR 시각표 컬럼과 정합)
 const STATION_DB: SubwayStationEntry[] = [
-  // 공항철도 (AREX)
+  // ── 공항철도 (AREX) ──────────────────────────────────────────
+  // 출처: https://www.airportrailroad.com/train/normal/info/070/0 (평일/휴일 동일)
   {
     id: "arex-geomam",
     displayName: "검암역",
@@ -57,7 +108,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5575, lng: 126.6721,
     apiType: "arex",
     stationCode: "검암",
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: {
+      upDirection: "서울역",
+      downDirection: "인천공항2터미널",
+      weekday: { upFirst: "05:30", upLast: "00:04", downFirst: "05:08", downLast: "00:00", intervalMin: 10, intervalDisplay: "6~15분" },
+      holiday: { upFirst: "05:30", upLast: "00:04", downFirst: "05:08", downLast: "00:00", intervalMin: 10, intervalDisplay: "6~15분" },
+    },
   },
   {
     id: "arex-gyeyang",
@@ -67,10 +123,16 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: {
+      upDirection: "서울역",
+      downDirection: "인천공항2터미널",
+      weekday: { upFirst: "05:36", upLast: "00:10", downFirst: "05:49", downLast: "23:51", intervalMin: 10, intervalDisplay: "6~15분" },
+      holiday: { upFirst: "05:36", upLast: "00:10", downFirst: "05:49", downLast: "23:51", intervalMin: 10, intervalDisplay: "6~15분" },
+    },
   },
 
-  // 서울 9호선
+  // ── 서울 9호선 ────────────────────────────────────────────────
+  // 출처: https://korailinfo.com/bbs/board.php?bo_table=line09&wr_id=37
   {
     id: "seoul9-gimpo",
     displayName: "김포공항역(9호선)",
@@ -79,10 +141,17 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5625, lng: 126.8013,
     apiType: "seoul9",
     stationCode: "김포공항",
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50", intervalMin: 9, upDirection: "중앙보훈병원", downDirection: "개화" },
+    timetable: {
+      upDirection: "중앙보훈병원",
+      downDirection: "개화",
+      weekday: { upFirst: "05:35", upLast: "23:44", downFirst: "05:41", downLast: "00:57", intervalMin: 6, intervalDisplay: "3~12분" },
+      holiday: { upFirst: "05:30", upLast: "22:53", downFirst: "05:40", downLast: "00:07", intervalMin: 8, intervalDisplay: "6~12분" },
+    },
   },
 
-  // 인천1호선
+  // ── 인천1호선 ────────────────────────────────────────────────
+  // 출처: https://www.ictr.or.kr/main/railway/guidance/timetable1_se.jsp
+  // 상행(up) = 송도달빛축제공원 방면, 하행(down) = 검단호수공원 방면
   {
     id: "ic1-gyeyang",
     displayName: "계양역(인천1호선)",
@@ -91,7 +160,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
     stationCode: "I023",
-    timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:39", upLast: "00:39", downFirst: "05:42", downLast: "00:52", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:39", upLast: "00:39", downFirst: "05:42", downLast: "00:52", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
   {
     id: "ic1-bakchon",
@@ -101,7 +175,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5513, lng: 126.7432,
     apiType: "ic1",
     stationCode: "I024",
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:25", downLast: "23:45", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:30", upLast: "00:44", downFirst: "05:37", downLast: "00:47", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:33", upLast: "00:44", downFirst: "05:37", downLast: "00:47", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
   {
     id: "ic1-imhak",
@@ -111,7 +190,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5441, lng: 126.7380,
     apiType: "ic1",
     stationCode: "I025",
-    timetable: { upFirst: "05:39", upLast: "23:59", downFirst: "05:23", downLast: "23:43", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:32", upLast: "00:46", downFirst: "05:35", downLast: "00:45", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:35", upLast: "00:46", downFirst: "05:35", downLast: "00:45", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
   {
     id: "ic1-gyesan",
@@ -121,10 +205,15 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5389, lng: 126.7285,
     apiType: "ic1",
     stationCode: "I026",
-    timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:34", upLast: "00:48", downFirst: "05:33", downLast: "00:43", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:37", upLast: "00:48", downFirst: "05:33", downLast: "00:43", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
 
-  // 인천1호선 검단 연장 구간 — 검단호수공원역이 현재 하행 종점
+  // 인천1호선 검단연장 구간 (2025.6.28 개통, 운영 중)
   {
     id: "gd-singeumdan",
     displayName: "신검단중앙역",
@@ -133,7 +222,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5930, lng: 126.7095,
     apiType: "ic1",
     stationCode: "I050",
-    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:32", upLast: "00:32", downFirst: "05:49", downLast: "00:59", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:32", upLast: "00:32", downFirst: "05:42", downLast: "00:59", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
   {
     id: "gd-gdlake",
@@ -143,7 +237,13 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5870, lng: 126.7025,
     apiType: "ic1",
     stationCode: "I051",
-    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "-", downLast: "-", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      // 북쪽 종점 — 검단호수공원 방면(down) 시간표 없음
+      weekday: { upFirst: "05:30", upLast: "00:30", downFirst: "-", downLast: "-", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:30", upLast: "00:30", downFirst: "-", downLast: "-", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
   {
     id: "gd-ara",
@@ -153,7 +253,12 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5778, lng: 126.6932,
     apiType: "ic1",
     stationCode: "I052",
-    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
+    timetable: {
+      upDirection: "송도달빛축제공원",
+      downDirection: "검단호수공원",
+      weekday: { upFirst: "05:34", upLast: "00:35", downFirst: "05:47", downLast: "00:57", intervalMin: 8, intervalDisplay: "5~9분" },
+      holiday: { upFirst: "05:34", upLast: "00:35", downFirst: "05:47", downLast: "00:57", intervalMin: 10, intervalDisplay: "9~10분" },
+    },
   },
 ];
 
@@ -180,12 +285,15 @@ export function hasSubwayKey() { return true; }
 
 // 운행 시간 내인지 확인 (종료 후 스테일 데이터 방지)
 function isInServiceHours(timetable: SubwayStationEntry["timetable"]): boolean {
-  if (timetable.upFirst === "-") return true;
+  const today = dayTimetable(timetable);
+  if (today.upFirst === "-" && today.downFirst === "-") return true;
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
   const parse = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
-  const firstMin = parse(timetable.upFirst);
-  let lastMin = parse(timetable.downLast);
+  const firstStr = today.upFirst !== "-" ? today.upFirst : today.downFirst;
+  const lastStr  = today.downLast !== "-" ? today.downLast : today.upLast;
+  const firstMin = parse(firstStr);
+  let lastMin = parse(lastStr);
   if (lastMin < firstMin) lastMin += 1440;
   // 첫차 20분 전 ~ 막차 30분 후 사이
   const start = firstMin - 20;
@@ -291,7 +399,8 @@ export async function fetchSubwayArrivals(
 export function estimateNextArrivals(
   timetable: SubwayStationEntry["timetable"],
 ): SubwayArrival[] {
-  if (!timetable.intervalMin || timetable.upFirst === "-") return [];
+  const today = dayTimetable(timetable);
+  if (!today.intervalMin) return [];
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
@@ -312,11 +421,11 @@ export function estimateNextArrivals(
     }
     if (nowAdj > lastMin) return null;
 
-    const nextOffset = timetable.intervalMin - ((nowAdj - firstMin) % timetable.intervalMin);
+    const nextOffset = today.intervalMin - ((nowAdj - firstMin) % today.intervalMin);
     return {
       direction,
       terminalStation: destName,
-      arrivalMin: nextOffset >= timetable.intervalMin ? 0 : nextOffset,
+      arrivalMin: nextOffset >= today.intervalMin ? 0 : nextOffset,
       trainNo: "",
       currentStation: "시간표",
       isExpress: false,
@@ -324,8 +433,8 @@ export function estimateNextArrivals(
   };
 
   const results: SubwayArrival[] = [];
-  const up   = calc(timetable.upFirst,   timetable.upLast,   "상행", timetable.upDirection);
-  const down = calc(timetable.downFirst, timetable.downLast, "하행", timetable.downDirection);
+  const up   = calc(today.upFirst,   today.upLast,   "상행", timetable.upDirection);
+  const down = calc(today.downFirst, today.downLast, "하행", timetable.downDirection);
   if (up)   results.push(up);
   if (down) results.push(down);
   return results;
