@@ -12,12 +12,20 @@ import {
 import type { StoreCategory } from "@/lib/types";
 
 // ─── 상수 ────────────────────────────────────────────────────
-const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "헬스/운동", "반려동물", "세탁", "기타"];
+const CATS: StoreCategory[] = [
+  "카페", "음식점", "편의점", "병원/약국", "미용", "학원",
+  "마트", "헬스/운동", "반려동물", "세탁",
+  "베이커리", "부동산", "스터디카페", "안경원", "꽃집",
+  "기타",
+];
 const CAT_COLOR: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
   "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
   마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
-  세탁: "#6366F1", 기타: "#9CA3AF",
+  세탁: "#6366F1",
+  베이커리: "#D97706", 부동산: "#0EA5A8", 스터디카페: "#7C3AED",
+  안경원: "#0F766E", 꽃집: "#DB2777",
+  기타: "#9CA3AF",
 };
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
@@ -72,6 +80,28 @@ const EXTRA_FIELDS: Partial<Record<StoreCategory, ExtraField[]>> = {
   세탁: [
     { key: "service_types", label: "서비스 종류", type: "text" },
     { key: "same_day",      label: "당일 처리",   type: "boolean" },
+  ],
+  베이커리: [
+    { key: "menu_highlights", label: "대표 메뉴 (자유 입력)", type: "text" },
+    { key: "fresh_baked",     label: "당일 생산",             type: "boolean" },
+    { key: "delivery",        label: "배달 가능",             type: "boolean" },
+  ],
+  부동산: [
+    { key: "specialties",     label: "전문 분야 (예: 아파트/오피스텔)", type: "text" },
+    { key: "license_no",      label: "공인중개사 등록번호",            type: "text" },
+  ],
+  스터디카페: [
+    { key: "seats",           label: "좌석 수",              type: "text" },
+    { key: "is_24h",          label: "24시간 운영",          type: "boolean" },
+    { key: "price_range",     label: "이용 요금",            type: "text" },
+  ],
+  안경원: [
+    { key: "brands",          label: "주요 브랜드 (쉼표 구분)", type: "text" },
+    { key: "lens_eye_test",   label: "시력검사 가능",         type: "boolean" },
+  ],
+  꽃집: [
+    { key: "specialties",     label: "주요 상품 (꽃다발/화환 등)", type: "text" },
+    { key: "delivery",        label: "배달 가능",                  type: "boolean" },
   ],
 };
 
@@ -159,6 +189,7 @@ const STORE_EMPTY: Omit<AdminStore, "id" | "building_id"> = {
   open_date: null, logo_url: null, description: null,
   promo_text: null, emoji: "🏪", show_in_openings: null,
   open_benefit: null, extra_info: null,
+  is_published: true, admin_password: null, admin_email: null,
 };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -362,6 +393,40 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                   </Field>
                 ))}
               </>
+            )}
+
+            {/* ── 매장 페이지 / 어드민 ── */}
+            <SectionTitle>매장 페이지 · 매장 어드민</SectionTitle>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox"
+                checked={form.is_published !== false}
+                onChange={e => set("is_published", e.target.checked)}
+                className="w-4 h-4" />
+              <span className="text-[13px] text-[#4E5968]">매장 브랜드 페이지 공개</span>
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="매장 어드민 비밀번호">
+                <input className={INPUT} type="text" value={form.admin_password ?? ""}
+                  onChange={e => set("admin_password", e.target.value || null)}
+                  placeholder="비워두면 0000 사용" />
+              </Field>
+              <Field label="매장 담당자 이메일">
+                <input className={INPUT} type="email" value={form.admin_email ?? ""}
+                  onChange={e => set("admin_email", e.target.value || null)}
+                  placeholder="owner@example.com" />
+              </Field>
+            </div>
+            {initial && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a href={`/stores/${initial.id}`} target="_blank" rel="noopener noreferrer"
+                  className="h-9 px-3 inline-flex items-center rounded-lg bg-[#F0F7FF] text-[#0071e3] text-[12px] font-bold">
+                  매장 페이지 열기 ↗
+                </a>
+                <a href={`/stores/${initial.id}/admin`} target="_blank" rel="noopener noreferrer"
+                  className="h-9 px-3 inline-flex items-center rounded-lg bg-[#1d1d1f] text-white text-[12px] font-bold">
+                  매장 어드민 열기 ↗
+                </a>
+              </div>
             )}
 
             {/* ── SVG 맵 좌표 ── */}

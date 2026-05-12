@@ -37,20 +37,16 @@ const YT_API_KEY    = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY  ?? "";
 const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
-const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
-
-// ── 캐시 ──────────────────────────────────────────────────────
-function isFresh(fetchedAt: string): boolean {
-  try { return Date.now() - new Date(fetchedAt).getTime() < CACHE_TTL_MS; }
-  catch { return false; }
-}
+// 정적 export(GitHub Pages) 환경에서 /api/news 가 stripped 되므로 캐시가 유일한 소스가 된다.
+// GH Actions 가 3시간마다 갱신하지만 실패/지연을 감안해 staleness 체크를 제거하고 캐시를 항상 사용한다.
+// (캐시가 매우 오래됐다면 호출자가 라이브 fetch 로 덮어쓰도록 빈 배열 대신 캐시를 그대로 반환)
 
 export async function fetchCachedNews(): Promise<NewsArticle[]> {
   try {
     const res = await fetch(`${BASE_PATH}/cache/news.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.articles) && d.articles.length > 0 && isFresh(d.fetchedAt)) {
+    if (Array.isArray(d.articles) && d.articles.length > 0) {
       return d.articles as NewsArticle[];
     }
   } catch { /* ignore */ }
@@ -62,7 +58,7 @@ export async function fetchCachedYouTube(): Promise<YouTubeVideo[]> {
     const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.videos) && d.videos.length > 0 && isFresh(d.fetchedAt)) {
+    if (Array.isArray(d.videos) && d.videos.length > 0) {
       return d.videos as YouTubeVideo[];
     }
   } catch { /* ignore */ }
@@ -148,6 +144,33 @@ async function fetchNaverNews(): Promise<NewsArticle[]> {
 }
 
 // ── 2. Google News RSS ────────────────────────────────────────
+// RSS 표준 이미지 태그(<media:thumbnail>, <media:content medium="image">,
+// <enclosure type="image/...">)만 사용. description HTML 안 <img>나 본문 크롤링은 금지.
+function extractMediaImage(item: string): string | undefined {
+  const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
+  if (thumb?.[1]) return thumb[1];
+  const mediaContents = item.matchAll(/<media:content\b([^>]*)\/?>(?:[\s\S]*?<\/media:content>)?/gi);
+  for (const m of mediaContents) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (medium === "image" || (type && type.startsWith("image/")) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
+      return url;
+    }
+  }
+  const enclosures = item.matchAll(/<enclosure\b([^>]*)\/?>/gi);
+  for (const m of enclosures) {
+    const attrs = m[1] ?? "";
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (type?.startsWith("image/")) return url;
+  }
+  return undefined;
+}
+
 function parseRssXml(xml: string, prefix: string): NewsArticle[] {
   if (!xml.includes("<item>")) return [];
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m, i) => {
@@ -157,10 +180,11 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
     const desc  = stripXml(tagVal(raw, "description")).slice(0, 120);
     const pub   = tagVal(raw, "pubDate");
     const src   = tagVal(raw, "source") || extractSource(title);
+    const thumb = extractMediaImage(raw);
     return {
       id: `${prefix}-${i}`, title, summary: desc, source: src,
       publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
-      url: link || "#", thumbnail: undefined, type: "뉴스" as const,
+      url: link || "#", thumbnail: thumb, type: "뉴스" as const,
     };
   }).filter(n => n.title.length > 5).slice(0, 20);
 }
@@ -372,6 +396,43 @@ async function fetchYouTubeHTML(query: string): Promise<YouTubeVideo[]> {
     }
     return extractVideoIdsOnly(html, query);
   } catch { return []; }
+}
+
+// ── /api/news 라우트 호출 (서버에서 RSS 파싱 + 캐시) ──────────
+export type NewsCategory = "검단신도시" | "인천" | "부동산" | "교통";
+
+const BASE_API = BASE_PATH; // basePath 가 있으면 prefix 자동 추가
+
+export async function fetchNewsFromApi(
+  category: NewsCategory = "검단신도시",
+): Promise<{ articles: NewsArticle[]; source: string; ms: number }> {
+  const t0 = performance.now();
+  try {
+    const ctrl = new AbortController();
+    const tid  = setTimeout(() => ctrl.abort(), 8000);
+    const res  = await fetch(
+      `${BASE_API}/api/news?category=${encodeURIComponent(category)}`,
+      { signal: ctrl.signal },
+    );
+    clearTimeout(tid);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    const articles: NewsArticle[] = Array.isArray(json.articles) ? json.articles : [];
+    if (articles.length > 0) {
+      return {
+        articles,
+        source: (json.source as string) ?? "api",
+        ms: Math.round(performance.now() - t0),
+      };
+    }
+  } catch { /* fall through */ }
+
+  // 정적 export 환경 (Capacitor) 등에서 /api/news 가 없을 때만 대체 경로 사용
+  if (category === "검단신도시") {
+    const live = await fetchGeumdanNews();
+    return live;
+  }
+  return { articles: [], source: "없음", ms: Math.round(performance.now() - t0) };
 }
 
 // ── 메인 exports ──────────────────────────────────────────────

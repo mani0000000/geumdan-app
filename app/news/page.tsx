@@ -262,9 +262,16 @@ function NewsListItem({ item }: { item: CardItem }) {
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
       className="bg-white rounded-2xl px-4 py-4 flex items-start gap-3 active:bg-[#f5f5f7] transition-colors block">
-      <div className="w-[48px] h-[48px] rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">
-        {tabIcon[item.type]}
-      </div>
+      {item.thumbnail ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.thumbnail} alt="" loading="lazy"
+          className="w-[64px] h-[64px] rounded-xl object-cover bg-[#f5f5f7] shrink-0"
+          onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+      ) : (
+        <div className="w-[48px] h-[48px] rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">
+          {tabIcon[item.type]}
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
         {item.summary && (
@@ -287,6 +294,7 @@ interface ApiNews {
   pubDate: string;
   source: string;
   description: string;
+  thumbnail?: string | null;
 }
 
 export default function NewsPage() {
@@ -316,6 +324,7 @@ export default function NewsPage() {
           publishedAt: item.pubDate,
           url: item.link,
           type: "뉴스" as const,
+          thumbnail: item.thumbnail ?? undefined,
         }));
         setRealNews(newsArticles);
         setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));

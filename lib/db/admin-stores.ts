@@ -88,6 +88,10 @@ export interface AdminStore {
   show_in_openings: boolean | null;
   open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
   extra_info: Record<string, unknown> | null;
+  // 매장 브랜드 페이지 / 어드민
+  is_published?: boolean | null;
+  admin_password?: string | null;
+  admin_email?: string | null;
 }
 
 export async function adminFetchStores(buildingId: string): Promise<AdminStore[]> {

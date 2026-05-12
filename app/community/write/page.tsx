@@ -1,12 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
+import {
+  ChevronLeft, Image as ImageIcon, ChevronDown, Video, X, Loader2,
+} from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
 import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
+
+// 동영상 제한: 1분, 100MB
+const VIDEO_MAX_DURATION_SEC = 60;
+const VIDEO_MAX_BYTES = 100 * 1024 * 1024;
+const IMAGE_MAX_COUNT = 4;
 
 // 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
 function saveMyPostId(id: string) {
@@ -16,26 +23,154 @@ function saveMyPostId(id: string) {
   } catch { /* ignore */ }
 }
 
+// 동영상 메타데이터 로드 — 길이가 60초 이내인지 검증
+function readVideoDuration(file: File): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const v = document.createElement("video");
+    v.preload = "metadata";
+    v.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(v.duration);
+    };
+    v.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("동영상을 읽을 수 없어요"));
+    };
+    v.src = url;
+  });
+}
+
+async function uploadFile(file: File, folder: string): Promise<string> {
+  const fd = new FormData();
+  fd.append("file", file);
+  fd.append("folder", folder);
+  const res = await fetch("/api/upload", { method: "POST", body: fd });
+  if (!res.ok) {
+    const j = await res.json().catch(() => ({} as { error?: string }));
+    throw new Error(j.error ?? "업로드에 실패했어요");
+  }
+  const j = await res.json() as { url: string };
+  return j.url;
+}
+
 export default function WritePage() {
   const router = useRouter();
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+
   const [category, setCategory] = useState<CommunityCategory | "">("");
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
   const [videos, setVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setNickname(p.nickname);
+      setAuthorDong(p.dong);
+      setAvatarUrl(p.avatar_url);
+    });
+  }, []);
+
+  const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
+
+  const handlePickImage = () => {
+    if (uploading || images.length >= IMAGE_MAX_COUNT) return;
+    imgInputRef.current?.click();
+  };
+
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setError("");
+
+    const slots = IMAGE_MAX_COUNT - images.length;
+    const queue = Array.from(files).slice(0, slots);
+    if (files.length > slots) {
+      setError(`이미지는 최대 ${IMAGE_MAX_COUNT}장까지 첨부할 수 있어요`);
+    }
+
+    setUploading("image");
+    setUploadProgress(0);
+    try {
+      const uploaded: string[] = [];
+      for (let i = 0; i < queue.length; i++) {
+        const url = await uploadFile(queue[i], "community");
+        uploaded.push(url);
+        setUploadProgress(Math.round(((i + 1) / queue.length) * 100));
+      }
+      setImages(prev => [...prev, ...uploaded]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "이미지 업로드 실패");
+    } finally {
+      setUploading(null);
+      setUploadProgress(0);
+      if (imgInputRef.current) imgInputRef.current.value = "";
+    }
+  };
+
+  const handlePickVideo = () => {
+    if (uploading || videoUrl) return;
+    videoInputRef.current?.click();
+  };
+
+  const handleVideoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setError("");
+
+    if (file.size > VIDEO_MAX_BYTES) {
+      setError(`동영상은 최대 ${VIDEO_MAX_BYTES / 1024 / 1024}MB까지 가능해요`);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+      return;
+    }
+
+    // 클라이언트 길이 검증
+    try {
+      const duration = await readVideoDuration(file);
+      if (duration > VIDEO_MAX_DURATION_SEC) {
+        setError(`동영상은 ${VIDEO_MAX_DURATION_SEC}초 이내여야 해요 (현재 ${Math.round(duration)}초)`);
+        if (videoInputRef.current) videoInputRef.current.value = "";
+        return;
+      }
+    } catch {
+      setError("동영상 파일을 확인할 수 없어요");
+      if (videoInputRef.current) videoInputRef.current.value = "";
+      return;
+    }
+
+    setUploading("video");
+    setUploadProgress(0);
+    try {
+      const url = await uploadFile(file, "community/videos");
+      setVideoUrl(url);
+      setUploadProgress(100);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "동영상 업로드 실패");
+    } finally {
+      setUploading(null);
+      setUploadProgress(0);
+      if (videoInputRef.current) videoInputRef.current.value = "";
+    }
+  };
+
+  const removeImage = (idx: number) => {
+    setImages(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const removeVideo = () => setVideoUrl(null);
 
   const submit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     setError("");
     try {
-      const post = await createPost({
+      const uid = await getOrCreateUserId();
+      const result = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
@@ -44,11 +179,10 @@ export default function WritePage() {
         isAnonymous: anonymous,
         videos,
       });
-      if (post) {
-        saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
+      if (result?.post) {
+        saveMyPostId(result.post.id);
+        router.push(`/community/detail/?id=${result.post.id}`);
       } else {
-        // Supabase 미설정 시 목록으로 이동
         router.push("/community/");
       }
     } catch {
@@ -128,9 +262,30 @@ export default function WritePage() {
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+            <button
+              onClick={handlePickImage}
+              disabled={!!uploading || images.length >= IMAGE_MAX_COUNT}
+              aria-label="이미지 첨부"
+              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-40"
+            >
               <ImageIcon size={18} className="text-[#6e6e73]" />
             </button>
+            <button
+              onClick={handlePickVideo}
+              disabled={!!uploading || !!videoUrl}
+              aria-label="동영상 첨부"
+              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-40"
+            >
+              <Video size={18} className="text-[#6e6e73]" />
+            </button>
+            <input
+              ref={imgInputRef} type="file" accept="image/*" multiple hidden
+              onChange={handleImageChange}
+            />
+            <input
+              ref={videoInputRef} type="file" accept="video/mp4,video/quicktime,video/webm,video/*" hidden
+              onChange={handleVideoChange}
+            />
             {!anonymous && (
               <input value={nickname} onChange={e => setNickname(e.target.value)}
                 placeholder="닉네임" maxLength={12}
@@ -157,6 +312,9 @@ export default function WritePage() {
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
             광고·홍보 목적 게시글, 타인 비방·혐오 표현, 개인정보 노출, 불법 정보 공유
+          </p>
+          <p className="text-[12px] text-[#0071e3]/70 mt-2 leading-relaxed">
+            동영상은 최대 1분 · {VIDEO_MAX_BYTES / 1024 / 1024}MB까지 첨부할 수 있어요
           </p>
         </div>
       </div>

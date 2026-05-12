@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, useMap, ZoomControl } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -14,109 +14,67 @@ if (typeof window !== "undefined") {
   });
 }
 
-// ── 3D 건물 마커 HTML 생성 ────────────────────────────────────
-function building3DHTML(
+// ── 핀 + 건물 카드 마커 HTML 생성 ──────────────────────────────
+function buildingPinHTML(
   name: string,
-  floors: number,
   hasData: boolean,
   selected: boolean,
   dimmed: boolean,
 ): string {
-  const fw  = 34;               // 전면 폭
-  const ox  = 14;               // 3D 깊이 x-offset
-  const oy  = 7;                // 3D 깊이 y-offset
-  const h   = Math.max(20, Math.min(10 + floors * 9, 58)); // 층수 비례 높이
-  const px  = 2;                // 전면 좌상단 x
-  const py  = oy + 4;          // 전면 좌상단 y (상단 roof 영역 확보)
-
-  // 전면 꼭짓점
-  const fTL = [px, py] as const;
-  const fTR = [px + fw, py] as const;
-  const fBR = [px + fw, py + h] as const;
-  const fBL = [px, py + h] as const;
-  // 후면 꼭짓점 (offset)
-  const bTL = [px + ox, py - oy] as const;
-  const bTR = [px + fw + ox, py - oy] as const;
-  const bBR = [px + fw + ox, py + h - oy] as const;
-
-  // 색상
-  const front = selected ? "#0058b0" : hasData ? "#0071e3" : "#9CA3AF";
-  const side  = selected ? "#103B7A" : hasData ? "#1849A3" : "#6B7280";
-  const top   = selected ? "#93C5FD" : hasData ? "#BFDBFE" : "#E5E7EB";
-  const winC  = "rgba(255,255,255,0.55)";
-
-  // 창문 (층수만큼, 최대 4줄)
-  const wRows = Math.min(floors, 4);
-  const wGap  = h / (wRows + 1);
-  const wh    = 4;
-  let windows = "";
-  for (let r = 0; r < wRows; r++) {
-    for (let c = 0; c < 2; c++) {
-      const wx = px + 4 + c * 13;
-      const wy = py + wGap * (r + 0.5) - wh / 2;
-      windows += `<rect x="${wx.toFixed(1)}" y="${wy.toFixed(1)}" width="9" height="${wh}" rx="1.5" fill="${winC}"/>`;
-    }
-  }
-
-  // 문
-  const doorX = (px + px + fw) / 2 - 4;
-  const doorY = py + h - 10;
-
-  // 지붕 꼭대기 삼각형 (건물 강조)
-  const roofPeak = [px + fw / 2 + ox / 2, py - oy - 6] as const;
-  const roofLeft = bTL;
-  const roofRight = bTR;
-
-  const svgW = px + fw + ox + 2;
-  const svgH = py + h + 2;
-
-  const opacity = dimmed ? 0.22 : 1;
-  const shortName = name.length > 8 ? name.slice(0, 8) + "…" : name;
+  const opacity = dimmed ? 0.28 : 1;
+  const accent  = selected ? "#0058b0" : hasData ? "#0071e3" : "#94A3B8";
+  const ringBg  = selected ? "#0058b0" : "white";
+  const ringFg  = selected ? "white" : accent;
+  const ringBd  = selected ? "transparent" : accent;
   const labelBg = selected ? "#0058b0" : "white";
-  const labelColor = selected ? "white" : "#1d1d1f";
+  const labelFg = selected ? "white" : "#1d1d1f";
+  const labelBd = selected ? "transparent" : "rgba(0,0,0,0.08)";
+  const shortName = name.length > 10 ? name.slice(0, 10) + "…" : name;
+
+  // 핀 SVG: 둥근 머리 + 뾰족한 꼬리
+  const pinSVG = `
+    <svg width="44" height="52" viewBox="0 0 44 52" xmlns="http://www.w3.org/2000/svg" style="filter:drop-shadow(0 4px 8px rgba(0,0,0,.22))">
+      <defs>
+        <linearGradient id="g${selected ? "s" : hasData ? "h" : "n"}" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="${selected ? "#0079f0" : hasData ? "#3691f0" : "#A8B3C2"}"/>
+          <stop offset="1" stop-color="${accent}"/>
+        </linearGradient>
+      </defs>
+      <path d="M22 50C22 50 4 28 4 18 A18 18 0 0 1 40 18 C40 28 22 50 22 50Z"
+        fill="url(#g${selected ? "s" : hasData ? "h" : "n"})"/>
+      <circle cx="22" cy="18" r="11" fill="${ringBg}" stroke="${ringBd}" stroke-width="1.5"/>
+      <!-- Building2 icon paths (lucide) scaled into the circle -->
+      <g transform="translate(13.5, 9.5) scale(0.71)" stroke="${ringFg}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none">
+        <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+        <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+        <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+        <path d="M10 6h4"/>
+        <path d="M10 10h4"/>
+        <path d="M10 14h4"/>
+        <path d="M10 18h4"/>
+      </g>
+    </svg>
+  `;
 
   return `
 <div style="display:inline-flex;flex-direction:column;align-items:center;opacity:${opacity};cursor:pointer">
-  <svg xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}" overflow="visible">
-    <!-- 지붕 삼각형 -->
-    <polygon points="${roofLeft[0]},${roofLeft[1]} ${roofPeak[0]},${roofPeak[1]} ${roofRight[0]},${roofRight[1]}" fill="${top}" opacity="0.7"/>
-    <!-- 우측 측면 -->
-    <polygon points="${fTR[0]},${fTR[1]} ${bTR[0]},${bTR[1]} ${bBR[0]},${bBR[1]} ${fBR[0]},${fBR[1]}" fill="${side}"/>
-    <!-- 전면 -->
-    <rect x="${fTL[0]}" y="${fTL[1]}" width="${fw}" height="${h}" fill="${front}"/>
-    <!-- 상단 면 -->
-    <polygon points="${fTL[0]},${fTL[1]} ${bTL[0]},${bTL[1]} ${bTR[0]},${bTR[1]} ${fTR[0]},${fTR[1]}" fill="${top}"/>
-    <!-- 창문 -->
-    ${windows}
-    <!-- 문 -->
-    <rect x="${doorX.toFixed(1)}" y="${doorY.toFixed(1)}" width="8" height="10" rx="1.5" fill="${side}" opacity="0.7"/>
-    <!-- 층수 표시 (전면 우상단) -->
-    <text x="${(fTR[0] - 2).toFixed(1)}" y="${(fTL[1] + 11).toFixed(1)}" font-size="8" font-weight="800" fill="rgba(255,255,255,0.9)" text-anchor="end">${floors}F</text>
-  </svg>
-  <div style="background:${labelBg};color:${labelColor};font-size:10px;font-weight:700;padding:2px 7px;border-radius:7px;box-shadow:0 2px 8px rgba(0,0,0,.22);white-space:nowrap;max-width:96px;overflow:hidden;text-overflow:ellipsis;text-align:center;margin-top:2px;border:${selected ? "none" : "1px solid #d2d2d7"}">${shortName}</div>
+  ${pinSVG}
+  <div style="background:${labelBg};color:${labelFg};font-size:13px;font-weight:700;padding:4px 10px;border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,.18);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;text-align:center;margin-top:-4px;border:1px solid ${labelBd};letter-spacing:-0.2px">${shortName}</div>
 </div>`;
 }
 
 function buildingMarkerIcon(
   name: string,
-  floors: number,
   hasData: boolean,
   selected: boolean,
   dimmed: boolean,
 ) {
-  const oy  = 7;
-  const h   = Math.max(20, Math.min(10 + floors * 9, 58));
-  const py  = oy + 4;
-  const svgH = py + h + 2;
-  const totalW = 90;
-  const totalH = svgH + 22;
-
   return L.divIcon({
     className:   "",
-    iconSize:    [totalW, totalH]   as [number, number],
-    iconAnchor:  [totalW / 2, svgH] as [number, number],
-    popupAnchor: [0, -(svgH + 4)]   as [number, number],
-    html: building3DHTML(name, floors, hasData, selected, dimmed),
+    iconSize:    [120, 78] as [number, number],
+    iconAnchor:  [60, 50]  as [number, number],
+    popupAnchor: [0, -52]  as [number, number],
+    html: buildingPinHTML(name, hasData, selected, dimmed),
   });
 }
 
@@ -192,13 +150,12 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
           subdomains="abcd"
           maxZoom={19}
         />
-        <ZoomControl position="bottomleft" />
 
         {buildings.map(b => (
           <Marker
             key={b.id}
             position={[b.lat, b.lng]}
-            icon={buildingMarkerIcon(b.name, b.floors, b.hasData, selectedId === b.id, dimmedIds.has(b.id))}
+            icon={buildingMarkerIcon(b.name, b.hasData, selectedId === b.id, dimmedIds.has(b.id))}
             eventHandlers={{ click: () => onSelect(b.id) }}
           />
         ))}
@@ -210,7 +167,7 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
         {flyTo && <FlyTo pos={flyTo} />}
       </MapContainer>
 
-      {/* 내 위치 버튼 */}
+      {/* 내 위치 버튼 (Crosshair 스타일) */}
       <button
         onClick={locate}
         disabled={locating}
@@ -244,9 +201,13 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
             stroke={myPos ? "#0071e3" : "#6e6e73"} strokeWidth="2.2"
             strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" fill={myPos ? "#0071e3" : "none"} />
-            <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" />
-            <circle cx="12" cy="12" r="7" strokeWidth="1.2" opacity=".35" />
+            {/* lucide Crosshair icon */}
+            <circle cx="12" cy="12" r="10" />
+            <line x1="22" y1="12" x2="18" y2="12" />
+            <line x1="6" y1="12" x2="2" y2="12" />
+            <line x1="12" y1="6" x2="12" y2="2" />
+            <line x1="12" y1="22" x2="12" y2="18" />
+            <circle cx="12" cy="12" r="2.5" fill={myPos ? "#0071e3" : "transparent"} />
           </svg>
         )}
       </button>
