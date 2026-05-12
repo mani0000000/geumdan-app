@@ -1,52 +1,35 @@
-import type { NextRequest } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
-export const revalidate = 1800;
 
-export interface NewsArticle {
-  id: string;
+interface NewsItem {
   title: string;
-  summary: string;
+  link: string;
+  pubDate: string;
   source: string;
-  publishedAt: string;
-  url: string;
-  thumbnail?: string;
-  type: "뉴스";
+  description: string;
+  thumbnail: string | null;
 }
 
-const QUERIES: Record<string, string[]> = {
-  검단신도시: ["검단신도시", "검단+아파트"],
-  인천:       ["인천+서구+검단", "인천+서구"],
-  부동산:     ["검단+부동산", "검단+분양"],
-  교통:       ["검단+지하철", "검단+버스", "검단+도로"],
-};
-
-const DEFAULT_CATEGORY = "검단신도시";
-
-function decodeEntities(s: string): string {
+/**
+ * Google News RSS 파싱 헬퍼
+ */
+function stripXml(s: string): string {
   return s
-    .replace(/&amp;/g, "&")
+    .replace(/<[^>]+>/g, "")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&")
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, " ");
-}
-
-function stripXml(s: string): string {
-  // Google News RSS double-encodes description content (e.g. `&amp;nbsp;`,
-  // `&lt;a href=...&gt;`), so we decode entities twice before stripping the
-  // resulting tags. Stripping first leaves the encoded `<a>` text visible.
-  return decodeEntities(decodeEntities(s))
-    .replace(/<[^>]+>/g, "")
-    .replace(/\s+/g, " ")
     .trim();
 }
 
 function tagVal(xml: string, tag: string): string {
   const m = xml.match(
-    new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`),
+    new RegExp(
+      `<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([^<]*)<\\/${tag}>`
+    )
   );
   return m ? (m[1] ?? m[2] ?? "").trim() : "";
 }
@@ -56,175 +39,167 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
-// 이미지 추출 우선순위:
-//   1) <media:thumbnail url>
-//   2) <media:content url medium=image | type=image/* | 확장자가 이미지>
-//   3) <enclosure url type=image/*>
-//   4) <content:encoded> 안의 첫 <img src>
-//   5) <description> 안의 첫 <img src>
-// 페이지 크롤링(og:image)은 라우트에서 하지 않고 Supabase sync 배치에서만 수행한다.
-function firstImgSrc(html: string): string | undefined {
-  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  return m?.[1];
-}
-
-function extractMediaImage(item: string): string | undefined {
-  const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
-  if (thumb?.[1]) return thumb[1];
-
-  const mediaContents = item.matchAll(/<media:content\b([^>]*)\/?>(?:[\s\S]*?<\/media:content>)?/gi);
-  for (const m of mediaContents) {
-    const attrs = m[1] ?? "";
-    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
-    if (!url) continue;
-    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    if (medium === "image" || (type && type.startsWith("image/")) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
-      return url;
-    }
-  }
-
-  const enclosures = item.matchAll(/<enclosure\b([^>]*)\/?>/gi);
-  for (const m of enclosures) {
-    const attrs = m[1] ?? "";
-    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
-    if (!url) continue;
-    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    if (type?.startsWith("image/")) return url;
-  }
-
-  const ce = item.match(/<content:encoded[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
-  if (ce?.[1]) {
-    const src = firstImgSrc(decodeEntities(ce[1]));
-    if (src) return src;
-  }
-
-  const dm = item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
-  if (dm?.[1]) {
-    const src = firstImgSrc(decodeEntities(dm[1]));
-    if (src) return src;
-  }
-
-  return undefined;
-}
-
-function parseRssXml(xml: string, prefix: string): NewsArticle[] {
+/**
+ * RSS XML 파싱
+ */
+function parseRssXml(xml: string): NewsItem[] {
   if (!xml.includes("<item>")) return [];
-  return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
-    .map((m, i) => {
-      const raw   = m[1];
-      const title = stripXml(tagVal(raw, "title"));
-      const link  = tagVal(raw, "link") || tagVal(raw, "guid");
-      const desc  = stripXml(tagVal(raw, "description")).slice(0, 160);
-      const pub   = tagVal(raw, "pubDate");
-      const src   = stripXml(tagVal(raw, "source")) || extractSource(title);
-      const thumb = extractMediaImage(raw);
-      return {
-        id: `${prefix}-${i}`,
+
+  const items: NewsItem[] = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const raw = match[1];
+    const title = stripXml(tagVal(raw, "title"));
+    const link = tagVal(raw, "link") || tagVal(raw, "guid");
+    const desc = stripXml(tagVal(raw, "description")).slice(0, 200);
+    const pub = tagVal(raw, "pubDate");
+    const src = tagVal(raw, "source") || extractSource(title);
+
+    if (title.length > 5) {
+      items.push({
         title,
-        summary: desc,
+        link: link || "#",
+        pubDate: pub ? new Date(pub).toISOString() : new Date().toISOString(),
         source: src,
-        publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
-        url: link || "#",
-        thumbnail: thumb,
-        type: "뉴스" as const,
-      };
-    })
-    .filter(n => n.title.length > 5 && n.url !== "#");
+        description: desc,
+        thumbnail: null,
+      });
+    }
+
+    if (items.length >= 30) break;
+  }
+
+  return items;
 }
 
-async function fetchRssQuery(query: string, prefix: string): Promise<NewsArticle[]> {
-  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+/**
+ * CORS 프록시를 통한 RSS 페칭
+ */
+async function fetchRssWithCors(rssUrl: string): Promise<string> {
+  const timeoutMs = 7000;
+
+  // allorigins.win 시도
   try {
-    const res = await fetch(url, {
-      next: { revalidate: 1800 },
-      signal: AbortSignal.timeout(8000),
-      headers: { "User-Agent": "Mozilla/5.0 (compatible; GeumdanApp/1.0)" },
-    });
-    if (!res.ok) return [];
-    const xml = await res.text();
-    return parseRssXml(xml, prefix);
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(
+      `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`,
+      { signal: ctrl.signal, cache: "no-store" }
+    );
+    clearTimeout(tid);
+    if (res.ok) {
+      const j = await res.json();
+      return (j.contents as string) ?? "";
+    }
+  } catch {
+    /* continue to next proxy */
+  }
+
+  // corsproxy.io 시도
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+    const res = await fetch(
+      `https://corsproxy.io/?${encodeURIComponent(rssUrl)}`,
+      { signal: ctrl.signal, cache: "no-store" }
+    );
+    clearTimeout(tid);
+    if (res.ok) {
+      return await res.text();
+    }
+  } catch {
+    /* fallback */
+  }
+
+  return "";
+}
+
+/**
+ * Google News RSS 페칭 (썸네일 없음)
+ */
+async function fetchGoogleNewsRss(): Promise<NewsItem[]> {
+  const rssUrl =
+    "https://news.google.com/rss/search?q=검단신도시&hl=ko&gl=KR&ceid=KR:ko";
+
+  try {
+    const xml = await fetchRssWithCors(rssUrl);
+    if (!xml) return [];
+    return parseRssXml(xml);
   } catch {
     return [];
   }
 }
 
-async function fetchSupabaseFallback(limit = 30): Promise<NewsArticle[]> {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return [];
-  }
+/**
+ * Supabase news_articles 우선 조회 (썸네일 포함, 배치 스크립트가 og:image 추출 후 저장)
+ */
+async function fetchFromSupabase(): Promise<NewsItem[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+
   try {
+    const supabase = createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     const { data, error } = await supabase
       .from("news_articles")
-      .select("id, title, summary, source, published_at, url, thumbnail")
+      .select("title, url, source, summary, thumbnail, published_at")
       .order("published_at", { ascending: false })
-      .limit(limit);
+      .limit(50);
+
     if (error || !data) return [];
+
     return data
-      .map((row, i) => ({
-        id: (row.id as string) ?? `db-${i}`,
-        title: (row.title as string) ?? "",
-        summary: (row.summary as string) ?? "",
-        source: (row.source as string) ?? "DB",
-        publishedAt: (row.published_at as string) ?? new Date().toISOString(),
-        url: (row.url as string) ?? "",
-        thumbnail: (row.thumbnail as string) ?? undefined,
-        type: "뉴스" as const,
-      }))
-      .filter(a => a.title.length > 0 && a.url.length > 0);
-  } catch {
+      .filter((r) => r.title && r.url)
+      .map((r) => ({
+        title: r.title as string,
+        link: r.url as string,
+        pubDate: (r.published_at as string) ?? new Date().toISOString(),
+        source: (r.source as string) ?? "뉴스",
+        description: (r.summary as string) ?? "",
+        thumbnail: (r.thumbnail as string) ?? null,
+      }));
+  } catch (err) {
+    console.error("[/api/news] Supabase fetch failed:", err);
     return [];
   }
 }
 
-export async function GET(request: NextRequest) {
-  const sp = request.nextUrl.searchParams;
-  const requested = sp.get("category") ?? DEFAULT_CATEGORY;
-  const category = QUERIES[requested] ? requested : DEFAULT_CATEGORY;
+export async function GET() {
+  try {
+    // 1순위: 배치로 채워둔 Supabase 데이터 (썸네일 포함)
+    let items = await fetchFromSupabase();
+    let source: "supabase" | "rss" = "supabase";
 
-  const queries = QUERIES[category];
-  const t0 = Date.now();
-
-  let articles: NewsArticle[] = [];
-  let source = "supabase";
-
-  // Supabase 우선: 배치 sync 단계에서 og:image까지 채워두므로 썸네일 노출에 유리
-  const fromDb = await fetchSupabaseFallback();
-  if (fromDb.length > 0) {
-    articles = fromDb;
-  } else {
-    const results = await Promise.all(
-      queries.map((q, i) => fetchRssQuery(q, `${category}-${i}`)),
-    );
-
-    const seen = new Set<string>();
-    const merged: NewsArticle[] = [];
-    for (const arr of results) {
-      for (const a of arr) {
-        const key = a.url !== "#" ? a.url : a.title;
-        if (!seen.has(key)) {
-          seen.add(key);
-          merged.push(a);
-        }
-      }
+    // 2순위: 라이브 RSS (썸네일 없음, 비상시)
+    if (items.length === 0) {
+      items = await fetchGoogleNewsRss();
+      source = "rss";
     }
-    merged.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-    articles = merged.slice(0, 30);
-    source = "google-news-rss";
-  }
 
-  return Response.json(
-    {
-      category,
-      source,
-      ms: Date.now() - t0,
-      fetchedAt: new Date().toISOString(),
-      articles,
-    },
-    {
-      headers: {
-        "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+    return NextResponse.json(
+      { items, success: true, source, timestamp: new Date().toISOString() },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("[/api/news] Error:", error);
+    return NextResponse.json(
+      {
+        items: [],
+        success: false,
+        error: "Failed to fetch news",
+        timestamp: new Date().toISOString(),
       },
-    },
-  );
+      { status: 500 }
+    );
+  }
 }
