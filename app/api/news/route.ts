@@ -51,34 +51,9 @@ function tagVal(xml: string, tag: string): string {
   return m ? (m[1] ?? m[2] ?? "").trim() : "";
 }
 
-function rawTagContent(xml: string, tag: string): string {
-  const m = xml.match(
-    new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`),
-  );
-  return m ? (m[1] ?? m[2] ?? "") : "";
-}
-
 function extractSource(title: string): string {
   const m = title.match(/ - ([^-]+)$/);
   return m ? m[1].trim() : "뉴스";
-}
-
-function extractThumbnail(rawItem: string, descriptionHtml: string): string | undefined {
-  const mediaThumb = rawItem.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
-  if (mediaThumb?.[1]) return mediaThumb[1];
-
-  const mediaContent = rawItem.match(/<media:content[^>]*\burl=["']([^"']+)["']/i);
-  if (mediaContent?.[1]) return mediaContent[1];
-
-  const enclosure = rawItem.match(
-    /<enclosure[^>]*\burl=["']([^"']+)["'][^>]*\btype=["']image\/[^"']+["']/i,
-  );
-  if (enclosure?.[1]) return enclosure[1];
-
-  const imgInDesc = descriptionHtml.match(/<img[^>]*\bsrc=["']([^"']+)["']/i);
-  if (imgInDesc?.[1]) return imgInDesc[1];
-
-  return undefined;
 }
 
 function parseRssXml(xml: string, prefix: string): NewsArticle[] {
@@ -88,8 +63,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
       const raw   = m[1];
       const title = stripXml(tagVal(raw, "title"));
       const link  = tagVal(raw, "link") || tagVal(raw, "guid");
-      const descHtml = rawTagContent(raw, "description");
-      const desc  = stripXml(descHtml).slice(0, 160);
+      const desc  = stripXml(tagVal(raw, "description")).slice(0, 160);
       const pub   = tagVal(raw, "pubDate");
       const src   = stripXml(tagVal(raw, "source")) || extractSource(title);
       return {
@@ -99,7 +73,7 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
         source: src,
         publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
         url: link || "#",
-        thumbnail: extractThumbnail(raw, descHtml),
+        thumbnail: undefined,
         type: "뉴스" as const,
       };
     })
