@@ -56,8 +56,18 @@ function extractSource(title: string): string {
   return m ? m[1].trim() : "뉴스";
 }
 
-// RSS 표준 이미지 태그(<media:thumbnail>, <media:content medium="image">, <enclosure type="image/...">)만 허용.
-// description HTML 안의 <img>나 페이지 크롤링은 사용하지 않는다.
+// 이미지 추출 우선순위:
+//   1) <media:thumbnail url>
+//   2) <media:content url medium=image | type=image/* | 확장자가 이미지>
+//   3) <enclosure url type=image/*>
+//   4) <content:encoded> 안의 첫 <img src>
+//   5) <description> 안의 첫 <img src>
+// 페이지 크롤링(og:image)은 라우트에서 하지 않고 Supabase sync 배치에서만 수행한다.
+function firstImgSrc(html: string): string | undefined {
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?.[1];
+}
+
 function extractMediaImage(item: string): string | undefined {
   const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
   if (thumb?.[1]) return thumb[1];
@@ -82,6 +92,19 @@ function extractMediaImage(item: string): string | undefined {
     const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
     if (type?.startsWith("image/")) return url;
   }
+
+  const ce = item.match(/<content:encoded[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
+  if (ce?.[1]) {
+    const src = firstImgSrc(decodeEntities(ce[1]));
+    if (src) return src;
+  }
+
+  const dm = item.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+  if (dm?.[1]) {
+    const src = firstImgSrc(decodeEntities(dm[1]));
+    if (src) return src;
+  }
+
   return undefined;
 }
 

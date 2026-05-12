@@ -48,6 +48,60 @@ function stripHtml(str) {
   return str.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
 }
 
+async function fetchOgImage(url, timeoutMs = 6000) {
+  if (!url) return null;
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GeumdanNewsBot/1.0; +https://geumdan.app)',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'ko,en;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+    const html = (await res.text()).slice(0, 64_000);
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+    if (!m) return null;
+    try {
+      return new URL(m[1], url).href;
+    } catch {
+      return null;
+    }
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
+async function enrichWithOgImages(rows, concurrency = 4) {
+  let cursor = 0;
+  let hits = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (true) {
+      const i = cursor++;
+      if (i >= rows.length) return;
+      const row = rows[i];
+      if (row.thumbnail || !row.url) continue;
+      const og = await fetchOgImage(row.url);
+      if (og) {
+        row.thumbnail = og;
+        hits++;
+      }
+    }
+  });
+  await Promise.all(workers);
+  return hits;
+}
+
 async function fetchNaverNews(query, display = 20) {
   const params = new URLSearchParams({
     query,
@@ -122,6 +176,10 @@ try {
   if (rows.length === 0) {
     console.log('  No articles to insert');
   } else {
+    console.log(`  Fetching og:image for ${rows.length} articles...`);
+    const hits = await enrichWithOgImages(rows);
+    console.log(`  Got og:image for ${hits}/${rows.length} articles`);
+
     // Use upsert with onConflict=url to avoid duplicates
     const { error } = await supabase
       .from('news_articles')
