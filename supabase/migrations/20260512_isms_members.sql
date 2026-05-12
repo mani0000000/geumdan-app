@@ -84,22 +84,22 @@ CREATE POLICY "service write admin logs" ON admin_member_logs FOR INSERT WITH CH
 -- 활동 통계 뷰 (admin-members.ts 에서 우선 참조)
 CREATE OR REPLACE VIEW user_activity_stats AS
 SELECT
-  u.id,
-  u.nickname,
-  u.dong,
-  u.avatar_url,
-  u.email,
-  u.status,
-  u.suspended_until,
-  u.withdrawn_at,
-  u.admin_notes,
-  u.level,
-  u.points,
-  u.joined_at,
-  u.last_active_at,
-  u.updated_at,
-  COALESCE(u.post_count,    0)::INT AS post_count,
-  COALESCE(u.comment_count, 0)::INT AS comment_count,
-  0::INT                             AS received_like_count,
-  u.last_active_at                   AS last_activity_at
-FROM users u;
+  users.id,
+  users.nickname,
+  users.dong,
+  users.avatar_url,
+  users.email,
+  users.status,
+  users.suspended_until,
+  users.withdrawn_at,
+  users.admin_notes,
+  users.level,
+  users.points,
+  users.joined_at,
+  users.last_active_at,
+  users.updated_at,
+  COALESCE(users.post_count,    0)::INT AS post_count,
+  COALESCE(users.comment_count, 0)::INT AS comment_count,
+  0::INT                                AS received_like_count,
+  users.last_active_at                  AS last_activity_at
+FROM users;
