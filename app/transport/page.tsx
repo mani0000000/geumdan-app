@@ -25,7 +25,7 @@ import {
   type RouteSearchResult,
 } from "@/lib/api/bus";
 import {
-  getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  getAllSubwayStations, findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
   estimateNextArrivals, currentDayType, dayTimetable,
   type SubwayStationWithDist, type SubwayArrival, type SubwayDayType,
 } from "@/lib/api/subway";
@@ -472,9 +472,12 @@ function TransferHubCard({
         <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
         <div className="flex items-center gap-2">
           {isEstimated && <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>}
-          {active.timetable.intervalMin > 0 && (
-            <span className="text-[11px] text-[#86868b]">배차 {active.timetable.intervalDisplay ?? `${active.timetable.intervalMin}분`}</span>
-          )}
+          {(() => {
+            const t = dayTimetable(active.timetable);
+            return t.intervalMin > 0 ? (
+              <span className="text-[11px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+            ) : null;
+          })()}
         </div>
       </div>
 
@@ -526,18 +529,22 @@ function TransferHubCard({
       )}
 
       {/* 첫차/막차 */}
-      {active.timetable.upFirst !== "-" && (
-        <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
-          <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-            <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.upDirection} 첫/막차</p>
-            <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.upFirst} / {active.timetable.upLast}</p>
+      {(() => {
+        const t = dayTimetable(active.timetable);
+        if (t.upFirst === "-") return null;
+        return (
+          <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.upDirection} 첫/막차</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+            </div>
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.downDirection} 첫/막차</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+            </div>
           </div>
-          <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-            <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.downDirection} 첫/막차</p>
-            <p className="text-[13px] font-bold text-[#1d1d1f]">{active.timetable.downFirst} / {active.timetable.downLast}</p>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
@@ -647,7 +654,7 @@ function SubwayTimetableSheet({
               className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
                 dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
               }`}>
-              {dir === "up" ? `⬆ ${tt.upDirection}` : `⬇ ${tt.downDirection}`}
+              {dir === "up" ? `⬆ ${station.timetable.upDirection}` : `⬇ ${station.timetable.downDirection}`}
             </button>
           ))}
         </div>
@@ -1476,9 +1483,12 @@ export default function TransportPage() {
                   <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
                   <div className="flex items-center gap-2">
                     {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
-                    {st.timetable.intervalMin > 0 && (
-                      <span className="text-[10px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
-                    )}
+                    {(() => {
+                      const t = dayTimetable(st.timetable);
+                      return t.intervalMin > 0 ? (
+                        <span className="text-[10px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
 
@@ -1524,18 +1534,22 @@ export default function TransportPage() {
                 )}
 
                 {/* 첫차/막차 */}
-                {st.timetable.upFirst !== "-" && (
-                  <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
-                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                {(() => {
+                  const t = dayTimetable(st.timetable);
+                  if (t.upFirst === "-") return null;
+                  return (
+                    <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+                      </div>
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             );
           })}
@@ -2081,9 +2095,12 @@ export default function TransportPage() {
                     <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
                     <div className="flex items-center gap-2">
                       {isEstimated && <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>}
-                      {st.timetable.intervalMin > 0 && (
-                        <span className="text-[11px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</span>
-                      )}
+                      {(() => {
+                        const t = dayTimetable(st.timetable);
+                        return t.intervalMin > 0 ? (
+                          <span className="text-[11px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                        ) : null;
+                      })()}
                     </div>
                   </div>
 
@@ -2126,12 +2143,13 @@ export default function TransportPage() {
                                 {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
                               </span>
                             </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
-                          </div>
-                        ))}
-                      </>
-                      );
-                    })()}
+                          )) : (
+                            <p className="text-[11px] text-[#86868b] py-2">정보 없음</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                     {/* 첫차/막차 (오늘 요일 기준) */}
                     {(() => {
@@ -2163,7 +2181,6 @@ export default function TransportPage() {
                       );
                     })()}
                   </div>
-                </div>
               );
             })}
               </>

@@ -1,14 +1,17 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { MoreHorizontal, EyeOff, Flag } from "lucide-react";
+import { MoreHorizontal, EyeOff, Eye, Flag } from "lucide-react";
 
 interface PostMenuProps {
   postId?: string;
+  isHidden?: boolean;
   onHide?: (id?: string) => void;
+  onUnhide?: (id?: string) => void;
   onReport?: (id?: string) => void;
+  size?: number;
 }
 
-export function PostMenu({ postId, onHide, onReport }: PostMenuProps) {
+export function PostMenu({ postId, isHidden, onHide, onUnhide, onReport, size = 16 }: PostMenuProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -20,24 +23,37 @@ export function PostMenu({ postId, onHide, onReport }: PostMenuProps) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
+  const buttonSize = Math.max(28, size + 12);
+
   return (
     <div className="relative" ref={ref}>
       <button
         onClick={e => { e.stopPropagation(); setOpen(v => !v); }}
-        className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
+        style={{ width: buttonSize, height: buttonSize }}
+        className="flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors"
       >
-        <MoreHorizontal size={16} className="text-gray-400" />
+        <MoreHorizontal size={size} className="text-gray-400" />
       </button>
       {open && (
         <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden min-w-[140px]">
-          {onHide && (
+          {isHidden && onUnhide ? (
             <button
-              onClick={e => { e.stopPropagation(); setOpen(false); onHide(postId); }}
+              onClick={e => { e.stopPropagation(); setOpen(false); onUnhide(postId); }}
               className="w-full flex items-center gap-2.5 px-4 py-3 text-[14px] text-gray-700 hover:bg-gray-50 active:bg-gray-100"
             >
-              <EyeOff size={15} className="text-gray-500" />
-              이 글 숨기기
+              <Eye size={15} className="text-gray-500" />
+              숨김 해제
             </button>
+          ) : (
+            onHide && (
+              <button
+                onClick={e => { e.stopPropagation(); setOpen(false); onHide(postId); }}
+                className="w-full flex items-center gap-2.5 px-4 py-3 text-[14px] text-gray-700 hover:bg-gray-50 active:bg-gray-100"
+              >
+                <EyeOff size={15} className="text-gray-500" />
+                이 글 숨기기
+              </button>
+            )
           )}
           {onReport && (
             <button

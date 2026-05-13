@@ -399,22 +399,16 @@ export async function fetchSubwayArrivals(
 }
 
 // ── 시간표 기반 다음 열차 추정 (실시간 API 미설정 시 폴백) ────
-// perDirection: 방향당 반환할 열차 수 (기본 1대)
 export function estimateNextArrivals(
   timetable: SubwayStationEntry["timetable"],
-  perDirection = 1,
 ): SubwayArrival[] {
   const today = dayTimetable(timetable);
   if (!today.intervalMin) return [];
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
 
-  const calc = (
-    first: string, last: string, intervalMin: number,
-    direction: "상행" | "하행", destName: string,
-    isExpress: boolean, expressLabel?: string,
-  ): SubwayArrival[] => {
-    if (!first || first === "-" || !intervalMin) return [];
+  const calc = (first: string, last: string, direction: "상행" | "하행", destName: string): SubwayArrival | null => {
+    if (!first || first === "-") return null;
     const [fH, fM] = first.split(":").map(Number);
     const [lH, lM] = last.split(":").map(Number);
     const firstMin = fH * 60 + fM;
@@ -424,20 +418,11 @@ export function estimateNextArrivals(
     let nowAdj = nowMin;
     if (nowAdj + 1440 < firstMin) nowAdj += 1440;
 
-    const trainTypeName = isExpress ? expressLabel : undefined;
-
-    // 첫차 전: 첫차까지 2시간 이내일 때만 안내
     if (nowAdj < firstMin) {
-      if (firstMin - nowAdj > 120) return [];
-      const out: SubwayArrival[] = [];
-      for (let i = 0; i < perDirection; i++) {
-        const arr = firstMin - nowAdj + i * intervalMin;
-        if (firstMin + i * intervalMin > lastMin) break;
-        out.push({ direction, terminalStation: destName, arrivalMin: arr, trainNo: "", currentStation: "시간표", isExpress, trainTypeName });
-      }
-      return out;
+      if (firstMin - nowAdj > 120) return null;
+      return { direction, terminalStation: destName, arrivalMin: firstMin - nowAdj, trainNo: "", currentStation: "시간표", isExpress: false };
     }
-    if (nowAdj > lastMin) return [];
+    if (nowAdj > lastMin) return null;
 
     const nextOffset = today.intervalMin - ((nowAdj - firstMin) % today.intervalMin);
     return {

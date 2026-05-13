@@ -137,6 +137,8 @@ export interface PostInput {
   authorAvatarUrl?: string | null;
   userId?: string | null;
   isAnonymous: boolean;
+  images?: string[];
+  videoUrl?: string | null;
   videos?: string[];
 }
 

@@ -415,24 +415,6 @@ function DetailContent() {
                 </span>
                 {post.isPinned && <span className="text-[11px] text-[#0071e3] font-medium">📌 공지</span>}
               </div>
-              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-
-              {post.videos && post.videos.length > 0 && (
-                <div className="mt-4 space-y-3">
-                  {post.videos.map((src, i) => (
-                    <video
-                      key={i}
-                      src={src}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      className="w-full rounded-xl bg-black aspect-video"
-                    />
-                  ))}
-                </div>
-              )}
-            </>
-          )}
 
               {editMode ? (
                 <div className="space-y-3 mt-3">
@@ -469,10 +451,18 @@ function DetailContent() {
                       ))}
                     </div>
                   )}
-                  {post.videoUrl && (
-                    <div className="mt-3 rounded-xl overflow-hidden bg-black">
-                      <video src={post.videoUrl} controls playsInline preload="metadata"
-                        className="w-full max-h-[520px] object-contain bg-black" />
+                  {post.videos && post.videos.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {post.videos.map((src, i) => (
+                        <video
+                          key={i}
+                          src={src}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="w-full rounded-xl bg-black aspect-video"
+                        />
+                      ))}
                     </div>
                   )}
                   <p className="text-[12px] text-[#86868b] mt-3">조회 {post.viewCount.toLocaleString()}</p>

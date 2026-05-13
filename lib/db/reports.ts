@@ -46,6 +46,17 @@ export async function hidePost(postId: string, nickname: string): Promise<boolea
   }
 }
 
+export async function unhidePost(postId: string, nickname: string): Promise<boolean> {
+  try {
+    const current = JSON.parse(localStorage.getItem(HIDDEN_KEY) || '[]') as string[];
+    const next = current.filter(id => id !== postId);
+    localStorage.setItem(HIDDEN_KEY, JSON.stringify(next));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ─── Report ──────────────────────────────────────────────────────────────
 
 export async function reportPost(params: {
@@ -59,6 +70,28 @@ export async function reportPost(params: {
       .from('post_reports')
       .insert({
         post_id: params.postId,
+        reporter_nickname: params.reporterNickname,
+        reason: params.reason,
+        detail: params.detail ?? '',
+        created_at: new Date().toISOString(),
+      });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+
+export async function reportComment(params: {
+  commentId: string;
+  reporterNickname: string;
+  reason: ReportReason;
+  detail?: string;
+}): Promise<boolean> {
+  try {
+    const { error } = await supabase
+      .from('comment_reports')
+      .insert({
+        comment_id: params.commentId,
         reporter_nickname: params.reporterNickname,
         reason: params.reason,
         detail: params.detail ?? '',
