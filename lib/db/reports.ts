@@ -7,12 +7,23 @@
 import { supabase } from '@/lib/supabase';
 
 export type ReportReason =
-  | '스팸/광고'
-  | '욕설/혐오'
-  | '음란물'
-  | '개인정보 노출'
-  | '허위정보'
-  | '기타';
+  | 'spam'
+  | 'obscene'
+  | 'privacy'
+  | 'harassment'
+  | 'illegal'
+  | 'hate'
+  | 'other';
+
+export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
+  spam: '스팸/광고',
+  obscene: '음란물',
+  privacy: '개인정보 노출',
+  harassment: '욕설/혐오',
+  illegal: '불법 콘텐츠',
+  hate: '혐오 표현',
+  other: '기타',
+};
 
 // ─── Hide ────────────────────────────────────────────────────────────────
 
