@@ -16,6 +16,7 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
+  fetchNearbyStopsWithArrivals,
   fetchNearbyStopsFromTago,
   fetchArrivalsByNodeId, fetchArrivalsByStationId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
@@ -896,37 +897,55 @@ export default function TransportPage() {
     };
 
     try {
-      const tagoNearby = await fetchNearbyStopsFromTago(lat, lng);
-      if (dev) console.log(`[transport] TAGO nearby ${since()}ms → ${tagoNearby.length}`);
-      if (tagoNearby.length > 0) {
+      // 정류장 + 도착정보를 서버에서 병렬 처리 후 한 번에 반환 — 2단계 요청 제거
+      const combined = await fetchNearbyStopsWithArrivals(lat, lng);
+      if (dev) console.log(`[transport] combined nearby+arrivals ${since()}ms → ${combined.length}`);
+      if (combined.length > 0) {
         src = "tago";
-        stops = pickNearest(tagoNearby).map(s => ({
+        stops = combined.map(s => ({
           id: s.stationId, name: s.stationName,
-          distM: s.distanceM, arrivals: [], loadingArrivals: true,
+          distM: s.distanceM, arrivals: s.arrivals, loadingArrivals: false,
           lat: s.lat, lng: s.lng, osmRoutes: [],
         }));
-      } else throw new Error("tago_empty");
+        setStopSource(src);
+        setApiStops(stops);
+        setLoading(false);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+        if (dev) console.log(`[transport] painted with arrivals ${since()}ms`);
+        return;
+      }
+      throw new Error("combined_empty");
     } catch {
-      // TAGO 실패/빈 응답 — 검단 하드코딩 폴백.
-      // 거리 계산은 사용자 좌표가 검단에서 5km+ 떨어진 경우 검단 중심 기준으로
-      // 보정 (사용자가 서울에 있는데 "아라역 37km" 같은 무의미한 표시 방지).
-      src = "fallback";
-      // 사용자 좌표가 검단에서 5km+ 멀면 검단 중심 기준으로 거리 계산 →
-      // "아라역 37km" 같은 무의미한 표시 방지.
-      const farFromGeumdan = haversineM(lat, lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng) > 5000;
-      const refLat = farFromGeumdan ? GEUMDAN_DEFAULT.lat : lat;
-      const refLng = farFromGeumdan ? GEUMDAN_DEFAULT.lng : lng;
-      const all = GEUMDAN_BUS_STATIONS.map(s => ({
-        ...s,
-        distanceM: Math.round(haversineM(refLat, refLng, s.lat, s.lng)),
-      }));
-      stops = pickNearest(all).map(s => ({
-        id: s.stationId, name: s.name,
-        distM: s.distanceM, arrivals: [], loadingArrivals: true,
-        lat: s.lat, lng: s.lng,
-        osmRoutes: s.routes,
-      }));
-      if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms (farFromGeumdan=${farFromGeumdan})`);
+      // 통합 API 실패 — TAGO 개별 조회로 폴백
+      try {
+        const tagoNearby = await fetchNearbyStopsFromTago(lat, lng);
+        if (dev) console.log(`[transport] TAGO fallback nearby ${since()}ms → ${tagoNearby.length}`);
+        if (tagoNearby.length > 0) {
+          src = "tago";
+          stops = pickNearest(tagoNearby).map(s => ({
+            id: s.stationId, name: s.stationName,
+            distM: s.distanceM, arrivals: [], loadingArrivals: true,
+            lat: s.lat, lng: s.lng, osmRoutes: [],
+          }));
+        } else throw new Error("tago_empty");
+      } catch {
+        // 하드코딩 폴백
+        src = "fallback";
+        const farFromGeumdan = haversineM(lat, lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng) > 5000;
+        const refLat = farFromGeumdan ? GEUMDAN_DEFAULT.lat : lat;
+        const refLng = farFromGeumdan ? GEUMDAN_DEFAULT.lng : lng;
+        const all = GEUMDAN_BUS_STATIONS.map(s => ({
+          ...s,
+          distanceM: Math.round(haversineM(refLat, refLng, s.lat, s.lng)),
+        }));
+        stops = pickNearest(all).map(s => ({
+          id: s.stationId, name: s.name,
+          distM: s.distanceM, arrivals: [], loadingArrivals: true,
+          lat: s.lat, lng: s.lng,
+          osmRoutes: s.routes,
+        }));
+        if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
+      }
     }
 
     setStopSource(src);
@@ -1011,7 +1030,7 @@ export default function TransportPage() {
     const fastTimer = setTimeout(() => {
       if (dev) console.log(`[transport] GPS fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
       dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
-    }, 700);
+    }, 300);
 
     navigator.geolocation.getCurrentPosition(
       pos => {

@@ -631,5 +631,24 @@ export function formatBusTime(raw: string | undefined | null): string {
   return s;
 }
 
+// ─── 주변 정류장 + 도착정보 통합 단일 요청 ───────────────────
+// /api/bus-nearby-arrivals 서버 라우트: 1회 왕복으로 정류장+도착 동시 반환.
+// 기존 fetchNearbyStopsFromTago → fetchArrivalsForStops 2단계를 대체한다.
+export interface NearbyStopWithArrivals extends NearbyStop {
+  arrivals: BusArrival[];
+}
+
+export async function fetchNearbyStopsWithArrivals(
+  lat: number,
+  lng: number,
+): Promise<NearbyStopWithArrivals[]> {
+  const res = await fetch(`/api/bus-nearby-arrivals?lat=${lat}&lng=${lng}`, {
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) throw new Error(`bus-nearby-arrivals ${res.status}`);
+  const data: { stops: NearbyStopWithArrivals[] } = await res.json();
+  return data.stops ?? [];
+}
+
 // 서버 라우트가 키를 관리하므로 클라이언트에서는 항상 활성으로 취급
 export const hasBusApiKey = () => true;

@@ -151,7 +151,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "seohae",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:21", upLast: "23:29", downFirst: "05:47", downLast: "24:04", intervalMin: 14, intervalDisplay: "12~20분", upDirection: "일산", downDirection: "원시" },
+    timetable: { upFirst: "05:21", upLast: "23:29", downFirst: "05:47", downLast: "24:04", intervalMin: 12, intervalDisplay: "12~20분", upDirection: "일산", downDirection: "원시" },
   },
   {
     id: "gimpoair-gold",
@@ -163,7 +163,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "gimpogold",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:30", upLast: "24:29", downFirst: "-", downLast: "-", intervalMin: 4, intervalDisplay: "3~10분", upDirection: "양촌", downDirection: "-" },
+    timetable: { upFirst: "05:30", upLast: "24:29", downFirst: "-", downLast: "-", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "양촌", downDirection: "-" },
   },
 
   // 인천1호선
@@ -367,7 +367,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6431, lng: 126.6223,
     apiType: "gimpogold",
     stationCode: "구래",
-    timetable: { upFirst: "05:28", upLast: "24:28", downFirst: "05:59", downLast: "24:59", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:28", upLast: "24:28", downFirst: "05:59", downLast: "24:59", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-masan",
@@ -377,7 +377,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6408, lng: 126.6413,
     apiType: "gimpogold",
     stationCode: "마산",
-    timetable: { upFirst: "05:31", upLast: "24:32", downFirst: "05:56", downLast: "24:56", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:31", upLast: "24:32", downFirst: "05:56", downLast: "24:56", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-janggi",
@@ -387,7 +387,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6440, lng: 126.6690,
     apiType: "gimpogold",
     stationCode: "장기",
-    timetable: { upFirst: "05:36", upLast: "24:36", downFirst: "05:52", downLast: "24:52", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:36", upLast: "24:36", downFirst: "05:52", downLast: "24:52", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-unyang",
@@ -397,7 +397,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6539, lng: 126.6838,
     apiType: "gimpogold",
     stationCode: "운양",
-    timetable: { upFirst: "05:38", upLast: "24:38", downFirst: "05:49", downLast: "24:49", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:38", upLast: "24:38", downFirst: "05:49", downLast: "24:49", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-geolpobukbyeon",
@@ -407,7 +407,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6316, lng: 126.7057,
     apiType: "gimpogold",
     stationCode: "걸포북변",
-    timetable: { upFirst: "05:42", upLast: "24:42", downFirst: "05:45", downLast: "24:45", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:42", upLast: "24:42", downFirst: "05:45", downLast: "24:45", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-sau",
@@ -417,7 +417,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6204, lng: 126.7166,
     apiType: "gimpogold",
     stationCode: "사우",
-    timetable: { upFirst: "05:45", upLast: "24:45", downFirst: "05:43", downLast: "24:43", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:45", upLast: "24:45", downFirst: "05:43", downLast: "24:43", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-pungmu",
@@ -427,7 +427,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6123, lng: 126.7295,
     apiType: "gimpogold",
     stationCode: "풍무",
-    timetable: { upFirst: "05:48", upLast: "24:47", downFirst: "05:40", downLast: "24:40", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:48", upLast: "24:47", downFirst: "05:40", downLast: "24:40", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-gochon",
@@ -437,7 +437,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6013, lng: 126.7666,
     apiType: "gimpogold",
     stationCode: "고촌",
-    timetable: { upFirst: "05:52", upLast: "24:52", downFirst: "05:36", downLast: "24:35", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:52", upLast: "24:52", downFirst: "05:36", downLast: "24:35", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
 ];
 
