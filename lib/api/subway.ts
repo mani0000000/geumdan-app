@@ -323,7 +323,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5849, lng: 126.6760,
     apiType: "ic2",
     stationCode: "I206",
-    timetable: { upFirst: "05:40", upLast: "24:23", downFirst: "05:32", downLast: "24:55", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    timetable: { upFirst: "05:40", upLast: "24:22", downFirst: "05:33", downLast: "24:55", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
   {
     id: "ic2-geomam",
@@ -335,17 +335,17 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "ic2",
     stationCode: "I207",
     groupKey: GEOMAM_GROUP,
-    timetable: { upFirst: "05:42", upLast: "24:25", downFirst: "05:30", downLast: "24:53", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    timetable: { upFirst: "05:30", upLast: "24:25", downFirst: "05:30", downLast: "24:52", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
   {
     id: "ic2-gajeong",
     displayName: "가정역",
     line: "인천2호선",
     lineColor: "#ED8B00",
-    lat: 37.5481, lng: 126.6573,
+    lat: 37.5489, lng: 126.6558,
     apiType: "ic2",
-    stationCode: "I208",
-    timetable: { upFirst: "05:44", upLast: "24:27", downFirst: "05:28", downLast: "24:51", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    stationCode: "I211",
+    timetable: { upFirst: "05:32", upLast: "24:34", downFirst: "05:35", downLast: "24:44", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
 
   // ── 김포 골드라인 (양촌 ↔ 김포공항) — TAGO 시간표 폴백 ─────────

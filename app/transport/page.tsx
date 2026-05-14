@@ -1221,10 +1221,11 @@ export default function TransportPage() {
   const routeFavKey = (stopId: string, a: BusArrival) =>
     `${stopId}::${a.routeId || a.routeNo}`;
 
-  // 즐겨찾기는 사용자가 정한 순서대로 표시 (배열 순서 그대로)
+  // 즐겨찾기는 내 위치 기준 가까운 순서로 정렬
   const favStopList = favStops
     .map(id => stopsWithRoutes.find(s => s.id === id))
-    .filter((s): s is DisplayStop => Boolean(s));
+    .filter((s): s is DisplayStop => Boolean(s))
+    .sort((a, b) => a.distM - b.distM);
   const favRouteList = favRoutes
     .map(fk => {
       for (const stop of stopsWithRoutes) {
