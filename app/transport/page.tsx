@@ -222,6 +222,13 @@ function BusDetailSheet({
     return () => { cancelled = true; };
   }, [arrival.routeId, arrival.routeNo]);
 
+  // 바텀시트가 열려 있는 동안 바디 스크롤 잠금 (모바일 스크롤 전파 방지)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   // 30초마다 실시간 버스 위치 자동 갱신 (탭 활성 상태일 때만)
   useEffect(() => {
     if (loading || noRouteData) return;
@@ -342,7 +349,7 @@ function BusDetailSheet({
         )}
 
         {/* 정류장 목록 */}
-        <div className="overflow-y-auto flex-1 px-4 py-3">
+        <div className="overflow-y-auto overscroll-contain flex-1 px-4 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
           {loading ? (
             <div className="space-y-3">
               {[1,2,3,4,5].map(i => (
@@ -1042,7 +1049,7 @@ export default function TransportPage() {
     const tGpsStart = performance.now();
     const dev = process.env.NODE_ENV !== "production";
 
-    // 700ms 안에 GPS 응답 없으면 DEFAULT 로 버스 우선 로드. GPS 도착 시 재조회.
+    // GPS 응답을 기다리지 않고 DEFAULT 좌표로 즉시 버스 로드. GPS 도착 시 좌표가 다르면 재조회.
     // GPS 자체 timeout 은 8초.
     let busDispatched = false;
     const dispatchBus = (lat: number, lng: number) => {
@@ -1051,10 +1058,11 @@ export default function TransportPage() {
       loadBusData(lat, lng);
     };
 
+    // 즉시 DEFAULT로 로드 (0ms) — 사용자가 버스 탭을 열자마자 데이터 요청 시작
     const fastTimer = setTimeout(() => {
-      if (dev) console.log(`[transport] GPS fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
+      if (dev) console.log(`[transport] fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
       dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
-    }, 300);
+    }, 0);
 
     navigator.geolocation.getCurrentPosition(
       pos => {

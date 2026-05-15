@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 15;
+export const maxDuration = 12;
 
 const TAGO_BASE = "https://apis.data.go.kr/1613000";
 const NEARBY_RADIUS_M = 500;
@@ -49,7 +49,7 @@ async function tagoGet(
   p.set("_type", "xml");
   const url = `${TAGO_BASE}${path}?serviceKey=${encodeURIComponent(key)}&${p.toString()}`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
     if (!res.ok) return [];
     const xml = await res.text();
     const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
@@ -88,7 +88,7 @@ export async function GET(request: NextRequest) {
   const stopItems = await tagoGet(
     key,
     "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",
-    { gpsLati: String(lat), gpsLong: String(lng), numOfRows: "10" },
+    { gpsLati: String(lat), gpsLong: String(lng), numOfRows: "5" },
   );
 
   const allStops = stopItems
