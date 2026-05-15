@@ -157,25 +157,29 @@ function BusDetailSheet({
       let l: BusLocation[] = [];
       let locSrc: { kind: "incheon" | "tago"; routeId: string } | null = null;
 
-      // 1) 인천 routeId가 있으면 인천 API 우선 시도
+      // TAGO 노선 검색을 인천 API 호출과 동시에 시작 (속도 개선)
+      const tagoSearchPromise: Promise<string | null> = arrival.routeNo
+        ? searchRouteByNo(arrival.routeNo)
+        : Promise.resolve(null);
+
+      // 1) 인천 routeId가 있으면 인천 API + TAGO 검색 병렬 시도
       if (arrival.routeId) {
-        const [icDetail, icStations, icLocations] = await Promise.all([
-          fetchRouteDetail(arrival.routeId),
-          fetchStationsByRoute(arrival.routeId),
-          fetchBusLocations(arrival.routeId),
+        const [[icDetail, icStations, icLocations], tagoRouteId] = await Promise.all([
+          Promise.all([
+            fetchRouteDetail(arrival.routeId),
+            fetchStationsByRoute(arrival.routeId),
+            fetchBusLocations(arrival.routeId),
+          ]),
+          tagoSearchPromise,
         ]);
         if (cancelled) return;
         d = icDetail; s = icStations; l = icLocations;
         if (icDetail || icStations.length > 0 || icLocations.length > 0) {
           locSrc = { kind: "incheon", routeId: arrival.routeId };
         }
-      }
 
-      // 2) 인천 API가 비어있고 routeNo가 있으면 TAGO로 보강
-      if ((!d || s.length === 0 || l.length === 0) && arrival.routeNo) {
-        const tagoRouteId = await searchRouteByNo(arrival.routeNo);
-        if (cancelled) return;
-        if (tagoRouteId) {
+        // 2) 인천 API가 비어있으면 이미 검색해둔 tagoRouteId로 바로 보강
+        if ((!d || s.length === 0 || l.length === 0) && tagoRouteId) {
           const [tagoDetail, tagoStations, tagoLocations] = await Promise.all([
             fetchRouteDetailFromTago(tagoRouteId),
             fetchStationsByRouteTago(tagoRouteId),
@@ -186,11 +190,24 @@ function BusDetailSheet({
           if (s.length === 0) s = tagoStations;
           if (l.length === 0) {
             l = tagoLocations;
-            // 인천 API 위치가 비었을 때만 TAGO를 자동갱신 소스로 사용
             if (!locSrc || locSrc.kind === "incheon") {
               locSrc = { kind: "tago", routeId: tagoRouteId };
             }
           }
+        }
+      } else if (arrival.routeNo) {
+        // routeId 없이 routeNo만 있는 경우: TAGO 검색 결과 대기
+        const tagoRouteId = await tagoSearchPromise;
+        if (cancelled) return;
+        if (tagoRouteId) {
+          const [tagoDetail, tagoStations, tagoLocations] = await Promise.all([
+            fetchRouteDetailFromTago(tagoRouteId),
+            fetchStationsByRouteTago(tagoRouteId),
+            fetchBusLocationsTago(tagoRouteId),
+          ]);
+          if (cancelled) return;
+          d = tagoDetail; s = tagoStations; l = tagoLocations;
+          locSrc = { kind: "tago", routeId: tagoRouteId };
         }
       }
 
@@ -223,7 +240,16 @@ function BusDetailSheet({
   const upStations   = stations.filter(s => s.direction === 0);
   const downStations = stations.filter(s => s.direction === 1);
   const curStations  = dirTab === 0 ? upStations : downStations;
-  const busesOnDir   = locations.filter(l => l.direction === dirTab);
+
+  // 정류장 seq→direction 맵으로 버스 위치 방향 보완
+  // API가 updowncd를 누락하거나 0으로 반환할 때도 하행 버스가 표시되도록 함
+  const seqDirMap = new Map<number, 0 | 1>();
+  stations.forEach(st => seqDirMap.set(st.seq, st.direction));
+  const enrichedLocations = locations.map(loc => {
+    const stDir = seqDirMap.get(loc.stationSeq);
+    return stDir !== undefined ? { ...loc, direction: stDir } : loc;
+  });
+  const busesOnDir   = enrichedLocations.filter(l => l.direction === dirTab);
   const busSeqs      = new Set(busesOnDir.map(b => b.stationSeq));
 
   return (
