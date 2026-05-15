@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-15T19:14:16.414Z",
+  "fetchedAt": "2026-05-15T21:46:22.245Z",
   "count": 40,
   "articles": [
     {
@@ -21,15 +21,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-2",
-      "title": "LH, 동부건설 등에 인천검단 사고 320억원 손배소 - 뉴시스",
-      "summary": "",
-      "source": "뉴시스",
-      "publishedAt": "2026-05-15T10:17:14.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1DRGRqZDhwMVJQTjc4ZFdUQkV2eHdwYV9QeE43dExRdURMTC00RjRLMzJ2MWF1bk5ISkhrU0VEWnAxRENydEM3ZXZxbTNUR05DVFZWZldUbnZ5ODZ0R2NlX9IBeEFVX3lxTFBhaGxzTHVOM0xVZU96bkgwNjRCZmNHbFNiZjNJb21JVjdTTEMyOVdYYkZ5eExkdS1ZODctcW5YdnExX3dxVFJVRlFZNVFxU2dyNm1JQUJsWDNCRTZPdEVJWG8yMktKek5kMXZNLTJlYWVpU292LWtzTQ?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr2-0",
       "title": "[현안 점검] 인천 검단구 출범 준비 분주···GTX-D Y자 등 교통현안 산적 - 인천투데이",
       "summary": "",
@@ -48,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-5",
       "title": "“이마트·롯데마트, 이래도 안 들어올래?”···검단신도시 더제이마켓 검단점 오픈에 인파 몰려 - 나눔경제뉴스",
       "summary": "",
       "source": "나눔경제뉴스",
@@ -57,21 +48,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-8",
+      "id": "gr1-7",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2000만원에 거래 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-14T09:27:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBqdE9EOV9XLTJrWnk3TE92SDUyZlo5MHhKR2hMLXIwOW1JaGozV0I3eThiVXQtWHN1anJ3QW9DVDZrb0lsb20tYjZYVWFqemhWakUwNV8xZFFOTzhRc1c0ZEpwVUw2Qmp2U2xnWnRn?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-4",
-      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2000만원에 거래 - 조선비즈 - Chosunbiz",
-      "summary": "",
-      "source": "Chosunbiz",
-      "publishedAt": "2026-05-14T09:25:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxPYWNVaTRncWtiajRNU3I3cVJXUW1ZN0tlcTBuZFRFOGhqZW1GbnpmSjdpRFVFOFpjblNxNlZJak0tMFJsTy1fWWMwdkdGSS16RWxJWVJHZHRqbXE0ZTgtR0p2MF9mRmczSjRtNGl2WTNGLVhHQVB4bklsVDM5c0NyZkhIVmx4cFVRUkRuR2JHVXp5YUJIZzg2VWdPUdIBmwFBVV95cUxPYWNVaTRncWtiajRNU3I3cVJXUW1ZN0tlcTBuZFRFOGhqZW1GbnpmSjdpRFVFOFpjblNxNlZJak0tMFJsTy1fWWMwdkdGSS16RWxJWVJHZHRqbXE0ZTgtR0p2MF9mRmczSjRtNGl2WTNGLVhHQVB4bklsVDM5c0NyZkhIVmx4cFVRUkRuR2JHVXp5YUJIZzg2VWdPUQ?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE9qeWVxMWZqWHdJOUpvSDlQX0EyMWQyaWxQYVd3RExFUkZWX3VrNzA1ZTRsdkptZnJ3MDVCOUw1Wmw3dm5PcDVibEFNY04wbzd5QVhZ?oc=5",
       "type": "뉴스"
     },
     {
@@ -84,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "IH “교통망 확충으로 검단신도시 날개 달다” - 현대일보",
       "summary": "",
       "source": "현대일보",
@@ -93,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-38",
+      "id": "gr0-39",
       "title": "인천 검암역세권 1조 4000억 복합개발 민간 공모 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -120,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-7",
+      "id": "gr1-5",
       "title": "대단지 아파트 ‘더샵 검단레이크파크’ 5월 분양 - 세계일보",
       "summary": "",
       "source": "세계일보",
@@ -129,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-4",
       "title": "GTX-D·5호선 연장 검단신도시, 엘리프 검단 포레듀 잔여세대 선착순 계약 진행 - 대한경제",
       "summary": "",
       "source": "대한경제",
@@ -138,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-21",
       "title": "인천도시공사, 검암역 중심 복합개발 조성 본격화 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -156,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-68",
+      "id": "gr0-63",
       "title": "인천도시공사, 검암역세권 복합개발 본격 시동 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -201,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-3",
       "title": "인천 사랑의열매, ‘착한가게’ 4100호 돌파…한상민과자점 검단신도시점 가입 - 미디어생활",
       "summary": "",
       "source": "미디어생활",
@@ -300,15 +282,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-16",
-      "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 98㎡ 6억4900만원에 거래 - 조선비즈 - Chosunbiz",
-      "summary": "",
-      "source": "Chosunbiz",
-      "publishedAt": "2026-05-12T08:11:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxNZXN4MWZIM0NUYkpwQlVaQ0RhX1BvLW1NWDlhaVoxME5ZLU1UVzhkaWtwVUVQVWF5Z2JjVmlqTHJMTWd4QTBzZmZjVnVvaldkOS03YXdrWU1JUE5rWENERnpxQnprZnZlNHVkNGxpMjlVcWtnUmRQLVpPSmkxNG9PcEF4WU5GOUHSAZsBQVVfeXFMTWw2QnJtZS1rRExza1BJSUlfU1BlYTE0cGs2bEkxX1VuV2JSUjNqMS1mczc0SzlZRjdQelFvRElCVmVGUE5lWk5pVGxIUnRfUU1zbXp1UktTdjZsLURqR2lsNGk2ZlJlY3oxVmdvX0N4VHQyUDM2SXJTVVVaNFBPYTZHX2VJVU9GSTZvazhUR0FxZmgtLUx5R3FmYTA?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr2-19",
       "title": "더불어민주당 인천 서구병, 검단 원팀 선거대책위원회 발대식 개최 - 매일뉴스",
       "summary": "",
@@ -360,6 +333,33 @@
       "source": "인천일보",
       "publishedAt": "2026-05-11T09:27:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBkX0NfTVg3bWIyZXg4ajdLU2ZOcW5FY3NOQnQ5dlRoYTVSd3pPYmlodVJDZ0gwbFJYQTVxYVYtVjV1QmJHaElUazlmSUZsNUlvRHY3WUJEUlllSkdDRHlJWDZKNWM1M1dmdXVoZVZCa3k?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-20",
+      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
+      "summary": "",
+      "source": "인천일보",
+      "publishedAt": "2026-05-11T09:25:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-25",
+      "title": "도성훈 인천교육감 예비후보, 검단신도시 \"학교 부족\" 해법 제시 - 뉴스티앤티",
+      "summary": "",
+      "source": "뉴스티앤티",
+      "publishedAt": "2026-05-11T08:44:22.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE0tRnRKX19WQWYxUTNDdzZxSTlTd251RmV3bWZuTXRVS0U0elBBall6WUt5d0JMcWhPSGRSVmpaSWlVNHBsTjFCakQ0VUJLVWhFdlIwN09xUDBYNGpuYl8yblp1NTZMN3lsdEE?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-20",
+      "title": "교육 인프라 갖춘 ‘더샵 검단레이크파크’ 5월 공급 예정 - 헤럴드경제",
+      "summary": "",
+      "source": "헤럴드경제",
+      "publishedAt": "2026-05-11T04:16:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTFBIMWNabmpCR2F2eXRxWEtER1pyVzVyc1d2dlZ0SlIxMHdqd0x0eGE2YTA4X0xfbWNDNjZqMWhhMGlUaDF6b2U4NUIzVHdqZkxaWXpEaEJ3?oc=5",
       "type": "뉴스"
     }
   ]
