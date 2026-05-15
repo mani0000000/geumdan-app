@@ -81,7 +81,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "arex",
     stationCode: "검암",
     groupKey: GEOMAM_GROUP,
-    timetable: { upFirst: "05:20", upLast: "23:28", downFirst: "05:43", downLast: "23:50", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:30", upLast: "24:04", downFirst: "05:08", downLast: "24:05", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -93,7 +93,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "arex",
     stationCode: "계양",
     groupKey: GYEYANG_GROUP,
-    timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:36", upLast: "24:11", downFirst: "05:49", downLast: "24:09", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
   // ── 김포공항역 환승 그룹 ─ 5호선·9호선·공항철도·서해선·김포골드라인 ──
@@ -107,7 +107,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "seoul5",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:38", upLast: "00:13", downFirst: "05:18", downLast: "23:36", intervalMin: 6, intervalDisplay: "5~10분", upDirection: "방화", downDirection: "하남검단산" },
+    timetable: { upFirst: "05:56", upLast: "24:55", downFirst: "05:34", downLast: "24:41", intervalMin: 6, intervalDisplay: "5~10분", upDirection: "방화", downDirection: "하남검단산" },
   },
   {
     id: "gimpoair-9",
@@ -120,7 +120,7 @@ const STATION_DB: SubwayStationEntry[] = [
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
     timetable: {
-      upFirst: "05:37", upLast: "23:57", downFirst: "05:30", downLast: "23:50",
+      upFirst: "05:30", upLast: "24:49", downFirst: "05:40", downLast: "24:59",
       intervalMin: 9, upDirection: "중앙보훈병원", downDirection: "개화",
       // 9호선 급행: 김포공항 정차, 약 12분 배차 (출퇴근 시간엔 더 자주)
       expressLabel: "급행",
@@ -139,7 +139,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "arex",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:43", upLast: "00:11", downFirst: "05:24", downLast: "23:54", intervalMin: 8, intervalDisplay: "6~12분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:43", upLast: "24:34", downFirst: "05:42", downLast: "24:21", intervalMin: 8, intervalDisplay: "6~12분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "gimpoair-seohae",
@@ -151,7 +151,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "seohae",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:36", upLast: "23:43", downFirst: "05:33", downLast: "23:23", intervalMin: 14, intervalDisplay: "12~20분", upDirection: "일산", downDirection: "원시" },
+    timetable: { upFirst: "05:21", upLast: "23:29", downFirst: "05:47", downLast: "24:04", intervalMin: 12, intervalDisplay: "12~20분", upDirection: "일산", downDirection: "원시" },
   },
   {
     id: "gimpoair-gold",
@@ -163,7 +163,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "gimpogold",
     stationCode: "김포공항",
     groupKey: GIMPO_AIRPORT_GROUP,
-    timetable: { upFirst: "05:30", upLast: "00:09", downFirst: "-", downLast: "-", intervalMin: 4, intervalDisplay: "3~10분", upDirection: "양촌", downDirection: "-" },
+    timetable: { upFirst: "05:30", upLast: "24:29", downFirst: "-", downLast: "-", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "양촌", downDirection: "-" },
   },
 
   // 인천1호선
@@ -175,9 +175,9 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
-    stationCode: "I023",
+    stationCode: "I110",
     groupKey: GYEYANG_GROUP,
-    timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:39", upLast: "23:55", downFirst: "05:42", downLast: "24:52", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-gyulhyeon",
@@ -186,8 +186,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5594, lng: 126.7411,
     apiType: "ic1",
-    stationCode: "I024",
-    timetable: { upFirst: "05:36", upLast: "23:56", downFirst: "05:26", downLast: "23:46", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I111",
+    timetable: { upFirst: "05:41", upLast: "24:41", downFirst: "05:40", downLast: "24:50", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-bakchon",
@@ -196,8 +196,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5513, lng: 126.7432,
     apiType: "ic1",
-    stationCode: "I025",
-    timetable: { upFirst: "05:37", upLast: "23:57", downFirst: "05:25", downLast: "23:45", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I112",
+    timetable: { upFirst: "05:30", upLast: "24:44", downFirst: "05:37", downLast: "24:47", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-imhak",
@@ -206,8 +206,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5441, lng: 126.7380,
     apiType: "ic1",
-    stationCode: "I026",
-    timetable: { upFirst: "05:39", upLast: "23:59", downFirst: "05:23", downLast: "23:43", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I113",
+    timetable: { upFirst: "05:32", upLast: "24:46", downFirst: "05:35", downLast: "24:45", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-gyesan",
@@ -216,8 +216,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5389, lng: 126.7285,
     apiType: "ic1",
-    stationCode: "I027",
-    timetable: { upFirst: "05:41", upLast: "00:01", downFirst: "05:21", downLast: "23:41", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I114",
+    timetable: { upFirst: "05:34", upLast: "24:48", downFirst: "05:33", downLast: "24:43", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
 
   // 인천1호선 검단 연장 구간 — 검단호수공원역이 현재 하행 종점
@@ -228,8 +228,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.6048, lng: 126.7024,
     apiType: "ic1",
-    stationCode: "I050",
-    timetable: { upFirst: "05:40", upLast: "23:55", downFirst: "05:35", downLast: "23:50", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I108",
+    timetable: { upFirst: "05:32", upLast: "24:32", downFirst: "05:49", downLast: "24:59", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "gd-gdlake",
@@ -238,8 +238,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.6025, lng: 126.6881,
     apiType: "ic1",
-    stationCode: "I051",
-    timetable: { upFirst: "05:42", upLast: "23:57", downFirst: "-", downLast: "-", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I107",
+    timetable: { upFirst: "05:42", upLast: "24:30", downFirst: "-", downLast: "-", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "gd-ara",
@@ -248,8 +248,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lineColor: "#759CCE",
     lat: 37.5922, lng: 126.7133,
     apiType: "ic1",
-    stationCode: "I052",
-    timetable: { upFirst: "05:44", upLast: "23:59", downFirst: "05:31", downLast: "23:46", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    stationCode: "I109",
+    timetable: { upFirst: "05:34", upLast: "24:35", downFirst: "05:47", downLast: "24:57", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
 
   // 서울 9호선 — 검단에서 가장 가까운 서쪽 종점
@@ -323,7 +323,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5849, lng: 126.6760,
     apiType: "ic2",
     stationCode: "I206",
-    timetable: { upFirst: "05:40", upLast: "24:23", downFirst: "05:32", downLast: "24:55", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    timetable: { upFirst: "05:40", upLast: "24:22", downFirst: "05:33", downLast: "24:55", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
   {
     id: "ic2-geomam",
@@ -335,17 +335,17 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "ic2",
     stationCode: "I207",
     groupKey: GEOMAM_GROUP,
-    timetable: { upFirst: "05:42", upLast: "24:25", downFirst: "05:30", downLast: "24:53", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    timetable: { upFirst: "05:30", upLast: "24:25", downFirst: "05:30", downLast: "24:52", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
   {
     id: "ic2-gajeong",
     displayName: "가정역",
     line: "인천2호선",
     lineColor: "#ED8B00",
-    lat: 37.5481, lng: 126.6573,
+    lat: 37.5489, lng: 126.6558,
     apiType: "ic2",
-    stationCode: "I208",
-    timetable: { upFirst: "05:44", upLast: "24:27", downFirst: "05:28", downLast: "24:51", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
+    stationCode: "I211",
+    timetable: { upFirst: "05:32", upLast: "24:34", downFirst: "05:35", downLast: "24:44", intervalMin: 5, intervalDisplay: "3~10분", upDirection: "운연", downDirection: "검단오류" },
   },
 
   // ── 김포 골드라인 (양촌 ↔ 김포공항) — TAGO 시간표 폴백 ─────────
@@ -357,7 +357,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6416, lng: 126.6147,
     apiType: "gimpogold",
     stationCode: "양촌",
-    timetable: { upFirst: "-", upLast: "-", downFirst: "05:30", downLast: "23:55", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "-", downDirection: "양촌" },
+    timetable: { upFirst: "-", upLast: "-", downFirst: "05:26", downLast: "24:26", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "-", downDirection: "김포공항" },
   },
   {
     id: "gold-gurae",
@@ -367,7 +367,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6431, lng: 126.6223,
     apiType: "gimpogold",
     stationCode: "구래",
-    timetable: { upFirst: "05:32", upLast: "23:57", downFirst: "05:30", downLast: "23:55", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:28", upLast: "24:28", downFirst: "05:59", downLast: "24:59", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-masan",
@@ -377,7 +377,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6408, lng: 126.6413,
     apiType: "gimpogold",
     stationCode: "마산",
-    timetable: { upFirst: "05:34", upLast: "23:59", downFirst: "05:28", downLast: "23:53", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:31", upLast: "24:32", downFirst: "05:56", downLast: "24:56", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-janggi",
@@ -387,7 +387,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6440, lng: 126.6690,
     apiType: "gimpogold",
     stationCode: "장기",
-    timetable: { upFirst: "05:36", upLast: "00:01", downFirst: "05:26", downLast: "23:51", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:36", upLast: "24:36", downFirst: "05:52", downLast: "24:52", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-unyang",
@@ -397,7 +397,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6539, lng: 126.6838,
     apiType: "gimpogold",
     stationCode: "운양",
-    timetable: { upFirst: "05:38", upLast: "00:03", downFirst: "05:24", downLast: "23:49", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:38", upLast: "24:38", downFirst: "05:49", downLast: "24:49", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-geolpobukbyeon",
@@ -407,7 +407,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6316, lng: 126.7057,
     apiType: "gimpogold",
     stationCode: "걸포북변",
-    timetable: { upFirst: "05:40", upLast: "00:05", downFirst: "05:22", downLast: "23:47", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:42", upLast: "24:42", downFirst: "05:45", downLast: "24:45", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-sau",
@@ -417,7 +417,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6204, lng: 126.7166,
     apiType: "gimpogold",
     stationCode: "사우",
-    timetable: { upFirst: "05:42", upLast: "00:07", downFirst: "05:20", downLast: "23:45", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:45", upLast: "24:45", downFirst: "05:43", downLast: "24:43", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-pungmu",
@@ -427,7 +427,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6123, lng: 126.7295,
     apiType: "gimpogold",
     stationCode: "풍무",
-    timetable: { upFirst: "05:44", upLast: "00:09", downFirst: "05:18", downLast: "23:43", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:48", upLast: "24:47", downFirst: "05:40", downLast: "24:40", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
   {
     id: "gold-gochon",
@@ -437,7 +437,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6013, lng: 126.7666,
     apiType: "gimpogold",
     stationCode: "고촌",
-    timetable: { upFirst: "05:46", upLast: "00:11", downFirst: "05:16", downLast: "23:41", intervalMin: 4, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
+    timetable: { upFirst: "05:52", upLast: "24:52", downFirst: "05:36", downLast: "24:35", intervalMin: 3, intervalDisplay: "3~7분", upDirection: "김포공항", downDirection: "양촌" },
   },
 ];
 

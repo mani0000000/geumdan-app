@@ -1,14 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
 import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
-// 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
 function saveMyPostId(id: string) {
   try {
     const stored = JSON.parse(localStorage.getItem("myPostIds") ?? "[]") as string[];
@@ -16,8 +15,31 @@ function saveMyPostId(id: string) {
   } catch { /* ignore */ }
 }
 
+async function compressToBase64(file: File, maxSize = 800, quality = 0.75): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function WritePage() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<CommunityCategory | "">("");
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
@@ -25,6 +47,7 @@ export default function WritePage() {
   const [nickname, setNickname] = useState("검단주민");
   const [authorDong, setAuthorDong] = useState("검단");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -35,6 +58,15 @@ export default function WritePage() {
       setAvatarUrl(p.avatar_url);
     });
   }, []);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files) return;
+    const remaining = 5 - images.length;
+    if (remaining <= 0) return;
+    const toProcess = Array.from(files).slice(0, remaining);
+    const compressed = await Promise.all(toProcess.map(f => compressToBase64(f)));
+    setImages(prev => [...prev, ...compressed]);
+  }
 
   const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
@@ -53,6 +85,7 @@ export default function WritePage() {
         authorAvatarUrl: avatarUrl,
         userId: uid,
         isAnonymous: false,
+        images,
       });
       if (result?.post) {
         saveMyPostId(result.post.id);
@@ -126,10 +159,45 @@ export default function WritePage() {
             className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
+        {/* Image preview strip */}
+        {images.length > 0 && (
+          <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-[#f5f5f7]">
+            {images.map((src, i) => (
+              <div key={i} className="relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center active:opacity-70"
+                >
+                  <X size={12} className="text-white" />
+                </button>
+              </div>
+            ))}
+            {images.length < 5 && (
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex-shrink-0 w-20 h-20 rounded-xl bg-[#f5f5f7] flex flex-col items-center justify-center gap-1 active:opacity-60"
+              >
+                <ImageIcon size={20} className="text-[#86868b]" />
+                <span className="text-[11px] text-[#86868b]">{images.length}/5</span>
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center gap-3 border-t border-[#f5f5f7]">
-          <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 relative"
+          >
             <ImageIcon size={18} className="text-[#6e6e73]" />
+            {images.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center">
+                {images.length}
+              </span>
+            )}
           </button>
           <input value={nickname} onChange={e => setNickname(e.target.value)}
             placeholder="닉네임" maxLength={12}
@@ -148,6 +216,16 @@ export default function WritePage() {
           </p>
         </div>
       </div>
+
+      {/* Hidden file input */}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={e => handleFiles(e.target.files)}
+      />
     </div>
   );
 }

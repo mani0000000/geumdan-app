@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 /**
  * fetch-news.mjs
- * Fetches news from Naver Search API and inserts into Supabase.
+ * Pulls news from Google News RSS (always) + Naver Search API (if creds set),
+ * resolves og:image for each article, and upserts into Supabase.
  *
- * Usage:
- *   NAVER_CLIENT_ID=xxx NAVER_CLIENT_SECRET=xxx SUPABASE_URL=xxx SUPABASE_SERVICE_KEY=xxx \
- *   node scripts/batch/fetch-news.mjs
+ * Required: SUPABASE_URL, SUPABASE_SERVICE_KEY
+ * Optional: NAVER_CLIENT_ID, NAVER_CLIENT_SECRET
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -14,11 +14,13 @@ const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const NAVER_ENABLED = Boolean(NAVER_CLIENT_ID && NAVER_CLIENT_SECRET);
 
-if (!NAVER_CLIENT_ID || !NAVER_CLIENT_SECRET || !SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
-  console.error('❌ Missing required env vars: NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, SUPABASE_URL, SUPABASE_SERVICE_KEY');
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+  console.error('❌ Missing required env vars: SUPABASE_URL, SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
+console.log(`   Naver source: ${NAVER_ENABLED ? 'enabled' : 'DISABLED (creds missing) — Google News RSS only'}`);
 
 // sb_* keys are not JWTs — strip Authorization: Bearer for PostgREST to avoid "Invalid Compact JWS"
 function makeFetch(key) {
@@ -46,6 +48,62 @@ const API_URL = 'https://openapi.naver.com/v1/search/news.json';
 
 function stripHtml(str) {
   return str.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
+}
+
+async function fetchOgImage(url, timeoutMs = 6000) {
+  if (!url) return null;
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      redirect: 'follow',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; GeumdanNewsBot/1.0; +https://geumdan.app)',
+        'Accept': 'text/html,application/xhtml+xml',
+        'Accept-Language': 'ko,en;q=0.8',
+      },
+    });
+    if (!res.ok) return null;
+    // Google News redirect pages put og:image near the END of a ~600KB doc,
+    // so we have to scan much more than a typical <head>.
+    const html = (await res.text()).slice(0, 1_000_000);
+    const m =
+      html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i) ||
+      html.match(/<meta[^>]+name=["']og:image["'][^>]*content=["']([^"']+)["']/i) ||
+      html.match(/<meta[^>]+name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i);
+    if (!m) return null;
+    try {
+      return new URL(m[1], url).href;
+    } catch {
+      return null;
+    }
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
+async function enrichWithOgImages(rows, concurrency = 4) {
+  let cursor = 0;
+  let hits = 0;
+  const workers = Array.from({ length: concurrency }, async () => {
+    while (true) {
+      const i = cursor++;
+      if (i >= rows.length) return;
+      const row = rows[i];
+      if (row.thumbnail || !row.url) continue;
+      const og = await fetchOgImage(row.url);
+      if (og) {
+        row.thumbnail = og;
+        hits++;
+      }
+    }
+  });
+  await Promise.all(workers);
+  return hits;
 }
 
 async function fetchNaverNews(query, display = 20) {
@@ -91,28 +149,149 @@ function itemToRow(item, newsType) {
   };
 }
 
+const GOOGLE_RSS_QUERIES = [
+  { query: '검단신도시',       type: 'local' },
+  { query: '검단 아파트',      type: 'local' },
+  { query: '인천 서구 검단',   type: 'local' },
+  { query: '검단 부동산',      type: 'real_estate' },
+  { query: '검단 분양',        type: 'real_estate' },
+];
+
+function decodeEntities(s) {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
+function rssStripXml(s) {
+  return decodeEntities(decodeEntities(s)).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function rssTagVal(xml, tag) {
+  const re = new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`);
+  const m = xml.match(re);
+  return m ? (m[1] ?? m[2] ?? '').trim() : '';
+}
+
+function rssExtractSource(title) {
+  const m = title.match(/ - ([^-]+)$/);
+  return m ? m[1].trim() : '구글뉴스';
+}
+
+function rssFirstImg(html) {
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m?.[1];
+}
+
+function rssExtractMediaImage(raw) {
+  const thumb = raw.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
+  if (thumb?.[1]) return thumb[1];
+  const mediaContents = raw.matchAll(/<media:content\b([^>]*)\/?>/gi);
+  for (const m of mediaContents) {
+    const attrs = m[1] ?? '';
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (medium === 'image' || (type && type.startsWith('image/')) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
+      return url;
+    }
+  }
+  const enclosures = raw.matchAll(/<enclosure\b([^>]*)\/?>/gi);
+  for (const m of enclosures) {
+    const attrs = m[1] ?? '';
+    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
+    if (!url) continue;
+    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
+    if (type?.startsWith('image/')) return url;
+  }
+  const ce = raw.match(/<content:encoded[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
+  if (ce?.[1]) {
+    const src = rssFirstImg(decodeEntities(ce[1]));
+    if (src) return src;
+  }
+  const dm = raw.match(/<description[^>]*>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/description>/i);
+  if (dm?.[1]) {
+    const src = rssFirstImg(decodeEntities(dm[1]));
+    if (src) return src;
+  }
+  return null;
+}
+
+async function fetchGoogleRssRows(query, type) {
+  const url = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), 8000);
+  try {
+    const res = await fetch(url, {
+      signal: ctrl.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; GeumdanApp/1.0)' },
+    });
+    if (!res.ok) return [];
+    const xml = await res.text();
+    const rows = [];
+    const items = xml.matchAll(/<item>([\s\S]*?)<\/item>/g);
+    for (const m of items) {
+      const raw = m[1];
+      const title = rssStripXml(rssTagVal(raw, 'title'));
+      const link = rssTagVal(raw, 'link') || rssTagVal(raw, 'guid');
+      const desc = rssStripXml(rssTagVal(raw, 'description')).slice(0, 160);
+      const pub = rssTagVal(raw, 'pubDate');
+      const source = rssStripXml(rssTagVal(raw, 'source')) || rssExtractSource(title);
+      if (title.length < 5 || !link || link === '#') continue;
+      rows.push({
+        title,
+        url: link,
+        source,
+        summary: desc,
+        thumbnail: rssExtractMediaImage(raw),
+        published_at: pub ? new Date(pub).toISOString() : new Date().toISOString(),
+        news_type: type,
+        tags: [],
+      });
+      if (rows.length >= 30) break;
+    }
+    return rows;
+  } catch {
+    return [];
+  } finally {
+    clearTimeout(tid);
+  }
+}
+
 console.log('📰 Starting news fetch...\n');
 
 try {
   const allRows = new Map(); // url -> row (deduplicate by URL)
 
-  for (const { query, type } of QUERIES) {
-    console.log(`  Fetching "${query}"...`);
-    try {
-      const items = await fetchNaverNews(query, 20);
-      console.log(`  Got ${items.length} articles`);
-
-      for (const item of items) {
-        const row = itemToRow(item, type);
-        if (row.url && !allRows.has(row.url)) {
-          allRows.set(row.url, row);
+  if (NAVER_ENABLED) {
+    for (const { query, type } of QUERIES) {
+      console.log(`  [Naver] "${query}"...`);
+      try {
+        const items = await fetchNaverNews(query, 20);
+        console.log(`    got ${items.length}`);
+        for (const item of items) {
+          const row = itemToRow(item, type);
+          if (row.url && !allRows.has(row.url)) allRows.set(row.url, row);
         }
+      } catch (err) {
+        console.error(`    ❌ ${err.message}`);
       }
-    } catch (err) {
-      console.error(`  ❌ Failed to fetch "${query}":`, err.message);
+      await new Promise(r => setTimeout(r, 200));
     }
+  }
 
-    // Small delay between requests to be polite
+  for (const { query, type } of GOOGLE_RSS_QUERIES) {
+    console.log(`  [Google RSS] "${query}"...`);
+    const rows = await fetchGoogleRssRows(query, type);
+    console.log(`    got ${rows.length}`);
+    for (const row of rows) {
+      if (row.url && !allRows.has(row.url)) allRows.set(row.url, row);
+    }
     await new Promise(r => setTimeout(r, 200));
   }
 
@@ -122,6 +301,10 @@ try {
   if (rows.length === 0) {
     console.log('  No articles to insert');
   } else {
+    console.log(`  Fetching og:image for ${rows.length} articles...`);
+    const hits = await enrichWithOgImages(rows);
+    console.log(`  Got og:image for ${hits}/${rows.length} articles`);
+
     // Use upsert with onConflict=url to avoid duplicates
     const { error } = await supabase
       .from('news_articles')

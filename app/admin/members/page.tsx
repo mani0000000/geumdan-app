@@ -8,9 +8,9 @@ import {
   adminFetchMembers, adminFetchMemberStats,
   adminSuspendMember, adminUnsuspendMember,
   adminWithdrawMember, adminRestoreMember, adminUpdateMemberNotes,
-  adminFetchMemberPosts, adminFetchMemberComments,
+  adminFetchMemberPosts, adminFetchMemberComments, adminFetchMemberLoginHistory,
   type AdminMember, type MemberStatus, type AdminMemberPost, type AdminMemberComment,
-  type MemberStats,
+  type AdminMemberLoginHistory, type MemberStats,
 } from "@/lib/db/admin-members";
 
 const STATUS_FILTERS: { key: "all" | MemberStatus; label: string; color: string }[] = [
@@ -90,11 +90,13 @@ function MemberDetailModal({ member, onClose, onChanged }: {
   const [showSuspendMenu, setShowSuspendMenu] = useState(false);
   const [posts, setPosts] = useState<AdminMemberPost[]>([]);
   const [comments, setComments] = useState<AdminMemberComment[]>([]);
+  const [loginHistory, setLoginHistory] = useState<AdminMemberLoginHistory[]>([]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     adminFetchMemberPosts(member.id, 5).then(setPosts).catch(() => setPosts([]));
     adminFetchMemberComments(member.id, 5).then(setComments).catch(() => setComments([]));
+    adminFetchMemberLoginHistory(member.id, 10).then(setLoginHistory).catch(() => setLoginHistory([]));
   }, [member.id]);
 
   async function saveNotes() {
@@ -235,6 +237,30 @@ function MemberDetailModal({ member, onClose, onChanged }: {
                   <div key={c.id} className="px-3 py-2 bg-[#F8F9FB] rounded-xl">
                     <p className="text-[12px] text-[#191F28] line-clamp-2">{c.content}</p>
                     <p className="text-[11px] text-[#B0B8C1] mt-1">{timeAgo(c.created_at)}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* 로그인 이력 */}
+          <section>
+            <h3 className="text-[11px] font-bold text-[#8B95A1] uppercase mb-2">로그인 이력 (최근 {loginHistory.length}건)</h3>
+            {loginHistory.length === 0 ? (
+              <p className="text-[12px] text-[#B0B8C1] py-3 text-center bg-[#F8F9FB] rounded-xl">로그인 이력 없음</p>
+            ) : (
+              <div className="space-y-1.5">
+                {loginHistory.map(h => (
+                  <div key={h.id} className="flex items-center gap-2 px-3 py-2 bg-[#F8F9FB] rounded-xl">
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${h.success ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+                      {h.success ? "성공" : "실패"}
+                    </span>
+                    <span className="text-[11px] text-[#4E5968] shrink-0">{h.login_type}</span>
+                    <span className="text-[11px] text-[#8B95A1] font-mono truncate flex-1">{h.ip_address ?? "-"}</span>
+                    {!h.success && h.fail_reason && (
+                      <span className="text-[11px] text-[#EF4444] truncate max-w-[80px]">{h.fail_reason}</span>
+                    )}
+                    <span className="text-[11px] text-[#B0B8C1] shrink-0">{timeAgo(h.login_at)}</span>
                   </div>
                 ))}
               </div>
