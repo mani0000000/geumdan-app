@@ -330,10 +330,13 @@ function CommunityTab() {
       <div className="bg-white mt-2 divide-y divide-[#f0f0f3]">
         {loadingPosts ? (
           [1,2,3].map(i => (
-            <div key={i} className="bg-white rounded-2xl px-4 py-4 space-y-2 animate-pulse">
-              <div className="h-3 w-16 bg-gray-100 rounded-full" />
-              <div className="h-4 w-3/4 bg-gray-100 rounded" />
-              <div className="h-3 w-1/2 bg-gray-100 rounded" />
+            <div key={i} className="px-4 py-4 flex gap-3 animate-pulse">
+              <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3 w-24 bg-gray-100 rounded-full" />
+                <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                <div className="h-3 w-1/2 bg-gray-100 rounded" />
+              </div>
             </div>
           ))
         ) : sorted.length === 0 ? (
@@ -343,40 +346,13 @@ function CommunityTab() {
           </div>
         ) : (
           sorted.map(post => (
-            <button key={post.id} onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-4 text-left active:bg-gray-50 transition-colors shadow-sm">
-              <div className="flex items-center gap-2 mb-2">
-                {post.isPinned && <Pin size={12} className="text-blue-600" />}
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catColor[post.category]}`}>
-                  {post.category}
-                </span>
-                {post.isHot && (
-                  <span className="flex items-center gap-0.5 text-[12px] font-bold text-red-500">
-                    <Flame size={10} /> HOT
-                  </span>
-                )}
-              </div>
-              <p className="text-[15px] font-semibold text-gray-900 leading-snug">{post.title}</p>
-              <p className="text-[14px] text-gray-500 mt-1 line-clamp-1">{post.content}</p>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-100">
-                <span className="text-[13px] text-gray-500">{post.author} · {post.authorDong}</span>
-                <span className="text-[13px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
-                <div className="flex items-center gap-3 ml-auto">
-                  <div className="flex items-center gap-1">
-                    <ThumbsUp size={12} className="text-gray-400" />
-                    <span className="text-[13px] text-gray-400">{post.likeCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MessageSquare size={12} className="text-gray-400" />
-                    <span className="text-[13px] text-gray-400">{post.commentCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} className="text-gray-400" />
-                    <span className="text-[13px] text-gray-400">{post.viewCount.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
-            </button>
+            <PostCard
+              key={post.id}
+              post={post}
+              router={router}
+              onHide={handleHide}
+              onReport={(id) => setReportTarget(id)}
+            />
           ))
         )}
       </div>
