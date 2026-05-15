@@ -26,7 +26,7 @@ import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
-import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
+import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
@@ -2446,11 +2446,14 @@ function HomeTransportWidget() {
                   <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
                     style={{ background: st.lineColor }}>{st.line}</span>
                 </div>
-                {st.timetable.intervalMin > 0 && (
-                  <p className="text-[12px] text-[#86868b] mt-0.5">
-                    배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}
-                  </p>
-                )}
+                {(() => {
+                  const t = dayTimetable(st.timetable);
+                  return t.intervalMin > 0 ? (
+                    <p className="text-[12px] text-[#86868b] mt-0.5">
+                      배차 {t.intervalDisplay ?? `${t.intervalMin}분`}
+                    </p>
+                  ) : null;
+                })()}
               </div>
               <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
                 className="p-1.5 active:opacity-60">

@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 /**
  * backfill-og-images.mjs
- * One-shot: for every news_articles row with thumbnail IS NULL,
+ * One-shot: for every news_articles row that needs a real thumbnail
+ *   (thumbnail IS NULL  OR  thumbnail contains "google" — i.e. the
+ *    Google News redirect logo from a previous run),
  * fetch og:image (or twitter:image) from the article URL and update the row.
  *
  * Usage:
@@ -84,14 +86,16 @@ async function fetchOgImage(url) {
   }
 }
 
-async function fetchAllNullThumbnailRows() {
+// Rows worth re-fetching: no thumbnail at all, OR the thumbnail is a Google
+// asset (logo from a news.google.com redirect that an earlier batch saved).
+async function fetchRowsNeedingThumbnail() {
   const rows = [];
   let from = 0;
   while (true) {
     const { data, error } = await supabase
       .from('news_articles')
-      .select('id, url')
-      .is('thumbnail', null)
+      .select('id, url, thumbnail')
+      .or('thumbnail.is.null,thumbnail.ilike.%google%')
       .order('published_at', { ascending: false })
       .range(from, from + PAGE_SIZE - 1);
     if (error) throw new Error(`Supabase select failed: ${error.message}`);
@@ -119,7 +123,7 @@ async function runWorkers(rows) {
       const og = await fetchOgImage(row.url);
       processed++;
 
-      if (og) {
+      if (og && !/google/i.test(og)) {
         if (!DRY_RUN) {
           const { error } = await supabase
             .from('news_articles')
@@ -153,8 +157,10 @@ console.log(`   Supabase: ${SUPABASE_URL}`);
 console.log(`   Concurrency: ${CONCURRENCY}   Timeout: ${FETCH_TIMEOUT_MS}ms   Dry run: ${DRY_RUN}`);
 
 try {
-  const rows = await fetchAllNullThumbnailRows();
-  console.log(`\n📋 Rows with thumbnail IS NULL: ${rows.length}`);
+  const rows = await fetchRowsNeedingThumbnail();
+  const nullCount = rows.filter(r => !r.thumbnail).length;
+  const googleCount = rows.length - nullCount;
+  console.log(`\n📋 Rows needing thumbnail: ${rows.length} (null: ${nullCount}, google logo: ${googleCount})`);
   if (rows.length === 0) {
     console.log('✅ Nothing to backfill.');
     process.exit(0);
@@ -164,7 +170,7 @@ try {
 
   console.log('\n────────────────────────────────────');
   console.log(`✅ Done. ${hits} rows updated${DRY_RUN ? ' (DRY RUN — no writes)' : ''}.`);
-  console.log(`   No og:image found: ${misses}`);
+  console.log(`   No usable og:image: ${misses}`);
   if (updateErrors) console.log(`   Update errors: ${updateErrors}`);
 } catch (err) {
   console.error('\n❌ Backfill failed:', err.message);

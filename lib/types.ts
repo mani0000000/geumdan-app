@@ -35,6 +35,7 @@ export interface Post {
   likeCount: number;
   commentCount: number;
   images?: string[];
+  videos?: string[];
   isPinned?: boolean;
   isHot?: boolean;
   isHidden?: boolean;

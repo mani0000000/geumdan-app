@@ -16,6 +16,7 @@
  *   comment_count INTEGER DEFAULT 0,
  *   is_pinned   BOOLEAN DEFAULT FALSE,
  *   is_hot      BOOLEAN DEFAULT FALSE,
+ *   videos      TEXT[],
  *   created_at  TIMESTAMPTZ DEFAULT NOW(),
  *   updated_at  TIMESTAMPTZ DEFAULT NOW()
  * );
@@ -39,6 +40,14 @@ function isConfigured(): boolean {
 
 function rowToPost(row: Record<string, unknown>): Post {
   const isAnon = Boolean(row.is_anonymous);
+  const imageUrlsCol = Array.isArray(row.image_urls) ? (row.image_urls as string[]) : undefined;
+  const imagesLegacy = Array.isArray(row.images) ? (row.images as string[]) : undefined;
+  const images = (imageUrlsCol && imageUrlsCol.length > 0)
+    ? imageUrlsCol
+    : (imagesLegacy ?? []);
+  const videoUrl = typeof row.video_url === 'string' && row.video_url.length > 0
+    ? (row.video_url as string)
+    : undefined;
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
@@ -52,7 +61,7 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
-    images: (row.images as string[]) ?? [],
+    videos: Array.isArray(row.videos) ? (row.videos as string[]) : undefined,
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
     isHidden: (row.is_hidden as boolean) ?? false,
@@ -129,6 +138,8 @@ export interface PostInput {
   userId?: string | null;
   isAnonymous: boolean;
   images?: string[];
+  videoUrl?: string | null;
+  videos?: string[];
 }
 
 export interface CreatePostResult {
@@ -157,7 +168,12 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     user_id: input.userId ?? null,
   };
   const hasImages = (input.images?.length ?? 0) > 0;
-  const payload = hasImages ? { ...base, images: input.images } : base;
+  const hasVideo = !!input.videoUrl;
+  const payload = {
+    ...base,
+    ...(hasImages ? { images: input.images } : {}),
+    ...(hasVideo ? { video_url: input.videoUrl } : {}),
+  };
 
   let { data, error } = await supabase
     .from('community_posts')
@@ -179,7 +195,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         author_dong: input.authorDong,
         author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
         is_anonymous: input.isAnonymous,
-        user_id: input.userId ?? null,
+        videos: input.videos && input.videos.length > 0 ? input.videos : null,
       })
       .select()
       .single());

@@ -451,6 +451,20 @@ function DetailContent() {
                       ))}
                     </div>
                   )}
+                  {post.videos && post.videos.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      {post.videos.map((src, i) => (
+                        <video
+                          key={i}
+                          src={src}
+                          controls
+                          playsInline
+                          preload="metadata"
+                          className="w-full rounded-xl bg-black aspect-video"
+                        />
+                      ))}
+                    </div>
+                  )}
                   <p className="text-[12px] text-[#86868b] mt-3">조회 {post.viewCount.toLocaleString()}</p>
 
                   {/* Action row */}

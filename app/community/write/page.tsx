@@ -5,6 +5,7 @@ import { ChevronLeft, Image as ImageIcon, ChevronDown, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
 import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -44,10 +45,12 @@ export default function WritePage() {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
   const [authorDong, setAuthorDong] = useState("검단");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -80,12 +83,13 @@ export default function WritePage() {
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: nickname.trim() || "검단주민",
+        author: anonymous ? "익명" : (nickname.trim() || "검단주민"),
         authorDong,
-        authorAvatarUrl: avatarUrl,
+        authorAvatarUrl: anonymous ? null : avatarUrl,
         userId: uid,
-        isAnonymous: false,
+        isAnonymous: anonymous,
         images,
+        videos,
       });
       if (result?.post) {
         saveMyPostId(result.post.id);
@@ -101,7 +105,6 @@ export default function WritePage() {
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] sticky top-0 bg-white z-10">
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
@@ -116,7 +119,6 @@ export default function WritePage() {
         </button>
       </div>
 
-      {/* Category picker */}
       <button
         onClick={() => setShowCatPicker(!showCatPicker)}
         className="flex items-center justify-between px-5 py-4 border-b border-[#f5f5f7] active:bg-[#F9FAFB] transition-colors"
@@ -142,7 +144,6 @@ export default function WritePage() {
       )}
 
       <div className="flex-1 flex flex-col">
-        {/* Title */}
         <div className="border-b border-[#f5f5f7]">
           <input value={title} onChange={e => setTitle(e.target.value)}
             placeholder="제목을 입력해주세요" maxLength={50}
@@ -152,19 +153,16 @@ export default function WritePage() {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 border-b border-[#f5f5f7]">
           <textarea value={content} onChange={e => setContent(e.target.value)}
-            placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
-            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
+            placeholder={"내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기"}
+            className="w-full h-full min-h-[180px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
-        {/* Image preview strip */}
         {images.length > 0 && (
           <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-[#f5f5f7]">
             {images.map((src, i) => (
               <div key={i} className="relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt="" className="w-full h-full object-cover" />
                 <button
                   onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
@@ -186,29 +184,45 @@ export default function WritePage() {
           </div>
         )}
 
-        {/* Bottom toolbar */}
-        <div className="px-4 py-3 flex items-center gap-3 border-t border-[#f5f5f7]">
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 relative"
-          >
-            <ImageIcon size={18} className="text-[#6e6e73]" />
-            {images.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center">
-                {images.length}
-              </span>
+        <div className="border-b border-[#f5f5f7] px-5 py-4 space-y-2">
+          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
+          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
+        </div>
+
+        <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 relative"
+            >
+              <ImageIcon size={18} className="text-[#6e6e73]" />
+              {images.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center">
+                  {images.length}
+                </span>
+              )}
+            </button>
+            {!anonymous && (
+              <input value={nickname} onChange={e => setNickname(e.target.value)}
+                placeholder="닉네임" maxLength={12}
+                className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
             )}
+          </div>
+          <button onClick={() => setAnonymous(!anonymous)}
+            className={`flex items-center gap-2 h-8 px-3 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
+              anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"
+            }`}>
+            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${anonymous ? "border-white" : "border-[#86868b]"}`}>
+              {anonymous && <div className="w-2 h-2 rounded-full bg-white" />}
+            </div>
+            익명
           </button>
-          <input value={nickname} onChange={e => setNickname(e.target.value)}
-            placeholder="닉네임" maxLength={12}
-            className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
         </div>
 
         {error && (
           <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
         )}
 
-        {/* Tips */}
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
@@ -217,7 +231,6 @@ export default function WritePage() {
         </div>
       </div>
 
-      {/* Hidden file input */}
       <input
         ref={fileRef}
         type="file"

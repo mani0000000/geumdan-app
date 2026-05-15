@@ -68,6 +68,44 @@ export interface SubwayStationWithDist extends SubwayStationEntry {
   distM: number;
 }
 
+// ── 평일/휴일 구분 ──────────────────────────────────────────────
+export type SubwayDayType = "weekday" | "holiday";
+
+export interface DayTimetable {
+  upFirst: string; upLast: string;
+  downFirst: string; downLast: string;
+  intervalMin: number;
+  intervalDisplay?: string;
+}
+
+const KR_HOLIDAYS_2026 = new Set([
+  "2026-01-01",
+  "2026-02-16", "2026-02-17", "2026-02-18",
+  "2026-03-01", "2026-03-02",
+  "2026-05-05", "2026-05-25",
+  "2026-06-03", "2026-06-06",
+  "2026-08-15",
+  "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27",
+  "2026-10-03", "2026-10-05", "2026-10-09",
+  "2026-12-25",
+]);
+
+export function currentDayType(now: Date = new Date()): SubwayDayType {
+  const day = now.getDay();
+  if (day === 0 || day === 6) return "holiday";
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return KR_HOLIDAYS_2026.has(`${yyyy}-${mm}-${dd}`) ? "holiday" : "weekday";
+}
+
+export function dayTimetable(
+  t: SubwayStationEntry["timetable"],
+  _dayType?: SubwayDayType,
+): DayTimetable {
+  return t;
+}
+
 // ── 역 데이터베이스 ───────────────────────────────────────────
 const STATION_DB: SubwayStationEntry[] = [
   // 공항철도 (AREX)
