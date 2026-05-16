@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-16T15:45:44.949Z",
+  "fetchedAt": "2026-05-16T18:46:23.606Z",
   "count": 40,
   "articles": [
     {
@@ -30,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-12",
+      "id": "gr2-13",
       "title": "[현안 점검] 인천 검단구 출범 준비 분주···GTX-D Y자 등 교통현안 산적 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-6",
+      "id": "gr0-8",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2000만원에 거래 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -75,12 +75,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-1",
-      "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - 인천일보",
+      "id": "gr2-10",
+      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
       "summary": "",
       "source": "인천일보",
-      "publishedAt": "2026-05-14T08:13:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE5KYWdybkJkNFBFcmlaSm1iVGpUY0JFRkRPdU1qZU95MEV0X3pFLVJjYVZyY0xvdGhGZHZrekJDZnBQV2VpM01PWktha3NwMjJwRGtJR2JwOTdFSXgtSk5KT0kwcVpmYm1wbm5wMF8yQkg?oc=5",
+      "publishedAt": "2026-05-14T08:14:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
       "type": "뉴스"
     },
     {
@@ -93,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-35",
+      "id": "gr0-42",
       "title": "인천 검암역세권 1조 4000억 복합개발 민간 공모 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-9",
       "title": "아파트 가치 견인하는 브랜드 프리미엄…‘검단신도시 롯데캐슬 넥스티엘’ 입주 중 - 골프타임즈",
       "summary": "",
       "source": "골프타임즈",
@@ -120,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-15",
+      "id": "gr1-16",
       "title": "대단지 아파트 '더샵 검단레이크파크' 5월 분양 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-5",
+      "id": "gr1-6",
       "title": "대단지 아파트 ‘더샵 검단레이크파크’ 5월 분양 - 세계일보",
       "summary": "",
       "source": "세계일보",
@@ -147,21 +147,30 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-64",
+      "id": "gr0-19",
+      "title": "인천도시공사, 검암역 중심 복합개발 조성 본격화 - 일간투데이",
+      "summary": "",
+      "source": "일간투데이",
+      "publishedAt": "2026-05-13T12:43:37.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5ENEdKQXNvdzFRdFNRZVZjX1FDUFdVazJzY2tmbzRwSjZXZEdXaXY0ZGdENmpfNjltZTM3M3gxQlBrd3ZBbk5mdTRtWXFrUVNhRjdERl9ObEtQb0ZQTFo1RDJqZF9SS0UxTkUw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-13",
+      "title": "김진규 인천 검단구청장 후보 검단신도시 남부아파트 주민 악취민원 청취 - 현대일보",
+      "summary": "",
+      "source": "현대일보",
+      "publishedAt": "2026-05-13T09:44:26.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5TYjNnMmMyQUxNSjFDdEFnZHJVN3AxSWE4NHNzMWZlQVRZZGtmSUFrWHo2UllYby1NdzBRM3o5eEVuNFpwdGlIZmlHdWx1QUIzN2R2WjFVb3dzeTNFVWpuZ1M1eHlkcktPV0VNZ2V3?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-83",
       "title": "인천도시공사, 검암역세권 복합개발 본격 시동 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-13T09:42:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5vMkVkcVBwS1lQandfVWtiQkF2MlJqUXB6Mk01YVI5dXAydDNjNlM0anVGeWdqZHNGbDZpaW5mcFRkcUx1SW4xdC1SWnNCT1hLT18w?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-9",
-      "title": "iH, 1조 4천억 검암 플라시아 복합개발사업 설명회 열어 - 일간경기",
-      "summary": "",
-      "source": "일간경기",
-      "publishedAt": "2026-05-13T09:13:34.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE8wclRwQ011WlB2LXhld1ZJcGo1ejZCNnVaVC1DY2NodlNxUnNYMzRLS25TSVhJdDRHODVtakhsU01Cd0hLeHRXRmhYc2JDUGxobmpOcklZa0s0bm5KbW5oaXFQSi1Pd0pV?oc=5",
       "type": "뉴스"
     },
     {
@@ -174,15 +183,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
-      "title": "검단신도시 브랜드 아파트 공급 이어져... '더샵 검단레이크파크' 5월 분양 - 모바일한경",
-      "summary": "",
-      "source": "모바일한경",
-      "publishedAt": "2026-05-13T07:45:46.000Z",
-      "url": "https://news.google.com/rss/articles/CBMif0FVX3lxTE9ha3g5cWl5cUNZY1VRdEFBTlB2UTRTOTBISVpRRm9Pak1hb09oOURaOERTLTctVTRzQ0tyOEszZkJFdnp2NWc2WmZTWDIwbnE1ckNZNDdiNlZ1TWNiVGVrdGs1ZVhyV1hTMV9Vd0FaQ3VROVNVbjhuMTBRRFo2dGM?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr2-1",
       "title": "인천 서구, 검단구 출범 앞두고 ‘구정소식 알림서비스’ 사전구독 시작 - 뉴스타운",
       "summary": "",
@@ -192,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-11",
       "title": "인천 ‘착한가게’ 4,100호 돌파… 나눔의 온기 검단까지 퍼졌다 - 복지투데이",
       "summary": "",
       "source": "복지투데이",
@@ -201,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-7",
       "title": "인천 서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -246,16 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
-      "title": "서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 미디어생활",
-      "summary": "",
-      "source": "미디어생활",
-      "publishedAt": "2026-05-13T01:19:16.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE52bmkyU0ZvekFxNm1vZFlETTZnYnpqNi05RTl4TEpKaGNRMENXNlZ5cF9QbXdGQkh2UktDZE5LOFdNRy1IWTNqOWdBMFBCQ0ViQmpCTEIwUHA4YTY1bkhscU9IVzVvZGQySHhKV1Z0cw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-10",
+      "id": "gr2-11",
       "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 케이에스피뉴스",
       "summary": "",
       "source": "케이에스피뉴스",
@@ -273,7 +264,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
+      "id": "gr2-8",
+      "title": "민주당 인천 서구병 지역위원회, ‘검단 원팀 선거대책위원회’ 출범 - 기호일보",
+      "summary": "",
+      "source": "기호일보",
+      "publishedAt": "2026-05-12T19:13:21.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1pSTc2WnVxdnUzTGZ5emp2ZGJUQXp3c3dmVDlwQmxLdFp1dmxlaEtSUXlrdmY2UEEwUHlPM0c1UE9QM0NtaGdPbnZic0owRE90XzBzbEJMZXhpVVN5OVF0VktxcS1GbWp2T3d6UnlpRQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-18",
       "title": "더불어민주당 인천 서구병, 검단 원팀 선거대책위원회 발대식 개최 - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -282,7 +282,34 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr3-1",
+      "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-05-11T10:10:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5sbUFUcHNtbmtyWmI0REZpY0ZoMHB6MWVIYWRUV2l1ZllfcW1KZWtZemZQQnJJQjBIeWVFZzdJRWRINGR6Tlp3QnExbzFzeUxsNGFxVA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-10",
+      "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - 인천일보",
+      "summary": "",
+      "source": "인천일보",
+      "publishedAt": "2026-05-11T09:42:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE5KYWdybkJkNFBFcmlaSm1iVGpUY0JFRkRPdU1qZU95MEV0X3pFLVJjYVZyY0xvdGhGZHZrekJDZnBQV2VpM01PWktha3NwMjJwRGtJR2JwOTdFSXgtSk5KT0kwcVpmYm1wbm5wMF8yQkg?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-16",
+      "title": "[인천 기초단체장 후보 공약 점검] 김진규 검단구청장 후보 “광역교통망 반드시 구축” - 인천일보",
+      "summary": "",
+      "source": "인천일보",
+      "publishedAt": "2026-05-11T09:42:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBLSG1uNEVuR0pTQnlxNmh1a3lyaWhpLVd3WDBIN1JZZEpkVjRZR0hLY0p6U3Z2eThGUWxINWp4YXJyS1NNLWxpS1JkdXhfWDh1LS1mb0RvWnNsdzdqZTVTQ1lVWXpQNHM2OFY5dTVjalc?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-14",
       "title": "[6·3 지선 여론조사] 인천 서구 표심, 박찬대 50.0%로 앞서 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -291,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-23",
+      "id": "gr2-24",
       "title": "[6·3 지선 여론조사] 서구 정당 지지도, 민주당 45.3%·국힘 30.9%…우위 흐름 뚜렷 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -300,16 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
-      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
-      "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-05-11T09:25:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-22",
+      "id": "gr0-24",
       "title": "도성훈 인천교육감 예비후보, 검단신도시 \"학교 부족\" 해법 제시 - 뉴스티앤티",
       "summary": "",
       "source": "뉴스티앤티",
@@ -327,16 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-21",
-      "title": "인천 서해구 검단구 영종구 제물포구 7월 출범 - seniortoday.co.kr",
-      "summary": "",
-      "source": "seniortoday.co.kr",
-      "publishedAt": "2026-05-09T03:00:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1rRzRrUjRrU1BPMElrTXpQdFZCMHNSRjkwMXp2dE1jR0RUVU5QeUhhTUZlS3FFRDR3MUNlYjE5cV9hNFhsNE56cXVKZlBvN2s2bzJleDNBQm1hYkpnRHk0b3p6MmF2dVVjRXZJUUNGMA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-13",
+      "id": "gr0-14",
       "title": "[도로투데이] 인천 검단신도시 드림로 우회도로 완료 속도제한 시속 50㎞로 하향 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-7",
+      "id": "gr0-64",
       "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-08T05:57:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5ScGJzNEVYRnFaaEJfT1R4SlJzV25WWThSODNLX0FvLXY5VEZOTC1RNFdKOU0xVVZOU3V3dzhtajVpR0VmU0pHdWdqWExta1J5T0Rn?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-11",
-      "title": "교통 호재에 주목받는 검단신도시, 수도권 서북부 부동산 시장 다크호스로 부상 - 마켓인",
-      "summary": "",
-      "source": "마켓인",
-      "publishedAt": "2026-05-08T05:55:04.000Z",
-      "url": "https://news.google.com/rss/articles/CBMic0FVX3lxTE1ZT2VObTVYWTVFUWdyeDJZLUJkSS1TR0NzREwzOHJBZ0NkQjFsWDFOaWlTZ1BxRThsM1pCTFZ4b3FEUWlFQmcwTWJ4SjJHTTVJbUgtSHRzbUZVckdCOXZucmNiV0JTR1dXenZHYllGY2ZRaE0?oc=5",
       "type": "뉴스"
     }
   ]
