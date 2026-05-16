@@ -61,6 +61,7 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
+    images: images.length > 0 ? images : undefined,
     videos: Array.isArray(row.videos) ? (row.videos as string[]) : undefined,
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
@@ -169,10 +170,12 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
   };
   const hasImages = (input.images?.length ?? 0) > 0;
   const hasVideo = !!input.videoUrl;
+  const hasVideos = (input.videos?.length ?? 0) > 0;
   const payload = {
     ...base,
     ...(hasImages ? { images: input.images } : {}),
     ...(hasVideo ? { video_url: input.videoUrl } : {}),
+    ...(hasVideos ? { videos: input.videos } : {}),
   };
 
   let { data, error } = await supabase
