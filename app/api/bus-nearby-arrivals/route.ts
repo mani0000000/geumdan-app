@@ -2,12 +2,12 @@ import type { NextRequest } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 12;
+export const maxDuration = 14;
 
 const TAGO_BASE = "https://apis.data.go.kr/1613000";
 const NEARBY_RADIUS_M = 500;
 const NEARBY_MAX = 4;
-const CACHE_TTL_MS = 30 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 
 type CacheEntry = { ts: number; body: string };
 const cache = new Map<string, CacheEntry>();
@@ -42,6 +42,7 @@ async function tagoGet(
   key: string,
   path: string,
   params: Record<string, string>,
+  timeoutMs = 8000,
 ): Promise<Record<string, string>[]> {
   const p = new URLSearchParams(params);
   if (!p.has("pageNo")) p.set("pageNo", "1");
@@ -49,7 +50,7 @@ async function tagoGet(
   p.set("_type", "xml");
   const url = `${TAGO_BASE}${path}?serviceKey=${encodeURIComponent(key)}&${p.toString()}`;
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
     if (!res.ok) return [];
     const xml = await res.text();
     const code = xml.match(/<resultCode>(\d+)<\/resultCode>/)?.[1];
@@ -84,11 +85,12 @@ export async function GET(request: NextRequest) {
 
   const t0 = Date.now();
 
-  // Step 1: nearby stops
+  // Step 1: nearby stops — 충분한 timeout(8s)으로 fallback 방지
   const stopItems = await tagoGet(
     key,
     "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",
     { gpsLati: String(lat), gpsLong: String(lng), numOfRows: "5" },
+    8000,
   );
 
   const allStops = stopItems
@@ -110,13 +112,14 @@ export async function GET(request: NextRequest) {
     return new Response(body, { headers: { "Content-Type": "application/json", "X-Cache": "MISS" } });
   }
 
-  // Step 2: arrivals for all stops in parallel
+  // Step 2: arrivals for all stops in parallel — 4s timeout: 도착정보는 실패해도 정류장은 표시됨
   const stopsWithArrivals = await Promise.all(
     stops.map(async stop => {
       const items = await tagoGet(
         key,
         "/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList",
         { cityCode: "23", nodeId: stop.stationId, numOfRows: "15" },
+        4000,
       );
       const arrivals = items.map(d => {
         const routeTp = d.routetp ?? d.routeTp ?? "";
