@@ -1,7 +1,16 @@
 {
-  "fetchedAt": "2026-05-16T07:46:53.603Z",
+  "fetchedAt": "2026-05-16T10:06:53.975Z",
   "count": 40,
   "articles": [
+    {
+      "id": "gr2-0",
+      "title": "인천 서구 왕길동 공장서 화재··· 화재 진화 중 [1보] - 인천투데이",
+      "summary": "",
+      "source": "인천투데이",
+      "publishedAt": "2026-05-16T08:29:57.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9US0J3eU5mUUY0djRNeGZ0T3U0eTBtTERnU1ZJcmxEWDh4WU1fXzRWTVpMaXczOE11cC1YWkhLdEVEcGlHcEhXM3J0bGlraUhNOWNDcHQtdjM3bWhzNDg2ZGlGZkdieFR6NE1CVEtvUzg?oc=5",
+      "type": "뉴스"
+    },
     {
       "id": "gr1-1",
       "title": "LH, 인천검단 아파트 공사 관련 동부건설에 320억원대 손배소 제기 - 데이터투자",
@@ -21,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
+      "id": "gr2-14",
       "title": "[현안 점검] 인천 검단구 출범 준비 분주···GTX-D Y자 등 교통현안 산적 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -36,6 +45,15 @@
       "source": "ppss.kr",
       "publishedAt": "2026-05-15T08:03:43.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBURDZnV2E1c3lGd3drOHkxc3VsZkJjS2p6OGNHeVZzSGRQNUxvQWJPaXB4M2tLV1pVYWd3U1p6TmE2UE1jWHRZUE5mSzVVWXJjNy10TElPWFhKb0JqS2dmdmRBN2w?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-2",
+      "title": "7월 인천 검단구 출범...검단 소식 미리 받아보세요 - seniortoday.co.kr",
+      "summary": "",
+      "source": "seniortoday.co.kr",
+      "publishedAt": "2026-05-15T03:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFB3VGxYbE96ZUlDbVBWVlFYNjh3azdZYTNHQ0FUeU9nOTBxTlk1NWYzOXhQZVMtZVpRNmFYTVRpbnQtLVFPTzlLZ3VrblpjTmFkRTZNNk4wUE5LbTAzYlFHVmxSbFluNTBMaEgyaWVtaw?oc=5",
       "type": "뉴스"
     },
     {
@@ -75,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-36",
+      "id": "gr0-25",
       "title": "인천 검암역세권 1조 4000억 복합개발 민간 공모 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -84,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-2",
+      "id": "gr2-3",
       "title": "서구, 검단구 구정 소식 알림서비스 사전구독자 모집 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -129,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-17",
       "title": "인천도시공사, 검암역 중심 복합개발 조성 본격화 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -138,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-14",
       "title": "김진규 인천 검단구청장 후보 검단신도시 남부아파트 주민 악취민원 청취 - 현대일보",
       "summary": "",
       "source": "현대일보",
@@ -147,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-66",
+      "id": "gr0-29",
       "title": "인천도시공사, 검암역세권 복합개발 본격 시동 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -174,6 +192,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-8",
+      "title": "인천 서구, 청년정책위원회.청년참여단 및 검단구 구정소식 알림서비스 사전 구독자 모집 - 브레이크뉴스",
+      "summary": "",
+      "source": "브레이크뉴스",
+      "publishedAt": "2026-05-13T04:22:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiSEFVX3lxTFB3VEtLU09HclRjd2pXclhSMm9FNEdFWnhVY1NxOHMzMDNNYkd3eHE3Q0ZZWVBvVGpDWVBFSUYzU0tuM0lSR3c3OQ?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr0-11",
       "title": "인천 ‘착한가게’ 4,100호 돌파… 나눔의 온기 검단까지 퍼졌다 - 복지투데이",
       "summary": "",
@@ -183,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-10",
       "title": "인천 서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -201,15 +228,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
-      "title": "인천 검단구 7월 출범…서구, 구정알림 사전구독자 모집 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-13T02:04:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBud3k5ZURzMWk4bktieFFpbHhibTk0czFPNW40ZVk5a2xpMWg3TjRMb1RxYkZtT0J1UTVTT2dyalJzbGF3WHVhTElnMUE1bjBQd1dB?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr2-4",
       "title": "인천 검단구 7월 출범…서구, 구정알림 사전구독자 모집 - 뉴시스",
       "summary": "",
@@ -219,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-5",
       "title": "검단구 구정소식 알림서비스 '사전구독자' 모집 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -228,16 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
-      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 엔디엔뉴스",
-      "summary": "",
-      "source": "엔디엔뉴스",
-      "publishedAt": "2026-05-13T01:58:58.000Z",
-      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE9DdGlGOVBIVGtQbms3a0pOR3d5YmhlOHBNblZSWVJLMFYxMjA0SDkxOC1MMU9jX2Y5VVJEM3dSMkY3d0hGRGNFdU8yLWI5U0EyMVVFOVkwQVp0cmYxMDNoT3FZVnFDaDJfWlA4QTd0MEdrd9IBckFVX3lxTE9DdGlGOVBIVGtQbms3a0pOR3d5YmhlOHBNblZSWVJLMFYxMjA0SDkxOC1MMU9jX2Y5VVJEM3dSMkY3d0hGRGNFdU8yLWI5U0EyMVVFOVkwQVp0cmYxMDNoT3FZVnFDaDJfWlA4QTd0MEdrdw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-5",
+      "id": "gr2-6",
       "title": "인천 서구, 검단구 출범 앞두고 구정소식 알림서비스 사전구독 모집 - 연합시민의소리",
       "summary": "",
       "source": "연합시민의소리",
@@ -246,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-7",
       "title": "서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 미디어생활",
       "summary": "",
       "source": "미디어생활",
@@ -255,12 +264,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
-      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 미디어투데이",
+      "id": "gr2-13",
+      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 케이에스피뉴스",
       "summary": "",
-      "source": "미디어투데이",
+      "source": "케이에스피뉴스",
       "publishedAt": "2026-05-13T00:58:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiSkFVX3lxTE5QajFGeHNDcWs5d0FjV3RPelktbnhwWTNUWG4xaHdWMGtMeXdMcFNnYllHWktYRWUxYVpiOHNYbTMyOFIwQ0N6NFln?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE5jM0UzOFdIa3I2RXVwMzRRSVdZRVNjZ2hSZEI2TVc3bm9rX291cFdMZmRaWE4zaC16Zkp0R0k4Y2pOMWZw?oc=5",
       "type": "뉴스"
     },
     {
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-16",
+      "id": "gr1-13",
       "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 98㎡ 6억4900만원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
@@ -291,12 +300,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-23",
       "title": "더불어민주당 인천 서구병, 검단 원팀 선거대책위원회 발대식 개최 - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
       "publishedAt": "2026-05-12T00:38:10.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFAxdnFhay1BakRoM04yOXZGSEpCNnNrWGdkdnhjSy1FYm42Nl82cDFfWm9tZ1FGZG5iclV6MWhkV2lUVHJIdlUtRXFHRGlJRTd1bGNqT2N1SmtpMWFtWVkxTw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-11",
+      "title": "[인천 기초단체장 후보 공약 점검] 박세훈 검단구청장 후보 “교통 확충…저녁시간 드릴 것” - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-05-11T10:10:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiRkFVX3lxTE81Znh2SmlMQVlsQ0t4WkNqdkVIZ0J3STY4OFIyRnRvTnBsY05HWDVPdTVJZDBzNk5NdVY0bWZSX184LU94WWc?oc=5",
       "type": "뉴스"
     },
     {
@@ -318,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
+      "id": "gr2-15",
       "title": "[인천 기초단체장 후보 공약 점검] 김진규 검단구청장 후보 “광역교통망 반드시 구축” - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -327,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-11",
+      "id": "gr2-12",
       "title": "[6·3 지선 여론조사] 인천 서구 표심, 박찬대 50.0%로 앞서 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -336,30 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-26",
+      "id": "gr2-48",
       "title": "[6·3 지선 여론조사] 서구 정당 지지도, 민주당 45.3%·국힘 30.9%…우위 흐름 뚜렷 - 인천일보",
       "summary": "",
       "source": "인천일보",
       "publishedAt": "2026-05-11T09:27:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBkX0NfTVg3bWIyZXg4ajdLU2ZOcW5FY3NOQnQ5dlRoYTVSd3pPYmlodVJDZ0gwbFJYQTVxYVYtVjV1QmJHaElUazlmSUZsNUlvRHY3WUJEUlllSkdDRHlJWDZKNWM1M1dmdXVoZVZCa3k?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-21",
-      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
-      "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-05-11T09:25:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-22",
-      "title": "도성훈 인천교육감 예비후보, 검단신도시 \"학교 부족\" 해법 제시 - 뉴스티앤티",
-      "summary": "",
-      "source": "뉴스티앤티",
-      "publishedAt": "2026-05-11T08:44:22.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE0tRnRKX19WQWYxUTNDdzZxSTlTd251RmV3bWZuTXRVS0U0elBBall6WUt5d0JMcWhPSGRSVmpaSWlVNHBsTjFCakQ0VUJLVWhFdlIwN09xUDBYNGpuYl8yblp1NTZMN3lsdEE?oc=5",
       "type": "뉴스"
     }
   ]
