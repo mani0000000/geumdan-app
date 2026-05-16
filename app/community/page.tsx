@@ -80,11 +80,15 @@ function PostCard({
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
   return (
-    <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
+    <div className="relative px-4 pt-4 pb-0 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
       <div className="flex gap-3">
-        <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
-        <div className="flex-1 min-w-0">
+        {/* 아바타 + 쓰레드 연결선 */}
+        <div className="flex flex-col items-center shrink-0">
+          <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={40} />
+          <div className="w-0.5 flex-1 min-h-[16px] bg-[#e5e5ea] mt-1.5 rounded-full" />
+        </div>
+        <div className="flex-1 min-w-0 pb-3">
           {/* Header: name · dong · time, with menu on the right */}
           <div className="flex items-start gap-2">
             <div className="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-1.5">
