@@ -130,11 +130,13 @@ function BusDetailSheet({
   onClose,
   isFav,
   onToggleFav,
+  onSaveMeta,
 }: {
   arrival: BusArrival;
   onClose: () => void;
   isFav: boolean;
   onToggleFav: () => void;
+  onSaveMeta?: (endStation: string) => void;
 }) {
   const [detail, setDetail] = useState<RouteDetail | null>(null);
   const [stations, setStations] = useState<RouteStation[]>([]);
@@ -215,12 +217,16 @@ function BusDetailSheet({
       setDetail(d); setStations(s); setLocations(l);
       setLoading(false);
       if (!d && s.length === 0) setNoRouteData(true);
-      else locSourceRef.current = locSrc;
+      else {
+        locSourceRef.current = locSrc;
+        // 노선 종착역 정보를 부모에 전달 → 즐겨찾기 메타 저장
+        if (d?.endStation) onSaveMeta?.(d.endStation);
+      }
     }
 
     load();
     return () => { cancelled = true; };
-  }, [arrival.routeId, arrival.routeNo]);
+  }, [arrival.routeId, arrival.routeNo, onSaveMeta]);
 
   // 바텀시트가 열려 있는 동안 바디 스크롤 잠금 (모바일 스크롤 전파 방지)
   useEffect(() => {
@@ -780,6 +786,11 @@ export default function TransportPage() {
   const [favRoutes, setFavRoutes] = useState<string[]>(() => loadFavList("favRoutes"));
   // 노선 자체 즐겨찾기 (key=routeNo) — 정류장 무관, 모든 정류장에서 해당 routeNo 도착정보를 모아 보여줌
   const [favBusRoutes, setFavBusRoutes] = useState<string[]>(() => loadFavList("favBusRoutes"));
+  // 즐겨찾기 노선 메타 (종착역 등) — TAGO 도착 API가 목적지를 미제공하므로 상세 로드 시 저장
+  const [favBusRoutesMeta, setFavBusRoutesMeta] = useState<Record<string, { endStation?: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem("favBusRoutes_meta") ?? "{}") as Record<string, { endStation?: string }>; }
+    catch { return {}; }
+  });
   const [favSubways, setFavSubways] = useState<string[]>(() => loadFavList("favSubways"));
   // 가까운 N개만 기본 표시, 나머지는 "더 보기" 토글로
   const [showAllStops, setShowAllStops] = useState(false);
@@ -1238,6 +1249,16 @@ export default function TransportPage() {
   const _toggleSubway  = makeToggle("favSubways",   setFavSubways);
   const toggleBusRoute = makeToggle("favBusRoutes", setFavBusRoutes);
 
+  // 노선 즐겨찾기 종착역 메타 저장 (상세 시트에서 로드된 endStation)
+  const saveBusRouteMeta = (routeNo: string, endStation: string) => {
+    if (!endStation || endStation === "종점") return;
+    setFavBusRoutesMeta(prev => {
+      const next = { ...prev, [routeNo]: { endStation } };
+      try { localStorage.setItem("favBusRoutes_meta", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
   // 메타데이터(이름 등)를 함께 저장하여 마이페이지에서 표시 가능하도록 함
   const toggleStop = (id: string) => {
     const wasFav = favStops.includes(id);
@@ -1358,6 +1379,7 @@ export default function TransportPage() {
           onClose={() => setSelectedArrival(null)}
           isFav={favBusRoutes.includes(selectedArrival.routeNo)}
           onToggleFav={() => toggleBusRoute(selectedArrival.routeNo)}
+          onSaveMeta={(endStation) => saveBusRouteMeta(selectedArrival.routeNo, endStation)}
         />
       )}
 
@@ -1428,7 +1450,9 @@ export default function TransportPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{card.arrival.destination} 방면</p>
+                    <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">
+                      {favBusRoutesMeta[card.arrival.routeNo]?.endStation ?? card.arrival.destination} 방면
+                    </p>
                     {card.arrival.isExpress && (
                       <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
                         <Zap size={9} />급행
