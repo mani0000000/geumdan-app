@@ -1512,7 +1512,13 @@ function getPharmacyStatus(p: Pharmacy, now: Date): {
   const cur = h * 60 + now.getMinutes();
 
   if (isNight && p.nightHours) {
-    return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
+    // 심야 시간대: 요일 적용 여부 확인 (평일 전용인데 주말이면 패스)
+    const weekdayOnly = /평일/.test(p.nightHours);
+    const weekendOnly = /주말|토요일|일요일|토·일/.test(p.nightHours);
+    const nightApplicable = weekdayOnly ? !isWeekend : weekendOnly ? isWeekend : true;
+    if (nightApplicable) {
+      return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
+    }
   }
   if (isWeekend) {
     if (p.weekendHours) return { isOpen: withinHoursStr(p.weekendHours, cur), todayHours: p.weekendHours, todayLabel: "주말" };
@@ -1528,13 +1534,16 @@ function getPharmacyStatus(p: Pharmacy, now: Date): {
 interface MapTarget { name: string; address: string; lat?: number; lng?: number; }
 
 function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onClose: () => void }) {
-  const q = encodeURIComponent(address || name);
+  // 상호명으로 검색 — 주소로 검색하면 무관한 장소가 나올 수 있음
+  const q = encodeURIComponent(name);
 
   const kakaoUrl = `https://map.kakao.com/link/search/${q}`;
   const naverUrl = `https://map.naver.com/v5/search/${q}`;
   const tmapUrl  = `https://tmap.life/search?query=${q}`;
 
-  const embedUrl = `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
+  const embedUrl = lat && lng
+    ? `https://maps.google.com/maps?q=${lat},${lng}&output=embed&hl=ko`
+    : `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
 
   const apps = [
     { label: "카카오맵", url: kakaoUrl, icon: "/icons/kakaomap.svg" },
