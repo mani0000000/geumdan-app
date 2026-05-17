@@ -786,15 +786,17 @@ export default function TransportPage() {
   const [favRoutes, setFavRoutes] = useState<string[]>(() => loadFavList("favRoutes"));
   // 노선 자체 즐겨찾기 (key=routeNo) — 정류장 무관, 모든 정류장에서 해당 routeNo 도착정보를 모아 보여줌
   const [favBusRoutes, setFavBusRoutes] = useState<string[]>(() => loadFavList("favBusRoutes"));
-  // 즐겨찾기 노선 메타 (종착역 등) — TAGO 도착 API가 목적지를 미제공하므로 상세 로드 시 저장
-  const [favBusRoutesMeta, setFavBusRoutesMeta] = useState<Record<string, { endStation?: string }>>(() => {
-    try { return JSON.parse(localStorage.getItem("favBusRoutes_meta") ?? "{}") as Record<string, { endStation?: string }>; }
+  // 즐겨찾기 노선 메타 (종착역 + 즐겨찾기 정류장 정보)
+  const [favBusRoutesMeta, setFavBusRoutesMeta] = useState<Record<string, { endStation?: string; stopId?: string; stopName?: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem("favBusRoutes_meta") ?? "{}") as Record<string, { endStation?: string; stopId?: string; stopName?: string }>; }
     catch { return {}; }
   });
   const [favSubways, setFavSubways] = useState<string[]>(() => loadFavList("favSubways"));
   // 가까운 N개만 기본 표시, 나머지는 "더 보기" 토글로
   const [showAllStops, setShowAllStops] = useState(false);
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
+  // 도착 상세를 열 때 어떤 정류장에서 탭했는지 기억 — 즐겨찾기 저장 시 사용
+  const selectedStopRef = useRef<{ id: string; name: string; distM: number } | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
@@ -1249,11 +1251,31 @@ export default function TransportPage() {
   const _toggleSubway  = makeToggle("favSubways",   setFavSubways);
   const toggleBusRoute = makeToggle("favBusRoutes", setFavBusRoutes);
 
-  // 노선 즐겨찾기 종착역 메타 저장 (상세 시트에서 로드된 endStation)
+  // 노선 즐겨찾기 메타 저장 (종착역 + 정류장 정보)
   const saveBusRouteMeta = (routeNo: string, endStation: string) => {
-    if (!endStation || endStation === "종점") return;
+    const stop = selectedStopRef.current;
     setFavBusRoutesMeta(prev => {
-      const next = { ...prev, [routeNo]: { endStation } };
+      const existing = prev[routeNo] ?? {};
+      const next = {
+        ...prev,
+        [routeNo]: {
+          ...existing,
+          ...(endStation && endStation !== "종점" ? { endStation } : {}),
+          ...(stop ? { stopId: stop.id, stopName: stop.name } : {}),
+        },
+      };
+      try { localStorage.setItem("favBusRoutes_meta", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  // 즐겨찾기 추가 시 정류장 정보만 즉시 저장 (endStation은 상세 로드 후 추가됨)
+  const saveBusRouteStopMeta = (routeNo: string) => {
+    const stop = selectedStopRef.current;
+    if (!stop) return;
+    setFavBusRoutesMeta(prev => {
+      const existing = prev[routeNo] ?? {};
+      const next = { ...prev, [routeNo]: { ...existing, stopId: stop.id, stopName: stop.name } };
       try { localStorage.setItem("favBusRoutes_meta", JSON.stringify(next)); } catch { /* ignore */ }
       return next;
     });
@@ -1307,33 +1329,48 @@ export default function TransportPage() {
       return null;
     })
     .filter(<T,>(x: T | null): x is T => x !== null);
-  // favBusRoutes (routeNo 기반): 사용자 지정 순서대로, 노선당 가장 빨리 오는 도착 1건
+  // favBusRoutes: 사용자가 즐겨찾기한 정류장 우선 표시, 없으면 가장 빨리 오는 정류장으로 폴백
   const favBusRouteCards = (() => {
-    const byRouteNo = new Map<string, { arrival: BusArrival; stopName: string; stopId: string; stopDistM: number }>();
-    for (const stop of stopsWithRoutes) {
-      for (const a of stop.arrivals) {
-        if (!favBusRoutes.includes(a.routeNo)) continue;
-        const existing = byRouteNo.get(a.routeNo);
-        const candidate = { arrival: a, stopName: stop.name, stopId: stop.id, stopDistM: stop.distM };
-        if (!existing) {
-          byRouteNo.set(a.routeNo, candidate);
-        } else {
-          // 더 빨리 오는(또는 더 가까운) 정류장의 카드를 채택
-          const existingMin = existing.arrival.arrivalMin;
-          const newMin = a.arrivalMin;
-          const existingLive = existingMin >= 0;
-          const newLive = newMin >= 0;
-          if ((newLive && !existingLive) ||
-              (newLive && existingLive && newMin < existingMin) ||
-              (!newLive && !existingLive && stop.distM < existing.stopDistM)) {
-            byRouteNo.set(a.routeNo, candidate);
+    return favBusRoutes.map(rn => {
+      const meta = favBusRoutesMeta[rn];
+      const savedStopId = meta?.stopId;
+
+      // 1) 저장된 정류장이 있으면 해당 정류장에서 도착정보 조회
+      if (savedStopId) {
+        const stop = stopsWithRoutes.find(s => s.id === savedStopId);
+        const stopName = meta.stopName ?? stop?.name ?? savedStopId;
+        if (stop) {
+          const arrival = stop.arrivals.find(a => a.routeNo === rn);
+          if (arrival) {
+            return { arrival, stopName, stopId: stop.id, stopDistM: stop.distM };
+          }
+          // 정류장은 있으나 해당 노선 도착정보 없음 → 정류장명은 유지, 시간 없음으로 표시
+          return {
+            arrival: { routeNo: rn, routeId: "", destination: meta?.endStation ?? "종점", arrivalMin: 0, remainingStops: 0, isLowFloor: false, isExpress: false, plateNo: "", isScheduled: true } as BusArrival,
+            stopName, stopId: stop.id, stopDistM: stop.distM,
+          };
+        }
+        // 저장된 정류장이 현재 API 응답에 없음 → 메타 이름 표시 + 시간 없음
+        return {
+          arrival: { routeNo: rn, routeId: "", destination: meta?.endStation ?? "종점", arrivalMin: 0, remainingStops: 0, isLowFloor: false, isExpress: false, plateNo: "", isScheduled: true } as BusArrival,
+          stopName, stopId: savedStopId, stopDistM: 0,
+        };
+      }
+
+      // 2) 저장된 정류장 없음 (이전 즐겨찾기) → 주변에서 가장 빨리 오는 정류장으로 폴백
+      let best: { arrival: BusArrival; stopName: string; stopId: string; stopDistM: number } | null = null;
+      for (const stop of stopsWithRoutes) {
+        for (const a of stop.arrivals) {
+          if (a.routeNo !== rn) continue;
+          const candidate = { arrival: a, stopName: stop.name, stopId: stop.id, stopDistM: stop.distM };
+          if (!best || (!a.isScheduled && best.arrival.isScheduled) ||
+              (a.isScheduled === best.arrival.isScheduled && a.arrivalMin < best.arrival.arrivalMin)) {
+            best = candidate;
           }
         }
       }
-    }
-    return favBusRoutes
-      .map(rn => byRouteNo.get(rn))
-      .filter((x): x is NonNullable<typeof x> => Boolean(x));
+      return best;
+    }).filter((x): x is NonNullable<typeof x> => x !== null);
   })();
   const favSubwayList = favSubways
     .map(id => subwayList.find(s => s.id === id))
@@ -1378,7 +1415,11 @@ export default function TransportPage() {
           arrival={selectedArrival}
           onClose={() => setSelectedArrival(null)}
           isFav={favBusRoutes.includes(selectedArrival.routeNo)}
-          onToggleFav={() => toggleBusRoute(selectedArrival.routeNo)}
+          onToggleFav={() => {
+            const willFav = !favBusRoutes.includes(selectedArrival.routeNo);
+            toggleBusRoute(selectedArrival.routeNo);
+            if (willFav) saveBusRouteStopMeta(selectedArrival.routeNo);
+          }}
           onSaveMeta={(endStation) => saveBusRouteMeta(selectedArrival.routeNo, endStation)}
         />
       )}
@@ -1444,7 +1485,7 @@ export default function TransportPage() {
             favBusRouteCards.map(card => (
               <div key={card.arrival.routeNo}
                 className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-[#f5f5f7]"
-                onClick={() => setSelectedArrival(card.arrival)}>
+                onClick={() => { selectedStopRef.current = { id: card.stopId, name: card.stopName, distM: card.stopDistM }; setSelectedArrival(card.arrival); }}>
                 <div className={`${card.arrival.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-2 min-w-[44px] text-center shrink-0`}>
                   <span className="text-white text-[14px] font-black">{card.arrival.routeNo}</span>
                 </div>
@@ -1995,7 +2036,7 @@ export default function TransportPage() {
                         {displayArrivals.map((a, i) => (
                           <div key={i}
                             className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
-                            onClick={() => setSelectedArrival(a)}>
+                            onClick={() => { selectedStopRef.current = { id: stop.id, name: stop.name, distM: stop.distM }; setSelectedArrival(a); }}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
                               <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
                                 <span className="text-white text-[14px] font-black">{a.routeNo}</span>
