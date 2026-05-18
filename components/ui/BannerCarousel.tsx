@@ -31,8 +31,6 @@ export default function BannerCarousel({ banners }: Props) {
 
   if (banners.length === 0) return null;
 
-  const b = banners[current];
-
   return (
     <div className="px-4 pb-1 pt-3">
       <div
@@ -48,41 +46,74 @@ export default function BannerCarousel({ banners }: Props) {
           setTimeout(() => setPaused(false), 1200);
         }}
       >
-        {/* 배경 — 이미지 or 그라디언트 */}
-        {b.image_url ? (
-          <img
-            key={b.id}
-            src={b.image_url}
-            alt={b.title}
-            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-          />
-        ) : (
-          <div
-            key={b.id}
-            className="absolute inset-0 transition-all duration-300"
-            style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
-          />
-        )}
-
-        {/* 그라디언트 오버레이 */}
+        {/* 슬라이드 트랙 */}
         <div
-          className="absolute inset-0"
+          className="flex h-full w-full"
           style={{
-            background: `linear-gradient(160deg, ${b.bg_from}cc 0%, transparent 55%, rgba(0,0,0,.55) 100%)`,
+            transform: `translateX(-${current * 100}%)`,
+            transition: "transform 700ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
           }}
-        />
+        >
+          {banners.map(b => (
+            <div key={b.id} className="relative h-full w-full flex-shrink-0">
+              {/* 배경 — 이미지 or 그라디언트 */}
+              {b.image_url ? (
+                <img
+                  src={b.image_url}
+                  alt={b.title}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <div
+                  className="absolute inset-0"
+                  style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
+                />
+              )}
 
-        {/* 배지 */}
-        {b.badge && (
-          <div className="absolute top-3.5 left-3.5">
-            <span
-              className="text-[11px] font-black px-2.5 py-1 rounded-full shadow"
-              style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}
-            >
-              {b.badge}
-            </span>
-          </div>
-        )}
+              {/* 텍스트 가독성용 하단 그라디언트 */}
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(to top, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.2) 50%, transparent 100%)",
+                }}
+              />
+
+              {/* 배지 */}
+              {b.badge && (
+                <div className="absolute top-3.5 left-3.5">
+                  <span
+                    className="text-[11px] font-black px-2.5 py-1 rounded-full shadow"
+                    style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}
+                  >
+                    {b.badge}
+                  </span>
+                </div>
+              )}
+
+              {/* 텍스트 + 링크 */}
+              <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+                <p className="text-[20px] font-black text-white leading-tight drop-shadow">
+                  {b.title}
+                </p>
+                {b.subtitle && (
+                  <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
+                    {b.subtitle}
+                  </p>
+                )}
+                {b.link_url && (
+                  <a
+                    href={b.link_url}
+                    className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold
+                               bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
+                  >
+                    {b.link_label || "자세히 보기"} →
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* 슬라이드 카운터 */}
         {banners.length > 1 && (
@@ -92,28 +123,6 @@ export default function BannerCarousel({ banners }: Props) {
             </span>
           </div>
         )}
-
-        {/* 텍스트 + 링크 */}
-        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-          <p className="text-[20px] font-black text-white leading-tight drop-shadow">
-            {b.title}
-          </p>
-          {b.subtitle && (
-            <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
-              {b.subtitle}
-            </p>
-          )}
-          {b.link_url && (
-            <a
-              href={b.link_url}
-              className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold
-                         bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
-            >
-              {b.link_label || "자세히 보기"} →
-            </a>
-          )}
-        </div>
-
       </div>
     </div>
   );
