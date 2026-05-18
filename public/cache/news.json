@@ -1,18 +1,144 @@
 {
-  "fetchedAt": "2026-05-18T02:04:59.297Z",
+  "fetchedAt": "2026-05-18T06:42:52.988Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-3",
-      "title": "인천 서구, 검단신도시 고산터널 ‘자동염수 분사장치’ 설치..특별교부세 확보 - 매일뉴스",
+      "id": "gr0-11",
+      "title": "인천 서구, 검단신도시 제설취약구간에 원격 염수분사 시스템 도입 - 경인매일",
       "summary": "",
-      "source": "매일뉴스",
-      "publishedAt": "2026-05-18T01:43:55.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9LYTFhUUxEdUhLa0kxQVVLRFQ4Q282RkZmYmYyMEJYRDQ2YnBseXVrbTlvVUtsazV5YUFWSzNJcFlWdGFvM2VjVU1YUXJPemhEb0M0RlJSc1RrbExfRzRlSQ?oc=5",
+      "source": "경인매일",
+      "publishedAt": "2026-05-18T05:41:16.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBvNExqVndLcmNuTUljTjNpZFRlaDBtdEF0N3Z5RFMtRVY1T3NpaVR6WWQ1TGVHengtd2lzQlV3STM0X3RkcUZSS3NTSkdJLWdCVUdsN0NrdE9GNTVWc1BhdVZyOUdOeU1O?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-3",
+      "title": "검단신도시 아라누리도서관 21일 개관 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-05-18T05:40:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBOcWZsQmhaSm9EUDBCQ3dxTzBhV3BUY1plRi02RnJraDByZTFnTTRDQ3hrckloM3ExWk8xVmhxVU9HQUVpYi1HTnZVM3NMbkZ6M09V?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-0",
+      "title": "인천 서구, 아라누리도서관 개관…검단신도시 독서접근성 높여 - 경기일보",
+      "summary": "",
+      "source": "경기일보",
+      "publishedAt": "2026-05-18T05:35:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBseURtSFFmMEUwb3JZUXNYTnRlTnB1dVcxRjByOWZKeUtsUUdheFZjdEJwQVhYVHBmMGFVT0U2NnQ2Y3RPRUJzam1CdWt0YzZ6OUw1QV9DTEd3SjA?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-10",
+      "title": "인천 서구, 검단신도시 고산터널 ‘자동염수 분사장치’ 설치..특별교부세 확보 - 경인신문",
+      "summary": "",
+      "source": "경인신문",
+      "publishedAt": "2026-05-18T05:05:50.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE12WUVSdG4wUHhDNVdFSElHOFlsZDQyRmxad3BoT001S0FnY0w1TGtDeXByNmtfb2NUVVNMRjU4VG9YYUplMnJmSU9ZazkyR3R0clN6Sl9SSlNRX2JWZmFOdXdRNnZhZDQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-8",
+      "title": "인천 서구, 검단신도시에 ‘아라누리도서관’ 개관…복합문화공간 탄생 - 매일일보",
+      "summary": "",
+      "source": "매일일보",
+      "publishedAt": "2026-05-18T05:01:15.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5YbjI0bkcya2tSTDV3bGdId2ZUcE1LZmJNaHBnSXljY1JoTUsxSXdhTFNSU2N3M1lnRGZZTFp1RzVvSmtsdlBfLUdVc1pEN1ZIOERJR25yM3VzR0hRWEtPUUFORWw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-1",
+      "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-05-18T04:46:03.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5QTDVTOVlzNlB6SE54MUVaMThpZ2dlUy12RzNDak9acFZUdWY5bTl3RExieVJidENZLVMwTm9SemsxUnFzY0Z0cm5HVVlhVGc?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-2",
+      "title": "인천 서구 검단신도시 '아라누리도서관' 본격 운영 - 뉴스1",
+      "summary": "",
+      "source": "뉴스1",
+      "publishedAt": "2026-05-18T04:43:13.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5fRGJIS21mYk96ZC1wZVl2dnRfNUhZcjVTSHBKa3RObWFtanZHSnEzV0RSSzRHcTZGYVdMbmdseE1ZdFFSb2FiOUdiaGtxaTI2S3JOYw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-19",
+      "title": "인천 서구, 고산터널 자동염수 분사장치 설치 위해 특별교부세 3억 확보 - 웹이코노미",
+      "summary": "",
+      "source": "웹이코노미",
+      "publishedAt": "2026-05-18T04:41:58.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1SUWx5bjVlU2VJbWVkVWV0Q2lJWmVPdmdyWWNGOThjTGJiakVaS3Y3aEZXVF9wSFI5TU9kb01HcE9lU3dFOGFSUzZhbEpCeFVZdk54TE5ER2JsNW9ZTHJGSWFhaW5Dd0Q1Sk1LOVNDSWtRUQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-18",
+      "title": "인천 검단신도시 '아라누리도서관' 6월 개관…\"체류형 문화플랫폼\" 주목 - 뉴스티앤티",
+      "summary": "",
+      "source": "뉴스티앤티",
+      "publishedAt": "2026-05-18T03:42:58.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE8tMEpfNUV6MjJJVWpXWl9IWW9ucTFsczREMlF4OHNVenhwZFpiRVdlOXQ0dTFQRmFoUktORVlJQjBaQmJCcW45b1RwTF9tN0VGelI1M081LW1XVGlaTzhQYnBncjh3NXlLQ3c?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-7",
+      "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 엔디엔뉴스",
+      "summary": "",
+      "source": "엔디엔뉴스",
+      "publishedAt": "2026-05-18T02:57:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE42N0IxdC1ZclVWRVVtaXZFVmg2RVZXcE16MFhRNFhBQVQ0MXlkMHdIb04zY0g3ZHQwUnpjWXhGT3JmVkxGNlAwWUJpajMxdG9kOGFzUTQzT3I4TDBRUExBY29UbzJ4UUZmOW5BZVhHQjlZZ9IBckFVX3lxTE42N0IxdC1ZclVWRVVtaXZFVmg2RVZXcE16MFhRNFhBQVQ0MXlkMHdIb04zY0g3ZHQwUnpjWXhGT3JmVkxGNlAwWUJpajMxdG9kOGFzUTQzT3I4TDBRUExBY29UbzJ4UUZmOW5BZVhHQjlZZw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-4",
+      "title": "인천 서구, 검단 고산터널 ‘자동염수 분사장치’ 설치 - 이뉴스투데이",
+      "summary": "",
+      "source": "이뉴스투데이",
+      "publishedAt": "2026-05-18T02:29:28.000Z",
+      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE03ck4zM25qZVdVSmd3YjJoZXEwWnhsMjJNb0xYR25FUFFtUUJDeGZvUWVzd3o5TG5pRFc5V0FfaGFxMDJQRFAtNW9aQ2RDdC13a2xVU0hfNlNCNDFNLXcydk1pTTNvTGpES2dTUy15YV9zclpO0gF0QVVfeXFMTTdyTjMzbmplV1VKZ3diMmhlcTBaeGwyMk1vTFhHbkVQUW1RQkN4Zm9RZXN3ejlMbmlEVzlXQV9oYXEwMlBEUC01b1pDZEN0LXdrbFVTSF82U0I0MU0tdzJ2TWlNM29MakRLZ1NTLXlhX3NyWk4?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-15",
+      "title": "인천 서구, 검단 고산터널 ‘자동염수 분사장치’ 설치 - 이뉴스투데이",
+      "summary": "",
+      "source": "이뉴스투데이",
+      "publishedAt": "2026-05-18T02:10:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1TN08yamdNUFZqdUJzeUtabDQzQVdyMDNsaWhaSFhNb3l4VzV2UHdydWdOMkNXR3RYWEpsZjZfbDhZMi1FX0poX0hQeDlrR3B1TVpuUlFfRTdxSGZxOGR6cU5zZW9ENGpRZzl6UlJlTmrSAXRBVV95cUxNN3JOMzNuamVXVUpnd2IyaGVxMFp4bDIyTW9MWEduRVBRbVFCQ3hmb1Flc3d6OUxuaURXOVdBX2hhcTAyUERQLTVvWkNkQ3Qtd2tsVVNIXzZTQjQxTS13MnZNaU0zb0xqREtnU1MteWFfc3JaTg?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-16",
+      "title": "인천 서구, 검단신도시 아라누리도서관 21일 개관 - 웹이코노미",
+      "summary": "",
+      "source": "웹이코노미",
+      "publishedAt": "2026-05-18T02:02:21.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1tZFZpT0FLdV9IUXlFT2dxa096UUV2SC12VkNOVXcxUF9kX2lzUVk2TW1Eakg3amVpeEQwajVlLXZhSnN5WkdBc2FJblI5MWdJS0NpMXlrazNmSmFpcGM4RlI5TlpjQjJsTE5WRjJFTzJTdw?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-5",
+      "title": "인천 검단신도시 '아라누리 구립도서관' 21일 개관 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-05-18T02:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE8zZVlLWmZIWEhCVTcyVHlZY3hYa2ZEWk51MGR1QnBPWEFlMU9VZWkzRDBnb01XYjdqYXpqenhHaDh0b21PdDR3QnNZdm9MbUlZTU1n?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-7",
+      "title": "인천 검단신도시 '아라누리 구립도서관' 21일 개관 - 연합뉴스",
+      "summary": "",
+      "source": "연합뉴스",
+      "publishedAt": "2026-05-18T01:59:53.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTFBfamYyNDNGMjZwM3M4WWEtSWQzcS0zS2tOMEFabnNxalhTd29aOHQ1dk4ySmJaWUUtR3hVY1R1MGNrdmNiT0xYeDloVERBb1RNRjR2TFhlazgxaFHSAWBBVV95cUxPMTdscGN0M0xaYkRQaTBRcFVhMTVZMzVIVlAxdEhnWlNIb3RUSG43TGFvYnZOVzN0azR6dWYyR1gyOE00T3VlQUxrYklyMXNSdzJ3QktUN196TWIzREl5aHU?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-17",
       "title": "인천 서구, 검단신도시 ‘아라누리도서관’ 개관…복합 문화공간 운영 - 연합시민의소리",
       "summary": "",
       "source": "연합시민의소리",
@@ -21,7 +147,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-9",
+      "title": "인천 서구, 21일 검단 ‘아라누리도서관’ 개관...도서 3만권 보유 - 미디어인천신문",
+      "summary": "",
+      "source": "미디어인천신문",
+      "publishedAt": "2026-05-18T01:07:36.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBsSHJzbG8zbUJPbktxSHJGZm90OEhzcFVTbzRVdFZQQ1ZFZk91T0l5dWJ4ZlZ0ZjZtLS0zazgyczRlazhrSEU2Tl9wYzAtX2l1V0lxVzliUEJRLW1MbzJyS3o3cmRwZzFWMXhj?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-10",
       "title": "인천 서구, 특별교부세 확보해 제설 취약구간 개선 - 녹색경제신문",
       "summary": "",
       "source": "녹색경제신문",
@@ -30,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-13",
       "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 저널25방송",
       "summary": "",
       "source": "저널25방송",
@@ -39,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-9",
       "title": "인천 서구, 검단신도시 내 '아라누리도서관' 21일 개관 - 중도일보",
       "summary": "",
       "source": "중도일보",
@@ -48,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-4",
       "title": "“책 읽고 쉬고 모인다”… 검단신도시에 아라누리도서관 문 연다 - ppss.kr",
       "summary": "",
       "source": "ppss.kr",
@@ -57,16 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
-      "title": "인천 서구, 검단신도시 고산터널 ‘자동염수 분사장치’ 설치 - 서프라이즈뉴스",
-      "summary": "",
-      "source": "서프라이즈뉴스",
-      "publishedAt": "2026-05-18T00:49:21.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5QV2lqYVVHcm5Bc1Jka3R4eTJNczA0MW5oSEJSWnU5QW9URVdPZTBQbWlBeU54ajV1YUhzWGNYWHhTeUZvNDl0Nk5vZm43TVRXXzNiYzAtbmVZdzI1Z3JfanpJdDFQRDJreEd3eHFB?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-9",
+      "id": "gr0-12",
       "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 서프라이즈뉴스",
       "summary": "",
       "source": "서프라이즈뉴스",
@@ -75,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-14",
       "title": "인천 서구, 검단신도시에 복합문화공간 ‘아라누리도서관’ 21일 전격 개관 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
@@ -84,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "검단신도시 분양가상한제 단지 공급 진행 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -93,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-15",
       "title": "[정치포차] 더불어민주당 김진규 인천 검단구청장 후보 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -102,21 +228,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-23",
+      "id": "gr2-29",
       "title": "인천 서구 생활지원사 건강돌봄 역량강화 프로그램 실시 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
       "publishedAt": "2026-05-17T12:57:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTE5fUzRoSzV2WUF4ZXg4TTI0TGI1QzhMU2k5QzlhSFg5UHh5d2k0dmNCd0ZfWlYyb1gwTmduUjk4QzJNb0U?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-18",
-      "title": "인천 서구 왕길동 공장서 화재··· 화재 진화 중 [1보] - 인천투데이",
-      "summary": "",
-      "source": "인천투데이",
-      "publishedAt": "2026-05-16T08:29:57.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9US0J3eU5mUUY0djRNeGZ0T3U0eTBtTERnU1ZJcmxEWDh4WU1fXzRWTVpMaXczOE11cC1YWkhLdEVEcGlHcEhXM3J0bGlraUhNOWNDcHQtdjM3bWhzNDg2ZGlGZkdieFR6NE1CVEtvUzg?oc=5",
       "type": "뉴스"
     },
     {
@@ -138,12 +255,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-75",
+      "id": "gr2-36",
       "title": "LH, 동부건설 등에 인천검단 사고 320억원 손배소 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-05-15T10:18:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBzc09CTl9xZHE0cGJBc21LSkcyckJtM1czWTZKWnZ0VE5MVlVDa2pqQ2RPMWRSb0dVck01cENMV2cyVXFQSmlvWEZtS0szNmxKZFRr?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-3",
+      "title": "LH, 동부건설 등에 인천검단 사고 320억원 손배소 - 뉴시스",
+      "summary": "",
+      "source": "뉴시스",
+      "publishedAt": "2026-05-15T10:17:14.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1DRGRqZDhwMVJQTjc4ZFdUQkV2eHdwYV9QeE43dExRdURMTC00RjRLMzJ2MWF1bk5ISkhrU0VEWnAxRENydEM3ZXZxbTNUR05DVFZWZldUbnZ5ODZ0R2NlX9IBeEFVX3lxTFBhaGxzTHVOM0xVZU96bkgwNjRCZmNHbFNiZjNJb21JVjdTTEMyOVdYYkZ5eExkdS1ZODctcW5YdnExX3dxVFJVRlFZNVFxU2dyNm1JQUJsWDNCRTZPdEVJWG8yMktKek5kMXZNLTJlYWVpU292LWtzTQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -156,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-26",
       "title": "퐁당(PONGDANG), 검단신도시 창고형 약국 ‘검단 엑스약국’ 입점 - ppss.kr",
       "summary": "",
       "source": "ppss.kr",
@@ -165,25 +291,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-12",
-      "title": "[6·3 지선 여론조사] 인천 서구 표심, 박찬대 50.0%로 앞서 - 인천일보",
+      "id": "gr0-31",
+      "title": "인천 원당동 검단신도시디에트르더힐아파트 84㎡ 6억2000만원에 거래 - 네이트",
       "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-05-14T08:45:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9KTHRhQUdVY3ZYQWJLMjhPajg5YmJoMnctQWNuT1ZhOFJMNTYxTzJINjY4ZzMwM2lzclE2VkxLU1R5SE9WdXRYQmtoN0NiSVVoN1hIODIzbkRGcUNGU2xlZENBUkpYNzhQc0haaDVuMkQ?oc=5",
+      "source": "네이트",
+      "publishedAt": "2026-05-14T09:27:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9Gb1VobWFZaGdmU2pQWlBWZEpVUlRBZENheEdBY1FjUEk1d2RCOTJIRXBEc2QwVUUyYThJMEZvMWlKdk15RzY1TEFEQkowMHk2ejZfMWlqQkJjTW56ZklMclQ1N29IWG1rRW9QaUlB?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-24",
-      "title": "[6·3 지선 여론조사] 인천 서구청장, 구재용 46.7% 선두…강범석 37.2% 추격 - 인천일보",
-      "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-05-14T08:14:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE04VGFmdHJ1M3EzMUphUHk5a2Y2XzlHSVAyb2U3WHJkZFJPSjJwcVFkandfZWkyR1JMY1dQOFdYMUlYeEtlOTdXRTdjSFRYaXg2cWxPZ0RLamNYVkMtcUpRUXhyTjNRd2ZiV3BfaGYxeGE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-8",
+      "id": "gr0-21",
       "title": "IH “교통망 확충으로 검단신도시 날개 달다” - 현대일보",
       "summary": "",
       "source": "현대일보",
@@ -192,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-18",
       "title": "서구, 검단구 구정 소식 알림서비스 사전구독자 모집 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -201,7 +318,25 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-25",
+      "id": "gr1-14",
+      "title": "아파트 가치 견인하는 브랜드 프리미엄…‘검단신도시 롯데캐슬 넥스티엘’ 입주 중 - 골프타임즈",
+      "summary": "",
+      "source": "골프타임즈",
+      "publishedAt": "2026-05-14T00:42:01.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE8yVlR6aHdLUDZYSThSLWRHcEdOTGpoaEFqbnBaUUxVT3ZYOE9kY05PbkczNDFNdmo5N0JtNXZleDdKUjFEQjJFMG82SFFXRGx0YjUya0tIUnotMl9URGRPcjB5RTZPRGt6ZXdsMW5zTURWUQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-13",
+      "title": "대단지 아파트 '더샵 검단레이크파크' 5월 분양 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-05-14T00:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5yVHVRdU1pa3J0X1NnczdaRHJrOWRDUXdzY0MzbzJEYkl2WTZndmNSaXBXQXR0dGpnNGhtMHVJU0J1VUlpMTNpMlZQS216a3ZtQVVN?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr1-5",
       "title": "대단지 아파트 ‘더샵 검단레이크파크’ 5월 분양 - 세계일보",
       "summary": "",
       "source": "세계일보",
@@ -210,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-23",
       "title": "GTX-D·5호선 연장 검단신도시, 엘리프 검단 포레듀 잔여세대 선착순 계약 진행 - 대한경제",
       "summary": "",
       "source": "대한경제",
@@ -219,147 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr1-4",
       "title": "김진규 인천 검단구청장 후보 검단신도시 남부아파트 주민 악취민원 청취 - 현대일보",
       "summary": "",
       "source": "현대일보",
       "publishedAt": "2026-05-13T09:44:26.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE5TYjNnMmMyQUxNSjFDdEFnZHJVN3AxSWE4NHNzMWZlQVRZZGtmSUFrWHo2UllYby1NdzBRM3o5eEVuNFpwdGlIZmlHdWx1QUIzN2R2WjFVb3dzeTNFVWpuZ1M1eHlkcktPV0VNZ2V3?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-10",
-      "title": "검단신도시 브랜드 아파트 공급 이어져... '더샵 검단레이크파크' 5월 분양 - 한경매거진&북",
-      "summary": "",
-      "source": "한경매거진&북",
-      "publishedAt": "2026-05-13T07:45:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5nYTBuaUFSdjdZMVc5bGRJdmdLOEFMWmdjUG1ObldjcVhDWXIwRjRjcExnSU92OTV0MGFZSmlZdXFfc2I5dExfY2ZfRU95R1NlbjdZVW9FTG8xNVlYSjkyaDZtU3dfUG5R?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-9",
-      "title": "인천 서구, 검단구 출범 앞두고 ‘구정소식 알림서비스’ 사전구독 시작 - 뉴스타운",
-      "summary": "",
-      "source": "뉴스타운",
-      "publishedAt": "2026-05-13T04:57:04.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBwMnBiR1V0Mm5TZXNQLV9VSjhLM1FuOVBSalU1T0xpb0JtLTdSYXZWUlA3SW5IS2prQ1J4bGs5UVl3aEplRThRWlFvRDN5YjFJZGpGQ0xkS0VsVkJVNkZ2WjVDY3FJWlZJY0l1ZWJn?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-24",
-      "title": "인천 ‘착한가게’ 4,100호 돌파… 나눔의 온기 검단까지 퍼졌다 - 복지투데이",
-      "summary": "",
-      "source": "복지투데이",
-      "publishedAt": "2026-05-13T04:06:38.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE53OFZfdEUzTTdfVWhUMXFaTFZJbWx1WFZHTlZCNG0xd2xnNEhnSlBKSklXaThCSTFPd1V2ODl0WmdwemJ3OXRYTGpBOWUtZzd2SkxHTDhDSU9uZWk5MDYydERla3hzSnhjY08tLQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-20",
-      "title": "인천 서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 웹이코노미",
-      "summary": "",
-      "source": "웹이코노미",
-      "publishedAt": "2026-05-13T02:28:34.000Z",
-      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1PU040cE9WVjZlSHczdFNqaVducUJUMXBRazNUamZ1RlRBVnpZX2pEWkY3V3VNckJyLUEySC1QYkoydzJwWm1jWjBnQjhudTJwSjNkamNmTzd2Vk9famYzcDFWMVQzTzhhdWg1SDlTY2ZwUQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-11",
-      "title": "인천 사랑의열매, ‘착한가게’ 4100호 돌파…한상민과자점 검단신도시점 가입 - 미디어생활",
-      "summary": "",
-      "source": "미디어생활",
-      "publishedAt": "2026-05-13T02:21:03.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE10bnBmdmxRdXFwWWloZXhJVDlZdEpMY1NZMXdKV0pDbjM2aUk1WlZfVW42Z3Bwc1dtUUtsZGxGM1JIWEZZQUdzVVllTHJvZnh4NUMwcHphQm1zOWxxd0lONWk1YXdWTE9qNksxRkVKYw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-13",
-      "title": "인천 검단구 7월 출범…서구, 구정알림 사전구독자 모집 - 뉴시스",
-      "summary": "",
-      "source": "뉴시스",
-      "publishedAt": "2026-05-13T02:03:19.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE0wdzdvSDgyUHBfU3paY0U3NGRiMGxYWURqcTJ2RGEtTURfSEdzQThZUG1kaVFGXzdGcWVQQ1VWcU1pN25uYUs2UTgtbjZyaEI5M0dvdXlIUEMySVJrdVAxa9IBeEFVX3lxTFB5YXh5RWtmZnRNMC1jbGV0amZiNmFEOUZQUl9Tay1oREthUVJILVdwQ0pWVldtWVoyY2lIeDU4VWNkRFU3LVRrdUxDcEhCTExzM1p6Z3d6elB6XzZNaHJVUG5xbGJPLTJyUEM3RnBQTk1qZGhrSFZHYQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-15",
-      "title": "검단구 구정소식 알림서비스 '사전구독자' 모집 - 미디어인천신문",
-      "summary": "",
-      "source": "미디어인천신문",
-      "publishedAt": "2026-05-13T02:03:08.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5rVE0zRFY3VXpvZTMxb3VwYUpieDVoOVZmNFlmTlFEZlVRMk84MXhUWHZHUnk5M0lQUmFxZkxiQ19FN2I3OU9sR0gxVHBldEw2c3lKMThrbHZzU3dudGJrWjQyODFiemhZY0kw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-11",
-      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 엔디엔뉴스",
-      "summary": "",
-      "source": "엔디엔뉴스",
-      "publishedAt": "2026-05-13T01:58:58.000Z",
-      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE9DdGlGOVBIVGtQbms3a0pOR3d5YmhlOHBNblZSWVJLMFYxMjA0SDkxOC1MMU9jX2Y5VVJEM3dSMkY3d0hGRGNFdU8yLWI5U0EyMVVFOVkwQVp0cmYxMDNoT3FZVnFDaDJfWlA4QTd0MEdrd9IBckFVX3lxTE9DdGlGOVBIVGtQbms3a0pOR3d5YmhlOHBNblZSWVJLMFYxMjA0SDkxOC1MMU9jX2Y5VVJEM3dSMkY3d0hGRGNFdU8yLWI5U0EyMVVFOVkwQVp0cmYxMDNoT3FZVnFDaDJfWlA4QTd0MEdrdw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-17",
-      "title": "인천 서구, 검단구 출범 앞두고 구정소식 알림서비스 사전구독 모집 - 연합시민의소리",
-      "summary": "",
-      "source": "연합시민의소리",
-      "publishedAt": "2026-05-13T01:40:19.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBBOHVIRFRFVGF2dXh0UmV3aFBIbU04SzlBTGhrMm1FTjRfN1RDc0tvcktzT2cxM0hlYWxKdTViVTJLdmhDZkNFYjNoTGhncWdXc05wNEdycmgxLTE2U1hORFAwR0ZXTmc?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-19",
-      "title": "서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 미디어생활",
-      "summary": "",
-      "source": "미디어생활",
-      "publishedAt": "2026-05-13T01:19:16.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE52bmkyU0ZvekFxNm1vZFlETTZnYnpqNi05RTl4TEpKaGNRMENXNlZ5cF9QbXdGQkh2UktDZE5LOFdNRy1IWTNqOWdBMFBCQ0ViQmpCTEIwUHA4YTY1bkhscU9IVzVvZGQySHhKV1Z0cw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-53",
-      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 한국미디어뉴스통신",
-      "summary": "",
-      "source": "한국미디어뉴스통신",
-      "publishedAt": "2026-05-13T00:58:52.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBYaG5EMUs5QjFzLTFsZkhGU09SSWQ2TDdvekhoUjZmY2VrZXhGRjA0VnRLWEM0STcxbjZQQ2tmTTlTdl9HVWhpamxabEdEU3ZQMGFxNEM0alVQLV9MUEROWlRaeDlvR0hwTmY1WQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-27",
-      "title": "인천시서구, 검단구 구정소식 알림서비스 사전 구독자 모집 - 케이에스피뉴스",
-      "summary": "",
-      "source": "케이에스피뉴스",
-      "publishedAt": "2026-05-13T00:58:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiREFVX3lxTE5jM0UzOFdIa3I2RXVwMzRRSVdZRVNjZ2hSZEI2TVc3bm9rX291cFdMZmRaWE4zaC16Zkp0R0k4Y2pOMWZw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-7",
-      "title": "인천 사랑의열매, 착한가게 4100호 돌파··· 한상민과자점 검단신도시점 가입 - 인천투데이",
-      "summary": "",
-      "source": "인천투데이",
-      "publishedAt": "2026-05-13T00:44:06.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE5Rb0UwaWRUYklsNkdWcmZuVGdheENLV3hUbzVUOF9lWUlUVEV1Z3ZsTWpMb0piVzB5TkNyQ20xR0c4STkzUU1MMDd6Qk1jcTY1UzFYNjVHdTJiODdrUm9FQUtjZ0NGbnFJc2x2dmppNlU?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-21",
-      "title": "민주당 인천 서구병 지역위원회, ‘검단 원팀 선거대책위원회’ 출범 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-05-12T19:13:21.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1pSTc2WnVxdnUzTGZ5emp2ZGJUQXp3c3dmVDlwQmxLdFp1dmxlaEtSUXlrdmY2UEEwUHlPM0c1UE9QM0NtaGdPbnZic0owRE90XzBzbEJMZXhpVVN5OVF0VktxcS1GbWp2T3d6UnlpRQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-4",
-      "title": "식사 제공하고 지인에게 결제하게 한 예비 후보자… 검단구 선관위 고발 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-05-12T09:37:15.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE44SzRpOTFLQS01aDlWcWdFeTlUUnJmSmM3WDJwQjBLS3dsaUdndTdLVFpYMnowLXhyVWI0dG5qX2NRS0o0OEtmS3dqMUpPcjA?oc=5",
       "type": "뉴스"
     }
   ]
