@@ -49,7 +49,7 @@ export default function LoginPage() {
         ) : (
           <span className="text-[24px] font-bold text-[#1d1d1f] tracking-tight mb-6">검단 신도시</span>
         )}
-        <h1 className="text-[29px] font-bold text-[#1d1d1f] leading-tight">
+        <h1 className="text-[22px] font-semibold text-[#86868b] leading-tight">
           우리가 만드는<br />우리동네 핫한 최신 이야기
         </h1>
       </div>
