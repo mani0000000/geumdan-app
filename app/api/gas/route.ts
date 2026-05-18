@@ -1,21 +1,22 @@
 import { NextResponse } from "next/server";
 import type { GasStation, GasSource, GasApiResponse } from "@/lib/types";
+import { GEUMDAN_KATEC } from "@/lib/api/opinet";
 
 /**
  * 검단 신도시 주변 주유소 가격 (Opinet 공공 API 프록시)
  *
- * - API key: env `OPINET_API_KEY` (서버사이드 전용). 미설정 시 source="no_key" 반환.
+ * - API key: env `OPINET_API_KEY` (서버사이드 전용). 미설정 시 발급키로 폴백.
  * - 검단 중심 KATEC TM 좌표 + 반경 5km 이내 (aroundAll.do)
- *   ※ Opinet aroundAll.do 의 x/y 는 KATEC(TM128) 좌표계 — WGS84 직접 입력 불가.
+ *   ※ Opinet aroundAll.do 의 x/y 는 KATEC 좌표계 — WGS84 를 변환해 사용
+ *     (검단 WGS84 37.5446,126.6861 → KATEC, lib/api/opinet.ts).
  * - 휘발유·경유·LPG 병렬 조회 후 UNI_ID 기준 병합
- * - HTTP 캐싱: 성공 시 1시간, no_key/empty 는 짧게 또는 no-store
+ * - HTTP 캐싱: 성공 시 1시간, empty 는 짧게
  *
  * 참고: https://www.opinet.co.kr/api/
  */
 
-// 검단신도시 중심부 KATEC(TM128) 좌표 (인천 서구 원당동 검단사거리 인근)
-// WGS84 약 (126.66°E, 37.60°N) → KATEC ≈ (181842, 466791)
-const GEUMDAN_KATEC = { x: 181842, y: 466791 } as const;
+// 오피넷 발급 키 — 환경변수 미설정 시 폴백 (운영은 Vercel 환경변수 권장)
+const FALLBACK_OPINET_KEY = "F260518486";
 const RADIUS_M = 5000;
 
 // 유종 코드
@@ -153,19 +154,10 @@ function buildStations(
 }
 
 export async function GET() {
-  const apiKey = process.env.OPINET_API_KEY?.trim();
+  const apiKey = process.env.OPINET_API_KEY?.trim() || FALLBACK_OPINET_KEY;
   const timestamp = new Date().toISOString();
-
-  if (!apiKey) {
-    console.warn("[/api/gas] OPINET_API_KEY 미설정 — Vercel 환경변수에 키를 등록해 주세요.");
-    const body: GasApiResponse = {
-      stations: [],
-      source: "no_key",
-      timestamp,
-      success: false,
-      message: "OPINET_API_KEY 환경변수가 설정되지 않았습니다.",
-    };
-    return NextResponse.json(body, { headers: { "Cache-Control": "no-store" } });
+  if (!process.env.OPINET_API_KEY?.trim()) {
+    console.warn("[/api/gas] OPINET_API_KEY 미설정 — 폴백 키 사용. 운영 환경은 Vercel 환경변수 등록 권장.");
   }
 
   const [gasoline, diesel, lpg] = await Promise.all([
