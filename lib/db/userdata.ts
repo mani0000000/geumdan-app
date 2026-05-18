@@ -24,6 +24,8 @@ export interface UserProfile {
   weekly_likes: number;
   weekly_posts: number;
   monthly_points: number;
+  deleted_at?: string | null;
+  deletion_reason?: string | null;
 }
 
 export interface UserGameStats {
@@ -714,4 +716,80 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
   const cached = lsGet(SETTINGS_KEY);
   const prev = cached ? JSON.parse(cached) : { ...DEFAULT_SETTINGS };
   lsSet(SETTINGS_KEY, JSON.stringify({ ...prev, ...patch }));
+}
+
+// ── 회원 탈퇴 (soft delete) ───────────────────────────────────────────
+export interface DeleteAccountSummary {
+  points: number;
+  couponCount: number;
+  postCount: number;
+  commentCount: number;
+}
+
+/** 탈퇴 안내 화면에 보여줄 소멸 예정 데이터 요약 */
+export async function getDeleteAccountSummary(): Promise<DeleteAccountSummary> {
+  const [profile, coupons, postCount, commentCount] = await Promise.all([
+    getUserProfile(),
+    getDownloadedCoupons(),
+    getMyPostCount(),
+    getMyCommentCount(),
+  ]);
+  return {
+    points: profile.points ?? 0,
+    couponCount: coupons.length,
+    postCount,
+    commentCount,
+  };
+}
+
+const LOCAL_KEYS = [
+  PROFILE_KEY, HISTORY_KEY, MISSIONS_KEY, REDEEMED_KEY, COUPONS_KEY,
+  FAV_BUSES_KEY, FAV_STORES_KEY, FAV_APTS_KEY, SETTINGS_KEY,
+  "geumdan_uid", "gd_nickname",
+];
+
+/**
+ * 회원 탈퇴 — 실제 삭제 대신 users.deleted_at 기록 (soft delete).
+ * 소멸 포인트/쿠폰 수를 스냅샷으로 남기고, 작성 글·댓글은 익명 처리,
+ * 즐겨찾기·쿠폰 등 개인 데이터는 삭제한다.
+ */
+export async function deleteAccount(reason: string): Promise<void> {
+  const uid = lsGet("geumdan_uid");
+
+  if (uid && isConfigured()) {
+    const summary = await getDeleteAccountSummary();
+
+    await supabase.from("users").update({
+      deleted_at: new Date().toISOString(),
+      deletion_reason: reason || null,
+      deleted_points: summary.points,
+      deleted_coupon_count: summary.couponCount,
+      points: 0,
+      monthly_points: 0,
+      updated_at: new Date().toISOString(),
+    }).eq("id", uid);
+
+    // 작성 글·댓글 익명 처리 (삭제하지 않고 작성자 정보만 분리)
+    await Promise.all([
+      supabase.from("community_posts")
+        .update({ is_anonymous: true, author: "탈퇴한 회원", user_id: null })
+        .eq("user_id", uid),
+      supabase.from("community_comments")
+        .update({ is_anonymous: true, author: "탈퇴한 회원", user_id: null })
+        .eq("user_id", uid),
+    ]);
+
+    // 개인 데이터(즐겨찾기·쿠폰·포인트 내역) 삭제
+    await Promise.all([
+      supabase.from("user_coupons").delete().eq("user_id", uid),
+      supabase.from("user_favorite_buses").delete().eq("user_id", uid),
+      supabase.from("user_favorite_stores").delete().eq("user_id", uid),
+      supabase.from("user_favorite_apts").delete().eq("user_id", uid),
+      supabase.from("user_point_history").delete().eq("user_id", uid),
+    ]);
+  }
+
+  if (typeof window !== "undefined") {
+    for (const k of LOCAL_KEYS) localStorage.removeItem(k);
+  }
 }

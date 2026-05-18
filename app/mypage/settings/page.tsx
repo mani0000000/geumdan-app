@@ -1,5 +1,152 @@
-import { redirect } from "next/navigation";
+"use client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getUserSettings, updateUserSettings } from "@/lib/db/userdata";
+
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      className={`relative w-12 h-6 rounded-full transition-colors ${on ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`}
+    >
+      <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${on ? "translate-x-6" : "translate-x-0.5"}`} />
+    </button>
+  );
+}
 
 export default function SettingsPage() {
-  redirect("/mypage/");
+  const router = useRouter();
+  const [pushAll, setPushAll] = useState(true);
+  const [pushComment, setPushComment] = useState(true);
+  const [pushLike, setPushLike] = useState(false);
+  const [pushNotice, setPushNotice] = useState(true);
+  const [pushMarketing, setPushMarketing] = useState(false);
+  const [locationOn, setLocationOn] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    getUserSettings().then(s => {
+      setPushAll(s.push_all);
+      setPushComment(s.push_comment);
+      setPushLike(s.push_like);
+      setPushNotice(s.push_notice);
+      setPushMarketing(s.push_marketing);
+      setLocationOn(s.location_on);
+    });
+  }, []);
+
+  function toggle(key: "push_all" | "push_comment" | "push_like" | "push_notice" | "push_marketing" | "location_on", value: boolean) {
+    updateUserSettings({ [key]: value });
+  }
+
+  return (
+    <div className="min-h-dvh bg-[#f5f5f7]">
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 h-14 border-b border-[#f5f5f7] bg-white sticky top-0 z-10">
+        <button onClick={() => router.back()} className="active:opacity-60">
+          <ChevronLeft size={24} className="text-[#1d1d1f]" />
+        </button>
+        <h1 className="text-[18px] font-bold text-[#1d1d1f]">앱 설정</h1>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        {/* Push notifications */}
+        <div className="bg-white">
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">알림 설정</p>
+          {[
+            {
+              label: "전체 알림", sub: "모든 알림 on/off", value: pushAll,
+              onToggle: () => { const v = !pushAll; setPushAll(v); toggle("push_all", v); },
+            },
+            {
+              label: "댓글·답글 알림", sub: "내 글/댓글에 새 반응", value: pushComment,
+              onToggle: () => { const v = !pushComment; setPushComment(v); toggle("push_comment", v); },
+            },
+            {
+              label: "좋아요 알림", sub: "내 글·댓글 좋아요", value: pushLike,
+              onToggle: () => { const v = !pushLike; setPushLike(v); toggle("push_like", v); },
+            },
+            {
+              label: "공지사항 알림", sub: "검단 라이프 공지", value: pushNotice,
+              onToggle: () => { const v = !pushNotice; setPushNotice(v); toggle("push_notice", v); },
+            },
+            {
+              label: "마케팅 알림", sub: "이벤트 및 혜택 소식", value: pushMarketing,
+              onToggle: () => { const v = !pushMarketing; setPushMarketing(v); toggle("push_marketing", v); },
+            },
+          ].map(({ label, sub, value, onToggle }, i, arr) => (
+            <div key={label} className={`flex items-center px-4 py-4 ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
+              <div className="flex-1">
+                <p className="text-[15px] text-[#1d1d1f] font-medium">{label}</p>
+                <p className="text-[13px] text-[#6e6e73] mt-0.5">{sub}</p>
+              </div>
+              <Toggle on={value} onToggle={onToggle} />
+            </div>
+          ))}
+        </div>
+
+        {/* Privacy */}
+        <div className="bg-white">
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">개인정보 보호</p>
+          <div className="flex items-center px-4 py-4 border-b border-[#f5f5f7]">
+            <div className="flex-1">
+              <p className="text-[15px] text-[#1d1d1f] font-medium">위치 정보 사용</p>
+              <p className="text-[13px] text-[#6e6e73] mt-0.5">버스·상가 내 위치 기반 서비스</p>
+            </div>
+            <Toggle on={locationOn} onToggle={() => { const v = !locationOn; setLocationOn(v); toggle("location_on", v); }} />
+          </div>
+          {[
+            { label: "개인정보 처리방침", href: "#" },
+            { label: "서비스 이용약관", href: "#" },
+            { label: "위치기반 서비스 이용약관", href: "#" },
+          ].map(({ label }, i, arr) => (
+            <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#f5f5f7] transition-colors ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
+              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
+              <ChevronRight size={16} className="text-[#d2d2d7]" />
+            </button>
+          ))}
+        </div>
+
+        {/* Display */}
+        <div className="bg-white">
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">화면 설정</p>
+          <div className="flex items-center px-4 py-4">
+            <div className="flex-1">
+              <p className="text-[15px] text-[#1d1d1f] font-medium">다크 모드</p>
+              <p className="text-[13px] text-[#6e6e73] mt-0.5">준비 중인 기능이에요</p>
+            </div>
+            <Toggle on={darkMode} onToggle={() => setDarkMode(!darkMode)} />
+          </div>
+        </div>
+
+        {/* App info */}
+        <div className="bg-white">
+          <p className="px-4 pt-4 pb-2 text-[13px] font-bold text-[#6e6e73]">앱 정보</p>
+          {[
+            { label: "버전 정보", value: "v1.0.0 (최신)" },
+            { label: "캐시 초기화", value: "12.3 MB" },
+            { label: "오픈소스 라이선스", value: "" },
+          ].map(({ label, value }, i, arr) => (
+            <button key={label} className={`w-full flex items-center px-4 py-4 active:bg-[#f5f5f7] transition-colors ${i !== arr.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
+              <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
+              <div className="flex items-center gap-1">
+                {value && <span className="text-[14px] text-[#6e6e73]">{value}</span>}
+                <ChevronRight size={16} className="text-[#d2d2d7]" />
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {/* Delete account */}
+        <div className="mx-4 mb-6">
+          <button
+            onClick={() => router.push("/mypage/delete-account/")}
+            className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
+            회원 탈퇴
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
