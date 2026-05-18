@@ -1683,18 +1683,13 @@ export default function StoresPage() {
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
-  const [mapDetailStore, setMapDetailStore] = useState<EnrichedStore | null>(null);
   const [dbBuildings, setDbBuildings] = useState<BuildingRow[]>([]);
   const [allDbStores, setAllDbStores] = useState<FlatStore[]>([]);
-  const [mapCoupons, setMapCoupons] = useState<import("@/lib/types").Coupon[]>([]);
-  const [mapOpenings, setMapOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
 
   // DB 데이터 로드
   useEffect(() => {
     fetchBuildings().then(setDbBuildings);
     fetchAllStoresFlat().then(setAllDbStores);
-    fetchActiveCoupons().then(setMapCoupons);
-    fetchActiveOpenings().then(setMapOpenings);
     fetchRecommendedKeywords().then(setRecommendedKws);
     fetchPopularKeywords().then(setPopularKws);
   }, []);
@@ -1940,28 +1935,18 @@ export default function StoresPage() {
           </div>
 
           {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
-          {selectedBuildingId && selectedNearby && !mapDetailStore && (
+          {selectedBuildingId && selectedNearby && (
             <MapBuildingSheet
               nearbyInfo={selectedNearby}
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
-              onSelectStore={setMapDetailStore}
+              onSelectStore={(s) => { setSelectedBuildingId(null); router.push(`/stores/detail/?id=${s.id}`); }}
             />
           )}
         </>
       ) : (
         /* ─── 리스트 모드 ─── */
         <StoreListView />
-      )}
-
-      {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}
-      {mapDetailStore && (
-        <StoreListDetailSheet
-          store={mapDetailStore}
-          onClose={() => setMapDetailStore(null)}
-          allCoupons={mapCoupons}
-          allOpenings={mapOpenings}
-        />
       )}
 
       {selected && selected.name !== "공실" && (
