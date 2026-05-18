@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
+import Avatar from "@/components/ui/Avatar";
 import { posts } from "@/lib/mockData";
 import {
   getUserProfile,
@@ -211,7 +212,7 @@ export default function MyPage() {
       <div className={`mx-4 mt-4 ${CARD}`}>
         <div className="px-4 pt-5 pb-5">
           <div className="flex items-start gap-3">
-            <div className="w-16 h-16 rounded-full bg-[#e8f1fd] flex items-center justify-center text-2xl shrink-0">👤</div>
+            <Avatar src={profile?.avatar_url} size={64} alt={nickname} className="shrink-0" />
             <div className="flex-1 min-w-0 pt-0.5">
               <div className="flex items-center gap-2">
                 <h2 className="text-[19px] font-extrabold text-[#1d1d1f] truncate">{nickname}</h2>
