@@ -2214,16 +2214,20 @@ export default function TransportPage() {
                       <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
                         <span className="text-[13px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {(() => {
-                          const t = dayTimetable(st.timetable);
-                          return t.intervalMin > 0 ? (
-                            <p className="text-[12px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</p>
-                          ) : null;
-                        })()}
-                        <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
-                          <Clock size={10} />시간표
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-extrabold text-[18px] leading-tight truncate">{st.displayName}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {(() => {
+                            const t = dayTimetable(st.timetable);
+                            return t.intervalMin > 0 ? (
+                              <span className="text-white/85 text-[12px] font-medium">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                            ) : null;
+                          })()}
+                          <span className="text-white/50">·</span>
+                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
+                            <Clock size={11} />시간표
+                          </span>
+                        </div>
                       </div>
                     </button>
                     {!st.planned && (
