@@ -91,6 +91,9 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
       label: row.label as string,
       hasRestroom: (row.has_restroom as boolean) ?? false,
       restroomCode: (row.restroom_code as string | undefined) ?? undefined,
+      restroomLocation: (row.restroom_location as string | undefined) ?? undefined,
+      restroomGender: (row.restroom_gender as string | undefined) ?? undefined,
+      restroomNote: (row.restroom_note as string | undefined) ?? undefined,
       stores: storesByFloor[row.label as string] ?? [],
     }));
 

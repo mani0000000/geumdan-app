@@ -16,7 +16,7 @@ import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/l
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
-import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
+import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, fetchStoreExtraInfo, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
@@ -46,6 +46,26 @@ const catBg: Record<StoreCategory, string> = {
   꽃집:"bg-[#FCE7F3] text-[#9D174D]",
   기타:"bg-[#F3F4F6] text-[#374151]",
 };
+
+// 업종별 상세 정보 키 → 표시 라벨 (admin EXTRA_FIELDS 와 동일 키 기준)
+const EXTRA_LABEL: Record<string, string> = {
+  menu_highlights: "대표 메뉴", seats: "좌석 수", table_count: "테이블 수",
+  wireless_charge: "무선충전", pet_friendly: "반려동물 동반", wifi: "와이파이",
+  takeout: "테이크아웃", delivery: "배달", dessert: "디저트", parking: "주차",
+  sns: "SNS", cuisine: "음식 종류", price_range: "가격대", kitchen_area: "주방 면적",
+  open_hours: "영업시간", break_time: "브레이크타임", last_order: "라스트오더",
+  delivery_apps: "배달앱", reservation: "예약", group_room: "단체석/룸",
+  brand: "브랜드", is_24h: "24시간", atm: "ATM", parcel: "택배접수", seating: "취식공간",
+  specialties: "진료/취급", doctor_count: "의료진 수", night_open: "야간진료",
+  weekend_open: "주말진료", reservation_info: "예약 방법", insurance: "보험적용",
+  services: "시술 항목", staff_count: "직원 수", designer_pick: "디자이너 지정",
+  courses: "강좌", age_range: "대상", tuition: "수강료", shuttle: "셔틀",
+  trial: "무료체험", consult: "상담 방법", programs: "프로그램", pt_available: "PT",
+  trial_available: "체험 가능", shower: "샤워시설", fresh_food: "신선식품",
+  holiday: "정기휴무", pet_types: "취급 동물", service_types: "서비스 종류",
+  same_day: "당일처리", pickup: "수거/배달",
+};
+function humanizeKey(k: string) { return EXTRA_LABEL[k] ?? k.replace(/_/g, " "); }
 
 // 건물 이미지 매핑 (Unsplash 무료 이미지)
 const BUILDING_IMAGES: Record<string, string> = {
@@ -443,13 +463,19 @@ function StoreListDetailSheet({
   const [sent, setSent] = useState(false);
   const [imgFailed, setImgFailed] = useState(false);
   const [detail, setDetail] = useState<StoreDetail | null>(null);
+  const [extra, setExtra] = useState<Record<string, unknown> | null>(null);
   const coupon = allCoupons.find(c => c.storeId === store.id);
   const opening = allOpenings.find(o => o.storeId === store.id);
   const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
 
   useEffect(() => {
     fetchStoreDetail(store.id).then(setDetail);
+    fetchStoreExtraInfo(store.id).then(setExtra);
   }, [store.id]);
+
+  const extraEntries = extra
+    ? Object.entries(extra).filter(([, v]) => v !== "" && v !== false && v != null)
+    : [];
   const color = catDot[store.category];
   const dDay = coupon ? Math.ceil((new Date(coupon.expiry).getTime() - Date.now()) / 86400000) : null;
   const heroImg = catHeroImage[store.category];
@@ -590,6 +616,23 @@ function StoreListDetailSheet({
                   <div key={i} className="flex items-center gap-2.5 bg-[#F8F9FB] rounded-xl px-3.5 py-2.5">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
                     <p className="text-[13px] text-[#424245]">{t}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 업종별 상세 정보 */}
+          {extraEntries.length > 0 && (
+            <div>
+              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">{store.category} 상세 정보</p>
+              <div className="bg-[#F8F9FB] rounded-xl divide-y divide-[#EEF0F3]">
+                {extraEntries.map(([k, v]) => (
+                  <div key={k} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
+                    <span className="text-[13px] text-[#86868b] shrink-0">{humanizeKey(k)}</span>
+                    <span className="text-[13px] font-semibold text-[#1d1d1f] text-right">
+                      {v === true ? "✓ 가능" : String(v)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -1536,16 +1579,31 @@ function BuildingDetail({
             <div className="p-3">
               <FloorSVG floor={currentFloor} selectedId={selectedStore?.id ?? null} onSelect={setSelectedStore} />
             </div>
-            <div className="px-4 py-3 border-t border-[#f5f5f7] flex items-center gap-4">
-              <div className="flex items-center gap-1.5">
-                <div className={`w-2 h-2 rounded-full ${currentFloor.hasRestroom ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`} />
-                <span className="text-[13px] text-[#6e6e73]">화장실 {currentFloor.hasRestroom ? "있음" : "없음"}</span>
+            <div className="px-4 py-3 border-t border-[#f5f5f7]">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${currentFloor.hasRestroom ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`} />
+                  <span className="text-[13px] text-[#6e6e73]">
+                    🚻 화장실 {currentFloor.hasRestroom ? "있음" : "없음"}
+                  </span>
+                </div>
+                {currentFloor.hasRestroom && currentFloor.restroomGender && (
+                  <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#e8f1fd] text-[#0071e3]">
+                    {currentFloor.restroomGender}
+                  </span>
+                )}
+                {currentFloor.hasRestroom && currentFloor.restroomCode && (
+                  <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
+                    <Lock size={12} className="text-[#0071e3]" />
+                    <span className="text-[13px] text-[#0071e3] font-medium">{showCode ? `비번: ${currentFloor.restroomCode}` : "비번 보기"}</span>
+                  </button>
+                )}
               </div>
-              {currentFloor.hasRestroom && currentFloor.restroomCode && (
-                <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
-                  <Lock size={12} className="text-[#0071e3]" />
-                  <span className="text-[13px] text-[#0071e3] font-medium">{showCode ? `비번: ${currentFloor.restroomCode}` : "비번 보기"}</span>
-                </button>
+              {currentFloor.hasRestroom && (currentFloor.restroomLocation || currentFloor.restroomNote) && (
+                <p className="text-[12px] text-[#6e6e73] mt-2">
+                  {currentFloor.restroomLocation && <span>📍 {currentFloor.restroomLocation}</span>}
+                  {currentFloor.restroomNote && <span className="ml-2">· {currentFloor.restroomNote}</span>}
+                </p>
               )}
             </div>
           </div>

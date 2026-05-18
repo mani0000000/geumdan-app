@@ -69,7 +69,27 @@ export async function fetchStoreDetail(storeId: string): Promise<StoreDetail | n
   }
 }
 
-// ─── 활성 쿠폰 목록 (expiry >= today) ────────────────────────
+// ─── 매장 업종별 상세 정보 (stores.extra_info JSONB) ─────────
+export async function fetchStoreExtraInfo(
+  storeId: string,
+): Promise<Record<string, unknown> | null> {
+  try {
+    const { data, error } = await supabase
+      .from('stores')
+      .select('extra_info')
+      .eq('id', storeId)
+      .single();
+
+    if (error || !data) return null;
+    const ei = data.extra_info as Record<string, unknown> | null;
+    if (!ei || Object.keys(ei).length === 0) return null;
+    return ei;
+  } catch {
+    return null;
+  }
+}
+
+// ─── 활성 쿠폰 목록 (expiry >= today, 잔여수량 > 0) ──────────
 export async function fetchActiveCoupons(): Promise<Coupon[]> {
   try {
     const today = new Date().toISOString().slice(0, 10);
@@ -82,7 +102,13 @@ export async function fetchActiveCoupons(): Promise<Coupon[]> {
 
     if (error || !data) return [];
 
-    return data.map(row => ({
+    return data
+      .filter(row => {
+        const q = row.quantity as number | null;
+        const used = (row.used_count as number) ?? 0;
+        return q == null || used < q;   // 무제한이거나 잔여수량 남음
+      })
+      .map(row => ({
       id: row.id as string,
       storeId: (row.store_id as string) ?? '',
       storeName: (row.store_name as string) ?? '',

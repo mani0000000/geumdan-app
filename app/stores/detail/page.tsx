@@ -186,10 +186,16 @@ function DetailContent() {
                 <div className="flex items-center gap-3">
                   <Lock size={16} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">{floor.label} 화장실</p>
-                    <p className="text-[15px] font-medium text-[#1d1d1f]">
-                      {showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
+                    <p className="text-[12px] text-[#6e6e73]">
+                      {floor.label} 화장실
+                      {floor.restroomGender && <span className="ml-1.5 text-[#0071e3] font-semibold">· {floor.restroomGender}</span>}
                     </p>
+                    <p className="text-[15px] font-medium text-[#1d1d1f]">
+                      {floor.restroomLocation
+                        ? floor.restroomLocation
+                        : showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
+                    </p>
+                    {floor.restroomNote && <p className="text-[12px] text-[#6e6e73] mt-0.5">{floor.restroomNote}</p>}
                   </div>
                 </div>
                 {floor.restroomCode && (

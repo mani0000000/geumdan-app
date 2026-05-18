@@ -182,6 +182,9 @@ export interface Floor {
   stores: Store[];
   hasRestroom: boolean;
   restroomCode?: string;
+  restroomLocation?: string;            // 화장실 위치 (예: "엘리베이터 옆")
+  restroomGender?: string;              // '남여공용' | '남여분리' | '남자' | '여자'
+  restroomNote?: string;                // 추가 안내
 }
 
 // Coupons
