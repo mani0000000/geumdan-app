@@ -12,6 +12,10 @@ export interface BuildingRow {
   image_url: string | null;
   categories: string[] | null;
   has_data: boolean;
+  photo_north: string | null;
+  photo_south: string | null;
+  photo_east: string | null;
+  photo_west: string | null;
 }
 
 export async function fetchBuildings(): Promise<BuildingRow[]> {
@@ -35,6 +39,10 @@ export async function fetchBuildings(): Promise<BuildingRow[]> {
       image_url: (row.image_url as string | null) ?? null,
       categories: (row.categories as string[] | null) ?? null,
       has_data: (row.has_data as boolean) ?? false,
+      photo_north: (row.photo_north as string | null) ?? null,
+      photo_south: (row.photo_south as string | null) ?? null,
+      photo_east: (row.photo_east as string | null) ?? null,
+      photo_west: (row.photo_west as string | null) ?? null,
     }));
   } catch (err) {
     console.error('[buildings] fetchBuildings error:', err);

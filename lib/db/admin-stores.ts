@@ -16,6 +16,10 @@ export interface AdminBuilding {
   has_data: boolean;
   categories: string[] | null;
   image_url: string | null;
+  photo_north: string | null;
+  photo_south: string | null;
+  photo_east: string | null;
+  photo_west: string | null;
 }
 
 export async function adminFetchBuildings(): Promise<AdminBuilding[]> {

@@ -81,10 +81,16 @@ const BUILDING_IMAGES: Record<string, string> = {
 const DEFAULT_IMG = "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format";
 
 // DB BuildingRow를 화면용 building 객체로 변환
+type DirectionPhotos = {
+  north: string | null; south: string | null;
+  east: string | null;  west: string | null;
+};
+
 type NearbyBuilding = {
   id: string; name: string; address: string;
   lat: number; lng: number; floors: number; stores: number;
   hasData: boolean; image: string; categories: StoreCategory[]; km: number;
+  photos: DirectionPhotos;
 };
 
 function rowToNearby(row: BuildingRow, userLat: number, userLng: number): NearbyBuilding {
@@ -96,6 +102,10 @@ function rowToNearby(row: BuildingRow, userLat: number, userLng: number): Nearby
     image: BUILDING_IMAGES[row.id] ?? DEFAULT_IMG,
     categories: (row.categories ?? []) as StoreCategory[],
     km: haversineKm(userLat, userLng, row.lat ?? 37.586, row.lng ?? 126.706),
+    photos: {
+      north: row.photo_north, south: row.photo_south,
+      east: row.photo_east,   west: row.photo_west,
+    },
   };
 }
 
@@ -309,6 +319,62 @@ const catHeroImage: Record<StoreCategory, string> = {
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
 
+// ─── 방향별 로드뷰 섹션 ──────────────────────────────────────
+const ROADVIEW_DIRS = [
+  { key: "north" as const, label: "북" },
+  { key: "east" as const, label: "동" },
+  { key: "south" as const, label: "남" },
+  { key: "west" as const, label: "서" },
+];
+
+function RoadviewSection({ photos, name }: { photos: DirectionPhotos; name: string }) {
+  const hasAny = ROADVIEW_DIRS.some(d => photos[d.key]);
+  const [dir, setDir] = useState<keyof DirectionPhotos>(
+    () => ROADVIEW_DIRS.find(d => photos[d.key])?.key ?? "north",
+  );
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { setFailed(false); }, [dir]);
+
+  const url = photos[dir];
+
+  return (
+    <div className="px-4 py-3 border-b border-[#f5f5f7] shrink-0">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[13px] font-bold text-[#1d1d1f]">방향별 로드뷰</p>
+        <div className="flex gap-1">
+          {ROADVIEW_DIRS.map(d => {
+            const active = d.key === dir;
+            const has = !!photos[d.key];
+            return (
+              <button key={d.key} onClick={() => setDir(d.key)}
+                className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-colors ${
+                  active ? "bg-[#0071e3] text-white"
+                  : has ? "bg-[#EFF6FF] text-[#0071e3]"
+                  : "bg-[#f5f5f7] text-[#b0b8c1]"
+                }`}>
+                {d.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      <div className="relative w-full rounded-xl overflow-hidden bg-[#f5f5f7]" style={{ aspectRatio: "16 / 10" }}>
+        {url && !failed ? (
+          <img src={url} alt={`${name} ${dir} 방향`} onError={() => setFailed(true)}
+            className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[#b0b8c1]">
+            <Building2 size={26} />
+            <p className="text-[13px] font-semibold">
+              {hasAny ? "이 방향 사진 준비중" : "로드뷰 준비중"}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── 상가 건물 바텀시트 (리스트뷰용) ─────────────────────────
 function BuildingBottomSheet({
   nearbyInfo, buildingData, loading, onClose, onSelectStore,
@@ -371,6 +437,8 @@ function BuildingBottomSheet({
             </p>
           </div>
         </div>
+
+        <RoadviewSection photos={nearbyInfo.photos} name={nearbyInfo.name} />
 
         {/* 로딩 */}
         {loading && (
@@ -1427,6 +1495,8 @@ function MapBuildingSheet({
             <p className="text-[11px] text-white/75 mt-0.5">{nearbyInfo.address} · {nearbyInfo.floors}층 · {nearbyInfo.stores}개 매장</p>
           </div>
         </div>
+
+        <RoadviewSection photos={nearbyInfo.photos} name={nearbyInfo.name} />
 
         {buildingData ? (
           <>
