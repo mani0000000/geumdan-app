@@ -1157,6 +1157,28 @@ export default function TransportPage() {
     fetchArrivalsForStops(stubs);
   }, [apiStops, favStops, loading, fetchArrivalsForStops]);
 
+  // ── 즐겨찾기 정류장 이름 백필 ────────────────────────────────
+  // 구버전/이름 누락으로 favStops_meta에 이름이 없거나 "정류장"인 즐겨찾기를
+  // apiStops의 실제 이름으로 채워 홈 위젯이 올바른 이름을 표시하도록 한다.
+  useEffect(() => {
+    if (!apiStops || apiStops.length === 0 || favStops.length === 0) return;
+    let meta: Record<string, { name?: string; lat?: number; lng?: number }> = {};
+    try { meta = JSON.parse(localStorage.getItem("favStops_meta") ?? "{}"); } catch { /* ignore */ }
+    let changed = false;
+    for (const id of favStops) {
+      const cur = meta[id]?.name;
+      if (cur && cur !== "정류장") continue;
+      const match = apiStops.find(s => s.id === id);
+      if (match?.name && match.name !== "정류장") {
+        meta[id] = { ...(meta[id] ?? {}), name: match.name, lat: match.lat, lng: match.lng };
+        changed = true;
+      }
+    }
+    if (changed) {
+      try { localStorage.setItem("favStops_meta", JSON.stringify(meta)); } catch { /* ignore */ }
+    }
+  }, [apiStops, favStops]);
+
   // ── 30초 자동 갱신 (도착정보만, 정류장 목록은 재조회 안 함) ──
   useEffect(() => {
     const id = setInterval(() => {

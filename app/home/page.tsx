@@ -2347,7 +2347,7 @@ function HomeTransportWidget() {
         const displayed = hasFavRoutes
           ? stopArrivals.filter(a => favRouteKeySet.has(routeFavKey(stop.id, a))).slice(0, 3)
           : stopArrivals.slice(0, 3);
-        const stopName = stop.name && stop.name !== "정류장" ? stop.name : (STOP_NAME_FALLBACK[stop.id] ?? "정류장");
+        const stopName = stop.name && stop.name !== "정류장" ? stop.name : (STOP_NAME_FALLBACK[stop.id] ?? "알 수 없는 정류장");
         const isLoading = busLoading.has(stop.id);
 
         return (
