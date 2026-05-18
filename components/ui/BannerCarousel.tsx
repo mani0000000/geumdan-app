@@ -37,11 +37,11 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
         />
       )}
 
-      {/* 그라디언트 오버레이 */}
+      {/* 텍스트 영역 하단 그라디언트 오버레이 */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-x-0 bottom-0 h-1/2"
         style={{
-          background: `linear-gradient(160deg, ${b.bg_from}cc 0%, transparent 55%, rgba(0,0,0,.55) 100%)`,
+          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%)",
         }}
       />
 
