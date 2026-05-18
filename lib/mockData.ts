@@ -49,11 +49,12 @@ export const posts: Post[] = [
     id: "p3",
     category: "중고거래",
     title: "[판매] 아이쿠션 5만원 (거의 새것)",
-    content: "아이가 크면서 안 쓰게 되어 판매합니다. 직거래 선호, 원당동·당하동 가능합니다.",
+    content: "아이가 크면서 안 쓰게 되어 판매합니다. 직거래 선호, 원당동·당하동 가능합니다. 상태 확인용 영상 첨부해요!",
     author: "정리왕맘",
     authorDong: "원당동",
     createdAt: "2026-03-28T08:45:00",
     viewCount: 156, likeCount: 5, commentCount: 8,
+    videos: ["https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"],
   },
   {
     id: "p4",

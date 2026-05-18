@@ -10,6 +10,7 @@ import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import { PostMenu } from "@/components/ui/PostMenu";
+import { PostVideo } from "@/components/ui/PostVideo";
 import { ReportModal } from "@/components/ui/ReportModal";
 import {
   fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId, fetchPostOwner,
@@ -454,14 +455,7 @@ function DetailContent() {
                   {post.videos && post.videos.length > 0 && (
                     <div className="mt-3 space-y-2">
                       {post.videos.map((src, i) => (
-                        <video
-                          key={i}
-                          src={src}
-                          controls
-                          playsInline
-                          preload="metadata"
-                          className="w-full rounded-xl bg-black aspect-video"
-                        />
+                        <PostVideo key={i} src={src} rounded />
                       ))}
                     </div>
                   )}

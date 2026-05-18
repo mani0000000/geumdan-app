@@ -11,6 +11,7 @@ import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import ThreadAvatar from "@/components/ui/ThreadAvatar";
 import { PostMenu } from "@/components/ui/PostMenu";
+import { PostVideo } from "@/components/ui/PostVideo";
 import { ReportModal } from "@/components/ui/ReportModal";
 import { posts, newsItems, apartments } from "@/lib/mockData";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
@@ -79,6 +80,7 @@ function PostCard({
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
+  const videos = post.videos ?? [];
   return (
     <div className="relative px-4 pt-4 pb-0 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
@@ -145,6 +147,13 @@ function PostCard({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {/* Video */}
+          {videos.length > 0 && (
+            <div className="mt-3">
+              <PostVideo src={videos[0]} rounded />
             </div>
           )}
 
