@@ -12,7 +12,8 @@ const TAGO_BASE = "https://apis.data.go.kr/1613000";
 const STATIC_ACTIONS = new Set([
   "routeInfo", "routeStations",
   "tagoRouteStations", "tagoRouteDetail", "tagoRoutes",
-  "tagoStations", "aroundStations",
+  "tagoStations", "tagoStationsByName", "aroundStations",
+  "stationByName", "routeList",
 ]);
 const STATIC_TTL_MS  = 5 * 60 * 1000;
 const DEFAULT_TTL_MS = 30 * 1000;
@@ -31,6 +32,7 @@ const ACTIONS: Record<string, { base: string; path: string; required: string[] }
   routeList:         { base: BUS_BASE,  path: "/busRouteService/getBusRouteList",                              required: ["routeNo"] },
   // 국가대중교통 TAGO API (전국 공통 - cityCode=23 인천)
   tagoStations:      { base: TAGO_BASE, path: "/BusSttnInfoInqireService/getCrdntPrxmtSttnList",               required: ["gpsLati", "gpsLong"] },
+  tagoStationsByName:{ base: TAGO_BASE, path: "/BusSttnInfoInqireService/getSttnNoList",                       required: ["cityCode", "nodeNm"] },
   tagoArrivals:      { base: TAGO_BASE, path: "/ArvlInfoInqireService/getSttnAcctoArvlPrearngeInfoList",       required: ["cityCode", "nodeId"] },
   tagoRoutes:        { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteNoList",                     required: ["cityCode", "routeNo"] },
   tagoRouteDetail:   { base: TAGO_BASE, path: "/BusRouteInfoInqireService/getRouteInfoIem",                    required: ["cityCode", "routeId"] },

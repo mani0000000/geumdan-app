@@ -518,8 +518,28 @@ export async function fetchRouteDetailFromTago(routeId: string, cityCode = "23")
   };
 }
 
-// ─── 정류장 이름으로 검색 (인천 BIS) ─────────────────────────
+// ─── TAGO 정류소명 검색 (전국, 위치 무관 / cityCode 23 = 인천) ──
+// getSttnNoList 는 좌표가 아닌 정류소명 기준이라 현재 위치와 완전히 무관하다.
+async function searchStationsByNameTago(stationName: string, cityCode = "23"): Promise<NearbyStop[]> {
+  const items = await apiFetch("tagoStationsByName", { cityCode, nodeNm: stationName, numOfRows: "50" });
+  return items
+    .map(d => ({
+      stationId: d.nodeid ?? d.nodeId ?? "",
+      osmNodeId: 0,
+      stationName: d.nodenm ?? d.nodeNm ?? "",
+      lat: Number(d.gpslati ?? d.gpsLati ?? 0),
+      lng: Number(d.gpslong ?? d.gpsLong ?? 0),
+      distanceM: 0,
+      osmRoutes: [] as Array<{ routeNo: string; destination: string }>,
+    }))
+    .filter(s => s.stationId && s.stationName);
+}
+
+// ─── 정류장 이름으로 검색 (TAGO 전국 우선 → 인천 BIS 폴백) ────
+// 위치와 무관하게 정류소명만으로 조회한다. 검단 권역 밖에서도 동작.
 export async function searchStationsByName(stationName: string): Promise<NearbyStop[]> {
+  const tago = await searchStationsByNameTago(stationName).catch(() => []);
+  if (tago.length > 0) return tago;
   const items = await apiFetch("stationByName", { stationName, numOfRows: "30" });
   return items
     .map(d => {
@@ -538,12 +558,13 @@ export async function searchStationsByName(stationName: string): Promise<NearbyS
     .filter(s => s.stationId && s.stationName);
 }
 
-// ─── 정류장 이름으로 검색 (Overpass 폴백, 검단 광역 8km) ─────
+// ─── 정류장 이름으로 검색 (Overpass 폴백, 수도권 광역 35km) ──
+// 검단 권역(8km)에 묶지 않고 인천·김포·서울 서부까지 포함하도록 넓혔다.
 export async function searchStationsByNameOsm(query: string): Promise<NearbyStop[]> {
   const center = { lat: 37.594, lng: 126.710 };
   const escaped = query.replace(/["\\]/g, "\\$&");
   const overpassQuery = `[out:json][timeout:20];
-node["highway"="bus_stop"]["name"~"${escaped}",i](around:8000,${center.lat},${center.lng});
+node["highway"="bus_stop"]["name"~"${escaped}",i](around:35000,${center.lat},${center.lng});
 out body;`;
   try {
     const res = await fetch(OVERPASS, {

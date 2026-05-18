@@ -1787,7 +1787,7 @@ export default function TransportPage() {
             <input
               value={busSearch}
               onChange={e => setBusSearch(e.target.value)}
-              placeholder="정류장 이름 · 노선 번호 (전체 검단 검색)"
+              placeholder="정류장 이름 · 노선 번호 검색"
               className="flex-1 text-[14px] outline-none bg-transparent placeholder:text-[#86868b]"
             />
             {busSearch && (
@@ -1803,7 +1803,7 @@ export default function TransportPage() {
               {searching && (
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex items-center gap-2">
                   <RefreshCw size={14} className="text-[#0071e3] animate-spin" />
-                  <span className="text-[13px] text-[#6e6e73]">검단 전체에서 검색 중...</span>
+                  <span className="text-[13px] text-[#6e6e73]">검색 중...</span>
                 </div>
               )}
 
@@ -1865,7 +1865,7 @@ export default function TransportPage() {
                             <div className="flex-1 min-w-0">
                               <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{s.stationName}</p>
                               {s.distanceM > 0 && (
-                                <p className="text-[11px] text-[#86868b]">검단 중심 기준 {distLabel(s.distanceM)}</p>
+                                <p className="text-[11px] text-[#86868b]">{distLabel(s.distanceM)}</p>
                               )}
                             </div>
                             <button onClick={e => { e.stopPropagation(); toggleStop(s.stationId); }}
