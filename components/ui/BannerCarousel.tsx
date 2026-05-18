@@ -8,7 +8,6 @@ function badgeTextColor(color: string) {
   return BADGE_LIGHT.has(color.toUpperCase()) || BADGE_LIGHT.has(color) ? "#1d1d1f" : "#ffffff";
 }
 
-const HEIGHT = 192;
 const AUTOPLAY_MS = 4000;
 const RESUME_MS = 1500;
 const SWIPE_THRESHOLD = 50;
@@ -194,8 +193,7 @@ export default function BannerCarousel({ banners }: Props) {
   return (
     <div className="px-4 pb-1 pt-3">
       <div
-        className="relative w-full rounded-2xl overflow-hidden select-none"
-        style={{ height: HEIGHT }}
+        className="relative w-full h-48 md:h-60 lg:h-72 rounded-2xl overflow-hidden select-none"
       >
         <div
           className="flex h-full"

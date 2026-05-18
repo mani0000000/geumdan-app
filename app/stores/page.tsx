@@ -1310,7 +1310,7 @@ function StoreListView() {
                     </span>
                     <div className="flex-1 h-px bg-[#e5e5ea]" />
                   </div>
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
                     {stores.map(s => (
                       <StoreCard
                         key={s.id}
@@ -1339,7 +1339,7 @@ function StoreListView() {
                 ? `${visibleList.length} / ${baseList.length}개 표시 중`
                 : `${visibleList.length}개 매장`}
             </p>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
               {visibleList.map(s => (
                 <StoreCard
                   key={s.id}

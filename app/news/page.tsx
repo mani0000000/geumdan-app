@@ -440,11 +440,13 @@ export default function NewsPage() {
 
       {/* Rest as list */}
       {active !== "유튜브" && rest.length > 0 && (
-        <div className="px-4 space-y-2">
+        <div className="px-4">
           <p className="text-[14px] font-bold text-[#6e6e73] mb-1">더 보기</p>
-          {rest.map(item => (
-            <NewsListItem key={item.id} item={item} />
-          ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {rest.map(item => (
+              <NewsListItem key={item.id} item={item} />
+            ))}
+          </div>
         </div>
       )}
 
