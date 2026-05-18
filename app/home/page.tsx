@@ -40,7 +40,7 @@ import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
-import type { YouTubeVideo } from "@/lib/api/news";
+import { fetchYouTubeLatest, type YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
@@ -537,7 +537,19 @@ function NewsWidget() {
 // ─── 유튜브 위젯 ─────────────────────────────────────────────
 function YouTubeSection() {
   const [videos, setVideos] = useState<YouTubeVideo[] | null>(null);
-  useEffect(() => { fetchYouTubeVideosFromDB(6).then(r => setVideos(r.videos)); }, []);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      // 1) "검단신도시" 최신 영상 실시간 (YouTube API order=date, 30분 캐시)
+      const live = await fetchYouTubeLatest("검단신도시", 8);
+      if (!alive) return;
+      if (live.videos.length > 0) { setVideos(live.videos.slice(0, 6)); return; }
+      // 2) 폴백 — Supabase DB / 정적 캐시
+      const db = await fetchYouTubeVideosFromDB(6);
+      if (alive) setVideos(db.videos);
+    })();
+    return () => { alive = false; };
+  }, []);
   if (!videos?.length) return null;
   return (
     <>

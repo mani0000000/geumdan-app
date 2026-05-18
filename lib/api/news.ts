@@ -243,12 +243,12 @@ async function fetchRss2json(): Promise<NewsArticle[]> {
 }
 
 // ── YouTube: API v3 ───────────────────────────────────────────
-async function fetchYouTubeDataAPI(query: string): Promise<YouTubeVideo[]> {
+async function fetchYouTubeDataAPI(query: string, maxResults = 12): Promise<YouTubeVideo[]> {
   if (!YT_API_KEY) return [];
   try {
     const params = new URLSearchParams({
       part: "snippet", q: query, type: "video",
-      maxResults: "12", key: YT_API_KEY,
+      maxResults: String(maxResults), key: YT_API_KEY,
       regionCode: "KR", relevanceLanguage: "ko", order: "date",
     });
     const ctrl = new AbortController();
@@ -433,6 +433,73 @@ export async function fetchNewsFromApi(
     return live;
   }
   return { articles: [], source: "없음", ms: Math.round(performance.now() - t0) };
+}
+
+// ── 실시간 최신 영상 (YouTube Data API v3 order=date 우선) ──────
+// 클라이언트 localStorage 30분 캐시로 API 쿼터 보호 (revalidate 역할)
+const YT_LATEST_TTL_MS = 30 * 60 * 1000;
+
+function readLatestCache(key: string): YouTubeVideo[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const { at, videos } = JSON.parse(raw) as { at: number; videos: YouTubeVideo[] };
+    if (Date.now() - at < YT_LATEST_TTL_MS && Array.isArray(videos) && videos.length > 0) {
+      return videos;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function writeLatestCache(key: string, videos: YouTubeVideo[]): void {
+  if (typeof window === "undefined" || videos.length === 0) return;
+  try {
+    window.localStorage.setItem(key, JSON.stringify({ at: Date.now(), videos }));
+  } catch { /* ignore */ }
+}
+
+/**
+ * "검단신도시" 최신 영상을 실시간으로 가져온다.
+ * 1. localStorage 30분 캐시 → 2. YouTube Data API v3(order=date)
+ * → 3. Piped → 4. Invidious → 5. HTML 파싱
+ * 모두 실패 시 빈 배열 (호출 측에서 DB/정적 캐시로 폴백)
+ */
+export async function fetchYouTubeLatest(
+  query = "검단신도시",
+  limit = 10,
+  forceRefresh = false,
+): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
+  const t0 = performance.now();
+  const cacheKey = `yt-latest:${query}`;
+
+  const cached = forceRefresh ? null : readLatestCache(cacheKey);
+  if (cached) {
+    return { videos: cached.slice(0, limit), source: "캐시(30분)", ms: Math.round(performance.now() - t0) };
+  }
+
+  const api = await fetchYouTubeDataAPI(query, Math.max(limit, 12));
+  if (api.length > 0) {
+    writeLatestCache(cacheKey, api);
+    return { videos: api.slice(0, limit), source: "YouTube API", ms: Math.round(performance.now() - t0) };
+  }
+
+  const [piped, invidious] = await Promise.all([
+    fetchYouTubePiped(query),
+    fetchYouTubeInvidious(query),
+  ]);
+  if (piped.length > 0) {
+    writeLatestCache(cacheKey, piped);
+    return { videos: piped.slice(0, limit), source: "Piped API", ms: Math.round(performance.now() - t0) };
+  }
+  if (invidious.length > 0) {
+    writeLatestCache(cacheKey, invidious);
+    return { videos: invidious.slice(0, limit), source: "Invidious API", ms: Math.round(performance.now() - t0) };
+  }
+
+  const html = await fetchYouTubeHTML(query);
+  if (html.length > 0) writeLatestCache(cacheKey, html);
+  return { videos: html.slice(0, limit), source: "HTML파싱", ms: Math.round(performance.now() - t0) };
 }
 
 // ── 메인 exports ──────────────────────────────────────────────

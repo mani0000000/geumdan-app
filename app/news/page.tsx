@@ -6,7 +6,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, fetchYouTubeLatest, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
@@ -342,16 +342,24 @@ export default function NewsPage() {
     setLoading(false);
   };
 
-  const loadYouTube = async () => {
-    if (ytVideos.length > 0) return;
+  const loadYouTube = async (forceRefresh = false) => {
+    if (ytVideos.length > 0 && !forceRefresh) return;
     setYtLoading(true);
-    // DB에 등록된 영상 먼저, 없으면 API 검색
+    // 1) "검단신도시" 최신 영상 실시간 (YouTube API order=date, 30분 캐시)
+    const live = await fetchYouTubeLatest("검단신도시", 20, forceRefresh);
+    if (live.videos.length > 0) {
+      setYtVideos(live.videos);
+      setYtLoading(false);
+      return;
+    }
+    // 2) 폴백 — Supabase DB / 정적 캐시
     const dbResult = await fetchYouTubeVideosFromDB();
     if (dbResult.videos.length > 0) {
       setYtVideos(dbResult.videos);
       setYtLoading(false);
       return;
     }
+    // 3) 최후 폴백 — 기존 멀티소스 파이프라인
     const result = await fetchYouTubeVideos("검단신도시");
     setYtVideos(result.videos);
     setYtLoading(false);
@@ -415,7 +423,7 @@ export default function NewsPage() {
               <div className="w-1.5 h-1.5 rounded-full bg-[#FF0000] animate-pulse" />
               <span className="text-[13px] text-[#424245]">검단신도시 유튜브 영상</span>
             </div>
-            <button onClick={() => { setYtVideos([]); loadYouTube(); }} className="active:opacity-60">
+            <button onClick={() => { setYtVideos([]); loadYouTube(true); }} className="active:opacity-60">
               <RefreshCw size={12} className={`text-[#6e6e73] ${ytLoading ? "animate-spin" : ""}`} />
             </button>
           </div>
