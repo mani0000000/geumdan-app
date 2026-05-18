@@ -34,6 +34,17 @@ const TEXTAREA = INPUT + " resize-none";
 
 // ─── 업종별 상세 필드 정의 ────────────────────────────────────
 type ExtraField = { key: string; label: string; type: "text" | "boolean" | "select"; options?: string[]; ph?: string };
+
+// 모든 업종 공통 — 상세 주소 · 연락 · 외부 링크
+const COMMON_FIELDS: ExtraField[] = [
+  { key: "address_detail", label: "상세 주소 (도로명/지번)", type: "text", ph: "인천 서구 ..." },
+  { key: "naver_url",      label: "네이버 플레이스 링크",     type: "text", ph: "https://naver.me/..." },
+  { key: "kakao_url",      label: "카카오맵 링크",           type: "text", ph: "https://place.map.kakao.com/..." },
+  { key: "google_url",     label: "구글 지도 링크",          type: "text", ph: "https://maps.app.goo.gl/..." },
+  { key: "instagram",      label: "인스타그램",              type: "text", ph: "@id 또는 링크" },
+  { key: "blog_url",       label: "블로그/홈페이지 링크",     type: "text", ph: "https://..." },
+];
+
 const EXTRA_FIELDS: Partial<Record<StoreCategory, ExtraField[]>> = {
   카페: [
     { key: "menu_highlights", label: "대표 메뉴",            type: "text", ph: "아메리카노, 시그니처 라떼" },
@@ -516,6 +527,16 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                 ))}
               </>
             )}
+
+            {/* ── 공통: 주소 · 연락 · 링크 (모든 업종) ── */}
+            <SectionTitle>주소 · 연락 · 링크</SectionTitle>
+            {COMMON_FIELDS.map(f => (
+              <Field key={f.key} label={f.label}>
+                <input className={INPUT} value={(getExtra(f.key) as string) || ""}
+                  placeholder={f.ph}
+                  onChange={e => setExtra(f.key, e.target.value || "")} />
+              </Field>
+            ))}
 
             {/* ── 매장 페이지 / 어드민 ── */}
             <SectionTitle>매장 페이지 · 매장 어드민</SectionTitle>
