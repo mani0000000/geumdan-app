@@ -1779,10 +1779,10 @@ export const userGameData = {
   weeklyLikes: 5,
   weeklyLikesMax: 10,
   weeklyPosts: 2,
-  monthlyLevel: "실버" as "브론즈" | "실버" | "골드" | "플래티넘",
+  monthlyLevel: "검단 단골" as "검단 새내기" | "검단 단골" | "검단 일꾼" | "검단 지킴이",
   monthlyPoints: 1250,
-  monthlyLevelThresholds: { 브론즈: 0, 실버: 500, 골드: 1500, 플래티넘: 3000 },
-  nextLevel: "골드" as "브론즈" | "실버" | "골드" | "플래티넘",
+  monthlyLevelThresholds: { "검단 새내기": 0, "검단 단골": 500, "검단 일꾼": 1500, "검단 지킴이": 3000 },
+  nextLevel: "검단 일꾼" as "검단 새내기" | "검단 단골" | "검단 일꾼" | "검단 지킴이",
   nextLevelPoints: 1500,
   missions: [
     { id: "m1", title: "글 작성하기", desc: "커뮤니티에 글 1개 작성", reward: 10, done: true, icon: "✍️" },

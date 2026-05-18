@@ -50,18 +50,18 @@ const levelBadge: Record<string, string> = {
 };
 const levelPct: Record<string, number> = { 새싹: 15, 주민: 40, 이웃: 65, 터줏대감: 100 };
 
-// 등급명 → 카드 그라데이션 색상 (DB 등급명이 달라도 순서로 폴백)
-const GRADE_COLORS: Record<string, { from: string; to: string }> = {
-  브론즈: { from: "#92400E", to: "#D97706" },
-  실버: { from: "#4B5563", to: "#9CA3AF" },
-  골드: { from: "#B45309", to: "#FBBF24" },
-  플래티넘: { from: "#1E40AF", to: "#38BDF8" },
+// 등급명 → 카드 포인트 색상 (DB 등급명이 달라도 순서로 폴백)
+const GRADE_COLORS: Record<string, { accent: string; soft: string }> = {
+  "검단 새내기": { accent: "#00C471", soft: "#F0FDF4" },
+  "검단 단골": { accent: "#0071e3", soft: "#e8f1fd" },
+  "검단 일꾼": { accent: "#7C3AED", soft: "#EDE9FE" },
+  "검단 지킴이": { accent: "#D97706", soft: "#FEF3C7" },
 };
 const GRADE_FALLBACK = [
-  { from: "#92400E", to: "#D97706" },
-  { from: "#4B5563", to: "#9CA3AF" },
-  { from: "#B45309", to: "#FBBF24" },
-  { from: "#1E40AF", to: "#38BDF8" },
+  { accent: "#00C471", soft: "#F0FDF4" },
+  { accent: "#0071e3", soft: "#e8f1fd" },
+  { accent: "#7C3AED", soft: "#EDE9FE" },
+  { accent: "#D97706", soft: "#FEF3C7" },
 ];
 function gradeColor(name: string, order: number) {
   return GRADE_COLORS[name] ?? GRADE_FALLBACK[Math.min(order, GRADE_FALLBACK.length - 1)];
@@ -247,73 +247,77 @@ export default function MyPage() {
       </div>
 
       {/* ── 멤버십 등급 & 포인트 카드 ── */}
-      <div className="mx-4 mt-3 rounded-2xl overflow-hidden shadow-sm"
-        style={{ background: `linear-gradient(135deg, ${mlv.from}, ${mlv.to})` }}>
+      <div className={`mx-4 mt-3 ${CARD}`}>
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between mb-3">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <Trophy size={16} className="text-white/80" />
-                <span className="text-[14px] font-bold text-white/80">멤버십 등급</span>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Trophy size={15} style={{ color: mlv.accent }} />
+                <span className="text-[13px] font-medium text-[#6e6e73]">멤버십 등급</span>
               </div>
-              <span className="text-[29px] font-black text-white">{grade.current.name}</span>
+              <span className="inline-block text-[15px] font-bold px-2.5 py-1 rounded-full"
+                style={{ background: mlv.soft, color: mlv.accent }}>
+                {grade.current.name}
+              </span>
             </div>
             <div className="text-right">
-              <p className="text-[13px] text-white/70">보유 포인트</p>
-              <p className="text-[27px] font-black text-white">{gameStats.points.toLocaleString()}P</p>
+              <p className="text-[12px] text-[#6e6e73]">보유 포인트</p>
+              <p className="text-[24px] font-black text-[#1d1d1f]">{gameStats.points.toLocaleString()}P</p>
             </div>
           </div>
 
           {grade.current.benefits && (
-            <p className="text-[12px] text-white/75 mb-3 leading-relaxed">🎁 {grade.current.benefits}</p>
+            <p className="text-[12px] text-[#6e6e73] mb-3 leading-relaxed">🎁 {grade.current.benefits}</p>
           )}
 
           {/* 등급 진행 바 */}
-          <div className="mb-3">
+          <div className="mb-4">
             <div className="flex justify-between mb-1.5">
-              <span className="text-[12px] text-white/70">{grade.current.name}</span>
-              <span className="text-[12px] text-white/70">
-                {grade.next ? `${grade.next.name} (앞으로 ${remainToNext.toLocaleString()}P)` : "최고 등급 달성 🎉"}
+              <span className="text-[12px] text-[#6e6e73]">{grade.current.name}</span>
+              <span className="text-[12px] text-[#86868b]">
+                {grade.next ? `${grade.next.name}까지 ${remainToNext.toLocaleString()}P` : "최고 등급 달성 🎉"}
               </span>
             </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+            <div className="h-2 bg-[#f5f5f7] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all"
+                style={{ width: `${progressPct}%`, background: mlv.accent }} />
             </div>
           </div>
 
           {/* 이번 주 활동 */}
-          <div className="flex gap-3">
-            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
-              <p className="text-[12px] text-white/70">이번 주 좋아요</p>
+          <div className="flex gap-2.5">
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[12px] text-[#6e6e73]">이번 주 좋아요</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[19px] font-black text-white">{gameStats.weeklyLikes}</span>
-                <span className="text-[13px] text-white/60">/{WEEKLY_LIKES_MAX}</span>
+                <span className="text-[18px] font-black text-[#1d1d1f]">{gameStats.weeklyLikes}</span>
+                <span className="text-[13px] text-[#86868b]">/{WEEKLY_LIKES_MAX}</span>
               </div>
-              <div className="h-1 bg-white/20 rounded-full mt-1.5 overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%` }} />
+              <div className="h-1 bg-[#e5e5ea] rounded-full mt-1.5 overflow-hidden">
+                <div className="h-full rounded-full"
+                  style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%`, background: mlv.accent }} />
               </div>
             </div>
-            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
-              <p className="text-[12px] text-white/70">이번 주 글</p>
-              <span className="text-[19px] font-black text-white">{gameStats.weeklyPosts}개</span>
-              <p className="text-[12px] text-white/60 mt-0.5">글 1개 = +10P</p>
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[12px] text-[#6e6e73]">이번 주 글</p>
+              <span className="text-[18px] font-black text-[#1d1d1f]">{gameStats.weeklyPosts}개</span>
+              <p className="text-[12px] text-[#86868b] mt-0.5">글 1개 = +10P</p>
             </div>
           </div>
 
           <button onClick={() => setShowPointHistory(s => !s)}
-            className="mt-3 w-full text-center text-[13px] text-white/70 active:opacity-60 flex items-center justify-center gap-1">
+            className="mt-3 w-full text-center text-[13px] text-[#6e6e73] active:opacity-60 flex items-center justify-center gap-1">
             포인트 내역 {showPointHistory ? "▲" : "▼"}
           </button>
           {showPointHistory && (
-            <div className="mt-2 bg-white/10 rounded-xl p-3 space-y-1.5">
+            <div className="mt-2 bg-[#f5f5f7] rounded-xl p-3 space-y-1.5">
               {gameStats.pointHistory.length === 0 ? (
-                <p className="text-[13px] text-white/60 text-center">포인트 내역이 없습니다</p>
+                <p className="text-[13px] text-[#86868b] text-center">포인트 내역이 없습니다</p>
               ) : gameStats.pointHistory.map((h, i) => (
                 <div key={i} className="flex items-center justify-between">
-                  <span className="text-[13px] text-white/80">{h.desc}</span>
+                  <span className="text-[13px] text-[#1d1d1f]">{h.desc}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-white/50">{h.date.slice(5)}</span>
-                    <span className={`text-[14px] font-bold ${h.points > 0 ? "text-white" : "text-white/60"}`}>
+                    <span className="text-[12px] text-[#86868b]">{h.date.slice(5)}</span>
+                    <span className={`text-[14px] font-bold ${h.points > 0 ? "text-[#00C471]" : "text-[#86868b]"}`}>
                       {h.points > 0 ? "+" : ""}{h.points}P
                     </span>
                   </div>

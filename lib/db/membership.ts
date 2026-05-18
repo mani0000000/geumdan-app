@@ -39,10 +39,10 @@ export interface MyCoupon {
 
 // 마이그레이션 시드와 동일 — DB 미응답 시 폴백
 export const DEFAULT_GRADES: MembershipGrade[] = [
-  { name: "브론즈",   required_points: 0,    benefits: "기본 혜택 · 쿠폰 교환 이용 가능",                sort_order: 0 },
-  { name: "실버",     required_points: 500,  benefits: "교환 쿠폰 5% 추가 적립 · 전용 쿠폰 열람",         sort_order: 1 },
-  { name: "골드",     required_points: 1500, benefits: "교환 쿠폰 10% 추가 적립 · 골드 한정 쿠폰",        sort_order: 2 },
-  { name: "플래티넘", required_points: 3000, benefits: "교환 쿠폰 우선권 · 플래티넘 전용 프리미엄 쿠폰",  sort_order: 3 },
+  { name: "검단 새내기", required_points: 0,    benefits: "기본 혜택 · 쿠폰 교환 이용 가능",                  sort_order: 0 },
+  { name: "검단 단골",   required_points: 500,  benefits: "교환 쿠폰 5% 추가 적립 · 단골 전용 쿠폰 열람",     sort_order: 1 },
+  { name: "검단 일꾼",   required_points: 1500, benefits: "교환 쿠폰 10% 추가 적립 · 일꾼 한정 쿠폰",         sort_order: 2 },
+  { name: "검단 지킴이", required_points: 3000, benefits: "교환 쿠폰 우선권 · 지킴이 전용 프리미엄 쿠폰",     sort_order: 3 },
 ];
 
 // ── 헬퍼 ────────────────────────────────────────────────────────────

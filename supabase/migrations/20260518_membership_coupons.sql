@@ -37,10 +37,10 @@ ALTER TABLE user_coupons
 INSERT INTO membership_grades (name, required_points, benefits, sort_order)
 SELECT v.name, v.required_points, v.benefits, v.sort_order
 FROM (VALUES
-  ('브론즈',   0,    '기본 혜택 · 쿠폰 교환 이용 가능',                  0),
-  ('실버',     500,  '교환 쿠폰 5% 추가 적립 · 전용 쿠폰 열람',          1),
-  ('골드',     1500, '교환 쿠폰 10% 추가 적립 · 골드 한정 쿠폰',         2),
-  ('플래티넘', 3000, '교환 쿠폰 우선권 · 플래티넘 전용 프리미엄 쿠폰',   3)
+  ('검단 새내기', 0,    '기본 혜택 · 쿠폰 교환 이용 가능',                    0),
+  ('검단 단골',   500,  '교환 쿠폰 5% 추가 적립 · 단골 전용 쿠폰 열람',       1),
+  ('검단 일꾼',   1500, '교환 쿠폰 10% 추가 적립 · 일꾼 한정 쿠폰',           2),
+  ('검단 지킴이', 3000, '교환 쿠폰 우선권 · 지킴이 전용 프리미엄 쿠폰',       3)
 ) AS v(name, required_points, benefits, sort_order)
 WHERE NOT EXISTS (SELECT 1 FROM membership_grades);
 
