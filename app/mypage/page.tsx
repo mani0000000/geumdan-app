@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2 } from "lucide-react";
+import { ChevronRight, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Store as StoreIcon, Home, Bus, Bookmark } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts } from "@/lib/mockData";
@@ -13,11 +13,16 @@ import {
   getFavoriteBuses,
   getFavoriteStores,
   getFavoriteApts,
+  getFavoritePosts,
   getUserGameStats,
   completeMission,
   redeemReward,
   type UserProfile,
   type UserGameStats,
+  type FavoriteStore,
+  type FavoriteApt,
+  type FavoriteBus,
+  type FavoritePost,
 } from "@/lib/db/userdata";
 
 const WEEKLY_LIKES_MAX = 10;
@@ -84,9 +89,10 @@ export default function MyPage() {
   const [postCount, setPostCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [couponCount, setCouponCount] = useState(0);
-  const [busCount, setBusCount] = useState(0);
-  const [storeCount, setStoreCount] = useState(0);
-  const [aptCount, setAptCount] = useState(0);
+  const [favStores, setFavStores] = useState<FavoriteStore[]>([]);
+  const [favApts, setFavApts] = useState<FavoriteApt[]>([]);
+  const [favBuses, setFavBuses] = useState<FavoriteBus[]>([]);
+  const [favPosts, setFavPosts] = useState<FavoritePost[]>([]);
 
   useEffect(() => {
     getUserProfile().then(setProfile);
@@ -94,9 +100,10 @@ export default function MyPage() {
     getMyPostCount().then(setPostCount);
     getMyCommentCount().then(setCommentCount);
     getDownloadedCoupons().then(c => setCouponCount(c.length));
-    getFavoriteBuses().then(b => setBusCount(b.length));
-    getFavoriteStores().then(s => setStoreCount(s.length));
-    getFavoriteApts().then(a => setAptCount(a.length));
+    getFavoriteBuses().then(setFavBuses);
+    getFavoriteStores().then(setFavStores);
+    getFavoriteApts().then(setFavApts);
+    getFavoritePosts().then(setFavPosts);
   }, []);
 
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
@@ -118,6 +125,55 @@ export default function MyPage() {
     done: gameStats.completedMissions.includes(m.id),
   }));
 
+  type BookmarkCard = {
+    key: string;
+    icon: typeof StoreIcon;
+    typeLabel: string;
+    typeColor: string;
+    title: string;
+    subtitle: string;
+    href: string;
+  };
+
+  const bookmarks: BookmarkCard[] = [
+    ...favStores.map(s => ({
+      key: `store-${s.id}`,
+      icon: StoreIcon,
+      typeLabel: "가게",
+      typeColor: "bg-[#FFF0E6] text-[#C2410C]",
+      title: s.store_name,
+      subtitle: s.building_name ?? "상가",
+      href: `/stores/detail/?id=${s.store_id}`,
+    })),
+    ...favApts.map(a => ({
+      key: `apt-${a.id}`,
+      icon: Home,
+      typeLabel: "아파트",
+      typeColor: "bg-[#D1FAE5] text-[#065F46]",
+      title: a.apt_name,
+      subtitle: a.dong ?? "시세",
+      href: `/real-estate/detail/?id=${a.apt_id}`,
+    })),
+    ...favPosts.map(p => ({
+      key: `post-${p.id}`,
+      icon: MessageSquare,
+      typeLabel: "커뮤니티",
+      typeColor: "bg-[#e8f1fd] text-[#1565C0]",
+      title: p.title,
+      subtitle: p.category ?? "커뮤니티 글",
+      href: `/community/detail/?id=${p.post_id}`,
+    })),
+    ...favBuses.map(b => ({
+      key: `bus-${b.id}`,
+      icon: Bus,
+      typeLabel: "버스",
+      typeColor: "bg-[#FEF3C7] text-[#92400E]",
+      title: b.route_name,
+      subtitle: b.stop_name ?? "버스 노선",
+      href: "/transport/",
+    })),
+  ];
+
   async function handleRedeemConfirm(r: typeof REWARDS[number]) {
     await redeemReward(r.id, r.cost, r.title);
     setRedeemTarget(null);
@@ -132,14 +188,6 @@ export default function MyPage() {
         { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
-      ],
-    },
-    {
-      title: "즐겨찾기",
-      items: [
-        { icon: Star, label: "즐겨찾는 버스", badge: String(busCount), color: "text-[#FBBF24]", href: "/transport/" },
-        { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
-        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/community/?tab=시세" },
       ],
     },
     {
@@ -377,6 +425,45 @@ export default function MyPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* ── 바로가기 (북마크) ── */}
+      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="flex items-center gap-1.5">
+            <Bookmark size={16} className="text-[#0071e3]" />
+            <span className="text-[16px] font-bold text-[#1d1d1f]">바로가기</span>
+          </div>
+          <span className="text-[13px] text-[#6e6e73]">{bookmarks.length}개</span>
+        </div>
+        {bookmarks.length === 0 ? (
+          <div className="px-4 pb-6 pt-2 text-center">
+            <p className="text-3xl mb-2">🔖</p>
+            <p className="text-[15px] font-medium text-[#1d1d1f]">아직 북마크한 항목이 없어요</p>
+            <p className="text-[13px] text-[#6e6e73] mt-1">가게·아파트·커뮤니티 글을 북마크하면 여기 모여요</p>
+          </div>
+        ) : (
+          <div className="px-4 pb-4 grid grid-cols-2 gap-2">
+            {bookmarks.map(b => {
+              const Icon = b.icon;
+              return (
+                <button key={b.key} onClick={() => router.push(b.href)}
+                  className="flex flex-col gap-2 bg-[#f5f5f7] rounded-xl px-3 py-3 text-left active:opacity-70">
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${b.typeColor}`}>
+                      {b.typeLabel}
+                    </span>
+                    <Icon size={15} className="text-[#86868b]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{b.title}</p>
+                    <p className="text-[12px] text-[#6e6e73] truncate mt-0.5">{b.subtitle}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 메뉴 */}

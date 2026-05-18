@@ -55,6 +55,13 @@ export interface FavoriteApt {
   dong?: string;
 }
 
+export interface FavoritePost {
+  id: string;
+  post_id: string;
+  title: string;
+  category?: string;
+}
+
 export interface DownloadedCoupon {
   id: string;
   coupon_id: string;
@@ -574,6 +581,62 @@ export async function isFavoriteStore(storeId: string): Promise<boolean> {
 export async function isFavoriteBus(routeId: string): Promise<boolean> {
   const list = await getFavoriteBuses();
   return list.some(b => b.route_id === routeId);
+}
+
+// ── 북마크한 커뮤니티 글 ───────────────────────────────────────────────
+const FAV_POSTS_KEY = "geumdan_fav_posts";
+
+export async function getFavoritePosts(): Promise<FavoritePost[]> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return [];
+
+  if (isConfigured()) {
+    try {
+      const { data } = await supabase
+        .from("user_favorite_posts")
+        .select("id,post_id,title,category")
+        .eq("user_id", uid).order("created_at", { ascending: false });
+      if (data) return data as FavoritePost[];
+    } catch {}
+  }
+
+  const cached = lsGet(FAV_POSTS_KEY);
+  return cached ? JSON.parse(cached) : [];
+}
+
+export async function addFavoritePost(post: Omit<FavoritePost, "id">): Promise<void> {
+  const uid = await getOrCreateUserId();
+
+  if (isConfigured()) {
+    await supabase.from("user_favorite_posts").upsert(
+      { user_id: uid, ...post }, { onConflict: "user_id,post_id" }
+    );
+  }
+
+  const cached = lsGet(FAV_POSTS_KEY);
+  const prev: FavoritePost[] = cached ? JSON.parse(cached) : [];
+  if (!prev.find(p => p.post_id === post.post_id)) {
+    lsSet(FAV_POSTS_KEY, JSON.stringify([{ id: crypto.randomUUID(), ...post }, ...prev]));
+  }
+}
+
+export async function removeFavoritePost(postId: string): Promise<void> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return;
+
+  if (isConfigured()) {
+    await supabase.from("user_favorite_posts").delete()
+      .eq("user_id", uid).eq("post_id", postId);
+  }
+
+  const cached = lsGet(FAV_POSTS_KEY);
+  const prev: FavoritePost[] = cached ? JSON.parse(cached) : [];
+  lsSet(FAV_POSTS_KEY, JSON.stringify(prev.filter(p => p.post_id !== postId)));
+}
+
+export async function isFavoritePost(postId: string): Promise<boolean> {
+  const list = await getFavoritePosts();
+  return list.some(p => p.post_id === postId);
 }
 
 // ── 설정 ─────────────────────────────────────────────────────────────
