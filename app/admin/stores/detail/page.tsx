@@ -154,6 +154,39 @@ const EXTRA_FIELDS: Partial<Record<StoreCategory, ExtraField[]>> = {
   ],
 };
 
+// 매장에 입력된 업종별 상세정보를 라벨/값 쌍으로 추출
+function extraInfoEntries(store: AdminStore): { label: string; value: string }[] {
+  const fields = EXTRA_FIELDS[store.category] ?? [];
+  const data = (store.extra_info ?? {}) as Record<string, unknown>;
+  const out: { label: string; value: string }[] = [];
+  for (const f of fields) {
+    const v = data[f.key];
+    if (v === undefined || v === null || v === "") continue;
+    if (f.type === "boolean") {
+      if (v === true) out.push({ label: f.label, value: "예" });
+    } else {
+      out.push({ label: f.label, value: String(v) });
+    }
+  }
+  return out;
+}
+
+function ExtraInfoChips({ store }: { store: AdminStore }) {
+  const entries = extraInfoEntries(store);
+  if (entries.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-2">
+      {entries.map(e => (
+        <span key={e.label}
+          className="inline-flex items-center gap-1 text-[11px] bg-[#F2F4F6] text-[#4E5968] rounded-full px-2 py-0.5">
+          <span className="text-[#8B95A1]">{e.label}</span>
+          <span className="font-semibold text-[#191F28]">{e.value}</span>
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -780,11 +813,24 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#F2F4F6]">
-                  {floorStores.map(s => (
-                    <tr key={s.id} className="hover:bg-[#F8F9FB]">
+                  {floorStores.map(s => {
+                    const extras = extraInfoEntries(s);
+                    return (
+                    <tr key={s.id} className="hover:bg-[#F8F9FB] align-top">
                       <td className="px-4 py-3 font-semibold text-[#191F28]">
                         {s.name}
                         {s.is_premium && <span className="ml-1.5 text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★</span>}
+                        {extras.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2 font-normal">
+                            {extras.map(e => (
+                              <span key={e.label}
+                                className="inline-flex items-center gap-1 text-[11px] bg-[#F2F4F6] text-[#4E5968] rounded-full px-2 py-0.5">
+                                <span className="text-[#8B95A1]">{e.label}</span>
+                                <span className="font-semibold text-[#191F28]">{e.value}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td className="px-4 py-3">
                         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
@@ -819,7 +865,8 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                         </div>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
 
@@ -843,6 +890,7 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                           {s.phone && <span className="text-[12px] text-[#4E5968]">{s.phone}</span>}
                           {s.hours && <span className="text-[12px] text-[#8B95A1]">{s.hours}</span>}
                         </div>
+                        <ExtraInfoChips store={s} />
                       </div>
                       <OpenToggle store={s} onToggled={loadData} />
                     </div>
