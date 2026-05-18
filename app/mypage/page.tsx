@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Store as StoreIcon, Home, Bus, Bookmark } from "lucide-react";
+import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts } from "@/lib/mockData";
@@ -13,17 +13,24 @@ import {
   getFavoriteBuses,
   getFavoriteStores,
   getFavoriteApts,
-  getFavoritePosts,
   getUserGameStats,
   completeMission,
-  redeemReward,
   type UserProfile,
   type UserGameStats,
-  type FavoriteStore,
-  type FavoriteApt,
-  type FavoriteBus,
-  type FavoritePost,
 } from "@/lib/db/userdata";
+import {
+  getMembershipGrades,
+  resolveGrade,
+  getExchangeableCoupons,
+  getMyCoupons,
+  exchangeCoupon,
+  useMyCoupon,
+  grantDailyLoginPoints,
+  DEFAULT_GRADES,
+  type MembershipGrade,
+  type ExchangeCoupon,
+  type MyCoupon,
+} from "@/lib/db/membership";
 
 const WEEKLY_LIKES_MAX = 10;
 
@@ -35,30 +42,6 @@ const MISSIONS = [
   { id: "m5", title: "부동산 조회", desc: "단지 상세 1회 열람", reward: 5, icon: "🏠" },
 ];
 
-const REWARDS = [
-  { id: "r1", title: "스타벅스 아메리카노 교환권", cost: 800, emoji: "☕", stock: 5 },
-  { id: "r2", title: "맘스터치 할인쿠폰 500원", cost: 300, emoji: "🍔", stock: 10 },
-  { id: "r3", title: "올리브영 1,000원 할인", cost: 500, emoji: "🛍️", stock: 8 },
-  { id: "r4", title: "이디야 음료 무료", cost: 600, emoji: "☕", stock: 3 },
-];
-
-const LEVEL_THRESHOLDS: Record<string, number> = { 브론즈: 0, 실버: 500, 골드: 1500, 플래티넘: 3000 };
-const LEVEL_ORDER = ["브론즈", "실버", "골드", "플래티넘"] as const;
-type MonthlyLevel = typeof LEVEL_ORDER[number];
-
-function getMonthlyLevel(monthlyPoints: number): MonthlyLevel {
-  let level: MonthlyLevel = "브론즈";
-  for (const l of LEVEL_ORDER) {
-    if (monthlyPoints >= LEVEL_THRESHOLDS[l]) level = l;
-  }
-  return level;
-}
-
-function getNextLevel(level: MonthlyLevel): MonthlyLevel {
-  const idx = LEVEL_ORDER.indexOf(level);
-  return LEVEL_ORDER[Math.min(idx + 1, LEVEL_ORDER.length - 1)];
-}
-
 const levelBadge: Record<string, string> = {
   새싹: "bg-[#D1FAE5] text-[#065F46]",
   주민: "bg-[#e8f1fd] text-[#1E40AF]",
@@ -67,12 +50,22 @@ const levelBadge: Record<string, string> = {
 };
 const levelPct: Record<string, number> = { 새싹: 15, 주민: 40, 이웃: 65, 터줏대감: 100 };
 
-const monthlyLevelColor: Record<string, { from: string; to: string; badge: string }> = {
-  브론즈: { from: "#92400E", to: "#D97706", badge: "bg-[#FEF3C7] text-[#92400E]" },
-  실버: { from: "#4B5563", to: "#9CA3AF", badge: "bg-[#F3F4F6] text-[#374151]" },
-  골드: { from: "#B45309", to: "#FBBF24", badge: "bg-[#FEF9C3] text-[#854D0E]" },
-  플래티넘: { from: "#1E40AF", to: "#38BDF8", badge: "bg-[#e8f1fd] text-[#1E40AF]" },
+// 등급명 → 카드 그라데이션 색상 (DB 등급명이 달라도 순서로 폴백)
+const GRADE_COLORS: Record<string, { from: string; to: string }> = {
+  브론즈: { from: "#92400E", to: "#D97706" },
+  실버: { from: "#4B5563", to: "#9CA3AF" },
+  골드: { from: "#B45309", to: "#FBBF24" },
+  플래티넘: { from: "#1E40AF", to: "#38BDF8" },
 };
+const GRADE_FALLBACK = [
+  { from: "#92400E", to: "#D97706" },
+  { from: "#4B5563", to: "#9CA3AF" },
+  { from: "#B45309", to: "#FBBF24" },
+  { from: "#1E40AF", to: "#38BDF8" },
+];
+function gradeColor(name: string, order: number) {
+  return GRADE_COLORS[name] ?? GRADE_FALLBACK[Math.min(order, GRADE_FALLBACK.length - 1)];
+}
 
 const DEFAULT_STATS: UserGameStats = {
   points: 0, weeklyLikes: 0, weeklyPosts: 0, monthlyPoints: 0,
@@ -83,37 +76,41 @@ export default function MyPage() {
   const router = useRouter();
   const [showPointHistory, setShowPointHistory] = useState(false);
   const [redeemTarget, setRedeemTarget] = useState<string | null>(null);
+  const [exchangeMsg, setExchangeMsg] = useState<string | null>(null);
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [gameStats, setGameStats] = useState<UserGameStats>(DEFAULT_STATS);
+  const [grades, setGrades] = useState<MembershipGrade[]>(DEFAULT_GRADES);
+  const [exchangeCoupons, setExchangeCoupons] = useState<ExchangeCoupon[]>([]);
+  const [myCoupons, setMyCoupons] = useState<MyCoupon[]>([]);
   const [postCount, setPostCount] = useState(0);
   const [commentCount, setCommentCount] = useState(0);
   const [couponCount, setCouponCount] = useState(0);
-  const [favStores, setFavStores] = useState<FavoriteStore[]>([]);
-  const [favApts, setFavApts] = useState<FavoriteApt[]>([]);
-  const [favBuses, setFavBuses] = useState<FavoriteBus[]>([]);
-  const [favPosts, setFavPosts] = useState<FavoritePost[]>([]);
+  const [busCount, setBusCount] = useState(0);
+  const [storeCount, setStoreCount] = useState(0);
+  const [aptCount, setAptCount] = useState(0);
 
   useEffect(() => {
     getUserProfile().then(setProfile);
-    getUserGameStats().then(setGameStats);
+    getMembershipGrades().then(setGrades);
+    getExchangeableCoupons().then(setExchangeCoupons);
+    getMyCoupons().then(setMyCoupons);
     getMyPostCount().then(setPostCount);
     getMyCommentCount().then(setCommentCount);
     getDownloadedCoupons().then(c => setCouponCount(c.length));
-    getFavoriteBuses().then(setFavBuses);
-    getFavoriteStores().then(setFavStores);
-    getFavoriteApts().then(setFavApts);
-    getFavoritePosts().then(setFavPosts);
+    getFavoriteBuses().then(b => setBusCount(b.length));
+    getFavoriteStores().then(s => setStoreCount(s.length));
+    getFavoriteApts().then(a => setAptCount(a.length));
+    // 출석(로그인) 활동 포인트 → 적립 시 통계 갱신
+    grantDailyLoginPoints()
+      .then(() => getUserGameStats())
+      .then(setGameStats);
   }, []);
 
-  const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
-  const nextLevel = getNextLevel(monthlyLevel);
-  const mlv = monthlyLevelColor[monthlyLevel];
-  const progressPct = Math.min(100, Math.round(
-    (gameStats.monthlyPoints - LEVEL_THRESHOLDS[monthlyLevel]) /
-    (LEVEL_THRESHOLDS[nextLevel] - LEVEL_THRESHOLDS[monthlyLevel]) * 100
-  ));
-  const remainToNext = LEVEL_THRESHOLDS[nextLevel] - gameStats.monthlyPoints;
+  const grade = resolveGrade(grades, gameStats.points);
+  const mlv = gradeColor(grade.current.name, grade.current.sort_order);
+  const progressPct = grade.progressPct;
+  const remainToNext = grade.remainToNext;
 
   const nickname = profile?.nickname ?? "검단주민";
   const level = profile?.level ?? "새싹";
@@ -125,60 +122,25 @@ export default function MyPage() {
     done: gameStats.completedMissions.includes(m.id),
   }));
 
-  type BookmarkCard = {
-    key: string;
-    icon: typeof StoreIcon;
-    typeLabel: string;
-    typeColor: string;
-    title: string;
-    subtitle: string;
-    href: string;
-  };
+  const myCouponIds = new Set(myCoupons.map(c => c.coupon_id));
 
-  const bookmarks: BookmarkCard[] = [
-    ...favStores.map(s => ({
-      key: `store-${s.id}`,
-      icon: StoreIcon,
-      typeLabel: "가게",
-      typeColor: "bg-[#FFF0E6] text-[#C2410C]",
-      title: s.store_name,
-      subtitle: s.building_name ?? "상가",
-      href: `/stores/detail/?id=${s.store_id}`,
-    })),
-    ...favApts.map(a => ({
-      key: `apt-${a.id}`,
-      icon: Home,
-      typeLabel: "아파트",
-      typeColor: "bg-[#D1FAE5] text-[#065F46]",
-      title: a.apt_name,
-      subtitle: a.dong ?? "시세",
-      href: `/real-estate/detail/?id=${a.apt_id}`,
-    })),
-    ...favPosts.map(p => ({
-      key: `post-${p.id}`,
-      icon: MessageSquare,
-      typeLabel: "커뮤니티",
-      typeColor: "bg-[#e8f1fd] text-[#1565C0]",
-      title: p.title,
-      subtitle: p.category ?? "커뮤니티 글",
-      href: `/community/detail/?id=${p.post_id}`,
-    })),
-    ...favBuses.map(b => ({
-      key: `bus-${b.id}`,
-      icon: Bus,
-      typeLabel: "버스",
-      typeColor: "bg-[#FEF3C7] text-[#92400E]",
-      title: b.route_name,
-      subtitle: b.stop_name ?? "버스 노선",
-      href: "/transport/",
-    })),
-  ];
-
-  async function handleRedeemConfirm(r: typeof REWARDS[number]) {
-    await redeemReward(r.id, r.cost, r.title);
+  async function handleExchangeConfirm(c: ExchangeCoupon) {
+    const res = await exchangeCoupon(c, gameStats.points);
     setRedeemTarget(null);
-    const updated = await getUserGameStats();
-    setGameStats(updated);
+    if (!res.ok) {
+      setExchangeMsg(res.error ?? "교환에 실패했습니다.");
+      return;
+    }
+    setExchangeMsg(`'${c.title}' 쿠폰을 받았어요! 내 쿠폰함에서 확인하세요.`);
+    const [stats, mine] = await Promise.all([getUserGameStats(), getMyCoupons()]);
+    setGameStats(stats);
+    setMyCoupons(mine);
+  }
+
+  async function handleUseCoupon(row: MyCoupon) {
+    if (!confirm(`'${row.title}' 쿠폰을 사용 완료 처리할까요?`)) return;
+    await useMyCoupon(row.id);
+    setMyCoupons(await getMyCoupons());
   }
 
   const menuGroups = [
@@ -188,6 +150,14 @@ export default function MyPage() {
         { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
+      ],
+    },
+    {
+      title: "즐겨찾기",
+      items: [
+        { icon: Star, label: "즐겨찾는 버스", badge: String(busCount), color: "text-[#FBBF24]", href: "/transport/" },
+        { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
+        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/community/?tab=시세" },
       ],
     },
     {
@@ -243,17 +213,17 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* ── 포인트 & 월간 레벨 카드 ── */}
+      {/* ── 멤버십 등급 & 포인트 카드 ── */}
       <div className="mx-4 mb-3 rounded-2xl overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${mlv.from}, ${mlv.to})` }}>
         <div className="px-5 pt-5 pb-4">
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-3">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Trophy size={16} className="text-white/80" />
-                <span className="text-[14px] font-bold text-white/80">이번 달 등급</span>
+                <span className="text-[14px] font-bold text-white/80">멤버십 등급</span>
               </div>
-              <span className="text-[29px] font-black text-white">{monthlyLevel}</span>
+              <span className="text-[29px] font-black text-white">{grade.current.name}</span>
             </div>
             <div className="text-right">
               <p className="text-[13px] text-white/70">보유 포인트</p>
@@ -261,11 +231,17 @@ export default function MyPage() {
             </div>
           </div>
 
-          {/* 월간 레벨 진행 바 */}
+          {grade.current.benefits && (
+            <p className="text-[12px] text-white/75 mb-3 leading-relaxed">🎁 {grade.current.benefits}</p>
+          )}
+
+          {/* 등급 진행 바 */}
           <div className="mb-3">
             <div className="flex justify-between mb-1.5">
-              <span className="text-[12px] text-white/70">{monthlyLevel}</span>
-              <span className="text-[12px] text-white/70">{nextLevel} (앞으로 {remainToNext}P)</span>
+              <span className="text-[12px] text-white/70">{grade.current.name}</span>
+              <span className="text-[12px] text-white/70">
+                {grade.next ? `${grade.next.name} (앞으로 ${remainToNext.toLocaleString()}P)` : "최고 등급 달성 🎉"}
+              </span>
             </div>
             <div className="h-2 bg-white/20 rounded-full overflow-hidden">
               <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
@@ -354,7 +330,7 @@ export default function MyPage() {
         </div>
       </div>
 
-      {/* ── 포인트 교환 ── */}
+      {/* ── 포인트 교환 (DB store_coupons.required_points) ── */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-1.5">
@@ -363,40 +339,56 @@ export default function MyPage() {
           </div>
           <span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>
         </div>
+
+        {exchangeMsg && (
+          <div className="mx-4 mb-2 bg-[#e8f1fd] rounded-xl px-3 py-2.5 flex items-start justify-between gap-2">
+            <p className="text-[13px] text-[#0071e3] leading-relaxed">{exchangeMsg}</p>
+            <button onClick={() => setExchangeMsg(null)} className="text-[#0071e3] text-[12px] font-bold shrink-0">닫기</button>
+          </div>
+        )}
+
         <div className="px-4 pb-4 space-y-2">
-          {REWARDS.map(r => {
-            const done = gameStats.redeemedRewards.includes(r.id);
-            const canRedeem = gameStats.points >= r.cost && !done;
+          {exchangeCoupons.length === 0 ? (
+            <div className="py-8 text-center">
+              <p className="text-[14px] text-[#6e6e73]">교환 가능한 쿠폰이 없습니다</p>
+              <p className="text-[12px] text-[#86868b] mt-1">관리자가 포인트 교환형 쿠폰을 등록하면 표시됩니다</p>
+            </div>
+          ) : exchangeCoupons.map(c => {
+            const owned = myCouponIds.has(c.id);
+            const soldOut = c.stock != null && c.stock <= 0;
+            const canRedeem = gameStats.points >= c.required_points && !owned && !soldOut;
             return (
-              <div key={r.id} className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
-                <span className="text-2xl">{r.emoji}</span>
+              <div key={c.id} className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
+                <span className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-[15px] font-black shrink-0"
+                  style={{ background: c.color }}>{c.discount.replace(/[^0-9%]/g, "").slice(0, 3) || "🎟"}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.title}</p>
+                  <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{c.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[13px] font-bold text-[#0071e3]">{r.cost}P</span>
-                    <span className="text-[12px] text-[#6e6e73]">잔여 {r.stock}개</span>
+                    <span className="text-[13px] font-bold text-[#0071e3]">{c.required_points.toLocaleString()}P</span>
+                    <span className="text-[12px] text-[#6e6e73] truncate">{c.store_name}</span>
+                    {c.stock != null && <span className="text-[12px] text-[#86868b]">· 잔여 {c.stock}개</span>}
                   </div>
                 </div>
-                {done ? (
-                  <div className="flex items-center gap-1 bg-[#D1FAE5] px-3 py-1.5 rounded-xl">
+                {owned ? (
+                  <div className="flex items-center gap-1 bg-[#D1FAE5] px-3 py-1.5 rounded-xl shrink-0">
                     <CheckCircle2 size={13} className="text-[#00C471]" />
                     <span className="text-[12px] font-bold text-[#065F46]">교환완료</span>
                   </div>
-                ) : redeemTarget === r.id ? (
-                  <div className="flex gap-1.5">
+                ) : redeemTarget === c.id ? (
+                  <div className="flex gap-1.5 shrink-0">
                     <button onClick={() => setRedeemTarget(null)}
                       className="h-8 px-2.5 bg-[#d2d2d7] rounded-xl text-[12px] font-bold text-[#424245] active:opacity-70">취소</button>
-                    <button onClick={() => handleRedeemConfirm(r)}
+                    <button onClick={() => handleExchangeConfirm(c)}
                       className="h-8 px-2.5 bg-[#0071e3] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
                   </div>
                 ) : (
                   <button
-                    onClick={() => canRedeem && setRedeemTarget(r.id)}
+                    onClick={() => canRedeem && setRedeemTarget(c.id)}
                     disabled={!canRedeem}
-                    className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors ${
+                    className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors shrink-0 ${
                       canRedeem ? "bg-[#0071e3] text-white active:bg-[#0058b0]" : "bg-[#d2d2d7] text-[#86868b]"
                     }`}>
-                    교환
+                    {soldOut ? "품절" : "교환"}
                   </button>
                 )}
               </div>
@@ -405,10 +397,49 @@ export default function MyPage() {
         </div>
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-3 py-2.5">
           <p className="text-[13px] text-[#0071e3] leading-relaxed">
-            💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회)
+            💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회) · 출석 <strong>+5P</strong>
           </p>
         </div>
       </div>
+
+      {/* ── 내 쿠폰함 (user_coupons) ── */}
+      {myCoupons.length > 0 && (
+        <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
+          <div className="flex items-center justify-between px-4 pt-4 pb-3">
+            <div className="flex items-center gap-1.5">
+              <Tag size={16} className="text-[#F59E0B]" />
+              <span className="text-[16px] font-bold text-[#1d1d1f]">내 쿠폰함</span>
+            </div>
+            <span className="text-[13px] text-[#6e6e73]">
+              사용 가능 {myCoupons.filter(c => c.status === "사용가능").length}장
+            </span>
+          </div>
+          <div className="px-4 pb-4 space-y-2">
+            {myCoupons.map(c => {
+              const used = c.status === "사용완료";
+              return (
+                <div key={c.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${used ? "bg-[#f5f5f7] opacity-60" : "bg-[#FFFBEB]"}`}>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{c.title}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[12px] text-[#6e6e73] truncate">{c.store_name}</span>
+                      {c.expiry && <span className="text-[12px] text-[#86868b]">~ {c.expiry.slice(0, 10)}</span>}
+                    </div>
+                  </div>
+                  {used ? (
+                    <span className="text-[12px] font-bold px-3 py-1.5 rounded-xl bg-[#E5E8EB] text-[#86868b] shrink-0">사용완료</span>
+                  ) : (
+                    <button onClick={() => handleUseCoupon(c)}
+                      className="h-8 px-3 rounded-xl text-[13px] font-bold bg-[#F59E0B] text-white active:opacity-70 shrink-0">
+                      사용하기
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* 최근 작성글 */}
       <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
@@ -425,45 +456,6 @@ export default function MyPage() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* ── 바로가기 (북마크) ── */}
-      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <div className="flex items-center gap-1.5">
-            <Bookmark size={16} className="text-[#0071e3]" />
-            <span className="text-[16px] font-bold text-[#1d1d1f]">바로가기</span>
-          </div>
-          <span className="text-[13px] text-[#6e6e73]">{bookmarks.length}개</span>
-        </div>
-        {bookmarks.length === 0 ? (
-          <div className="px-4 pb-6 pt-2 text-center">
-            <p className="text-3xl mb-2">🔖</p>
-            <p className="text-[15px] font-medium text-[#1d1d1f]">아직 북마크한 항목이 없어요</p>
-            <p className="text-[13px] text-[#6e6e73] mt-1">가게·아파트·커뮤니티 글을 북마크하면 여기 모여요</p>
-          </div>
-        ) : (
-          <div className="px-4 pb-4 grid grid-cols-2 gap-2">
-            {bookmarks.map(b => {
-              const Icon = b.icon;
-              return (
-                <button key={b.key} onClick={() => router.push(b.href)}
-                  className="flex flex-col gap-2 bg-[#f5f5f7] rounded-xl px-3 py-3 text-left active:opacity-70">
-                  <div className="flex items-center justify-between">
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${b.typeColor}`}>
-                      {b.typeLabel}
-                    </span>
-                    <Icon size={15} className="text-[#86868b]" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{b.title}</p>
-                    <p className="text-[12px] text-[#6e6e73] truncate mt-0.5">{b.subtitle}</p>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* 메뉴 */}

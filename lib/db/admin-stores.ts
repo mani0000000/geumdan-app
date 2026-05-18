@@ -126,6 +126,10 @@ export interface AdminCoupon {
   expiry: string;
   color: string;
   active: boolean;
+  /** 값이 있으면 포인트 교환형 쿠폰 (NULL = 일반 매장 쿠폰) */
+  required_points: number | null;
+  /** 교환 수량 제한 (NULL = 무제한) */
+  stock: number | null;
 }
 
 export async function adminFetchCoupons(): Promise<AdminCoupon[]> {

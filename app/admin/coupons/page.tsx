@@ -30,6 +30,7 @@ const EMPTY_COUPON: AdminCoupon = {
   id: "", store_id: "", store_name: "", building_name: "",
   title: "", discount: "", discount_type: "rate",
   category: "기타", expiry: "", color: "#3182F6", active: true,
+  required_points: null, stock: null,
 };
 
 function CouponModal({ initial, onSave, onClose }: {
@@ -52,6 +53,9 @@ function CouponModal({ initial, onSave, onClose }: {
     if (!form.store_name.trim()) { setErr("매장명을 입력하세요."); return; }
     if (!form.title.trim()) { setErr("쿠폰 제목을 입력하세요."); return; }
     if (!form.expiry) { setErr("만료일을 입력하세요."); return; }
+    if (form.required_points != null && form.required_points < 1) {
+      setErr("교환 필요 포인트는 1 이상이어야 합니다."); return;
+    }
     setSaving(true);
     try {
       await adminUpsertCoupon(form);
@@ -123,6 +127,33 @@ function CouponModal({ initial, onSave, onClose }: {
                 </div>
               </Field>
             </div>
+            <div className="rounded-xl bg-[#F8F9FB] border border-[#E5E8EB] p-3 space-y-3">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox"
+                  checked={form.required_points != null}
+                  onChange={e => set("required_points", e.target.checked ? 100 : null)}
+                  className="w-4 h-4" />
+                <span className="text-[13px] font-semibold text-[#191F28]">포인트 교환형 쿠폰</span>
+              </label>
+              <p className="text-[11px] text-[#8B95A1] -mt-1">
+                체크 시 마이페이지 ‘포인트 교환’에 노출됩니다. (해제 = 일반 매장 쿠폰)
+              </p>
+              {form.required_points != null && (
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="교환 필요 포인트 *">
+                    <input className={INPUT} type="number" min={1} value={form.required_points}
+                      onChange={e => set("required_points", Math.max(0, Number(e.target.value)))}
+                      placeholder="800" />
+                  </Field>
+                  <Field label="수량 제한 (비우면 무제한)">
+                    <input className={INPUT} type="number" min={0}
+                      value={form.stock ?? ""}
+                      onChange={e => set("stock", e.target.value === "" ? null : Math.max(0, Number(e.target.value)))}
+                      placeholder="무제한" />
+                  </Field>
+                </div>
+              )}
+            </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.active} onChange={e => set("active", e.target.checked)} className="w-4 h-4" />
               <span className="text-[13px] text-[#4E5968]">활성 상태 (active)</span>
@@ -170,7 +201,9 @@ export default function AdminCouponsPage() {
       <div className="flex items-center justify-between mb-5">
         <div>
           <h1 className="text-[16px] md:text-[20px] font-extrabold text-[#191F28]">쿠폰 관리</h1>
-          <p className="text-[13px] text-[#8B95A1] mt-0.5">DB: store_coupons 테이블 · {coupons.length}개</p>
+          <p className="text-[13px] text-[#8B95A1] mt-0.5">
+            DB: store_coupons · 전체 {coupons.length}개 · 포인트 교환형 {coupons.filter(c => c.required_points != null).length}개
+          </p>
         </div>
         <div className="flex gap-2">
           <button onClick={load} className="p-2 rounded-xl border border-[#E5E8EB] hover:bg-[#F2F4F6]">
@@ -207,6 +240,11 @@ export default function AdminCouponsPage() {
                     <div className="flex items-center gap-2">
                       <span className="w-3 h-3 rounded-full shrink-0" style={{ background: c.color }} />
                       <span className="font-semibold text-[#191F28]">{c.store_name}</span>
+                      {c.required_points != null && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#EFF6FF] text-[#3182F6]">
+                          {c.required_points}P 교환{c.stock != null ? ` · ${c.stock}개` : ""}
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="px-4 py-3 text-[#4E5968]">{c.building_name}</td>
@@ -260,6 +298,11 @@ export default function AdminCouponsPage() {
                 </span>
               </div>
               <p className="text-[13px] text-[#4E5968] mb-2 truncate">{c.title}</p>
+              {c.required_points != null && (
+                <span className="inline-block text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#3182F6] mb-2">
+                  {c.required_points}P 교환{c.stock != null ? ` · 잔여 ${c.stock}개` : " · 무제한"}
+                </span>
+              )}
               <div className="flex items-center gap-3 mb-3">
                 <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#F2F4F6] text-[#4E5968]">{c.category}</span>
                 <span className="font-bold text-[13px]" style={{ color: c.color }}>{c.discount}</span>
