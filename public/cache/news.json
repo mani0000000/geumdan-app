@@ -1,7 +1,16 @@
 {
-  "fetchedAt": "2026-05-18T17:23:35.440Z",
+  "fetchedAt": "2026-05-18T19:21:55.177Z",
   "count": 40,
   "articles": [
+    {
+      "id": "gr2-4",
+      "title": "인천 서구, 검단은 ‘기대감’ 검암은 ‘관망세’… 분양 시장 양극화 - 뉴스타운",
+      "summary": "",
+      "source": "뉴스타운",
+      "publishedAt": "2026-05-18T14:58:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9CWl8zQ3BqdUQ4MWdzeVFqZEdERkFsQ3FIZ3MxRjNRRlNFeEltX1R1UTZGaDI5MllXLU9NdlA2TlBaU1hORE1zQ0V0Y2dBYlpEaEtTRXVXTDN6Tnhhd1FZWnpMdVY5bEt4azd6S0Nn?oc=5",
+      "type": "뉴스"
+    },
     {
       "id": "gr0-3",
       "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 일간투데이",
@@ -30,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-11",
       "title": "[6·3 지선 내가 뛴다] 인천 검단구청장 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -48,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-22",
       "title": "단지 앞 유·초·중 예정 부지… ‘더샵 검단레이크파크’ 교육 특화 단지로 관심 - 일간스포츠",
       "summary": "",
       "source": "일간스포츠",
@@ -66,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-10",
       "title": "인천 서구, 검단신도시 제설취약구간에 원격 염수분사 시스템 도입 - 경인매일",
       "summary": "",
       "source": "경인매일",
@@ -126,15 +135,6 @@
       "source": "뉴스티앤티",
       "publishedAt": "2026-05-18T03:42:58.000Z",
       "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE8tMEpfNUV6MjJJVWpXWl9IWW9ucTFsczREMlF4OHNVenhwZFpiRVdlOXQ0dTFQRmFoUktORVlJQjBaQmJCcW45b1RwTF9tN0VGelI1M081LW1XVGlaTzhQYnBncjh3NXlLQ3c?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-4",
-      "title": "인천 서구, 검단 고산터널 ‘자동염수 분사장치’ 설치 - 이뉴스투데이",
-      "summary": "",
-      "source": "이뉴스투데이",
-      "publishedAt": "2026-05-18T02:29:28.000Z",
-      "url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE03ck4zM25qZVdVSmd3YjJoZXEwWnhsMjJNb0xYR25FUFFtUUJDeGZvUWVzd3o5TG5pRFc5V0FfaGFxMDJQRFAtNW9aQ2RDdC13a2xVU0hfNlNCNDFNLXcydk1pTTNvTGpES2dTUy15YV9zclpO0gF0QVVfeXFMTTdyTjMzbmplV1VKZ3diMmhlcTBaeGwyMk1vTFhHbkVQUW1RQkN4Zm9RZXN3ejlMbmlEVzlXQV9oYXEwMlBEUC01b1pDZEN0LXdrbFVTSF82U0I0MU0tdzJ2TWlNM29MakRLZ1NTLXlhX3NyWk4?oc=5",
       "type": "뉴스"
     },
     {
@@ -246,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-17",
+      "id": "gr2-18",
       "title": "[정치포차] 더불어민주당 김진규 인천 검단구청장 후보 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -255,12 +255,21 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-64",
+      "id": "gr2-69",
       "title": "인천 서구 생활지원사 건강돌봄 역량강화 프로그램 실시 > 뉴스 - 더코리아",
       "summary": "",
       "source": "더코리아",
       "publishedAt": "2026-05-17T12:57:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiQ0FVX3lxTE5fUzRoSzV2WUF4ZXg4TTI0TGI1QzhMU2k5QzlhSFg5UHh5d2k0dmNCd0ZfWlYyb1gwTmduUjk4QzJNb0U?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-15",
+      "title": "인천 서구 왕길동 공장서 화재··· 화재 진화 중 [1보] - 인천투데이",
+      "summary": "",
+      "source": "인천투데이",
+      "publishedAt": "2026-05-16T08:29:57.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE9US0J3eU5mUUY0djRNeGZ0T3U0eTBtTERnU1ZJcmxEWDh4WU1fXzRWTVpMaXczOE11cC1YWkhLdEVEcGlHcEhXM3J0bGlraUhNOWNDcHQtdjM3bWhzNDg2ZGlGZkdieFR6NE1CVEtvUzg?oc=5",
       "type": "뉴스"
     },
     {
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-81",
+      "id": "gr2-87",
       "title": "LH, 동부건설 등에 인천검단 사고 320억원 손배소 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-21",
       "title": "IH “교통망 확충으로 검단신도시 날개 달다” - 현대일보",
       "summary": "",
       "source": "현대일보",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-19",
       "title": "서구, 검단구 구정 소식 알림서비스 사전구독자 모집 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-37",
-      "title": "아파트 가치 견인하는 브랜드 프리미엄…‘검단신도시 롯데캐슬 넥스티엘’ 입주 중 - 골프타임즈",
+      "id": "gr1-7",
+      "title": "대단지 아파트 ‘더샵 검단레이크파크’ 5월 분양 - 세계일보",
       "summary": "",
-      "source": "골프타임즈",
-      "publishedAt": "2026-05-14T00:42:01.000Z",
-      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE8yVlR6aHdLUDZYSThSLWRHcEdOTGpoaEFqbnBaUUxVT3ZYOE9kY05PbkczNDFNdmo5N0JtNXZleDdKUjFEQjJFMG82SFFXRGx0YjUya0tIUnotMl9URGRPcjB5RTZPRGt6ZXdsMW5zTURWUQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-14",
-      "title": "대단지 아파트 '더샵 검단레이크파크' 5월 분양 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-14T00:36:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE5yVHVRdU1pa3J0X1NnczdaRHJrOWRDUXdzY0MzbzJEYkl2WTZndmNSaXBXQXR0dGpnNGhtMHVJU0J1VUlpMTNpMlZQS216a3ZtQVVN?oc=5",
+      "source": "세계일보",
+      "publishedAt": "2026-05-14T00:35:14.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTFBlZ0Y1WWR0U2hyaE9McEFocW1Qc2RTa3hJWGNhTWZOdS10dHlhVnJiRnhKMHhVU1A3UFlQZWR6ejRTZmIxd185Nnl0MmFicnJDamFQaERkV27SAVRBVV95cUxOM1Q1OXpvcmdKQ0RUZW5Sai1TdUFtTjRKU3JzMnpfLXJESHVFWW95YWVjWm9WMHRrVmtEcVliRnlldlcxejNKYzJ0MThzTGhSclk4SXU?oc=5",
       "type": "뉴스"
     }
   ]
