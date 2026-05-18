@@ -1,8 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { fetchSiteSetting } from "@/lib/db/site-settings";
+
+const LOGO_CACHE_KEY = "site_logo_url";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -10,6 +13,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cached = localStorage.getItem(LOGO_CACHE_KEY);
+    if (cached) setLogoUrl(cached);
+    fetchSiteSetting("logo_url").then(url => {
+      if (url) {
+        setLogoUrl(url);
+        localStorage.setItem(LOGO_CACHE_KEY, url);
+      }
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,13 +43,15 @@ export default function LoginPage() {
     <div className="min-h-dvh bg-white flex flex-col">
       {/* Brand */}
       <div className="flex flex-col px-6 pt-16 pb-8">
-        <div className="w-12 h-12 rounded-2xl bg-[#0071e3] flex items-center justify-center mb-6">
-          <span className="text-2xl">🏡</span>
-        </div>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt="검단신도시라이프" className="h-12 w-auto object-contain self-start mb-6" />
+        ) : (
+          <span className="text-[24px] font-bold text-[#1d1d1f] tracking-tight mb-6">검단 신도시</span>
+        )}
         <h1 className="text-[29px] font-bold text-[#1d1d1f] leading-tight">
-          검단 라이프에<br />오신 걸 환영해요
+          우리가 만드는<br />우리동네 핫한 최신 이야기
         </h1>
-        <p className="text-[16px] text-[#6e6e73] mt-2">검단 신도시 주민을 위한 슈퍼앱</p>
       </div>
 
       {/* Form */}
