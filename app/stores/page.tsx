@@ -4,20 +4,20 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  MapPin, Phone, Clock, Lock, Tag,
-  ChevronLeft, ChevronRight, X, Pencil, CheckCircle2,
-  Search, Navigation, Building2, List, Map as MapIcon,
+  Phone, Clock, Tag,
+  ChevronRight, X, Pencil, CheckCircle2,
+  Search, List, Map as MapIcon,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
+import { fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
-import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, fetchStoreExtraInfo, type StoreDetail } from "@/lib/db/stores";
-import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
+import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
+import type { Store, StoreCategory } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
 const catDot: Record<StoreCategory, string> = {
@@ -116,49 +116,6 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   const a = Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
-function distLabel(km: number) {
-  return km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
-}
-
-// ─── SVG 층 지도 ─────────────────────────────────────────────
-function FloorSVG({ floor, selectedId, onSelect }: { floor: Floor; selectedId: string | null; onSelect: (s: Store) => void }) {
-  return (
-    <svg viewBox="0 0 100 100" className="w-full" style={{ aspectRatio: "1.5/1" }}>
-      <rect width="100" height="100" fill="#F9FAFB" />
-      <rect x="2" y="2" width="96" height="96" rx="3" fill="#F9FAFB" stroke="#d2d2d7" strokeWidth="1" />
-      {floor.hasRestroom && (
-        <>
-          <rect x="44" y="44" width="12" height="12" rx="2" fill="#e8f1fd" stroke="#93C5FD" strokeWidth="0.5" />
-          <text x="50" y="52" textAnchor="middle" fontSize="5.5" fill="#2563EB" fontWeight="bold">WC</text>
-        </>
-      )}
-      {floor.stores.map(s => {
-        const vacant = s.name === "공실";
-        const sel = selectedId === s.id;
-        return (
-          <g key={s.id} onClick={() => !vacant && onSelect(s)} style={{ cursor: vacant ? "default" : "pointer" }}>
-            <rect x={`${s.x}%`} y={`${s.y}%`} width={`${s.w}%`} height={`${s.h}%`} rx="3"
-              fill={sel ? "#e8f1fd" : "white"} stroke={sel ? "#0071e3" : "#d2d2d7"} strokeWidth={sel ? 1.5 : 0.8} />
-            {!vacant && (
-              <rect x={`${s.x}%`} y={`${s.y}%`} width={`${s.w}%`} height="3%"
-                fill={catDot[s.category]} rx="3" opacity="0.9" />
-            )}
-            <foreignObject x={`${s.x+1}%`} y={`${s.y+4}%`} width={`${s.w-2}%`} height={`${s.h-5}%`}>
-              <div style={{ display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", height:"100%", textAlign:"center" }}>
-                {!vacant && <span style={{ fontSize:"12px" }}>{catEmoji[s.category]}</span>}
-                <span style={{ fontSize:"8px", fontWeight: vacant ? 400 : 600, color: vacant ? "#9CA3AF" : "#1F2937", lineHeight:1.2, marginTop:"2px", wordBreak:"keep-all" }}>
-                  {s.name}
-                </span>
-                {!vacant && s.isOpen === false && <span style={{ fontSize:"7px", color:"#EF4444" }}>영업종료</span>}
-              </div>
-            </foreignObject>
-          </g>
-        );
-      })}
-    </svg>
-  );
 }
 
 // ─── 바텀시트 공통 래퍼 ──────────────────────────────────────
@@ -318,204 +275,6 @@ const catHeroImage: Record<StoreCategory, string> = {
   꽃집:       "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=600&h=260&fit=crop&auto=format",
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
-
-// ─── 방향별 로드뷰 섹션 ──────────────────────────────────────
-const ROADVIEW_DIRS = [
-  { key: "north" as const, label: "북" },
-  { key: "east" as const, label: "동" },
-  { key: "south" as const, label: "남" },
-  { key: "west" as const, label: "서" },
-];
-
-function RoadviewSection({ photos, name }: { photos: DirectionPhotos; name: string }) {
-  const hasAny = ROADVIEW_DIRS.some(d => photos[d.key]);
-  const [dir, setDir] = useState<keyof DirectionPhotos>(
-    () => ROADVIEW_DIRS.find(d => photos[d.key])?.key ?? "north",
-  );
-  const [failed, setFailed] = useState(false);
-  useEffect(() => { setFailed(false); }, [dir]);
-
-  const url = photos[dir];
-
-  return (
-    <div className="px-4 py-3 border-b border-[#f5f5f7] shrink-0">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-[13px] font-bold text-[#1d1d1f]">방향별 로드뷰</p>
-        <div className="flex gap-1">
-          {ROADVIEW_DIRS.map(d => {
-            const active = d.key === dir;
-            const has = !!photos[d.key];
-            return (
-              <button key={d.key} onClick={() => setDir(d.key)}
-                className={`w-8 h-8 rounded-lg text-[12px] font-bold transition-colors ${
-                  active ? "bg-[#0071e3] text-white"
-                  : has ? "bg-[#EFF6FF] text-[#0071e3]"
-                  : "bg-[#f5f5f7] text-[#b0b8c1]"
-                }`}>
-                {d.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-      <div className="relative w-full rounded-xl overflow-hidden bg-[#f5f5f7]" style={{ aspectRatio: "16 / 10" }}>
-        {url && !failed ? (
-          <img src={url} alt={`${name} ${dir} 방향`} onError={() => setFailed(true)}
-            className="w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[#b0b8c1]">
-            <Building2 size={26} />
-            <p className="text-[13px] font-semibold">
-              {hasAny ? "이 방향 사진 준비중" : "로드뷰 준비중"}
-            </p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── 상가 건물 바텀시트 (리스트뷰용) ─────────────────────────
-function BuildingBottomSheet({
-  nearbyInfo, buildingData, loading, onClose, onSelectStore,
-}: {
-  nearbyInfo: NearbyBuilding;
-  buildingData: Building | null;
-  loading: boolean;
-  onClose: () => void;
-  onSelectStore: (s: EnrichedStore) => void;
-}) {
-  const [floorIdx, setFloorIdx] = useState(-1);
-  const [imgFailed, setImgFailed] = useState(false);
-  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
-
-  const allStores: { store: Store; floorLabel: string }[] = buildingData
-    ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
-    : [];
-  const visible = floorIdx === -1
-    ? allStores
-    : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
-
-  return (
-    <div className="fixed inset-0" style={{ zIndex: 300 }}>
-      <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
-      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
-        style={{ zIndex: 2, ...sheetStyle }}>
-
-        {/* 건물 이미지 헤더 (드래그 가능) */}
-        <div className="relative shrink-0" style={{ height: 160, ...handleProps.style }}
-          onPointerDown={handleProps.onPointerDown}
-          onPointerMove={handleProps.onPointerMove}
-          onPointerUp={handleProps.onPointerUp}
-          onPointerCancel={handleProps.onPointerCancel}
-        >
-          {!imgFailed && nearbyInfo.image ? (
-            <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
-              className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#0071e3] to-[#1849A3] flex items-center justify-center">
-              <Building2 size={40} className="text-white/60" />
-            </div>
-          )}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.6) 100%)" }} />
-          <div className="absolute top-2 left-1/2 -translate-x-1/2">
-            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
-          </div>
-          <button
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerMove={(e) => e.stopPropagation()}
-            onPointerUp={(e) => e.stopPropagation()}
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
-            <X size={14} className="text-white" />
-          </button>
-          <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
-            <p className="text-[18px] font-bold text-white leading-tight drop-shadow">{nearbyInfo.name}</p>
-            <p className="text-[11px] text-white/75 mt-0.5">
-              {nearbyInfo.floors}층 · {nearbyInfo.stores}개 매장
-              {nearbyInfo.km > 0 && ` · ${distLabel(nearbyInfo.km)}`}
-            </p>
-          </div>
-        </div>
-
-        <RoadviewSection photos={nearbyInfo.photos} name={nearbyInfo.name} />
-
-        {/* 로딩 */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center flex-1 py-12 gap-3">
-            <div className="w-8 h-8 border-[3px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[13px] text-[#6e6e73]">매장 정보 불러오는 중...</p>
-          </div>
-        )}
-
-        {/* 데이터 없음 */}
-        {!loading && !buildingData && (
-          <div className="flex flex-col items-center justify-center flex-1 pb-10 px-8">
-            <span className="text-5xl mb-3">🏗️</span>
-            <p className="text-[16px] font-bold text-[#1d1d1f]">정보 준비 중</p>
-            <p className="text-[13px] text-[#6e6e73] mt-1 text-center leading-relaxed">
-              이 건물의 상세 정보는 곧 업데이트돼요
-            </p>
-            <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-5 py-4 w-full">
-              <p className="text-[13px] text-[#424245]">{nearbyInfo.address}</p>
-              <p className="text-[13px] text-[#6e6e73] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
-            </div>
-          </div>
-        )}
-
-        {/* 매장 목록 */}
-        {!loading && buildingData && (
-          <>
-            {/* 층 탭 */}
-            <div className="flex gap-2 px-4 py-2.5 border-b border-[#f5f5f7] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
-              <button onClick={() => setFloorIdx(-1)}
-                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                전체 {allStores.length}개
-              </button>
-              {buildingData.floors.map((f, i) => (
-                <button key={f.label} onClick={() => setFloorIdx(i)}
-                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            {/* 매장 리스트 */}
-            <div className="overflow-y-auto flex-1">
-              {visible.length === 0 ? (
-                <div className="flex items-center justify-center py-10 text-[13px] text-[#86868b]">입점 매장 없음</div>
-              ) : (
-                visible.map(({ store: s, floorLabel }) => (
-                  <button key={s.id}
-                    onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
-                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] border-b border-[#f5f5f7] text-left">
-                    <StoreLogo name={s.name} category={s.category} size={44} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${catBg[s.category]}`}>
-                          {catEmoji[s.category]} {s.category}
-                        </span>
-                      </div>
-                      <p className="text-[12px] text-[#6e6e73] mt-0.5">
-                        {floorIdx === -1 ? `${floorLabel} · ` : ""}{s.hours ?? "영업시간 미등록"}
-                      </p>
-                    </div>
-                    <div className="shrink-0 flex flex-col items-end gap-1">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                        {s.isOpen !== false ? "영업 중" : "영업 종료"}
-                      </span>
-                      <ChevronRight size={13} className="text-[#86868b]" />
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
 
 // ─── 매장 리스트 상세 시트 ──────────────────────────────────
 type EnrichedStore = Store & { floorLabel: string; buildingName: string };
@@ -1426,318 +1185,6 @@ const StoreMapView = dynamic(() => import("./StoreMapView"), {
 });
 
 
-// ─── 지도 모드 건물 매장 시트 ────────────────────────────────
-function MapBuildingSheet({
-  nearbyInfo,
-  buildingData,
-  onClose,
-  onSelectStore,
-}: {
-  nearbyInfo: NearbyBuilding;
-  buildingData: Building | null;
-  onClose: () => void;
-  onSelectStore: (store: EnrichedStore) => void;
-}) {
-  const [floorIdx, setFloorIdx] = useState<number>(-1);
-  const [imgFailed, setImgFailed] = useState(false);
-  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
-
-  const allStores: { store: Store; floorLabel: string }[] = buildingData
-    ? buildingData.floors.flatMap(f => f.stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: f.label })))
-    : [];
-
-  const visibleStores: { store: Store; floorLabel: string }[] = floorIdx === -1
-    ? allStores
-    : (buildingData ? buildingData.floors[floorIdx].stores.filter(s => s.name !== "공실").map(s => ({ store: s, floorLabel: buildingData.floors[floorIdx].label })) : []);
-
-  return (
-    <div className="fixed inset-0" style={{ zIndex: 200 }}>
-      {/* backdrop */}
-      <div className="absolute inset-0 bg-black/50" style={{ zIndex: 1 }} onClick={onClose} />
-      {/* 시트 */}
-      <div
-        className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
-        style={{ zIndex: 2, ...sheetStyle }}
-      >
-        {/* 건물 이미지 헤더 (드래그 가능) */}
-        <div className="relative shrink-0" style={{ height: 160, ...handleProps.style }}
-          onPointerDown={handleProps.onPointerDown}
-          onPointerMove={handleProps.onPointerMove}
-          onPointerUp={handleProps.onPointerUp}
-          onPointerCancel={handleProps.onPointerCancel}
-        >
-          {!imgFailed && nearbyInfo.image ? (
-            <img src={nearbyInfo.image} alt={nearbyInfo.name} onError={() => setImgFailed(true)}
-              className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-[#0071e3] to-[#1849A3] flex items-center justify-center">
-              <Building2 size={36} className="text-white/70" />
-            </div>
-          )}
-          {/* 그라디언트 오버레이 */}
-          <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.05) 0%, rgba(0,0,0,.55) 100%)" }} />
-          {/* 핸들 */}
-          <div className="absolute top-2 left-1/2 -translate-x-1/2">
-            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
-          </div>
-          {/* 닫기 */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerMove={(e) => e.stopPropagation()}
-            onPointerUp={(e) => e.stopPropagation()}
-            className="absolute top-3 right-3 w-7 h-7 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
-            <X size={14} className="text-white" />
-          </button>
-          {/* 건물명 */}
-          <div className="absolute bottom-0 left-0 right-0 px-4 pb-3">
-            <p className="text-[17px] font-bold text-white leading-tight drop-shadow">{nearbyInfo.name}</p>
-            <p className="text-[11px] text-white/75 mt-0.5">{nearbyInfo.address} · {nearbyInfo.floors}층 · {nearbyInfo.stores}개 매장</p>
-          </div>
-        </div>
-
-        <RoadviewSection photos={nearbyInfo.photos} name={nearbyInfo.name} />
-
-        {buildingData ? (
-          <>
-            {/* 층 탭 */}
-            <div className="flex gap-2 px-4 py-2 border-b border-[#f5f5f7] overflow-x-auto shrink-0" style={{ scrollbarWidth: "none" }}>
-              <button onClick={() => setFloorIdx(-1)}
-                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                전체
-              </button>
-              {buildingData.floors.map((f, i) => (
-                <button key={f.label} onClick={() => setFloorIdx(i)}
-                  className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            {/* 매장 리스트 — 스크롤 가능 */}
-            <div style={{ overflowY: "auto", flex: 1, WebkitOverflowScrolling: "touch" }}>
-              {visibleStores.length === 0 ? (
-                <div className="flex items-center justify-center py-10 text-[13px] text-[#86868b]">입점 매장 없음</div>
-              ) : (
-                visibleStores.map(({ store: s, floorLabel }) => (
-                  <button key={s.id}
-                    onClick={() => onSelectStore({ ...s, floorLabel, buildingName: nearbyInfo.name })}
-                    className="w-full px-4 py-3 flex items-center gap-3 active:bg-[#f5f5f7] border-b border-[#f5f5f7] text-left">
-                    <StoreLogo name={s.name} category={s.category} size={42} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                      <p className="text-[12px] text-[#6e6e73] mt-0.5">
-                        {catEmoji[s.category]} {s.category}
-                        {floorIdx === -1 ? ` · ${floorLabel}` : ""}
-                        {s.hours ? ` · ${s.hours}` : ""}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1 shrink-0">
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                        {s.isOpen !== false ? "영업 중" : "영업 종료"}
-                      </span>
-                      <ChevronRight size={13} className="text-[#86868b]" />
-                    </div>
-                  </button>
-                ))
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex flex-col items-center justify-center flex-1 pb-10 px-8">
-            <span className="text-5xl mb-3">🏗️</span>
-            <p className="text-[16px] font-bold text-[#1d1d1f]">정보 준비 중</p>
-            <p className="text-[13px] text-[#6e6e73] mt-1 text-center">이 건물의 상세 정보는 곧 업데이트돼요</p>
-            <div className="mt-4 bg-[#f5f5f7] rounded-2xl px-5 py-4 w-full">
-              <p className="text-[13px] text-[#424245]">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ─── 건물 상세 (층별 / 업종별) ──────────────────────────────
-function BuildingDetail({
-  buildingData,
-  nearbyInfo,
-  onBack,
-}: {
-  buildingData: Building | null;
-  nearbyInfo: NearbyBuilding;
-  onBack: () => void;
-}) {
-  const [tab, setTab] = useState<"층별" | "업종별">("층별");
-  const [floorIdx, setFloorIdx] = useState(1);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [showCode, setShowCode] = useState(false);
-  const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
-  const router = useRouter();
-
-  if (!buildingData) {
-    return (
-      <div className="pb-28">
-        <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7] px-4 flex items-center h-12">
-          <button onClick={onBack} className="mr-3 active:opacity-60">
-            <ChevronLeft size={22} className="text-[#1d1d1f]" />
-          </button>
-          <p className="text-[16px] font-bold text-[#1d1d1f]">{nearbyInfo.name}</p>
-        </div>
-        <div className="flex flex-col items-center justify-center pt-24 text-center px-8">
-          <span className="text-5xl mb-4">🏗️</span>
-          <p className="text-[17px] font-bold text-[#1d1d1f]">정보 준비 중</p>
-          <p className="text-[14px] text-[#6e6e73] mt-2">이 건물의 상세 정보는 곧 업데이트될 예정이에요</p>
-          <div className="mt-4 bg-[#f5f5f7] rounded-xl px-4 py-3 text-left w-full">
-            <p className="text-[13px] text-[#424245]">{nearbyInfo.address}</p>
-            <p className="text-[13px] text-[#6e6e73] mt-1">{nearbyInfo.floors}층 · 약 {nearbyInfo.stores}개 매장</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const allStores: { store: Store; floorLabel: string }[] = [];
-  buildingData.floors.forEach(f => f.stores.forEach(s => {
-    if (s.name !== "공실") allStores.push({ store: s, floorLabel: f.label });
-  }));
-  const categories = Array.from(new Set(allStores.map(({ store }) => store.category))) as StoreCategory[];
-  const filteredStores = catFilter === "전체" ? allStores : allStores.filter(({ store }) => store.category === catFilter);
-  const currentFloor = buildingData.floors[floorIdx];
-
-  return (
-    <div className="pb-28">
-      <div className="bg-white sticky top-[56px] z-30 border-b border-[#f5f5f7]">
-        <div className="px-4 flex items-center h-12">
-          <button onClick={onBack} className="mr-3 active:opacity-60">
-            <ChevronLeft size={22} className="text-[#1d1d1f]" />
-          </button>
-          <p className="text-[16px] font-bold text-[#1d1d1f]">{buildingData.name}</p>
-        </div>
-        <div className="flex border-t border-[#f5f5f7]">
-          {(["층별", "업종별"] as const).map(t => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 h-10 text-[14px] font-semibold border-b-2 transition-colors ${tab === t ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"}`}>
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {tab === "층별" ? (
-        <div className="mx-4 mt-3">
-          <div className="bg-white rounded-2xl px-4 py-3 mb-3 flex items-center justify-between">
-            <button onClick={() => { setFloorIdx(i => Math.max(0, i-1)); setSelectedStore(null); }}
-              disabled={floorIdx === 0}
-              className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
-              <ChevronLeft size={18} className="text-[#1d1d1f]" />
-            </button>
-            <div className="flex items-center gap-2">
-              {buildingData.floors.map((f, i) => (
-                <button key={f.label} onClick={() => { setFloorIdx(i); setSelectedStore(null); }}
-                  className={`w-10 h-10 rounded-xl text-[14px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
-                  {f.label}
-                </button>
-              ))}
-            </div>
-            <button onClick={() => { setFloorIdx(i => Math.min(buildingData.floors.length-1, i+1)); setSelectedStore(null); }}
-              disabled={floorIdx === buildingData.floors.length-1}
-              className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
-              <ChevronRight size={18} className="text-[#1d1d1f]" />
-            </button>
-          </div>
-          <div className="bg-white rounded-2xl overflow-hidden mb-3">
-            <div className="p-3">
-              <FloorSVG floor={currentFloor} selectedId={selectedStore?.id ?? null} onSelect={setSelectedStore} />
-            </div>
-            <div className="px-4 py-3 border-t border-[#f5f5f7]">
-              <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-1.5">
-                  <div className={`w-2 h-2 rounded-full ${currentFloor.hasRestroom ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`} />
-                  <span className="text-[13px] text-[#6e6e73]">
-                    🚻 화장실 {currentFloor.hasRestroom ? "있음" : "없음"}
-                  </span>
-                </div>
-                {currentFloor.hasRestroom && currentFloor.restroomGender && (
-                  <span className="text-[12px] font-bold px-2 py-0.5 rounded-full bg-[#e8f1fd] text-[#0071e3]">
-                    {currentFloor.restroomGender}
-                  </span>
-                )}
-                {currentFloor.hasRestroom && currentFloor.restroomCode && (
-                  <button onClick={() => setShowCode(!showCode)} className="flex items-center gap-1 active:opacity-60">
-                    <Lock size={12} className="text-[#0071e3]" />
-                    <span className="text-[13px] text-[#0071e3] font-medium">{showCode ? `비번: ${currentFloor.restroomCode}` : "비번 보기"}</span>
-                  </button>
-                )}
-              </div>
-              {currentFloor.hasRestroom && (currentFloor.restroomLocation || currentFloor.restroomNote) && (
-                <p className="text-[12px] text-[#6e6e73] mt-2">
-                  {currentFloor.restroomLocation && <span>📍 {currentFloor.restroomLocation}</span>}
-                  {currentFloor.restroomNote && <span className="ml-2">· {currentFloor.restroomNote}</span>}
-                </p>
-              )}
-            </div>
-          </div>
-          <p className="text-[15px] font-bold text-[#1d1d1f] mb-2.5">{currentFloor.label} 입점 매장</p>
-          <div className="space-y-2">
-            {currentFloor.stores.filter(s => s.name !== "공실").map(s => (
-              <button key={s.id} onClick={() => setSelectedStore(s)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === s.id ? "ring-2 ring-[#0071e3]" : ""}`}>
-                <div className="flex items-center gap-3">
-                  <StoreLogo name={s.name} category={s.category} size={40} />
-                  <div className="text-left">
-                    <p className="text-[15px] font-medium text-[#1d1d1f]">{s.name}</p>
-                    {s.hours && <p className="text-[13px] text-[#6e6e73]">{s.hours}</p>}
-                  </div>
-                </div>
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                  {s.isOpen !== false ? "영업 중" : "영업 종료"}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div className="mt-3">
-          <div className="flex gap-2 px-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-            {(["전체", ...categories] as (StoreCategory | "전체")[]).map(c => (
-              <button key={c} onClick={() => setCatFilter(c)}
-                className={`shrink-0 px-3 h-8 rounded-full text-[13px] font-semibold transition-colors ${catFilter === c ? "bg-[#0071e3] text-white" : "bg-white text-[#424245]"}`}>
-                {c === "전체" ? "전체" : `${catEmoji[c as StoreCategory]} ${c}`}
-              </button>
-            ))}
-          </div>
-          <div className="px-4 space-y-2">
-            <p className="text-[13px] text-[#6e6e73]">총 {filteredStores.length}개 매장</p>
-            {filteredStores.map(({ store, floorLabel }) => (
-              <button key={store.id} onClick={() => setSelectedStore(store)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === store.id ? "ring-2 ring-[#0071e3]" : ""}`}>
-                <div className="flex items-center gap-3">
-                  <StoreLogo name={store.name} category={store.category} size={40} />
-                  <div className="text-left">
-                    <p className="text-[15px] font-medium text-[#1d1d1f]">{store.name}</p>
-                    <p className="text-[13px] text-[#6e6e73]">{floorLabel}</p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-                  <span className={`text-[11px] font-medium ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
-                    {store.isOpen !== false ? "영업 중" : "영업 종료"}
-                  </span>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {selectedStore && (
-        <StoreSheet store={selectedStore} onClose={() => setSelectedStore(null)}
-          onDetail={() => { setSelectedStore(null); router.push(`/stores/${selectedStore.id}`); }} />
-      )}
-    </div>
-  );
-}
-
 // ─── 메인 ────────────────────────────────────────────────────
 export default function StoresPage() {
   const router = useRouter();
@@ -1750,8 +1197,6 @@ export default function StoresPage() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
-  const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
   const [dbBuildings, setDbBuildings] = useState<BuildingRow[]>([]);
   const [allDbStores, setAllDbStores] = useState<FlatStore[]>([]);
@@ -1805,12 +1250,7 @@ export default function StoresPage() {
     requestLocation();
   }, []);
 
-  useEffect(() => {
-    if (!selectedBuildingId) { setSelectedBuildingData(null); return; }
-    fetchBuildingWithFloors(selectedBuildingId).then(data => setSelectedBuildingData(data));
-  }, [selectedBuildingId]);
-
-  // 검색 결과 (매장)
+  // 검색 결과
   const searchResults = useMemo<SearchResult[]>(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
@@ -1844,11 +1284,6 @@ export default function StoresPage() {
   }, [searchQuery, viewMode, nearbyWithDist]);
 
   const isSearching = searchQuery.trim().length > 0;
-
-  // 선택된 건물 정보
-  const selectedNearby = selectedBuildingId
-    ? nearbyWithDist.find(n => n.id === selectedBuildingId) ?? null
-    : null;
 
   // 지도 필터: 선택 업종이 없는 건물 ID set
   const dimmedIds = useMemo(() => {
@@ -1896,6 +1331,19 @@ export default function StoresPage() {
             </button>
           )}
         </div>
+        {!isSearching && !searchFocused && (
+          <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
+            {(["리스트", "지도"] as const).map(mode => (
+              <button key={mode} onClick={() => setViewMode(mode)}
+                className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
+                  viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
+                }`}>
+                {mode === "리스트" ? <List size={14} /> : <MapIcon size={14} />}
+                {mode === "리스트" ? "매장 리스트" : "상가 지도"}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 키워드 검색 패널 */}
@@ -1942,82 +1390,36 @@ export default function StoresPage() {
       )}
 
       {isSearching ? (
-        <div>
-          {viewMode === "지도" && buildingSearchMatches.length > 0 && (
-            <div className="px-4 pt-3">
-              <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">상가 {buildingSearchMatches.length}건</p>
-              <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7] mb-3">
-                {buildingSearchMatches.map(b => (
-                  <button key={b.id}
-                    onClick={() => {
-                      setViewMode("지도");
-                      setSelectedBuildingId(b.id);
-                      setSearchQuery("");
-                      setSearchFocused(false);
-                      searchInputRef.current?.blur();
-                    }}
-                    className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                    <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                      <Building2 size={18} className="text-[#0071e3]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{b.name}</p>
-                      <p className="text-[12px] text-[#6e6e73] truncate">{b.address} · {distLabel(b.km)}</p>
-                    </div>
-                    <ChevronRight size={16} className="text-[#86868b] shrink-0" />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
-        </div>
-      ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
-        /* ─── 건물 상세 뷰 (리스트 모드) ─── */
-        <BuildingDetail
-          buildingData={selectedBuildingData}
-          nearbyInfo={selectedNearby}
-          onBack={() => setSelectedBuildingId(null)}
-        />
-      ) : viewMode === "지도" ? (
+        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+      ) : searchFocused ? null : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
-        <>
-          <div className="fixed left-0 right-0" style={{ top: 184, bottom: 58, zIndex: 10 }}>
-            {/* 지도 */}
-            <StoreMapView
-              buildings={nearbyWithDist}
-              selectedId={selectedBuildingId}
-              onSelect={id => setSelectedBuildingId(selectedBuildingId === id ? null : id)}
-              dimmedIds={dimmedIds}
-            />
-
-            {/* 업종별 필터 바 — 지도 위 floating */}
-            <div className="absolute top-3 left-0 right-0 z-[400] pointer-events-none">
-              <div className="flex gap-2 px-3 overflow-x-auto pointer-events-auto" style={{ scrollbarWidth: "none" }}>
-                {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
-                  <button key={cat} onClick={() => setMapCatFilter(cat)}
-                    className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-md transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
-                    {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
-                  </button>
-                ))}
-              </div>
+        <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
+          {/* 업종별 필터 바 */}
+          <div className="absolute top-0 left-0 right-0 z-[50] pt-2 pb-1.5"
+            style={{ background: "linear-gradient(180deg,rgba(255,255,255,.96) 70%,transparent)" }}>
+            <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+              {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
+                <button key={cat} onClick={() => setMapCatFilter(cat)}
+                  className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
+                  {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
-          {selectedBuildingId && selectedNearby && (
-            <MapBuildingSheet
-              nearbyInfo={selectedNearby}
-              buildingData={selectedBuildingData}
-              onClose={() => setSelectedBuildingId(null)}
-              onSelectStore={(s) => { setSelectedBuildingId(null); router.push(`/stores/detail/?id=${s.id}`); }}
-            />
-          )}
-        </>
+          {/* 지도 */}
+          <StoreMapView
+            buildings={nearbyWithDist}
+            selectedId={null}
+            onSelect={id => router.push(`/stores/building/?id=${id}`)}
+            dimmedIds={dimmedIds}
+          />
+        </div>
       ) : (
         /* ─── 리스트 모드 ─── */
         <StoreListView />
       )}
+
 
       {selected && selected.name !== "공실" && (
         <StoreSheet store={selected} onClose={() => setSelected(null)}
