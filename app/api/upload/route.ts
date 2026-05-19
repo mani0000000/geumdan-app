@@ -10,7 +10,7 @@ const MAX_BASE64_BYTES = 8 * 1024 * 1024; // 8MB — data URL 폴백 허용 상�
 const MAX_VIDEO_BYTES  = 100 * 1024 * 1024; // 100MB — 동영상 최대 크기
 
 const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","avif","svg"];
-const VIDEO_EXTS = ["mp4","mov","m4v","webm"];
+const VIDEO_EXTS = ["mp4","mov","m4v","webm","ogg"];
 
 function candidateKeys(): string[] {
   return [
@@ -66,11 +66,10 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const IMAGE_EXT = ["jpg","jpeg","png","gif","webp","avif","svg"];
-    const VIDEO_EXT = ["mp4","mov","webm","m4v","ogg"];
-    if (![...IMAGE_EXT, ...VIDEO_EXT].includes(ext)) {
+    if (![...IMAGE_EXTS, ...VIDEO_EXTS].includes(ext)) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
+    const isVideo = VIDEO_EXTS.includes(ext) || (file.type || "").startsWith("video/");
 
     const bytes = await file.arrayBuffer();
 
