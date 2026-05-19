@@ -5,7 +5,6 @@ import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCir
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import Avatar from "@/components/ui/Avatar";
-import { posts } from "@/lib/mockData";
 import {
   getUserProfile,
   getMyPostCount,
@@ -180,7 +179,7 @@ export default function MyPage() {
     {
       title: "내 활동",
       items: [
-        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
+        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/mypage/posts/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
       ],
@@ -477,29 +476,6 @@ export default function MyPage() {
           </div>
         </div>
       )}
-
-      {/* 최근 작성글 */}
-      <SectionLabel
-        label="최근 작성글"
-        icon={<FileText size={18} className="text-[#0071e3]" />}
-        onClick={() => router.push("/community/")}
-      />
-      <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
-        {posts.slice(0, 3).map(p => (
-          <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
-            className="w-full px-4 py-3.5 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
-            <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
-              <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
-            </div>
-          </button>
-        ))}
-        <button onClick={() => router.push("/community/")}
-          className="w-full flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold active:opacity-60">
-          전체 보기 <ChevronRight size={13} />
-        </button>
-      </div>
 
       {/* 메뉴 */}
       {menuGroups.map(grp => (
