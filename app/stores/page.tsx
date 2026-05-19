@@ -380,7 +380,7 @@ function StoreListView() {
     fetchAllStoresFlat().then(setDbStores);
     fetchActiveCoupons().then(setDbCoupons);
     fetchActiveOpenings().then(setDbOpenings);
-    fetchActiveBanners().then(setBanners);
+    fetchActiveBanners("stores").then(setBanners);
   }, []);
 
   const allStores = useMemo<EnrichedStore[]>(() =>

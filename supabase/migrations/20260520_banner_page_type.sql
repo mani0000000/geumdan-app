@@ -1,0 +1,1 @@
+ALTER TABLE banners ADD COLUMN IF NOT EXISTS page_type TEXT DEFAULT 'all';

@@ -2554,7 +2554,7 @@ export default function HomePage() {
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     getUserProfile().then(p => setUserNickname(p.nickname));
-    fetchActiveBanners().then(setHomeBanners);
+    fetchActiveBanners("home").then(setHomeBanners);
     fetchActivePopups().then(setPopups);
     const local = loadUserWidgets();
     if (local) {
