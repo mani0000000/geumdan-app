@@ -15,8 +15,11 @@ interface Props {
 export default function BannerCarousel({ banners }: Props) {
   const [current, setCurrent] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const touchStartX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => { setImgFailed(false); }, [current]);
 
   const goTo = useCallback(
     (idx: number) => setCurrent(((idx % banners.length) + banners.length) % banners.length),
@@ -48,19 +51,19 @@ export default function BannerCarousel({ banners }: Props) {
           setTimeout(() => setPaused(false), 1200);
         }}
       >
-        {/* 배경 — 이미지 or 그라디언트 */}
-        {b.image_url ? (
+        {/* 배경 그라디언트 — 항상 렌더 (이미지 로드 실패 시 fallback) */}
+        <div
+          className="absolute inset-0 transition-all duration-300"
+          style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
+        />
+        {/* 배경 이미지 — 그라디언트 위에 덮어쓰기, 실패 시 숨김 */}
+        {b.image_url && !imgFailed && (
           <img
             key={b.id}
             src={b.image_url}
             alt={b.title}
+            onError={() => setImgFailed(true)}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
-          />
-        ) : (
-          <div
-            key={b.id}
-            className="absolute inset-0 transition-all duration-300"
-            style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
           />
         )}
 

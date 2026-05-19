@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, MonitorPlay,
 } from "lucide-react";
 
 const NAV = [
   { href: "/admin/banners",    icon: Image,         label: "배너 관리"     },
+  { href: "/admin/popups",     icon: MonitorPlay,   label: "팝업 관리"     },
   { href: "/admin/stores",     icon: Building2,     label: "상가건물 관리" },
   { href: "/admin/coupons",    icon: Tag,           label: "쿠폰 관리"    },
   { href: "/admin/openings",   icon: Store,         label: "신규오픈 관리" },

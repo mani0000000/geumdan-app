@@ -30,6 +30,8 @@ import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
+import { fetchActivePopups, type Popup } from "@/lib/db/popups";
+import PopupBottomSheet from "@/components/ui/PopupBottomSheet";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
@@ -2495,11 +2497,13 @@ export default function HomePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [userNickname, setUserNickname] = useState("검단주민");
   const [homeBanners, setHomeBanners] = useState<Banner[]>([]);
+  const [popups, setPopups] = useState<Popup[]>([]);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     getUserProfile().then(p => setUserNickname(p.nickname));
     fetchActiveBanners().then(setHomeBanners);
+    fetchActivePopups().then(setPopups);
     const local = loadUserWidgets();
     if (local) {
 
@@ -2607,6 +2611,8 @@ export default function HomePage() {
 
       <div className="h-4" />
       <BottomNav />
+
+      <PopupBottomSheet popups={popups} />
     </div>
   );
 }

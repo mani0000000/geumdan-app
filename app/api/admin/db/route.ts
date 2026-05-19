@@ -4,7 +4,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ALLOWED_TABLES = new Set([
-  "banners", "buildings", "floors", "stores", "store_coupons", "store_openings",
+  "banners", "popups", "buildings", "floors", "stores", "store_coupons", "store_openings",
   "pharmacies", "emergency_rooms", "community_posts", "community_comments", "news_articles",
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
   "home_widget_config", "places", "search_keywords", "marts",
