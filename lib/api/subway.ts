@@ -119,7 +119,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "arex",
     stationCode: "검암",
     groupKey: GEOMAM_GROUP,
-    timetable: { upFirst: "05:30", upLast: "24:04", downFirst: "05:08", downLast: "24:05", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
+    timetable: { upFirst: "05:30", upLast: "24:04", downFirst: "05:25", downLast: "24:14", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
   {
     id: "arex-gyeyang",
@@ -215,7 +215,7 @@ const STATION_DB: SubwayStationEntry[] = [
     apiType: "ic1",
     stationCode: "I110",
     groupKey: GYEYANG_GROUP,
-    timetable: { upFirst: "05:39", upLast: "23:55", downFirst: "05:42", downLast: "24:52", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:32", upLast: "23:55", downFirst: "05:42", downLast: "24:52", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-gyulhyeon",
@@ -225,7 +225,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5594, lng: 126.7411,
     apiType: "ic1",
     stationCode: "I111",
-    timetable: { upFirst: "05:41", upLast: "24:41", downFirst: "05:40", downLast: "24:50", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:41", upLast: "24:41", downFirst: "05:40", downLast: "24:50", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-bakchon",
@@ -235,7 +235,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5513, lng: 126.7432,
     apiType: "ic1",
     stationCode: "I112",
-    timetable: { upFirst: "05:30", upLast: "24:44", downFirst: "05:37", downLast: "24:47", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:30", upLast: "24:44", downFirst: "05:37", downLast: "24:47", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-imhak",
@@ -245,7 +245,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5441, lng: 126.7380,
     apiType: "ic1",
     stationCode: "I113",
-    timetable: { upFirst: "05:32", upLast: "24:46", downFirst: "05:35", downLast: "24:45", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:32", upLast: "24:46", downFirst: "05:35", downLast: "24:45", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "ic1-gyesan",
@@ -255,7 +255,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5389, lng: 126.7285,
     apiType: "ic1",
     stationCode: "I114",
-    timetable: { upFirst: "05:34", upLast: "24:48", downFirst: "05:33", downLast: "24:43", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:34", upLast: "24:48", downFirst: "05:33", downLast: "24:43", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
 
   // 인천1호선 검단 연장 구간 — 검단호수공원역이 현재 하행 종점
@@ -267,7 +267,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6048, lng: 126.7024,
     apiType: "ic1",
     stationCode: "I108",
-    timetable: { upFirst: "05:32", upLast: "24:32", downFirst: "05:49", downLast: "24:59", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:32", upLast: "24:32", downFirst: "05:49", downLast: "24:59", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "gd-gdlake",
@@ -277,7 +277,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.6025, lng: 126.6881,
     apiType: "ic1",
     stationCode: "I107",
-    timetable: { upFirst: "05:42", upLast: "24:30", downFirst: "-", downLast: "-", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:42", upLast: "24:30", downFirst: "-", downLast: "-", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
   {
     id: "gd-ara",
@@ -287,7 +287,7 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5922, lng: 126.7133,
     apiType: "ic1",
     stationCode: "I109",
-    timetable: { upFirst: "05:34", upLast: "24:35", downFirst: "05:47", downLast: "24:57", intervalMin: 6, upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
+    timetable: { upFirst: "05:34", upLast: "24:35", downFirst: "05:47", downLast: "24:57", intervalMin: 6, intervalDisplay: "5~9분", upDirection: "송도달빛축제공원", downDirection: "검단호수공원" },
   },
 
   // 서울 9호선 — 검단에서 가장 가까운 서쪽 종점

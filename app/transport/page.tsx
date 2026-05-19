@@ -15,7 +15,6 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import {
   hasBusApiKey,
   haversineM,
-  GEUMDAN_BUS_STATIONS,
   fetchNearbyStopsWithArrivals,
   fetchNearbyStopsFromTago,
   fetchArrivalsByNodeId, fetchArrivalsByStationId, osmRoutesToArrivals,
@@ -973,22 +972,10 @@ export default function TransportPage() {
           }));
         } else throw new Error("tago_empty");
       } catch {
-        // 하드코딩 폴백
+        // API 모두 실패 — 빈 결과 반환 (하드코딩 폴백 데이터 숨김)
         src = "fallback";
-        const farFromGeumdan = haversineM(lat, lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng) > 5000;
-        const refLat = farFromGeumdan ? GEUMDAN_DEFAULT.lat : lat;
-        const refLng = farFromGeumdan ? GEUMDAN_DEFAULT.lng : lng;
-        const all = GEUMDAN_BUS_STATIONS.map(s => ({
-          ...s,
-          distanceM: Math.round(haversineM(refLat, refLng, s.lat, s.lng)),
-        }));
-        stops = pickNearest(all).map(s => ({
-          id: s.stationId, name: s.name,
-          distM: s.distanceM, arrivals: [], loadingArrivals: true,
-          lat: s.lat, lng: s.lng,
-          osmRoutes: s.routes,
-        }));
-        if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
+        stops = [];
+        if (dev) console.warn(`[transport] all APIs failed, showing empty state ${since()}ms`);
       }
     }
 
@@ -1940,9 +1927,12 @@ export default function TransportPage() {
 
           {/* 데이터 소스 상태 배너 */}
           {!loading && stopSource === "fallback" && (
-            <div className="bg-[#FFF3E0] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-              <span className="text-[13px]">📍</span>
-              <p className="text-[12px] text-[#7C4700] font-medium">주변 정류장을 못 찾았어요 · 검단 주요 정류장 표시 중</p>
+            <div className="bg-white rounded-2xl px-5 py-7 text-center space-y-2">
+              <p className="text-[32px]">🚌</p>
+              <p className="text-[15px] font-bold text-[#1d1d1f]">정류장 정보를 불러올 수 없어요</p>
+              <p className="text-[13px] text-[#6e6e73] leading-relaxed">
+                잠시 후 다시 시도하거나<br />정류장 이름으로 검색해 주세요.
+              </p>
             </div>
           )}
           {!loading && stopSource === "osm" && (
