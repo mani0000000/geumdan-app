@@ -16,7 +16,7 @@ import { fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
-import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDetail } from "@/lib/db/stores";
+import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, fetchStoreExtraInfo, type StoreDetail } from "@/lib/db/stores";
 import type { Store, StoreCategory } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
