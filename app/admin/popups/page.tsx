@@ -2,52 +2,51 @@
 import { useState, useEffect } from "react";
 import {
   Plus, Pencil, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Megaphone, X, Loader2, AlertCircle, CheckCircle2,
+  Image as ImageIcon, X, Loader2, AlertCircle, CheckCircle2,
 } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchPopups, adminCreatePopup, adminUpdatePopup, adminDeletePopup,
-  MAX_ACTIVE_POPUPS, type Popup,
+  type Popup,
 } from "@/lib/db/popups";
 
 const EMPTY_FORM = {
   sort_order: 1,
   title: "",
-  body: "",
   image_url: "",
   link_url: "",
-  link_label: "",
-  is_active: true,
+  link_label: "자세히 보기",
+  start_at: "",
+  end_at: "",
+  active: true,
 };
 
 type FormData = typeof EMPTY_FORM;
 
-function PopupPreview({ form }: { form: FormData }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  useEffect(() => { setImgFailed(false); }, [form.image_url]);
+function toLocalInput(iso: string | null | undefined) {
+  if (!iso) return "";
+  try { return new Date(iso).toISOString().slice(0, 16); }
+  catch { return ""; }
+}
 
-  return (
-    <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
-      <div className="flex justify-center pt-3">
-        <div className="w-10 h-1 rounded-full bg-gray-200" />
-      </div>
-      {form.image_url && !imgFailed && (
-        <img src={form.image_url} alt="" onError={() => setImgFailed(true)}
-          className="w-full max-h-44 object-cover mt-3" />
-      )}
-      <div className="px-5 py-4">
-        <p className="text-[17px] font-extrabold text-[#191F28]">{form.title || "팝업 제목"}</p>
-        {form.body && (
-          <p className="text-[13px] text-gray-600 mt-2 whitespace-pre-wrap leading-relaxed">{form.body}</p>
-        )}
-        {form.link_url && (
-          <div className="mt-4 h-11 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold flex items-center justify-center">
-            {form.link_label || "자세히 보기"}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+function fromLocalInput(local: string): string | null {
+  if (!local) return null;
+  return new Date(local).toISOString();
+}
+
+function StatusBadge({ p }: { p: Popup }) {
+  const now = Date.now();
+  const starts = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
+  const ends = p.end_at ? new Date(p.end_at).getTime() : Infinity;
+  if (!p.active) return <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>;
+  if (now < starts) return <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">예약</span>;
+  if (now > ends)   return <span className="text-[11px] font-semibold bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">만료</span>;
+  return <span className="text-[11px] font-semibold bg-green-50 text-green-600 px-2 py-0.5 rounded-full">● 노출 중</span>;
+}
+
+function fmt(iso: string | null | undefined) {
+  if (!iso) return "제한 없음";
+  return new Date(iso).toLocaleDateString("ko-KR", { month: "numeric", day: "numeric" });
 }
 
 function PopupRow({
@@ -60,25 +59,24 @@ function PopupRow({
   const [imgFail, setImgFail] = useState(false);
   return (
     <div className="bg-white rounded-2xl overflow-hidden shadow-sm flex">
-      <div className="shrink-0 relative bg-gray-100" style={{ width: 100, minHeight: 72 }}>
+      <div className="shrink-0 relative bg-gray-100" style={{ width: 90, minHeight: 72 }}>
         {p.image_url && !imgFail ? (
           <img src={p.image_url} alt="" onError={() => setImgFail(true)} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Megaphone size={22} className="text-gray-300" />
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <ImageIcon size={20} />
           </div>
         )}
       </div>
       <div className="flex-1 px-4 py-3 min-w-0">
         <div className="flex items-start gap-2 flex-wrap">
           <span className="text-[12px] font-bold text-gray-400">#{p.sort_order}</span>
-          <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{p.title}</p>
-          {p.is_active
-            ? <span className="text-[11px] font-semibold bg-green-50 text-green-600 px-2 py-0.5 rounded-full">● 노출 중</span>
-            : <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>}
+          <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{p.title || "(제목 없음)"}</p>
+          <StatusBadge p={p} />
         </div>
-        {p.body && <p className="text-[12px] text-gray-500 mt-0.5 truncate">{p.body}</p>}
-        {p.link_url && <p className="text-[11px] text-blue-500 mt-1 truncate">{p.link_url}</p>}
+        <p className="text-[11px] text-gray-400 mt-1">
+          {fmt(p.start_at)} ~ {fmt(p.end_at)}
+        </p>
       </div>
       <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100">
         <button onClick={onMoveUp} disabled={idx === 0}
@@ -90,7 +88,7 @@ function PopupRow({
           <ChevronDown size={16} className="text-gray-500" />
         </button>
         <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
-          {p.is_active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
+          {p.active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
         </button>
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
           <Pencil size={14} className="text-gray-500" />
@@ -133,14 +131,8 @@ export default function AdminPopupsPage() {
   }
   useEffect(() => { reload(); }, []);
 
-  const activeCount = popups.filter(p => p.is_active).length;
-
   function openCreate() {
-    setForm({
-      ...EMPTY_FORM,
-      sort_order: (popups[popups.length - 1]?.sort_order ?? 0) + 1,
-      is_active: activeCount < MAX_ACTIVE_POPUPS,
-    });
+    setForm({ ...EMPTY_FORM, sort_order: (popups[popups.length - 1]?.sort_order ?? 0) + 1 });
     setEditingId(null);
     setShowForm(true);
   }
@@ -148,38 +140,31 @@ export default function AdminPopupsPage() {
   function openEdit(p: Popup) {
     setForm({
       sort_order: p.sort_order,
-      title: p.title,
-      body: p.body ?? "",
+      title: p.title ?? "",
       image_url: p.image_url ?? "",
       link_url: p.link_url ?? "",
-      link_label: p.link_label ?? "",
-      is_active: p.is_active,
+      link_label: p.link_label,
+      start_at: toLocalInput(p.start_at),
+      end_at: toLocalInput(p.end_at),
+      active: p.active,
     });
     setEditingId(p.id);
     setShowForm(true);
   }
 
-  // 활성화하려는 팝업을 제외한 현재 활성 개수
-  function activeCountExcluding(id: string | null) {
-    return popups.filter(p => p.is_active && p.id !== id).length;
-  }
-
   async function handleSave() {
-    if (!form.title.trim()) { showToast("제목을 입력해 주세요", false); return; }
-    if (form.is_active && activeCountExcluding(editingId) >= MAX_ACTIVE_POPUPS) {
-      showToast(`활성 팝업은 최대 ${MAX_ACTIVE_POPUPS}개까지만 가능해요`, false);
-      return;
-    }
+    if (!form.image_url.trim()) { showToast("팝업 이미지를 등록해 주세요", false); return; }
     setSaving(true);
     try {
       const payload = {
         sort_order: form.sort_order,
-        title: form.title.trim(),
-        body: form.body,
+        title: form.title,
         image_url: form.image_url || null,
         link_url: form.link_url || null,
-        link_label: form.link_label || null,
-        is_active: form.is_active,
+        link_label: form.link_label,
+        start_at: fromLocalInput(form.start_at),
+        end_at: fromLocalInput(form.end_at),
+        active: form.active,
       };
       if (editingId) {
         await adminUpdatePopup(editingId, payload);
@@ -207,12 +192,8 @@ export default function AdminPopupsPage() {
   }
 
   async function toggleActive(p: Popup) {
-    if (!p.is_active && activeCountExcluding(p.id) >= MAX_ACTIVE_POPUPS) {
-      showToast(`활성 팝업은 최대 ${MAX_ACTIVE_POPUPS}개까지만 가능해요`, false);
-      return;
-    }
     try {
-      await adminUpdatePopup(p.id, { is_active: !p.is_active });
+      await adminUpdatePopup(p.id, { active: !p.active });
       await reload();
     } catch { showToast("변경 실패", false); }
   }
@@ -231,14 +212,20 @@ export default function AdminPopupsPage() {
     } catch { showToast("순서 변경 실패", false); }
   }
 
+  const activeCount = popups.filter(p => {
+    const now = Date.now();
+    const s = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
+    const e = p.end_at ? new Date(p.end_at).getTime() : Infinity;
+    return p.active && s <= now && e >= now;
+  }).length;
+
   return (
     <div className="p-4 md:p-8 max-w-4xl">
-      {/* 헤더 */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-[22px] font-extrabold text-[#191F28]">팝업 관리</h1>
           <p className="text-[13px] text-gray-500 mt-0.5">
-            전체 {popups.length}개 · 현재 노출 {activeCount} / {MAX_ACTIVE_POPUPS}개
+            전체 {popups.length}개 · 현재 노출 {activeCount}개
           </p>
         </div>
         <button
@@ -249,21 +236,13 @@ export default function AdminPopupsPage() {
         </button>
       </div>
 
-      {activeCount >= MAX_ACTIVE_POPUPS && (
-        <div className="mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-[13px] text-amber-700">
-          <AlertCircle size={15} />
-          활성 팝업이 최대치({MAX_ACTIVE_POPUPS}개)입니다. 추가로 활성화하려면 다른 팝업을 비활성화하세요.
-        </div>
-      )}
-
-      {/* 목록 */}
       {loading ? (
         <div className="flex items-center gap-2 py-16 justify-center text-gray-400">
           <Loader2 size={20} className="animate-spin" />불러오는 중...
         </div>
       ) : popups.length === 0 ? (
         <div className="flex flex-col items-center py-16 gap-2 text-gray-400">
-          <Megaphone size={36} />
+          <ImageIcon size={36} />
           <p className="text-[14px]">팝업이 없습니다. 새 팝업을 추가해 보세요.</p>
         </div>
       ) : (
@@ -282,7 +261,6 @@ export default function AdminPopupsPage() {
         </div>
       )}
 
-      {/* 추가/편집 폼 — 바텀 시트 */}
       {showForm && (
         <div className="fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowForm(false)} />
@@ -298,31 +276,19 @@ export default function AdminPopupsPage() {
             </div>
 
             <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-              <PopupPreview form={form} />
-
               <div className="space-y-2">
-                <label className="text-[12px] font-bold text-gray-600">제목 *</label>
+                <label className="text-[12px] font-bold text-gray-600">관리용 제목</label>
                 <input
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="예: 검단신도시 봄축제 안내"
+                  placeholder="예: 5월 봄맞이 이벤트 (앱에는 표시되지 않음)"
                   className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
                 />
+                <p className="text-[11px] text-gray-400">목록 식별용으로만 쓰이며 팝업 본문에는 노출되지 않습니다</p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-bold text-gray-600">본문 내용</label>
-                <textarea
-                  value={form.body}
-                  onChange={e => setForm(f => ({ ...f, body: e.target.value }))}
-                  placeholder="팝업에 표시할 안내 문구를 입력하세요"
-                  rows={4}
-                  className="w-full rounded-xl border border-gray-200 px-3.5 py-3 text-[14px] leading-relaxed focus:outline-none focus:ring-2 focus:ring-[#3182F6] resize-none"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[12px] font-bold text-gray-600">이미지</label>
+                <label className="text-[12px] font-bold text-gray-600">팝업 이미지 *</label>
                 <ImageUpload
                   value={form.image_url}
                   onChange={url => setForm(f => ({ ...f, image_url: url ?? "" }))}
@@ -335,18 +301,27 @@ export default function AdminPopupsPage() {
                 <input
                   value={form.link_url}
                   onChange={e => setForm(f => ({ ...f, link_url: e.target.value }))}
-                  placeholder="https:// 또는 /stores, /community 등"
+                  placeholder="https:// 또는 /stores 등 (이미지 클릭 시 이동)"
                   className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
                 />
               </div>
+
               <div className="space-y-2">
-                <label className="text-[12px] font-bold text-gray-600">링크 버튼 텍스트</label>
-                <input
-                  value={form.link_label}
-                  onChange={e => setForm(f => ({ ...f, link_label: e.target.value }))}
-                  placeholder="자세히 보기"
-                  className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
-                />
+                <label className="text-[12px] font-bold text-gray-600">노출 기간 (비워두면 제한 없음)</label>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <p className="text-[11px] text-gray-400 mb-1">시작</p>
+                    <input type="datetime-local" value={form.start_at}
+                      onChange={e => setForm(f => ({ ...f, start_at: e.target.value }))}
+                      className="w-full h-11 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[11px] text-gray-400 mb-1">종료</p>
+                    <input type="datetime-local" value={form.end_at}
+                      onChange={e => setForm(f => ({ ...f, end_at: e.target.value }))}
+                      className="w-full h-11 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]" />
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center gap-4">
@@ -358,22 +333,15 @@ export default function AdminPopupsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-bold text-gray-600">활성화</label>
-                  <button onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
+                  <button onClick={() => setForm(f => ({ ...f, active: !f.active }))}
                     className={`flex items-center gap-2 h-11 px-4 rounded-xl font-bold text-[14px] border-2 transition-colors ${
-                      form.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
+                      form.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
                     }`}>
-                    {form.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
-                    {form.is_active ? "활성" : "비활성"}
+                    {form.active ? <Eye size={15} /> : <EyeOff size={15} />}
+                    {form.active ? "활성" : "비활성"}
                   </button>
                 </div>
               </div>
-
-              {form.is_active && activeCountExcluding(editingId) >= MAX_ACTIVE_POPUPS && (
-                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-[12px] text-amber-700">
-                  <AlertCircle size={14} />
-                  활성 팝업은 최대 {MAX_ACTIVE_POPUPS}개입니다. 저장하려면 비활성으로 전환하세요.
-                </div>
-              )}
 
               <div className="pb-4" />
             </div>
@@ -384,7 +352,7 @@ export default function AdminPopupsPage() {
                 취소
               </button>
               <button onClick={handleSave} disabled={saving}
-                className="flex-[2] h-12 px-8 rounded-xl bg-[#3182F6] text-white text-[15px] font-bold active:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2">
+                className="flex-2 h-12 px-8 rounded-xl bg-[#3182F6] text-white text-[15px] font-bold active:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2">
                 {saving && <Loader2 size={16} className="animate-spin" />}
                 {editingId ? "수정하기" : "추가하기"}
               </button>
@@ -393,7 +361,6 @@ export default function AdminPopupsPage() {
         </div>
       )}
 
-      {/* 토스트 */}
       {toast && (
         <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold text-white ${toast.ok ? "bg-[#191F28]" : "bg-red-500"}`}>
           {toast.ok ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}

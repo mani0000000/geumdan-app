@@ -82,34 +82,19 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
 }
 
 export default function BannerCarousel({ banners }: Props) {
-  const n = banners.length;
-  const loop = n > 1;
-
-  // 무한 루프: [마지막 클론, ...원본, 첫 클론]. 실제 시작은 index 1.
-  const slides = loop ? [banners[n - 1], ...banners, banners[0]] : banners;
-
-  const [index, setIndex] = useState(loop ? 1 : 0);
-  const [withTransition, setWithTransition] = useState(true);
-  const [drag, setDrag] = useState(0);
-
-  const startX = useRef<number | null>(null);
-  const dragging = useRef(false);
-  const paused = useRef(false);
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // 자동 재생
-  useEffect(() => {
-    if (!loop) return;
-    timerRef.current = setInterval(() => {
-      if (paused.current || dragging.current) return;
-      setWithTransition(true);
-      setIndex(i => i + 1);
-    }, AUTOPLAY_MS);
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [loop]);
+  useEffect(() => { setImgFailed(false); }, [current]);
+
+  const goTo = useCallback(
+    (idx: number) => setCurrent(((idx % banners.length) + banners.length) % banners.length),
+    [banners.length]
+  );
 
   useEffect(() => {
     return () => {
@@ -195,6 +180,23 @@ export default function BannerCarousel({ banners }: Props) {
       <div
         className="relative w-full h-48 md:h-60 lg:h-72 rounded-2xl overflow-hidden select-none"
       >
+        {/* 배경 그라디언트 — 항상 렌더 (이미지 로드 실패 시 fallback) */}
+        <div
+          className="absolute inset-0 transition-all duration-300"
+          style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
+        />
+        {/* 배경 이미지 — 그라디언트 위에 덮어쓰기, 실패 시 숨김 */}
+        {b.image_url && !imgFailed && (
+          <img
+            key={b.id}
+            src={b.image_url}
+            alt={b.title}
+            onError={() => setImgFailed(true)}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          />
+        )}
+
+        {/* 그라디언트 오버레이 */}
         <div
           className="flex h-full"
           style={{
