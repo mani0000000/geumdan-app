@@ -15,6 +15,7 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
+import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -169,9 +170,21 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
+      isFavoritePost(postId).then(setBookmarked);
     }
     load();
   }, [postId, isMock, router]);
+
+  const toggleBookmark = async () => {
+    if (!post) return;
+    if (bookmarked) {
+      setBookmarked(false);
+      await removeFavoritePost(postId);
+    } else {
+      setBookmarked(true);
+      await addFavoritePost({ post_id: postId, title: post.title, category: post.category });
+    }
+  };
 
   // 댓글 로드
   const loadComments = useCallback(async () => {
@@ -298,7 +311,7 @@ function DetailContent() {
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={() => setBookmarked(!bookmarked)} className="active:opacity-60">
+          <button onClick={toggleBookmark} className="active:opacity-60">
             <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
           </button>
           <button className="active:opacity-60">

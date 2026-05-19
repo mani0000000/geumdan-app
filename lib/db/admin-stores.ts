@@ -16,6 +16,10 @@ export interface AdminBuilding {
   has_data: boolean;
   categories: string[] | null;
   image_url: string | null;
+  photo_north: string | null;
+  photo_south: string | null;
+  photo_east: string | null;
+  photo_west: string | null;
 }
 
 export async function adminFetchBuildings(): Promise<AdminBuilding[]> {
@@ -45,6 +49,9 @@ export interface AdminFloor {
   label: string;
   has_restroom: boolean;
   restroom_code: string | null;
+  restroom_location: string | null;
+  restroom_gender: string | null;
+  restroom_note: string | null;
   sort_order: number;
 }
 
@@ -88,6 +95,10 @@ export interface AdminStore {
   show_in_openings: boolean | null;
   open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
   extra_info: Record<string, unknown> | null;
+  // 매장 브랜드 페이지 / 어드민
+  is_published?: boolean | null;
+  admin_password?: string | null;
+  admin_email?: string | null;
 }
 
 export async function adminFetchStores(buildingId: string): Promise<AdminStore[]> {
@@ -119,13 +130,24 @@ export interface AdminCoupon {
   discount: string;
   discount_type: "rate" | "amount";
   category: StoreCategory;
+  issued_date: string | null;
   expiry: string;
+  quantity: number | null;     // 총 발행 수량 (null = 무제한)
+  used_count: number;          // 사용 횟수
   color: string;
   active: boolean;
+  /** 값이 있으면 포인트 교환형 쿠폰 (NULL = 일반 매장 쿠폰) */
+  required_points: number | null;
+  /** 교환 수량 제한 (NULL = 무제한) */
+  stock: number | null;
 }
 
 export async function adminFetchCoupons(): Promise<AdminCoupon[]> {
   return adminApiGet<AdminCoupon>("store_coupons", { order: "expiry" });
+}
+
+export async function adminFetchCouponsByStore(storeId: string): Promise<AdminCoupon[]> {
+  return adminApiGet<AdminCoupon>("store_coupons", { order: "expiry", eq: `store_id=eq.${storeId}` });
 }
 
 export async function adminUpsertCoupon(c: AdminCoupon): Promise<void> {

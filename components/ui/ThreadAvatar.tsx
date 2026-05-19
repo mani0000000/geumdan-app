@@ -2,7 +2,7 @@
 
 interface ThreadAvatarProps {
   name: string;
-  src?: string;
+  src?: string | null;
   size?: number;
 }
 
