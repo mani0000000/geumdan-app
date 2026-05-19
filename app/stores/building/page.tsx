@@ -9,7 +9,9 @@ import type { BuildingRow } from "@/lib/db/buildings";
 
 const catEmoji: Record<StoreCategory, string> = {
   카페: "☕", 음식점: "🍽️", 편의점: "🏪", "병원/약국": "💊", 미용: "💇",
-  학원: "📚", 마트: "🛒", "헬스/운동": "💪", 반려동물: "🐾", 세탁: "👕", 기타: "🏢",
+  학원: "📚", 마트: "🛒", "헬스/운동": "💪", 반려동물: "🐾", 세탁: "👕",
+  베이커리: "🥐", 부동산: "🏘️", 스터디카페: "📖", 안경원: "👓", 꽃집: "💐",
+  기타: "🏢",
 }
 const catBg: Record<StoreCategory, string> = {
   카페: "bg-[#FEF3C7] text-[#92400E]", 음식점: "bg-[#FFF0E6] text-[#C2410C]",
@@ -17,6 +19,9 @@ const catBg: Record<StoreCategory, string> = {
   미용: "bg-[#FCE7F3] text-[#9D174D]", 학원: "bg-[#EDE9FE] text-[#5B21B6]",
   마트: "bg-[#D1FAE5] text-[#065F46]", "헬스/운동": "bg-[#E0F2FE] text-[#0369A1]",
   반려동물: "bg-[#FDF2F8] text-[#9D174D]", 세탁: "bg-[#EEF2FF] text-[#4338CA]",
+  베이커리: "bg-[#FEF3C7] text-[#9A3412]", 부동산: "bg-[#CCFBF1] text-[#115E59]",
+  스터디카페: "bg-[#F3E8FF] text-[#6B21A8]", 안경원: "bg-[#CFFAFE] text-[#155E75]",
+  꽃집: "bg-[#FCE7F3] text-[#9D174D]",
   기타: "bg-[#F3F4F6] text-[#374151]",
 };
 
