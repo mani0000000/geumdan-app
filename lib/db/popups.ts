@@ -10,17 +10,17 @@ export interface Popup {
   link_label: string;
   start_at?: string | null;
   end_at?: string | null;
-  active: boolean;
+  is_active: boolean;
   created_at: string;
 }
 
-// 노출 조건: active=true, (start_at NULL 또는 <= now), (end_at NULL 또는 >= now)
+// 노출 조건: is_active=true, (start_at NULL 또는 <= now), (end_at NULL 또는 >= now)
 export async function fetchActivePopups(): Promise<Popup[]> {
   const now = new Date().toISOString();
   const { data, error } = await supabase
     .from("popups")
     .select("*")
-    .eq("active", true)
+    .eq("is_active", true)
     .or(`start_at.is.null,start_at.lte.${now}`)
     .or(`end_at.is.null,end_at.gte.${now}`)
     .order("sort_order");

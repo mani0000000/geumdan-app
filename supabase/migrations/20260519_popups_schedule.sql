@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS popups (
   link_label  TEXT         NOT NULL DEFAULT '자세히 보기',
   start_at    TIMESTAMPTZ,
   end_at      TIMESTAMPTZ,
-  active      BOOLEAN      NOT NULL DEFAULT true,
+  is_active      BOOLEAN      NOT NULL DEFAULT true,
   created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 
@@ -17,5 +17,5 @@ CREATE TABLE IF NOT EXISTS popups (
 ALTER TABLE popups ADD COLUMN IF NOT EXISTS start_at TIMESTAMPTZ;
 ALTER TABLE popups ADD COLUMN IF NOT EXISTS end_at   TIMESTAMPTZ;
 
-CREATE INDEX IF NOT EXISTS popups_active_schedule_idx
-  ON popups (active, start_at, end_at);
+CREATE INDEX IF NOT EXISTS popups_is_active_schedule_idx
+  ON popups (is_active, start_at, end_at);
