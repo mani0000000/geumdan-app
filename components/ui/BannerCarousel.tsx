@@ -27,11 +27,11 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           alt={b.title}
           draggable={false}
           loading={eager ? "eager" : "lazy"}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 z-0 w-full h-full object-cover"
         />
       ) : (
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 z-0"
           style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
         />
       )}
@@ -46,7 +46,7 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
 
       {/* 배지 */}
       {b.badge && (
-        <div className="absolute top-3.5 left-3.5">
+        <div className="absolute top-3.5 left-3.5 z-10">
           <span
             className="text-[11px] font-black px-2.5 py-1 rounded-full shadow"
             style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}
@@ -56,8 +56,13 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
         </div>
       )}
 
-      {/* 텍스트 + 링크 (title은 프론트 노출 안 함 — DB/어드민에는 유지) */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+      {/* 타이틀 + 부제목 + 링크 */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-4 pb-4">
+        {b.title && (
+          <p className="text-[18px] font-black text-white leading-tight drop-shadow">
+            {b.title}
+          </p>
+        )}
         {b.subtitle && (
           <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
             {b.subtitle}

@@ -35,6 +35,19 @@ const EMPTY_FORM = {
   starts_at: new Date().toISOString().slice(0, 16),
   ends_at:   new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 16),
   active: true,
+  page_type: "all" as "home" | "stores" | "all",
+};
+
+const PAGE_TYPE_OPTIONS: { value: "all" | "home" | "stores"; label: string }[] = [
+  { value: "all", label: "전체" },
+  { value: "home", label: "홈" },
+  { value: "stores", label: "상가" },
+];
+
+const PAGE_TYPE_BADGE: Record<"all" | "home" | "stores", { label: string; cls: string }> = {
+  home:   { label: "홈",   cls: "bg-blue-50 text-blue-600" },
+  stores: { label: "상가", cls: "bg-green-50 text-green-600" },
+  all:    { label: "전체", cls: "bg-gray-100 text-gray-500" },
 };
 
 type FormData = typeof EMPTY_FORM;
@@ -115,6 +128,7 @@ function BannerRow({
         <div className="flex items-start gap-2 flex-wrap">
           <span className="text-[12px] font-bold text-gray-400">#{b.sort_order}</span>
           <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{b.title}</p>
+          <PageTypeBadge pageType={b.page_type ?? "all"} />
           <StatusBadge banner={b} />
         </div>
         {b.subtitle && <p className="text-[12px] text-gray-500 mt-0.5 truncate">{b.subtitle}</p>}
@@ -147,6 +161,15 @@ function BannerRow({
         </button>
       </div>
     </div>
+  );
+}
+
+function PageTypeBadge({ pageType }: { pageType: "home" | "stores" | "all" }) {
+  const info = PAGE_TYPE_BADGE[pageType] ?? PAGE_TYPE_BADGE.all;
+  return (
+    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${info.cls}`}>
+      {info.label}
+    </span>
   );
 }
 
@@ -208,6 +231,7 @@ export default function AdminBannersPage() {
       starts_at: toLocalInput(b.starts_at),
       ends_at:   toLocalInput(b.ends_at),
       active: b.active,
+      page_type: (b.page_type ?? "all") as "home" | "stores" | "all",
     });
     setEditingId(b.id);
     setShowForm(true);
@@ -455,6 +479,26 @@ export default function AdminBannersPage() {
                   placeholder="자세히 보기"
                   className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
                 />
+              </div>
+
+              {/* 노출 페이지 */}
+              <div className="space-y-2">
+                <label className="text-[12px] font-bold text-gray-600">노출 페이지</label>
+                <div className="flex items-center gap-2">
+                  {PAGE_TYPE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setForm(f => ({ ...f, page_type: opt.value }))}
+                      className={`flex-1 h-11 rounded-xl text-[13px] font-bold border-2 transition-colors ${
+                        form.page_type === opt.value
+                          ? "bg-[#3182F6] text-white border-[#3182F6]"
+                          : "bg-white text-gray-600 border-gray-200"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* 노출 기간 */}

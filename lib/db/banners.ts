@@ -16,18 +16,25 @@ export interface Banner {
   starts_at: string;
   ends_at: string;
   active: boolean;
+  page_type: "home" | "stores" | "all";
   created_at: string;
 }
 
-export async function fetchActiveBanners(): Promise<Banner[]> {
+export async function fetchActiveBanners(
+  pageType?: "home" | "stores"
+): Promise<Banner[]> {
   const now = new Date().toISOString();
-  const { data, error } = await supabase
+  let query = supabase
     .from("banners")
     .select("*")
     .eq("active", true)
     .lte("starts_at", now)
     .gte("ends_at", now)
     .order("sort_order");
+  if (pageType) {
+    query = query.in("page_type", [pageType, "all"]);
+  }
+  const { data, error } = await query;
   if (error) return [];
   return (data ?? []) as Banner[];
 }
