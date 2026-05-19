@@ -3,26 +3,58 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone,
 } from "lucide-react";
 
-const NAV = [
-  { href: "/admin/banners",    icon: Image,         label: "배너 관리"     },
-  { href: "/admin/stores",     icon: Building2,     label: "상가건물 관리" },
-  { href: "/admin/coupons",    icon: Tag,           label: "쿠폰 관리"    },
-  { href: "/admin/openings",   icon: Store,         label: "신규오픈 관리" },
-  { href: "/admin/pharmacy",   icon: Pill,          label: "약국 관리"     },
-  { href: "/admin/emergency",  icon: Siren,         label: "응급실 관리"   },
-  { href: "/admin/community",  icon: MessageSquare, label: "커뮤니티 관리" },
-  { href: "/admin/news",       icon: Newspaper,     label: "소식 관리"     },
-  { href: "/admin/realestate", icon: TrendingUp,    label: "부동산 시세"   },
-  { href: "/admin/widgets",    icon: LayoutGrid,    label: "홈 위젯 구성"  },
-  { href: "/admin/marts",      icon: ShoppingBag,   label: "주변 마트 관리" },
-  { href: "/admin/places",     icon: MapPin,        label: "가볼만한곳 관리"},
-  { href: "/admin/keywords",   icon: Search,        label: "검색어 관리"   },
-  { href: "/admin/sports",      icon: Trophy,        label: "스포츠 관리"   },
-  { href: "/admin/instagram",  icon: Camera,        label: "인스타그램 관리"},
-  { href: "/admin/settings",   icon: Settings,      label: "앱 설정"       },
+const NAV_GROUPS = [
+  {
+    title: "홈화면 관리",
+    items: [
+      { href: "/admin/banners", icon: Image,      label: "배너 관리"    },
+      { href: "/admin/popups",  icon: Megaphone,  label: "팝업 관리"    },
+      { href: "/admin/widgets", icon: LayoutGrid, label: "홈 위젯 구성" },
+    ],
+  },
+  {
+    title: "상가 및 매장 정보 관리",
+    items: [
+      { href: "/admin/stores",   icon: Building2, label: "건물·층·매장 관리" },
+      { href: "/admin/openings", icon: Store,     label: "신규오픈 관리"     },
+      { href: "/admin/coupons",  icon: Tag,       label: "쿠폰 관리"         },
+    ],
+  },
+  {
+    title: "콘텐츠 관리",
+    items: [
+      { href: "/admin/news",      icon: Newspaper,     label: "소식 관리"     },
+      { href: "/admin/community", icon: MessageSquare, label: "커뮤니티 관리" },
+      { href: "/admin/sports",    icon: Trophy,        label: "스포츠 관리"   },
+    ],
+  },
+  {
+    title: "회원 관리",
+    items: [
+      { href: "/admin/members", icon: Users, label: "회원 관리" },
+    ],
+  },
+  {
+    title: "지역정보 관리",
+    items: [
+      { href: "/admin/pharmacy",   icon: Pill,       label: "약국 관리"      },
+      { href: "/admin/emergency",  icon: Siren,      label: "응급실 관리"    },
+      { href: "/admin/realestate", icon: TrendingUp, label: "부동산 시세"    },
+      { href: "/admin/marts",      icon: ShoppingBag,label: "주변 마트 관리" },
+      { href: "/admin/places",     icon: MapPin,     label: "가볼만한곳 관리"},
+    ],
+  },
+  {
+    title: "운영 관리",
+    items: [
+      { href: "/admin/keywords",  icon: Search,   label: "검색어 관리"   },
+      { href: "/admin/instagram", icon: Camera,   label: "인스타그램 관리"},
+      { href: "/admin/settings",  icon: Settings, label: "앱 설정"       },
+    ],
+  },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -62,18 +94,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </div>
           <p className="text-white/40 text-[11px] mt-1">관리자 전용</p>
         </div>
-        <nav className="flex-1 min-h-0 py-4 space-y-0.5 px-2 overflow-y-auto">
-          {NAV.map(({ href, icon: Icon, label }) => {
-            const active = pathname.startsWith(href);
-            return (
-              <Link key={href} href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all
-                  ${active ? "bg-[#3182F6] text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}>
-                <Icon size={16} />{label}
-                {active && <ChevronRight size={14} className="ml-auto opacity-70" />}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 min-h-0 py-4 px-2 overflow-y-auto">
+          {NAV_GROUPS.map(group => (
+            <div key={group.title} className="mb-4">
+              <p className="px-3 mb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+                {group.title}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map(({ href, icon: Icon, label }) => {
+                  const active = pathname.startsWith(href);
+                  return (
+                    <Link key={href} href={href}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold transition-all
+                        ${active ? "bg-[#3182F6] text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}>
+                      <Icon size={16} />{label}
+                      {active && <ChevronRight size={14} className="ml-auto opacity-70" />}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         <div className="px-4 py-4 border-t border-white/10">
           <button onClick={logout}
@@ -108,18 +149,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <X size={20} />
               </button>
             </div>
-            <nav className="flex-1 min-h-0 py-4 space-y-1 px-3 overflow-y-auto">
-              {NAV.map(({ href, icon: Icon, label }) => {
-                const active = pathname.startsWith(href);
-                return (
-                  <Link key={href} href={href} onClick={() => setDrawerOpen(false)}
-                    className={`flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-semibold transition-all
-                      ${active ? "bg-[#3182F6] text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}>
-                    <Icon size={17} />{label}
-                    {active && <ChevronRight size={14} className="ml-auto opacity-70" />}
-                  </Link>
-                );
-              })}
+            <nav className="flex-1 min-h-0 py-4 px-3 overflow-y-auto">
+              {NAV_GROUPS.map(group => (
+                <div key={group.title} className="mb-4">
+                  <p className="px-3 mb-1.5 text-[10px] font-bold text-white/30 uppercase tracking-wider">
+                    {group.title}
+                  </p>
+                  <div className="space-y-1">
+                    {group.items.map(({ href, icon: Icon, label }) => {
+                      const active = pathname.startsWith(href);
+                      return (
+                        <Link key={href} href={href} onClick={() => setDrawerOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-3 rounded-xl text-[14px] font-semibold transition-all
+                            ${active ? "bg-[#3182F6] text-white" : "text-white/60 hover:bg-white/10 hover:text-white"}`}>
+                          <Icon size={17} />{label}
+                          {active && <ChevronRight size={14} className="ml-auto opacity-70" />}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
             <div className="px-4 py-4 border-t border-white/10">
               <button onClick={logout}
