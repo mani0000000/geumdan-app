@@ -1,10 +1,11 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2 } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
 import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -45,12 +46,16 @@ export default function WritePage() {
   const canSubmit =
     category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
 
+  // 이미지는 /api/upload 로 보낸다 (압축된 base64 폴백 가능).
+  // 영상은 Vercel 4.5MB 본문 한도를 우회하기 위해 VideoUpload 컴포넌트가
+  // Supabase Storage 로 직접 올린다 — 여기서는 처리하지 않는다.
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
     setUploading(true);
     setError("");
     try {
       for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) continue;
         const form = new FormData();
         form.append("file", file);
         form.append("folder", "community");
@@ -59,11 +64,7 @@ export default function WritePage() {
         if (!res.ok || !json.url) {
           throw new Error(json.error ?? "업로드 실패");
         }
-        if (file.type.startsWith("video/")) {
-          setVideos(prev => [...prev, json.url!]);
-        } else {
-          setImages(prev => [...prev, json.url!]);
-        }
+        setImages(prev => [...prev, json.url!]);
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "파일 업로드에 실패했습니다.");
@@ -166,8 +167,8 @@ export default function WritePage() {
             className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
-        {/* Media previews */}
-        {(images.length > 0 || videos.length > 0 || uploading) && (
+        {/* Image previews */}
+        {(images.length > 0 || uploading) && (
           <div className="px-4 py-3 border-t border-[#f5f5f7] flex flex-wrap gap-2">
             {images.map((src, i) => (
               <div key={`img-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
@@ -181,21 +182,6 @@ export default function WritePage() {
                 </button>
               </div>
             ))}
-            {videos.map((src, i) => (
-              <div key={`vid-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-black">
-                <video src={`${src}#t=0.1`} preload="metadata" muted playsInline
-                  className="w-full h-full object-cover" />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Play size={20} className="text-white fill-white/80" />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setVideos(prev => prev.filter((_, idx) => idx !== i))}
-                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
-                  <X size={11} />
-                </button>
-              </div>
-            ))}
             {uploading && (
               <div className="w-20 h-20 rounded-xl bg-[#f5f5f7] flex items-center justify-center">
                 <Loader2 size={20} className="text-[#0071e3] animate-spin" />
@@ -204,13 +190,19 @@ export default function WritePage() {
           </div>
         )}
 
+        {/* Video upload — Supabase Storage 직접 업로드(Vercel 4.5MB 한도 우회) */}
+        <div className="border-t border-[#f5f5f7] px-5 py-4 space-y-2">
+          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
+          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
+        </div>
+
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
           <div className="flex items-center gap-3">
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*,video/*"
+              accept="image/*"
               multiple
               className="hidden"
               onChange={e => handleFiles(e.target.files)}
