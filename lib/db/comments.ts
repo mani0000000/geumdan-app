@@ -24,13 +24,16 @@
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 export interface DBComment {
   id: string;
   postId: string;
+  postTitle?: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  authorUserId?: string | null;
   content: string;
   likeCount: number;
   isAnonymous: boolean;
@@ -38,21 +41,23 @@ export interface DBComment {
 }
 
 function isConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  return isSupabaseConfigured;
 }
 
+const COMMENT_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
+
 function rowToComment(row: Record<string, unknown>): DBComment {
+  const isAnon = Boolean(row.is_anonymous);
   return {
     id: row.id as string,
     postId: row.post_id as string,
-    author: (row.is_anonymous ? '익명' : row.author) as string,
+    author: (isAnon ? '익명' : row.author) as string,
     authorDong: row.author_dong as string,
+    authorAvatarUrl: isAnon ? null : ((row.author_avatar_url as string | null) ?? null),
+    authorUserId: (row.user_id as string | null) ?? null,
     content: row.content as string,
     likeCount: (row.like_count as number) ?? 0,
-    isAnonymous: (row.is_anonymous as boolean) ?? false,
+    isAnonymous: isAnon,
     createdAt: row.created_at as string,
   };
 }
@@ -63,10 +68,17 @@ export async function fetchComments(postId: string): Promise<DBComment[]> {
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .select('*')
+      .select(COMMENT_SELECT)
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    if (error) throw error;
+    if (error) {
+      const fb = await supabase
+        .from('community_comments')
+        .select('*')
+        .eq('post_id', postId)
+        .order('created_at', { ascending: true });
+      return (fb.data ?? []).map(row => rowToComment(row as Record<string, unknown>));
+    }
     return (data ?? []).map(row => rowToComment(row as Record<string, unknown>));
   } catch (e) {
     console.error('[comments] fetchComments error:', e);
@@ -79,6 +91,8 @@ export interface CommentInput {
   postId: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  userId?: string | null;
   content: string;
   isAnonymous: boolean;
 }
@@ -94,16 +108,66 @@ export async function createComment(
         post_id: input.postId,
         author: input.author,
         author_dong: input.authorDong,
+        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
+        user_id: input.userId ?? null,
         content: input.content,
         is_anonymous: input.isAnonymous,
       })
-      .select()
+      .select(COMMENT_SELECT)
       .single();
     if (error) throw error;
     return rowToComment(data as Record<string, unknown>);
   } catch (e) {
     console.error('[comments] createComment error:', e);
     return null;
+  }
+}
+
+// ── 수정 ─────────────────────────────────────────────────────
+export async function updateComment(id: string, content: string): Promise<boolean> {
+  if (!isConfigured()) return false;
+  try {
+    const { error } = await supabase
+      .from('community_comments')
+      .update({ content })
+      .eq('id', id);
+    if (error) throw error;
+    return true;
+  } catch (e) {
+    console.error('[comments] updateComment error:', e);
+    return false;
+  }
+}
+
+// ── 내가 쓴 댓글 ────────────────────────────────────────────
+export interface MyCommentWithPost extends DBComment {
+  postTitle: string;
+  postCategory: string;
+}
+
+export async function fetchMyComments(userId: string, limit = 100): Promise<MyCommentWithPost[]> {
+  if (!isConfigured() || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('community_comments')
+      .select('*, community_posts!inner(title,category)')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(row => {
+      const r = row as Record<string, unknown>;
+      const c = rowToComment(r);
+      const post = r.community_posts as { title?: string; category?: string } | null;
+      return {
+        ...c,
+        postTitle: post?.title ?? '(원글 없음)',
+        postCategory: post?.category ?? '',
+      };
+    });
+  } catch (e) {
+    console.error('[comments] fetchMyComments error:', e);
+    return [];
   }
 }
 

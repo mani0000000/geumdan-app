@@ -3,9 +3,12 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapPin, RefreshCw, ChevronDown, ChevronUp, Star,
   Zap, Accessibility, Train, Navigation, Bus, Search, Clock,
-  Car, Phone, Globe, ChevronRight, X,
+  Car, Phone, Globe, ChevronRight, X, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { fetchPublishedPlaces, CATEGORY_META, AREAS, type Place, type PlaceCategory, type PlaceArea } from "@/lib/db/places";
+import {
+  getFavoritePlaces, addFavoritePlace, removeFavoritePlace,
+} from "@/lib/db/placeFavorites";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -13,19 +16,26 @@ import {
   hasBusApiKey,
   haversineM,
   GEUMDAN_BUS_STATIONS,
-  fetchNearbyStopsFromTago, fetchNearbyStopsFromApi, fetchNearbyStopsWide,
-  fetchArrivalsByStationId, fetchArrivalsByNodeId, osmRoutesToArrivals,
+  fetchNearbyStopsWithArrivals,
+  fetchNearbyStopsFromTago,
+  fetchArrivalsByNodeId, fetchArrivalsByStationId, osmRoutesToArrivals,
   fetchBusLocations, fetchRouteDetail, fetchStationsByRoute,
   searchRouteByNo, fetchRouteDetailFromTago, fetchStationsByRouteTago,
+  searchStationsByName, searchStationsByNameOsm, searchRoutesByQuery,
+  fetchBusLocationsTago, formatBusTime,
+  type RouteSearchResult,
 } from "@/lib/api/bus";
 import {
-  getAllSubwayStations, fetchSubwayArrivals, hasSubwayKey,
-  estimateNextArrivals,
-  type SubwayStationWithDist, type SubwayArrival,
+  getAllSubwayStations, findNearbySubwayStations, fetchSubwayArrivals, hasSubwayKey,
+  estimateNextArrivals, currentDayType, dayTimetable,
+  type SubwayStationWithDist, type SubwayArrival, type SubwayDayType,
 } from "@/lib/api/subway";
-import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
+import type { BusArrival, RouteDetail, RouteStation, BusLocation, NearbyStop } from "@/lib/api/bus";
 
 type Tab = "가볼만한곳" | "버스" | "지하철";
+
+// 검단신도시 중심 좌표 — GPS 미취득/실패 시 폴백 기준점
+const GEUMDAN_DEFAULT = { lat: 37.5777, lng: 126.7209 } as const;
 
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
@@ -43,31 +53,45 @@ function distLabel(m: number) {
   return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
 }
 
-// localStorage helpers for favorites persistence
-function loadFavSet(key: string): Set<string> {
-  try { return new Set(JSON.parse(localStorage.getItem(key) ?? "[]")); } catch { return new Set(); }
+// localStorage helpers — 순서가 의미 있는 즐겨찾기 ID 목록
+function loadFavList(key: string): string[] {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) ?? "[]");
+    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
+  } catch { return []; }
 }
-function saveFavSet(key: string, set: Set<string>) {
-  try { localStorage.setItem(key, JSON.stringify([...set])); } catch { /* ignore */ }
+function saveFavList(key: string, list: string[]) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch { /* ignore */ }
+}
+
+// 즐겨찾기 메타데이터 (id → { name, ... }) — 마이페이지 등에서 이름 표시용
+function saveFavMeta(metaKey: string, id: string, value: Record<string, unknown> | null) {
+  if (typeof window === "undefined") return;
+  try {
+    const map = JSON.parse(localStorage.getItem(metaKey) ?? "{}") as Record<string, Record<string, unknown>>;
+    if (value === null) delete map[id];
+    else map[id] = value;
+    localStorage.setItem(metaKey, JSON.stringify(map));
+  } catch { /* ignore */ }
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
 function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
   if (!live || min === -1) {
     return (
-      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
-        <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
+      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[64px]">
+        <span className="text-[#6e6e73] text-[16px] font-bold">--</span>
       </div>
     );
   }
   const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
   return (
-    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
-      {min <= 0
-        ? <span className="text-white text-[12px] font-bold">곧도착</span>
+    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[68px]`}>
+      {min <= 1
+        ? <span className="text-white text-[13px] font-extrabold">곧 도착 예정</span>
         : <>
-            <span className="text-white text-[21px] font-black leading-none">{min}</span>
-            <span className="text-white/80 text-[11px] block leading-none mt-0.5">분 후</span>
+            <span className="text-white text-[22px] font-black leading-none">{min}</span>
+            <span className="text-white/80 text-[12px] block leading-none mt-0.5">분 후</span>
           </>
       }
     </div>
@@ -76,7 +100,7 @@ function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
 
 function SkeletonStop() {
   return (
-    <div className="bg-white rounded-2xl p-4 space-y-3">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 space-y-3">
       <div className="flex items-center gap-3">
         <Skeleton className="w-10 h-10 rounded-xl" />
         <div className="flex-1 space-y-2">
@@ -104,9 +128,15 @@ function SkeletonStop() {
 function BusDetailSheet({
   arrival,
   onClose,
+  isFav,
+  onToggleFav,
+  onSaveMeta,
 }: {
   arrival: BusArrival;
   onClose: () => void;
+  isFav: boolean;
+  onToggleFav: () => void;
+  onSaveMeta?: (endStation: string) => void;
 }) {
   const [detail, setDetail] = useState<RouteDetail | null>(null);
   const [stations, setStations] = useState<RouteStation[]>([]);
@@ -114,53 +144,125 @@ function BusDetailSheet({
   const [loading, setLoading] = useState(true);
   const [noRouteData, setNoRouteData] = useState(false);
   const [dirTab, setDirTab] = useState<0 | 1>(0);
+  // 실시간 위치 갱신을 위해 어떤 API로 어떤 routeId를 쓰는지 기억
+  const locSourceRef = useRef<{ kind: "incheon" | "tago"; routeId: string } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setNoRouteData(false);
+    locSourceRef.current = null;
 
     async function load() {
+      let d: RouteDetail | null = null;
+      let s: RouteStation[] = [];
+      let l: BusLocation[] = [];
+      let locSrc: { kind: "incheon" | "tago"; routeId: string } | null = null;
+
+      // TAGO 노선 검색을 인천 API 호출과 동시에 시작 (속도 개선)
+      const tagoSearchPromise: Promise<string | null> = arrival.routeNo
+        ? searchRouteByNo(arrival.routeNo)
+        : Promise.resolve(null);
+
+      // 1) 인천 routeId가 있으면 인천 API + TAGO 검색 병렬 시도
       if (arrival.routeId) {
-        const [d, s, l] = await Promise.all([
-          fetchRouteDetail(arrival.routeId),
-          fetchStationsByRoute(arrival.routeId),
-          fetchBusLocations(arrival.routeId),
+        const [[icDetail, icStations, icLocations], tagoRouteId] = await Promise.all([
+          Promise.all([
+            fetchRouteDetail(arrival.routeId),
+            fetchStationsByRoute(arrival.routeId),
+            fetchBusLocations(arrival.routeId),
+          ]),
+          tagoSearchPromise,
         ]);
         if (cancelled) return;
-        setDetail(d); setStations(s); setLocations(l);
-        setLoading(false);
-        if (!d && s.length === 0) setNoRouteData(true);
-      } else if (arrival.routeNo) {
-        const tagoRouteId = await searchRouteByNo(arrival.routeNo);
-        if (cancelled) return;
-        if (tagoRouteId) {
-          const [d, s] = await Promise.all([
+        d = icDetail; s = icStations; l = icLocations;
+        if (icDetail || icStations.length > 0 || icLocations.length > 0) {
+          locSrc = { kind: "incheon", routeId: arrival.routeId };
+        }
+
+        // 2) 인천 API가 비어있으면 이미 검색해둔 tagoRouteId로 바로 보강
+        if ((!d || s.length === 0 || l.length === 0) && tagoRouteId) {
+          const [tagoDetail, tagoStations, tagoLocations] = await Promise.all([
             fetchRouteDetailFromTago(tagoRouteId),
             fetchStationsByRouteTago(tagoRouteId),
+            fetchBusLocationsTago(tagoRouteId),
           ]);
           if (cancelled) return;
-          setDetail(d); setStations(s); setLocations([]);
-          setLoading(false);
-          if (!d && s.length === 0) setNoRouteData(true);
-        } else {
-          setLoading(false);
-          setNoRouteData(true);
+          if (!d) d = tagoDetail;
+          if (s.length === 0) s = tagoStations;
+          if (l.length === 0) {
+            l = tagoLocations;
+            if (!locSrc || locSrc.kind === "incheon") {
+              locSrc = { kind: "tago", routeId: tagoRouteId };
+            }
+          }
         }
-      } else {
-        setLoading(false);
-        setNoRouteData(true);
+      } else if (arrival.routeNo) {
+        // routeId 없이 routeNo만 있는 경우: TAGO 검색 결과 대기
+        const tagoRouteId = await tagoSearchPromise;
+        if (cancelled) return;
+        if (tagoRouteId) {
+          const [tagoDetail, tagoStations, tagoLocations] = await Promise.all([
+            fetchRouteDetailFromTago(tagoRouteId),
+            fetchStationsByRouteTago(tagoRouteId),
+            fetchBusLocationsTago(tagoRouteId),
+          ]);
+          if (cancelled) return;
+          d = tagoDetail; s = tagoStations; l = tagoLocations;
+          locSrc = { kind: "tago", routeId: tagoRouteId };
+        }
+      }
+
+      if (cancelled) return;
+      setDetail(d); setStations(s); setLocations(l);
+      setLoading(false);
+      if (!d && s.length === 0) setNoRouteData(true);
+      else {
+        locSourceRef.current = locSrc;
+        // 노선 종착역 정보를 부모에 전달 → 즐겨찾기 메타 저장
+        if (d?.endStation) onSaveMeta?.(d.endStation);
       }
     }
 
     load();
     return () => { cancelled = true; };
-  }, [arrival.routeId, arrival.routeNo]);
+  }, [arrival.routeId, arrival.routeNo, onSaveMeta]);
+
+  // 바텀시트가 열려 있는 동안 바디 스크롤 잠금 (모바일 스크롤 전파 방지)
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  // 30초마다 실시간 버스 위치 자동 갱신 (탭 활성 상태일 때만)
+  useEffect(() => {
+    if (loading || noRouteData) return;
+    const id = setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const src = locSourceRef.current;
+      if (!src) return;
+      const fetcher = src.kind === "incheon" ? fetchBusLocations : fetchBusLocationsTago;
+      fetcher(src.routeId).then(l => {
+        if (locSourceRef.current?.routeId === src.routeId) setLocations(l);
+      }).catch(() => { /* ignore */ });
+    }, 30000);
+    return () => clearInterval(id);
+  }, [loading, noRouteData]);
 
   const upStations   = stations.filter(s => s.direction === 0);
   const downStations = stations.filter(s => s.direction === 1);
   const curStations  = dirTab === 0 ? upStations : downStations;
-  const busesOnDir   = locations.filter(l => l.direction === dirTab);
+
+  // 정류장 seq→direction 맵으로 버스 위치 방향 보완
+  // API가 updowncd를 누락하거나 0으로 반환할 때도 하행 버스가 표시되도록 함
+  const seqDirMap = new Map<number, 0 | 1>();
+  stations.forEach(st => seqDirMap.set(st.seq, st.direction));
+  const enrichedLocations = locations.map(loc => {
+    const stDir = seqDirMap.get(loc.stationSeq);
+    return stDir !== undefined ? { ...loc, direction: stDir } : loc;
+  });
+  const busesOnDir   = enrichedLocations.filter(l => l.direction === dirTab);
   const busSeqs      = new Set(busesOnDir.map(b => b.stationSeq));
 
   return (
@@ -187,9 +289,16 @@ function BusDetailSheet({
                 </span>
               )}
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
-              <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
-            </button>
+            <div className="flex items-center gap-1">
+              <button onClick={onToggleFav}
+                className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60"
+                aria-label={isFav ? "즐겨찾기 해제" : "즐겨찾기 추가"}>
+                <Star size={16} className={isFav ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#86868b]"} />
+              </button>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+                <span className="text-[#6e6e73] text-[16px] font-bold">✕</span>
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -207,13 +316,13 @@ function BusDetailSheet({
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
                   <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">상행 첫차/막차</p>
                   <p className="text-[13px] font-bold text-[#1d1d1f]">
-                    {detail.upFirstTime || "-"} / {detail.upLastTime || "-"}
+                    {formatBusTime(detail.upFirstTime)} / {formatBusTime(detail.upLastTime)}
                   </p>
                 </div>
                 <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2.5">
                   <p className="text-[11px] text-[#6e6e73] font-medium mb-0.5">하행 첫차/막차</p>
                   <p className="text-[13px] font-bold text-[#1d1d1f]">
-                    {detail.downFirstTime || "-"} / {detail.downLastTime || "-"}
+                    {formatBusTime(detail.downFirstTime)} / {formatBusTime(detail.downLastTime)}
                   </p>
                 </div>
               </div>
@@ -246,7 +355,7 @@ function BusDetailSheet({
         )}
 
         {/* 정류장 목록 */}
-        <div className="overflow-y-auto flex-1 px-4 py-3">
+        <div className="overflow-y-auto overscroll-contain flex-1 px-4 py-3" style={{ WebkitOverflowScrolling: "touch" }}>
           {loading ? (
             <div className="space-y-3">
               {[1,2,3,4,5].map(i => (
@@ -257,54 +366,226 @@ function BusDetailSheet({
               ))}
             </div>
           ) : noRouteData ? (
-            <div className="py-12 text-center">
+            <div className="py-10 text-center">
               <Bus size={28} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] text-[#6e6e73]">노선 정보 없음</p>
-              <p className="text-[12px] text-[#86868b] mt-1">공공 API에서 해당 노선을 찾을 수 없습니다</p>
+              <p className="text-[14px] font-semibold text-[#424245]">
+                {arrival.routeNo}번 {arrival.destination !== "종점" && arrival.destination !== "방향 미상" ? `· ${arrival.destination} 방면` : ""}
+              </p>
+              <p className="text-[12px] text-[#86868b] mt-1.5">상세 노선 정보를 불러오지 못했습니다</p>
+              <p className="text-[11px] text-[#a1a1a6] mt-0.5">잠시 후 새로고침해 주세요</p>
             </div>
           ) : curStations.length === 0 ? (
-            <div className="py-12 text-center">
-              <p className="text-[14px] text-[#6e6e73]">정류장 정보를 불러올 수 없습니다</p>
+            <div className="py-16 flex flex-col items-center gap-2">
+              <Bus size={32} className="text-[#D1D5DB]" />
+              <p className="text-[15px] font-semibold text-[#6e6e73]">
+                {dirTab === 1 ? "하행 방면" : "상행 방면"} 버스 정보 없음
+              </p>
+              <p className="text-[12px] text-[#86868b]">이 방향의 정류장 정보가 제공되지 않습니다</p>
             </div>
           ) : (
-            <div className="relative">
-              {/* 수직선 */}
-              <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#d2d2d7]" />
-              <div className="space-y-0">
-                {curStations.map((st, idx) => {
-                  const hasBus = busSeqs.has(st.seq);
-                  const isFirst = idx === 0;
-                  const isLast = idx === curStations.length - 1;
-                  return (
-                    <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
-                      <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
-                        hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
-                        (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
-                      }`}>
-                        {hasBus && <span className="text-[8px]">🚌</span>}
-                      </div>
-                      <div className="flex-1 flex items-center justify-between">
-                        <span className={`text-[13px] ${
-                          hasBus ? "font-bold text-[#F04452]" :
-                          (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
+            <>
+              {locations.length === 0 && (
+                <div className="mb-3 rounded-xl bg-[#f5f5f7] px-3 py-2 text-center text-[12px] text-[#6e6e73]">
+                  현재 운행 중인 버스 없음
+                </div>
+              )}
+              <div className="relative">
+                {/* 수직선 */}
+                <div className="absolute left-[7px] top-3 bottom-3 w-0.5 bg-[#d2d2d7]" />
+                <div className="space-y-0">
+                  {curStations.map((st, idx) => {
+                    const hasBus = busSeqs.has(st.seq);
+                    const isFirst = idx === 0;
+                    const isLast = idx === curStations.length - 1;
+                    return (
+                      <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
+                        <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
+                          hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
+                          (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
                         }`}>
-                          {st.stationName}
-                        </span>
-                        {hasBus && (
-                          <span className="text-[11px] font-bold text-white bg-[#F04452] px-2 py-0.5 rounded-full">
-                            여기
+                          {hasBus && <span className="text-[8px]">🚌</span>}
+                        </div>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className={`text-[13px] ${
+                            hasBus ? "font-bold text-[#F04452]" :
+                            (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
+                          }`}>
+                            {st.stationName}
                           </span>
-                        )}
+                          {hasBus && (
+                            <span className="text-[11px] font-bold text-white bg-[#F04452] px-2 py-0.5 rounded-full">
+                              여기
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </div>
     </>
+  );
+}
+
+// ─── 환승역 통합 카드 (김포공항·계양 등 — 같은 groupKey 의 노선을 한 카드로) ────
+// 노선별 다음 도착을 한 줄로 요약 표시한다. 자세한 시간표는 칩 탭 → 시간표 시트.
+function TransferHubCard({
+  hubName,
+  stations,
+  favSubways,
+  onToggleFav,
+  onOpenTimetable,
+}: {
+  hubName: string;
+  stations: (SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[];
+  favSubways: string[];
+  onToggleFav: (id: string) => void;
+  onOpenTimetable: (st: SubwayStationWithDist) => void;
+}) {
+  const [activeIdx, setActiveIdx] = useState(0);
+  if (stations.length === 0) return null;
+
+  const safeIdx = Math.min(activeIdx, stations.length - 1);
+  const active = stations[safeIdx];
+  const minDistM = stations.reduce((m, s) => Math.min(m, s.distM), Infinity);
+  const isFav = favSubways.includes(active.id);
+
+  const displayArrivals = active.arrivals.length > 0 ? active.arrivals : estimateNextArrivals(active.timetable);
+  const isEstimated = active.arrivals.length === 0;
+  const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
+  const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 3);
+  const lineShort = active.line.replace(/호선|철도/g, "").slice(0, 2);
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+      {/* 헤더 — 선택된 노선 컬러 (일반 역 카드와 동일 톤) */}
+      <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: active.lineColor }}>
+        <button onClick={() => onOpenTimetable(active)}
+          className="flex items-center gap-2.5 flex-1 min-w-0 active:opacity-70 text-left">
+          <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+            <span className="text-[13px] font-black leading-none" style={{ color: active.lineColor }}>{lineShort}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-extrabold text-[18px] leading-tight truncate">{hubName}</p>
+            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
+                <Navigation size={11} />{distLabel(minDistM)}
+              </span>
+              <span className="text-white/50">·</span>
+              <span className="text-white/85 text-[12px] font-medium">{stations.length}개 노선 환승역</span>
+            </div>
+          </div>
+        </button>
+        <button onClick={() => onToggleFav(active.id)} className="p-1.5 active:opacity-60 shrink-0">
+          <Star size={20}
+            className={isFav ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
+        </button>
+      </div>
+
+      {/* 노선별 탭 — 각 노선 색상 적용 */}
+      <div className="flex gap-1.5 px-3 pt-3 pb-2.5 overflow-x-auto scrollbar-hide border-b border-[#f5f5f7]">
+        {stations.map((st, idx) => {
+          const isActive = idx === safeIdx;
+          const label = st.shortLineLabel ?? st.line;
+          return (
+            <button
+              key={st.id}
+              onClick={() => setActiveIdx(idx)}
+              className="shrink-0 h-8 px-3 rounded-full text-[13px] font-bold flex items-center gap-1.5 border-2 transition-colors"
+              style={isActive
+                ? { background: st.lineColor, borderColor: st.lineColor, color: "#fff" }
+                : { background: "transparent", borderColor: st.lineColor, color: st.lineColor }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: isActive ? "#fff" : st.lineColor }} />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 도착 정보 헤더 */}
+      <div className="px-4 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+        <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
+        <div className="flex items-center gap-2">
+          {isEstimated && <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>}
+          {(() => {
+            const t = dayTimetable(active.timetable);
+            return t.intervalMin > 0 ? (
+              <span className="text-[11px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+            ) : null;
+          })()}
+        </div>
+      </div>
+
+      {/* 2열 도착 */}
+      {active.loadingArrivals ? (
+        <div className="grid grid-cols-2 gap-2 p-3">
+          {[0,1].map(i => <div key={i} className="h-20 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+        </div>
+      ) : displayArrivals.length === 0 ? (
+        <p className="px-3 py-4 text-[14px] text-[#6e6e73] text-center">운행 종료</p>
+      ) : (
+        <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+          {[
+            { label: active.timetable.upDirection, arrivals: upArrivals },
+            { label: active.timetable.downDirection, arrivals: downArrivals },
+          ].map(({ label, arrivals: dirArrivals }, col) => (
+            <div key={col} className="px-3 py-3">
+              <div className="flex items-center gap-0.5 mb-2 pb-1.5 border-b border-[#f5f5f7]">
+                <span className="text-[13px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                <ChevronRight size={13} className="text-[#86868b] shrink-0" />
+              </div>
+              {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                <div key={i} className="flex items-center justify-between py-1.5">
+                  <div className="flex-1 min-w-0 mr-1">
+                    <span className="text-[13px] text-[#424245] block truncate font-medium">{a.terminalStation}</span>
+                    {!isEstimated && a.currentStation && (
+                      <span className="text-[10px] text-[#86868b]">{a.currentStation} 출발</span>
+                    )}
+                    {a.isExpress && (
+                      <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 ${
+                        a.trainTypeName === "직통"
+                          ? "bg-[#F3E8FF] text-[#7C3AED]"
+                          : "bg-[#FFF3E0] text-[#E65100]"
+                      }`}>
+                        {a.trainTypeName ?? "급행"}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                    {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
+                  </span>
+                </div>
+              )) : (
+                <span className="text-[12px] text-[#86868b]">정보 없음</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* 첫차/막차 */}
+      {(() => {
+        const t = dayTimetable(active.timetable);
+        if (t.upFirst === "-") return null;
+        return (
+          <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.upDirection} 첫/막차</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+            </div>
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[11px] text-[#86868b] mb-0.5">{active.timetable.downDirection} 첫/막차</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+            </div>
+          </div>
+        );
+      })()}
+    </div>
   );
 }
 
@@ -317,6 +598,7 @@ function SubwayTimetableSheet({
   onClose: () => void;
 }) {
   const [dirTab, setDirTab] = useState<"up" | "down">("up");
+  const [dayTab, setDayTab] = useState<SubwayDayType>(currentDayType());
 
   function generateTimes(first: string, last: string, interval: number): string[] {
     if (!first || first === "-" || !interval) return [];
@@ -336,13 +618,16 @@ function SubwayTimetableSheet({
 
   const now = new Date();
   const nowMin = now.getHours() * 60 + now.getMinutes();
+  const today = dayTimetable(station.timetable, dayTab);
 
-  const upTimes   = generateTimes(station.timetable.upFirst,   station.timetable.upLast,   station.timetable.intervalMin);
-  const downTimes = generateTimes(station.timetable.downFirst, station.timetable.downLast, station.timetable.intervalMin);
+  const upTimes   = generateTimes(today.upFirst,   today.upLast,   today.intervalMin);
+  const downTimes = generateTimes(today.downFirst, today.downLast, today.intervalMin);
   const curTimes  = dirTab === "up" ? upTimes : downTimes;
   const curDest   = dirTab === "up" ? station.timetable.upDirection : station.timetable.downDirection;
+  const isToday   = dayTab === currentDayType();
 
   const isTimePast = (t: string) => {
+    if (!isToday) return false; // 다른 요일 탭에서는 "지난 열차" 음영 없음
     const [h, m] = t.split(":").map(Number);
     const tMin = h * 60 + m;
     if (tMin < 300 && nowMin > 1200) return false; // 새벽 시간은 미래로 처리
@@ -383,8 +668,23 @@ function SubwayTimetableSheet({
           </div>
           <p className="text-[11px] text-[#86868b] mt-2 flex items-center gap-1">
             <Clock size={11} />
-            배차 {station.timetable.intervalDisplay ?? `${station.timetable.intervalMin}분`} 기준 추정 시간표
+            배차 {today.intervalDisplay ?? `${today.intervalMin}분`} 기준 추정 시간표
           </p>
+        </div>
+
+        {/* 요일 탭 (평일 / 휴일) */}
+        <div className="shrink-0 flex border-b border-[#f5f5f7] bg-[#fafafa]">
+          {(["weekday", "holiday"] as const).map(day => (
+            <button key={day} onClick={() => setDayTab(day)}
+              className={`flex-1 h-9 text-[12px] font-semibold transition-colors ${
+                dayTab === day ? "text-[#1d1d1f] bg-white" : "text-[#86868b]"
+              }`}>
+              {day === "weekday" ? "평일" : "토·일·공휴일"}
+              {dayTab === day && currentDayType() === day && (
+                <span className="ml-1 text-[10px] text-[#0071e3]">·오늘</span>
+              )}
+            </button>
+          ))}
         </div>
 
         {/* 방면 탭 */}
@@ -402,11 +702,15 @@ function SubwayTimetableSheet({
         {/* 시간표 그리드 */}
         <div className="overflow-y-auto flex-1 px-4 py-4">
           {curTimes.length === 0 ? (
-            <p className="text-[13px] text-[#86868b] text-center py-10">시간표 정보 없음</p>
+            <p className="text-[13px] text-[#86868b] text-center py-10">
+              {dirTab === "up" && station.timetable.upDirection === "송도달빛축제공원" && today.upFirst === "-"
+                ? "이 방향은 종착역입니다"
+                : "시간표 정보 없음"}
+            </p>
           ) : (
             <>
-              {/* 다음 열차 안내 */}
-              {nextIdx >= 0 && (
+              {/* 다음 열차 안내 (오늘 요일 탭에서만) */}
+              {isToday && nextIdx >= 0 && (
                 <div className="bg-[#e8f1fd] rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
                   <div>
                     <p className="text-[11px] text-[#0071e3] font-medium">다음 열차</p>
@@ -418,8 +722,8 @@ function SubwayTimetableSheet({
                       const [h, m] = curTimes[nextIdx].split(":").map(Number);
                       let diff = h * 60 + m - nowMin;
                       if (diff < 0) diff += 1440;
-                      return diff === 0 ? (
-                        <span className="text-[22px] font-black text-[#F04452]">곧도착</span>
+                      return diff <= 1 ? (
+                        <span className="text-[20px] font-black text-[#F04452]">곧 도착 예정</span>
                       ) : (
                         <>
                           <span className="text-[28px] font-black text-[#0071e3]">{diff}</span>
@@ -478,23 +782,45 @@ export default function TransportPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [favStops, setFavStops] = useState<Set<string>>(() => loadFavSet("favStops"));
-  const [favRoutes, setFavRoutes] = useState<Set<string>>(() => loadFavSet("favRoutes"));
-  const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
+  const [favStops, setFavStops] = useState<string[]>(() => loadFavList("favStops"));
+  const [favRoutes, setFavRoutes] = useState<string[]>(() => loadFavList("favRoutes"));
+  // 노선 자체 즐겨찾기 (key=routeNo) — 정류장 무관, 모든 정류장에서 해당 routeNo 도착정보를 모아 보여줌
+  const [favBusRoutes, setFavBusRoutes] = useState<string[]>(() => loadFavList("favBusRoutes"));
+  // 즐겨찾기 노선 메타 (종착역 + 즐겨찾기 정류장 정보)
+  const [favBusRoutesMeta, setFavBusRoutesMeta] = useState<Record<string, { endStation?: string; stopId?: string; stopName?: string }>>(() => {
+    try { return JSON.parse(localStorage.getItem("favBusRoutes_meta") ?? "{}") as Record<string, { endStation?: string; stopId?: string; stopName?: string }>; }
+    catch { return {}; }
+  });
+  const [favSubways, setFavSubways] = useState<string[]>(() => loadFavList("favSubways"));
+  // 가까운 N개만 기본 표시, 나머지는 "더 보기" 토글로
+  const [showAllStops, setShowAllStops] = useState(false);
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
+  // 도착 상세를 열 때 어떤 정류장에서 탭했는지 기억 — 즐겨찾기 저장 시 사용
+  const selectedStopRef = useRef<{ id: string; name: string; distM: number } | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
   const [lastUpdated, setLastUpdated] = useState("");
   const [, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
-  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
+  // "far" = GPS는 잡혔지만 검단 권역 밖 → 검단 중심 좌표로 강제 검색 중
+  const [locState, setLocState] = useState<"loading" | "ok" | "far" | "denied" | "idle">("idle");
   // 버스 정류장 소스: "tago"=국가API실시간, "ic"=인천API실시간, "osm"=경유만, "fallback"=하드코딩
   const [stopSource, setStopSource] = useState<"tago"|"ic"|"osm"|"fallback"|null>(null);
   // GPS 기반으로 API에서 조회한 정류장 (null = 미조회)
   const [apiStops, setApiStops] = useState<DisplayStop[] | null>(null);
   // 지하철 역 + 실시간 도착정보
-  const [subwayList, setSubwayList] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
+  // 검단 기준 정렬된 역 목록으로 동기 초기화 — GPS 대기 중에도 빈 상태 노출 방지
+  const [subwayList, setSubwayList] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>(
+    () => findNearbySubwayStations(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, 25000)
+      .map(st => ({ ...st, arrivals: [], loadingArrivals: true }))
+  );
   const [subwayLoading, setSubwayLoading] = useState(false);
   const [busSearch, setBusSearch] = useState("");
+  // 광역 검색 결과 (TAGO/Overpass에서 검단 외 정류장·노선까지)
+  const [searchStations, setSearchStations] = useState<NearbyStop[]>([]);
+  const [searchRoutes, setSearchRoutes] = useState<RouteSearchResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchStationArrivals, setSearchStationArrivals] = useState<Record<string, BusArrival[]>>({});
+  const [searchExpanded, setSearchExpanded] = useState<string | null>(null);
   const isLive = hasBusApiKey();
 
   // 가볼만한곳 state
@@ -503,115 +829,173 @@ export default function TransportPage() {
   const [placesCatFilter, setPlacesCatFilter] = useState<PlaceCategory | "all">("all");
   const [placesAreaFilter, setPlacesAreaFilter] = useState<PlaceArea | "all">("all");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [favPlaceIds, setFavPlaceIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    getFavoritePlaces().then(list => setFavPlaceIds(new Set(list.map(f => f.place_id))));
+  }, []);
+  async function togglePlaceFavorite(place: Place) {
+    if (favPlaceIds.has(place.id)) {
+      await removeFavoritePlace(place.id);
+      setFavPlaceIds(prev => {
+        const n = new Set(prev);
+        n.delete(place.id);
+        return n;
+      });
+    } else {
+      await addFavoritePlace({
+        place_id: place.id,
+        place_name: place.name,
+        place_category: place.category,
+        place_area: place.area,
+        place_image_url: place.thumbnail_url,
+        place_address: place.address ?? null,
+      });
+      setFavPlaceIds(prev => new Set(prev).add(place.id));
+    }
+  }
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
   const apiStopsRef = useRef<DisplayStop[] | null>(null);
   const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
+  // 즐겨찾기 정류장 중 apiStops에 없는 것을 추가 로드할 때 중복 방지용
+  const favStopsAddedRef = useRef<Set<string>>(new Set());
 
   // ref 동기화
   useEffect(() => { apiStopsRef.current = apiStops; }, [apiStops]);
   useEffect(() => { subwayListRef.current = subwayList; }, [subwayList]);
+  // 새 로드 시작 시 추가 즐겨찾기 추적 초기화
+  useEffect(() => { if (loading) favStopsAddedRef.current = new Set(); }, [loading]);
 
   // ── 정류장별 실시간 도착 조회 (소스별 API 분기) ──
+  // 우선순위: 첫 PRIORITY_N개 await → 사용자 시야 카드 먼저 채움.
+  // 나머지는 fire-and-forget → setApiStops로 점진적 업데이트.
   const fetchArrivalsForStops = useCallback(async (stops: DisplayStop[], src?: "tago"|"ic"|"osm"|"fallback"|null) => {
     const source = src ?? stopSource;
-    await Promise.allSettled(
-      stops.map(async stop => {
-        let arrivals: BusArrival[] = [];
-        if (source === "tago") {
-          arrivals = await fetchArrivalsByNodeId(stop.id);
-        } else if (source === "ic") {
-          arrivals = await fetchArrivalsByStationId(stop.id);
-        } else if (source === "osm") {
-          // OSM ref stationIds often match Incheon API stationIds — try real-time first
-          arrivals = await fetchArrivalsByStationId(stop.id);
-          if (arrivals.length === 0) arrivals = await fetchArrivalsByNodeId(stop.id);
-        } else if (source === "fallback") {
-          arrivals = await fetchArrivalsByNodeId(stop.id);
-          if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stop.id);
-        }
-        if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
-          arrivals = osmRoutesToArrivals(stop.osmRoutes);
-        }
-        setApiStops(prev =>
-          prev ? prev.map(s => s.id === stop.id
-            ? { ...s, arrivals, loadingArrivals: false }
-            : s)
-          : prev
-        );
-      })
-    );
+    const PRIORITY_N = 5;
+    const dev = process.env.NODE_ENV !== "production";
+    const t0 = dev ? performance.now() : 0;
+
+    // production 진단: 인천 BUS_BASE arrivals API는 5자리·ICB nodeId 모두
+    // resultCode=3 거부 (활용신청 미승인). TAGO tagoArrivals만 신뢰 가능.
+    // → 모든 source에서 TAGO 도착 API 우선. 빈 응답이면 osmRoutes 정적 정보로 폴백.
+    const fetchOne = async (stop: DisplayStop) => {
+      let arrivals: BusArrival[] = await fetchArrivalsByNodeId(stop.id);
+      if (arrivals.length === 0 && stop.osmRoutes && stop.osmRoutes.length > 0) {
+        arrivals = osmRoutesToArrivals(stop.osmRoutes);
+      }
+      setApiStops(prev =>
+        prev ? prev.map(s => s.id === stop.id
+          ? { ...s, arrivals, loadingArrivals: false }
+          : s)
+        : prev
+      );
+    };
+
+    const priority = stops.slice(0, PRIORITY_N);
+    const rest     = stops.slice(PRIORITY_N);
+
+    await Promise.allSettled(priority.map(fetchOne));
+    if (dev) console.log(`[transport] arrivals priority(${priority.length}) ${(performance.now() - t0).toFixed(0)}ms src=${source}`);
     setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+
+    // 나머지는 fire-and-forget (UI에 점진 반영)
+    if (rest.length > 0) {
+      Promise.allSettled(rest.map(fetchOne)).then(() => {
+        if (dev) console.log(`[transport] arrivals rest(${rest.length}) total ${(performance.now() - t0).toFixed(0)}ms`);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      });
+    }
   }, [stopSource]);
 
   // ── 버스 데이터 전체 로드: GPS 기반 주변 정류장 + 도착정보 ──
+  // 단일 소스: TAGO BusSttnInfoInqireService/getCrdntPrxmtSttnList.
+  // 인천 aroundStations(별도 활용신청 미승인 → 500), Overpass(빈 응답·외부 불안정)는
+  // 모두 신뢰 불가로 판명되어 race에서 제거. TAGO 빈 응답 시 검단 하드코딩 폴백.
+  //
+  // 깜박임 방지: 첫 로드(apiStops==null)일 때만 setLoading(true)→스켈레톤.
+  // GPS 재호출 등 갱신 시에는 기존 정류장 목록을 유지한 채 데이터만 교체.
   const loadBusData = useCallback(async (lat: number, lng: number, clearStops = true) => {
-    setLoading(true);
-    if (clearStops) setApiStops(null);
+    const isFirstLoad = clearStops || apiStopsRef.current === null;
+    if (isFirstLoad) {
+      setLoading(true);
+      setApiStops(null);
+    }
+
+    const dev = process.env.NODE_ENV !== "production";
+    const t0 = dev ? performance.now() : 0;
+    const since = () => (performance.now() - t0).toFixed(0);
 
     let stops: DisplayStop[] = [];
     let src: "tago"|"ic"|"osm"|"fallback" = "fallback";
 
+    // TAGO race timeout 제거: apiFetch 자체에 10s AbortSignal 있음.
+    // Vercel cold start(3-5s) + TAGO(1-3s)가 6s 초과해서 false-fallback 트리거되던
+    // 버그 수정. 클라이언트는 최대 10s 기다린 뒤 빈 배열 받으면 폴백.
+    //
+    // 정렬 정책: 반경 500m 내 가까운 순 상위 4개. 비면 최근접 1개 폴백.
+    const NEARBY_RADIUS_M = 500;
+    const NEARBY_MAX = 4;
+    const pickNearest = <T extends { distanceM: number }>(arr: T[]): T[] => {
+      const sorted = [...arr].sort((a, b) => a.distanceM - b.distanceM);
+      const within = sorted.filter(s => s.distanceM <= NEARBY_RADIUS_M).slice(0, NEARBY_MAX);
+      return within.length > 0 ? within : sorted.slice(0, 1);
+    };
+
     try {
-      // 1순위: TAGO 국가대중교통 API (전국 공통 stationId, 실시간 도착 연동)
-      const tagoNearby = await Promise.race([
-        fetchNearbyStopsFromTago(lat, lng),
-        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
-      ]);
-      if (tagoNearby.length > 0) {
+      // 정류장 + 도착정보를 서버에서 병렬 처리 후 한 번에 반환 — 2단계 요청 제거
+      const combined = await fetchNearbyStopsWithArrivals(lat, lng);
+      if (dev) console.log(`[transport] combined nearby+arrivals ${since()}ms → ${combined.length}`);
+      if (combined.length > 0) {
         src = "tago";
-        stops = tagoNearby.slice(0, 14).map(s => ({
+        stops = combined.map(s => ({
           id: s.stationId, name: s.stationName,
-          distM: s.distanceM, arrivals: [], loadingArrivals: true,
+          distM: s.distanceM, arrivals: s.arrivals, loadingArrivals: false,
           lat: s.lat, lng: s.lng, osmRoutes: [],
         }));
-      } else throw new Error("tago_empty");
+        setStopSource(src);
+        setApiStops(stops);
+        setLoading(false);
+        setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+        if (dev) console.log(`[transport] painted with arrivals ${since()}ms`);
+        return;
+      }
+      throw new Error("combined_empty");
     } catch {
+      // 통합 API 실패 — TAGO 개별 조회로 폴백
       try {
-        // 2순위: 인천 공공API (stationId가 도착정보 API와 일치)
-        const apiNearby = await Promise.race([
-          fetchNearbyStopsFromApi(lat, lng),
-          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 8000)),
-        ]);
-        if (apiNearby.length > 0) {
-          src = "ic";
-          stops = apiNearby.slice(0, 14).map(s => ({
+        const tagoNearby = await fetchNearbyStopsFromTago(lat, lng);
+        if (dev) console.log(`[transport] TAGO fallback nearby ${since()}ms → ${tagoNearby.length}`);
+        if (tagoNearby.length > 0) {
+          src = "tago";
+          stops = pickNearest(tagoNearby).map(s => ({
             id: s.stationId, name: s.stationName,
             distM: s.distanceM, arrivals: [], loadingArrivals: true,
             lat: s.lat, lng: s.lng, osmRoutes: [],
           }));
-        } else throw new Error("api_empty");
+        } else throw new Error("tago_empty");
       } catch {
-        // 3순위: OSM Overpass (경유 노선 정보 포함)
-        try {
-          const nearby = await Promise.race([
-            fetchNearbyStopsWide(lat, lng),
-            new Promise<never>((_, rej) => setTimeout(() => rej(new Error("timeout")), 18000)),
-          ]);
-          if (nearby.length === 0) throw new Error("empty");
-          src = "osm";
-          stops = nearby.slice(0, 14).map(s => ({
-            id: s.stationId, name: s.stationName,
-            distM: s.distanceM, arrivals: [], loadingArrivals: true,
-            lat: s.lat, lng: s.lng, osmRoutes: s.osmRoutes,
-          }));
-        } catch {
-          // 4순위: 검단신도시 하드코딩 정류장
-          src = "fallback";
-          stops = GEUMDAN_BUS_STATIONS
-            .map(s => ({
-              id: s.stationId, name: s.name,
-              distM: Math.round(haversineM(lat, lng, s.lat, s.lng)),
-              arrivals: [], loadingArrivals: true,
-              lat: s.lat, lng: s.lng,
-            }))
-            .sort((a, b) => a.distM - b.distM);
-        }
+        // 하드코딩 폴백
+        src = "fallback";
+        const farFromGeumdan = haversineM(lat, lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng) > 5000;
+        const refLat = farFromGeumdan ? GEUMDAN_DEFAULT.lat : lat;
+        const refLng = farFromGeumdan ? GEUMDAN_DEFAULT.lng : lng;
+        const all = GEUMDAN_BUS_STATIONS.map(s => ({
+          ...s,
+          distanceM: Math.round(haversineM(refLat, refLng, s.lat, s.lng)),
+        }));
+        stops = pickNearest(all).map(s => ({
+          id: s.stationId, name: s.name,
+          distM: s.distanceM, arrivals: [], loadingArrivals: true,
+          lat: s.lat, lng: s.lng,
+          osmRoutes: s.routes,
+        }));
+        if (dev) console.warn(`[transport] hard-coded fallback ${since()}ms`);
       }
     }
 
     setStopSource(src);
     setApiStops(stops);
     setLoading(false);
+    if (dev) console.log(`[transport] stop list painted ${since()}ms`);
     await fetchArrivalsForStops(stops, src);
   }, [fetchArrivalsForStops]);
 
@@ -628,10 +1012,18 @@ export default function TransportPage() {
     setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
   }, []);
 
-  // ── 지하철 데이터 로드 (위치 무관, 전체 역 표시) ────────────
-  const loadSubwayData = useCallback(async () => {
-    setSubwayLoading(true);
-    const all = getAllSubwayStations();
+  // ── 지하철 데이터 로드 — GPS 기준 가까운 순 정렬 ────────────
+  // GPS 미취득/실패 시 검단신도시(GEUMDAN_DEFAULT) 기준으로 정렬 → 항상 목록 표시.
+  const loadSubwayData = useCallback(async (lat?: number, lng?: number) => {
+    const ref = lat != null && lng != null
+      ? { lat, lng }
+      : (posRef.current ?? GEUMDAN_DEFAULT);
+    // 김포공항역(허브)까지 포함하도록 반경 25km. 빈 결과 방지 — 후속 안전망.
+    let all = findNearbySubwayStations(ref.lat, ref.lng, 25000);
+    if (all.length === 0) {
+      // 반경 내 결과가 없으면(이상 좌표 등) 검단 기준 전체 정렬로 폴백
+      all = findNearbySubwayStations(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, 100000);
+    }
     const initial = all.map(st => ({ ...st, arrivals: [], loadingArrivals: true }));
     setSubwayList(initial);
     setSubwayLoading(false);
@@ -650,29 +1042,142 @@ export default function TransportPage() {
   }, []);
 
   // ── 초기 로드 + GPS 갱신 ─────────────────────────────────────
+  // 검단신도시 중심 좌표 + 권역 반경. GPS가 권역 밖이면 검단 중심으로 강제
+  // 검색해서 의미 있는 정류장을 보여준다 (이 앱은 검단 전용이므로).
   useEffect(() => {
-    const DEFAULT = { lat: 37.594, lng: 126.710 };
-    posRef.current = DEFAULT;
-    setUserPos(DEFAULT);
-    loadSubwayData();
-    loadBusData(DEFAULT.lat, DEFAULT.lng);
+    const GEUMDAN_RADIUS_M = 8000;
+    // 1) GPS 와 무관하게 검단 기본 좌표로 지하철 목록을 즉시 채운다.
+    //    GPS 가 늦게 오거나 실패해도 사용자는 검단 인근 역 전체를 바로 본다.
+    posRef.current = GEUMDAN_DEFAULT;
+    setUserPos(GEUMDAN_DEFAULT);
+    loadSubwayData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
 
-    if (!navigator.geolocation) { setLocState("denied"); return; }
+    if (!navigator.geolocation) {
+      setLocState("denied");
+      loadBusData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+      return;
+    }
+
     setLocState("loading");
+    const tGpsStart = performance.now();
+    const dev = process.env.NODE_ENV !== "production";
+
+    // GPS 응답을 기다리지 않고 DEFAULT 좌표로 즉시 버스 로드. GPS 도착 시 좌표가 다르면 재조회.
+    // GPS 자체 timeout 은 8초.
+    let busDispatched = false;
+    const dispatchBus = (lat: number, lng: number) => {
+      if (busDispatched) return;
+      busDispatched = true;
+      loadBusData(lat, lng);
+    };
+
+    // 즉시 DEFAULT로 로드 (0ms) — 사용자가 버스 탭을 열자마자 데이터 요청 시작
+    const fastTimer = setTimeout(() => {
+      if (dev) console.log(`[transport] fastTimer fired at ${(performance.now() - tGpsStart).toFixed(0)}ms — using DEFAULT`);
+      dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+    }, 0);
+
     navigator.geolocation.getCurrentPosition(
       pos => {
+        clearTimeout(fastTimer);
+        if (dev) console.log(`[transport] GPS resolved at ${(performance.now() - tGpsStart).toFixed(0)}ms`);
         const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        const distFromGeumdan = haversineM(p.lat, p.lng, GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+        const inGeumdan = distFromGeumdan <= GEUMDAN_RADIUS_M;
+        if (dev) console.log(`[transport] GPS @ ${distFromGeumdan.toFixed(0)}m from 검단 (in=${inGeumdan})`);
+
+        if (!inGeumdan) {
+          // 사용자가 검단 밖 → 검단 중심 좌표로 강제 검색.
+          // userPos는 실제 위치를 기록하되 정류장 검색만 검단 기준.
+          setLocState("far");
+          setUserPos(p);
+          posRef.current = GEUMDAN_DEFAULT;
+          if (busDispatched) {
+            loadBusData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, false);
+          } else {
+            dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+          }
+          return;
+        }
+
+        setLocState("ok");
         posRef.current = p;
         setUserPos(p);
-        setLocState("ok");
-        if (haversineM(DEFAULT.lat, DEFAULT.lng, p.lat, p.lng) > 300) {
-          loadBusData(p.lat, p.lng, false);  // GPS 갱신 시 기존 목록 유지하면서 교체
+        // 50m 이상 이동했을 때만 재조회 — 깜빡임 방지
+        if (haversineM(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng, p.lat, p.lng) > 50) {
+          if (busDispatched) {
+            loadBusData(p.lat, p.lng, false);
+          } else {
+            dispatchBus(p.lat, p.lng);
+          }
+          loadSubwayData(p.lat, p.lng);
+        } else {
+          dispatchBus(p.lat, p.lng);
         }
       },
-      () => setLocState("denied"),
-      { timeout: 3000, maximumAge: 300000, enableHighAccuracy: false }
+      () => {
+        clearTimeout(fastTimer);
+        setLocState("denied");
+        dispatchBus(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng);
+      },
+      { timeout: 8000, maximumAge: 60000, enableHighAccuracy: true }
     );
   }, [loadBusData, loadSubwayData]);
+
+  // ── 즐겨찾기 정류장 보강 로드 ────────────────────────────────
+  // apiStops에 없는 즐겨찾기 정류장을 메타데이터로 복원하고 도착 정보를 별도 조회.
+  // 권역 밖에 있어도 저장된 검단 정류장 즐겨찾기가 항상 보이도록 한다.
+  useEffect(() => {
+    if (loading || !apiStops) return;
+    type FavMeta = { name: string; lat?: number; lng?: number };
+    let meta: Record<string, FavMeta> = {};
+    try { meta = JSON.parse(localStorage.getItem("favStops_meta") ?? "{}"); } catch { /* ignore */ }
+
+    const missing = favStops.filter(id =>
+      !apiStops.some(s => s.id === id) &&
+      meta[id]?.name &&
+      !favStopsAddedRef.current.has(id)
+    );
+    if (missing.length === 0) return;
+
+    missing.forEach(id => favStopsAddedRef.current.add(id));
+    const ref = posRef.current ?? GEUMDAN_DEFAULT;
+    const stubs: DisplayStop[] = missing.map(id => ({
+      id,
+      name: meta[id].name,
+      distM: meta[id].lat != null && meta[id].lng != null
+        ? Math.round(haversineM(ref.lat, ref.lng, meta[id].lat!, meta[id].lng!))
+        : 0,
+      arrivals: [],
+      loadingArrivals: true,
+      lat: meta[id].lat,
+      lng: meta[id].lng,
+    }));
+    setApiStops(prev => prev ? [...prev, ...stubs] : stubs);
+    fetchArrivalsForStops(stubs);
+  }, [apiStops, favStops, loading, fetchArrivalsForStops]);
+
+  // ── 즐겨찾기 정류장 이름 백필 ────────────────────────────────
+  // 구버전/이름 누락으로 favStops_meta에 이름이 없거나 "정류장"인 즐겨찾기를
+  // apiStops의 실제 이름으로 채워 홈 위젯이 올바른 이름을 표시하도록 한다.
+  useEffect(() => {
+    if (!apiStops || apiStops.length === 0 || favStops.length === 0) return;
+    let meta: Record<string, { name?: string; lat?: number; lng?: number }> = {};
+    try { meta = JSON.parse(localStorage.getItem("favStops_meta") ?? "{}"); } catch { /* ignore */ }
+    let changed = false;
+    for (const id of favStops) {
+      const cur = meta[id]?.name;
+      if (cur && cur !== "정류장") continue;
+      const match = apiStops.find(s => s.id === id);
+      if (match?.name && match.name !== "정류장") {
+        meta[id] = { ...(meta[id] ?? {}), name: match.name, lat: match.lat, lng: match.lng };
+        changed = true;
+      }
+    }
+    if (changed) {
+      try { localStorage.setItem("favStops_meta", JSON.stringify(meta)); } catch { /* ignore */ }
+    }
+  }, [apiStops, favStops]);
 
   // ── 30초 자동 갱신 (도착정보만, 정류장 목록은 재조회 안 함) ──
   useEffect(() => {
@@ -687,62 +1192,211 @@ export default function TransportPage() {
     return () => clearInterval(id);
   }, [tab, fetchArrivalsForStops, refreshSubwayArrivals]);
 
+  // ── 버스 광역 검색 (정류장명 + 노선번호) ────────────────────
+  useEffect(() => {
+    const q = busSearch.trim();
+    if (q.length < 2) {
+      setSearchStations([]);
+      setSearchRoutes([]);
+      setSearching(false);
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    const handle = setTimeout(async () => {
+      const [stationsResult, osmResult, routesResult] = await Promise.allSettled([
+        searchStationsByName(q),
+        searchStationsByNameOsm(q),
+        searchRoutesByQuery(q),
+      ]);
+      if (cancelled) return;
+      // 인천 BIS 응답 우선, 비어 있으면 Overpass 사용. 중복은 stationId 기준 제거
+      const incheon = stationsResult.status === "fulfilled" ? stationsResult.value : [];
+      const osm = osmResult.status === "fulfilled" ? osmResult.value : [];
+      const seen = new Set<string>();
+      const merged: NearbyStop[] = [];
+      for (const s of [...incheon, ...osm]) {
+        if (seen.has(s.stationId)) continue;
+        seen.add(s.stationId);
+        merged.push(s);
+      }
+      setSearchStations(merged.slice(0, 30));
+      setSearchRoutes(routesResult.status === "fulfilled" ? routesResult.value.slice(0, 15) : []);
+      setSearching(false);
+    }, 350);
+    return () => { cancelled = true; clearTimeout(handle); };
+  }, [busSearch]);
+
+  // 검색 결과 정류장 클릭 → 도착정보 조회
+  const loadSearchStationArrivals = useCallback(async (stationId: string) => {
+    if (searchStationArrivals[stationId]) return;
+    let arrivals = await fetchArrivalsByNodeId(stationId);
+    if (arrivals.length === 0) arrivals = await fetchArrivalsByStationId(stationId);
+    setSearchStationArrivals(prev => ({ ...prev, [stationId]: arrivals }));
+  }, [searchStationArrivals]);
+
   const refresh = async () => {
-    const p = posRef.current ?? { lat: 37.594, lng: 126.710 };
+    // posRef.current는 "far" 상태일 때 이미 검단 중심으로 보정되어 있음
+    const p = posRef.current ?? GEUMDAN_DEFAULT;
     setRefreshing(true);
     if (tab === "버스") {
-      await loadBusData(p.lat, p.lng);
+      await loadBusData(p.lat, p.lng, false);
     } else {
-      await loadSubwayData();
+      await loadSubwayData(p.lat, p.lng);
     }
     setRefreshing(false);
   };
 
   const stopsWithRoutes: DisplayStop[] = apiStops ?? [];
-  const q = busSearch.trim().toLowerCase();
-  const filteredStops = q
-    ? stopsWithRoutes.filter(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.arrivals.some(a => a.routeNo.toLowerCase().includes(q))
-      )
-    : stopsWithRoutes;
 
-  function toggleStop(id: string) {
-    setFavStops(p => {
-      const n = new Set(p);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      saveFavSet("favStops", n);
-      return n;
+  function makeToggle(key: string, setter: React.Dispatch<React.SetStateAction<string[]>>) {
+    return (id: string) => setter(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id];
+      saveFavList(key, next);
+      return next;
     });
   }
-  function toggleRoute(key: string) {
-    setFavRoutes(p => {
-      const n = new Set(p);
-      if (n.has(key)) n.delete(key); else n.add(key);
-      saveFavSet("favRoutes", n);
-      return n;
+  function makeMove(key: string, setter: React.Dispatch<React.SetStateAction<string[]>>) {
+    return (id: string, dir: -1 | 1) => setter(prev => {
+      const idx = prev.indexOf(id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= prev.length) return prev;
+      const next = [...prev];
+      [next[idx], next[target]] = [next[target], next[idx]];
+      saveFavList(key, next);
+      return next;
     });
   }
-  function toggleSubway(id: string) {
-    setFavSubways(p => {
-      const n = new Set(p);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      saveFavSet("favSubways", n);
-      return n;
+  const _toggleStop    = makeToggle("favStops",     setFavStops);
+  const toggleRoute    = makeToggle("favRoutes",    setFavRoutes);
+  const _toggleSubway  = makeToggle("favSubways",   setFavSubways);
+  const toggleBusRoute = makeToggle("favBusRoutes", setFavBusRoutes);
+
+  // 노선 즐겨찾기 메타 저장 (종착역 + 정류장 정보)
+  const saveBusRouteMeta = (routeNo: string, endStation: string) => {
+    const stop = selectedStopRef.current;
+    setFavBusRoutesMeta(prev => {
+      const existing = prev[routeNo] ?? {};
+      const next = {
+        ...prev,
+        [routeNo]: {
+          ...existing,
+          ...(endStation && endStation !== "종점" ? { endStation } : {}),
+          ...(stop ? { stopId: stop.id, stopName: stop.name } : {}),
+        },
+      };
+      try { localStorage.setItem("favBusRoutes_meta", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
     });
-  }
+  };
+
+  // 즐겨찾기 추가 시 정류장 정보만 즉시 저장 (endStation은 상세 로드 후 추가됨)
+  const saveBusRouteStopMeta = (routeNo: string) => {
+    const stop = selectedStopRef.current;
+    if (!stop) return;
+    setFavBusRoutesMeta(prev => {
+      const existing = prev[routeNo] ?? {};
+      const next = { ...prev, [routeNo]: { ...existing, stopId: stop.id, stopName: stop.name } };
+      try { localStorage.setItem("favBusRoutes_meta", JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  // 메타데이터(이름 등)를 함께 저장하여 마이페이지에서 표시 가능하도록 함
+  const toggleStop = (id: string) => {
+    const wasFav = favStops.includes(id);
+    _toggleStop(id);
+    if (wasFav) {
+      saveFavMeta("favStops_meta", id, null);
+    } else {
+      const stop = stopsWithRoutes.find(s => s.id === id);
+      if (stop) saveFavMeta("favStops_meta", id, { name: stop.name, lat: stop.lat, lng: stop.lng });
+    }
+  };
+  const toggleSubway = (id: string) => {
+    const wasFav = favSubways.includes(id);
+    _toggleSubway(id);
+    if (wasFav) {
+      saveFavMeta("favSubways_meta", id, null);
+    } else {
+      const station = subwayList.find(s => s.id === id);
+      if (station) saveFavMeta("favSubways_meta", id, {
+        name: station.displayName,
+        line: station.line,
+        lineColor: station.lineColor,
+      });
+    }
+  };
+  const moveStop       = makeMove("favStops",       setFavStops);
+  const moveRoute      = makeMove("favRoutes",      setFavRoutes);
+  const moveSubway     = makeMove("favSubways",     setFavSubways);
+  const moveBusRoute   = makeMove("favBusRoutes",   setFavBusRoutes);
 
   // 즐겨찾기 노선 키: `${stationId}::${routeId||routeNo}`
   const routeFavKey = (stopId: string, a: BusArrival) =>
     `${stopId}::${a.routeId || a.routeNo}`;
 
-  const favStopList = stopsWithRoutes.filter(s => favStops.has(s.id));
-  const favRouteList = stopsWithRoutes.flatMap(stop =>
-    stop.arrivals
-      .filter(a => favRoutes.has(routeFavKey(stop.id, a)))
-      .map(a => ({ ...a, stopName: stop.name, stopId: stop.id }))
-  );
-  const favSubwayList = subwayList.filter(s => favSubways.has(s.id));
+  // 즐겨찾기는 내 위치 기준 가까운 순서로 정렬
+  const favStopList = favStops
+    .map(id => stopsWithRoutes.find(s => s.id === id))
+    .filter((s): s is DisplayStop => Boolean(s))
+    .sort((a, b) => a.distM - b.distM);
+  const favRouteList = favRoutes
+    .map(fk => {
+      for (const stop of stopsWithRoutes) {
+        const a = stop.arrivals.find(ar => routeFavKey(stop.id, ar) === fk);
+        if (a) return { ...a, stopName: stop.name, stopId: stop.id, favKey: fk };
+      }
+      return null;
+    })
+    .filter(<T,>(x: T | null): x is T => x !== null);
+  // favBusRoutes: 사용자가 즐겨찾기한 정류장 우선 표시, 없으면 가장 빨리 오는 정류장으로 폴백
+  const favBusRouteCards = (() => {
+    return favBusRoutes.map(rn => {
+      const meta = favBusRoutesMeta[rn];
+      const savedStopId = meta?.stopId;
+
+      // 1) 저장된 정류장이 있으면 해당 정류장에서 도착정보 조회
+      if (savedStopId) {
+        const stop = stopsWithRoutes.find(s => s.id === savedStopId);
+        const stopName = meta.stopName ?? stop?.name ?? savedStopId;
+        if (stop) {
+          const arrival = stop.arrivals.find(a => a.routeNo === rn);
+          if (arrival) {
+            return { arrival, stopName, stopId: stop.id, stopDistM: stop.distM };
+          }
+          // 정류장은 있으나 해당 노선 도착정보 없음 → 정류장명은 유지, 시간 없음으로 표시
+          return {
+            arrival: { routeNo: rn, routeId: "", destination: meta?.endStation ?? "종점", arrivalMin: 0, remainingStops: 0, isLowFloor: false, isExpress: false, plateNo: "", isScheduled: true } as BusArrival,
+            stopName, stopId: stop.id, stopDistM: stop.distM,
+          };
+        }
+        // 저장된 정류장이 현재 API 응답에 없음 → 메타 이름 표시 + 시간 없음
+        return {
+          arrival: { routeNo: rn, routeId: "", destination: meta?.endStation ?? "종점", arrivalMin: 0, remainingStops: 0, isLowFloor: false, isExpress: false, plateNo: "", isScheduled: true } as BusArrival,
+          stopName, stopId: savedStopId, stopDistM: 0,
+        };
+      }
+
+      // 2) 저장된 정류장 없음 (이전 즐겨찾기) → 주변에서 가장 빨리 오는 정류장으로 폴백
+      let best: { arrival: BusArrival; stopName: string; stopId: string; stopDistM: number } | null = null;
+      for (const stop of stopsWithRoutes) {
+        for (const a of stop.arrivals) {
+          if (a.routeNo !== rn) continue;
+          const candidate = { arrival: a, stopName: stop.name, stopId: stop.id, stopDistM: stop.distM };
+          if (!best || (!a.isScheduled && best.arrival.isScheduled) ||
+              (a.isScheduled === best.arrival.isScheduled && a.arrivalMin < best.arrival.arrivalMin)) {
+            best = candidate;
+          }
+        }
+      }
+      return best;
+    }).filter((x): x is NonNullable<typeof x> => x !== null);
+  })();
+  const favSubwayList = favSubways
+    .map(id => subwayList.find(s => s.id === id))
+    .filter((s): s is (typeof subwayList)[number] => Boolean(s));
 
   // 위치 상태 뱃지
   function LocBadge() {
@@ -754,21 +1408,27 @@ export default function TransportPage() {
           <Navigation size={10} />내 위치
         </span>
       );
+    if (locState === "far")
+      return (
+        <span className="flex items-center gap-1 text-[12px] font-bold bg-[#FFF3E0] text-[#7C4700] px-2 py-0.5 rounded-full">
+          <MapPin size={10} />검단 권역 밖
+        </span>
+      );
     return <span className="text-[12px] text-[#86868b]">검단신도시 기준</span>;
   }
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
-      <Header title="교통 정보" />
+      <Header title="여행/교통" />
 
-      {/* 플로팅 새로고침 버튼 (하단) */}
+      {/* 플로팅 새로고침 버튼 — 네비(bottom-5 + h-64px = 84px) 위로 16px 여백 = 100px */}
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[76px] right-4 z-50 w-11 h-11 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[100px] right-4 z-50 w-12 h-12 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
-        <RefreshCw size={18} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
+        <RefreshCw size={20} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
       </button>
 
       {/* 버스 상세 바텀 시트 */}
@@ -776,6 +1436,13 @@ export default function TransportPage() {
         <BusDetailSheet
           arrival={selectedArrival}
           onClose={() => setSelectedArrival(null)}
+          isFav={favBusRoutes.includes(selectedArrival.routeNo)}
+          onToggleFav={() => {
+            const willFav = !favBusRoutes.includes(selectedArrival.routeNo);
+            toggleBusRoute(selectedArrival.routeNo);
+            if (willFav) saveBusRouteStopMeta(selectedArrival.routeNo);
+          }}
+          onSaveMeta={(endStation) => saveBusRouteMeta(selectedArrival.routeNo, endStation)}
         />
       )}
 
@@ -788,129 +1455,220 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="bg-white sticky top-[52px] z-30 border-b border-[#f5f5f7] flex">
+      <div className="flex gap-2 px-4 py-2 bg-white border-b border-gray-100 sticky top-[56px] z-30">
         {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-11 text-[13px] font-semibold border-b-2 transition-colors ${
-              t === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
+            className={`flex-1 h-9 flex items-center justify-center text-[13px] font-semibold rounded-xl transition-colors active:opacity-70 ${
+              t === tab ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-500"
             }`}>
             {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "📍 가볼만한곳"}
           </button>
         ))}
       </div>
 
-      {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
-      {tab === "버스" && (favStopList.length > 0 || favRouteList.length > 0) && (
-        <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center justify-between px-4 pt-3 pb-1.5">
-            <div className="flex items-center gap-1.5">
-              <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-              <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
-            </div>
-            <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-              <RefreshCw size={11} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
-              <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
-            </button>
-          </div>
-          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
-            {favRouteList.map(r => {
-              const fk = routeFavKey(r.stopId, r);
-              return (
-              <div key={fk}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
-                <button onClick={() => toggleRoute(fk)}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <div className="flex items-center gap-1.5 mb-1 pr-5">
-                  <div className="bg-[#0071e3] rounded-lg px-2 py-0.5">
-                    <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
-                  </div>
-                  {r.isExpress && <Zap size={9} className="text-[#E65100]" />}
-                </div>
-                <p className="text-[10px] text-[#6e6e73] truncate mb-2">{r.stopName}</p>
-                <ArrivalBadge min={r.arrivalMin} live={isLive} />
-              </div>
-              );
-            })}
-            {favStopList.map(stop => (
-              <div key={stop.id}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
-                <button onClick={() => toggleStop(stop.id)}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <div className="flex items-center gap-1 mb-1 pr-5">
-                  <MapPin size={10} className="text-[#0071e3] shrink-0" />
-                  <span className="text-[11px] font-bold text-[#1d1d1f] truncate">{stop.name}</span>
-                </div>
-                <p className="text-[10px] text-[#86868b] mb-2">{distLabel(stop.distM)}</p>
-                <div className="flex flex-wrap gap-1">
-                  {stop.arrivals.slice(0, 4).map((a, i) => (
-                    <div key={i} className="bg-[#0071e3] rounded px-1.5 py-0.5">
-                      <span className="text-white text-[10px] font-bold">{a.routeNo}</span>
-                    </div>
-                  ))}
-                  {stop.loadingArrivals && (
-                    <div className="bg-[#d2d2d7] rounded px-4 py-0.5 animate-pulse" />
-                  )}
-                </div>
-              </div>
-            ))}
+      {/* ══ 권역 밖 안내 배너 ══════════════════════════════════════ */}
+      {tab === "버스" && locState === "far" && (
+        <div className="mx-4 mt-3 px-4 py-3 bg-[#FFF8E1] rounded-2xl flex items-start gap-2.5">
+          <MapPin size={15} className="text-[#F59E0B] shrink-0 mt-0.5" />
+          <div>
+            <p className="text-[13px] font-bold text-[#92400E]">검단 신도시 권역 밖</p>
+            <p className="text-[12px] text-[#92400E]/80 mt-0.5">즐겨찾기 노선은 검단 기준 실시간 정보로 표시됩니다.</p>
           </div>
         </div>
       )}
 
-      {/* ══ 지하철 즐겨찾기 인라인 (지하철 탭 전용) ══════════════ */}
-      {tab === "지하철" && favSubwayList.length > 0 && (
-        <div className="bg-white border-b border-[#f5f5f7]">
-          <div className="flex items-center px-4 pt-3 pb-1.5 gap-1.5">
-            <Star size={12} className="text-[#FFBB00] fill-[#FFBB00]" />
-            <span className="text-[12px] font-bold text-[#424245]">즐겨찾기</span>
+      {/* ══ 버스 즐겨찾기 (버스 탭 전용) ══════════════════════════ */}
+      {tab === "버스" && favBusRoutes.length > 0 && (
+        <div className="px-4 pt-3 pb-1 space-y-2.5">
+          {/* 섹션 헤더 */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
+              <span className="text-[14px] font-bold text-[#1d1d1f]">노선 즐겨찾기</span>
+            </div>
+            <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
+              <RefreshCw size={12} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+              {lastUpdated && <span className="text-[11px] text-[#86868b]">{lastUpdated}</span>}
+            </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
-            {favSubwayList.map(st => {
-              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
-              const nextUp   = displayArrivals.find(a => a.direction === "상행");
-              const nextDown = displayArrivals.find(a => a.direction === "하행");
-              return (
-                <div key={st.id} className="shrink-0 relative">
-                <button onClick={() => toggleSubway(st.id)}
-                  className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <button
-                  onClick={() => setSelectedSubway(st)}
-                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[160px] border border-[#f5f5f7] text-left active:opacity-70">
-                  <div className="flex items-center gap-1 mb-0.5 pr-5">
-                    <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
-                    <span className="text-[12px] font-bold text-[#1d1d1f] truncate">{st.displayName}</span>
-                  </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
-                    style={{ background: st.lineColor }}>{st.line}</span>
-                  {st.loadingArrivals ? (
-                    <div className="h-10 bg-[#d2d2d7] rounded animate-pulse" />
-                  ) : (
-                    <div className="space-y-1.5">
-                      {nextUp && (
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] text-[#6e6e73] truncate">{nextUp.terminalStation}</span>
-                          <ArrivalBadge min={nextUp.arrivalMin} live />
-                        </div>
-                      )}
-                      {nextDown && (
-                        <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] text-[#6e6e73] truncate">{nextDown.terminalStation}</span>
-                          <ArrivalBadge min={nextDown.arrivalMin} live />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </button>
+
+          {loading ? (
+            [1, 2].map(i => (
+              <div key={i} className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 animate-pulse">
+                <div className="w-12 h-9 bg-[#d2d2d7] rounded-lg shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 w-32 bg-[#d2d2d7] rounded" />
+                  <div className="h-3 w-24 bg-[#d2d2d7] rounded" />
                 </div>
-              );
-            })}
+                <div className="w-16 h-12 bg-[#d2d2d7] rounded-xl shrink-0" />
+              </div>
+            ))
+          ) : favBusRouteCards.length > 0 ? (
+            favBusRouteCards.map(card => (
+              <div key={card.arrival.routeNo}
+                className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-[#f5f5f7]"
+                onClick={() => { selectedStopRef.current = { id: card.stopId, name: card.stopName, distM: card.stopDistM }; setSelectedArrival(card.arrival); }}>
+                <div className={`${card.arrival.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-2 min-w-[44px] text-center shrink-0`}>
+                  <span className="text-white text-[14px] font-black">{card.arrival.routeNo}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">
+                      {favBusRoutesMeta[card.arrival.routeNo]?.endStation ?? card.arrival.destination} 방면
+                    </p>
+                    {card.arrival.isExpress && (
+                      <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                        <Zap size={9} />급행
+                      </span>
+                    )}
+                    {card.arrival.isLowFloor && <Accessibility size={11} className="text-[#0071e3] shrink-0" />}
+                  </div>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <MapPin size={9} className="text-[#86868b] shrink-0" />
+                    <span className="text-[12px] text-[#86868b] truncate">{card.stopName}</span>
+                    <span className="text-[11px] text-[#d2d2d7] shrink-0">·</span>
+                    <span className="text-[11px] text-[#0071e3] shrink-0 font-medium">{distLabel(card.stopDistM)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <button onClick={e => { e.stopPropagation(); toggleBusRoute(card.arrival.routeNo); }}
+                    className="p-0.5 active:opacity-60">
+                    <Star size={14} className="text-[#FFBB00] fill-[#FFBB00]" />
+                  </button>
+                  <ArrivalBadge min={card.arrival.arrivalMin} live={!card.arrival.isScheduled} />
+                </div>
+              </div>
+            ))
+          ) : (
+            /* 즐겨찾기 노선이 있으나 주변 정류장에서 운행 정보 없음 */
+            <div className="bg-white rounded-2xl px-4 py-1 divide-y divide-[#f5f5f7]">
+              {favBusRoutes.map(rn => (
+                <div key={rn} className="flex items-center gap-3 py-3">
+                  <div className="bg-[#d2d2d7] rounded-lg px-2.5 py-2 min-w-[44px] text-center shrink-0">
+                    <span className="text-white text-[14px] font-black">{rn}</span>
+                  </div>
+                  <p className="text-[13px] text-[#86868b] flex-1">주변 정류장에서 운행 정보 없음</p>
+                  <button onClick={() => toggleBusRoute(rn)} className="p-1 active:opacity-60">
+                    <Star size={14} className="text-[#FFBB00] fill-[#FFBB00]" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="h-1 border-b border-[#e5e5ea]" />
+        </div>
+      )}
+
+      {/* ══ 지하철 즐겨찾기 (지하철 탭 전용) ══════════════════════ */}
+      {tab === "지하철" && favSubwayList.length > 0 && (
+        <div className="px-4 pt-3 pb-1 space-y-3">
+          <div className="flex items-center gap-1.5">
+            <Star size={13} className="text-[#FFBB00] fill-[#FFBB00]" />
+            <span className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기</span>
           </div>
+          {/* 즐겨찾기 역 카드 — 메인 UI와 동일 */}
+          {favSubwayList.map(st => {
+            const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+            const isEstimated = st.arrivals.length === 0;
+            const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 2);
+            const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 2);
+            const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
+            return (
+              <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm">
+                {/* 역 헤더 — 라인 컬러 배경 (메인과 동일) */}
+                <div className="flex items-center gap-2 px-3 py-2.5" style={{ background: st.lineColor }}>
+                  <button onClick={() => setTimetableStation(st)}
+                    className="flex items-center gap-2 flex-1 min-w-0 active:opacity-70 text-left">
+                    <div className="w-7 h-7 rounded-full bg-white flex items-center justify-center shrink-0">
+                      <span className="text-[12px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
+                    </div>
+                    <span className="text-white font-extrabold text-[15px] truncate">{st.displayName}</span>
+                    <span className="flex items-center gap-0.5 text-white/70 text-[11px] font-medium shrink-0">
+                      <Clock size={10} />시간표
+                    </span>
+                  </button>
+                  <button onClick={() => toggleSubway(st.id)} className="p-1 active:opacity-60 shrink-0">
+                    <Star size={18} className="text-yellow-300 fill-yellow-300" />
+                  </button>
+                </div>
+
+                {/* 도착 정보 헤더 */}
+                <div className="px-3 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                  <span className="text-[12px] font-bold text-[#1d1d1f]">도착 정보</span>
+                  <div className="flex items-center gap-2">
+                    {isEstimated && <span className="text-[10px] text-[#86868b]">⏱ 시간표 기준</span>}
+                    {(() => {
+                      const t = dayTimetable(st.timetable);
+                      return t.intervalMin > 0 ? (
+                        <span className="text-[10px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                      ) : null;
+                    })()}
+                  </div>
+                </div>
+
+                {/* 2열 도착 (메인과 동일) */}
+                {st.loadingArrivals ? (
+                  <div className="grid grid-cols-2 gap-2 p-3">
+                    {[0,1].map(i => <div key={i} className="h-16 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                  </div>
+                ) : displayArrivals.length === 0 ? (
+                  <p className="px-3 py-3 text-[13px] text-[#6e6e73] text-center">운행 종료</p>
+                ) : (
+                  <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                    {[
+                      { label: st.timetable.upDirection, arrivals: upArrivals },
+                      { label: st.timetable.downDirection, arrivals: downArrivals },
+                    ].map(({ label, arrivals: dirArrivals }, col) => (
+                      <div key={col} className="px-3 py-2.5">
+                        <div className="flex items-center gap-0.5 mb-2.5 pb-1.5 border-b border-[#f5f5f7]">
+                          <span className="text-[12px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                          <ChevronRight size={12} className="text-[#86868b] shrink-0" />
+                        </div>
+                        {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                          <div key={i} className="flex items-center justify-between py-1">
+                            <div className="flex-1 min-w-0 mr-1">
+                              <span className="text-[12px] text-[#424245] block truncate">{a.terminalStation}</span>
+                              {!isEstimated && a.currentStation && (
+                                <span className="text-[9px] text-[#86868b]">{a.currentStation} 출발</span>
+                              )}
+                              {a.isExpress && (
+                                <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
+                              )}
+                            </div>
+                            <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                              {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
+                            </span>
+                          </div>
+                        )) : (
+                          <span className="text-[11px] text-[#86868b]">정보 없음</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 첫차/막차 */}
+                {(() => {
+                  const t = dayTimetable(st.timetable);
+                  if (t.upFirst === "-") return null;
+                  return (
+                    <div className="flex gap-2 px-3 pb-3 pt-1 border-t border-[#f5f5f7]">
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.upDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+                      </div>
+                      <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2">
+                        <p className="text-[10px] text-[#86868b] mb-0.5">{st.timetable.downDirection} 첫/막차</p>
+                        <p className="text-[12px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            );
+          })}
+          <div className="h-1 border-b border-[#e5e5ea]" />
         </div>
       )}
 
@@ -936,9 +1694,12 @@ export default function TransportPage() {
                       <Train size={20} style={{ color: st.lineColor }} />
                     </div>
                     <div>
-                      <p className="text-[17px] font-bold text-[#1d1d1f]">{st.displayName}</p>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                        style={{ background: st.lineColor }}>{st.line}</span>
+                      <p className="text-[18px] font-bold text-[#1d1d1f]">{st.displayName}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                          style={{ background: st.lineColor }}>{st.line}</span>
+                        <span className="text-[11px] text-[#86868b] font-medium">{distLabel(st.distM)}</span>
+                      </div>
                     </div>
                   </div>
                   <button onClick={() => setSelectedSubway(null)}
@@ -958,21 +1719,25 @@ export default function TransportPage() {
                     ...downArr.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
                     ...downArr.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
                   ]).map(({ a, dir }, i) => (
-                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
+                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3.5 py-3">
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
                             dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
                           }`}>{dir}</span>
                           {a.isExpress && (
-                            <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                            <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                              a.trainTypeName === "직통"
+                                ? "bg-[#F3E8FF] text-[#7C3AED]"
+                                : "bg-[#FFF3E0] text-[#E65100]"
+                            }`}>
                               {a.trainTypeName ?? "급행"}
                             </span>
                           )}
-                          <p className="text-[14px] font-semibold text-[#1d1d1f]">{a.terminalStation} 방면</p>
+                          <p className="text-[16px] font-bold text-[#1d1d1f]">{a.terminalStation} 방면</p>
                         </div>
                         {!isEst && a.currentStation && (
-                          <p className="text-[11px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
+                          <p className="text-[12px] text-[#6e6e73] mt-0.5">현재: {a.currentStation}</p>
                         )}
                       </div>
                       <ArrivalBadge min={a.arrivalMin} live />
@@ -985,42 +1750,61 @@ export default function TransportPage() {
                   )}
                 </div>
 
-                {st.timetable.upFirst !== "-" && (
-                  <div className="flex gap-2 mt-3">
-                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 첫차/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.upFirst} / {st.timetable.upLast}</p>
+                {(() => {
+                  const t = dayTimetable(st.timetable);
+                  const dayLabel = currentDayType() === "holiday" ? "휴일" : "평일";
+                  return (
+                    <div className="mt-3">
+                      <p className="text-[10px] text-[#86868b] mb-1.5">{dayLabel} 시간표</p>
+                      <div className="flex gap-2">
+                        {t.upFirst !== "-" && (
+                          <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                            <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 첫차/막차</p>
+                            <p className="text-[12px] font-bold text-[#1d1d1f]">{t.upFirst} / {t.upLast}</p>
+                          </div>
+                        )}
+                        {t.downFirst !== "-" && (
+                          <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                            <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 첫차/막차</p>
+                            <p className="text-[12px] font-bold text-[#1d1d1f]">{t.downFirst} / {t.downLast}</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                      <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 첫차/막차</p>
-                      <p className="text-[12px] font-bold text-[#1d1d1f]">{st.timetable.downFirst} / {st.timetable.downLast}</p>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </div>
           </>
         );
       })()}
 
-      {/* 위치 상태 바 */}
-      <div className="flex items-center justify-between px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <MapPin size={13} className="text-[#0071e3]" />
-          <span className="text-[13px] text-[#424245] font-medium">가까운 순 정렬</span>
-          <LocBadge />
+      {/* 위치 상태 + 섹션 헤더 — 홈 SectionLabel 스타일 */}
+      {tab !== "가볼만한곳" && (
+        <div className="flex items-end justify-between px-4 pt-5 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-[19px] font-extrabold text-[#1d1d1f]">
+              {tab === "버스"
+                ? locState === "far" ? "버스 검색" : "주변 정류장"
+                : "주변 지하철역"}
+            </span>
+            <span className="flex items-center gap-1 text-[12px] text-[#86868b]">
+              <MapPin size={11} className="text-[#0071e3]" />가까운 순
+            </span>
+            <LocBadge />
+          </div>
+          <button onClick={refresh} className="flex items-center gap-1 active:opacity-60 pb-0.5">
+            <RefreshCw size={12} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
+            <span className="text-[11px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
+          </button>
         </div>
-        <button onClick={refresh} className="flex items-center gap-1 active:opacity-60">
-          <RefreshCw size={13} className={`text-[#6e6e73] ${refreshing ? "animate-spin" : ""}`} />
-          <span className="text-[12px] text-[#6e6e73]">{lastUpdated || "새로고침"}</span>
-        </button>
-      </div>
+      )}
 
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
         <div className="px-4 space-y-3">
           {/* 검색 바 */}
-          <div className="bg-white rounded-xl flex items-center gap-2 px-3 h-10">
+          <div className="bg-white rounded-xl flex items-center gap-2 px-3 h-10 border border-gray-200 shadow-sm">
             <Search size={15} className="text-[#86868b]" />
             <input
               value={busSearch}
@@ -1035,11 +1819,130 @@ export default function TransportPage() {
             )}
           </div>
 
+          {/* ── 광역 검색 결과 (입력 시) ── */}
+          {busSearch.trim().length >= 2 && (
+            <div className="space-y-2">
+              {searching && (
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex items-center gap-2">
+                  <RefreshCw size={14} className="text-[#0071e3] animate-spin" />
+                  <span className="text-[13px] text-[#6e6e73]">검색 중...</span>
+                </div>
+              )}
+
+              {!searching && searchRoutes.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-2 bg-[#f5f5f7] border-b border-gray-200">
+                    <span className="text-[12px] font-bold text-[#424245]">노선 {searchRoutes.length}개</span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {searchRoutes.map(r => (
+                      <button key={r.routeId}
+                        onClick={() => setSelectedArrival({
+                          routeNo: r.routeNo, routeId: r.routeId,
+                          destination: r.endStation || "종점",
+                          arrivalMin: -1, remainingStops: 0,
+                          isLowFloor: false, isExpress: r.routeNo.startsWith("M") || r.routeNo.includes("급행"),
+                          isScheduled: true,
+                        })}
+                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#f5f5f7] text-left">
+                        <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 min-w-[48px] text-center shrink-0">
+                          <span className="text-white text-[14px] font-black">{r.routeNo}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">
+                            {r.startStation || "기점"} ↔ {r.endStation || "종점"}
+                          </p>
+                          {r.routeName && r.routeName !== r.routeNo && (
+                            <p className="text-[11px] text-[#86868b] truncate">{r.routeName}</p>
+                          )}
+                        </div>
+                        <ChevronRight size={14} className="text-[#86868b] shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {!searching && searchStations.length > 0 && (
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  <div className="px-4 py-2 bg-[#f5f5f7] border-b border-gray-200">
+                    <span className="text-[12px] font-bold text-[#424245]">정류장 {searchStations.length}개</span>
+                  </div>
+                  <div className="divide-y divide-gray-100">
+                    {searchStations.map(s => {
+                      const open = searchExpanded === s.stationId;
+                      const arrivals = searchStationArrivals[s.stationId];
+                      return (
+                        <div key={s.stationId}>
+                          <button
+                            onClick={() => {
+                              const next = open ? null : s.stationId;
+                              setSearchExpanded(next);
+                              if (next) loadSearchStationArrivals(s.stationId);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#f5f5f7] text-left">
+                            <div className="w-8 h-8 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
+                              <Bus size={14} className="text-[#0071e3]" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{s.stationName}</p>
+                              {s.distanceM > 0 && (
+                                <p className="text-[11px] text-[#86868b]">{distLabel(s.distanceM)}</p>
+                              )}
+                            </div>
+                            <button onClick={e => { e.stopPropagation(); toggleStop(s.stationId); }}
+                              className="p-1 active:opacity-60">
+                              <Star size={15} className={favStops.includes(s.stationId) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                            </button>
+                            {open ? <ChevronUp size={14} className="text-[#86868b] shrink-0" /> : <ChevronDown size={14} className="text-[#86868b] shrink-0" />}
+                          </button>
+                          {open && (
+                            <div className="px-4 pb-3 pt-1 space-y-1.5 bg-[#fafafa]">
+                              {!arrivals ? (
+                                <div className="bg-[#f5f5f7] rounded-lg px-3 py-2.5 text-center">
+                                  <span className="text-[12px] text-[#86868b]">도착 정보 조회 중...</span>
+                                </div>
+                              ) : arrivals.length === 0 ? (
+                                <div className="bg-[#f5f5f7] rounded-lg px-3 py-2.5 text-center">
+                                  <span className="text-[12px] text-[#86868b]">도착 정보 없음</span>
+                                </div>
+                              ) : (
+                                arrivals.slice(0, 5).map((a, i) => (
+                                  <button key={i}
+                                    onClick={() => setSelectedArrival(a)}
+                                    className="w-full flex items-center gap-2.5 bg-[#f5f5f7] rounded-lg px-3 py-2 active:bg-[#eaeaea]">
+                                    <div className="bg-[#0071e3] rounded px-2 py-0.5 min-w-[40px] text-center shrink-0">
+                                      <span className="text-white text-[12px] font-black">{a.routeNo}</span>
+                                    </div>
+                                    <span className="text-[12px] text-[#1d1d1f] truncate flex-1 text-left">{a.destination} 방면</span>
+                                    <ArrivalBadge min={a.arrivalMin} live={isLive} />
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {!searching && searchStations.length === 0 && searchRoutes.length === 0 && (
+                <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-8 text-center">
+                  <Search size={28} className="mx-auto text-[#D1D5DB] mb-2" />
+                  <p className="text-[13px] font-bold text-[#6e6e73]">검색 결과가 없습니다</p>
+                  <p className="text-[11px] text-[#86868b] mt-1">정류장 이름이나 노선 번호를 다시 확인해 주세요</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* 데이터 소스 상태 배너 */}
           {!loading && stopSource === "fallback" && (
             <div className="bg-[#FFF3E0] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
-              <span className="text-[13px]">⚠️</span>
-              <p className="text-[12px] text-[#7C4700] font-medium">API 연결 불가 · 기본 검단 정류장 표시 중</p>
+              <span className="text-[13px]">📍</span>
+              <p className="text-[12px] text-[#7C4700] font-medium">주변 정류장을 못 찾았어요 · 검단 주요 정류장 표시 중</p>
             </div>
           )}
           {!loading && stopSource === "osm" && (
@@ -1049,33 +1952,56 @@ export default function TransportPage() {
             </div>
           )}
 
-          {loading ? (
+          {/* 검색 활성 시에는 주변 정류장 목록을 숨겨 중복 표시 방지 */}
+          {busSearch.trim().length >= 2 ? null : loading ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
+          ) : locState === "far" ? (
+            /* 권역 밖 — 검색 유도 카드로 대체 */
+            <div className="bg-white rounded-2xl overflow-hidden">
+              <div className="px-5 py-7 text-center space-y-3">
+                <div className="w-14 h-14 rounded-full bg-[#FFF3E0] flex items-center justify-center mx-auto">
+                  <MapPin size={24} className="text-[#F59E0B]" />
+                </div>
+                <div>
+                  <p className="text-[16px] font-bold text-[#1d1d1f]">주변 정류장을 표시하려면</p>
+                  <p className="text-[13px] text-[#6e6e73] mt-1.5 leading-relaxed">
+                    정류장 이름이나 노선 번호로 검색하거나<br />즐겨찾기 노선의 실시간 도착 정보를<br />위 즐겨찾기 섹션에서 확인하세요.
+                  </p>
+                </div>
+              </div>
+              <div className="border-t border-[#f5f5f7] px-4 py-3">
+                <button
+                  onClick={() => {
+                    const input = document.querySelector<HTMLInputElement>('input[placeholder*="정류장"]');
+                    input?.focus();
+                    input?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 bg-[#0071e3] text-white rounded-xl py-2.5 active:opacity-80">
+                  <Search size={14} />
+                  <span className="text-[13px] font-semibold">정류장·노선 검색하기</span>
+                </button>
+              </div>
+            </div>
           ) : stopsWithRoutes.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
               <Bus size={32} className="mx-auto text-[#D1D5DB] mb-2" />
               <p className="text-[14px] font-bold text-[#6e6e73]">주변 버스 정류장을 찾을 수 없습니다</p>
               <p className="text-[12px] text-[#86868b] mt-1">위치 권한을 허용하거나 새로고침해 주세요</p>
             </div>
-          ) : filteredStops.length === 0 ? (
-            <div className="bg-white rounded-2xl px-4 py-10 text-center">
-              <Search size={28} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] font-bold text-[#6e6e73]">검색 결과가 없습니다</p>
-              <p className="text-[12px] text-[#86868b] mt-1">다른 키워드로 검색해 보세요</p>
-            </div>
           ) : (
-            filteredStops.map((stop, idx) => {
+            // 가까운 4개 우선 노출, 나머지는 "더 보기" 토글로
+            (showAllStops ? stopsWithRoutes : stopsWithRoutes.slice(0, 4)).map((stop, idx) => {
               const open = expanded === stop.id;
               const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
               return (
-                <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
+                <div key={stop.id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                   {/* 정류장 헤더 */}
                   <button onClick={() => setExpanded(open ? null : stop.id)}
-                    className="w-full flex items-center justify-between px-4 py-3.5 active:bg-[#f5f5f7]">
+                    className="w-full flex items-center justify-between px-4 py-4 active:bg-[#f5f5f7]">
                     <div className="flex items-center gap-3">
                       <div className="relative">
-                        <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
-                          <Bus size={18} className="text-[#0071e3]" />
+                        <div className="w-11 h-11 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
+                          <Bus size={20} className="text-[#0071e3]" />
                         </div>
                         {idx === 0 && (
                           <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
@@ -1084,7 +2010,7 @@ export default function TransportPage() {
                         )}
                       </div>
                       <div className="text-left">
-                        <p className="text-[15px] font-bold text-[#1d1d1f]">{stop.name}</p>
+                        <p className="text-[16px] font-bold text-[#1d1d1f] leading-tight">{stop.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
                           <Navigation size={10} className="text-[#0071e3]" />
                           <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
@@ -1102,7 +2028,7 @@ export default function TransportPage() {
                     <div className="flex items-center gap-1.5">
                       <button onClick={e => { e.stopPropagation(); toggleStop(stop.id); }}
                         className="p-1.5 active:opacity-60">
-                        <Star size={18} className={favStops.has(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                        <Star size={18} className={favStops.includes(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                       </button>
                       {open ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
                     </div>
@@ -1132,7 +2058,7 @@ export default function TransportPage() {
                         {displayArrivals.map((a, i) => (
                           <div key={i}
                             className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
-                            onClick={() => setSelectedArrival(a)}>
+                            onClick={() => { selectedStopRef.current = { id: stop.id, name: stop.name, distM: stop.distM }; setSelectedArrival(a); }}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
                               <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
                                 <span className="text-white text-[14px] font-black">{a.routeNo}</span>
@@ -1148,7 +2074,7 @@ export default function TransportPage() {
                                   {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
                                 </div>
                                 <p className="text-[12px] text-[#6e6e73]">
-                                  {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                                  {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착 예정"}
                                 </p>
                               </div>
                             </div>
@@ -1156,7 +2082,7 @@ export default function TransportPage() {
                               {!a.isScheduled && (
                                 <button onClick={e => { e.stopPropagation(); toggleRoute(routeFavKey(stop.id, a)); }}
                                   className="p-1 active:opacity-60">
-                                  <Star size={15} className={favRoutes.has(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
+                                  <Star size={15} className={favRoutes.includes(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
                                 </button>
                               )}
                               <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
@@ -1177,9 +2103,22 @@ export default function TransportPage() {
             })
           )}
 
+          {/* 더 보기 (가까운 4개 외 추가 정류장) — 검색 중에는 비표시 */}
+          {!loading && busSearch.trim().length < 2 && stopsWithRoutes.length > 4 && (
+            <button onClick={() => setShowAllStops(s => !s)}
+              className="w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3.5 flex items-center justify-center gap-1.5 active:bg-[#f5f5f7]">
+              <span className="text-[13px] font-semibold text-[#0071e3]">
+                {showAllStops ? "가까운 정류장만 보기" : `더 보기 (${stopsWithRoutes.length - 4}개)`}
+              </span>
+              {showAllStops
+                ? <ChevronUp size={14} className="text-[#0071e3]" />
+                : <ChevronDown size={14} className="text-[#0071e3]" />}
+            </button>
+          )}
+
           {/* 범례 — 실시간 연동 시에만 의미 있음 */}
-          {isLive && (
-            <div className="bg-white rounded-2xl px-4 py-3 flex gap-4">
+          {isLive && busSearch.trim().length < 2 && (
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex gap-4">
               {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#0071e3]", "8분 이상"]].map(([c, l]) => (
                 <div key={l} className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${c}`} />
@@ -1195,144 +2134,207 @@ export default function TransportPage() {
       {/* ══ 지하철 탭 ════════════════════════════════════════ */}
       {tab === "지하철" && (
         <div className="px-4 space-y-3">
+          {/* 검단 2호선 연장 예정 — 즐겨찾기와 일반 역 정보 사이 */}
+          {!subwayLoading && (
+            <div className="bg-[#e8f1fd] border border-[#bcd9f7] rounded-xl shadow-sm px-4 py-3.5">
+              <p className="text-[14px] font-bold text-[#0071e3]">🚇 검단 2호선 연장 예정</p>
+              <p className="text-[13px] text-[#0071e3]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
+            </div>
+          )}
+
           {subwayLoading ? (
             <><SkeletonStop /><SkeletonStop /></>
           ) : subwayList.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
               <Train size={32} className="mx-auto text-[#D1D5DB] mb-2" />
-              <p className="text-[14px] font-bold text-[#6e6e73]">위치를 확인하는 중입니다</p>
+              <p className="text-[14px] font-bold text-[#6e6e73]">역 목록을 불러오는 중입니다</p>
+              <button
+                onClick={() => loadSubwayData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng)}
+                className="mt-3 text-[12px] font-bold text-[#0071e3] active:opacity-60"
+              >
+                다시 시도
+              </button>
             </div>
-          ) : (
-            subwayList.map((st) => {
+          ) : (() => {
+            // 환승역(같은 groupKey)은 한 카드로 묶고, 일반 역과 함께 거리 오름차순으로 정렬한다.
+            type SubwayItem = typeof subwayList[number];
+            type DisplayItem =
+              | { kind: "group"; key: string; stations: SubwayItem[]; distM: number; hubName: string }
+              | { kind: "single"; station: SubwayItem; distM: number };
+
+            const groupMap = new Map<string, SubwayItem[]>();
+            const singles: SubwayItem[] = [];
+            for (const st of subwayList) {
+              if (st.groupKey) {
+                const arr = groupMap.get(st.groupKey) ?? [];
+                arr.push(st);
+                groupMap.set(st.groupKey, arr);
+              } else {
+                singles.push(st);
+              }
+            }
+            const items: DisplayItem[] = [
+              ...Array.from(groupMap.entries()).map(([key, sts]): DisplayItem => ({
+                kind: "group",
+                key,
+                stations: sts,
+                distM: sts.reduce((m, s) => Math.min(m, s.distM), Infinity),
+                hubName: sts[0].displayName.replace(/\(.+?\)/g, "").trim(),
+              })),
+              ...singles.map((st): DisplayItem => ({ kind: "single", station: st, distM: st.distM })),
+            ].sort((a, b) => a.distM - b.distM);
+
+            return (
+              <>
+                {items.map(item => {
+              if (item.kind === "group") {
+                return (
+                  <TransferHubCard
+                    key={`group-${item.key}`}
+                    hubName={item.hubName}
+                    stations={item.stations}
+                    favSubways={favSubways}
+                    onToggleFav={toggleSubway}
+                    onOpenTimetable={(st) => setTimetableStation(st)}
+                  />
+                );
+              }
+              const st = item.station;
+              const displayArrivals = st.arrivals.length > 0 ? st.arrivals : estimateNextArrivals(st.timetable);
+              const isEstimated = st.arrivals.length === 0;
+              const upArrivals   = displayArrivals.filter(a => a.direction === "상행").slice(0, 3);
+              const downArrivals = displayArrivals.filter(a => a.direction === "하행").slice(0, 3);
+              const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 2);
               return (
-                <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
-                  {/* 역 헤더 — 탭하면 시간표 */}
-                  <button
-                    onClick={() => setTimetableStation(st)}
-                    className="w-full px-4 pt-4 pb-3 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ background: st.lineColor + "22" }}>
-                      <Train size={20} style={{ color: st.lineColor }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-[16px] font-bold text-[#1d1d1f]">{st.displayName}</p>
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                          style={{ background: st.lineColor }}>{st.line}</span>
+                <div key={st.id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                  {/* 역 헤더 — 라인 컬러 배경 */}
+                  <div className="flex items-center gap-2.5 px-4 py-3" style={{ background: st.lineColor }}>
+                    <button onClick={() => setTimetableStation(st)}
+                      className="flex items-center gap-2.5 flex-1 min-w-0 active:opacity-70 text-left">
+                      <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center shrink-0">
+                        <span className="text-[13px] font-black leading-none" style={{ color: st.lineColor }}>{lineShort}</span>
                       </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {st.timetable.intervalMin > 0 && (
-                          <p className="text-[12px] text-[#86868b]">배차 {st.timetable.intervalDisplay ?? `${st.timetable.intervalMin}분`}</p>
-                        )}
-                        <span className="flex items-center gap-0.5 text-[11px] text-[#0071e3] font-medium">
-                          <Clock size={10} />시간표
-                        </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-extrabold text-[18px] leading-tight truncate">{st.displayName}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                          {(() => {
+                            const t = dayTimetable(st.timetable);
+                            return t.intervalMin > 0 ? (
+                              <span className="text-white/85 text-[12px] font-medium">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                            ) : null;
+                          })()}
+                          <span className="text-white/50">·</span>
+                          <span className="flex items-center gap-0.5 text-white/85 text-[12px] font-bold">
+                            <Clock size={11} />시간표
+                          </span>
+                        </div>
                       </div>
-                    </div>
+                    </button>
                     {!st.planned && (
-                      <button onClick={e => { e.stopPropagation(); toggleSubway(st.id); }} className="p-1.5 active:opacity-60">
+                      <button onClick={() => toggleSubway(st.id)} className="p-1.5 active:opacity-60 shrink-0">
                         <Star size={20}
-                          className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                          className={favSubways.includes(st.id) ? "text-yellow-300 fill-yellow-300" : "text-white/50"} />
                       </button>
                     )}
-                  </button>
+                  </div>
 
-                  {/* 상하행 도착정보 */}
-                  <div className="px-4 pb-4 space-y-2">
-                    {st.loadingArrivals ? (
-                      [0, 1].map(i => (
-                        <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
-                          <div className="space-y-1.5">
-                            <div className="h-3.5 w-20 bg-[#d2d2d7] rounded" />
-                            <div className="h-3 w-14 bg-[#d2d2d7] rounded" />
+                  {/* 도착 정보 헤더 */}
+                  <div className="px-4 py-2 flex items-center justify-between border-b border-[#f5f5f7]">
+                    <span className="text-[13px] font-bold text-[#1d1d1f]">도착 정보</span>
+                    <div className="flex items-center gap-2">
+                      {isEstimated && <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준</span>}
+                      {(() => {
+                        const t = dayTimetable(st.timetable);
+                        return t.intervalMin > 0 ? (
+                          <span className="text-[11px] text-[#86868b]">배차 {t.intervalDisplay ?? `${t.intervalMin}분`}</span>
+                        ) : null;
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* 2열 도착 */}
+                  {st.loadingArrivals ? (
+                    <div className="grid grid-cols-2 gap-2 p-3">
+                      {[0,1].map(i => <div key={i} className="h-20 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+                    </div>
+                  ) : displayArrivals.length === 0 ? (
+                    <p className="px-3 py-4 text-[14px] text-[#6e6e73] text-center">운행 종료</p>
+                  ) : (
+                    <div className="grid grid-cols-2 divide-x divide-[#f5f5f7]">
+                      {[
+                        { label: st.timetable.upDirection, arrivals: upArrivals },
+                        { label: st.timetable.downDirection, arrivals: downArrivals },
+                      ].map(({ label, arrivals: dirArrivals }, col) => (
+                        <div key={col} className="px-3 py-3">
+                          <div className="flex items-center gap-0.5 mb-2 pb-1.5 border-b border-[#f5f5f7]">
+                            <span className="text-[13px] font-bold text-[#1d1d1f] flex-1 truncate">{label} 방면</span>
+                            <ChevronRight size={13} className="text-[#86868b] shrink-0" />
                           </div>
-                          <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
-                        </div>
-                      ))
-                    ) : (() => {
-                      // 실시간 있으면 실시간, 없으면 시간표 계산으로 대체
-                      const displayArrivals = st.arrivals.length > 0
-                        ? st.arrivals
-                        : estimateNextArrivals(st.timetable);
-                      const isEstimated = st.arrivals.length === 0;
-                      const upArrivals   = displayArrivals.filter(a => a.direction === "상행");
-                      const downArrivals = displayArrivals.filter(a => a.direction === "하행");
-
-                      if (displayArrivals.length === 0) return (
-                        <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                          <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
-                        </div>
-                      );
-
-                      // 방향 × 열차종류(일반/급행) 기준으로 행 목록 구성
-                      const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
-                        ...upArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-                        ...upArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-                        ...downArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-                        ...downArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-                      ];
-
-                      return (
-                      <>
-                        {isEstimated && (
-                          <div className="flex items-center gap-1.5 px-1 pb-1">
-                            <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준 추정 도착</span>
-                          </div>
-                        )}
-                        {rows.map(({ a, dir }, i) => (
-                          <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                            <div className="flex-1 min-w-0 mr-2">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                                  dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
-                                }`}>{dir}</span>
+                          {dirArrivals.length > 0 ? dirArrivals.map((a, i) => (
+                            <div key={i} className="flex items-center justify-between py-1.5">
+                              <div className="flex-1 min-w-0 mr-1">
+                                <span className="text-[13px] text-[#424245] block truncate font-medium">{a.terminalStation}</span>
+                                {!isEstimated && a.currentStation && (
+                                  <span className="text-[10px] text-[#86868b]">{a.currentStation} 출발</span>
+                                )}
                                 {a.isExpress && (
-                                  <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                                  <span className={`inline-block text-[10px] font-bold px-1.5 py-0.5 rounded mt-0.5 ${
+                                    a.trainTypeName === "직통"
+                                      ? "bg-[#F3E8FF] text-[#7C3AED]"
+                                      : "bg-[#FFF3E0] text-[#E65100]"
+                                  }`}>
                                     {a.trainTypeName ?? "급행"}
                                   </span>
                                 )}
-                                <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
                               </div>
-                              <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                                {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
-                              </p>
+                              <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                                {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
+                              </span>
                             </div>
-                            <ArrivalBadge min={a.arrivalMin} live />
+                          )) : (
+                            <p className="text-[11px] text-[#86868b] py-2">정보 없음</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                    {/* 첫차/막차 (오늘 요일 기준) */}
+                    {(() => {
+                      const t = dayTimetable(st.timetable);
+                      const dayLabel = currentDayType() === "holiday" ? "휴일" : "평일";
+                      if (t.upFirst === "-" && t.downFirst === "-") return null;
+                      return (
+                        <div className="pt-1">
+                          <p className="text-[10px] text-[#86868b] mb-1.5 px-1">{dayLabel} 첫차/막차</p>
+                          <div className="flex gap-2">
+                            {t.upFirst !== "-" && (
+                              <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                                <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.upDirection} 방면</p>
+                                <p className="text-[12px] font-bold text-[#1d1d1f]">
+                                  {t.upFirst} / {t.upLast}
+                                </p>
+                              </div>
+                            )}
+                            {t.downFirst !== "-" && (
+                              <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
+                                <p className="text-[10px] text-[#6e6e73] mb-0.5">{st.timetable.downDirection} 방면</p>
+                                <p className="text-[12px] font-bold text-[#1d1d1f]">
+                                  {t.downFirst} / {t.downLast}
+                                </p>
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </>
+                        </div>
                       );
                     })()}
-
-                    {/* 첫차/막차 */}
-                    {st.timetable.upFirst !== "-" && (
-                      <div className="flex gap-2 pt-1">
-                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                          <p className="text-[10px] text-[#6e6e73] mb-0.5">상행 첫차/막차</p>
-                          <p className="text-[12px] font-bold text-[#1d1d1f]">
-                            {st.timetable.upFirst} / {st.timetable.upLast}
-                          </p>
-                        </div>
-                        <div className="flex-1 bg-[#F8F9FA] rounded-xl px-3 py-2">
-                          <p className="text-[10px] text-[#6e6e73] mb-0.5">하행 첫차/막차</p>
-                          <p className="text-[12px] font-bold text-[#1d1d1f]">
-                            {st.timetable.downFirst} / {st.timetable.downLast}
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
-                </div>
               );
-            })
-          )}
+            })}
+              </>
+            );
+          })()}
 
-          {!subwayLoading && (
-            <div className="bg-[#e8f1fd] rounded-2xl px-4 py-3.5">
-              <p className="text-[14px] font-bold text-[#0071e3]">🚇 검단 2호선 연장 예정</p>
-              <p className="text-[13px] text-[#0071e3]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
-            </div>
-          )}
         </div>
       )}
 
@@ -1559,11 +2561,18 @@ export default function TransportPage() {
                   <div className="absolute top-3 left-0 right-0 flex justify-center">
                     <div className="w-10 h-1 bg-white/40 rounded-full" />
                   </div>
-                  {/* 닫기 버튼 */}
-                  <button onClick={() => setSelectedPlace(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
-                    <X size={16} className="text-white" />
-                  </button>
+                  {/* 닫기 + 즐겨찾기 */}
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <button onClick={() => togglePlaceFavorite(p)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <Star size={16}
+                        className={favPlaceIds.has(p.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-white"} />
+                    </button>
+                    <button onClick={() => setSelectedPlace(null)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <X size={16} className="text-white" />
+                    </button>
+                  </div>
                   {/* 배지 */}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5">
                     <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
