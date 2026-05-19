@@ -93,11 +93,8 @@ export default function BannerCarousel({ banners }: Props) {
           </div>
         )}
 
-        {/* 텍스트 + 링크 */}
+        {/* 텍스트 + 링크 (title은 프론트 노출 안 함 — DB/어드민에는 유지) */}
         <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-          <p className="text-[20px] font-black text-white leading-tight drop-shadow">
-            {b.title}
-          </p>
           {b.subtitle && (
             <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
               {b.subtitle}
