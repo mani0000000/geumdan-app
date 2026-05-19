@@ -4,8 +4,8 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  Phone, Clock, Tag,
-  ChevronRight, X, Pencil, CheckCircle2,
+  Phone, Clock, Tag, MapPin,
+  ChevronRight, X,
   Search, List, Map as MapIcon,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -16,7 +16,7 @@ import { fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
-import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, fetchStoreExtraInfo, type StoreDetail } from "@/lib/db/stores";
+import { fetchActiveCoupons, fetchActiveOpenings } from "@/lib/db/stores";
 import type { Store, StoreCategory } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
@@ -47,25 +47,6 @@ const catBg: Record<StoreCategory, string> = {
   기타:"bg-[#F3F4F6] text-[#374151]",
 };
 
-// 업종별 상세 정보 키 → 표시 라벨 (admin EXTRA_FIELDS 와 동일 키 기준)
-const EXTRA_LABEL: Record<string, string> = {
-  menu_highlights: "대표 메뉴", seats: "좌석 수", table_count: "테이블 수",
-  wireless_charge: "무선충전", pet_friendly: "반려동물 동반", wifi: "와이파이",
-  takeout: "테이크아웃", delivery: "배달", dessert: "디저트", parking: "주차",
-  sns: "SNS", cuisine: "음식 종류", price_range: "가격대", kitchen_area: "주방 면적",
-  open_hours: "영업시간", break_time: "브레이크타임", last_order: "라스트오더",
-  delivery_apps: "배달앱", reservation: "예약", group_room: "단체석/룸",
-  brand: "브랜드", is_24h: "24시간", atm: "ATM", parcel: "택배접수", seating: "취식공간",
-  specialties: "진료/취급", doctor_count: "의료진 수", night_open: "야간진료",
-  weekend_open: "주말진료", reservation_info: "예약 방법", insurance: "보험적용",
-  services: "시술 항목", staff_count: "직원 수", designer_pick: "디자이너 지정",
-  courses: "강좌", age_range: "대상", tuition: "수강료", shuttle: "셔틀",
-  trial: "무료체험", consult: "상담 방법", programs: "프로그램", pt_available: "PT",
-  trial_available: "체험 가능", shower: "샤워시설", fresh_food: "신선식품",
-  holiday: "정기휴무", pet_types: "취급 동물", service_types: "서비스 종류",
-  same_day: "당일처리", pickup: "수거/배달",
-};
-function humanizeKey(k: string) { return EXTRA_LABEL[k] ?? k.replace(/_/g, " "); }
 
 // 건물 이미지 매핑 (Unsplash 무료 이미지)
 const BUILDING_IMAGES: Record<string, string> = {
@@ -118,143 +99,6 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── 바텀시트 공통 래퍼 ──────────────────────────────────────
-function SheetBackdrop({ zIndex, onClose, children }: { zIndex: number; onClose: () => void; children: React.ReactNode }) {
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-  return (
-    <div className="fixed inset-0" style={{ zIndex }}>
-      {/* backdrop — 먼저 DOM에 → sheet보다 z 낮음, 클릭 시 닫기 */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} style={{ zIndex: 1 }} />
-      {/* sheet panel — 나중에 DOM에 → z:2 로 backdrop 위 */}
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px]" style={{ zIndex: 2 }}
-        onClick={e => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-// ─── 스와이프 가능한 바텀시트 훅 ────────────────────────────
-// 위로 스와이프 → full(전체 화면), 아래로 스와이프 → half(원래) 또는 close
-type SheetMode = "half" | "full";
-function useSwipeSheet(onClose: () => void, initial: SheetMode = "half") {
-  const [mode, setMode] = useState<SheetMode>(initial);
-  const [dragY, setDragY] = useState(0);
-  const startRef = useRef<{ y: number; t: number } | null>(null);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-
-  const onPointerDown = (e: React.PointerEvent) => {
-    startRef.current = { y: e.clientY, t: Date.now() };
-    try { (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId); } catch {}
-  };
-  const onPointerMove = (e: React.PointerEvent) => {
-    if (!startRef.current) return;
-    const delta = e.clientY - startRef.current.y;
-    setDragY(mode === "full" ? Math.max(-12, delta) : delta);
-  };
-  const onPointerUp = (e: React.PointerEvent) => {
-    if (!startRef.current) return;
-    const delta = e.clientY - startRef.current.y;
-    const dt = Math.max(1, Date.now() - startRef.current.t);
-    const v = Math.abs(delta) / dt; // px/ms
-    startRef.current = null;
-
-    if (mode === "half") {
-      if (delta < -40 || (delta < -10 && v > 0.5)) setMode("full");
-      else if (delta > 130 || (delta > 30 && v > 0.6)) { onClose(); return; }
-    } else {
-      if (delta > 280) { onClose(); return; }
-      if (delta > 100 || (delta > 30 && v > 0.5)) setMode("half");
-    }
-    setDragY(0);
-  };
-
-  const handleProps = {
-    onPointerDown, onPointerMove, onPointerUp, onPointerCancel: onPointerUp,
-    style: { touchAction: "none" as const },
-  };
-  const sheetStyle: React.CSSProperties = {
-    bottom: 0,
-    top: mode === "full" ? 0 : "auto",
-    height: mode === "full" ? "100dvh" : "90dvh",
-    maxHeight: mode === "full" ? "100dvh" : "90dvh",
-    borderTopLeftRadius: mode === "full" ? 0 : 24,
-    borderTopRightRadius: mode === "full" ? 0 : 24,
-    transform: `translateY(${dragY}px)`,
-    transition: dragY ? "none" : "all .28s cubic-bezier(.4,0,.2,1)",
-    boxShadow: "0 -4px 32px rgba(0,0,0,.22)",
-  };
-
-  return { mode, dragY, setMode, handleProps, sheetStyle };
-}
-
-// ─── 매장 바텀시트 ────────────────────────────────────────────
-function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () => void; onDetail: () => void }) {
-  const [sent, setSent] = useState(false);
-  return (
-    <SheetBackdrop zIndex={300} onClose={onClose}>
-      <div className="bg-white rounded-t-3xl overflow-hidden">
-        <div className="flex justify-center pt-3"><div className="w-10 h-1 bg-[#d2d2d7] rounded-full" /></div>
-        <div className="px-5 pt-4 pb-10">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-              <h2 className="text-[21px] font-bold text-[#1d1d1f] mt-1">{store.name}</h2>
-              {store.isOpen !== undefined && (
-                <span className={`text-[13px] font-medium ${store.isOpen ? "text-[#00C471]" : "text-[#F04452]"}`}>
-                  {store.isOpen ? "● 영업 중" : "● 영업 종료"}
-                </span>
-              )}
-            </div>
-            <button onClick={onClose} className="active:opacity-60"><X size={22} className="text-[#6e6e73]" /></button>
-          </div>
-          <div className="space-y-2.5">
-            {store.hours && (
-              <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3">
-                <Clock size={16} className="text-[#6e6e73] shrink-0" />
-                <div><p className="text-[12px] text-[#6e6e73]">영업시간</p><p className="text-[15px] font-medium text-[#1d1d1f]">{store.hours}</p></div>
-              </div>
-            )}
-            {store.phone && (
-              <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                <div className="flex items-center gap-3">
-                  <Phone size={16} className="text-[#6e6e73] shrink-0" />
-                  <div><p className="text-[12px] text-[#6e6e73]">전화번호</p><p className="text-[15px] font-medium text-[#1d1d1f]">{store.phone}</p></div>
-                </div>
-                <a href={`tel:${store.phone}`} className="h-9 px-4 bg-[#0071e3] rounded-xl text-white text-[14px] font-bold flex items-center active:opacity-80">전화</a>
-              </div>
-            )}
-          </div>
-          <div className="mt-4 space-y-2">
-            <button onClick={onDetail}
-              className="w-full h-12 bg-[#0071e3] rounded-xl flex items-center justify-center gap-2 text-[15px] text-white font-bold active:bg-[#0058b0]">
-              매장 상세 정보 보기
-            </button>
-            {!sent
-              ? <button onClick={() => setSent(true)}
-                  className="w-full h-11 border border-[#d2d2d7] rounded-xl flex items-center justify-center gap-2 text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7]">
-                  <Pencil size={14} className="text-[#6e6e73]" />정보 수정 제안하기
-                </button>
-              : <div className="w-full h-11 bg-[#D1FAE5] rounded-xl flex items-center justify-center gap-2">
-                  <CheckCircle2 size={16} className="text-[#00C471]" />
-                  <span className="text-[14px] text-[#065F46] font-medium">제안이 접수됐어요</span>
-                </div>
-            }
-          </div>
-        </div>
-      </div>
-    </SheetBackdrop>
-  );
-}
 
 // 업종별 대표 이미지 (Unsplash 특정 사진 ID — 안정적으로 로드됨)
 const catHeroImage: Record<StoreCategory, string> = {
@@ -276,295 +120,8 @@ const catHeroImage: Record<StoreCategory, string> = {
   기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
 };
 
-// ─── 매장 리스트 상세 시트 ──────────────────────────────────
 type EnrichedStore = Store & { floorLabel: string; buildingName: string };
 
-function StoreListDetailSheet({
-  store, onClose, allCoupons, allOpenings,
-}: {
-  store: EnrichedStore;
-  onClose: () => void;
-  allCoupons: import("@/lib/types").Coupon[];
-  allOpenings: import("@/lib/types").NewStoreOpening[];
-}) {
-  const [sent, setSent] = useState(false);
-  const [imgFailed, setImgFailed] = useState(false);
-  const [detail, setDetail] = useState<StoreDetail | null>(null);
-  const [extra, setExtra] = useState<Record<string, unknown> | null>(null);
-  const coupon = allCoupons.find(c => c.storeId === store.id);
-  const opening = allOpenings.find(o => o.storeId === store.id);
-  const { mode, handleProps, sheetStyle } = useSwipeSheet(onClose);
-
-  useEffect(() => {
-    fetchStoreDetail(store.id).then(setDetail);
-    fetchStoreExtraInfo(store.id).then(setExtra);
-  }, [store.id]);
-
-  const extraEntries = extra
-    ? Object.entries(extra).filter(([, v]) => v !== "" && v !== false && v != null)
-    : [];
-  const color = catDot[store.category];
-  const dDay = coupon ? Math.ceil((new Date(coupon.expiry).getTime() - Date.now()) / 86400000) : null;
-  const heroImg = catHeroImage[store.category];
-
-  return (
-    <div className="fixed inset-0" style={{ zIndex: 300 }}>
-      {/* backdrop */}
-      <div className="absolute inset-0 bg-black/50" onClick={onClose} style={{ zIndex: 1 }} />
-      {/* sheet panel */}
-      <div className="absolute left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white flex flex-col overflow-hidden"
-        style={{ zIndex: 2, ...sheetStyle }}
-        onClick={e => e.stopPropagation()}>
-
-        {/* ── 대표 이미지 헤더 (드래그 가능) ── */}
-        <div className="relative shrink-0" style={{ height: 220, ...handleProps.style }}
-          onPointerDown={handleProps.onPointerDown}
-          onPointerMove={handleProps.onPointerMove}
-          onPointerUp={handleProps.onPointerUp}
-          onPointerCancel={handleProps.onPointerCancel}
-        >
-          {/* 이미지 or 컬러 fallback */}
-          {!imgFailed ? (
-            <img
-              src={heroImg}
-              alt={store.name}
-              onError={() => setImgFailed(true)}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center"
-              style={{ background: `linear-gradient(135deg, ${color}cc, ${color}55)` }}>
-              <span style={{ fontSize: 72 }}>{catEmoji[store.category]}</span>
-            </div>
-          )}
-
-          {/* 하단 그라디언트 오버레이 */}
-          <div className="absolute inset-0"
-            style={{ background: "linear-gradient(to bottom, rgba(0,0,0,.08) 0%, rgba(0,0,0,.0) 35%, rgba(0,0,0,.55) 75%, rgba(0,0,0,.82) 100%)" }} />
-
-          {/* 드래그 핸들 */}
-          <div className="absolute top-2.5 left-1/2 -translate-x-1/2">
-            <div className={`h-1 rounded-full bg-white/60 transition-all ${mode === "full" ? "w-14" : "w-10"}`} />
-          </div>
-
-          {/* 닫기 버튼 — 드래그 이벤트 격리 */}
-          <button
-            onClick={(e) => { e.stopPropagation(); onClose(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            onPointerMove={(e) => e.stopPropagation()}
-            onPointerUp={(e) => e.stopPropagation()}
-            className="absolute top-3.5 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm z-10">
-            <X size={16} className="text-white" />
-          </button>
-
-          {/* 영업 상태 뱃지 */}
-          <div className="absolute top-4 left-4 flex items-center gap-1.5">
-            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full backdrop-blur-sm ${
-              store.isOpen !== false ? "bg-[#00C471]/90 text-white" : "bg-black/40 text-white"}`}>
-              {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
-            </span>
-            {store.isPremium && (
-              <span className="text-[10px] font-black bg-[#F59E0B]/90 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">★ PREMIUM</span>
-            )}
-            {opening?.isNew && (
-              <span className="text-[10px] font-black bg-[#F04452]/90 text-white px-1.5 py-0.5 rounded-full backdrop-blur-sm">NEW</span>
-            )}
-          </div>
-
-          {/* 매장명 + 위치 — 이미지 하단 */}
-          <div className="absolute bottom-0 left-0 right-0 px-5 pb-4">
-            <div className="flex items-end justify-between gap-2">
-              <div className="flex-1 min-w-0">
-                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]} inline-block mb-1.5`}>
-                  {catEmoji[store.category]} {store.category}
-                </span>
-                <p className="text-[22px] font-black text-white leading-tight drop-shadow-sm">{store.name}</p>
-                <p className="text-[12px] text-white/80 mt-0.5">{store.buildingName} · {store.floorLabel}</p>
-              </div>
-              <div className="shrink-0 ring-2 ring-white/40 rounded-2xl shadow-lg overflow-hidden">
-                <StoreLogo name={store.name} category={store.category} size={48} rounded="rounded-2xl" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 스크롤 바디 */}
-        <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-
-          {/* 기본 정보 */}
-          <div className="space-y-2">
-            {store.hours && (
-              <div className="flex items-center gap-3 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
-                <Clock size={15} className="text-[#6e6e73] shrink-0" />
-                <div>
-                  <p className="text-[11px] text-[#86868b]">영업시간</p>
-                  <p className="text-[14px] font-semibold text-[#1d1d1f]">{store.hours}</p>
-                </div>
-              </div>
-            )}
-            {store.phone && (
-              <div className="flex items-center justify-between bg-[#F8F9FB] rounded-xl px-3.5 py-3">
-                <div className="flex items-center gap-3">
-                  <Phone size={15} className="text-[#6e6e73] shrink-0" />
-                  <div>
-                    <p className="text-[11px] text-[#86868b]">전화번호</p>
-                    <p className="text-[14px] font-semibold text-[#1d1d1f]">{store.phone}</p>
-                  </div>
-                </div>
-                <a href={`tel:${store.phone}`} className="h-8 px-3.5 rounded-xl text-white text-[13px] font-bold flex items-center active:opacity-80"
-                  style={{ background: color }}>전화</a>
-              </div>
-            )}
-            {detail?.priceRange && (
-              <div className="flex items-center gap-3 bg-[#F8F9FB] rounded-xl px-3.5 py-3">
-                <span className="text-[15px] shrink-0">💰</span>
-                <div>
-                  <p className="text-[11px] text-[#86868b]">가격대</p>
-                  <p className="text-[14px] font-semibold text-[#1d1d1f]">{detail.priceRange}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* 소개 */}
-          {detail?.description && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">매장 소개</p>
-              <p className="text-[14px] text-[#424245] leading-relaxed bg-[#F8F9FB] rounded-xl px-3.5 py-3">{detail.description}</p>
-            </div>
-          )}
-
-          {/* 하이라이트 태그 */}
-          {detail?.tags && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">주요 특징</p>
-              <div className="space-y-1.5">
-                {detail.tags.map((t, i) => (
-                  <div key={i} className="flex items-center gap-2.5 bg-[#F8F9FB] rounded-xl px-3.5 py-2.5">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-                    <p className="text-[13px] text-[#424245]">{t}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 업종별 상세 정보 */}
-          {extraEntries.length > 0 && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">{store.category} 상세 정보</p>
-              <div className="bg-[#F8F9FB] rounded-xl divide-y divide-[#EEF0F3]">
-                {extraEntries.map(([k, v]) => (
-                  <div key={k} className="flex items-start justify-between gap-3 px-3.5 py-2.5">
-                    <span className="text-[13px] text-[#86868b] shrink-0">{humanizeKey(k)}</span>
-                    <span className="text-[13px] font-semibold text-[#1d1d1f] text-right">
-                      {v === true ? "✓ 가능" : String(v)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 메뉴 (카페/음식점/마트) */}
-          {detail?.menu && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">대표 메뉴</p>
-              <div className="space-y-1.5">
-                {detail.menu.map((m, i) => (
-                  <div key={i} className="flex items-center justify-between bg-[#F8F9FB] rounded-xl px-3.5 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-medium text-[#1d1d1f]">{m.name}</span>
-                      {m.tag && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white" style={{ background: color }}>{m.tag}</span>}
-                    </div>
-                    <span className="text-[14px] font-bold text-[#1d1d1f]">{m.price}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 서비스 목록 (미용/병원/학원 등) */}
-          {detail?.services && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">제공 서비스</p>
-              <div className="grid grid-cols-2 gap-1.5">
-                {detail.services.map((s, i) => (
-                  <div key={i} className="bg-[#F8F9FB] rounded-xl px-3 py-2.5 flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: color }} />
-                    <span className="text-[12px] text-[#424245] leading-snug">{s}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 공지/주의사항 */}
-          {detail?.notice && (
-            <div className="flex items-start gap-2.5 rounded-xl px-3.5 py-3" style={{ background: `${color}15` }}>
-              <span className="text-[15px] shrink-0 mt-0.5">📌</span>
-              <p className="text-[13px] font-medium" style={{ color }}>{detail.notice}</p>
-            </div>
-          )}
-
-          {/* 이번 주 쿠폰 */}
-          {coupon && dDay !== null && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">이번 주 쿠폰</p>
-              <div className="rounded-2xl overflow-hidden" style={{ border: `1.5px solid ${coupon.color}33` }}>
-                <div className="px-4 pt-3 pb-2" style={{ background: `${coupon.color}14` }}>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-[26px] font-black" style={{ color: coupon.color }}>{coupon.discount}</span>
-                    <span className="text-[12px] font-bold text-[#6e6e73]">할인</span>
-                  </div>
-                  <p className="text-[12px] text-[#424245] mt-0.5">{coupon.title}</p>
-                </div>
-                <div className="px-4 py-2.5 flex items-center justify-between bg-white">
-                  <span className={`text-[11px] font-bold ${dDay <= 3 ? "text-[#F04452]" : "text-[#86868b]"}`}>
-                    {dDay <= 3 ? `⏰ D-${dDay}` : `~${coupon.expiry.slice(5)}`}
-                  </span>
-                  <span className="text-[12px] font-bold text-white px-3 py-1 rounded-lg" style={{ background: coupon.color }}>쿠폰받기</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 오픈 혜택 */}
-          {opening?.openBenefit && (
-            <div>
-              <p className="text-[13px] font-bold text-[#6e6e73] mb-2">오픈 혜택</p>
-              <div className="bg-[#FFF0F0] rounded-xl px-3.5 py-3 space-y-1.5">
-                {opening.openBenefit.details.map((d, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className="text-[11px] font-black text-white bg-[#F04452] rounded-full w-4 h-4 flex items-center justify-center shrink-0 mt-0.5">{i + 1}</span>
-                    <p className="text-[13px] text-[#424245]">{d}</p>
-                  </div>
-                ))}
-                {opening.openBenefit.validUntil && (
-                  <p className="text-[11px] text-[#F04452] font-medium pt-1">혜택 기간: ~{opening.openBenefit.validUntil.slice(5).replace("-", "/")}</p>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* 수정 제안 */}
-          <div className="pb-2">
-            {!sent
-              ? <button onClick={() => setSent(true)}
-                  className="w-full h-10 border border-[#d2d2d7] rounded-xl flex items-center justify-center gap-2 text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
-                  <Pencil size={13} className="text-[#6e6e73]" />정보 수정 제안하기
-                </button>
-              : <div className="w-full h-10 bg-[#D1FAE5] rounded-xl flex items-center justify-center gap-2">
-                  <CheckCircle2 size={15} className="text-[#00C471]" />
-                  <span className="text-[13px] text-[#065F46] font-medium">제안이 접수됐어요</span>
-                </div>
-            }
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── 신규오픈 날짜 헬퍼 ─────────────────────────────────────
 function getWeekBounds() {
@@ -809,8 +366,8 @@ const PAGE_SIZE = 12;
 const POPULAR_LIMIT = 12;
 
 function StoreListView() {
+  const router = useRouter();
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
-  const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
   const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
   const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
@@ -920,10 +477,9 @@ function StoreListView() {
               </div>
               <div className="px-4 space-y-2">
                 {items.map((o, idx) => {
-                  const s = allStores.find(x => x.id === o.storeId);
                   const isTop = idx === 0;
                   return (
-                    <button key={o.id} onClick={() => s && setSelectedStore(s)}
+                    <button key={o.id} onClick={() => router.push(`/stores/${o.storeId}`)}
                       className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
                       <div className="w-[3px] shrink-0" style={{ background: color }} />
                       <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
@@ -1119,14 +675,6 @@ function StoreListView() {
         )}
       </div>
 
-      {selectedStore && (
-        <StoreListDetailSheet
-          store={selectedStore}
-          onClose={() => setSelectedStore(null)}
-          allCoupons={dbCoupons}
-          allOpenings={dbOpenings}
-        />
-      )}
     </div>
   );
 }
@@ -1188,7 +736,6 @@ const StoreMapView = dynamic(() => import("./StoreMapView"), {
 // ─── 메인 ────────────────────────────────────────────────────
 export default function StoresPage() {
   const router = useRouter();
-  const [selected, setSelected] = useState<Store | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [recommendedKws, setRecommendedKws] = useState<string[]>([]);
@@ -1299,7 +846,7 @@ export default function StoresPage() {
       <div className="bg-white px-4 pt-3 pb-2 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
         <div className="flex gap-1 bg-[#f5f5f7] rounded-2xl p-1">
           {(["지도", "리스트"] as const).map(mode => (
-            <button key={mode} onClick={() => { setViewMode(mode); setSelectedBuildingId(null); setSearchQuery(""); setSearchFocused(false); }}
+            <button key={mode} onClick={() => { setViewMode(mode); setSearchQuery(""); setSearchFocused(false); }}
               className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
                 viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
               }`}>
@@ -1390,7 +937,7 @@ export default function StoresPage() {
       )}
 
       {isSearching ? (
-        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+        <SearchResults results={searchResults} onSelect={(s) => { setSearchFocused(false); router.push(`/stores/${s.id}`); }} />
       ) : searchFocused ? null : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
         <div className="fixed left-0 right-0" style={{ top: 170, bottom: 58, zIndex: 10 }}>
@@ -1420,11 +967,6 @@ export default function StoresPage() {
         <StoreListView />
       )}
 
-
-      {selected && selected.name !== "공실" && (
-        <StoreSheet store={selected} onClose={() => setSelected(null)}
-          onDetail={() => { setSelected(null); router.push(`/stores/${selected.id}`); }} />
-      )}
       <BottomNav />
     </div>
   );
