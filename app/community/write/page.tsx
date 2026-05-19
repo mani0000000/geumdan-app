@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
 
@@ -26,7 +26,41 @@ export default function WritePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+
+  const canSubmit =
+    category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setError("");
+    try {
+      for (const file of Array.from(files)) {
+        const form = new FormData();
+        form.append("file", file);
+        form.append("folder", "community");
+        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const json = (await res.json()) as { url?: string; error?: string };
+        if (!res.ok || !json.url) {
+          throw new Error(json.error ?? "업로드 실패");
+        }
+        if (file.type.startsWith("video/")) {
+          setVideos(prev => [...prev, json.url!]);
+        } else {
+          setImages(prev => [...prev, json.url!]);
+        }
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "파일 업로드에 실패했습니다.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
 
   const submit = async () => {
     if (!canSubmit) return;
@@ -40,6 +74,8 @@ export default function WritePage() {
         author: nickname.trim() || "검단주민",
         authorDong: "검단",
         isAnonymous: anonymous,
+        images,
+        videos,
       });
       if (post) {
         saveMyPostId(post.id);
@@ -114,11 +150,63 @@ export default function WritePage() {
             className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
+        {/* Media previews */}
+        {(images.length > 0 || videos.length > 0 || uploading) && (
+          <div className="px-4 py-3 border-t border-[#f5f5f7] flex flex-wrap gap-2">
+            {images.map((src, i) => (
+              <div key={`img-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}
+                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
+                  <X size={11} />
+                </button>
+              </div>
+            ))}
+            {videos.map((src, i) => (
+              <div key={`vid-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-black">
+                <video src={`${src}#t=0.1`} preload="metadata" muted playsInline
+                  className="w-full h-full object-cover" />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Play size={20} className="text-white fill-white/80" />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setVideos(prev => prev.filter((_, idx) => idx !== i))}
+                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
+                  <X size={11} />
+                </button>
+              </div>
+            ))}
+            {uploading && (
+              <div className="w-20 h-20 rounded-xl bg-[#f5f5f7] flex items-center justify-center">
+                <Loader2 size={20} className="text-[#0071e3] animate-spin" />
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
-              <ImageIcon size={18} className="text-[#6e6e73]" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*,video/*"
+              multiple
+              className="hidden"
+              onChange={e => handleFiles(e.target.files)}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-50">
+              {uploading
+                ? <Loader2 size={18} className="text-[#6e6e73] animate-spin" />
+                : <ImageIcon size={18} className="text-[#6e6e73]" />}
             </button>
             {!anonymous && (
               <input value={nickname} onChange={e => setNickname(e.target.value)}

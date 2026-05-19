@@ -79,6 +79,7 @@ function PostCard({
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
   const images = post.images ?? [];
+  const videos = post.videos ?? [];
   return (
     <div className="relative px-4 pt-4 pb-3 active:bg-[#fafafb] transition-colors cursor-pointer"
       onClick={goDetail}>
@@ -137,6 +138,41 @@ function PostCard({
                   {i === 2 && images.length > 3 && (
                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
                       <span className="text-white text-[16px] font-bold">+{images.length - 3}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Videos (first-frame thumbnail) */}
+          {videos.length > 0 && (
+            <div
+              className={`mt-3 grid gap-1 rounded-xl overflow-hidden border border-[#e5e5ea] ${
+                videos.length === 1 ? "grid-cols-1" : "grid-cols-2"
+              }`}
+            >
+              {videos.slice(0, 2).map((src, i) => (
+                <div
+                  key={i}
+                  className="relative bg-black"
+                  style={{ aspectRatio: videos.length === 1 ? "16/10" : "1/1" }}
+                >
+                  <video
+                    src={`${src}#t=0.1`}
+                    preload="metadata"
+                    muted
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="w-10 h-10 rounded-full bg-black/55 flex items-center justify-center">
+                      <Play size={18} className="text-white fill-white ml-0.5" />
+                    </span>
+                  </div>
+                  {i === 1 && videos.length > 2 && (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                      <span className="text-white text-[16px] font-bold">+{videos.length - 2}</span>
                     </div>
                   )}
                 </div>

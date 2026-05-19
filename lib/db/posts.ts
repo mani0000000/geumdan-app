@@ -20,6 +20,10 @@
  *   updated_at  TIMESTAMPTZ DEFAULT NOW()
  * );
  *
+ * -- 사진/영상 첨부 (기존 테이블이 있다면 아래 실행)
+ * ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}';
+ * ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS video_urls TEXT[] DEFAULT '{}';
+ *
  * ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
  * CREATE POLICY "public read"  ON community_posts FOR SELECT USING (true);
  * CREATE POLICY "public write" ON community_posts FOR INSERT WITH CHECK (true);
@@ -40,6 +44,21 @@ function isConfigured(): boolean {
   );
 }
 
+function toUrlArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((v): v is string => typeof v === 'string' && v.length > 0);
+      }
+    } catch { /* not JSON */ }
+  }
+  return [];
+}
+
 function rowToPost(row: Record<string, unknown>): Post {
   return {
     id: row.id as string,
@@ -52,6 +71,8 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
+    images: toUrlArray(row.image_urls),
+    videos: toUrlArray(row.video_urls),
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
   };
@@ -103,6 +124,8 @@ export interface PostInput {
   author: string;
   authorDong: string;
   isAnonymous: boolean;
+  images?: string[];
+  videos?: string[];
 }
 
 export async function createPost(input: PostInput): Promise<Post | null> {
@@ -117,6 +140,8 @@ export async function createPost(input: PostInput): Promise<Post | null> {
         author: input.author,
         author_dong: input.authorDong,
         is_anonymous: input.isAnonymous,
+        image_urls: input.images ?? [],
+        video_urls: input.videos ?? [],
       })
       .select()
       .single();
