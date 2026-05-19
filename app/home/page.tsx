@@ -41,6 +41,7 @@ import {
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import type { YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
+import { useFavorites, routeFavKey } from "@/lib/favorites";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -2317,28 +2318,16 @@ function SubwayRow({ arrival, lineColor, isEst, delay }: {
 function HomeTransportWidget() {
   const router = useRouter();
 
-  const [favStops] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try { return new Set(JSON.parse(localStorage.getItem("favStops") ?? "[]")); } catch { return new Set(); }
-  });
-  const [favRoutes] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try { return new Set(JSON.parse(localStorage.getItem("favRoutes") ?? "[]")); } catch { return new Set(); }
-  });
+  const { stops: favStopMeta, routes: favRoutesObj, subways: favSubwayIds } = useFavorites();
   const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
   const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
-
-  const [favSubways] = useState<Set<string>>(() => {
-    if (typeof window === "undefined") return new Set();
-    try { return new Set(JSON.parse(localStorage.getItem("favSubways") ?? "[]")); } catch { return new Set(); }
-  });
   const [subwayArrivals, setSubwayArrivals] = useState<Record<string, SubwayArrival[]>>({});
   const [subwayLoading, setSubwayLoading] = useState<Set<string>>(new Set());
   const [globalRefreshing, setGlobalRefreshing] = useState(false);
 
-  const favStopIds = [...favStops];
-  const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
-  const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
+  const favStopIds = Object.keys(favStopMeta);
+  const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubwayIds.includes(s.id));
+  const favRoutes = new Set(Object.keys(favRoutesObj));
 
   const refreshBusStop = useCallback(async (stopId: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
@@ -2369,13 +2358,16 @@ function HomeTransportWidget() {
     setGlobalRefreshing(false);
   }, [favStopIds, favSubwayStations, refreshBusStop, refreshSubwayStation]);
 
+  // 즐겨찾기가 바뀌면(추가/삭제) 새로 추가된 항목 도착정보를 즉시 조회
+  const favStopKey = favStopIds.join(",");
+  const favSubwayKey = favSubwayIds.join(",");
   useEffect(() => {
-    favStopIds.forEach(id => refreshBusStop(id));
-    favSubwayStations.forEach(st => refreshSubwayStation(st));
+    favStopIds.forEach(id => { if (!busArrivals[id]) refreshBusStop(id); });
+    favSubwayStations.forEach(st => { if (!subwayArrivals[st.id]) refreshSubwayStation(st); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [favStopKey, favSubwayKey]);
 
-  const hasBus    = favStops.size > 0;
+  const hasBus    = favStopIds.length > 0;
   const hasSubway = favSubwayStations.length > 0;
   const transportHref = (hasSubway && !hasBus) ? "/transport/?tab=지하철" : "/transport/?tab=버스";
 
@@ -2412,7 +2404,7 @@ function HomeTransportWidget() {
         const displayed = hasFavRoutes
           ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a))).slice(0, 2)
           : stopArrivals.slice(0, 2);
-        const stopName = STOP_NAME[stopId] ?? "정류장";
+        const stopName = favStopMeta[stopId]?.name || STOP_NAME[stopId] || "정류장";
         const isLoading = busLoading.has(stopId);
 
         return (

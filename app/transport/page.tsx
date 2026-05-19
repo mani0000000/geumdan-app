@@ -24,6 +24,7 @@ import {
   type SubwayStationWithDist, type SubwayArrival,
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation } from "@/lib/api/bus";
+import { useFavorites, routeFavKey } from "@/lib/favorites";
 
 type Tab = "가볼만한곳" | "버스" | "지하철";
 
@@ -43,12 +44,51 @@ function distLabel(m: number) {
   return m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
 }
 
-// localStorage helpers for favorites persistence
-function loadFavSet(key: string): Set<string> {
-  try { return new Set(JSON.parse(localStorage.getItem(key) ?? "[]")); } catch { return new Set(); }
-}
-function saveFavSet(key: string, set: Set<string>) {
-  try { localStorage.setItem(key, JSON.stringify([...set])); } catch { /* ignore */ }
+// ─── 즐겨찾기 카드 (버스·지하철 공통 디자인) ─────────────────
+function FavCard({
+  icon, iconBg, badge, badgeBg, title, subtitle, onRemove, onOpen, children,
+}: {
+  icon: React.ReactNode;
+  iconBg: string;
+  badge?: string;
+  badgeBg?: string;
+  title: string;
+  subtitle?: string;
+  onRemove: () => void;
+  onOpen?: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="relative shrink-0 w-[156px] bg-white rounded-2xl border border-[#f0f0f0] shadow-sm">
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        aria-label="즐겨찾기 삭제"
+        className="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-[#f0f0f0] flex items-center justify-center active:opacity-60">
+        <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
+      </button>
+      <div
+        onClick={onOpen}
+        className={`px-3 py-3 ${onOpen ? "cursor-pointer active:bg-[#fafafa]" : ""}`}>
+        <div className="flex items-center gap-1.5 mb-2 pr-6">
+          <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+            style={{ background: iconBg }}>
+            {icon}
+          </div>
+          <span className="text-[12px] font-bold text-[#1d1d1f] truncate flex-1">{title}</span>
+        </div>
+        <div className="flex items-center gap-1.5 mb-2 min-h-[16px]">
+          {badge && (
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white shrink-0"
+              style={{ background: badgeBg }}>{badge}</span>
+          )}
+          {subtitle && (
+            <span className="text-[10px] text-[#86868b] truncate">{subtitle}</span>
+          )}
+        </div>
+        {children}
+      </div>
+    </div>
+  );
 }
 
 // ─── 도착 뱃지 ───────────────────────────────────────────────
@@ -478,9 +518,11 @@ export default function TransportPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [favStops, setFavStops] = useState<Set<string>>(() => loadFavSet("favStops"));
-  const [favRoutes, setFavRoutes] = useState<Set<string>>(() => loadFavSet("favRoutes"));
-  const [favSubways, setFavSubways] = useState<Set<string>>(() => loadFavSet("favSubways"));
+  const {
+    stopList: favStopMeta, routeList: favRouteMeta,
+    isStopFav, isRouteFav, isSubwayFav,
+    toggleStop, toggleRoute, toggleSubway,
+  } = useFavorites();
   const [selectedArrival, setSelectedArrival] = useState<BusArrival | null>(null);
   const [selectedSubway, setSelectedSubway] = useState<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean }) | null>(null);
   const [timetableStation, setTimetableStation] = useState<SubwayStationWithDist | null>(null);
@@ -707,42 +749,37 @@ export default function TransportPage() {
       )
     : stopsWithRoutes;
 
-  function toggleStop(id: string) {
-    setFavStops(p => {
-      const n = new Set(p);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      saveFavSet("favStops", n);
-      return n;
-    });
-  }
-  function toggleRoute(key: string) {
-    setFavRoutes(p => {
-      const n = new Set(p);
-      if (n.has(key)) n.delete(key); else n.add(key);
-      saveFavSet("favRoutes", n);
-      return n;
-    });
-  }
-  function toggleSubway(id: string) {
-    setFavSubways(p => {
-      const n = new Set(p);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      saveFavSet("favSubways", n);
-      return n;
-    });
-  }
+  // 즐겨찾기는 저장된 메타를 기준으로 항상 표시하고,
+  // 현재 로드된 정류장에 실시간 도착정보가 있으면 병합한다.
+  const liveStopById = new Map(stopsWithRoutes.map(s => [s.id, s]));
 
-  // 즐겨찾기 노선 키: `${stationId}::${routeId||routeNo}`
-  const routeFavKey = (stopId: string, a: BusArrival) =>
-    `${stopId}::${a.routeId || a.routeNo}`;
+  const favStopList: DisplayStop[] = favStopMeta.map(meta => {
+    const live = liveStopById.get(meta.id);
+    return live ?? {
+      id: meta.id,
+      name: meta.name || "정류장",
+      distM: -1,
+      arrivals: [],
+      loadingArrivals: false,
+      lat: meta.lat,
+      lng: meta.lng,
+      osmRoutes: [],
+    };
+  });
 
-  const favStopList = stopsWithRoutes.filter(s => favStops.has(s.id));
-  const favRouteList = stopsWithRoutes.flatMap(stop =>
-    stop.arrivals
-      .filter(a => favRoutes.has(routeFavKey(stop.id, a)))
-      .map(a => ({ ...a, stopName: stop.name, stopId: stop.id }))
-  );
-  const favSubwayList = subwayList.filter(s => favSubways.has(s.id));
+  const favRouteList = favRouteMeta.map(r => {
+    const live = liveStopById.get(r.stopId)?.arrivals.find(
+      a => (a.routeId || a.routeNo) === (r.routeId || r.routeNo),
+    );
+    return {
+      ...r,
+      arrivalMin: live?.arrivalMin ?? -1,
+      destination: live?.destination ?? r.destination,
+      isExpress: live?.isExpress ?? r.isExpress ?? false,
+    };
+  });
+
+  const favSubwayList = subwayList.filter(s => isSubwayFav(s.id));
 
   // 위치 상태 뱃지
   function LocBadge() {
@@ -813,39 +850,31 @@ export default function TransportPage() {
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto px-4 pb-3 scrollbar-hide">
-            {favRouteList.map(r => {
-              const fk = routeFavKey(r.stopId, r);
-              return (
-              <div key={fk}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
-                <button onClick={() => toggleRoute(fk)}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <div className="flex items-center gap-1.5 mb-1 pr-5">
-                  <div className="bg-[#0071e3] rounded-lg px-2 py-0.5">
-                    <span className="text-white text-[13px] font-black leading-tight">{r.routeNo}</span>
-                  </div>
-                  {r.isExpress && <Zap size={9} className="text-[#E65100]" />}
+            {favRouteList.map(r => (
+              <FavCard
+                key={r.key}
+                icon={<Bus size={13} className="text-white" />}
+                iconBg="#0071e3"
+                title={`${r.routeNo}번`}
+                subtitle={r.stopName}
+                onRemove={() => toggleRoute(r)}>
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-[10px] text-[#86868b] truncate">
+                    {r.isExpress ? "급행" : (r.destination ? `${r.destination} 방면` : "노선")}
+                  </span>
+                  <ArrivalBadge min={r.arrivalMin} live={isLive && r.arrivalMin >= 0} />
                 </div>
-                <p className="text-[10px] text-[#6e6e73] truncate mb-2">{r.stopName}</p>
-                <ArrivalBadge min={r.arrivalMin} live={isLive} />
-              </div>
-              );
-            })}
+              </FavCard>
+            ))}
             {favStopList.map(stop => (
-              <div key={stop.id}
-                className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[130px] border border-[#f5f5f7] relative">
-                <button onClick={() => toggleStop(stop.id)}
-                  className="absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <div className="flex items-center gap-1 mb-1 pr-5">
-                  <MapPin size={10} className="text-[#0071e3] shrink-0" />
-                  <span className="text-[11px] font-bold text-[#1d1d1f] truncate">{stop.name}</span>
-                </div>
-                <p className="text-[10px] text-[#86868b] mb-2">{distLabel(stop.distM)}</p>
-                <div className="flex flex-wrap gap-1">
+              <FavCard
+                key={stop.id}
+                icon={<Bus size={13} className="text-white" />}
+                iconBg="#0071e3"
+                title={stop.name}
+                subtitle={stop.distM >= 0 ? distLabel(stop.distM) : "정류장"}
+                onRemove={() => toggleStop({ id: stop.id, name: stop.name, lat: stop.lat, lng: stop.lng })}>
+                <div className="flex flex-wrap gap-1 min-h-[20px]">
                   {stop.arrivals.slice(0, 4).map((a, i) => (
                     <div key={i} className="bg-[#0071e3] rounded px-1.5 py-0.5">
                       <span className="text-white text-[10px] font-bold">{a.routeNo}</span>
@@ -854,8 +883,11 @@ export default function TransportPage() {
                   {stop.loadingArrivals && (
                     <div className="bg-[#d2d2d7] rounded px-4 py-0.5 animate-pulse" />
                   )}
+                  {!stop.loadingArrivals && stop.arrivals.length === 0 && (
+                    <span className="text-[10px] text-[#86868b]">도착 정보 없음</span>
+                  )}
                 </div>
-              </div>
+              </FavCard>
             ))}
           </div>
         </div>
@@ -874,40 +906,37 @@ export default function TransportPage() {
               const nextUp   = displayArrivals.find(a => a.direction === "상행");
               const nextDown = displayArrivals.find(a => a.direction === "하행");
               return (
-                <div key={st.id} className="shrink-0 relative">
-                <button onClick={() => toggleSubway(st.id)}
-                  className="absolute top-1.5 right-1.5 z-10 w-5 h-5 rounded-full bg-[#d2d2d7] flex items-center justify-center active:opacity-60">
-                  <span className="text-[#6e6e73] text-[11px] leading-none">✕</span>
-                </button>
-                <button
-                  onClick={() => setSelectedSubway(st)}
-                  className="shrink-0 bg-[#F8F9FA] rounded-2xl px-3 py-2.5 w-[160px] border border-[#f5f5f7] text-left active:opacity-70">
-                  <div className="flex items-center gap-1 mb-0.5 pr-5">
-                    <Train size={11} style={{ color: st.lineColor }} className="shrink-0" />
-                    <span className="text-[12px] font-bold text-[#1d1d1f] truncate">{st.displayName}</span>
-                  </div>
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full text-white inline-block mb-2"
-                    style={{ background: st.lineColor }}>{st.line}</span>
+                <FavCard
+                  key={st.id}
+                  icon={<Train size={13} className="text-white" />}
+                  iconBg={st.lineColor}
+                  badge={st.line}
+                  badgeBg={st.lineColor}
+                  title={st.displayName}
+                  onRemove={() => toggleSubway(st.id)}
+                  onOpen={() => setSelectedSubway(st)}>
                   {st.loadingArrivals ? (
-                    <div className="h-10 bg-[#d2d2d7] rounded animate-pulse" />
+                    <div className="h-10 bg-[#f5f5f7] rounded animate-pulse" />
                   ) : (
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 min-h-[20px]">
                       {nextUp && (
                         <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] text-[#6e6e73] truncate">{nextUp.terminalStation}</span>
+                          <span className="text-[10px] text-[#86868b] truncate">{nextUp.terminalStation}</span>
                           <ArrivalBadge min={nextUp.arrivalMin} live />
                         </div>
                       )}
                       {nextDown && (
                         <div className="flex items-center justify-between gap-1">
-                          <span className="text-[10px] text-[#6e6e73] truncate">{nextDown.terminalStation}</span>
+                          <span className="text-[10px] text-[#86868b] truncate">{nextDown.terminalStation}</span>
                           <ArrivalBadge min={nextDown.arrivalMin} live />
                         </div>
                       )}
+                      {!nextUp && !nextDown && (
+                        <span className="text-[10px] text-[#86868b]">운행 정보 없음</span>
+                      )}
                     </div>
                   )}
-                </button>
-                </div>
+                </FavCard>
               );
             })}
           </div>
@@ -1100,9 +1129,9 @@ export default function TransportPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <button onClick={e => { e.stopPropagation(); toggleStop(stop.id); }}
+                      <button onClick={e => { e.stopPropagation(); toggleStop({ id: stop.id, name: stop.name, lat: stop.lat, lng: stop.lng }); }}
                         className="p-1.5 active:opacity-60">
-                        <Star size={18} className={favStops.has(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                        <Star size={18} className={isStopFav(stop.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                       </button>
                       {open ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
                     </div>
@@ -1154,9 +1183,15 @@ export default function TransportPage() {
                             </div>
                             <div className="flex items-center gap-2 shrink-0 ml-2">
                               {!a.isScheduled && (
-                                <button onClick={e => { e.stopPropagation(); toggleRoute(routeFavKey(stop.id, a)); }}
+                                <button onClick={e => { e.stopPropagation(); toggleRoute({
+                                    key: routeFavKey(stop.id, a),
+                                    routeNo: a.routeNo, routeId: a.routeId,
+                                    destination: a.destination,
+                                    stopId: stop.id, stopName: stop.name,
+                                    isExpress: a.isExpress,
+                                  }); }}
                                   className="p-1 active:opacity-60">
-                                  <Star size={15} className={favRoutes.has(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
+                                  <Star size={15} className={isRouteFav(routeFavKey(stop.id, a)) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#D1D5DB]"} />
                                 </button>
                               )}
                               <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
@@ -1232,7 +1267,7 @@ export default function TransportPage() {
                     {!st.planned && (
                       <button onClick={e => { e.stopPropagation(); toggleSubway(st.id); }} className="p-1.5 active:opacity-60">
                         <Star size={20}
-                          className={favSubways.has(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
+                          className={isSubwayFav(st.id) ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
                       </button>
                     )}
                   </button>
