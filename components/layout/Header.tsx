@@ -4,6 +4,8 @@ import { Bell, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { fetchSiteSetting } from "@/lib/db/site-settings";
+import { fetchUnreadCount } from "@/lib/db/notifications";
+import { getOrCreateUserId } from "@/lib/db/userdata";
 
 const LOGO_CACHE_KEY = "site_logo_url";
 
@@ -18,6 +20,7 @@ interface HeaderProps {
 export default function Header({ title, showLocation, showBack, backHref, rightAction }: HeaderProps) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [unread, setUnread] = useState<number>(0);
 
   useEffect(() => {
     if (!showLocation) return;
@@ -30,6 +33,19 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
       }
     });
   }, [showLocation]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const uid = await getOrCreateUserId();
+        if (cancelled) return;
+        const count = await fetchUnreadCount(uid);
+        if (!cancelled) setUnread(count);
+      } catch { /* silent */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]">
@@ -56,9 +72,13 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
         </div>
         <div className="flex items-center gap-3">
           {rightAction}
-          <Link href="/mypage/" className="relative active:opacity-50 transition-opacity">
+          <Link href="/notifications/" className="relative active:opacity-50 transition-opacity">
             <Bell size={22} className="text-[#1d1d1f]" />
-            <span className="absolute -top-0.5 -right-0.5 w-[7px] h-[7px] bg-[#f04452] rounded-full" />
+            {unread > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-[#f04452] text-white rounded-full text-[10px] font-bold flex items-center justify-center leading-none">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
           </Link>
         </div>
       </div>

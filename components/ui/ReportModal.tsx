@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
 import { X } from "lucide-react";
-import type { ReportReason } from "@/lib/db/reports";
+import { REPORT_REASON_LABELS, type ReportReason } from "@/lib/db/reports";
 
 const REASONS: ReportReason[] = [
-  '스팸/광고', '욕설/혐오', '음란물', '개인정보 노출', '허위정보', '기타',
+  'spam', 'harassment', 'obscene', 'privacy', 'hate', 'illegal', 'other',
 ];
 
 interface ReportModalProps {
@@ -56,11 +56,11 @@ export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
                       ? 'bg-red-500 text-white border-red-500'
                       : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
                   }`}>
-                  {r}
+                  {REPORT_REASON_LABELS[r]}
                 </button>
               ))}
             </div>
-            {reason === '기타' && (
+            {reason === 'other' && (
               <textarea
                 value={detail}
                 onChange={e => setDetail(e.target.value)}

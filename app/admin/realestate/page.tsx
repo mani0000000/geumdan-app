@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback, useId } from "react";
-import { Plus, Pencil, Trash2, RefreshCw, ChevronDown, ChevronUp, X } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, ChevronDown, ChevronUp, X, Play } from "lucide-react";
 import {
   adminFetchApartments, adminCreateApartment, adminUpdateApartment, adminDeleteApartment,
   adminFetchSizes, adminUpsertSize, adminDeleteSize,
@@ -9,6 +9,7 @@ import {
   adminFetchRealEstateStats,
   type AdminApartment, type AdminApartmentSize, type AdminDeal, type AdminPriceIndex,
 } from "@/lib/db/admin-realestate";
+import { adminApiGet } from "@/lib/db/admin-api";
 
 const DONGS = ["당하동", "불로동", "마전동", "왕길동", "대곡동", "원당동", "백석동"];
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
@@ -531,9 +532,231 @@ function PriceIndexTab() {
   );
 }
 
+// ─── 탭4: 배치 관리 ───────────────────────────────────────────
+interface BatchLogRow {
+  id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: "running" | "success" | "partial" | "failed";
+  trigger_source: string | null;
+  target_months: string[] | null;
+  trades_count: number;
+  rentals_count: number;
+  error_message: string | null;
+}
+
+function defaultPrevYM(): string {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function fmtKST(iso: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,"0")}.${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;
+}
+
+function statusBadge(s: BatchLogRow["status"]) {
+  const map = {
+    running: ["bg-[#FEF3C7]", "text-[#B45309]", "실행중"],
+    success: ["bg-[#DCFCE7]", "text-[#16A34A]", "성공"],
+    partial: ["bg-[#FEF9C3]", "text-[#CA8A04]", "부분 성공"],
+    failed:  ["bg-[#FEE2E2]", "text-[#DC2626]", "실패"],
+  } as const;
+  const [bg, fg, label] = map[s] ?? ["bg-[#F2F4F6]", "text-[#4E5968]", s];
+  return <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${bg} ${fg}`}>{label}</span>;
+}
+
+function BatchTab() {
+  const [logs, setLogs] = useState<BatchLogRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [running, setRunning] = useState(false);
+  const [resultMsg, setResultMsg] = useState<string>("");
+  const [errMsg, setErrMsg] = useState<string>("");
+  const [months, setMonths] = useState<number>(1);
+  const [singleYM, setSingleYM] = useState<string>(defaultPrevYM());
+  const [mode, setMode] = useState<"recent" | "single">("recent");
+  const [stats, setStats] = useState({ trades: 0, rentals: 0, latestDeal: "—" });
+
+  const loadLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const rows = await adminApiGet<BatchLogRow>("realestate_batch_log", {
+        order: "started_at.desc", limit: 20,
+      });
+      setLogs(rows);
+    } catch (e) {
+      setErrMsg(e instanceof Error ? e.message : "로그 로드 실패");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const [trades, rentals, latest] = await Promise.all([
+        adminApiGet<{ id: number }>("apartment_trades", { select: "id", limit: 1 }),
+        adminApiGet<{ id: number }>("apartment_rentals", { select: "id", limit: 1 }),
+        adminApiGet<{ deal_year: number; deal_month: number }>("apartment_trades", {
+          order: "deal_year.desc,deal_month.desc", limit: 1,
+        }),
+      ]);
+      // 정확한 카운트는 PostgREST head/count 미지원 → 페이지에서는 목록 길이로 표시
+      setStats({
+        trades:  trades.length > 0 ? -1 : 0,   // -1: 데이터 있음
+        rentals: rentals.length > 0 ? -1 : 0,
+        latestDeal: latest[0]
+          ? `${latest[0].deal_year}.${String(latest[0].deal_month).padStart(2,"0")}`
+          : "—",
+      });
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  useEffect(() => { loadLogs(); loadStats(); }, [loadLogs, loadStats]);
+
+  async function runBatch() {
+    setErrMsg(""); setResultMsg("");
+    if (!confirm(mode === "recent"
+      ? `최근 ${months}개월 데이터를 수집할까요?\n(국토부 API 호출 + Supabase upsert)`
+      : `${singleYM} 데이터를 다시 수집할까요?`
+    )) return;
+
+    setRunning(true);
+    try {
+      const body = mode === "recent"
+        ? { months }
+        : { ym: singleYM.replace("-", "") };
+      const res = await fetch("/api/admin/realestate/run-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const json = await res.json() as {
+        success?: boolean; error?: string; missing?: Record<string, boolean>;
+        status?: string; tradesCount?: number; rentalsCount?: number;
+      };
+      if (!res.ok || !json.success) {
+        const miss = json.missing
+          ? " — 누락: " + Object.entries(json.missing).filter(([,v]) => v).map(([k]) => k).join(", ")
+          : "";
+        throw new Error((json.error ?? "배치 실패") + miss);
+      }
+      setResultMsg(`✅ ${json.status} — 매매 ${json.tradesCount}건, 전월세 ${json.rentalsCount}건`);
+      loadLogs(); loadStats();
+    } catch (e) {
+      setErrMsg(e instanceof Error ? e.message : "배치 실행 실패");
+    } finally {
+      setRunning(false);
+    }
+  }
+
+  return (
+    <div>
+      {/* ── 환경 안내 ── */}
+      <div className="bg-[#F8F9FB] border border-[#E5E8EB] rounded-2xl p-4 mb-4 text-[12px] text-[#4E5968]">
+        <p className="font-bold text-[#191F28] mb-1">⚙️ 국토교통부 실거래가 배치 시스템</p>
+        <p>인천광역시 서구(28260) → 검단신도시 9개 법정동 필터링 → <code>apartment_trades</code> / <code>apartment_rentals</code> 적재</p>
+        <p className="mt-1 text-[#8B95A1]">필요 환경변수: <code>MOLIT_API_KEY</code>, <code>SUPABASE_SERVICE_KEY</code>, (선택) <code>CRON_SECRET</code></p>
+        <p className="text-[#8B95A1]">Vercel Cron: 매일 02:00 UTC 자동 실행 → 전월 1개월 수집</p>
+      </div>
+
+      {/* ── 통계 카드 ── */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: "최근 거래월",  value: stats.latestDeal,                            color: "#3182F6" },
+          { label: "매매 데이터",  value: stats.trades  === -1 ? "있음" : "없음",      color: stats.trades  === -1 ? "#10B981" : "#94A3B8" },
+          { label: "전월세 데이터", value: stats.rentals === -1 ? "있음" : "없음",     color: stats.rentals === -1 ? "#10B981" : "#94A3B8" },
+        ].map(s => (
+          <div key={s.label} className="bg-white rounded-2xl border border-[#E5E8EB] px-3 py-3 text-center">
+            <p className="text-[16px] font-extrabold" style={{ color: s.color }}>{s.value}</p>
+            <p className="text-[11px] text-[#8B95A1] mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 실행 컨트롤 ── */}
+      <div className="bg-white border border-[#E5E8EB] rounded-2xl p-4 mb-4">
+        <div className="flex flex-wrap items-center gap-3 mb-3">
+          <div className="flex gap-1 bg-[#F2F4F6] rounded-xl p-1">
+            <button onClick={() => setMode("recent")}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${mode === "recent" ? "bg-white shadow-sm text-[#191F28]" : "text-[#8B95A1]"}`}>
+              최근 N개월
+            </button>
+            <button onClick={() => setMode("single")}
+              className={`px-3 py-1.5 rounded-lg text-[12px] font-semibold ${mode === "single" ? "bg-white shadow-sm text-[#191F28]" : "text-[#8B95A1]"}`}>
+              특정 월 재수집
+            </button>
+          </div>
+          {mode === "recent" ? (
+            <Field label="개월 수">
+              <input className={INPUT + " w-20"} type="number" min={1} max={12} value={months}
+                onChange={e => setMonths(Math.max(1, Math.min(12, Number(e.target.value) || 1)))} />
+            </Field>
+          ) : (
+            <Field label="기준년월">
+              <input className={INPUT + " w-36"} type="month" value={singleYM}
+                onChange={e => setSingleYM(e.target.value)} />
+            </Field>
+          )}
+          <button onClick={runBatch} disabled={running}
+            className="ml-auto flex items-center gap-1.5 px-4 py-2.5 bg-[#3182F6] text-white rounded-xl text-[13px] font-bold disabled:opacity-50">
+            {running ? <RefreshCw size={14} className="animate-spin" /> : <Play size={14} />}
+            {running ? "수집 중..." : "지금 수집 실행"}
+          </button>
+        </div>
+        {resultMsg && <p className="text-[12px] text-[#16A34A] mt-1">{resultMsg}</p>}
+        {errMsg    && <p className="text-[12px] text-[#DC2626] mt-1">{errMsg}</p>}
+      </div>
+
+      {/* ── 로그 ── */}
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-[13px] font-bold text-[#191F28]">실행 이력 (최근 20건)</p>
+        <button onClick={loadLogs} className="p-2 rounded-xl border border-[#E5E8EB]">
+          <RefreshCw size={14} className={loading ? "animate-spin text-[#3182F6]" : "text-[#8B95A1]"} />
+        </button>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
+        <div className="hidden md:grid grid-cols-[1.6fr_auto_1fr_1.4fr_1fr_1fr_2fr] gap-3 px-4 py-2.5 bg-[#F8F9FB] border-b text-[11px] font-bold text-[#8B95A1] uppercase">
+          <span>시작</span><span>상태</span><span>호출</span><span>대상월</span><span>매매</span><span>전월세</span><span>오류</span>
+        </div>
+        {loading ? (
+          <div className="py-10 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
+        ) : logs.length === 0 ? (
+          <div className="py-10 text-center text-[#B0B8C1] text-[13px]">실행 이력 없음 — &lsquo;지금 수집 실행&rsquo; 버튼을 눌러보세요</div>
+        ) : (
+          <div className="divide-y divide-[#F2F4F6]">
+            {logs.map(l => (
+              <div key={l.id} className="md:grid md:grid-cols-[1.6fr_auto_1fr_1.4fr_1fr_1fr_2fr] flex flex-col gap-1 md:gap-3 md:items-center px-4 py-3 hover:bg-[#F8F9FB]">
+                <div className="text-[12px] text-[#191F28]">
+                  <p className="font-semibold">{fmtKST(l.started_at)}</p>
+                  <p className="text-[10px] text-[#8B95A1] md:hidden">완료: {fmtKST(l.finished_at)}</p>
+                </div>
+                <div>{statusBadge(l.status)}</div>
+                <span className="text-[11px] text-[#4E5968]">{l.trigger_source ?? "—"}</span>
+                <span className="text-[11px] text-[#4E5968]">
+                  {l.target_months?.length ? l.target_months.join(", ") : "—"}
+                </span>
+                <span className="text-[12px] font-semibold text-[#3182F6]">{l.trades_count.toLocaleString()}건</span>
+                <span className="text-[12px] font-semibold text-[#10B981]">{l.rentals_count.toLocaleString()}건</span>
+                <span className="text-[11px] text-[#DC2626] truncate" title={l.error_message ?? ""}>
+                  {l.error_message ?? "—"}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── 메인 ─────────────────────────────────────────────────────
 export default function AdminRealEstatePage() {
-  const [tab, setTab] = useState<"apts" | "deals" | "index">("apts");
+  const [tab, setTab] = useState<"apts" | "deals" | "index" | "batch">("apts");
   const [stats, setStats] = useState({ totalApts: 0, totalDeals: 0, latestDealDate: null as string | null, latestKbPeriod: null as string | null, latestRebPeriod: null as string | null });
   const [apts, setApts] = useState<AdminApartment[]>([]);
 
@@ -546,6 +769,7 @@ export default function AdminRealEstatePage() {
     { id: "apts" as const, label: "단지 관리" },
     { id: "deals" as const, label: "실거래 내역" },
     { id: "index" as const, label: "가격 지수" },
+    { id: "batch" as const, label: "배치 관리" },
   ];
 
   return (
@@ -585,6 +809,7 @@ export default function AdminRealEstatePage() {
       {tab === "apts"  && <ApartmentsTab />}
       {tab === "deals" && <DealsTab apts={apts} />}
       {tab === "index" && <PriceIndexTab />}
+      {tab === "batch" && <BatchTab />}
     </div>
   );
 }

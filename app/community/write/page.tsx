@@ -1,13 +1,14 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
-// 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
 function saveMyPostId(id: string) {
   try {
     const stored = JSON.parse(localStorage.getItem("myPostIds") ?? "[]") as string[];
@@ -15,16 +16,60 @@ function saveMyPostId(id: string) {
   } catch { /* ignore */ }
 }
 
+async function compressToBase64(file: File, maxSize = 800, quality = 0.75): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ratio = Math.min(maxSize / img.width, maxSize / img.height, 1);
+        canvas.width = Math.round(img.width * ratio);
+        canvas.height = Math.round(img.height * ratio);
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function WritePage() {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [category, setCategory] = useState<CommunityCategory | "">("");
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
+  const [authorDong, setAuthorDong] = useState("검단");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [images, setImages] = useState<string[]>([]);
+  const [videos, setVideos] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    getUserProfile().then(p => {
+      setNickname(p.nickname);
+      setAuthorDong(p.dong);
+      setAvatarUrl(p.avatar_url);
+    });
+  }, []);
+
+  async function handleFiles(files: FileList | null) {
+    if (!files) return;
+    const remaining = 5 - images.length;
+    if (remaining <= 0) return;
+    const toProcess = Array.from(files).slice(0, remaining);
+    const compressed = await Promise.all(toProcess.map(f => compressToBase64(f)));
+    setImages(prev => [...prev, ...compressed]);
+  }
 
   const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
@@ -33,19 +78,23 @@ export default function WritePage() {
     setSubmitting(true);
     setError("");
     try {
-      const post = await createPost({
+      const uid = await getOrCreateUserId();
+      const result = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: nickname.trim() || "검단주민",
-        authorDong: "검단",
+        author: anonymous ? "익명" : (nickname.trim() || "검단주민"),
+        authorDong,
+        authorAvatarUrl: anonymous ? null : avatarUrl,
+        userId: uid,
         isAnonymous: anonymous,
+        images,
+        videos,
       });
-      if (post) {
-        saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
+      if (result?.post) {
+        saveMyPostId(result.post.id);
+        router.push(`/community/detail/?id=${result.post.id}`);
       } else {
-        // Supabase 미설정 시 목록으로 이동
         router.push("/community/");
       }
     } catch {
@@ -56,7 +105,6 @@ export default function WritePage() {
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
-      {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] sticky top-0 bg-white z-10">
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
@@ -71,7 +119,6 @@ export default function WritePage() {
         </button>
       </div>
 
-      {/* Category picker */}
       <button
         onClick={() => setShowCatPicker(!showCatPicker)}
         className="flex items-center justify-between px-5 py-4 border-b border-[#f5f5f7] active:bg-[#F9FAFB] transition-colors"
@@ -97,7 +144,6 @@ export default function WritePage() {
       )}
 
       <div className="flex-1 flex flex-col">
-        {/* Title */}
         <div className="border-b border-[#f5f5f7]">
           <input value={title} onChange={e => setTitle(e.target.value)}
             placeholder="제목을 입력해주세요" maxLength={50}
@@ -107,18 +153,54 @@ export default function WritePage() {
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 border-b border-[#f5f5f7]">
           <textarea value={content} onChange={e => setContent(e.target.value)}
-            placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
-            className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
+            placeholder={"내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기"}
+            className="w-full h-full min-h-[180px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
-        {/* Bottom toolbar */}
+        {images.length > 0 && (
+          <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-[#f5f5f7]">
+            {images.map((src, i) => (
+              <div key={i} className="relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button
+                  onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
+                  className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center active:opacity-70"
+                >
+                  <X size={12} className="text-white" />
+                </button>
+              </div>
+            ))}
+            {images.length < 5 && (
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex-shrink-0 w-20 h-20 rounded-xl bg-[#f5f5f7] flex flex-col items-center justify-center gap-1 active:opacity-60"
+              >
+                <ImageIcon size={20} className="text-[#86868b]" />
+                <span className="text-[11px] text-[#86868b]">{images.length}/5</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        <div className="border-b border-[#f5f5f7] px-5 py-4 space-y-2">
+          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
+          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
+        </div>
+
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
           <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+            <button
+              onClick={() => fileRef.current?.click()}
+              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 relative"
+            >
               <ImageIcon size={18} className="text-[#6e6e73]" />
+              {images.length > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#0071e3] text-white text-[10px] font-bold flex items-center justify-center">
+                  {images.length}
+                </span>
+              )}
             </button>
             {!anonymous && (
               <input value={nickname} onChange={e => setNickname(e.target.value)}
@@ -141,7 +223,6 @@ export default function WritePage() {
           <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
         )}
 
-        {/* Tips */}
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
@@ -149,6 +230,15 @@ export default function WritePage() {
           </p>
         </div>
       </div>
+
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        multiple
+        className="hidden"
+        onChange={e => handleFiles(e.target.files)}
+      />
     </div>
   );
 }
