@@ -18,7 +18,7 @@ const EMPTY_FORM = {
   link_label: "자세히 보기",
   start_at: "",
   end_at: "",
-  active: true,
+  is_active: true,
 };
 
 type FormData = typeof EMPTY_FORM;
@@ -38,7 +38,7 @@ function StatusBadge({ p }: { p: Popup }) {
   const now = Date.now();
   const starts = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
   const ends = p.end_at ? new Date(p.end_at).getTime() : Infinity;
-  if (!p.active) return <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>;
+  if (!p.is_active) return <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>;
   if (now < starts) return <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">예약</span>;
   if (now > ends)   return <span className="text-[11px] font-semibold bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">만료</span>;
   return <span className="text-[11px] font-semibold bg-green-50 text-green-600 px-2 py-0.5 rounded-full">● 노출 중</span>;
@@ -88,7 +88,7 @@ function PopupRow({
           <ChevronDown size={16} className="text-gray-500" />
         </button>
         <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
-          {p.active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
+          {p.is_active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
         </button>
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
           <Pencil size={14} className="text-gray-500" />
@@ -146,7 +146,7 @@ export default function AdminPopupsPage() {
       link_label: p.link_label,
       start_at: toLocalInput(p.start_at),
       end_at: toLocalInput(p.end_at),
-      active: p.active,
+      is_active: p.is_active,
     });
     setEditingId(p.id);
     setShowForm(true);
@@ -164,7 +164,7 @@ export default function AdminPopupsPage() {
         link_label: form.link_label,
         start_at: fromLocalInput(form.start_at),
         end_at: fromLocalInput(form.end_at),
-        active: form.active,
+        is_active: form.is_active,
       };
       if (editingId) {
         await adminUpdatePopup(editingId, payload);
@@ -193,7 +193,7 @@ export default function AdminPopupsPage() {
 
   async function toggleActive(p: Popup) {
     try {
-      await adminUpdatePopup(p.id, { active: !p.active });
+      await adminUpdatePopup(p.id, { is_active: !p.is_active });
       await reload();
     } catch { showToast("변경 실패", false); }
   }
@@ -216,7 +216,7 @@ export default function AdminPopupsPage() {
     const now = Date.now();
     const s = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
     const e = p.end_at ? new Date(p.end_at).getTime() : Infinity;
-    return p.active && s <= now && e >= now;
+    return p.is_active && s <= now && e >= now;
   }).length;
 
   return (
@@ -333,12 +333,12 @@ export default function AdminPopupsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-bold text-gray-600">활성화</label>
-                  <button onClick={() => setForm(f => ({ ...f, active: !f.active }))}
+                  <button onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
                     className={`flex items-center gap-2 h-11 px-4 rounded-xl font-bold text-[14px] border-2 transition-colors ${
-                      form.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
+                      form.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
                     }`}>
-                    {form.active ? <Eye size={15} /> : <EyeOff size={15} />}
-                    {form.active ? "활성" : "비활성"}
+                    {form.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
+                    {form.is_active ? "활성" : "비활성"}
                   </button>
                 </div>
               </div>
