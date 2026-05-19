@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -11,6 +11,7 @@ const NAV_GROUPS = [
     title: "홈화면 관리",
     items: [
       { href: "/admin/banners", icon: Image,      label: "배너 관리"    },
+      { href: "/admin/popups",  icon: Megaphone,  label: "팝업 관리"    },
       { href: "/admin/widgets", icon: LayoutGrid, label: "홈 위젯 구성" },
     ],
   },
