@@ -35,7 +35,6 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
         />
       )}
-
       {/* 텍스트 영역 하단 그라디언트 오버레이 */}
       <div
         className="absolute inset-x-0 bottom-0 h-1/2"
@@ -43,7 +42,6 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%)",
         }}
       />
-
       {/* 배지 */}
       {b.badge && (
         <div className="absolute top-3.5 left-3.5">
@@ -55,7 +53,6 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           </span>
         </div>
       )}
-
       {/* 텍스트 + 링크 */}
       <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
         <p className="text-[20px] font-black text-white leading-tight drop-shadow">
@@ -70,8 +67,7 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           <a
             href={b.link_url}
             draggable={false}
-            className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold
-                       bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
+            className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
           >
             {b.link_label || "자세히 보기"} →
           </a>
@@ -82,19 +78,38 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
 }
 
 export default function BannerCarousel({ banners }: Props) {
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused] = useState(false);
+  const n = banners.length;
+  const loop = n > 1;
+  const slides = loop ? [banners[n - 1], ...banners, banners[0]] : banners;
+
+  const [index, setIndex] = useState(loop ? 1 : 0);
+  const [withTransition, setWithTransition] = useState(true);
+  const [drag, setDrag] = useState(0);
   const [imgFailed, setImgFailed] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+
+  const paused = useRef(false);
+  const dragging = useRef(false);
+  const startX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => { setImgFailed(false); }, [current]);
+  const realIndex = loop ? ((index - 1 + n) % n) : index;
+  const b = banners[realIndex];
 
-  const goTo = useCallback(
-    (idx: number) => setCurrent(((idx % banners.length) + banners.length) % banners.length),
-    [banners.length]
-  );
+  useEffect(() => {
+    setImgFailed(false);
+  }, [realIndex]);
+
+  useEffect(() => {
+    if (!loop) return;
+    timerRef.current = setInterval(() => {
+      if (!paused.current) {
+        setWithTransition(true);
+        setIndex(i => i + 1);
+      }
+    }, AUTOPLAY_MS);
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [loop]);
 
   useEffect(() => {
     return () => {
@@ -102,7 +117,6 @@ export default function BannerCarousel({ banners }: Props) {
     };
   }, []);
 
-  // 클론으로 점프한 직후, 다음 프레임에 트랜지션 복구
   useEffect(() => {
     if (withTransition) return;
     const id = requestAnimationFrame(() =>
@@ -123,7 +137,6 @@ export default function BannerCarousel({ banners }: Props) {
     }, RESUME_MS);
   }, []);
 
-  // 트랜지션 종료 시 클론 → 원본 무탈 점프
   const handleTransitionEnd = useCallback(
     (e: React.TransitionEvent) => {
       if (!loop || e.propertyName !== "transform") return;
@@ -172,31 +185,24 @@ export default function BannerCarousel({ banners }: Props) {
 
   if (n === 0) return null;
 
-  const realIndex = loop ? ((index - 1 + n) % n) : index;
   const transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
 
   return (
     <div className="px-4 pb-1 pt-3">
-      <div
-        className="relative w-full h-48 md:h-60 lg:h-72 rounded-2xl overflow-hidden select-none"
-      >
-        {/* 배경 그라디언트 — 항상 렌더 (이미지 로드 실패 시 fallback) */}
+      <div className="relative w-full h-48 md:h-60 lg:h-72 rounded-2xl overflow-hidden select-none">
         <div
           className="absolute inset-0 transition-all duration-300"
           style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
         />
-        {/* 배경 이미지 — 그라디언트 위에 덮어쓰기, 실패 시 숨김 */}
         {b.image_url && !imgFailed && (
           <img
-            key={b.id}
+            key={realIndex}
             src={b.image_url}
             alt={b.title}
             onError={() => setImgFailed(true)}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           />
         )}
-
-        {/* 그라디언트 오버레이 */}
         <div
           className="flex h-full"
           style={{
@@ -210,12 +216,10 @@ export default function BannerCarousel({ banners }: Props) {
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
         >
-          {slides.map((b, i) => (
-            <Slide key={i} b={b} eager={loop ? i === 1 : i === 0} />
+          {slides.map((slide, i) => (
+            <Slide key={i} b={slide} eager={loop ? i === 1 : i === 0} />
           ))}
         </div>
-
-        {/* 슬라이드 카운터 */}
         {loop && (
           <div className="absolute top-3.5 right-3.5 z-10">
             <span className="text-[11px] font-semibold bg-black/30 text-white/90 px-2 py-0.5 rounded-full backdrop-blur-sm">
