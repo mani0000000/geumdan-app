@@ -93,6 +93,9 @@ export default function WritePage() {
       });
       if (result?.post) {
         saveMyPostId(result.post.id);
+        if (result.imagesDropped && (images.length > 0 || videos.length > 0)) {
+          alert("사진·영상 저장 기능이 아직 준비 중이라 글만 등록되었어요.");
+        }
         router.push(`/community/detail/?id=${result.post.id}`);
       } else {
         router.push("/community/");
