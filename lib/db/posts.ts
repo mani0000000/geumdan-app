@@ -1,7 +1,7 @@
 /**
  * community_posts Supabase CRUD
  *
- * ── Supabase에서 먼저 실행하세요 ──────────────────────────────
+ * ── Supabase에서 먼저 실행하세요 ────────────────────────────────────────────────
  *
  * CREATE TABLE community_posts (
  *   id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
@@ -16,10 +16,13 @@
  *   comment_count INTEGER DEFAULT 0,
  *   is_pinned   BOOLEAN DEFAULT FALSE,
  *   is_hot      BOOLEAN DEFAULT FALSE,
- *   videos      TEXT[],
  *   created_at  TIMESTAMPTZ DEFAULT NOW(),
  *   updated_at  TIMESTAMPTZ DEFAULT NOW()
  * );
+ *
+ * -- 사진/영상 첨부 (기존 테이블이 있다면 아래 실행)
+ * ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS image_urls TEXT[] DEFAULT '{}';
+ * ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS video_urls TEXT[] DEFAULT '{}';
  *
  * ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
  * CREATE POLICY "public read"  ON community_posts FOR SELECT USING (true);
@@ -38,16 +41,23 @@ function isConfigured(): boolean {
   return isSupabaseConfigured;
 }
 
+function toUrlArray(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v.length > 0);
+  }
+  if (typeof value === 'string' && value.trim()) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((v): v is string => typeof v === 'string' && v.length > 0);
+      }
+    } catch { /* not JSON */ }
+  }
+  return [];
+}
+
 function rowToPost(row: Record<string, unknown>): Post {
   const isAnon = Boolean(row.is_anonymous);
-  const imageUrlsCol = Array.isArray(row.image_urls) ? (row.image_urls as string[]) : undefined;
-  const imagesLegacy = Array.isArray(row.images) ? (row.images as string[]) : undefined;
-  const images = (imageUrlsCol && imageUrlsCol.length > 0)
-    ? imageUrlsCol
-    : (imagesLegacy ?? []);
-  const videoUrl = typeof row.video_url === 'string' && row.video_url.length > 0
-    ? (row.video_url as string)
-    : undefined;
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
@@ -61,8 +71,10 @@ function rowToPost(row: Record<string, unknown>): Post {
     viewCount: (row.view_count as number) ?? 0,
     likeCount: (row.like_count as number) ?? 0,
     commentCount: (row.comment_count as number) ?? 0,
-    images: images.length > 0 ? images : undefined,
-    videos: Array.isArray(row.videos) ? (row.videos as string[]) : undefined,
+    images: toUrlArray(row.image_urls).length > 0
+      ? toUrlArray(row.image_urls)
+      : toUrlArray(row.images),
+    videos: toUrlArray(row.video_urls),
     isPinned: (row.is_pinned as boolean) ?? false,
     isHot: (row.is_hot as boolean) ?? false,
     isHidden: (row.is_hidden as boolean) ?? false,
@@ -128,7 +140,7 @@ export async function fetchDBPost(id: string): Promise<Post | null> {
   }
 }
 
-// ── 작성 ─────────────────────────────────────────────────────
+// ── 작성 ─────────────────────────────────────────────────────────
 export interface PostInput {
   category: CommunityCategory;
   title: string;
@@ -139,7 +151,6 @@ export interface PostInput {
   userId?: string | null;
   isAnonymous: boolean;
   images?: string[];
-  videoUrl?: string | null;
   videos?: string[];
 }
 
@@ -148,10 +159,10 @@ export interface CreatePostResult {
   imagesDropped: boolean;
 }
 
-function isImagesColumnMissing(err: unknown): boolean {
+function isMediaColumnMissing(err: unknown): boolean {
   const e = err as { code?: string; message?: string } | null;
   if (!e) return false;
-  return e.code === 'PGRST204' && /['"]?images['"]? column/i.test(e.message ?? '');
+  return e.code === 'PGRST204' && /['"]?(?:images|image_urls|video_urls)['"]? column/i.test(e.message ?? '');
 }
 
 export async function createPost(input: PostInput): Promise<CreatePostResult> {
@@ -168,15 +179,10 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     is_anonymous: input.isAnonymous,
     user_id: input.userId ?? null,
   };
-  const hasImages = (input.images?.length ?? 0) > 0;
-  const hasVideo = !!input.videoUrl;
-  const hasVideos = (input.videos?.length ?? 0) > 0;
-  const payload = {
-    ...base,
-    ...(hasImages ? { images: input.images } : {}),
-    ...(hasVideo ? { video_url: input.videoUrl } : {}),
-    ...(hasVideos ? { videos: input.videos } : {}),
-  };
+  const hasMedia = (input.images?.length ?? 0) > 0 || (input.videos?.length ?? 0) > 0;
+  const payload = hasMedia
+    ? { ...base, image_urls: input.images ?? [], video_urls: input.videos ?? [] }
+    : base;
 
   let { data, error } = await supabase
     .from('community_posts')
@@ -185,8 +191,8 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     .single();
 
   let imagesDropped = false;
-  if (error && hasImages && isImagesColumnMissing(error)) {
-    console.warn('[posts] images column missing — retrying without images');
+  if (error && hasMedia && isMediaColumnMissing(error)) {
+    console.warn('[posts] media columns missing — retrying without media');
     imagesDropped = true;
     ({ data, error } = await supabase
       .from('community_posts')
@@ -197,8 +203,8 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         author: input.author,
         author_dong: input.authorDong,
         author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
+        user_id: input.userId ?? null,
         is_anonymous: input.isAnonymous,
-        videos: input.videos && input.videos.length > 0 ? input.videos : null,
       })
       .select()
       .single());
@@ -211,7 +217,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
   return { post: rowToPost(data as Record<string, unknown>), imagesDropped };
 }
 
-// ── 내가 쓴 글 ─────────────────────────────────────────────────
+// ── 내가 쓴 글 ─────────────────────────────────────────────────────
 export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]> {
   if (!isConfigured() || !userId) return [];
   try {
@@ -229,26 +235,7 @@ export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]>
   }
 }
 
-// ── 글 작성자 user_id 조회 ──────────────────────────────────
-export async function fetchPostOwner(
-  id: string,
-): Promise<{ userId: string | null; title: string | null } | null> {
-  if (!isConfigured()) return null;
-  try {
-    const { data, error } = await supabase
-      .from('community_posts')
-      .select('user_id,title')
-      .eq('id', id)
-      .single();
-    if (error) return null;
-    const row = data as { user_id: string | null; title: string | null };
-    return { userId: row.user_id, title: row.title };
-  } catch {
-    return null;
-  }
-}
-
-// ── 수정 ─────────────────────────────────────────────────────
+// ── 수정 ─────────────────────────────────────────────────────────
 export async function updatePost(
   id: string,
   input: Partial<Pick<PostInput, 'title' | 'content' | 'category'>>
@@ -269,7 +256,7 @@ export async function updatePost(
   }
 }
 
-// ── 삭제 ─────────────────────────────────────────────────────
+// ── 삭제 ─────────────────────────────────────────────────────────
 export async function deletePost(id: string): Promise<boolean> {
   if (!isConfigured()) return false;
   try {
@@ -285,7 +272,7 @@ export async function deletePost(id: string): Promise<boolean> {
   }
 }
 
-// ── 조회수 증가 ───────────────────────────────────────────────
+// ── 조회수 증가 ───────────────────────────────────────────────────
 export async function incrementViewCount(id: string): Promise<void> {
   if (!isConfigured()) return;
   try {
@@ -295,7 +282,7 @@ export async function incrementViewCount(id: string): Promise<void> {
   }
 }
 
-// ── 좋아요 토글 ───────────────────────────────────────────────
+// ── 좋아요 토글 ──────────────────────────────────────────────────
 export async function togglePostLike(
   id: string,
   delta: 1 | -1
@@ -315,7 +302,7 @@ export async function togglePostLike(
   } catch { /* silent */ }
 }
 
-// ── 댓글 수 동기화 ────────────────────────────────────────────
+// ── 댓글 수 동기화 ────────────────────────────────────────────────
 export async function syncCommentCount(
   id: string,
   delta: 1 | -1

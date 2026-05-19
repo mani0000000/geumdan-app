@@ -66,8 +66,9 @@ export async function POST(req: NextRequest) {
     }
 
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
-    const isVideo = VIDEO_EXTS.includes(ext);
-    if (!IMAGE_EXTS.includes(ext) && !isVideo) {
+    const IMAGE_EXT = ["jpg","jpeg","png","gif","webp","avif","svg"];
+    const VIDEO_EXT = ["mp4","mov","webm","m4v","ogg"];
+    if (![...IMAGE_EXT, ...VIDEO_EXT].includes(ext)) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
 
