@@ -35,6 +35,7 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
         />
       )}
+
       {/* 텍스트 영역 하단 그라디언트 오버레이 */}
       <div
         className="absolute inset-x-0 bottom-0 h-1/2"
@@ -42,6 +43,7 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%)",
         }}
       />
+
       {/* 배지 */}
       {b.badge && (
         <div className="absolute top-3.5 left-3.5">
@@ -53,11 +55,9 @@ function Slide({ b, eager }: { b: Banner; eager: boolean }) {
           </span>
         </div>
       )}
-      {/* 텍스트 + 링크 */}
+
+      {/* 텍스트 + 링크 (title은 프론트 노출 안 함 — DB/어드민에는 유지) */}
       <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-        <p className="text-[20px] font-black text-white leading-tight drop-shadow">
-          {b.title}
-        </p>
         {b.subtitle && (
           <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
             {b.subtitle}
@@ -96,9 +96,7 @@ export default function BannerCarousel({ banners }: Props) {
   const realIndex = loop ? ((index - 1 + n) % n) : index;
   const b = banners[realIndex];
 
-  useEffect(() => {
-    setImgFailed(false);
-  }, [realIndex]);
+  useEffect(() => { setImgFailed(false); }, [realIndex]);
 
   useEffect(() => {
     if (!loop) return;
@@ -112,9 +110,7 @@ export default function BannerCarousel({ banners }: Props) {
   }, [loop]);
 
   useEffect(() => {
-    return () => {
-      if (resumeRef.current) clearTimeout(resumeRef.current);
-    };
+    return () => { if (resumeRef.current) clearTimeout(resumeRef.current); };
   }, []);
 
   useEffect(() => {
@@ -132,21 +128,14 @@ export default function BannerCarousel({ banners }: Props) {
 
   const scheduleResume = useCallback(() => {
     if (resumeRef.current) clearTimeout(resumeRef.current);
-    resumeRef.current = setTimeout(() => {
-      paused.current = false;
-    }, RESUME_MS);
+    resumeRef.current = setTimeout(() => { paused.current = false; }, RESUME_MS);
   }, []);
 
   const handleTransitionEnd = useCallback(
     (e: React.TransitionEvent) => {
       if (!loop || e.propertyName !== "transform") return;
-      if (index === n + 1) {
-        setWithTransition(false);
-        setIndex(1);
-      } else if (index === 0) {
-        setWithTransition(false);
-        setIndex(n);
-      }
+      if (index === n + 1) { setWithTransition(false); setIndex(1); }
+      else if (index === 0) { setWithTransition(false); setIndex(n); }
     },
     [loop, index, n]
   );
