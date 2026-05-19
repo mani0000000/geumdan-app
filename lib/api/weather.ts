@@ -87,7 +87,86 @@ async function fetchAirQuality(): Promise<{ pm10: number | null; pm25: number | 
   } catch { return { pm10: null, pm25: null }; }
 }
 
+interface KmaSlot {
+  date: string;
+  time: string;
+  hour: string;
+  temp: number | null;
+  pop: number | null;
+  humidity: number | null;
+  label: string;
+  emoji: string;
+  weatherCode: number;
+}
+interface KmaWeatherResponse {
+  success: boolean;
+  current: KmaSlot | null;
+  todayHigh: number | null;
+  todayLow: number | null;
+  today: KmaSlot[];
+}
+
+// 기상청 단기예보 (서버 /api/weather 프록시). 정적 빌드/오류 시 null.
+async function fetchKma(): Promise<KmaWeatherResponse | null> {
+  try {
+    const res = await fetch("/api/weather", { cache: "no-store" });
+    if (!res.ok) return null;
+    const j = (await res.json()) as KmaWeatherResponse;
+    return j?.success ? j : null;
+  } catch {
+    return null;
+  }
+}
+
+// 기상청 현재값을 우선 적용하고, 기상청이 제공하지 않는
+// 어제 기온·주간·체감·풍속·미세먼지는 Open-Meteo 값을 유지한다.
 export async function fetchWeather(): Promise<WeatherData | null> {
+  const [openMeteo, kma] = await Promise.all([fetchOpenMeteo(), fetchKma()]);
+
+  if (!kma || !kma.current) return openMeteo;
+
+  const c = kma.current;
+  const nowH = new Date().getHours();
+  const kmaHourly = kma.today
+    .filter((s) => Number(s.time.slice(0, 2)) >= nowH && s.temp != null)
+    .slice(0, 6)
+    .map((s) => ({ hour: `${s.time.slice(0, 2)}:00`, temp: s.temp as number, emoji: s.emoji }));
+
+  if (!openMeteo) {
+    return {
+      temp: c.temp ?? 0,
+      feelsLike: c.temp ?? 0,
+      weatherCode: c.weatherCode,
+      label: c.label,
+      emoji: c.emoji,
+      humidity: c.humidity ?? 0,
+      windSpeed: 0,
+      high: kma.todayHigh ?? c.temp ?? 0,
+      low: kma.todayLow ?? c.temp ?? 0,
+      hourly: kmaHourly,
+      yesterdayTemp: null,
+      weekly: [],
+      pm10: null,
+      pm25: null,
+      pm10Label: "",
+      pm25Label: "",
+    };
+  }
+
+  return {
+    ...openMeteo,
+    temp: c.temp ?? openMeteo.temp,
+    weatherCode: c.weatherCode,
+    label: c.label,
+    emoji: c.emoji,
+    humidity: c.humidity ?? openMeteo.humidity,
+    high: kma.todayHigh ?? openMeteo.high,
+    low: kma.todayLow ?? openMeteo.low,
+    hourly: kmaHourly.length > 0 ? kmaHourly : openMeteo.hourly,
+  };
+}
+
+async function fetchOpenMeteo(): Promise<WeatherData | null> {
   try {
     const url = [
       "https://api.open-meteo.com/v1/forecast",
