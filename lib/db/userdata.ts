@@ -20,6 +20,14 @@ export interface UserProfile {
   weekly_likes: number;
   weekly_posts: number;
   monthly_points: number;
+  avatar_url?: string | null;
+}
+
+export interface DeleteAccountSummary {
+  points: number;
+  couponCount: number;
+  postCount: number;
+  commentCount: number;
 }
 
 export interface UserGameStats {
@@ -151,7 +159,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     try {
       const { data } = await supabase
         .from("users")
-        .select("id,nickname,dong,intro,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
+        .select("id,nickname,dong,intro,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points,avatar_url")
         .eq("id", uid)
         .single();
       if (data) {
@@ -174,7 +182,7 @@ export async function getUserProfile(): Promise<UserProfile> {
 }
 
 export async function updateUserProfile(
-  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro">>
+  patch: Partial<Pick<UserProfile, "nickname" | "dong" | "intro" | "avatar_url">>
 ): Promise<void> {
   const uid = await getOrCreateUserId();
 
@@ -678,4 +686,67 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
   const cached = lsGet(SETTINGS_KEY);
   const prev = cached ? JSON.parse(cached) : { ...DEFAULT_SETTINGS };
   lsSet(SETTINGS_KEY, JSON.stringify({ ...prev, ...patch }));
+}
+
+// ── 회원탈퇴 ───────────────────────────────────────────────────────────
+export async function getDeleteAccountSummary(): Promise<DeleteAccountSummary> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return { points: 0, couponCount: 0, postCount: 0, commentCount: 0 };
+
+  if (isConfigured()) {
+    try {
+      const [profileRes, couponRes, postRes, commentRes] = await Promise.all([
+        supabase.from("users").select("points").eq("id", uid).single(),
+        supabase.from("user_coupons").select("*", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("community_posts").select("*", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("community_comments").select("*", { count: "exact", head: true }).eq("user_id", uid),
+      ]);
+      return {
+        points: (profileRes.data as { points?: number } | null)?.points ?? 0,
+        couponCount: couponRes.count ?? 0,
+        postCount: postRes.count ?? 0,
+        commentCount: commentRes.count ?? 0,
+      };
+    } catch {}
+  }
+
+  // localStorage 폴백
+  const cached = lsGet(PROFILE_KEY);
+  const profile = cached ? JSON.parse(cached) : DEFAULT_PROFILE;
+  const coupons = lsGet(COUPONS_KEY);
+  const couponList = coupons ? JSON.parse(coupons) : [];
+  return {
+    points: profile.points ?? 0,
+    couponCount: couponList.length,
+    postCount: 0,
+    commentCount: 0,
+  };
+}
+
+export async function deleteAccount(reason?: string): Promise<void> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return;
+
+  if (isConfigured()) {
+    if (reason) {
+      try {
+        await supabase.from("users").update({
+          delete_reason: reason,
+          deleted_at: new Date().toISOString(),
+        }).eq("id", uid);
+      } catch {}
+    }
+    try {
+      await supabase.from("users").delete().eq("id", uid);
+    } catch {}
+  }
+
+  // 로컬 데이터 삭제
+  if (typeof window !== "undefined") {
+    const keys = [
+      "geumdan_uid", PROFILE_KEY, HISTORY_KEY, MISSIONS_KEY, REDEEMED_KEY,
+      COUPONS_KEY, FAV_BUSES_KEY, FAV_STORES_KEY, FAV_APTS_KEY, SETTINGS_KEY,
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
+  }
 }

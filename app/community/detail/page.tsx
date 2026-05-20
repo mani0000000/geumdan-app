@@ -15,7 +15,7 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
-import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
+import { savePost, unsavePost, isPostSaved } from "@/lib/db/savedposts";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -170,7 +170,7 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
-      isFavoritePost(postId).then(setBookmarked);
+      isPostSaved(postId).then(setBookmarked);
     }
     load();
   }, [postId, isMock, router]);
@@ -179,10 +179,10 @@ function DetailContent() {
     if (!post) return;
     if (bookmarked) {
       setBookmarked(false);
-      await removeFavoritePost(postId);
+      await unsavePost(postId);
     } else {
       setBookmarked(true);
-      await addFavoritePost({ post_id: postId, title: post.title, category: post.category });
+      await savePost(postId, post.title, post.category ?? "");
     }
   };
 

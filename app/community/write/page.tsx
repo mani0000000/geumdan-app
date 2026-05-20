@@ -38,7 +38,7 @@ export default function WritePage() {
     getUserProfile().then(p => {
       setNickname(p.nickname);
       setAuthorDong(p.dong);
-      setAvatarUrl(p.avatar_url);
+      setAvatarUrl(p.avatar_url ?? null);
     });
   }, []);
 
