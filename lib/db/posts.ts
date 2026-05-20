@@ -117,6 +117,24 @@ export async function fetchDBPost(id: string): Promise<Post | null> {
   }
 }
 
+// ── 내 글 목록 조회 ──────────────────────────────────────────
+export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]> {
+  if (!isConfigured() || !userId) return [];
+  try {
+    const { data, error } = await supabase
+      .from('community_posts')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map(row => rowToPost(row as Record<string, unknown>));
+  } catch (e) {
+    console.error('[posts] fetchMyPosts error:', e);
+    return [];
+  }
+}
+
 // ── 작성 ─────────────────────────────────────────────────────
 export interface PostInput {
   category: CommunityCategory;
