@@ -49,12 +49,11 @@ export const posts: Post[] = [
     id: "p3",
     category: "중고거래",
     title: "[판매] 아이쿠션 5만원 (거의 새것)",
-    content: "아이가 크면서 안 쓰게 되어 판매합니다. 직거래 선호, 원당동·당하동 가능합니다. 상태 확인용 영상 첨부해요!",
+    content: "아이가 크면서 안 쓰게 되어 판매합니다. 직거래 선호, 원당동·당하동 가능합니다.",
     author: "정리왕맘",
     authorDong: "원당동",
     createdAt: "2026-03-28T08:45:00",
     viewCount: 156, likeCount: 5, commentCount: 8,
-    videos: ["https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"],
   },
   {
     id: "p4",
@@ -1594,8 +1593,6 @@ export interface Pharmacy {
   tags: string[];                // e.g. ["주말", "심야", "24시"]
   distance?: string;
   logo_url?: string | null;
-  lat?: number | null;
-  lng?: number | null;
 }
 
 // ---------- Nearby Marts ----------
@@ -1703,8 +1700,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    lat: 37.5953,
-    lng: 126.6585,
+    distance: "650m",
   },
   {
     id: "ph2",
@@ -1716,8 +1712,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    lat: 37.5979,
-    lng: 126.6688,
+    distance: "1.0km",
   },
   {
     id: "ph3",
@@ -1729,8 +1724,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    lat: 37.6034,
-    lng: 126.6643,
+    distance: "1.4km",
   },
   {
     id: "ph4",
@@ -1742,8 +1736,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "평일 22:00~01:00",
     isOpenNow: false,
     tags: ["심야"],
-    lat: 37.5310,
-    lng: 126.6800,
+    distance: "3.1km",
   },
   {
     id: "ph5",
@@ -1755,8 +1748,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    lat: 37.6050,
-    lng: 126.6595,
+    distance: "1.8km",
   },
   {
     id: "ph6",
@@ -1768,8 +1760,7 @@ export const pharmacies: Pharmacy[] = [
     nightHours: "매일 22:00~01:00",
     isOpenNow: false,
     tags: ["주말", "심야"],
-    lat: 37.4990,
-    lng: 126.6870,
+    distance: "4.2km",
   },
 ];
 
@@ -1779,10 +1770,10 @@ export const userGameData = {
   weeklyLikes: 5,
   weeklyLikesMax: 10,
   weeklyPosts: 2,
-  monthlyLevel: "검단 단골" as "검단 새내기" | "검단 단골" | "검단 일꾼" | "검단 지킴이",
+  monthlyLevel: "실버" as "브론즈" | "실버" | "골드" | "플래티넘",
   monthlyPoints: 1250,
-  monthlyLevelThresholds: { "검단 새내기": 0, "검단 단골": 500, "검단 일꾼": 1500, "검단 지킴이": 3000 },
-  nextLevel: "검단 일꾼" as "검단 새내기" | "검단 단골" | "검단 일꾼" | "검단 지킴이",
+  monthlyLevelThresholds: { 브론즈: 0, 실버: 500, 골드: 1500, 플래티넘: 3000 },
+  nextLevel: "골드" as "브론즈" | "실버" | "골드" | "플래티넘",
   nextLevelPoints: 1500,
   missions: [
     { id: "m1", title: "글 작성하기", desc: "커뮤니티에 글 1개 작성", reward: 10, done: true, icon: "✍️" },

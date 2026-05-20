@@ -6,7 +6,7 @@ import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { newsItems } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
-import { fetchGeumdanNews, fetchYouTubeVideos, fetchYouTubeLatest, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchYouTubeVideos, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchNewsArticles } from "@/lib/db/news";
 import { fetchInstagramPosts } from "@/lib/db/instagram";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
@@ -262,16 +262,9 @@ function NewsListItem({ item }: { item: CardItem }) {
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
       className="bg-white rounded-2xl px-4 py-4 flex items-start gap-3 active:bg-[#f5f5f7] transition-colors block">
-      {item.thumbnail ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.thumbnail} alt="" loading="lazy"
-          className="w-[64px] h-[64px] rounded-xl object-cover bg-[#f5f5f7] shrink-0"
-          onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
-      ) : (
-        <div className="w-[48px] h-[48px] rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">
-          {tabIcon[item.type]}
-        </div>
-      )}
+      <div className="w-[48px] h-[48px] rounded-xl bg-[#e8f1fd] flex items-center justify-center text-xl shrink-0">
+        {tabIcon[item.type]}
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-[15px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
         {item.summary && (
@@ -294,7 +287,6 @@ interface ApiNews {
   pubDate: string;
   source: string;
   description: string;
-  thumbnail?: string | null;
 }
 
 export default function NewsPage() {
@@ -324,7 +316,6 @@ export default function NewsPage() {
           publishedAt: item.pubDate,
           url: item.link,
           type: "뉴스" as const,
-          thumbnail: item.thumbnail ?? undefined,
         }));
         setRealNews(newsArticles);
         setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
@@ -342,24 +333,16 @@ export default function NewsPage() {
     setLoading(false);
   };
 
-  const loadYouTube = async (forceRefresh = false) => {
-    if (ytVideos.length > 0 && !forceRefresh) return;
+  const loadYouTube = async () => {
+    if (ytVideos.length > 0) return;
     setYtLoading(true);
-    // 1) "검단신도시" 최신 영상 실시간 (YouTube API order=date, 30분 캐시)
-    const live = await fetchYouTubeLatest("검단신도시", 20, forceRefresh);
-    if (live.videos.length > 0) {
-      setYtVideos(live.videos);
-      setYtLoading(false);
-      return;
-    }
-    // 2) 폴백 — Supabase DB / 정적 캐시
+    // DB에 등록된 영상 먼저, 없으면 API 검색
     const dbResult = await fetchYouTubeVideosFromDB();
     if (dbResult.videos.length > 0) {
       setYtVideos(dbResult.videos);
       setYtLoading(false);
       return;
     }
-    // 3) 최후 폴백 — 기존 멀티소스 파이프라인
     const result = await fetchYouTubeVideos("검단신도시");
     setYtVideos(result.videos);
     setYtLoading(false);
@@ -423,7 +406,7 @@ export default function NewsPage() {
               <div className="w-1.5 h-1.5 rounded-full bg-[#FF0000] animate-pulse" />
               <span className="text-[13px] text-[#424245]">검단신도시 유튜브 영상</span>
             </div>
-            <button onClick={() => { setYtVideos([]); loadYouTube(true); }} className="active:opacity-60">
+            <button onClick={() => { setYtVideos([]); loadYouTube(); }} className="active:opacity-60">
               <RefreshCw size={12} className={`text-[#6e6e73] ${ytLoading ? "animate-spin" : ""}`} />
             </button>
           </div>
@@ -440,13 +423,11 @@ export default function NewsPage() {
 
       {/* Rest as list */}
       {active !== "유튜브" && rest.length > 0 && (
-        <div className="px-4">
+        <div className="px-4 space-y-2">
           <p className="text-[14px] font-bold text-[#6e6e73] mb-1">더 보기</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {rest.map(item => (
-              <NewsListItem key={item.id} item={item} />
-            ))}
-          </div>
+          {rest.map(item => (
+            <NewsListItem key={item.id} item={item} />
+          ))}
         </div>
       )}
 

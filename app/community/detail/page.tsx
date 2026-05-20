@@ -1,9 +1,9 @@
 "use client";
-import { Suspense, useState, useEffect, useCallback, useRef } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
-  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check, Play,
+  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check,
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
@@ -15,7 +15,6 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
-import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -49,75 +48,6 @@ function saveMyCommentId(id: string) {
     const stored = getMyCommentIds();
     localStorage.setItem("myCommentIds", JSON.stringify([...stored, id]));
   } catch { /* ignore */ }
-}
-
-// 영상: 첫 프레임을 썸네일로 노출 (#t=0.1 미디어 프래그먼트), 탭하면 재생
-function PostVideo({ src }: { src: string }) {
-  const ref = useRef<HTMLVideoElement>(null);
-  const [playing, setPlaying] = useState(false);
-  return (
-    <div className="relative w-full bg-black rounded-xl overflow-hidden">
-      <video
-        ref={ref}
-        src={`${src}#t=0.1`}
-        preload="metadata"
-        playsInline
-        controls={playing}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        className="w-full max-h-[70vh] object-contain"
-      />
-      {!playing && (
-        <button
-          type="button"
-          aria-label="영상 재생"
-          onClick={() => ref.current?.play()}
-          className="absolute inset-0 flex items-center justify-center bg-black/15 active:bg-black/25"
-        >
-          <span className="w-14 h-14 rounded-full bg-black/55 flex items-center justify-center">
-            <Play size={26} className="text-white fill-white ml-0.5" />
-          </span>
-        </button>
-      )}
-    </div>
-  );
-}
-
-function PostMedia({ images, videos }: { images: string[]; videos: string[] }) {
-  if (images.length === 0 && videos.length === 0) return null;
-  return (
-    <div className="mt-5 space-y-2">
-      {images.length > 0 && (
-        <div
-          className={`grid gap-1.5 ${
-            images.length === 1 ? "grid-cols-1" : "grid-cols-2"
-          }`}
-        >
-          {images.map((src, i) => (
-            <div
-              key={i}
-              className="relative bg-[#f5f5f7] rounded-xl overflow-hidden"
-              style={{ aspectRatio: images.length === 1 ? "auto" : "1/1" }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={src}
-                alt=""
-                className={
-                  images.length === 1
-                    ? "w-full max-h-[70vh] object-contain"
-                    : "w-full h-full object-cover"
-                }
-              />
-            </div>
-          ))}
-        </div>
-      )}
-      {videos.map((src, i) => (
-        <PostVideo key={i} src={src} />
-      ))}
-    </div>
-  );
 }
 
 function DetailContent() {
@@ -170,21 +100,9 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
-      isFavoritePost(postId).then(setBookmarked);
     }
     load();
   }, [postId, isMock, router]);
-
-  const toggleBookmark = async () => {
-    if (!post) return;
-    if (bookmarked) {
-      setBookmarked(false);
-      await removeFavoritePost(postId);
-    } else {
-      setBookmarked(true);
-      await addFavoritePost({ post_id: postId, title: post.title, category: post.category });
-    }
-  };
 
   // 댓글 로드
   const loadComments = useCallback(async () => {
@@ -311,7 +229,7 @@ function DetailContent() {
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={toggleBookmark} className="active:opacity-60">
+          <button onClick={() => setBookmarked(!bookmarked)} className="active:opacity-60">
             <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
           </button>
           <button className="active:opacity-60">
@@ -387,7 +305,6 @@ function DetailContent() {
                 </div>
               </div>
               <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-              <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
             </>
           )}
 

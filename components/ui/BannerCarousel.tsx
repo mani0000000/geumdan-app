@@ -8,214 +8,112 @@ function badgeTextColor(color: string) {
   return BADGE_LIGHT.has(color.toUpperCase()) || BADGE_LIGHT.has(color) ? "#1d1d1f" : "#ffffff";
 }
 
-const AUTOPLAY_MS = 4000;
-const RESUME_MS = 1500;
-const SWIPE_THRESHOLD = 50;
-const DURATION = 420;
-const EASE = "cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-
 interface Props {
   banners: Banner[];
 }
 
-function Slide({ b, eager }: { b: Banner; eager: boolean }) {
-  return (
-    <div className="relative shrink-0 w-full h-full overflow-hidden">
-      {b.image_url ? (
-        <img
-          src={b.image_url}
-          alt={b.title}
-          draggable={false}
-          loading={eager ? "eager" : "lazy"}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
-        <div
-          className="absolute inset-0"
-          style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
-        />
-      )}
-
-      {/* 텍스트 영역 하단 그라디언트 오버레이 */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-1/2"
-        style={{
-          background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%)",
-        }}
-      />
-
-      {/* 배지 */}
-      {b.badge && (
-        <div className="absolute top-3.5 left-3.5">
-          <span
-            className="text-[11px] font-black px-2.5 py-1 rounded-full shadow"
-            style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}
-          >
-            {b.badge}
-          </span>
-        </div>
-      )}
-
-      {/* 텍스트 + 링크 (title은 프론트 노출 안 함 — DB/어드민에는 유지) */}
-      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-        {b.subtitle && (
-          <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
-            {b.subtitle}
-          </p>
-        )}
-        {b.link_url && (
-          <a
-            href={b.link_url}
-            draggable={false}
-            className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
-          >
-            {b.link_label || "자세히 보기"} →
-          </a>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function BannerCarousel({ banners }: Props) {
-  const n = banners.length;
-  const loop = n > 1;
-  const slides = loop ? [banners[n - 1], ...banners, banners[0]] : banners;
-
-  const [index, setIndex] = useState(loop ? 1 : 0);
-  const [withTransition, setWithTransition] = useState(true);
-  const [drag, setDrag] = useState(0);
-  const [imgFailed, setImgFailed] = useState(false);
-
-  const paused = useRef(false);
-  const dragging = useRef(false);
-  const startX = useRef<number | null>(null);
+  const [current, setCurrent] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const resumeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const realIndex = loop ? ((index - 1 + n) % n) : index;
-  const b = banners[realIndex];
-
-  useEffect(() => { setImgFailed(false); }, [realIndex]);
+  const goTo = useCallback(
+    (idx: number) => setCurrent(((idx % banners.length) + banners.length) % banners.length),
+    [banners.length]
+  );
 
   useEffect(() => {
-    if (!loop) return;
-    timerRef.current = setInterval(() => {
-      if (!paused.current) {
-        setWithTransition(true);
-        setIndex(i => i + 1);
-      }
-    }, AUTOPLAY_MS);
+    if (paused || banners.length <= 1) return;
+    timerRef.current = setInterval(() => setCurrent(c => (c + 1) % banners.length), 4000);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [loop]);
+  }, [paused, banners.length]);
 
-  useEffect(() => {
-    return () => { if (resumeRef.current) clearTimeout(resumeRef.current); };
-  }, []);
+  if (banners.length === 0) return null;
 
-  useEffect(() => {
-    if (withTransition) return;
-    const id = requestAnimationFrame(() =>
-      requestAnimationFrame(() => setWithTransition(true))
-    );
-    return () => cancelAnimationFrame(id);
-  }, [withTransition]);
-
-  const pause = useCallback(() => {
-    paused.current = true;
-    if (resumeRef.current) clearTimeout(resumeRef.current);
-  }, []);
-
-  const scheduleResume = useCallback(() => {
-    if (resumeRef.current) clearTimeout(resumeRef.current);
-    resumeRef.current = setTimeout(() => { paused.current = false; }, RESUME_MS);
-  }, []);
-
-  const handleTransitionEnd = useCallback(
-    (e: React.TransitionEvent) => {
-      if (!loop || e.propertyName !== "transform") return;
-      if (index === n + 1) { setWithTransition(false); setIndex(1); }
-      else if (index === 0) { setWithTransition(false); setIndex(n); }
-    },
-    [loop, index, n]
-  );
-
-  const onTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!loop) return;
-      startX.current = e.touches[0].clientX;
-      dragging.current = true;
-      pause();
-      setWithTransition(false);
-    },
-    [loop, pause]
-  );
-
-  const onTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!loop || startX.current === null) return;
-      setDrag(e.touches[0].clientX - startX.current);
-    },
-    [loop]
-  );
-
-  const onTouchEnd = useCallback(() => {
-    if (!loop || startX.current === null) return;
-    const dx = drag;
-    dragging.current = false;
-    startX.current = null;
-    setDrag(0);
-    setWithTransition(true);
-    if (Math.abs(dx) > SWIPE_THRESHOLD) {
-      setIndex(i => i + (dx < 0 ? 1 : -1));
-    }
-    scheduleResume();
-  }, [loop, drag, scheduleResume]);
-
-  if (n === 0) return null;
-
-  const transform = `translate3d(calc(${-index * 100}% + ${drag}px), 0, 0)`;
+  const b = banners[current];
 
   return (
     <div className="px-4 pb-1 pt-3">
-      <div className="relative w-full h-48 md:h-60 lg:h-72 rounded-2xl overflow-hidden select-none">
-        <div
-          className="absolute inset-0 transition-all duration-300"
-          style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
-        />
-        {b.image_url && !imgFailed && (
+      <div
+        className="relative w-full rounded-2xl overflow-hidden select-none"
+        style={{ height: 192 }}
+        onTouchStart={e => { touchStartX.current = e.touches[0].clientX; setPaused(true); }}
+        onTouchEnd={e => {
+          if (touchStartX.current !== null) {
+            const dx = e.changedTouches[0].clientX - touchStartX.current;
+            if (Math.abs(dx) > 44) goTo(current + (dx < 0 ? 1 : -1));
+          }
+          touchStartX.current = null;
+          setTimeout(() => setPaused(false), 1200);
+        }}
+      >
+        {/* 배경 — 이미지 or 그라디언트 */}
+        {b.image_url ? (
           <img
-            key={realIndex}
+            key={b.id}
             src={b.image_url}
             alt={b.title}
-            onError={() => setImgFailed(true)}
             className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           />
+        ) : (
+          <div
+            key={b.id}
+            className="absolute inset-0 transition-all duration-300"
+            style={{ background: `linear-gradient(135deg, ${b.bg_from}, ${b.bg_to})` }}
+          />
         )}
+
+        {/* 그라디언트 오버레이 */}
         <div
-          className="flex h-full"
+          className="absolute inset-0"
           style={{
-            transform,
-            transition: withTransition ? `transform ${DURATION}ms ${EASE}` : "none",
-            willChange: "transform",
-            touchAction: "pan-y",
+            background: `linear-gradient(160deg, ${b.bg_from}cc 0%, transparent 55%, rgba(0,0,0,.55) 100%)`,
           }}
-          onTransitionEnd={handleTransitionEnd}
-          onTouchStart={onTouchStart}
-          onTouchMove={onTouchMove}
-          onTouchEnd={onTouchEnd}
-        >
-          {slides.map((slide, i) => (
-            <Slide key={i} b={slide} eager={loop ? i === 1 : i === 0} />
-          ))}
-        </div>
-        {loop && (
-          <div className="absolute top-3.5 right-3.5 z-10">
-            <span className="text-[11px] font-semibold bg-black/30 text-white/90 px-2 py-0.5 rounded-full backdrop-blur-sm">
-              {realIndex + 1} / {n}
+        />
+
+        {/* 배지 */}
+        {b.badge && (
+          <div className="absolute top-3.5 left-3.5">
+            <span
+              className="text-[11px] font-black px-2.5 py-1 rounded-full shadow"
+              style={{ background: b.badge_color, color: badgeTextColor(b.badge_color) }}
+            >
+              {b.badge}
             </span>
           </div>
         )}
+
+        {/* 슬라이드 카운터 */}
+        {banners.length > 1 && (
+          <div className="absolute top-3.5 right-3.5">
+            <span className="text-[11px] font-semibold bg-black/30 text-white/90 px-2 py-0.5 rounded-full backdrop-blur-sm">
+              {current + 1} / {banners.length}
+            </span>
+          </div>
+        )}
+
+        {/* 텍스트 + 링크 */}
+        <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
+          <p className="text-[20px] font-black text-white leading-tight drop-shadow">
+            {b.title}
+          </p>
+          {b.subtitle && (
+            <p className="text-[13px] text-white/80 mt-1 leading-snug drop-shadow">
+              {b.subtitle}
+            </p>
+          )}
+          {b.link_url && (
+            <a
+              href={b.link_url}
+              className="mt-3 inline-flex items-center h-8 px-4 rounded-full text-[12px] font-bold
+                         bg-white/20 backdrop-blur-sm text-white border border-white/30 active:bg-white/35"
+            >
+              {b.link_label || "자세히 보기"} →
+            </a>
+          )}
+        </div>
+
       </div>
     </div>
   );

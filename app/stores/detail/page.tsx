@@ -9,9 +9,7 @@ import type { StoreCategory } from "@/lib/types";
 const catEmoji: Record<StoreCategory, string> = {
   카페: "☕", 음식점: "🍽️", 편의점: "🏪", "병원/약국": "💊",
   미용: "💇", 학원: "📚", 마트: "🛒", "헬스/운동": "💪",
-  반려동물: "🐾", 세탁: "👕",
-  베이커리: "🥐", 부동산: "🏘️", 스터디카페: "📖", 안경원: "👓", 꽃집: "💐",
-  기타: "🏢",
+  반려동물: "🐾", 세탁: "👕", 기타: "🏢",
 };
 const catBg: Record<StoreCategory, string> = {
   카페: "bg-[#FEF3C7] text-[#92400E]", 음식점: "bg-[#FFF0E6] text-[#C2410C]",
@@ -19,19 +17,13 @@ const catBg: Record<StoreCategory, string> = {
   미용: "bg-[#FCE7F3] text-[#9D174D]", 학원: "bg-[#EDE9FE] text-[#5B21B6]",
   마트: "bg-[#D1FAE5] text-[#065F46]", "헬스/운동": "bg-[#E0F2FE] text-[#0369A1]",
   반려동물: "bg-[#FDF2F8] text-[#9D174D]", 세탁: "bg-[#EEF2FF] text-[#4338CA]",
-  베이커리: "bg-[#FEF3C7] text-[#9A3412]", 부동산: "bg-[#CCFBF1] text-[#115E59]",
-  스터디카페: "bg-[#F3E8FF] text-[#6B21A8]", 안경원: "bg-[#CFFAFE] text-[#155E75]",
-  꽃집: "bg-[#FCE7F3] text-[#9D174D]",
   기타: "bg-[#F3F4F6] text-[#374151]",
 };
 const catDot: Record<StoreCategory, string> = {
   카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
   "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
   마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
-  세탁: "#6366F1",
-  베이커리: "#D97706", 부동산: "#0EA5A8", 스터디카페: "#7C3AED",
-  안경원: "#0F766E", 꽃집: "#DB2777",
-  기타: "#9CA3AF",
+  세탁: "#6366F1", 기타: "#9CA3AF",
 };
 
 // Mock reviews per store
@@ -186,16 +178,10 @@ function DetailContent() {
                 <div className="flex items-center gap-3">
                   <Lock size={16} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">
-                      {floor.label} 화장실
-                      {floor.restroomGender && <span className="ml-1.5 text-[#0071e3] font-semibold">· {floor.restroomGender}</span>}
-                    </p>
+                    <p className="text-[12px] text-[#6e6e73]">{floor.label} 화장실</p>
                     <p className="text-[15px] font-medium text-[#1d1d1f]">
-                      {floor.restroomLocation
-                        ? floor.restroomLocation
-                        : showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
+                      {showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
                     </p>
-                    {floor.restroomNote && <p className="text-[12px] text-[#6e6e73] mt-0.5">{floor.restroomNote}</p>}
                   </div>
                 </div>
                 {floor.restroomCode && (
