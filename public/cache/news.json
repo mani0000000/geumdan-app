@@ -1,7 +1,16 @@
 {
-  "fetchedAt": "2026-05-19T22:04:21.781Z",
+  "fetchedAt": "2026-05-20T02:03:48.185Z",
   "count": 40,
   "articles": [
+    {
+      "id": "gr0-0",
+      "title": "인천 검단신도시에 2,857가구 대단지 아파트 ‘더샵 검단레이크파크’ 6월 분양 - 경상일보",
+      "summary": "",
+      "source": "경상일보",
+      "publishedAt": "2026-05-20T01:21:09.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE1rTnZ5XzM5QVhJTFcxMnpKLXFLQUNjYzlRY0k4VjFVbVdZMXFwZ0Y1SU5UbGphaTRtaVNmaFVXUWFjTC1rWjNRb3owR094andwUGVtWTlYNllKLVRsdWV0YzZUenNEb016NmJVRw?oc=5",
+      "type": "뉴스"
+    },
     {
       "id": "gr3-0",
       "title": "박세훈 검단구청장 후보 “실무 행정 경험으로 교통·교육 주권 찾아올 것“ - v.daum.net",
@@ -12,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-11",
       "title": "인천 검단구 시·구의원 늘어난 자리 두고…신인 다수 출마 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -21,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-10",
       "title": "인천 초대 검단구청장 ‘해결사’ 김진규 vs ‘전문가’ 박세훈…발전 공약 ‘승부수’ - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -30,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-11",
       "title": "검단신도시에 수(水)세권 프리미엄 '더샵 검단레이크파크' 6월 분양 예정 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -39,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-4",
       "title": "검단신도시에 수(水)세권 프리미엄 ‘더샵 검단레이크파크’ 6월 분양 예정 - 이데일리",
       "summary": "",
       "source": "이데일리",
@@ -48,16 +57,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-1",
+      "id": "gr1-4",
       "title": "인천 원당동 검단신도시 예미지 트리플에듀 아파트 84㎡ 6억원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
-      "publishedAt": "2026-05-19T07:25:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxQVzIzdlVIOF81d2dsblp0QlhaYURIemRwVkkzb1Z3bGUxd0FjMGh1T2tfd18zRGVSa3JHS2dVYUhmcUo5R19SNjBlcVBLb0I2Tk9kTnJFdGZMTndzYWRjb1VRWUNqdG5wY19NbE9lQUluTFN5eTg3V1VXbnpuWlJIX0pRckhHMkduV2FOUVdmWHFISm15RDlSbklfONIBmwFBVV95cUxQVzIzdlVIOF81d2dsblp0QlhaYURIemRwVkkzb1Z3bGUxd0FjMGh1T2tfd18zRGVSa3JHS2dVYUhmcUo5R19SNjBlcVBLb0I2Tk9kTnJFdGZMTndzYWRjb1VRWUNqdG5wY19NbE9lQUluTFN5eTg3V1VXbnpuWlJIX0pRckhHMkduV2FOUVdmWHFISm15RDlSbklfOA?oc=5",
+      "publishedAt": "2026-05-19T07:26:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxOMDRNX2wwLUtLc0hvcFBVdkR5cVQwSTVNS0FxM0ptcG5IekFRTzZ4YWVWdW9DcUpVVjNxcGFXRy13RVlCcUFpVl9JT0c3bEdkRE5YdVNsQlVCTExQY2NNMmJmb1NJeGZNb3hibjRaY2dCWGozMlZSQWJuREZ5YkZkeXVPLUhRczDSAZsBQVVfeXFMUFcyM3ZVSDhfNXdnbG5adEJYWmFESHpkcFZJM29Wd2xlMXdBYzBodU9rX3dfM0RlUmtyR0tnVWFIZnFKOUdfUjYwZXFQS29CNk5PZE5yRXRmTE53c2FkY29VUVlDanRucGNfTWxPZUFJbkxTeXk4N1dVV256blpSSF9KUXJIRzJHbldhTlFXZlhxSEpteUQ5Um5JXzg?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
+      "id": "gr2-4",
       "title": "인천 서구, 검단신도시 ‘아라누리도서관’ 21일 개관…복합 문화공간 본격 운영 - 글로벌경제신문",
       "summary": "",
       "source": "글로벌경제신문",
@@ -66,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-26",
+      "id": "gr0-33",
       "title": "인천 서구 주민들을 위한 '아라누리도서관' 21일 개관 - 메트로신문",
       "summary": "",
       "source": "메트로신문",
@@ -84,21 +93,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-16",
       "title": "인천 원당동 검단신도시디에트르더힐아파트 108㎡ 7억원에 거래 - 조선비즈 - Chosunbiz",
       "summary": "",
       "source": "Chosunbiz",
       "publishedAt": "2026-05-19T05:20:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMihwFBVV95cUxQQVRUN1NGREczUnloQ3NYdGsxV3NqbzZFeFl6aFBMMV9kRlA4dlhNR281VGxFc3JqWWdvOVM0VWk0OXFvSGdOYnJuZTUwVzNCeHZCSU8wV0IwaTJoR2ppb2hJRmxXRFI4VEE5WGxiNWFHWkdfNWY1cl9WNjNhaHNXRURLczZFanPSAZsBQVVfeXFMTVAwYm1aVlZ4cHNiUDFaRjVCd2YtMGg5ekJkTWFmb1pDQ2dOYlRYajJYTWMxOGhmMklzSlFoR0ZTNXVpelJpR1dIN1ZqR3JLcF8zTnA4M3p0a1R5OGxRVmRpbU1YazRha1A5Nl9adTlRSWZ3TWtwYkljQ1JGc21VR2w5YVZhVTFodWYtdWtwNVhiWkY2a0pWeHVUSG8?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr1-6",
-      "title": "인천 원당동 검단신도시디에트르더힐아파트 108㎡ 7억원에 거래 - 조선비즈 - Chosunbiz",
-      "summary": "",
-      "source": "Chosunbiz",
-      "publishedAt": "2026-05-19T05:20:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMimwFBVV95cUxNUDBibVpWVnhwc2JQMVpGNUJ3Zi0waDl6QmRNYWZvWkNDZ05iVFhqMlhNYzE4aGYySXNKUWhHRlM1dWl6UmlHV0g3VmpHcktwXzNOcDgzenRrVHk4bFFWZGltTVhrNGFrUDk2X1p1OVFJZndNa3BiSWNDUkZzbVVHbDlhVmFVMWh1Zi11a3A1WGJaRjZrSlZ4dVRIb9IBmwFBVV95cUxNUDBibVpWVnhwc2JQMVpGNUJ3Zi0waDl6QmRNYWZvWkNDZ05iVFhqMlhNYzE4aGYySXNKUWhHRlM1dWl6UmlHV0g3VmpHcktwXzNOcDgzenRrVHk4bFFWZGltTVhrNGFrUDk2X1p1OVFJZndNa3BiSWNDUkZzbVVHbDlhVmFVMWh1Zi11a3A1WGJaRjZrSlZ4dVRIbw?oc=5",
       "type": "뉴스"
     },
     {
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-21",
       "title": "유세 중이던 인천 검단구의원 후보 폭행한 60대 입건 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -120,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-3",
       "title": "[인천 교육 현안] 신도시 과밀 학급·민원대응팀 교사 제외 등 과제 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
@@ -129,7 +129,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-22",
+      "id": "gr2-19",
+      "title": "선거유세 중이던 인천 검단구의원 후보 폭행한 60대 입건 - 연합뉴스",
+      "summary": "",
+      "source": "연합뉴스",
+      "publishedAt": "2026-05-19T02:43:07.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9yYXdLRERFR1ZKNTVOSjVLSXpReFV0X3hsMUpJOVFxRWE3azI0SW9IZnZGaFNvNkMzc2RWNkdudHVYZVlleTZyWlg4WnlLZzViN2lpOGpySlhnUjZ0YVhBcdIBYEFVX3lxTE9yYXdLRERFR1ZKNTVOSjVLSXpReFV0X3hsMUpJOVFxRWE3azI0SW9IZnZGaFNvNkMzc2RWNkdudHVYZVlleTZyWlg4WnlLZzViN2lpOGpySlhnUjZ0YVhBcQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-25",
       "title": "[단독] “피켓 안내리면 죽일 것” 박용갑 인천 검단구의원 후보, 선거 유세 중 폭언당해 - 인천일보",
       "summary": "",
       "source": "인천일보",
@@ -147,7 +156,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-14",
       "title": "[6·3 지선 내가 뛴다] 인천 검단구청장 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -156,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr1-0",
+      "id": "gr1-1",
       "title": "인천 검단 아파트는 완판인데···검암은 업계서 회의적 '대조' - 글로벌이코노믹",
       "summary": "",
       "source": "글로벌이코노믹",
@@ -165,7 +174,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-35",
+      "id": "gr2-16",
+      "title": "서구, 검단신도시 내 '아라누리도서관' 21일 개관 - 포커스인천",
+      "summary": "",
+      "source": "포커스인천",
+      "publishedAt": "2026-05-18T08:11:18.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE04TW9ZQk5kTFdEVzFyWWlKcy1mSDRwd21BMFhsNEpRcGtlcDBINUFZejdYMk9ON2c4dE14SExrR0ZYcGtRZjBtTHExejBCYlFsMnc5a1poNWd1TXBtZUVhcUFQbk1wbGdKVlRTStIBcEFVX3lxTE9LTC04bGlFSXhHcUpJTFFsODlwbl9sYm9XekJZXzRTZTQ4NXllZ0xjeTNoVlQtZmpfQzVHdEFlU19jOVlWOXpaQnZFTENVSVJoaGYwSHRuZGdIQ25EejRvRzNWMFY2cFhhS1VLVVJqbXo?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-37",
       "title": "단지 앞 유·초·중 예정 부지… ‘더샵 검단레이크파크’ 교육 특화 단지로 관심 - 일간스포츠",
       "summary": "",
       "source": "일간스포츠",
@@ -183,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-12",
       "title": "인천 서구, 검단신도시 제설취약구간에 원격 염수분사 시스템 도입 - 경인매일",
       "summary": "",
       "source": "경인매일",
@@ -192,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "인천 서구, 아라누리도서관 개관…검단신도시 독서접근성 높여 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -201,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-36",
+      "id": "gr2-35",
       "title": "서구, 재난안전시설 자동염수분사장치 설치 위한 특별교부세 확보 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -210,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-5",
       "title": "인천 서구, 검단신도시에 ‘아라누리도서관’ 개관…복합문화공간 탄생 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -223,21 +241,12 @@
       "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
-      "publishedAt": "2026-05-18T04:46:03.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE5QTDVTOVlzNlB6SE54MUVaMThpZ2dlUy12RzNDak9acFZUdWY5bTl3RExieVJidENZLVMwTm9SemsxUnFzY0Z0cm5HVVlhVGc?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-1",
-      "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
       "publishedAt": "2026-05-18T04:46:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5HbjlLanZkQmVHN2RYZVI5djlfN2N1MVE1a01GZjdmem1oS2tNUWRHNFpERkVtNEJUaHBncEM0cHhXazBERFdENktiTlJJY3BwajZmVw?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-7",
       "title": "인천 서구 검단신도시 '아라누리도서관' 본격 운영 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -246,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-34",
+      "id": "gr0-36",
       "title": "인천 서구, 고산터널 자동염수 분사장치 설치 위해 특별교부세 3억 확보 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -255,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-31",
+      "id": "gr0-32",
       "title": "인천 검단신도시 '아라누리도서관' 6월 개관…\"체류형 문화플랫폼\" 주목 - 뉴스티앤티",
       "summary": "",
       "source": "뉴스티앤티",
@@ -273,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-3",
       "title": "인천 서구, 검단 고산터널 ‘자동염수 분사장치’ 설치 - 이뉴스투데이",
       "summary": "",
       "source": "이뉴스투데이",
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-23",
       "title": "인천 서구, 검단 고산터널 ‘자동염수 분사장치’ 설치 - 이뉴스투데이",
       "summary": "",
       "source": "이뉴스투데이",
@@ -291,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-22",
       "title": "인천 서구, 검단신도시 아라누리도서관 21일 개관 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -300,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-2",
       "title": "인천 검단신도시 '아라누리 구립도서관' 21일 개관 - 연합뉴스",
       "summary": "",
       "source": "연합뉴스",
@@ -309,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-15",
+      "id": "gr2-7",
       "title": "[18일 인천 서구] 검단신도시 고산터널 ‘자동염수 분사장치’ 설치 등 - 아시아타임즈",
       "summary": "",
       "source": "아시아타임즈",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-8",
       "title": "인천 서구, 21일 검단 ‘아라누리도서관’ 개관...도서 3만권 보유 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
+      "id": "gr2-14",
       "title": "인천 서구, 고산터널 ‘자동염수 분사장치’ 설치비 3억 확보… 겨울 전 완료 - 녹색경제신문",
       "summary": "",
       "source": "녹색경제신문",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-21",
-      "title": "인천 서구, 특별교부세 확보해 제설 취약구간 개선 - 녹색경제신문",
+      "id": "gr0-15",
+      "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 저널25방송",
       "summary": "",
-      "source": "녹색경제신문",
-      "publishedAt": "2026-05-18T01:06:41.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFBlemZCTDY2TFMyb3hHZ0JmTGFCZUpQRnJJd1NEYVdJZzNtWkJxcUotelhCaW9LOVRYVk9jUE0zNWluZk5WZFo3cWRGbmljVmF5aU51TERvcHMxemtiR2xKa3dfeTJDdVE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-14",
-      "title": "인천 서구, 검단신도시 내 아라누리도서관 21일 개관 - 행정신문",
-      "summary": "",
-      "source": "행정신문",
+      "source": "저널25방송",
       "publishedAt": "2026-05-18T01:02:47.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9RZlU0Q2hJM3pKOW5YVzlrVlhYb21XLWl0c2xSSTBKWjJGWFljRm1Od0tUZmxQdEU5ZlpVSUhKM0dIQS1TMldVb051X25ST1VUWl9KUEVVaDRHMmJPOGhnRXpLeGx5MTN4UFU1bg?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9rNWxZQVI1VFpwM25zR2dGY3dlRmJJODJnbWdYTHBqcTRBXzlBaG1weWMxUVY5aVhXbkU3ZWIwdXNjS2dKTjBvWVRidWJIc2lfS0xQUGZXSlRTb3hEaXh5UHRnUlBia19UYm9ycA?oc=5",
       "type": "뉴스"
     }
   ]
