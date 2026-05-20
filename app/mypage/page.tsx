@@ -27,6 +27,8 @@ import { TERMS_MENU } from "@/lib/db/terms";
 
 const WEEKLY_LIKES_MAX = 10;
 
+const CARD = "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100";
+
 const MISSIONS = [
   { id: "m1", title: "글 작성하기", desc: "커뮤니티에 글 1개 작성", reward: 10, icon: "✍️", autoCheck: true },
   { id: "m2", title: "좋아요 5번", desc: "이번 주 좋아요 5회 이상", reward: 10, icon: "❤️", autoCheck: false },
@@ -67,17 +69,47 @@ const levelBadge: Record<string, string> = {
 };
 const levelPct: Record<string, number> = { 새싹: 15, 주민: 40, 이웃: 65, 터줏대감: 100 };
 
-const monthlyLevelColor: Record<string, { from: string; to: string; badge: string }> = {
-  브론즈: { from: "#92400E", to: "#D97706", badge: "bg-[#FEF3C7] text-[#92400E]" },
-  실버: { from: "#4B5563", to: "#9CA3AF", badge: "bg-[#F3F4F6] text-[#374151]" },
-  골드: { from: "#B45309", to: "#FBBF24", badge: "bg-[#FEF9C3] text-[#854D0E]" },
-  플래티넘: { from: "#1E40AF", to: "#38BDF8", badge: "bg-[#e8f1fd] text-[#1E40AF]" },
+const monthlyLevelColor: Record<string, { accent: string; soft: string }> = {
+  브론즈: { accent: "#D97706", soft: "#FEF3C7" },
+  실버: { accent: "#6B7280", soft: "#F3F4F6" },
+  골드: { accent: "#B45309", soft: "#FEF9C3" },
+  플래티넘: { accent: "#2563EB", soft: "#DBEAFE" },
 };
 
 const DEFAULT_STATS: UserGameStats = {
   points: 0, weeklyLikes: 0, weeklyPosts: 0, monthlyPoints: 0,
   completedMissions: [], redeemedRewards: [], pointHistory: [],
 };
+
+function Avatar({ src, size = 40, alt = "", className = "" }: { src?: string | null; size?: number; alt?: string; className?: string }) {
+  return src ? (
+    <img src={src} alt={alt} width={size} height={size} className={`rounded-full object-cover ${className}`} style={{ width: size, height: size }} />
+  ) : (
+    <div className={`rounded-full bg-[#e8f1fd] flex items-center justify-center ${className}`} style={{ width: size, height: size }}>
+      <span style={{ fontSize: size * 0.45 }}>👤</span>
+    </div>
+  );
+}
+
+function SectionLabel({
+  label, icon, right, onClick, linkLabel = "전체보기",
+}: {
+  label: string; icon?: React.ReactNode; right?: React.ReactNode; onClick?: () => void; linkLabel?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 pt-6 pb-3">
+      <div className="flex items-center gap-2">
+        {icon}
+        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
+      </div>
+      {onClick ? (
+        <button onClick={onClick} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5 active:opacity-60">
+          {linkLabel} <ChevronRight size={13} />
+        </button>
+      ) : right}
+    </div>
+  );
+}
 
 export default function MyPage() {
   const router = useRouter();
@@ -193,35 +225,34 @@ export default function MyPage() {
       <Header title="마이페이지" />
 
       {/* 프로필 카드 */}
-      <div className="mx-4 mt-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="h-16 bg-[#0071e3]" />
-        <div className="px-4 pb-5">
-          <div className="flex items-end justify-between -mt-8 mb-3">
-            <div className="w-16 h-16 rounded-full bg-[#e8f1fd] border-4 border-white flex items-center justify-center text-2xl">👤</div>
+      <div className={`mx-4 mt-4 ${CARD}`}>
+        <div className="p-4">
+          <div className="flex items-start gap-3">
+            <Avatar src={undefined} size={64} alt={nickname} className="shrink-0" />
+            <div className="flex-1 min-w-0 pt-0.5">
+              <div className="flex items-center gap-2">
+                <h2 className="text-[19px] font-extrabold text-[#1d1d1f] truncate">{nickname}</h2>
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full shrink-0 ${levelBadge[level] ?? levelBadge["새싹"]}`}>{level}</span>
+              </div>
+              <p className="text-[14px] text-[#6e6e73] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
+            </div>
             <button onClick={() => router.push("/mypage/edit/")}
-              className="h-8 px-3.5 border border-[#d2d2d7] rounded-xl text-[13px] text-[#424245] font-medium active:bg-[#f5f5f7]">
+              className="h-8 px-3.5 border border-[#d2d2d7] rounded-full text-[13px] text-[#424245] font-semibold active:bg-[#f5f5f7] shrink-0">
               프로필 수정
             </button>
           </div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-[19px] font-bold text-[#1d1d1f]">{nickname}</h2>
-            <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${levelBadge[level] ?? levelBadge["새싹"]}`}>
-              {level}
-            </span>
-          </div>
-          <p className="text-[14px] text-[#6e6e73] mt-0.5">{dong} · {joinedAt.slice(0, 7)} 가입</p>
-          <div className="mt-3">
-            <div className="flex justify-between mb-1">
+          <div className="mt-4">
+            <div className="flex justify-between mb-1.5">
               <span className="text-[12px] text-[#6e6e73]">레벨 진행도</span>
               <span className="text-[12px] font-bold text-[#0071e3]">{levelPct[level] ?? 15}%</span>
             </div>
             <div className="h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0071e3] rounded-full" style={{ width: `${levelPct[level] ?? 15}%` }} />
+              <div className="h-full bg-[#0071e3] rounded-full transition-all" style={{ width: `${levelPct[level] ?? 15}%` }} />
             </div>
           </div>
-          <div className="flex mt-4 border border-[#f5f5f7] rounded-xl overflow-hidden">
+          <div className="flex mt-4 bg-[#f5f5f7] rounded-xl overflow-hidden">
             {([["작성 글", postCount], ["댓글", commentCount], ["받은 좋아요", likeCount]] as [string, number][]).map(([l, v], i, arr) => (
-              <div key={l} className={`flex-1 py-3 text-center ${i !== arr.length - 1 ? "border-r border-[#f5f5f7]" : ""}`}>
+              <div key={l} className={`flex-1 py-3 text-center ${i !== arr.length - 1 ? "border-r border-white" : ""}`}>
                 <p className="text-[21px] font-black text-[#1d1d1f]">{v}</p>
                 <p className="text-[12px] text-[#6e6e73] mt-0.5">{l}</p>
               </div>
@@ -231,67 +262,66 @@ export default function MyPage() {
       </div>
 
       {/* ── 포인트 & 월간 레벨 카드 ── */}
-      <div className="mx-4 mb-3 rounded-2xl overflow-hidden"
-        style={{ background: `linear-gradient(135deg, ${mlv.from}, ${mlv.to})` }}>
+      <div className={`mx-4 mt-3 ${CARD}`}>
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Trophy size={16} className="text-white/80" />
-                <span className="text-[14px] font-bold text-white/80">이번 달 등급</span>
+                <Trophy size={16} className="text-[#6e6e73]" />
+                <span className="text-[14px] font-bold text-[#6e6e73]">이번 달 등급</span>
               </div>
-              <span className="text-[29px] font-black text-white">{monthlyLevel}</span>
+              <span className="inline-block text-[15px] font-bold px-2.5 py-1 rounded-full" style={{ background: mlv.soft, color: mlv.accent }}>{monthlyLevel}</span>
             </div>
             <div className="text-right">
-              <p className="text-[13px] text-white/70">보유 포인트</p>
-              <p className="text-[27px] font-black text-white">{gameStats.points.toLocaleString()}P</p>
+              <p className="text-[13px] text-[#6e6e73]">보유 포인트</p>
+              <p className="text-[27px] font-black text-[#1d1d1f]">{gameStats.points.toLocaleString()}P</p>
             </div>
           </div>
 
           {/* 월간 레벨 진행 바 */}
           <div className="mb-3">
             <div className="flex justify-between mb-1.5">
-              <span className="text-[12px] text-white/70">{monthlyLevel}</span>
-              <span className="text-[12px] text-white/70">{nextLevel} (앞으로 {remainToNext}P)</span>
+              <span className="text-[12px] text-[#6e6e73]">{monthlyLevel}</span>
+              <span className="text-[12px] text-[#6e6e73]">{nextLevel} (앞으로 {remainToNext}P)</span>
             </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div className="h-full bg-white rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+            <div className="h-2 bg-[#e5e5ea] rounded-full overflow-hidden">
+              <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: mlv.accent }} />
             </div>
           </div>
 
           {/* 이번 주 활동 */}
           <div className="flex gap-3">
-            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
-              <p className="text-[12px] text-white/70">이번 주 좋아요</p>
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[12px] text-[#6e6e73]">이번 주 좋아요</p>
               <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[19px] font-black text-white">{gameStats.weeklyLikes}</span>
-                <span className="text-[13px] text-white/60">/{WEEKLY_LIKES_MAX}</span>
+                <span className="text-[19px] font-black text-[#1d1d1f]">{gameStats.weeklyLikes}</span>
+                <span className="text-[13px] text-[#6e6e73]">/{WEEKLY_LIKES_MAX}</span>
               </div>
-              <div className="h-1 bg-white/20 rounded-full mt-1.5 overflow-hidden">
-                <div className="h-full bg-white rounded-full" style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%` }} />
+              <div className="h-1 bg-[#e5e5ea] rounded-full mt-1.5 overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${Math.min(100, gameStats.weeklyLikes / WEEKLY_LIKES_MAX * 100)}%`, background: mlv.accent }} />
               </div>
             </div>
-            <div className="flex-1 bg-white/15 rounded-xl px-3 py-2.5">
-              <p className="text-[12px] text-white/70">이번 주 글</p>
-              <span className="text-[19px] font-black text-white">{gameStats.weeklyPosts}개</span>
-              <p className="text-[12px] text-white/60 mt-0.5">글 1개 = +10P</p>
+            <div className="flex-1 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
+              <p className="text-[12px] text-[#6e6e73]">이번 주 글</p>
+              <span className="text-[19px] font-black text-[#1d1d1f]">{gameStats.weeklyPosts}개</span>
+              <p className="text-[12px] text-[#86868b] mt-0.5">글 1개 = +10P</p>
             </div>
           </div>
 
           <button onClick={() => setShowPointHistory(s => !s)}
-            className="mt-3 w-full text-center text-[13px] text-white/70 active:opacity-60 flex items-center justify-center gap-1">
+            className="mt-3 w-full text-center text-[13px] text-[#6e6e73] active:opacity-60 flex items-center justify-center gap-1">
             포인트 내역 {showPointHistory ? "▲" : "▼"}
           </button>
           {showPointHistory && (
-            <div className="mt-2 bg-white/10 rounded-xl p-3 space-y-1.5">
+            <div className="mt-2 bg-[#f5f5f7] rounded-xl p-3 space-y-1.5">
               {gameStats.pointHistory.length === 0 ? (
-                <p className="text-[13px] text-white/60 text-center">포인트 내역이 없습니다</p>
+                <p className="text-[13px] text-[#6e6e73] text-center">포인트 내역이 없습니다</p>
               ) : gameStats.pointHistory.map((h, i) => (
                 <div key={i} className="flex items-center justify-between">
-                  <span className="text-[13px] text-white/80">{h.desc}</span>
+                  <span className="text-[13px] text-[#6e6e73]">{h.desc}</span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-white/50">{h.date.slice(5)}</span>
-                    <span className={`text-[14px] font-bold ${h.points > 0 ? "text-white" : "text-white/60"}`}>
+                    <span className="text-[12px] text-[#86868b]">{h.date.slice(5)}</span>
+                    <span className={`text-[14px] font-bold ${h.points > 0 ? "text-[#1d1d1f]" : "text-[#86868b]"}`}>
                       {h.points > 0 ? "+" : ""}{h.points}P
                     </span>
                   </div>
@@ -303,17 +333,13 @@ export default function MyPage() {
       </div>
 
       {/* ── 주간 미션 ── */}
-      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <div className="flex items-center gap-1.5">
-            <Zap size={16} className="text-[#F59E0B]" />
-            <span className="text-[16px] font-bold text-[#1d1d1f]">주간 미션</span>
-          </div>
-          <span className="text-[13px] text-[#6e6e73]">
-            {missions.filter(m => m.done).length}/{missions.length} 완료
-          </span>
-        </div>
-        <div className="px-4 pb-4 space-y-2">
+      <SectionLabel
+        label="주간 미션"
+        icon={<Zap size={18} className="text-[#F59E0B]" />}
+        right={<span className="text-[13px] font-semibold text-[#6e6e73]">{missions.filter(m => m.done).length}/{missions.length} 완료</span>}
+      />
+      <div className={`mx-4 ${CARD}`}>
+        <div className="p-3 space-y-2">
           {missions.map(m => (
             <div key={m.id} className={`flex items-center gap-3 rounded-xl px-3 py-3 ${m.done ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"}`}>
               <span className="text-xl">{m.icon}</span>
@@ -342,15 +368,13 @@ export default function MyPage() {
       </div>
 
       {/* ── 포인트 교환 ── */}
-      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <div className="flex items-center gap-1.5">
-            <Gift size={16} className="text-[#0071e3]" />
-            <span className="text-[16px] font-bold text-[#1d1d1f]">포인트 교환</span>
-          </div>
-          <span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>
-        </div>
-        <div className="px-4 pb-4 space-y-2">
+      <SectionLabel
+        label="포인트 교환"
+        icon={<Gift size={18} className="text-[#0071e3]" />}
+        right={<span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>}
+      />
+      <div className={`mx-4 ${CARD}`}>
+        <div className="p-3 space-y-2">
           {REWARDS.map(r => {
             const done = gameStats.redeemedRewards.includes(r.id);
             const canRedeem = gameStats.points >= r.cost && !done;
@@ -389,36 +413,34 @@ export default function MyPage() {
               </div>
             );
           })}
-        </div>
-        <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-3 py-2.5">
-          <p className="text-[13px] text-[#0071e3] leading-relaxed">
-            💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회)
-          </p>
+          <div className="bg-[#e8f1fd] rounded-xl px-3 py-2.5">
+            <p className="text-[13px] text-[#0071e3] leading-relaxed">
+              💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회)
+            </p>
+          </div>
         </div>
       </div>
 
       {/* 최근 작성글 */}
-      <div className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-[14px] font-bold text-[#6e6e73]">최근 작성글</p>
-        <div className="divide-y divide-[#f5f5f7]">
-          {posts.slice(0, 3).map(p => (
-            <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
-              className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
-              <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
-                <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
-              </div>
-            </button>
-          ))}
-        </div>
+      <SectionLabel label="최근 작성글" />
+      <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
+        {posts.slice(0, 3).map(p => (
+          <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
+            className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
+            <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
+              <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* 메뉴 */}
       {menuGroups.map(grp => (
-        <div key={grp.title} className="mx-4 mb-3 bg-white rounded-2xl overflow-hidden">
-          <p className="px-4 pt-4 pb-1 text-[13px] font-bold text-[#6e6e73]">{grp.title}</p>
-          <div className="divide-y divide-[#f5f5f7]">
+        <div key={grp.title}>
+          <SectionLabel label={grp.title} />
+          <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
             {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
               <button key={label} onClick={() => href && router.push(href)}
                 className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
@@ -435,9 +457,9 @@ export default function MyPage() {
       ))}
 
       {/* 로그아웃 */}
-      <div className="mx-4 mb-6">
+      <div className="mx-4 mt-6 mb-6">
         <button onClick={() => router.push("/login/")}
-          className="w-full flex items-center justify-center gap-2 h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
+          className={`w-full flex items-center justify-center gap-2 h-12 ${CARD} text-[#F04452] text-[15px] font-semibold active:bg-[#FEE2E2] transition-colors`}>
           <LogOut size={16} />로그아웃
         </button>
       </div>
