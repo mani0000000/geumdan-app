@@ -57,15 +57,14 @@ function toUrlArray(value: unknown): string[] {
 }
 
 function rowToPost(row: Record<string, unknown>): Post {
-  const isAnon = Boolean(row.is_anonymous);
   return {
     id: row.id as string,
     category: row.category as CommunityCategory,
     title: row.title as string,
     content: row.content as string,
-    author: (isAnon ? '익명' : row.author) as string,
+    author: row.author as string,
     authorDong: row.author_dong as string,
-    authorAvatarUrl: isAnon ? null : ((row.author_avatar_url as string | null) ?? null),
+    authorAvatarUrl: (row.author_avatar_url as string | null) ?? null,
     authorUserId: (row.user_id as string | null) ?? null,
     createdAt: row.created_at as string,
     viewCount: (row.view_count as number) ?? 0,
@@ -149,7 +148,6 @@ export interface PostInput {
   authorDong: string;
   authorAvatarUrl?: string | null;
   userId?: string | null;
-  isAnonymous: boolean;
   images?: string[];
   videos?: string[];
 }
@@ -175,8 +173,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     content: input.content,
     author: input.author,
     author_dong: input.authorDong,
-    author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-    is_anonymous: input.isAnonymous,
+    author_avatar_url: input.authorAvatarUrl ?? null,
     user_id: input.userId ?? null,
   };
   const hasMedia = (input.images?.length ?? 0) > 0 || (input.videos?.length ?? 0) > 0;
@@ -196,16 +193,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     imagesDropped = true;
     ({ data, error } = await supabase
       .from('community_posts')
-      .insert({
-        category: input.category,
-        title: input.title,
-        content: input.content,
-        author: input.author,
-        author_dong: input.authorDong,
-        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-        user_id: input.userId ?? null,
-        is_anonymous: input.isAnonymous,
-      })
+      .insert(base)
       .select()
       .single());
   }
@@ -236,18 +224,45 @@ export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]>
 }
 
 // ── 수정 ─────────────────────────────────────────────────────────
+export type UpdatePostInput = Partial<
+  Pick<PostInput, 'title' | 'content' | 'category' | 'images' | 'videos'>
+>;
+
 export async function updatePost(
   id: string,
-  input: Partial<Pick<PostInput, 'title' | 'content' | 'category'>>
+  input: UpdatePostInput
 ): Promise<Post | null> {
   if (!isConfigured()) return null;
+
+  const { images, videos, ...rest } = input;
+  const basePatch: Record<string, unknown> = {
+    ...rest,
+    updated_at: new Date().toISOString(),
+  };
+  const mediaPatch: Record<string, unknown> = {};
+  if (images !== undefined) mediaPatch.image_urls = images;
+  if (videos !== undefined) mediaPatch.video_urls = videos;
+
   try {
+    const fullPatch = { ...basePatch, ...mediaPatch };
     const { data, error } = await supabase
       .from('community_posts')
-      .update({ ...input, updated_at: new Date().toISOString() })
+      .update(fullPatch)
       .eq('id', id)
       .select(POST_SELECT)
       .single();
+
+    if (error && Object.keys(mediaPatch).length > 0 && isMediaColumnMissing(error)) {
+      console.warn('[posts] media columns missing — retrying without media');
+      const fb = await supabase
+        .from('community_posts')
+        .update(basePatch)
+        .eq('id', id)
+        .select(POST_SELECT)
+        .single();
+      if (fb.error) throw fb.error;
+      return rowToPost(fb.data as Record<string, unknown>);
+    }
     if (error) throw error;
     return rowToPost(data as Record<string, unknown>);
   } catch (e) {

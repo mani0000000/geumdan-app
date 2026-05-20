@@ -1,46 +1,73 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play } from "lucide-react";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play,
+} from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
-import { createPost } from "@/lib/db/posts";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import { fetchDBPost, updatePost, isMockPostId } from "@/lib/db/posts";
 import { deleteUploadedFiles, uploadFile } from "@/lib/uploadClient";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
-// 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
-function saveMyPostId(id: string) {
-  try {
-    const stored = JSON.parse(localStorage.getItem("myPostIds") ?? "[]") as string[];
-    localStorage.setItem("myPostIds", JSON.stringify([...stored, id]));
-  } catch { /* ignore */ }
+function getMyPostIds(): string[] {
+  try { return JSON.parse(localStorage.getItem("myPostIds") ?? "[]"); } catch { return []; }
 }
 
-export default function WritePage() {
+function EditContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const postId = searchParams.get("id") ?? "";
+
+  const [loading, setLoading] = useState(true);
+  const [notAllowed, setNotAllowed] = useState(false);
+
   const [category, setCategory] = useState<CommunityCategory | "">("");
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [nickname, setNickname] = useState("검단주민");
-  const [authorDong, setAuthorDong] = useState("검단");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
+  // 처음 로드 시점의 미디어 URL — 저장 시 비교해서 빠진 것은 Storage에서도 삭제
+  const initialMediaRef = useRef<{ images: string[]; videos: string[] }>({ images: [], videos: [] });
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
-    getUserProfile().then(p => {
-      setNickname(p.nickname);
-      setAuthorDong(p.dong);
-      setAvatarUrl(p.avatar_url);
-    });
-  }, []);
+    async function load() {
+      if (!postId || isMockPostId(postId)) {
+        setNotAllowed(true);
+        setLoading(false);
+        return;
+      }
+      const owned = getMyPostIds().includes(postId);
+      if (!owned) {
+        setNotAllowed(true);
+        setLoading(false);
+        return;
+      }
+      const post = await fetchDBPost(postId);
+      if (!post) {
+        setNotAllowed(true);
+        setLoading(false);
+        return;
+      }
+      setCategory(post.category);
+      setTitle(post.title);
+      setContent(post.content);
+      setImages(post.images ?? []);
+      setVideos(post.videos ?? []);
+      initialMediaRef.current = {
+        images: [...(post.images ?? [])],
+        videos: [...(post.videos ?? [])],
+      };
+      setLoading(false);
+    }
+    load();
+  }, [postId]);
 
   const canSubmit =
     category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
@@ -66,49 +93,72 @@ export default function WritePage() {
     }
   };
 
-  // 글 등록 전 X 버튼으로 제거 → Storage에서도 정리 (best effort)
+  // 새로 업로드한 미디어(초기 상태에 없던 URL)는 X 누를 때 즉시 Storage에서 삭제.
+  // 기존 미디어는 저장 직전에 일괄 삭제 (저장 실패시 복구 가능하도록).
   const removeImage = (idx: number) => {
     const url = images[idx];
     setImages(prev => prev.filter((_, i) => i !== idx));
-    if (url) void deleteUploadedFiles([url]);
+    if (url && !initialMediaRef.current.images.includes(url)) {
+      void deleteUploadedFiles([url]);
+    }
   };
   const removeVideo = (idx: number) => {
     const url = videos[idx];
     setVideos(prev => prev.filter((_, i) => i !== idx));
-    if (url) void deleteUploadedFiles([url]);
+    if (url && !initialMediaRef.current.videos.includes(url)) {
+      void deleteUploadedFiles([url]);
+    }
   };
 
   const submit = async () => {
-    if (!canSubmit) return;
+    if (!canSubmit || !postId) return;
     setSubmitting(true);
     setError("");
     try {
-      const uid = await getOrCreateUserId();
-      const result = await createPost({
+      const updated = await updatePost(postId, {
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: nickname.trim() || "검단주민",
-        authorDong,
-        authorAvatarUrl: avatarUrl,
-        userId: uid,
         images,
         videos,
       });
-      if (result?.post) {
-        saveMyPostId(result.post.id);
-        if (result.imagesDropped && (images.length > 0 || videos.length > 0)) {
-          alert("사진·영상 저장 기능이 아직 준비 중이라 글만 등록되었어요.");
-        }
-        router.push(`/community/detail/?id=${result.post.id}`);
-      } else {
-        router.push("/community/");
+      if (!updated) {
+        setError("글 수정에 실패했습니다. 다시 시도해주세요.");
+        setSubmitting(false);
+        return;
       }
+      // 저장 성공 후, 기존 미디어 중 빠진 것은 Storage에서도 정리
+      const removed: string[] = [];
+      for (const u of initialMediaRef.current.images) if (!images.includes(u)) removed.push(u);
+      for (const u of initialMediaRef.current.videos) if (!videos.includes(u)) removed.push(u);
+      if (removed.length > 0) void deleteUploadedFiles(removed);
+      router.push(`/community/detail/?id=${postId}`);
     } catch {
-      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
+      setError("글 수정에 실패했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-dvh bg-white flex items-center justify-center">
+        <Loader2 size={22} className="text-[#0071e3] animate-spin" />
+      </div>
+    );
+  }
+
+  if (notAllowed) {
+    return (
+      <div className="min-h-dvh bg-white flex flex-col items-center justify-center px-6 text-center gap-3">
+        <p className="text-[16px] text-[#1d1d1f] font-semibold">수정할 수 없는 글이에요</p>
+        <p className="text-[13px] text-[#6e6e73]">본인이 작성한 글만 수정할 수 있어요.</p>
+        <button onClick={() => router.replace("/community/")}
+          className="mt-2 h-9 px-4 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold active:opacity-80">
+          커뮤니티로
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
@@ -117,13 +167,13 @@ export default function WritePage() {
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
-        <h1 className="text-[18px] font-bold text-[#1d1d1f]">글쓰기</h1>
+        <h1 className="text-[18px] font-bold text-[#1d1d1f]">글 수정</h1>
         <button
           onClick={submit}
           disabled={!canSubmit || submitting}
           className="h-9 px-4 rounded-xl bg-[#0071e3] text-white text-[15px] font-bold disabled:opacity-40 active:bg-[#0058b0] transition-colors"
         >
-          {submitting ? "등록 중..." : "등록"}
+          {submitting ? "저장 중..." : "저장"}
         </button>
       </div>
 
@@ -227,23 +277,17 @@ export default function WritePage() {
               ? <Loader2 size={18} className="text-[#6e6e73] animate-spin" />
               : <ImageIcon size={18} className="text-[#6e6e73]" />}
           </button>
-          <input value={nickname} onChange={e => setNickname(e.target.value)}
-            placeholder="닉네임" maxLength={12}
-            className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
+          <p className="text-[12px] text-[#86868b]">사진·영상은 X 버튼으로 삭제할 수 있어요</p>
         </div>
 
         {error && (
           <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
         )}
-
-        {/* Tips */}
-        <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
-          <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
-          <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
-          </p>
-        </div>
       </div>
     </div>
   );
+}
+
+export default function EditPage() {
+  return <Suspense><EditContent /></Suspense>;
 }

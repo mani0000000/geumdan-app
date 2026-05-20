@@ -3,12 +3,12 @@ import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
-  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check, Play,
+  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, Play,
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import {
-  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
+  fetchDBPost, deletePost, togglePostLike, isMockPostId,
 } from "@/lib/db/posts";
 import {
   fetchComments, createComment, deleteComment, toggleCommentLike,
@@ -16,6 +16,7 @@ import {
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
 import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
+import { deleteUploadedFiles } from "@/lib/uploadClient";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -142,10 +143,6 @@ function DetailContent() {
   // 수정/삭제
   const [isMyPost, setIsMyPost] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
   const [deletingPost, setDeletingPost] = useState(false);
 
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
@@ -266,25 +263,18 @@ function DetailContent() {
     if (!isMock) await toggleCommentLike(id, liked ? -1 : 1);
   };
 
-  // 글 수정 저장
-  const saveEdit = async () => {
-    if (!editTitle.trim() || !editContent.trim()) return;
-    setSavingEdit(true);
-    const updated = await updatePost(postId, { title: editTitle, content: editContent });
-    if (updated) {
-      setPost(updated);
-      setEditMode(false);
-    }
-    setSavingEdit(false);
-  };
-
-  // 글 삭제
+  // 글 삭제 — 본문에 붙어있던 사진·영상도 Storage에서 정리
   const handleDeletePost = async () => {
     if (!confirm("이 글을 삭제하시겠습니까?")) return;
     setDeletingPost(true);
     const ok = await deletePost(postId);
-    if (ok) router.replace("/community/");
-    else setDeletingPost(false);
+    if (ok) {
+      const media = [...(post?.images ?? []), ...(post?.videos ?? [])];
+      if (media.length > 0) void deleteUploadedFiles(media);
+      router.replace("/community/");
+    } else {
+      setDeletingPost(false);
+    }
   };
 
   if (postLoading || !post) {
@@ -325,7 +315,7 @@ function DetailContent() {
               {showMenu && (
                 <div className="absolute right-0 top-8 bg-white border border-[#d2d2d7] rounded-xl shadow-lg z-20 min-w-[120px] overflow-hidden">
                   <button
-                    onClick={() => { setEditTitle(post.title); setEditContent(post.content); setEditMode(true); setShowMenu(false); }}
+                    onClick={() => { setShowMenu(false); router.push(`/community/edit/?id=${postId}`); }}
                     className="w-full flex items-center gap-2 px-4 py-3 text-[14px] text-[#1d1d1f] hover:bg-[#f5f5f7] active:bg-[#f5f5f7]">
                     <Pencil size={14} />수정
                   </button>
@@ -357,58 +347,33 @@ function DetailContent() {
             {post.isPinned && <span className="text-[12px] text-[#0071e3] font-medium">📌 공지</span>}
           </div>
 
-          {/* 수정 모드 */}
-          {editMode ? (
-            <div className="space-y-3">
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={50}
-                className="w-full text-[20px] font-bold text-[#1d1d1f] outline-none border-b border-[#0071e3] pb-1" />
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                rows={6}
-                className="w-full text-[16px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-3 resize-none leading-relaxed" />
-              <div className="flex gap-2">
-                <button onClick={() => setEditMode(false)}
-                  className="flex-1 h-10 rounded-xl border border-[#d2d2d7] text-[14px] text-[#6e6e73] active:opacity-60">
-                  <X size={14} className="inline mr-1" />취소
-                </button>
-                <button onClick={saveEdit} disabled={savingEdit}
-                  className="flex-1 h-10 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
-                  <Check size={14} className="inline mr-1" />{savingEdit ? "저장 중..." : "저장"}
-                </button>
-              </div>
+          <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
+            <div>
+              <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
+              <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
             </div>
-          ) : (
-            <>
-              <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
-                <div>
-                  <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
-                  <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
-                </div>
-              </div>
-              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-              <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
-            </>
-          )}
+          </div>
+          <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+          <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
 
           {/* Reaction bar */}
-          {!editMode && (
-            <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
-              <button onClick={toggleLike}
-                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-                <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
-                <span className="text-[14px] font-semibold">{likeCount}</span>
-              </button>
-              <div className="flex items-center gap-1.5 text-[#6e6e73]">
-                <MessageSquare size={15} />
-                <span className="text-[14px]">{comments.length}</span>
-              </div>
-              <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
-                <Flag size={14} />
-                <span className="text-[13px]">신고</span>
-              </button>
+          <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
+            <button onClick={toggleLike}
+              className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
+              <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
+              <span className="text-[14px] font-semibold">{likeCount}</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[#6e6e73]">
+              <MessageSquare size={15} />
+              <span className="text-[14px]">{comments.length}</span>
             </div>
-          )}
+            <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
+              <Flag size={14} />
+              <span className="text-[13px]">신고</span>
+            </button>
+          </div>
         </article>
 
         {/* Comments */}

@@ -55,6 +55,73 @@ async function tryStorageUpload(
   return { ok: false, status: res.status, error: body.error ?? body.message ?? `Storage ${res.status}` };
 }
 
+/** public URL에서 bucket / path 분리. data URL이나 외부 URL이면 null. */
+function parseStoragePublicUrl(url: string): { bucket: string; path: string } | null {
+  const marker = "/storage/v1/object/public/";
+  const idx = url.indexOf(marker);
+  if (idx === -1) return null;
+  const rest = url.slice(idx + marker.length);
+  const slash = rest.indexOf("/");
+  if (slash <= 0) return null;
+  return {
+    bucket: rest.slice(0, slash),
+    path: decodeURIComponent(rest.slice(slash + 1).split("?")[0]),
+  };
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const body = (await req.json().catch(() => ({}))) as { url?: string; urls?: string[] };
+    const urls = body.urls ?? (body.url ? [body.url] : []);
+    if (urls.length === 0) {
+      return NextResponse.json({ error: "url이 필요해요" }, { status: 400 });
+    }
+
+    const keys = candidateKeys();
+    const results: Array<{ url: string; ok: boolean }> = [];
+
+    for (const url of urls) {
+      const parsed = parseStoragePublicUrl(url);
+      if (!parsed) {
+        // data URL이나 외부 URL — 삭제 대상 아님 (정상 처리로 간주)
+        results.push({ url, ok: true });
+        continue;
+      }
+      let ok = false;
+      for (const key of keys) {
+        const res = await fetch(
+          `${SUPABASE_URL}/storage/v1/object/${parsed.bucket}/${parsed.path}`,
+          {
+            method: "DELETE",
+            headers: { apikey: key, Authorization: `Bearer ${key}` },
+          },
+        );
+        if (res.ok || res.status === 404) {
+          ok = true;
+          break;
+        }
+        if (res.status !== 401 && res.status !== 403) break;
+      }
+      results.push({ url, ok });
+    }
+
+    const failed = results.filter((r) => !r.ok);
+    if (failed.length > 0) {
+      return NextResponse.json(
+        { ok: false, failed: failed.map((f) => f.url) },
+        { status: 207 },
+      );
+    }
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[upload] DELETE", err);
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "삭제 실패" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
