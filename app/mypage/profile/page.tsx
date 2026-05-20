@@ -15,7 +15,7 @@ export default function ProfileEditPage() {
   const [nickname, setNickname] = useState("");
   const [dong, setDong] = useState("당하동");
   const [intro, setIntro] = useState("");
-  const [level, setLevel] = useState<"새싹" | "주민" | "이웃" | "터줏대감">("새싹");
+  const [level, setLevel] = useState<"씨앗" | "새싹" | "주민" | "이웃" | "터줏대감">("씨앗");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
   const [uploading, setUploading] = useState(false);
