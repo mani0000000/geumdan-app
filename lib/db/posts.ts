@@ -142,7 +142,9 @@ export interface PostInput {
   content: string;
   author: string;
   authorDong: string;
-  isAnonymous: boolean;
+  authorAvatarUrl?: string | null;
+  userId?: string;
+  isAnonymous?: boolean;
   images?: string[];
   videos?: string[];
 }
@@ -158,7 +160,9 @@ export async function createPost(input: PostInput): Promise<Post | null> {
         content: input.content,
         author: input.author,
         author_dong: input.authorDong,
-        is_anonymous: input.isAnonymous,
+        author_avatar_url: input.authorAvatarUrl ?? null,
+        user_id: input.userId ?? null,
+        is_anonymous: input.isAnonymous ?? false,
         image_urls: input.images ?? [],
         video_urls: input.videos ?? [],
       })
