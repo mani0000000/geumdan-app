@@ -28,7 +28,7 @@ export default function ProfileEditPage() {
       setDong(p.dong || "당하동");
       setIntro(p.intro ?? "");
       setLevel(p.level);
-      setAvatarUrl(p.avatar_url);
+      setAvatarUrl(p.avatar_url ?? null);
     });
   }, []);
 
