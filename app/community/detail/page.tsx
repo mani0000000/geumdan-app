@@ -3,20 +3,20 @@ import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
-  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check, Play,
+  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, Play,
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
 import {
-  fetchDBPost, deletePost, updatePost, togglePostLike, isMockPostId,
+  fetchDBPost, deletePost, togglePostLike, isMockPostId,
 } from "@/lib/db/posts";
 import {
   fetchComments, createComment, deleteComment, toggleCommentLike,
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
-import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
 import type { Post } from "@/lib/types";
+import ThreadAvatar from "@/components/ui/ThreadAvatar";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
@@ -135,17 +135,12 @@ function DetailContent() {
   const [likeCount, setLikeCount] = useState(0);
   const [bookmarked, setBookmarked] = useState(false);
   const [commentText, setCommentText] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [commentLikes, setCommentLikes] = useState<Set<string>>(new Set());
   const [submittingComment, setSubmittingComment] = useState(false);
 
   // 수정/삭제
   const [isMyPost, setIsMyPost] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [savingEdit, setSavingEdit] = useState(false);
   const [deletingPost, setDeletingPost] = useState(false);
 
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
@@ -170,21 +165,9 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
-      isFavoritePost(postId).then(setBookmarked);
     }
     load();
   }, [postId, isMock, router]);
-
-  const toggleBookmark = async () => {
-    if (!post) return;
-    if (bookmarked) {
-      setBookmarked(false);
-      await removeFavoritePost(postId);
-    } else {
-      setBookmarked(true);
-      await addFavoritePost({ post_id: postId, title: post.title, category: post.category });
-    }
-  };
 
   // 댓글 로드
   const loadComments = useCallback(async () => {
@@ -217,16 +200,16 @@ function DetailContent() {
       // mock 포스트는 클라이언트 상태에만 추가
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: anonymous ? "익명" : "검단주민",
+        author: "검단주민",
         authorDong: "검단",
         content: commentText.trim(),
-        likeCount: 0, isAnonymous: anonymous,
+        likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
       }]);
     } else {
       const saved = await createComment({
         postId, author: "검단주민", authorDong: "검단",
-        content: commentText.trim(), isAnonymous: anonymous,
+        content: commentText.trim(), isAnonymous: false,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
@@ -266,18 +249,6 @@ function DetailContent() {
     if (!isMock) await toggleCommentLike(id, liked ? -1 : 1);
   };
 
-  // 글 수정 저장
-  const saveEdit = async () => {
-    if (!editTitle.trim() || !editContent.trim()) return;
-    setSavingEdit(true);
-    const updated = await updatePost(postId, { title: editTitle, content: editContent });
-    if (updated) {
-      setPost(updated);
-      setEditMode(false);
-    }
-    setSavingEdit(false);
-  };
-
   // 글 삭제
   const handleDeletePost = async () => {
     if (!confirm("이 글을 삭제하시겠습니까?")) return;
@@ -291,7 +262,7 @@ function DetailContent() {
     return (
       <div className="min-h-dvh bg-white flex flex-col">
         <div className="flex items-center px-4 h-14 border-b border-[#f5f5f7]">
-          <button onClick={() => router.back()}><ChevronLeft size={24} className="text-[#1d1d1f]" /></button>
+          <button onClick={() => router.push('/community')}><ChevronLeft size={24} className="text-[#1d1d1f]" /></button>
         </div>
         <div className="px-5 py-5 space-y-3 animate-pulse">
           <div className="h-3 w-16 bg-[#f5f5f7] rounded-full" />
@@ -307,11 +278,11 @@ function DetailContent() {
     <div className="min-h-dvh bg-white flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] sticky top-0 bg-white z-10">
-        <button onClick={() => router.back()} className="active:opacity-60">
+        <button onClick={() => router.push('/community')} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <div className="flex items-center gap-2">
-          <button onClick={toggleBookmark} className="active:opacity-60">
+          <button onClick={() => setBookmarked(!bookmarked)} className="active:opacity-60">
             <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
           </button>
           <button className="active:opacity-60">
@@ -325,7 +296,7 @@ function DetailContent() {
               {showMenu && (
                 <div className="absolute right-0 top-8 bg-white border border-[#d2d2d7] rounded-xl shadow-lg z-20 min-w-[120px] overflow-hidden">
                   <button
-                    onClick={() => { setEditTitle(post.title); setEditContent(post.content); setEditMode(true); setShowMenu(false); }}
+                    onClick={() => { setShowMenu(false); router.push(`/community/edit/${postId}`); }}
                     className="w-full flex items-center gap-2 px-4 py-3 text-[14px] text-[#1d1d1f] hover:bg-[#f5f5f7] active:bg-[#f5f5f7]">
                     <Pencil size={14} />수정
                   </button>
@@ -357,58 +328,33 @@ function DetailContent() {
             {post.isPinned && <span className="text-[12px] text-[#0071e3] font-medium">📌 공지</span>}
           </div>
 
-          {/* 수정 모드 */}
-          {editMode ? (
-            <div className="space-y-3">
-              <input value={editTitle} onChange={e => setEditTitle(e.target.value)} maxLength={50}
-                className="w-full text-[20px] font-bold text-[#1d1d1f] outline-none border-b border-[#0071e3] pb-1" />
-              <textarea value={editContent} onChange={e => setEditContent(e.target.value)}
-                rows={6}
-                className="w-full text-[16px] text-[#1d1d1f] outline-none border border-[#d2d2d7] rounded-xl p-3 resize-none leading-relaxed" />
-              <div className="flex gap-2">
-                <button onClick={() => setEditMode(false)}
-                  className="flex-1 h-10 rounded-xl border border-[#d2d2d7] text-[14px] text-[#6e6e73] active:opacity-60">
-                  <X size={14} className="inline mr-1" />취소
-                </button>
-                <button onClick={saveEdit} disabled={savingEdit}
-                  className="flex-1 h-10 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50 active:opacity-80">
-                  <Check size={14} className="inline mr-1" />{savingEdit ? "저장 중..." : "저장"}
-                </button>
-              </div>
+          <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
+          <div className="flex items-center gap-3 mb-5">
+            <ThreadAvatar name={post.author} src={post.authorAvatarUrl} size={36} />
+            <div>
+              <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
+              <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
             </div>
-          ) : (
-            <>
-              <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 rounded-full bg-[#e8f1fd] flex items-center justify-center text-base">👤</div>
-                <div>
-                  <p className="text-[15px] font-semibold text-[#1d1d1f]">{post.author}</p>
-                  <p className="text-[13px] text-[#6e6e73]">{post.authorDong} · {formatRelativeTime(post.createdAt)} · 조회 {post.viewCount.toLocaleString()}</p>
-                </div>
-              </div>
-              <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-              <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
-            </>
-          )}
+          </div>
+          <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
+          <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
 
           {/* Reaction bar */}
-          {!editMode && (
-            <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
-              <button onClick={toggleLike}
-                className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-                <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
-                <span className="text-[14px] font-semibold">{likeCount}</span>
-              </button>
-              <div className="flex items-center gap-1.5 text-[#6e6e73]">
-                <MessageSquare size={15} />
-                <span className="text-[14px]">{comments.length}</span>
-              </div>
-              <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
-                <Flag size={14} />
-                <span className="text-[13px]">신고</span>
-              </button>
+          <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
+            <button onClick={toggleLike}
+              className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
+              <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
+              <span className="text-[14px] font-semibold">{likeCount}</span>
+            </button>
+            <div className="flex items-center gap-1.5 text-[#6e6e73]">
+              <MessageSquare size={15} />
+              <span className="text-[14px]">{comments.length}</span>
             </div>
-          )}
+            <button className="ml-auto flex items-center gap-1 text-[#6e6e73] active:opacity-60">
+              <Flag size={14} />
+              <span className="text-[13px]">신고</span>
+            </button>
+          </div>
         </article>
 
         {/* Comments */}
@@ -451,7 +397,7 @@ function DetailContent() {
       </div>
 
       {/* Comment input */}
-      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
+      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
@@ -464,10 +410,6 @@ function DetailContent() {
               <Send size={18} className="text-[#0071e3]" />
             </button>
           </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`shrink-0 text-[12px] font-medium px-2.5 py-1.5 rounded-full transition-colors ${anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-            익명
-          </button>
         </div>
       </div>
     </div>
