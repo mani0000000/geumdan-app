@@ -14,7 +14,7 @@ export interface UserProfile {
   dong: string;
   intro: string;
   avatar_url: string | null;
-  level: "새싹" | "주민" | "이웃" | "터줏대감";
+  level: "씨앗" | "새싹" | "주민" | "이웃" | "터줏대감";
   status: UserStatus;
   post_count: number;
   comment_count: number;
@@ -378,6 +378,112 @@ export async function getMyCommentCount(): Promise<number> {
     .select("*", { count: "exact", head: true })
     .eq("user_id", uid);
   return count ?? 0;
+}
+
+// ── 활동 점수 / 등급 (DB 기반 실시간 계산) ───────────────────────────
+export type ActivityLevel = "씨앗" | "새싹" | "주민" | "이웃" | "터줏대감";
+
+const ACTIVITY_LEVELS: { name: ActivityLevel; min: number }[] = [
+  { name: "씨앗",     min: 0    },
+  { name: "새싹",     min: 50   },
+  { name: "주민",     min: 200  },
+  { name: "이웃",     min: 500  },
+  { name: "터줏대감", min: 1000 },
+];
+
+const POST_POINT    = 10;
+const COMMENT_POINT = 3;
+const LIKE_POINT    = 2;
+
+export interface ActivityStats {
+  postCount: number;
+  commentCount: number;
+  receivedLikes: number;
+  score: number;
+  level: ActivityLevel;
+  levelPct: number;          // 다음 등급까지 진행도 (%)
+  nextLevel: ActivityLevel | null;
+  remainToNext: number;      // 다음 등급까지 남은 점수
+  weeklyPosts: number;
+  weeklyComments: number;
+  weeklyLikesReceived: number;
+}
+
+const DEFAULT_ACTIVITY: ActivityStats = {
+  postCount: 0, commentCount: 0, receivedLikes: 0,
+  score: 0, level: "씨앗", levelPct: 0,
+  nextLevel: "새싹", remainToNext: ACTIVITY_LEVELS[1].min,
+  weeklyPosts: 0, weeklyComments: 0, weeklyLikesReceived: 0,
+};
+
+function resolveActivityLevel(score: number): Pick<ActivityStats, "level" | "levelPct" | "nextLevel" | "remainToNext"> {
+  let idx = 0;
+  for (let i = 0; i < ACTIVITY_LEVELS.length; i++) {
+    if (score >= ACTIVITY_LEVELS[i].min) idx = i;
+  }
+  const current = ACTIVITY_LEVELS[idx];
+  const next = ACTIVITY_LEVELS[idx + 1] ?? null;
+  if (!next) return { level: current.name, levelPct: 100, nextLevel: null, remainToNext: 0 };
+  const span = next.min - current.min;
+  const gained = score - current.min;
+  const pct = Math.min(100, Math.max(0, Math.round((gained / span) * 100)));
+  return { level: current.name, levelPct: pct, nextLevel: next.name, remainToNext: Math.max(0, next.min - score) };
+}
+
+/** 이번 주(월~일) 시작 시각의 ISO 문자열 */
+function weekStartISO(): string {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const w = new Date(d);
+  w.setDate(diff);
+  w.setHours(0, 0, 0, 0);
+  return w.toISOString();
+}
+
+export async function getUserActivityStats(): Promise<ActivityStats> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) return { ...DEFAULT_ACTIVITY };
+
+  const weekStart = weekStartISO();
+  try {
+    const [postsRes, commentsRes, weeklyPostsRes, weeklyCommentsRes] = await Promise.all([
+      supabase.from("community_posts").select("like_count", { count: "exact" }).eq("user_id", uid),
+      supabase.from("community_comments").select("like_count", { count: "exact" }).eq("user_id", uid),
+      supabase.from("community_posts")
+        .select("like_count", { count: "exact" })
+        .eq("user_id", uid)
+        .gte("created_at", weekStart),
+      supabase.from("community_comments")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", uid)
+        .gte("created_at", weekStart),
+    ]);
+
+    const postCount = postsRes.count ?? 0;
+    const commentCount = commentsRes.count ?? 0;
+    const receivedLikes =
+      ((postsRes.data ?? []) as { like_count: number | null }[])
+        .reduce((s, r) => s + (r.like_count ?? 0), 0) +
+      ((commentsRes.data ?? []) as { like_count: number | null }[])
+        .reduce((s, r) => s + (r.like_count ?? 0), 0);
+
+    const weeklyPosts = weeklyPostsRes.count ?? 0;
+    const weeklyComments = weeklyCommentsRes.count ?? 0;
+    const weeklyLikesReceived =
+      ((weeklyPostsRes.data ?? []) as { like_count: number | null }[])
+        .reduce((s, r) => s + (r.like_count ?? 0), 0);
+
+    const score = postCount * POST_POINT + commentCount * COMMENT_POINT + receivedLikes * LIKE_POINT;
+    return {
+      postCount, commentCount, receivedLikes, score,
+      ...resolveActivityLevel(score),
+      weeklyPosts, weeklyComments, weeklyLikesReceived,
+    };
+  } catch (e) {
+    console.warn("[userdata] getUserActivityStats:", e);
+    return { ...DEFAULT_ACTIVITY };
+  }
 }
 
 // ── 마이페이지 요약 (글/댓글/즐겨찾기 합계) ──────────────────────

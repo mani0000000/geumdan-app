@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2 } from "lucide-react";
+import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import Avatar from "@/components/ui/Avatar";
@@ -13,10 +13,13 @@ import {
   getFavoriteBuses,
   getFavoriteStores,
   getFavoriteApts,
+  getFavoritePosts,
   getUserGameStats,
+  getUserActivityStats,
   completeMission,
   type UserProfile,
   type UserGameStats,
+  type ActivityStats,
 } from "@/lib/db/userdata";
 import {
   getMembershipGrades,
@@ -43,12 +46,12 @@ const MISSIONS = [
 ];
 
 const levelBadge: Record<string, string> = {
+  씨앗: "bg-[#F5F5F4] text-[#57534E]",
   새싹: "bg-[#D1FAE5] text-[#065F46]",
   주민: "bg-[#e8f1fd] text-[#1E40AF]",
   이웃: "bg-[#EDE9FE] text-[#5B21B6]",
   터줏대감: "bg-[#FEF3C7] text-[#92400E]",
 };
-const levelPct: Record<string, number> = { 새싹: 15, 주민: 40, 이웃: 65, 터줏대감: 100 };
 
 // 등급명 → 카드 포인트 색상 (DB 등급명이 달라도 순서로 폴백)
 const GRADE_COLORS: Record<string, { accent: string; soft: string }> = {
@@ -70,6 +73,13 @@ function gradeColor(name: string, order: number) {
 const DEFAULT_STATS: UserGameStats = {
   points: 0, weeklyLikes: 0, weeklyPosts: 0, monthlyPoints: 0,
   completedMissions: [], redeemedRewards: [], pointHistory: [],
+};
+
+const DEFAULT_ACTIVITY: ActivityStats = {
+  postCount: 0, commentCount: 0, receivedLikes: 0,
+  score: 0, level: "씨앗", levelPct: 0,
+  nextLevel: "새싹", remainToNext: 50,
+  weeklyPosts: 0, weeklyComments: 0, weeklyLikesReceived: 0,
 };
 
 const CARD = "bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100";
@@ -112,6 +122,7 @@ export default function MyPage() {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [gameStats, setGameStats] = useState<UserGameStats>(DEFAULT_STATS);
+  const [activity, setActivity] = useState<ActivityStats>(DEFAULT_ACTIVITY);
   const [grades, setGrades] = useState<MembershipGrade[]>(DEFAULT_GRADES);
   const [exchangeCoupons, setExchangeCoupons] = useState<ExchangeCoupon[]>([]);
   const [myCoupons, setMyCoupons] = useState<MyCoupon[]>([]);
@@ -121,9 +132,11 @@ export default function MyPage() {
   const [busCount, setBusCount] = useState(0);
   const [storeCount, setStoreCount] = useState(0);
   const [aptCount, setAptCount] = useState(0);
+  const [savedCount, setSavedCount] = useState(0);
 
   useEffect(() => {
     getUserProfile().then(setProfile);
+    getUserActivityStats().then(setActivity);
     getMembershipGrades().then(setGrades);
     getExchangeableCoupons().then(setExchangeCoupons);
     getMyCoupons().then(setMyCoupons);
@@ -133,6 +146,7 @@ export default function MyPage() {
     getFavoriteBuses().then(b => setBusCount(b.length));
     getFavoriteStores().then(s => setStoreCount(s.length));
     getFavoriteApts().then(a => setAptCount(a.length));
+    getFavoritePosts().then(p => setSavedCount(p.length));
     // 출석(로그인) 활동 포인트 → 적립 시 통계 갱신
     grantDailyLoginPoints()
       .then(() => getUserGameStats())
@@ -145,13 +159,19 @@ export default function MyPage() {
   const remainToNext = grade.remainToNext;
 
   const nickname = profile?.nickname ?? "검단주민";
-  const level = profile?.level ?? "새싹";
+  const level = activity.level;
   const dong = profile?.dong ?? "당하동";
   const joinedAt = profile?.joined_at ?? new Date().toISOString().slice(0, 7);
 
+  // 주간 미션: 명시적 완료 기록 OR 이번 주 실제 활동 충족 시 완료 처리
+  const autoMissionDone: Record<string, boolean> = {
+    m1: activity.weeklyPosts >= 1,
+    m2: activity.weeklyLikesReceived >= 5,
+    m3: activity.weeklyComments >= 2,
+  };
   const missions = MISSIONS.map(m => ({
     ...m,
-    done: gameStats.completedMissions.includes(m.id),
+    done: gameStats.completedMissions.includes(m.id) || Boolean(autoMissionDone[m.id]),
   }));
 
   const myCouponIds = new Set(myCoupons.map(c => c.coupon_id));
@@ -181,6 +201,7 @@ export default function MyPage() {
       items: [
         { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/mypage/posts/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
+        { icon: Bookmark, label: "저장한 글", badge: String(savedCount), color: "text-[#10B981]", href: "/mypage/saved/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
       ],
     },
@@ -199,6 +220,16 @@ export default function MyPage() {
         { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
         { icon: Settings, label: "앱 설정", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
         { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#6e6e73]", href: null },
+      ],
+    },
+    {
+      title: "약관 및 정책",
+      items: [
+        { icon: ScrollText, label: "약관 전체 보기", badge: null, color: "text-[#6e6e73]", href: "/mypage/terms/" },
+        { icon: ScrollText, label: "서비스 이용약관", badge: null, color: "text-[#6e6e73]", href: "/terms/service/" },
+        { icon: ScrollText, label: "개인정보처리방침", badge: null, color: "text-[#6e6e73]", href: "/terms/privacy/" },
+        { icon: ScrollText, label: "위치기반 서비스 이용약관", badge: null, color: "text-[#6e6e73]", href: "/terms/location/" },
+        { icon: ScrollText, label: "마케팅 정보 수신 동의", badge: null, color: "text-[#6e6e73]", href: "/terms/marketing/" },
       ],
     },
   ];
@@ -228,15 +259,20 @@ export default function MyPage() {
           </div>
           <div className="mt-4">
             <div className="flex justify-between mb-1.5">
-              <span className="text-[12px] text-[#6e6e73]">레벨 진행도</span>
-              <span className="text-[12px] font-bold text-[#0071e3]">{levelPct[level] ?? 15}%</span>
+              <span className="text-[12px] text-[#6e6e73]">
+                활동 점수 <span className="font-bold text-[#1d1d1f]">{activity.score.toLocaleString()}</span>
+                {activity.nextLevel && (
+                  <span className="text-[#86868b]"> · {activity.nextLevel}까지 {activity.remainToNext.toLocaleString()}점</span>
+                )}
+              </span>
+              <span className="text-[12px] font-bold text-[#0071e3]">{activity.levelPct}%</span>
             </div>
             <div className="h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0071e3] rounded-full transition-all" style={{ width: `${levelPct[level] ?? 15}%` }} />
+              <div className="h-full bg-[#0071e3] rounded-full transition-all" style={{ width: `${activity.levelPct}%` }} />
             </div>
           </div>
           <div className="flex mt-4 bg-[#f5f5f7] rounded-xl overflow-hidden">
-            {([["작성 글", postCount], ["댓글", commentCount], ["받은 좋아요", profile?.like_count ?? 0]] as [string, number][]).map(([l, v], i, arr) => (
+            {([["작성 글", activity.postCount || postCount], ["댓글", activity.commentCount || commentCount], ["받은 좋아요", activity.receivedLikes]] as [string, number][]).map(([l, v], i, arr) => (
               <div key={l} className={`flex-1 py-3 text-center ${i !== arr.length - 1 ? "border-r border-white" : ""}`}>
                 <p className="text-[21px] font-black text-[#1d1d1f]">{v}</p>
                 <p className="text-[12px] text-[#6e6e73] mt-0.5">{l}</p>

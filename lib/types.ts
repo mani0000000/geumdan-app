@@ -4,7 +4,7 @@ export interface User {
   nickname: string;
   avatar?: string;
   dong: string; // e.g. "당하동", "불로동"
-  level: "새싹" | "주민" | "이웃" | "터줏대감";
+  level: "씨앗" | "새싹" | "주민" | "이웃" | "터줏대감";
   joinedAt: string;
   postCount: number;
   commentCount: number;
