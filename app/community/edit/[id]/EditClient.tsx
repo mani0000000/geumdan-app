@@ -1,50 +1,71 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play } from "lucide-react";
+import { ChevronLeft, ChevronDown, Image as ImageIcon, Loader2, Play, X } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
-import { createPost } from "@/lib/db/posts";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import { deletePostMedia, fetchDBPost, updatePost } from "@/lib/db/posts";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
-// 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
-function saveMyPostId(id: string) {
-  try {
-    const stored = JSON.parse(localStorage.getItem("myPostIds") ?? "[]") as string[];
-    localStorage.setItem("myPostIds", JSON.stringify([...stored, id]));
-  } catch { /* ignore */ }
+function getMyPostIds(): string[] {
+  try { return JSON.parse(localStorage.getItem("myPostIds") ?? "[]"); } catch { return []; }
 }
 
-export default function WritePage() {
+export default function EditClient({ params }: { params: Promise<{ id: string }> }) {
+  const { id: postId } = use(params);
   const router = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [notMine, setNotMine] = useState(false);
   const [category, setCategory] = useState<CommunityCategory | "">("");
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [nickname, setNickname] = useState("검단주민");
-  const [authorDong, setAuthorDong] = useState("검단");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState("");
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [images, setImages] = useState<string[]>([]);
   const [videos, setVideos] = useState<string[]>([]);
+  // 저장 시 Storage에서 함께 삭제할 미디어 URL 목록
+  const [pendingDeleteUrls, setPendingDeleteUrls] = useState<string[]>([]);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    getUserProfile().then(p => {
-      setNickname(p.nickname);
-      setAuthorDong(p.dong);
-      setAvatarUrl(p.avatar_url);
-    });
-  }, []);
+    if (postId === "preview") {
+      setLoading(false);
+      return;
+    }
+    async function load() {
+      const post = await fetchDBPost(postId);
+      if (!post) {
+        router.replace("/community/");
+        return;
+      }
+      if (!getMyPostIds().includes(postId)) {
+        setNotMine(true);
+        setLoading(false);
+        return;
+      }
+      setCategory(post.category);
+      setTitle(post.title);
+      setContent(post.content);
+      setImages(post.images ?? []);
+      setVideos(post.videos ?? []);
+      setLoading(false);
+    }
+    load();
+  }, [postId, router]);
 
   const canSubmit =
-    category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
+    category !== "" &&
+    title.trim().length > 0 &&
+    content.trim().length > 0 &&
+    !uploading &&
+    !saving;
 
-  const handleFiles = async (files: FileList | null) => {
+  async function handleFiles(files: FileList | null) {
     if (!files || files.length === 0) return;
     setUploading(true);
     setError("");
@@ -55,9 +76,7 @@ export default function WritePage() {
         form.append("folder", "community");
         const res = await fetch("/api/upload", { method: "POST", body: form });
         const json = (await res.json()) as { url?: string; error?: string };
-        if (!res.ok || !json.url) {
-          throw new Error(json.error ?? "업로드 실패");
-        }
+        if (!res.ok || !json.url) throw new Error(json.error ?? "업로드 실패");
         if (file.type.startsWith("video/")) {
           setVideos(prev => [...prev, json.url!]);
         } else {
@@ -70,39 +89,81 @@ export default function WritePage() {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  };
+  }
 
-  const submit = async () => {
+  function removeImage(idx: number) {
+    setImages(prev => {
+      const removed = prev[idx];
+      if (removed) setPendingDeleteUrls(d => [...d, removed]);
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
+
+  function removeVideo(idx: number) {
+    setVideos(prev => {
+      const removed = prev[idx];
+      if (removed) setPendingDeleteUrls(d => [...d, removed]);
+      return prev.filter((_, i) => i !== idx);
+    });
+  }
+
+  async function submit() {
     if (!canSubmit) return;
-    setSubmitting(true);
+    setSaving(true);
     setError("");
     try {
-      const uid = await getOrCreateUserId();
-      const result = await createPost({
+      const updated = await updatePost(postId, {
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
-        author: nickname.trim() || "검단주민",
-        authorDong,
-        authorAvatarUrl: avatarUrl,
-        userId: uid,
         images,
         videos,
       });
-      if (result?.post) {
-        saveMyPostId(result.post.id);
-        if (result.imagesDropped && (images.length > 0 || videos.length > 0)) {
-          alert("사진·영상 저장 기능이 아직 준비 중이라 글만 등록되었어요.");
-        }
-        router.push(`/community/detail/?id=${result.post.id}`);
-      } else {
-        router.push("/community/");
+      if (!updated) {
+        setError("글 수정에 실패했습니다. 다시 시도해주세요.");
+        setSaving(false);
+        return;
       }
+      if (pendingDeleteUrls.length > 0) {
+        void deletePostMedia(pendingDeleteUrls);
+      }
+      router.replace(`/community/detail/?id=${postId}`);
     } catch {
-      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
-      setSubmitting(false);
+      setError("글 수정에 실패했습니다. 다시 시도해주세요.");
+      setSaving(false);
     }
-  };
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-dvh bg-white flex flex-col">
+        <div className="flex items-center px-4 h-14 border-b border-[#f5f5f7]">
+          <button onClick={() => router.back()} className="active:opacity-60">
+            <ChevronLeft size={24} className="text-[#1d1d1f]" />
+          </button>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <Loader2 size={28} className="text-[#0071e3] animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
+  if (notMine) {
+    return (
+      <div className="min-h-dvh bg-white flex flex-col">
+        <div className="flex items-center px-4 h-14 border-b border-[#f5f5f7]">
+          <button onClick={() => router.back()} className="active:opacity-60">
+            <ChevronLeft size={24} className="text-[#1d1d1f]" />
+          </button>
+          <h1 className="ml-2 text-[18px] font-bold text-[#1d1d1f]">글 수정</h1>
+        </div>
+        <div className="flex-1 flex items-center justify-center text-[15px] text-[#6e6e73] px-6 text-center">
+          본인이 작성한 글만 수정할 수 있어요.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
@@ -111,13 +172,13 @@ export default function WritePage() {
         <button onClick={() => router.back()} className="active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
-        <h1 className="text-[18px] font-bold text-[#1d1d1f]">글쓰기</h1>
+        <h1 className="text-[18px] font-bold text-[#1d1d1f]">글 수정</h1>
         <button
           onClick={submit}
-          disabled={!canSubmit || submitting}
+          disabled={!canSubmit}
           className="h-9 px-4 rounded-xl bg-[#0071e3] text-white text-[15px] font-bold disabled:opacity-40 active:bg-[#0058b0] transition-colors"
         >
-          {submitting ? "등록 중..." : "등록"}
+          {saving ? "저장 중..." : "저장"}
         </button>
       </div>
 
@@ -160,7 +221,7 @@ export default function WritePage() {
         {/* Content */}
         <div className="flex-1 border-b border-[#f5f5f7]">
           <textarea value={content} onChange={e => setContent(e.target.value)}
-            placeholder={`내용을 자유롭게 작성해주세요.\n\n• 검단 주민만 알 수 있는 정보\n• 이웃에게 도움이 되는 이야기\n• 따뜻한 소통 환경 만들기`}
+            placeholder="내용을 자유롭게 작성해주세요."
             className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
@@ -173,7 +234,7 @@ export default function WritePage() {
                 <img src={src} alt="" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}
+                  onClick={() => removeImage(i)}
                   className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
                   <X size={11} />
                 </button>
@@ -188,7 +249,7 @@ export default function WritePage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => setVideos(prev => prev.filter((_, idx) => idx !== i))}
+                  onClick={() => removeVideo(i)}
                   className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
                   <X size={11} />
                 </button>
@@ -221,22 +282,12 @@ export default function WritePage() {
               ? <Loader2 size={18} className="text-[#6e6e73] animate-spin" />
               : <ImageIcon size={18} className="text-[#6e6e73]" />}
           </button>
-          <input value={nickname} onChange={e => setNickname(e.target.value)}
-            placeholder="닉네임" maxLength={12}
-            className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
+          <span className="text-[13px] text-[#86868b]">사진·영상 {images.length + videos.length}개</span>
         </div>
 
         {error && (
           <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
         )}
-
-        {/* Tips */}
-        <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
-          <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
-          <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
-          </p>
-        </div>
       </div>
     </div>
   );

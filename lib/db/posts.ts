@@ -149,7 +149,6 @@ export interface PostInput {
   authorDong: string;
   authorAvatarUrl?: string | null;
   userId?: string | null;
-  isAnonymous: boolean;
   images?: string[];
   videos?: string[];
 }
@@ -175,8 +174,8 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     content: input.content,
     author: input.author,
     author_dong: input.authorDong,
-    author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-    is_anonymous: input.isAnonymous,
+    author_avatar_url: input.authorAvatarUrl ?? null,
+    is_anonymous: false,
     user_id: input.userId ?? null,
   };
   const hasMedia = (input.images?.length ?? 0) > 0 || (input.videos?.length ?? 0) > 0;
@@ -202,9 +201,9 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         content: input.content,
         author: input.author,
         author_dong: input.authorDong,
-        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
+        author_avatar_url: input.authorAvatarUrl ?? null,
         user_id: input.userId ?? null,
-        is_anonymous: input.isAnonymous,
+        is_anonymous: false,
       })
       .select()
       .single());
@@ -236,15 +235,32 @@ export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]>
 }
 
 // ── 수정 ─────────────────────────────────────────────────────────
+export interface UpdatePostInput {
+  title?: string;
+  content?: string;
+  category?: CommunityCategory;
+  images?: string[];
+  videos?: string[];
+}
+
 export async function updatePost(
   id: string,
-  input: Partial<Pick<PostInput, 'title' | 'content' | 'category'>>
+  input: UpdatePostInput
 ): Promise<Post | null> {
   if (!isConfigured()) return null;
   try {
+    const payload: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+    if (input.title !== undefined) payload.title = input.title;
+    if (input.content !== undefined) payload.content = input.content;
+    if (input.category !== undefined) payload.category = input.category;
+    if (input.images !== undefined) payload.image_urls = input.images;
+    if (input.videos !== undefined) payload.video_urls = input.videos;
+
     const { data, error } = await supabase
       .from('community_posts')
-      .update({ ...input, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq('id', id)
       .select(POST_SELECT)
       .single();
@@ -254,6 +270,42 @@ export async function updatePost(
     console.error('[posts] updatePost error:', e);
     return null;
   }
+}
+
+// ── Storage 미디어 삭제 ─────────────────────────────────────────────
+// public URL → { bucket, path } 파싱 후 anon key로 DELETE 호출.
+// 실패해도 throw하지 않음(고아 파일이 남을 뿐 사용자 흐름은 영향 없음).
+function parseStorageUrl(url: string): { bucket: string; path: string } | null {
+  const match = url.match(/\/storage\/v1\/object\/public\/([^/]+)\/(.+)$/);
+  if (!match) return null;
+  return { bucket: match[1], path: decodeURIComponent(match[2]) };
+}
+
+export async function deletePostMedia(urls: string[]): Promise<void> {
+  if (!urls.length) return;
+  const SUPABASE_URL =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://plwpfnbhyzblgvliiole.supabase.co';
+  const KEY =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    'sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk';
+  await Promise.allSettled(
+    urls.map(async (url) => {
+      const parsed = parseStorageUrl(url);
+      if (!parsed) return;
+      try {
+        await fetch(
+          `${SUPABASE_URL}/storage/v1/object/${parsed.bucket}/${parsed.path}`,
+          {
+            method: 'DELETE',
+            headers: { apikey: KEY, Authorization: `Bearer ${KEY}` },
+          },
+        );
+      } catch (e) {
+        console.warn('[posts] deletePostMedia:', url, e);
+      }
+    }),
+  );
 }
 
 // ── 삭제 ─────────────────────────────────────────────────────────
