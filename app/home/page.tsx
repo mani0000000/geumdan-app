@@ -527,7 +527,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/news"
+        <Link href="/community/?tab=뉴스"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -2614,7 +2614,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/news/" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community/?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),
