@@ -842,22 +842,22 @@ export default function StoresPage() {
     <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       <Header title="상가" />
 
-      {/* 탭 토글 (상가지도 / 매장리스트) */}
+      {/* 탭 토글 (매장리스트 / 상가지도) */}
       <div className="bg-white px-4 pt-3 pb-2 sticky top-[56px] z-30 border-b border-[#f5f5f7]">
         <div className="flex gap-1 bg-[#f5f5f7] rounded-2xl p-1">
-          {(["지도", "리스트"] as const).map(mode => (
+          {(["리스트", "지도"] as const).map(mode => (
             <button key={mode} onClick={() => { setViewMode(mode); setSearchQuery(""); setSearchFocused(false); }}
               className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
                 viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
               }`}>
-              {mode === "지도" ? <MapIcon size={14} /> : <List size={14} />}
-              {mode === "지도" ? "상가 지도" : "매장 리스트"}
+              {mode === "리스트" ? <List size={14} /> : <MapIcon size={14} />}
+              {mode === "리스트" ? "매장 리스트" : "상가 지도"}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 검색바 — 탭 아래 (탭별 placeholder) */}
+      {/* 검색바 */}
       <div className="bg-white px-4 pt-2 pb-3 sticky top-[112px] z-30 border-b border-[#f5f5f7]">
         <div className={`flex items-center gap-2.5 rounded-2xl px-4 h-12 transition-all ${searchFocused ? "bg-white ring-2 ring-[#0071e3] shadow-sm" : "bg-[#f5f5f7]"}`}>
           <Search size={16} className={`shrink-0 transition-colors ${searchFocused ? "text-[#0071e3]" : "text-[#86868b]"}`} />
@@ -878,19 +878,6 @@ export default function StoresPage() {
             </button>
           )}
         </div>
-        {!isSearching && !searchFocused && (
-          <div className="flex gap-1 mt-2.5 bg-[#f5f5f7] rounded-2xl p-1">
-            {(["리스트", "지도"] as const).map(mode => (
-              <button key={mode} onClick={() => setViewMode(mode)}
-                className={`flex-1 h-9 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  viewMode === mode ? "bg-white text-[#1d1d1f] shadow-sm" : "text-[#86868b]"
-                }`}>
-                {mode === "리스트" ? <List size={14} /> : <MapIcon size={14} />}
-                {mode === "리스트" ? "매장 리스트" : "상가 지도"}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* 키워드 검색 패널 */}
