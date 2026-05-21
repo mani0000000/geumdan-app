@@ -1537,6 +1537,7 @@ function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
+  const [visibleCount, setVisibleCount] = useState(4);
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
@@ -1584,7 +1585,7 @@ function MartSection() {
 
         {/* 마트 목록 */}
         <div className="divide-y divide-[#f5f5f7]">
-          {marts.map(mart => {
+          {marts.slice(0, visibleCount).map(mart => {
             const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
             const mapUrl = mart.lat && mart.lng
@@ -1656,6 +1657,16 @@ function MartSection() {
             );
           })}
         </div>
+
+        {/* 더보기 버튼 */}
+        {visibleCount < marts.length && (
+          <button
+            onClick={() => setVisibleCount(c => c + 5)}
+            className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#f5f5f7] text-[13px] font-semibold text-[#4E5968] active:bg-[#f5f5f7] transition-colors">
+            <ChevronDown size={15} className="text-[#86868b]" />
+            더보기 ({Math.min(marts.length - visibleCount, 5)}개)
+          </button>
+        )}
       </div>
       </section>
       {mapTarget && <MapBottomSheet {...mapTarget} onClose={() => setMapTarget(null)} />}
