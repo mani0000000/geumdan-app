@@ -1,5 +1,7 @@
-// Instagram feed API client — talks to external Fastify backend
+// Instagram feed API client — talks to external Fastify backend first,
+// then falls back to Supabase instagram_posts table.
 // Base URL configured via NEXT_PUBLIC_INSTAGRAM_API_URL (e.g. http://localhost:3001)
+import { supabase } from "@/lib/supabase";
 
 export interface InstagramPost {
   id: string;
@@ -77,27 +79,81 @@ function extractList(payload: any): any[] {
   return [];
 }
 
-export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promise<InstagramPost[]> {
-  const base = getBaseUrl();
-  if (!base) return [];
-  const qs = new URLSearchParams();
-  if (params.limit != null) qs.set("limit", String(params.limit));
-  if (params.page != null) qs.set("page", String(params.page));
-  if (params.sort) qs.set("sort", params.sort);
-  if (params.reel) qs.set("reel", "true");
-  if (params.tag) qs.set("tag", params.tag);
+// Fallback: fetch from Supabase instagram_posts when Fastify backend is unavailable.
+// Works with both the basic schema (id, account_name, post_url, image_url, caption, posted_at)
+// and extended columns (media_type, like_count, comment_count, hashtags) if they exist.
+async function fetchFromSupabase(params: FetchFeedsParams): Promise<InstagramPost[]> {
   try {
-    const res = await fetch(`${base}/api/instagram-feeds?${qs.toString()}`, {
-      headers: { Accept: "application/json" },
-    });
-    if (!res.ok) return [];
-    const json = await res.json();
-    return extractList(json)
-      .map(normalize)
-      .filter((p): p is InstagramPost => p !== null);
+    const limit = params.limit ?? 12;
+    const page  = params.page  ?? 1;
+    const from  = (page - 1) * limit;
+    const to    = from + limit - 1;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
+      .from("instagram_posts")
+      .select("*")
+      .order("posted_at", { ascending: false })
+      .range(from, to);
+
+    // hashtag filter — try hashtags array column first, fall back to caption
+    if (params.tag) {
+      q = q.or(`hashtags.cs.{${params.tag}},caption.ilike.%${params.tag}%`);
+    }
+
+    // reels filter — only if media_type column exists
+    if (params.reel) {
+      q = q.or("media_type.ilike.%reel%,is_reel.eq.true");
+    }
+
+    const { data, error } = await q;
+    if (error || !data?.length) return [];
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((row: any) => ({
+      id: String(row.id),
+      permalink: String(row.post_url ?? row.permalink ?? ""),
+      isReel: Boolean(row.is_reel ?? String(row.media_type ?? "").toUpperCase().includes("REEL")),
+      mediaType: row.media_type ?? undefined,
+      thumbnailUrl: String(row.image_url ?? row.thumbnail_url ?? ""),
+      caption: row.caption ?? "",
+      username: row.account_name ?? row.username ?? undefined,
+      likeCount: Number(row.like_count ?? row.likes ?? 0),
+      commentCount: Number(row.comment_count ?? row.comments ?? 0),
+      hashtags: Array.isArray(row.hashtags) ? row.hashtags : undefined,
+      postedAt: String(row.posted_at ?? row.taken_at ?? new Date().toISOString()),
+    }));
   } catch {
     return [];
   }
+}
+
+export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promise<InstagramPost[]> {
+  const base = getBaseUrl();
+
+  // Try Fastify backend first
+  if (base) {
+    const qs = new URLSearchParams();
+    if (params.limit != null) qs.set("limit", String(params.limit));
+    if (params.page  != null) qs.set("page",  String(params.page));
+    if (params.sort) qs.set("sort", params.sort);
+    if (params.reel) qs.set("reel", "true");
+    if (params.tag)  qs.set("tag",  params.tag);
+    try {
+      const res = await fetch(`${base}/api/instagram-feeds?${qs.toString()}`, {
+        headers: { Accept: "application/json" },
+        signal: AbortSignal.timeout(5000),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        const list = extractList(json).map(normalize).filter((p): p is InstagramPost => p !== null);
+        if (list.length > 0) return list;
+      }
+    } catch { /* fall through to Supabase */ }
+  }
+
+  // Supabase fallback
+  return fetchFromSupabase(params);
 }
 
 export async function fetchInstagramReels(limit = 10): Promise<InstagramPost[]> {

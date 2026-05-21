@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone, User,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -50,10 +50,9 @@ const NAV_GROUPS = [
   {
     title: "운영 관리",
     items: [
-      { href: "/admin/keywords",  icon: Search,   label: "검색어 관리"      },
-      { href: "/admin/instagram", icon: Camera,   label: "인스타그램 관리"  },
-      { href: "/admin/mypage",    icon: User,     label: "마이페이지 위젯"  },
-      { href: "/admin/settings",  icon: Settings, label: "앱 설정"          },
+      { href: "/admin/keywords",  icon: Search,   label: "검색어 관리"   },
+      { href: "/admin/instagram", icon: Camera,   label: "인스타그램 관리"},
+      { href: "/admin/settings",  icon: Settings, label: "앱 설정"       },
     ],
   },
 ];

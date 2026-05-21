@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, RefreshCw, Camera, ExternalLink, AlertCircle } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Camera, ExternalLink } from "lucide-react";
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 interface InstaPost {
@@ -25,7 +25,6 @@ export default function AdminInstagramPage() {
   const [fetchErr, setFetchErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState("");
-  const [noToken, setNoToken] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -51,7 +50,6 @@ export default function AdminInstagramPage() {
       });
       const data = await res.json() as { thumbnail_url?: string; author_name?: string; title?: string; error?: string };
       if (!res.ok) {
-        if (data.error?.includes("환경변수")) setNoToken(true);
         setFetchErr(data.error ?? "가져오기 실패");
         return;
       }
@@ -107,23 +105,16 @@ export default function AdminInstagramPage() {
         </button>
       </div>
 
-      {/* 환경변수 미설정 안내 */}
-      {noToken && (
-        <div className="mb-4 rounded-2xl bg-[#FFF7ED] border border-[#FED7AA] p-4 space-y-2">
-          <p className="text-[13px] font-bold text-[#92400E] flex items-center gap-2">
-            <AlertCircle size={15} /> INSTAGRAM_APP_ID / INSTAGRAM_APP_SECRET 미설정
-          </p>
-          <p className="text-[12px] text-[#92400E]">Vercel 환경변수에 아래 두 값을 추가해야 합니다.</p>
-          <ol className="text-[12px] text-[#92400E] list-decimal pl-4 space-y-1">
-            <li><a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="underline">developers.facebook.com</a> 에서 앱 생성</li>
-            <li>Instagram &gt; Instagram oEmbed 제품 추가</li>
-            <li>앱 ID · 앱 시크릿을 Vercel 환경변수에 추가</li>
-          </ol>
-          <code className="block text-[11px] bg-white rounded-lg p-2 border border-[#FED7AA]">
-            INSTAGRAM_APP_ID=123456789{"\n"}INSTAGRAM_APP_SECRET=abcdef...
-          </code>
-        </div>
-      )}
+      {/* 자동 수집 안내 */}
+      <div className="mb-4 rounded-2xl bg-[#EFF6FF] border border-[#BFDBFE] p-4">
+        <p className="text-[13px] font-bold text-[#1D4ED8] flex items-center gap-2">
+          <Camera size={15} /> 자동 수집 활성화됨
+        </p>
+        <p className="text-[12px] text-[#1E40AF] mt-1">
+          GitHub Actions가 매시간 #검단신도시, #검단, #인천검단 등 해시태그 게시물을 자동으로 수집합니다.
+          아래에서 게시물을 직접 추가할 수도 있어요.
+        </p>
+      </div>
 
       {/* URL 입력 */}
       <div className="bg-white rounded-2xl border border-[#E5E8EB] p-5 mb-5 space-y-3">

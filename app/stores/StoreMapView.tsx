@@ -419,14 +419,14 @@ export default function StoreMapView({
         </MapContainer>
       </div>
 
-      {/* 나침반 버튼 (내 위치 버튼 위, 좌측 하단) */}
+      {/* 나침반 버튼 (내 위치 버튼 위) */}
       <button
         onClick={toggleCompass}
         title={compassActive ? "북쪽으로 정렬" : "나침반 회전"}
         style={{
           position: "absolute",
           bottom: 134,
-          left: 16,
+          right: 16,
           zIndex: 1000,
           width: 46,
           height: 46,
@@ -461,7 +461,7 @@ export default function StoreMapView({
         )}
       </button>
 
-      {/* 내 위치 버튼 (좌측 하단) */}
+      {/* 내 위치 버튼 (Crosshair 스타일) */}
       <button
         onClick={locate}
         disabled={locating}
@@ -469,7 +469,7 @@ export default function StoreMapView({
         style={{
           position: "absolute",
           bottom: 80,
-          left: 16,
+          right: 16,
           zIndex: 1000,
           width: 46,
           height: 46,
