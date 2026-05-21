@@ -408,6 +408,15 @@ function CommunityTab() {
   );
 }
 
+// ─── 카드뉴스 그라디언트 팔레트 ──────────────────────────────
+const NEWS_GRADIENTS = [
+  { from: "#0058b0", to: "#0071e3" },
+  { from: "#065F46", to: "#059669" },
+  { from: "#6D28D9", to: "#8B5CF6" },
+  { from: "#B45309", to: "#D97706" },
+  { from: "#9D174D", to: "#EC4899" },
+];
+
 // ─── News ─────────────────────────────────────────────────────
 function NewsTab() {
   const [realNews, setRealNews] = useState<NewsArticle[]>([]);
@@ -613,63 +622,106 @@ function NewsTab() {
           </div>
         ) : newsSource.length === 0 ? null : (
           <>
-            {/* 1. 헤드라인 카드 (뉴스[0]) — 16:9 이미지 + 그라디언트 오버레이 */}
+            {/* 1. 헤드라인 카드뉴스 (뉴스[0]) */}
             {(() => {
               const first = newsSource[0];
+              const g = NEWS_GRADIENTS[0];
               return (
                 <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
                   onClick={() => trackNewsView(first.id)}
-                  className="block mx-4 mb-3 rounded-xl overflow-hidden shadow-md active:opacity-90 relative bg-gradient-to-br from-gray-700 to-gray-900">
-                  <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-                    {/* fallback: 출처명 큼직하게 */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-[32px] font-black text-white/15 tracking-tight">{first.source}</span>
+                  className="block mx-4 mb-3 rounded-2xl overflow-hidden shadow-lg active:scale-[0.99] transition-transform relative"
+                  style={{ background: `linear-gradient(135deg, ${g.from}, ${g.to})` }}>
+                  {/* 장식 요소 */}
+                  <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/10" />
+                  <div className="absolute top-20 -left-8 w-32 h-32 rounded-full bg-white/8" />
+                  <div className="absolute top-4 right-4 grid grid-cols-4 gap-[5px]">
+                    {Array.from({ length: 16 }).map((_, i) => (
+                      <div key={i} className="w-[3px] h-[3px] rounded-full bg-white/30" />
+                    ))}
+                  </div>
+                  {/* 사선 */}
+                  <div className="absolute top-0 left-[60%] w-px h-full bg-white/10"
+                    style={{ transform: "rotate(-10deg)", transformOrigin: "top" }} />
+                  {/* 번호 워터마크 */}
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                    <span className="text-[120px] font-black text-white/[0.06] leading-none">01</span>
+                  </div>
+                  {/* 다크 오버레이 (하단) */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
+                  {/* 콘텐츠 */}
+                  <div className="relative px-5 pt-6 pb-5" style={{ minHeight: 180 }}>
+                    {/* 상단 배지 */}
+                    <div className="flex items-center gap-2 mb-auto">
+                      <span className="bg-white/20 backdrop-blur-sm text-white text-[11px] font-bold px-2.5 py-1 rounded-full">
+                        📰 뉴스
+                      </span>
+                      <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">NEW</span>
                     </div>
-                    {first.thumbnail && (
-                      <img src={first.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
-                        onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                    )}
-                    {/* 그라디언트 오버레이 */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                    {/* 텍스트 */}
-                    <div className="absolute bottom-0 left-0 right-0 px-4 pb-4">
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">NEW</span>
-                        <span className="text-[12px] text-white/90 font-medium">{first.source}</span>
+                    {/* 하단 텍스트 */}
+                    <div className="mt-12">
+                      <div className="w-8 h-[3px] rounded-full bg-white/70 mb-2" />
+                      <p className="text-white text-[17px] font-extrabold leading-snug line-clamp-3 drop-shadow-sm">
+                        {first.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <span className="text-white/75 text-[12px] font-semibold">{first.source}</span>
                         <span className="text-white/40 text-[10px]">·</span>
-                        <span className="text-[12px] text-white/80">{formatRelativeTime(first.publishedAt)}</span>
+                        <span className="text-white/60 text-[11px]">{formatRelativeTime(first.publishedAt)}</span>
                       </div>
-                      <p className="text-[18px] font-bold text-white leading-snug line-clamp-2">{first.title}</p>
                     </div>
                   </div>
+                  {/* 코너 프레임 */}
+                  <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-white/20 rounded-br-2xl" />
                 </a>
               );
             })()}
 
-            {/* 2. 2열 카드 그리드 (뉴스[1]~[4]) */}
+            {/* 2. 2열 카드뉴스 그리드 (뉴스[1]~[4]) */}
             {newsSource.length > 1 && (
               <div className="grid grid-cols-2 gap-3 px-4 mb-4">
-                {newsSource.slice(1, 5).map(item => (
-                  <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-                    onClick={() => trackNewsView(item.id)}
-                    className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:opacity-80 flex flex-col">
-                    <div className="relative w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center" style={{ aspectRatio: "4/3" }}>
-                      <span className="text-gray-400 text-[12px] font-bold px-2 text-center line-clamp-1">{item.source}</span>
-                      {item.thumbnail && (
-                        <img src={item.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover"
-                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      )}
-                    </div>
-                    <div className="p-3 flex-1 flex flex-col">
-                      <div className="flex items-center gap-1 mb-1">
-                        <span className="text-[11px] text-gray-500 truncate">{item.source}</span>
-                        <span className="text-gray-300 text-[9px] shrink-0">·</span>
-                        <span className="text-[11px] text-gray-400 shrink-0">{formatRelativeTime(item.publishedAt)}</span>
+                {newsSource.slice(1, 5).map((item, i) => {
+                  const g = NEWS_GRADIENTS[i + 1] ?? NEWS_GRADIENTS[0];
+                  const num = String(i + 2).padStart(2, "0");
+                  return (
+                    <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
+                      onClick={() => trackNewsView(item.id)}
+                      className="rounded-2xl overflow-hidden shadow-md active:scale-[0.97] transition-transform relative"
+                      style={{ background: `linear-gradient(135deg, ${g.from}, ${g.to})`, minHeight: 160 }}>
+                      {/* 장식: 큰 원 */}
+                      <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+                      <div className="absolute bottom-10 -left-4 w-14 h-14 rounded-full bg-white/10" />
+                      {/* 점 그리드 */}
+                      <div className="absolute top-2.5 right-2.5 grid grid-cols-3 gap-[4px]">
+                        {Array.from({ length: 9 }).map((_, k) => (
+                          <div key={k} className="w-[2.5px] h-[2.5px] rounded-full bg-white/35" />
+                        ))}
                       </div>
-                      <p className="text-[13.5px] font-semibold text-gray-900 leading-snug line-clamp-2">{item.title}</p>
-                    </div>
-                  </a>
-                ))}
+                      {/* 번호 워터마크 */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+                        <span className="text-[72px] font-black text-white/[0.07] leading-none">{num}</span>
+                      </div>
+                      {/* 다크 오버레이 */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+                      {/* 콘텐츠 */}
+                      <div className="relative px-3 pt-3 pb-3 flex flex-col h-full" style={{ minHeight: 160 }}>
+                        <span className="self-start text-[10px] font-bold text-white/80 bg-white/15 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                          {item.source}
+                        </span>
+                        <div className="mt-auto">
+                          <div className="w-5 h-[2px] rounded-full bg-white/60 mb-1.5" />
+                          <p className="text-white text-[13px] font-extrabold leading-snug line-clamp-3 drop-shadow-sm">
+                            {item.title}
+                          </p>
+                          <span className="text-white/50 text-[10px] mt-1 block">
+                            {formatRelativeTime(item.publishedAt)}
+                          </span>
+                        </div>
+                      </div>
+                      {/* 코너 */}
+                      <div className="absolute bottom-0 right-0 w-7 h-7 border-b-2 border-r-2 border-white/20 rounded-br-2xl" />
+                    </a>
+                  );
+                })}
               </div>
             )}
 
