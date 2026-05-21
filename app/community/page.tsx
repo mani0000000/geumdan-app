@@ -23,6 +23,7 @@ import { getMyNickname } from "@/lib/identity";
 import { fetchGeumdanNews, fetchNewsFromApi, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
+import InstagramFeedSection from "@/components/widgets/InstagramFeedSection";
 import type { CommunityCategory, NewsType, Post } from "@/lib/types";
 import type { Apartment } from "@/lib/types";
 
@@ -488,7 +489,6 @@ function NewsTab() {
     });
   }, []);
 
-  const instaItems = newsItems.filter(n => n.type === "인스타");
   const newsSource = realNews.length > 0 ? realNews : newsItems.filter(n => n.type === "뉴스");
 
   // 일주일 내 기사 중 클릭 수(localStorage) 기준 TOP 3
@@ -794,50 +794,8 @@ function NewsTab() {
         )}
       </div>
 
-      {/* ── 인스타그램 ── */}
-      <div className="pt-5">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
-              <span className="text-white text-[11px] font-bold">IG</span>
-            </div>
-            <span className="text-[15px] font-bold text-gray-900">인스타그램</span>
-            <span className="text-[12px] text-gray-500">검단 피드</span>
-          </div>
-          <a href="https://www.instagram.com/explore/tags/검단신도시/"
-            target="_blank" rel="noopener noreferrer"
-            className="text-[12px] text-blue-600 font-medium active:opacity-70">
-            더보기
-          </a>
-        </div>
-        <div className="flex gap-3 px-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-          {instaItems.map(item => (
-            <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
-              className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
-              <div className="w-full" style={{ aspectRatio: "1/1" }}>
-                <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div className="px-2.5 pt-2 pb-2.5">
-                <p className="text-[11px] font-bold text-pink-600">{item.source}</p>
-                <p className="text-[12px] text-gray-900 leading-snug line-clamp-2 mt-0.5">{item.title}</p>
-                <p className="text-[11px] text-gray-400 mt-1">{formatRelativeTime(item.publishedAt)}</p>
-              </div>
-            </a>
-          ))}
-          {/* 인스타 API 연동 안내 */}
-          <a href="https://www.instagram.com/explore/tags/검단신도시/"
-            target="_blank" rel="noopener noreferrer"
-            className="shrink-0 w-[120px] rounded-2xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center gap-2 py-6 active:opacity-70">
-            <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}>
-              <span className="text-white text-[14px]">📷</span>
-            </div>
-            <p className="text-[11px] text-gray-500 text-center px-2">인스타<br/>더보기</p>
-          </a>
-          <div className="shrink-0 w-2" />
-        </div>
-      </div>
+      {/* ── 인스타그램 피드 ── */}
+      <InstagramFeedSection />
 
     </div>
   );

@@ -31,7 +31,7 @@ import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
-import { fetchInstagramPosts } from "@/lib/db/instagram";
+import InstagramWidget from "@/components/widgets/InstagramWidget";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import {
@@ -41,7 +41,6 @@ import {
 } from "@/lib/db/sports";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import type { YouTubeVideo } from "@/lib/api/news";
-import type { NewsItem } from "@/lib/types";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -611,38 +610,6 @@ function YouTubeSection() {
   );
 }
 
-// ─── 인스타그램 위젯 ──────────────────────────────────────────
-function InstagramSection() {
-  const [posts, setPosts] = useState<NewsItem[] | null>(null);
-  useEffect(() => { fetchInstagramPosts(6).then(setPosts); }, []);
-  if (!posts?.length) return null;
-  return (
-    <>
-      <SectionLabel label="인스타 소식" href="/community?tab=뉴스" linkLabel="전체보기" />
-      <section className="mb-1">
-        <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-          <div className="flex gap-3" style={{ width: "max-content" }}>
-            {posts.map(p => (
-              <a key={p.id} href={p.url} target="_blank" rel="noopener noreferrer"
-                className="shrink-0 w-[160px] bg-white rounded-2xl overflow-hidden active:opacity-80">
-                <div className="w-full aspect-square bg-[#f5f5f7]">
-                  {p.thumbnail
-                    ? <img src={p.thumbnail} alt="" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-[28px]">📷</div>
-                  }
-                </div>
-                <div className="px-2.5 py-2">
-                  <p className="text-[11px] font-bold text-[#DD2A7B]">{p.source}</p>
-                  <p className="text-[11px] text-[#4E5968] mt-0.5 line-clamp-2 leading-snug">{p.title}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </section>
-    </>
-  );
-}
 // ─── 가볼만한곳 상세 바텀시트 ────────────────────────────────
 function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => void }) {
   const meta = CATEGORY_META[place.category];
@@ -2604,7 +2571,7 @@ export default function HomePage() {
       </>
     ),
     youtube: () => <YouTubeSection />,
-    instagram: () => <InstagramSection />,
+    instagram: () => <InstagramWidget />,
     realestate: () => (
       <>
         <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
