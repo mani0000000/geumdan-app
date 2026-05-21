@@ -198,37 +198,46 @@ export async function updateUserProfile(
   lsSet(PROFILE_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
-// ── 포인트 추가 (내역 기록 포함) ──────────────────────────────────────
+// ── 포인트 추가/차감 (내역 기록 포함) ────────────────────────────────────
 const HISTORY_KEY = "geumdan_point_history";
 
 export async function addPoints(pts: number, desc: string): Promise<void> {
   const uid = await getOrCreateUserId();
 
   if (isConfigured()) {
-    const { data } = await supabase
-      .from("users")
-      .select("points,monthly_points")
-      .eq("id", uid)
-      .single();
-    await Promise.all([
-      supabase.from("users").update({
-        points: (data?.points ?? 0) + pts,
-        monthly_points: (data?.monthly_points ?? 0) + pts,
-        updated_at: new Date().toISOString(),
-      }).eq("id", uid),
-      supabase.from("user_point_history").insert({
-        user_id: uid, points: pts, desc_text: desc,
-      }),
-    ]);
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("points,monthly_points")
+        .eq("id", uid)
+        .single();
+      await Promise.all([
+        supabase.from("users").update({
+          points: Math.max(0, (data?.points ?? 0) + pts),
+          // 월간 포인트는 적립만 반영 (쿠폰 교환 시 차감 없음)
+          monthly_points: pts > 0
+            ? (data?.monthly_points ?? 0) + pts
+            : (data?.monthly_points ?? 0),
+          updated_at: new Date().toISOString(),
+        }).eq("id", uid),
+        supabase.from("user_point_history").insert({
+          user_id: uid, points: pts, desc_text: desc,
+        }),
+      ]);
+    } catch {
+      // Supabase 테이블 미설정 시 localStorage 폴백으로 처리
+    }
   }
 
-  // localStorage 동기화
+  // localStorage 동기화 (항상 실행)
   const cached = lsGet(PROFILE_KEY);
   const prev = cached ? JSON.parse(cached) : { id: uid, ...DEFAULT_PROFILE };
   lsSet(PROFILE_KEY, JSON.stringify({
     ...prev,
-    points: (prev.points ?? 0) + pts,
-    monthly_points: (prev.monthly_points ?? 0) + pts,
+    points: Math.max(0, (prev.points ?? 0) + pts),
+    monthly_points: pts > 0
+      ? (prev.monthly_points ?? 0) + pts
+      : (prev.monthly_points ?? 0),
   }));
 
   const history = lsGet(HISTORY_KEY);
@@ -305,14 +314,19 @@ export async function completeMission(
   const weekStart = weekStartDate();
 
   if (isConfigured()) {
-    const { error } = await supabase.from("user_mission_completions").upsert(
-      { user_id: uid, mission_id: missionId, week_start: weekStart },
-      { onConflict: "user_id,mission_id,week_start", ignoreDuplicates: true }
-    );
-    if (!error) await addPoints(reward, desc);
-    return;
+    try {
+      const { error } = await supabase.from("user_mission_completions").upsert(
+        { user_id: uid, mission_id: missionId, week_start: weekStart },
+        { onConflict: "user_id,mission_id,week_start", ignoreDuplicates: true }
+      );
+      if (!error) {
+        await addPoints(reward, desc);
+        return;
+      }
+    } catch {}
   }
 
+  // localStorage 폴백
   const prev: string[] = JSON.parse(lsGet(MISSIONS_KEY) ?? "[]");
   if (!prev.includes(missionId)) {
     lsSet(MISSIONS_KEY, JSON.stringify([...prev, missionId]));
@@ -327,13 +341,16 @@ export async function redeemReward(
   const uid = await getOrCreateUserId();
 
   if (isConfigured()) {
-    await supabase.from("user_reward_redemptions").insert({
-      user_id: uid, reward_id: rewardId, cost,
-    });
-    await addPoints(-cost, `포인트 교환: ${title}`);
-    return;
+    try {
+      await supabase.from("user_reward_redemptions").insert({
+        user_id: uid, reward_id: rewardId, cost,
+      });
+      await addPoints(-cost, `포인트 교환: ${title}`);
+      return;
+    } catch {}
   }
 
+  // localStorage 폴백
   const prev: string[] = JSON.parse(lsGet(REDEEMED_KEY) ?? "[]");
   lsSet(REDEEMED_KEY, JSON.stringify([...prev, rewardId]));
   await addPoints(-cost, `포인트 교환: ${title}`);

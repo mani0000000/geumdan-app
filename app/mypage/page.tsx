@@ -155,6 +155,21 @@ export default function MyPage() {
     hasCommentedThisWeek().then(setWeeklyCommentDone);
   }, []);
 
+  // 주간 미션 달성 시 자동 포인트 지급
+  useEffect(() => {
+    if (weeklyPostDone) {
+      completeMission("m1", 10, "글 작성하기")
+        .then(() => getUserGameStats().then(setGameStats));
+    }
+  }, [weeklyPostDone]);
+
+  useEffect(() => {
+    if (weeklyCommentDone) {
+      completeMission("m3", 6, "댓글 달기")
+        .then(() => getUserGameStats().then(setGameStats));
+    }
+  }, [weeklyCommentDone]);
+
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
   const nextLevel = getNextLevel(monthlyLevel);
   const mlv = monthlyLevelColor[monthlyLevel];
