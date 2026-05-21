@@ -2237,7 +2237,7 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
 
 // ─── 홈 교통 위젯 (transport 페이지와 동일한 카드 디자인) ──────
 const STOP_NAME_FALLBACK: Record<string, string> = Object.fromEntries(
-  GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name])
+  GEUMDAN_BUS_STATIONS.map(s => [s.id, s.name])
 );
 const ALL_SUBWAY_STATIONS = getAllSubwayStations();
 
@@ -2300,8 +2300,11 @@ function HomeTransportWidget() {
   const refreshBusStop = useCallback(async (stopId: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
-      let data = await fetchArrivalsByStationId(stopId);
-      if (data.length === 0) data = await fetchArrivalsByNodeId(stopId);
+      // favStops stores stop.id ("gd-1"), but API needs stationId ("ICB168001459")
+      const station = GEUMDAN_BUS_STATIONS.find(s => s.id === stopId);
+      const apiId = station?.stationId ?? stopId;
+      let data = await fetchArrivalsByStationId(apiId);
+      if (data.length === 0) data = await fetchArrivalsByNodeId(apiId);
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
       setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
