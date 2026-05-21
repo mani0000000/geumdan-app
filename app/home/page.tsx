@@ -2620,6 +2620,9 @@ export default function HomePage() {
     ? widgets.filter(w => w.enabled)
     : DEFAULT_WIDGETS;
 
+  // 데스크탑 2열 레이아웃: 전폭 위젯 vs 반폭 위젯 구분
+  const FULL_WIDTH_IDS = new Set(["greeting", "banners", "quickmenu", "youtube", "instagram", "realestate"]);
+
   return (
     <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header
@@ -2640,11 +2643,19 @@ export default function HomePage() {
         />
       )}
 
-      {activeWidgets.map(w => {
-        const render = widgetRenderers[w.id];
-        if (!render) return null;
-        return <React.Fragment key={w.id}>{render()}</React.Fragment>;
-      })}
+      {/* 모바일/태블릿: 단일 컬럼 / 데스크탑(lg+): 2열 그리드 */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-x-4 lg:px-6 xl:px-10 lg:pt-2 lg:items-start">
+        {activeWidgets.map(w => {
+          const render = widgetRenderers[w.id];
+          if (!render) return null;
+          const isFullWidth = FULL_WIDTH_IDS.has(w.id);
+          return (
+            <div key={w.id} className={isFullWidth ? "lg:col-span-2" : ""}>
+              {render()}
+            </div>
+          );
+        })}
+      </div>
 
       <div className="h-4" />
       <BottomNav />

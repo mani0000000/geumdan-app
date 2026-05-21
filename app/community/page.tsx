@@ -1472,8 +1472,8 @@ function SoikContent() {
       <Header title="소식" />
 
       {/* Main tabs — pill style */}
-      <div className="bg-white sticky top-[56px] z-30 border-b border-gray-100 px-4 py-2">
-        <div className="flex gap-2">
+      <div className="bg-white sticky top-[56px] z-30 border-b border-gray-100 px-4 md:px-6 lg:px-10 py-2">
+        <div className="flex gap-2 max-w-screen-lg mx-auto">
           {mainTabs.map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${tab === t ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-500"}`}>
@@ -1483,9 +1483,12 @@ function SoikContent() {
         </div>
       </div>
 
-      {tab === "커뮤니티" && <CommunityTab />}
-      {tab === "뉴스" && <NewsTab />}
-      {tab === "시세" && <SiseTab />}
+      {/* 데스크탑: max-width로 중앙 정렬 */}
+      <div className="lg:max-w-screen-xl lg:mx-auto lg:px-10 xl:px-16">
+        {tab === "커뮤니티" && <CommunityTab />}
+        {tab === "뉴스" && <NewsTab />}
+        {tab === "시세" && <SiseTab />}
+      </div>
 
       {/* FAB - only on 커뮤니티 tab */}
       {tab === "커뮤니티" && (

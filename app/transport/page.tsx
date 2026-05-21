@@ -830,8 +830,8 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="bg-white sticky top-[52px] z-30 border-b border-gray-100 px-4 py-2">
-        <div className="flex gap-2">
+      <div className="bg-white sticky top-[52px] z-30 border-b border-gray-100 px-4 md:px-6 lg:px-10 py-2">
+        <div className="flex gap-2 max-w-screen-lg mx-auto">
         {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
             className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${
@@ -1062,7 +1062,7 @@ export default function TransportPage() {
 
       {/* ══ 버스 탭 ══════════════════════════════════════════ */}
       {tab === "버스" && (
-        <div className="px-4 space-y-3">
+        <div className="px-4 md:px-6 lg:max-w-screen-xl lg:mx-auto lg:px-10 space-y-3">
           {/* 검색 바 */}
           <div className="bg-white rounded-2xl flex items-center gap-2.5 px-4 h-11 shadow-sm border border-gray-100">
             <Search size={15} className="text-[#86868b] shrink-0" />
@@ -1236,7 +1236,7 @@ export default function TransportPage() {
 
       {/* ══ 지하철 탭 ════════════════════════════════════════ */}
       {tab === "지하철" && (
-        <div className="px-4 space-y-3">
+        <div className="px-4 md:px-6 lg:max-w-screen-xl lg:mx-auto lg:px-10 space-y-3">
           {subwayLoading ? (
             <><SkeletonStop /><SkeletonStop /></>
           ) : subwayList.length === 0 ? (
@@ -1371,9 +1371,9 @@ export default function TransportPage() {
 
       {/* ══ 가볼만한곳 탭 ══════════════════════════════════════ */}
       {tab === "가볼만한곳" && (
-        <div className="pb-8">
+        <div className="pb-8 lg:max-w-screen-xl lg:mx-auto">
           {/* 카테고리 필터 (홈 스타일 pill) */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-2">
+          <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 lg:px-8 pt-3 pb-2">
             {(["all", ...Object.keys(CATEGORY_META)] as (PlaceCategory | "all")[]).map(k => {
               const meta = k === "all" ? null : CATEGORY_META[k];
               const active = placesCatFilter === k;
@@ -1403,7 +1403,7 @@ export default function TransportPage() {
 
           {/* 목록 */}
           {placesLoading ? (
-            <div className="px-4 space-y-3">
+            <div className="px-4 lg:px-8 space-y-3">
               <div className="bg-white rounded-2xl overflow-hidden animate-pulse">
                 <div className="h-52 bg-[#e5e5ea]" />
                 <div className="px-4 py-4 space-y-2">
@@ -1451,7 +1451,7 @@ export default function TransportPage() {
             return (
               <div className="space-y-3">
                 {/* ── 피처드 히어로 카드 ── */}
-                <div className="px-4">
+                <div className="px-4 lg:px-8">
                   <button onClick={() => setSelectedPlace(featured)}
                     className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm">
                     <div className="relative h-52"
@@ -1502,7 +1502,7 @@ export default function TransportPage() {
 
                 {/* ── 나머지 카드 (2열 그리드) ── */}
                 {rest.length > 0 && (
-                  <div className="px-4">
+                  <div className="px-4 lg:px-8">
                     {/* 섹션 라벨 */}
                     <div className="flex items-center gap-3 mb-3">
                       <span className="text-[11px] font-black text-[#86868b] uppercase tracking-widest">
