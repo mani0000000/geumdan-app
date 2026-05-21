@@ -931,13 +931,15 @@ export default function StoresPage() {
           {/* 업종별 필터 바 */}
           <div className="absolute top-0 left-0 right-0 z-[50] pt-2 pb-1.5"
             style={{ background: "linear-gradient(180deg,rgba(255,255,255,.96) 70%,transparent)" }}>
-            <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-2 px-3 overflow-x-auto" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
               {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => (
                 <button key={cat} onClick={() => setMapCatFilter(cat)}
                   className={`shrink-0 flex items-center gap-1 px-3 h-8 rounded-full text-[12px] font-bold shadow-sm transition-all border ${mapCatFilter === cat ? "bg-[#0071e3] text-white border-transparent" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
                   {cat === "전체" ? "🏢 전체" : `${catEmoji[cat as StoreCategory]} ${cat}`}
                 </button>
               ))}
+              {/* 마지막 필 잘림 방지 스페이서 */}
+              <div className="shrink-0 w-3" />
             </div>
           </div>
 
