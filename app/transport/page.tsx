@@ -800,7 +800,7 @@ export default function TransportPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header title="교통 정보" />
 
       {/* 플로팅 새로고침 버튼 (하단) */}
@@ -1510,7 +1510,7 @@ export default function TransportPage() {
                       </span>
                       <div className="flex-1 h-px bg-[#e5e5ea]" />
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {rest.map(place => {
                         const cat = CATEGORY_META[place.category];
                         const [pFrom, pTo] = catGrads[place.category];

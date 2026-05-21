@@ -448,9 +448,9 @@ function CommunityWidget() {
   const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
   if (hotPosts.length === 0) return null;
   return (
-    <section className="mx-4 mb-1 space-y-2">
+    <section className="mx-4 mb-1 space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
       <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
-        className="w-full text-left rounded-2xl overflow-hidden active:opacity-90"
+        className="w-full text-left rounded-2xl overflow-hidden active:opacity-90 md:col-span-2"
         style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
         <div className="p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -1584,7 +1584,7 @@ function MartSection() {
         )}
 
         {/* 마트 목록 */}
-        <div className="divide-y divide-[#f5f5f7]">
+        <div className="divide-y divide-[#f5f5f7] md:divide-y-0 md:grid md:grid-cols-2 md:gap-px md:bg-[#f5f5f7]">
           {marts.slice(0, visibleCount).map(mart => {
             const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
@@ -1593,7 +1593,7 @@ function MartSection() {
               : `https://map.kakao.com/link/search/${encodeURIComponent(mart.address || mart.name)}`;
 
             return (
-              <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
+              <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3 bg-white">
                 {/* 로고 */}
                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
                   todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
@@ -2564,7 +2564,7 @@ export default function HomePage() {
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
               className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
@@ -2621,7 +2621,7 @@ export default function HomePage() {
     : DEFAULT_WIDGETS;
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header
         showLocation
         rightAction={

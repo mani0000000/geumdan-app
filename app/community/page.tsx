@@ -367,34 +367,39 @@ function CommunityTab() {
         </div>
       </div>
 
-      {/* Posts — Threads-style flat feed */}
-      <div className="bg-white mt-2 divide-y divide-[#f0f0f3]">
+      {/* Posts — Threads-style flat feed (mobile) / 2-col grid (md+) */}
+      <div className="mt-2">
         {loadingPosts ? (
-          [1,2,3].map(i => (
-            <div key={i} className="px-4 py-4 flex gap-3 animate-pulse">
-              <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
-              <div className="flex-1 space-y-2">
-                <div className="h-3 w-24 bg-gray-100 rounded-full" />
-                <div className="h-4 w-3/4 bg-gray-100 rounded" />
-                <div className="h-3 w-1/2 bg-gray-100 rounded" />
+          <div className="bg-white divide-y divide-[#f0f0f3] md:bg-transparent md:grid md:grid-cols-2 md:gap-3 md:px-4 md:divide-y-0">
+            {[1,2,3,4].map(i => (
+              <div key={i} className="px-4 py-4 flex gap-3 animate-pulse md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-100">
+                <div className="w-10 h-10 rounded-full bg-gray-100 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 w-24 bg-gray-100 rounded-full" />
+                  <div className="h-4 w-3/4 bg-gray-100 rounded" />
+                  <div className="h-3 w-1/2 bg-gray-100 rounded" />
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+          </div>
         ) : sorted.length === 0 ? (
-          <div className="py-12 flex flex-col items-center gap-2">
+          <div className="bg-white py-12 flex flex-col items-center gap-2">
             <span className="text-3xl">📭</span>
             <p className="text-[14px] text-gray-500">아직 글이 없어요</p>
           </div>
         ) : (
-          sorted.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              router={router}
-              onHide={handleHide}
-              onReport={(id) => setReportTarget(id)}
-            />
-          ))
+          <div className="bg-white divide-y divide-[#f0f0f3] md:bg-transparent md:grid md:grid-cols-2 md:gap-3 md:px-4 md:divide-y-0">
+            {sorted.map(post => (
+              <div key={post.id} className="md:bg-white md:rounded-2xl md:shadow-sm md:border md:border-gray-100 md:overflow-hidden">
+                <PostCard
+                  post={post}
+                  router={router}
+                  onHide={handleHide}
+                  onReport={(id) => setReportTarget(id)}
+                />
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -1463,7 +1468,7 @@ function SoikContent() {
   });
 
   return (
-    <div className="min-h-dvh bg-gray-50 pb-28">
+    <div className="min-h-dvh bg-gray-50 pb-28 lg:pb-10">
       <Header title="소식" />
 
       {/* Main tabs — pill style */}

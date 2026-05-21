@@ -248,7 +248,7 @@ export default function MyPage() {
   ];
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header title="마이페이지" />
 
       {/* 프로필 카드 */}
@@ -528,29 +528,31 @@ export default function MyPage() {
       )}
 
       {/* 메뉴 */}
-      {menuGroups.map((grp, grpIdx) => {
-        // 메뉴 그룹별 위젯 키 매핑
-        const widgetKey = grpIdx === 0 ? "menu_activity" : grpIdx === 1 ? "menu_favorites" : "menu_settings";
-        if (!widgetCfg[widgetKey as keyof MypageWidgetConfig]) return null;
-        return (
-        <div key={grp.title}>
-          <SectionLabel label={grp.title} />
-          <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
-            {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
-              <button key={label} onClick={() => href && router.push(href)}
-                className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
-                <Icon size={18} className={`${color} mr-3 shrink-0`} />
-                <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-                {badge !== null && badge !== "0" && (
-                  <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
-                )}
-                <ChevronRight size={16} className="text-[#d2d2d7]" />
-              </button>
-            ))}
+      <div className="md:grid md:grid-cols-2 md:gap-4 md:px-4 md:items-start">
+        {menuGroups.map((grp, grpIdx) => {
+          // 메뉴 그룹별 위젯 키 매핑
+          const widgetKey = grpIdx === 0 ? "menu_activity" : grpIdx === 1 ? "menu_favorites" : "menu_settings";
+          if (!widgetCfg[widgetKey as keyof MypageWidgetConfig]) return null;
+          return (
+          <div key={grp.title}>
+            <SectionLabel label={grp.title} />
+            <div className={`mx-4 md:mx-0 ${CARD} divide-y divide-[#f5f5f7]`}>
+              {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
+                <button key={label} onClick={() => href && router.push(href)}
+                  className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
+                  <Icon size={18} className={`${color} mr-3 shrink-0`} />
+                  <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
+                  {badge !== null && badge !== "0" && (
+                    <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
+                  )}
+                  <ChevronRight size={16} className="text-[#d2d2d7]" />
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
-        );
-      })}
+          );
+        })}
+      </div>
 
       {/* 로그아웃 */}
       <div className="mx-4 mt-6 mb-6">

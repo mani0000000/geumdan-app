@@ -839,7 +839,7 @@ export default function StoresPage() {
   }, [mapCatFilter, nearbyWithDist]);
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header title="상가" />
 
       {/* 탭 토글 (매장리스트 / 상가지도) */}
