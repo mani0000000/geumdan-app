@@ -830,15 +830,17 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="bg-white sticky top-[52px] z-30 border-b border-[#f5f5f7] flex">
+      <div className="bg-white sticky top-[52px] z-30 border-b border-gray-100 px-4 py-2">
+        <div className="flex gap-2">
         {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
           <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-11 text-[13px] font-semibold border-b-2 transition-colors ${
-              t === tab ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
+            className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${
+              t === tab ? "bg-[#0071e3] text-white shadow-sm" : "bg-gray-100 text-gray-500"
             }`}>
             {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "📍 가볼만한곳"}
           </button>
         ))}
+        </div>
       </div>
 
       {/* ══ 버스 즐겨찾기 인라인 (버스 탭 전용) ══════════════════ */}
