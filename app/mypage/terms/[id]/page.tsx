@@ -4,6 +4,15 @@ import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, FileText } from "lucide-react";
 import { fetchTermById, fetchAllTerms, type Term } from "@/lib/db/terms";
 
+export function generateStaticParams() {
+  return [
+    { id: "service" },
+    { id: "privacy" },
+    { id: "location" },
+    { id: "marketing" },
+  ];
+}
+
 function renderContent(content: string) {
   return content.split("\n").map((line, i) => {
     if (line.startsWith("## ")) {
