@@ -30,7 +30,7 @@ function MessageCircleSolid({ size = 20, className = "" }: IconProps) {
 
 const navItems = [
   { href: "/stores",    label: "상가",      icon: Store,              iconActive: StoreSolid,         match: "/stores" },
-  { href: "/community", label: "소식",      icon: MessageCircle,      iconActive: MessageCircleSolid, match: ["/community", "/news", "/real-estate"] },
+  { href: "/community", label: "소식",      icon: MessageCircle,      iconActive: MessageCircleSolid, match: ["/community", "/real-estate"] },
   { href: "/home",      label: "홈",        icon: Home,               match: "/home", center: true },
   { href: "/transport", label: "여행/교통", icon: Navigation,         match: "/transport" },
   { href: "/mypage",    label: "MY",        icon: User,               match: "/mypage" },

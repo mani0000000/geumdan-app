@@ -47,7 +47,7 @@ import type { NewsItem } from "@/lib/types";
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
   { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세", color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/news/",        color: "#E03131" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community?tab=뉴스",        color: "#E03131" },
   { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
   { icon: Store,         label: "상가",    href: "/stores/",      color: "#0C8599" },
@@ -566,7 +566,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/news/"
+        <Link href="/community?tab=뉴스"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -582,7 +582,7 @@ function YouTubeSection() {
   if (!videos?.length) return null;
   return (
     <>
-      <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
+      <SectionLabel label="유튜브 소식" href="/community?tab=뉴스" linkLabel="전체보기" />
       <section className="mb-1">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
@@ -618,7 +618,7 @@ function InstagramSection() {
   if (!posts?.length) return null;
   return (
     <>
-      <SectionLabel label="인스타 소식" href="/news/" linkLabel="전체보기" />
+      <SectionLabel label="인스타 소식" href="/community?tab=뉴스" linkLabel="전체보기" />
       <section className="mb-1">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
@@ -2588,7 +2588,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/news/" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),

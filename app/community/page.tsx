@@ -20,7 +20,7 @@ import {
   fetchHiddenPostIds, hidePost, reportPost, type ReportReason,
 } from "@/lib/db/reports";
 import { getMyNickname } from "@/lib/identity";
-import { fetchGeumdanNews, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
+import { fetchGeumdanNews, fetchNewsFromApi, type NewsArticle, type YouTubeVideo } from "@/lib/api/news";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import { fetchNewsFromDB } from "@/lib/db/news";
 import type { CommunityCategory, NewsType, Post } from "@/lib/types";
@@ -432,7 +432,22 @@ function NewsTab() {
 
   const refresh = async () => {
     setLoading(true);
-    // 1. Supabase DB 우선 (실제 기사 URL 보장)
+
+    // 1. /api/news 라우트 우선 — Supabase + RSS + og:image 보강 모두 서버에서 처리
+    const apiResult = await fetchNewsFromApi("검단신도시");
+    if (apiResult.articles.length > 0) {
+      const sorted = [...apiResult.articles].sort(
+        (a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+      );
+      setRealNews(sorted);
+      setNewsSource2(apiResult.source);
+      setNewsMs(apiResult.ms);
+      setLastUpdated(new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }));
+      setLoading(false);
+      return;
+    }
+
+    // 2. API 라우트 실패 시 Supabase 직접 조회
     const dbResult = await fetchNewsFromDB(30);
     if (dbResult.articles.length > 0) {
       setRealNews(dbResult.articles);
@@ -442,7 +457,8 @@ function NewsTab() {
       setLoading(false);
       return;
     }
-    // 2. Supabase 없으면 캐시/라이브 API fallback
+
+    // 3. 최후 fallback
     const result = await fetchGeumdanNews();
     if (result.articles.length > 0) {
       const sorted = [...result.articles].sort(

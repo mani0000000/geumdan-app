@@ -3,7 +3,7 @@ import { usePathname } from "next/navigation";
 
 // 목록/그리드 위주 라우트는 태블릿·PC에서 폭을 넓혀 공간을 활용한다.
 // 그 외(홈·마이·폼 등)는 모바일 앱처럼 좁은 폭으로 화면 중앙에 고정한다.
-const WIDE_PREFIXES = ["/news", "/stores", "/community", "/real-estate"];
+const WIDE_PREFIXES = ["/stores", "/community", "/real-estate"];
 
 export default function RootWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
