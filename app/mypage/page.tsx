@@ -24,6 +24,11 @@ import {
 } from "@/lib/db/userdata";
 import { getSavedPostCount } from "@/lib/db/savedposts";
 import { TERMS_MENU } from "@/lib/db/terms";
+import {
+  fetchMypageWidgetConfig,
+  MYPAGE_WIDGET_DEFAULT,
+  type MypageWidgetConfig,
+} from "@/lib/db/site-settings";
 
 const WEEKLY_LIKES_MAX = 10;
 
@@ -129,8 +134,11 @@ export default function MyPage() {
   // 주간 미션 DB 자동 체크 (m1: 글 작성, m3: 댓글 2개)
   const [weeklyPostDone, setWeeklyPostDone] = useState(false);
   const [weeklyCommentDone, setWeeklyCommentDone] = useState(false);
+  // 위젯 노출 설정
+  const [widgetCfg, setWidgetCfg] = useState<MypageWidgetConfig>({ ...MYPAGE_WIDGET_DEFAULT });
 
   useEffect(() => {
+    fetchMypageWidgetConfig().then(setWidgetCfg);
     getUserProfile().then(p => {
       setProfile(p);
       setLikeCount(p?.like_count ?? 0);
@@ -240,7 +248,7 @@ export default function MyPage() {
       <Header title="마이페이지" />
 
       {/* 프로필 카드 */}
-      <div className={`mx-4 mt-4 ${CARD}`}>
+      {widgetCfg.profile && <div className={`mx-4 mt-4 ${CARD}`}>
         <div className="p-4">
           <div className="flex items-start gap-3">
             <Avatar src={undefined} size={64} alt={nickname} className="shrink-0" />
@@ -274,10 +282,10 @@ export default function MyPage() {
             ))}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* ── 포인트 & 월간 레벨 카드 ── */}
-      <div className={`mx-4 mt-3 ${CARD}`}>
+      {widgetCfg.points && <div className={`mx-4 mt-3 ${CARD}`}>
         <div className="px-5 pt-5 pb-4">
           <div className="flex items-start justify-between mb-4">
             <div>
@@ -345,9 +353,10 @@ export default function MyPage() {
             </div>
           )}
         </div>
-      </div>
+      </div>}
 
       {/* ── 주간 미션 ── */}
+      {widgetCfg.missions && <>
       <SectionLabel
         label="주간 미션"
         icon={<Zap size={18} className="text-[#F59E0B]" />}
@@ -381,8 +390,10 @@ export default function MyPage() {
           ))}
         </div>
       </div>
+      </>}
 
       {/* ── 포인트 교환 ── */}
+      {widgetCfg.rewards && <>
       <SectionLabel
         label="포인트 교환"
         icon={<Gift size={18} className="text-[#0071e3]" />}
@@ -435,8 +446,10 @@ export default function MyPage() {
           </div>
         </div>
       </div>
+      </>}
 
       {/* 최근 작성글 */}
+      {widgetCfg.recent_posts && <>
       <SectionLabel label="최근 작성글" />
       <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
         {posts.slice(0, 3).map(p => (
@@ -450,9 +463,14 @@ export default function MyPage() {
           </button>
         ))}
       </div>
+      </>}
 
       {/* 메뉴 */}
-      {menuGroups.map(grp => (
+      {menuGroups.map((grp, grpIdx) => {
+        // 메뉴 그룹별 위젯 키 매핑
+        const widgetKey = grpIdx === 0 ? "menu_activity" : grpIdx === 1 ? "menu_favorites" : "menu_settings";
+        if (!widgetCfg[widgetKey as keyof MypageWidgetConfig]) return null;
+        return (
         <div key={grp.title}>
           <SectionLabel label={grp.title} />
           <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
@@ -469,7 +487,8 @@ export default function MyPage() {
             ))}
           </div>
         </div>
-      ))}
+        );
+      })}
 
       {/* 로그아웃 */}
       <div className="mx-4 mt-6 mb-6">
