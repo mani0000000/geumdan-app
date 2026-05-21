@@ -3,9 +3,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import {
   MapPin, RefreshCw, ChevronDown, ChevronUp, Star,
   Zap, Accessibility, Train, Navigation, Bus, Search, Clock,
-  Car, Phone, Globe, ChevronRight, X,
+  Car, Phone, Globe, ChevronRight, X, Bookmark,
 } from "lucide-react";
 import { fetchPublishedPlaces, CATEGORY_META, AREAS, type Place, type PlaceCategory, type PlaceArea } from "@/lib/db/places";
+import { getFavoritePlaces, addFavoritePlace, removeFavoritePlace } from "@/lib/db/placeFavorites";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -503,6 +504,34 @@ export default function TransportPage() {
   const [placesCatFilter, setPlacesCatFilter] = useState<PlaceCategory | "all">("all");
   const [placesAreaFilter, setPlacesAreaFilter] = useState<PlaceArea | "all">("all");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
+  const [savedPlaceIds, setSavedPlaceIds] = useState<Set<string>>(new Set());
+
+  // 저장된 장소 초기 로드
+  useEffect(() => {
+    getFavoritePlaces().then(list => setSavedPlaceIds(new Set(list.map(p => p.place_id))));
+  }, []);
+
+  const togglePlaceSave = async (e: React.MouseEvent, place: Place) => {
+    e.stopPropagation();
+    const saved = savedPlaceIds.has(place.id);
+    setSavedPlaceIds(prev => {
+      const next = new Set(prev);
+      saved ? next.delete(place.id) : next.add(place.id);
+      return next;
+    });
+    if (saved) {
+      await removeFavoritePlace(place.id);
+    } else {
+      await addFavoritePlace({
+        place_id: place.id,
+        place_name: place.name,
+        place_category: place.category,
+        place_area: place.area,
+        place_image_url: place.thumbnail_url,
+        place_address: place.address,
+      });
+    }
+  };
   const posRef = useRef<{ lat: number; lng: number } | null>(null);
   const apiStopsRef = useRef<DisplayStop[] | null>(null);
   const subwayListRef = useRef<(SubwayStationWithDist & { arrivals: SubwayArrival[]; loadingArrivals: boolean })[]>([]);
@@ -1443,9 +1472,16 @@ export default function TransportPage() {
                           {featured.area}
                         </span>
                       </div>
-                      {/* PICK 배지 */}
-                      <div className="absolute top-3 right-3 bg-white/90 rounded-full px-2 py-0.5">
-                        <span className="text-[10px] font-black text-[#0071e3]">PICK</span>
+                      {/* PICK 배지 + 저장 버튼 */}
+                      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                        <div className="bg-white/90 rounded-full px-2 py-0.5">
+                          <span className="text-[10px] font-black text-[#0071e3]">PICK</span>
+                        </div>
+                        <button
+                          onClick={e => togglePlaceSave(e, featured)}
+                          className="w-7 h-7 rounded-full flex items-center justify-center bg-black/30 backdrop-blur-sm active:scale-90 transition-transform">
+                          <Bookmark size={14} className={savedPlaceIds.has(featured.id) ? "text-[#FFE100] fill-[#FFE100]" : "text-white"} />
+                        </button>
                       </div>
                       {/* 하단 텍스트 오버레이 */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -1504,6 +1540,12 @@ export default function TransportPage() {
                                   <span className="text-[10px] text-white font-semibold">{place.drive_min}분</span>
                                 </div>
                               )}
+                              {/* 저장 버튼 */}
+                              <button
+                                onClick={e => togglePlaceSave(e, place)}
+                                className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-black/30 backdrop-blur-sm active:scale-90 transition-transform">
+                                <Bookmark size={11} className={savedPlaceIds.has(place.id) ? "text-[#FFE100] fill-[#FFE100]" : "text-white"} />
+                              </button>
                             </div>
                             {/* 텍스트 */}
                             <div className="px-3 py-2.5">
@@ -1561,11 +1603,17 @@ export default function TransportPage() {
                   <div className="absolute top-3 left-0 right-0 flex justify-center">
                     <div className="w-10 h-1 bg-white/40 rounded-full" />
                   </div>
-                  {/* 닫기 버튼 */}
-                  <button onClick={() => setSelectedPlace(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
-                    <X size={16} className="text-white" />
-                  </button>
+                  {/* 닫기 + 저장 버튼 */}
+                  <div className="absolute top-4 right-4 flex items-center gap-2">
+                    <button onClick={e => togglePlaceSave(e, p)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <Bookmark size={16} className={savedPlaceIds.has(p.id) ? "text-[#FFE100] fill-[#FFE100]" : "text-white"} />
+                    </button>
+                    <button onClick={() => setSelectedPlace(null)}
+                      className="w-8 h-8 rounded-full bg-black/30 flex items-center justify-center active:opacity-60 backdrop-blur-sm">
+                      <X size={16} className="text-white" />
+                    </button>
+                  </div>
                   {/* 배지 */}
                   <div className="absolute top-4 left-4 flex items-center gap-1.5">
                     <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">

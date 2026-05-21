@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText } from "lucide-react";
+import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText, MapPin } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts } from "@/lib/mockData";
@@ -23,6 +23,7 @@ import {
   type UserGameStats,
 } from "@/lib/db/userdata";
 import { getSavedPostCount } from "@/lib/db/savedposts";
+import { getFavoritePlaces, type FavoritePlace } from "@/lib/db/placeFavorites";
 import { TERMS_MENU } from "@/lib/db/terms";
 import {
   fetchMypageWidgetConfig,
@@ -131,6 +132,7 @@ export default function MyPage() {
   const [storeCount, setStoreCount] = useState(0);
   const [aptCount, setAptCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
+  const [savedPlaces, setSavedPlaces] = useState<FavoritePlace[]>([]);
   // 주간 미션 DB 자동 체크 (m1: 글 작성, m3: 댓글 2개)
   const [weeklyPostDone, setWeeklyPostDone] = useState(false);
   const [weeklyCommentDone, setWeeklyCommentDone] = useState(false);
@@ -158,6 +160,7 @@ export default function MyPage() {
     getFavoriteStores().then(s => setStoreCount(s.length));
     getFavoriteApts().then(a => setAptCount(a.length));
     getSavedPostCount().then(setSavedCount);
+    getFavoritePlaces().then(setSavedPlaces);
     // 주간 미션 자동 체크
     hasPostedThisWeek().then(setWeeklyPostDone);
     hasCommentedThisWeek().then(setWeeklyCommentDone);
@@ -223,6 +226,7 @@ export default function MyPage() {
         { icon: Star, label: "즐겨찾는 버스", badge: String(busCount), color: "text-[#FBBF24]", href: "/transport/" },
         { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
         { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/community/?tab=시세" },
+        { icon: MapPin, label: "저장한 장소", badge: savedPlaces.length > 0 ? String(savedPlaces.length) : null, color: "text-[#0071e3]", href: "/transport/" },
       ],
     },
     {
@@ -464,6 +468,64 @@ export default function MyPage() {
         ))}
       </div>
       </>}
+
+      {/* 저장한 장소 */}
+      {savedPlaces.length > 0 && (
+        <>
+          <SectionLabel label="저장한 장소" onClick={() => router.push("/transport/")} />
+          <div className="mx-4">
+            <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+              {savedPlaces.map(place => {
+                const catColors: Record<string, { bg: string; text: string }> = {
+                  kids:    { bg: "#e8f1fd", text: "#0071e3" },
+                  nature:  { bg: "#E8F5E9", text: "#2E7D32" },
+                  culture: { bg: "#EDE9FE", text: "#6B21A8" },
+                  travel:  { bg: "#FEF3C7", text: "#92400E" },
+                  food:    { bg: "#FEF9C3", text: "#9D5C00" },
+                };
+                const catGrads: Record<string, [string, string]> = {
+                  kids:    ["#0071e3", "#38BDF8"],
+                  nature:  ["#2E7D32", "#4CAF50"],
+                  culture: ["#6B21A8", "#9C27B0"],
+                  travel:  ["#C2410C", "#F97316"],
+                  food:    ["#9D5C00", "#F59E0B"],
+                };
+                const cat = place.place_category ?? "travel";
+                const c = catColors[cat] ?? catColors.travel;
+                const [gFrom, gTo] = catGrads[cat] ?? catGrads.travel;
+                return (
+                  <button key={place.id}
+                    onClick={() => router.push("/transport/")}
+                    className="shrink-0 w-[130px] bg-white rounded-2xl overflow-hidden shadow-sm border border-[#f0f0f0] active:scale-95 transition-transform text-left">
+                    <div className="relative h-[90px]"
+                      style={place.place_image_url ? {} : { background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
+                      {place.place_image_url
+                        ? <>
+                            <img src={place.place_image_url} alt={place.place_name} className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/15" />
+                          </>
+                        : <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                            <MapPin size={32} className="text-white" />
+                          </div>
+                      }
+                      <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-black/30 flex items-center justify-center">
+                        <Bookmark size={10} className="text-[#FFE100] fill-[#FFE100]" />
+                      </div>
+                    </div>
+                    <div className="px-2.5 py-2">
+                      <p className="text-[12px] font-bold text-[#1d1d1f] leading-tight line-clamp-1">{place.place_name}</p>
+                      {place.place_area && (
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full mt-1 inline-block"
+                          style={{ color: c.text, background: c.bg }}>{place.place_area}</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* 메뉴 */}
       {menuGroups.map((grp, grpIdx) => {
