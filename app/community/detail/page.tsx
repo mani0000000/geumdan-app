@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   ChevronLeft, ThumbsUp, MessageSquare, Share2,
   MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, X, Check, Play,
+  Copy, Check as CheckIcon,
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
@@ -15,7 +16,7 @@ import {
   type DBComment,
 } from "@/lib/db/comments";
 import { syncCommentCount } from "@/lib/db/posts";
-import { addFavoritePost, removeFavoritePost, isFavoritePost } from "@/lib/db/userdata";
+import { savePost, unsavePost, isPostSaved } from "@/lib/db/savedposts";
 import type { Post } from "@/lib/types";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
@@ -139,6 +140,10 @@ function DetailContent() {
   const [commentLikes, setCommentLikes] = useState<Set<string>>(new Set());
   const [submittingComment, setSubmittingComment] = useState(false);
 
+  // 공유
+  const [showShareSheet, setShowShareSheet] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   // 수정/삭제
   const [isMyPost, setIsMyPost] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -170,7 +175,7 @@ function DetailContent() {
       setLikeCount(found.likeCount);
       setIsMyPost(!isMock && getMyPostIds().includes(postId));
       setPostLoading(false);
-      isFavoritePost(postId).then(setBookmarked);
+      isPostSaved(postId).then(setBookmarked);
     }
     load();
   }, [postId, isMock, router]);
@@ -179,11 +184,40 @@ function DetailContent() {
     if (!post) return;
     if (bookmarked) {
       setBookmarked(false);
-      await removeFavoritePost(postId);
+      await unsavePost(postId);
     } else {
       setBookmarked(true);
-      await addFavoritePost({ post_id: postId, title: post.title, category: post.category });
+      await savePost(postId, post.title, post.category ?? "");
     }
+  };
+
+  // 공유
+  const handleShare = async () => {
+    const url = typeof window !== "undefined" ? window.location.href : "";
+    const title = post?.title ?? "검단 커뮤니티 글";
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try { await navigator.share({ title, url }); return; } catch { /* cancelled */ }
+    }
+    setShowShareSheet(true);
+  };
+  const copyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch { /* ignore */ }
+  };
+  const shareKakao = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent((post?.title ?? "검단 커뮤니티") + "\n");
+    // 카카오톡 설치된 모바일: 딥링크 시도
+    const deepLink = `kakaotalk://msg/send?text=${text}${url}`;
+    const webFallback = `https://sharer.kakao.com/talk/friends/picker/link?url=${url}`;
+    const a = document.createElement("a");
+    a.href = deepLink;
+    a.click();
+    // 500ms 후 앱이 없으면 web fallback
+    setTimeout(() => { window.location.href = webFallback; }, 800);
   };
 
   // 댓글 로드
@@ -304,7 +338,7 @@ function DetailContent() {
   }
 
   return (
-    <div className="min-h-dvh bg-white flex flex-col">
+    <div className="h-dvh bg-white flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 h-14 border-b border-[#f5f5f7] sticky top-0 bg-white z-10">
         <button onClick={() => router.back()} className="active:opacity-60">
@@ -314,7 +348,7 @@ function DetailContent() {
           <button onClick={toggleBookmark} className="active:opacity-60">
             <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
           </button>
-          <button className="active:opacity-60">
+          <button onClick={handleShare} className="active:opacity-60">
             <Share2 size={20} className="text-[#6e6e73]" />
           </button>
           {isMyPost && (
@@ -348,7 +382,7 @@ function DetailContent() {
       </div>
 
       {/* Scrollable content */}
-      <div className="flex-1 overflow-y-auto" onClick={() => setShowMenu(false)}>
+      <div className="flex-1 overflow-y-auto overscroll-contain" onClick={() => setShowMenu(false)}>
         <article className="px-5 py-5 border-b border-[#f5f5f7]">
           <div className="flex items-center gap-2 mb-3">
             <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#0071e3]"}`}>
@@ -450,8 +484,8 @@ function DetailContent() {
         <div className="h-24" />
       </div>
 
-      {/* Comment input */}
-      <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3 space-y-2">
+      {/* Comment input — flex 레이아웃이 항상 하단에 고정 */}
+      <div className="shrink-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
           <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
@@ -470,6 +504,77 @@ function DetailContent() {
           </button>
         </div>
       </div>
+
+      {/* 공유 바텀시트 */}
+      {showShareSheet && (
+        <div className="fixed inset-0 z-[200] flex flex-col justify-end" onClick={() => setShowShareSheet(false)}>
+          <div className="absolute inset-0 bg-black/40" />
+          <div className="relative bg-white rounded-t-3xl px-5 pt-5 pb-8 space-y-4"
+            onClick={e => e.stopPropagation()}>
+            {/* 핸들 */}
+            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1 rounded-full bg-[#d2d2d7]" />
+            <p className="text-[16px] font-bold text-[#1d1d1f] text-center pt-2 pb-1">공유하기</p>
+
+            {/* 공유 옵션 아이콘 행 */}
+            <div className="flex justify-around py-2">
+              {/* 링크 복사 */}
+              <button onClick={copyUrl} className="flex flex-col items-center gap-2 active:opacity-60">
+                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-colors ${copied ? "bg-[#00C471]" : "bg-[#f5f5f7]"}`}>
+                  {copied
+                    ? <CheckIcon size={24} className="text-white" />
+                    : <Copy size={24} className="text-[#1d1d1f]" />
+                  }
+                </div>
+                <span className="text-[12px] text-[#4E5968] font-medium">{copied ? "복사됨!" : "링크 복사"}</span>
+              </button>
+
+              {/* 카카오톡 */}
+              <button onClick={shareKakao} className="flex flex-col items-center gap-2 active:opacity-60">
+                <div className="w-14 h-14 rounded-2xl bg-[#FEE500] flex items-center justify-center">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3C7.03 3 3 6.36 3 10.5c0 2.62 1.61 4.93 4.05 6.3l-.88 3.27a.3.3 0 00.44.33l3.82-2.54c.5.07 1.02.1 1.57.1 4.97 0 9-3.36 9-7.5S16.97 3 12 3z" fill="#3B1E08"/>
+                  </svg>
+                </div>
+                <span className="text-[12px] text-[#4E5968] font-medium">카카오톡</span>
+              </button>
+
+              {/* SMS */}
+              <button onClick={() => { window.open(`sms:?&body=${encodeURIComponent((post?.title ?? "") + "\n" + window.location.href)}`); }} className="flex flex-col items-center gap-2 active:opacity-60">
+                <div className="w-14 h-14 rounded-2xl bg-[#34C759] flex items-center justify-center">
+                  <MessageSquare size={24} className="text-white fill-white" />
+                </div>
+                <span className="text-[12px] text-[#4E5968] font-medium">문자</span>
+              </button>
+
+              {/* 더 보기 (Web Share API) */}
+              {typeof navigator !== "undefined" && !!navigator.share && (
+                <button onClick={() => { setShowShareSheet(false); handleShare(); }}
+                  className="flex flex-col items-center gap-2 active:opacity-60">
+                  <div className="w-14 h-14 rounded-2xl bg-[#e8f1fd] flex items-center justify-center">
+                    <Share2 size={24} className="text-[#0071e3]" />
+                  </div>
+                  <span className="text-[12px] text-[#4E5968] font-medium">더 보기</span>
+                </button>
+              )}
+            </div>
+
+            {/* URL 표시 */}
+            <div className="bg-[#f5f5f7] rounded-xl px-4 py-3 flex items-center gap-2">
+              <span className="flex-1 text-[13px] text-[#86868b] truncate">
+                {typeof window !== "undefined" ? window.location.href : ""}
+              </span>
+              <button onClick={copyUrl} className="shrink-0 text-[12px] font-bold text-[#0071e3] active:opacity-60">
+                {copied ? "복사됨" : "복사"}
+              </button>
+            </div>
+
+            <button onClick={() => setShowShareSheet(false)}
+              className="w-full h-12 rounded-2xl bg-[#f5f5f7] text-[15px] font-semibold text-[#4E5968] active:opacity-60">
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,8 +8,6 @@ import {
   Newspaper, MessageCircle, ShoppingBag, Users,
   Star, Ticket, X, MapPin, Calendar, Train,
   TrendingDown, Phone, Clock, PillBottle, Store, AlertTriangle, RefreshCw, Settings2, ExternalLink,
-  LocateFixed, Loader2,
-  Navigation, Zap, Accessibility,
 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
@@ -18,42 +16,42 @@ import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/Coup
 import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
-import { fetchNewsFromApi, type NewsArticle } from "@/lib/api/news";
+import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
 import type { Pharmacy } from "@/lib/mockData";
 import { fetchMarts, type Mart, type MartClosingPattern } from "@/lib/db/marts";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
-import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
-import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
+import { fetchArrivalsByStationId, GEUMDAN_BUS_STATIONS, type BusArrival } from "@/lib/api/bus";
+import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
 import { fetchActiveCoupons } from "@/lib/db/stores";
 import type { Coupon } from "@/lib/types";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
-import { fetchActivePopups, type Popup } from "@/lib/db/popups";
-import PopupBottomSheet from "@/components/ui/PopupBottomSheet";
-import GasWidget from "@/components/home/GasWidget";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import InstagramWidget from "@/components/widgets/InstagramWidget";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
-import SportsWidget from "@/components/home/SportsWidget";
+import {
+  fetchUpcomingSportsMatches, fetchSportsAssets, TEAM_META, LEAGUE_STYLES, TEAM_LOGOS, LEAGUE_STANDINGS,
+  DEFAULT_SPORTS_ASSETS,
+  type SportsMatch, type TeamCode, type Standing, type SportsAssets,
+} from "@/lib/db/sports";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
-import { fetchYouTubeLatest, type YouTubeVideo } from "@/lib/api/news";
+import type { YouTubeVideo } from "@/lib/api/news";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
-  { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/community/?tab=뉴스",                          color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
-  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
-  { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },
-  { icon: ShoppingBag,   label: "중고거래",href: "/community/?tab=커뮤니티&category=중고거래",    color: "#C2255C" },
-  { icon: Star,          label: "즐겨찾기",href: "/mypage/",                                      color: "#D9480F" },
+  { icon: Bus,           label: "버스",    href: "/transport/",   color: "#3B5BDB" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세", color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community?tab=뉴스",        color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/",   color: "#7048E8" },
+  { icon: Ticket,        label: "쿠폰",    href: "/coupons/",     color: "#E67700" },
+  { icon: Store,         label: "상가",    href: "/stores/",      color: "#0C8599" },
+  { icon: ShoppingBag,   label: "중고거래",href: "/community/",   color: "#C2255C" },
+  { icon: Star,          label: "즐겨찾기",href: "/mypage/",      color: "#D9480F" },
 ];
 
 // ─── 시간 인사 ────────────────────────────────────────────────
@@ -446,39 +444,54 @@ function NewOpeningsSection() {
 // ─── 커뮤니티 위젯 ────────────────────────────────────────────
 function CommunityWidget() {
   const router = useRouter();
-  const hotPosts = posts.filter(p => p.isHot).slice(0, 3);
+  const hotPosts = posts.filter(p => p.isHot).slice(0, 4);
   if (hotPosts.length === 0) return null;
   return (
-    <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
-        {hotPosts.map((post, idx) => (
+    <section className="mx-4 mb-1 space-y-2 md:grid md:grid-cols-2 md:gap-3 md:space-y-0">
+      <button onClick={() => router.push(`/community/detail/?id=${hotPosts[0].id}`)}
+        className="w-full text-left rounded-2xl overflow-hidden active:opacity-90 md:col-span-2"
+        style={{ background: "linear-gradient(135deg, #7C3AED, #6366F1)" }}>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
+              {hotPosts[0].category}
+            </span>
+            <span className="flex items-center gap-1 text-[11px] text-orange-300 font-bold">
+              <Flame size={10} />HOT
+            </span>
+          </div>
+          <p className="text-[18px] font-black text-white leading-snug mb-3 line-clamp-2">
+            {hotPosts[0].title}
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-[12px] text-white/60">{hotPosts[0].authorDong}</span>
+              <span className="text-[12px] text-white/40">·</span>
+              <span className="text-[12px] text-white/60">{formatRelativeTime(hotPosts[0].createdAt)}</span>
+            </div>
+            <span className="text-[13px] font-bold text-white">❤️ {hotPosts[0].likeCount}</span>
+          </div>
+        </div>
+      </button>
+      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+        {hotPosts.slice(1).map(post => (
           <button key={post.id}
             onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
-            <span className={`shrink-0 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center ${
-              idx === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
-            }`}>
-              {idx + 1}
+            className="w-full px-4 py-3 flex items-start gap-2.5 active:bg-[#f5f5f7] text-left">
+            <span className="text-[11px] font-bold bg-[#F3F0FF] text-[#7C3AED] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+              {post.category}
             </span>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[11px] font-semibold text-gray-500">{post.category}</span>
-                <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
-                  <Flame size={9} />HOT
-                </span>
-              </div>
-              <p className="text-[14px] font-medium text-gray-900 leading-snug truncate">{post.title}</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[12px] text-gray-400">{post.authorDong}</span>
-                <span className="text-[12px] text-gray-300">·</span>
-                <span className="text-[12px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
-                <span className="text-[12px] text-gray-400 ml-auto">❤️ {post.likeCount}</span>
+              <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{post.title}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-[12px] text-[#6e6e73]">{post.authorDong}</span>
+                <span className="text-[12px] text-[#86868b] ml-auto">❤️ {post.likeCount}</span>
               </div>
             </div>
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-blue-600 font-semibold active:bg-gray-50">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -487,18 +500,44 @@ function CommunityWidget() {
 }
 
 // ─── 뉴스 위젯 ────────────────────────────────────────────────
+interface ApiNews {
+  title: string;
+  link: string;
+  pubDate: string;
+  source: string;
+  description: string;
+}
+
 function NewsWidget() {
-  const [realNews, setRealNews] = useState<NewsArticle[]>([]);
+  const [realNews, setRealNews] = useState<ApiNews[]>([]);
   useEffect(() => {
-    fetchNewsFromApi("검단신도시").then(result => {
-      if (result.articles.length > 0) setRealNews(result.articles.slice(0, 4));
-    });
+    fetch("/api/news")
+      .then(res => res.json())
+      .then(data => {
+        if (data.items && data.items.length > 0) {
+          setRealNews(data.items.slice(0, 4));
+        }
+      })
+      .catch(() => {
+        /* fallback to mockData handled in topNews */
+      });
   }, []);
-  const topNews = realNews.length > 0 ? realNews : newsItems.slice(0, 4);
+
+  const topNews = realNews.length > 0
+    ? realNews.map((item, idx) => ({
+        id: `api-${idx}`,
+        title: item.title,
+        url: item.link,
+        publishedAt: item.pubDate,
+        source: item.source,
+        summary: item.description,
+      }))
+    : newsItems.slice(0, 4);
+
   if (topNews.length === 0) return null;
   return (
     <section className="mx-4 mb-1 space-y-2">
-      <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+      <a href={topNews[0].url || "#"} target="_blank" rel="noopener noreferrer"
         className="block rounded-2xl overflow-hidden active:opacity-90"
         style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
         <div className="p-4">
@@ -514,7 +553,7 @@ function NewsWidget() {
       <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
         {topNews.slice(1).map(item => (
           <a key={item.id}
-            href={(item as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
+            href={item.url || "#"} target="_blank" rel="noopener noreferrer"
             className="flex items-start gap-3 px-4 py-3 active:bg-[#f5f5f7]">
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
@@ -526,7 +565,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/news"
+        <Link href="/community?tab=뉴스"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -538,23 +577,11 @@ function NewsWidget() {
 // ─── 유튜브 위젯 ─────────────────────────────────────────────
 function YouTubeSection() {
   const [videos, setVideos] = useState<YouTubeVideo[] | null>(null);
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      // 1) "검단신도시" 최신 영상 실시간 (YouTube API order=date, 30분 캐시)
-      const live = await fetchYouTubeLatest("검단신도시", 8);
-      if (!alive) return;
-      if (live.videos.length > 0) { setVideos(live.videos.slice(0, 6)); return; }
-      // 2) 폴백 — Supabase DB / 정적 캐시
-      const db = await fetchYouTubeVideosFromDB(6);
-      if (alive) setVideos(db.videos);
-    })();
-    return () => { alive = false; };
-  }, []);
+  useEffect(() => { fetchYouTubeVideosFromDB(6).then(r => setVideos(r.videos)); }, []);
   if (!videos?.length) return null;
   return (
     <>
-      <SectionLabel label="유튜브 소식" href="/news/" linkLabel="전체보기" />
+      <SectionLabel label="유튜브 소식" href="/community?tab=뉴스" linkLabel="전체보기" />
       <section className="mb-1">
         <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
           <div className="flex gap-3" style={{ width: "max-content" }}>
@@ -587,43 +614,35 @@ function YouTubeSection() {
 function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => void }) {
   const meta = CATEGORY_META[place.category];
   const q = encodeURIComponent(place.address || place.name);
-  const mapUrl = `https://map.kakao.com/link/search/${q}`;
+  const mapUrl = place.lat && place.lng
+    ? `https://map.kakao.com/link/map/${encodeURIComponent(place.name)},${place.lat},${place.lng}`
+    : `https://map.kakao.com/link/search/${q}`;
 
-  const [favorited, setFavorited] = useState(false);
+  const [isFav, setIsFav] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
-    isFavoritePlace(place.id).then(setFavorited);
+    isFavoritePlace(place.id).then(setIsFav);
   }, [place.id]);
 
-  const showToast = (msg: string) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 1800);
-  };
-
-  const handleToggleFav = async () => {
-    const next = !favorited;
-    setFavorited(next); // optimistic update
-    try {
-      if (next) {
-        await addFavoritePlace({
-          place_id: place.id,
-          place_name: place.name,
-          place_category: place.category,
-          place_area: place.area,
-          place_image_url: place.thumbnail_url,
-          place_address: place.address,
-        });
-        showToast("즐겨찾기에 추가됐어요 ⭐");
-      } else {
-        await removeFavoritePlace(place.id);
-        showToast("즐겨찾기에서 제거됐어요");
-      }
-    } catch {
-      setFavorited(!next); // revert
-      showToast("처리 중 오류가 발생했어요");
+  async function toggleFav(e: React.MouseEvent) {
+    e.stopPropagation();
+    const next = !isFav;
+    setIsFav(next); // optimistic update
+    if (next) {
+      await addFavoritePlace({
+        place_id: place.id,
+        place_name: place.name,
+        place_image_url: place.thumbnail_url,
+        place_category: place.category,
+      });
+      setToast("즐겨찾기에 추가됐어요 ⭐");
+    } else {
+      await removeFavoritePlace(place.id);
+      setToast("즐겨찾기에서 제거됐어요");
     }
-  };
+    setTimeout(() => setToast(null), 2000);
+  }
 
   return (
     <div className="fixed inset-0 z-[300]" onClick={onClose}>
@@ -643,15 +662,15 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
                 ? <img src={place.thumbnail_url} alt={place.name} className="w-full h-full object-cover" />
                 : <div className="w-full h-full flex items-center justify-center text-[64px]" style={{ background: meta.bg }}>🗺️</div>
               }
+              {/* 즐겨찾기 버튼 */}
+              <button onClick={toggleFav}
+                className="absolute top-3 right-12 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
+                <Star size={16} className={isFav ? "text-amber-400 fill-amber-400" : "text-white"} />
+              </button>
+              {/* 닫기 버튼 */}
               <button onClick={onClose}
                 className="absolute top-3 right-3 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
                 <X size={16} className="text-white" />
-              </button>
-              <button onClick={handleToggleFav}
-                aria-label={favorited ? "즐겨찾기 해제" : "즐겨찾기 추가"}
-                className="absolute top-3 right-12 w-8 h-8 bg-black/40 rounded-full flex items-center justify-center active:opacity-70">
-                <Star size={16} className={favorited ? "text-[#FBBF24]" : "text-white"}
-                  fill={favorited ? "#FBBF24" : "none"} />
               </button>
               <span className="absolute bottom-3 left-3 text-[12px] font-bold px-2.5 py-1 rounded-lg"
                 style={{ background: meta.bg, color: meta.color }}>{meta.label}</span>
@@ -723,8 +742,9 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
           </div>
         </div>
       </div>
+      {/* 토스트 */}
       {toast && (
-        <div className="absolute left-1/2 -translate-x-1/2 bottom-24 z-20 px-4 py-2.5 bg-black/80 text-white text-[13px] rounded-xl pointer-events-none">
+        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[400] px-5 py-3 rounded-2xl shadow-lg text-[14px] font-semibold text-white bg-[#191F28]">
           {toast}
         </div>
       )}
@@ -848,28 +868,28 @@ function TideSection() {
           <div className="px-4 pt-4 pb-3 flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[30px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
-                <span className="text-[19px] font-bold text-[#1d1d1f]">{multtae.name}</span>
-                <span className="text-[12px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[26px] font-black text-[#1d1d1f] leading-none">{multtae.number}물</span>
+                <span className="text-[16px] font-bold text-[#1d1d1f]">{multtae.name}</span>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: sizeColor }}>
                   {sizeLabel}
                 </span>
               </div>
-              <p className="text-[13px] text-gray-500 mt-1">
+              <p className="text-[11px] text-gray-400 mt-1">
                 음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
               </p>
             </div>
             {nextLowTide && (
-              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[78px]">
-                <p className="text-[11px] text-blue-500 font-semibold">다음 저조</p>
-                <p className="text-[21px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
+              <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[68px]">
+                <p className="text-[9px] text-blue-400 font-semibold">다음 저조</p>
+                <p className="text-[18px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
               </div>
             )}
           </div>
 
           {/* 조석 곡선 차트 */}
           {(() => {
-            const W = 320; const H = 78; const PAD_X = 14; const PAD_Y = 8;
+            const W = 320; const H = 72; const PAD_X = 28; const PAD_Y = 8;
             const minH2 = Math.min(...todayTides.map(t => t.heightM));
             const range = maxH - minH2 || 1;
             const toX = (i: number) => PAD_X + (i / (todayTides.length - 1)) * (W - PAD_X * 2);
@@ -884,8 +904,8 @@ function TideSection() {
             const fill = `${d} L${pts[pts.length - 1].x},${H} L${pts[0].x},${H} Z`;
             const nowX = PAD_X + (nowMin / 1440) * (W - PAD_X * 2);
             return (
-              <div className="border-t border-gray-50 px-1 pt-2 pb-1">
-                <svg viewBox={`0 0 ${W} ${H + 26}`} className="w-full" style={{ height: 110 }}>
+              <div className="border-t border-gray-50 px-3 pt-2 pb-1">
+                <svg viewBox={`0 0 ${W} ${H + 24}`} className="w-full" style={{ height: 96 }}>
                   <defs>
                     <linearGradient id="tideGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor="#0071e3" stopOpacity="0.55" />
@@ -907,11 +927,11 @@ function TideSection() {
                     const isLow = t.type === "low";
                     return (
                       <g key={i}>
-                        <circle cx={p.x} cy={p.y} r={3.8} fill={isLow ? "#BFDBFE" : "#0071e3"} stroke="white" strokeWidth="1.5" />
-                        <text x={p.x} y={p.y - 5} textAnchor="middle" fontSize="10" fontWeight="700"
-                          fill={isLow ? "#6B7280" : "#0071e3"}>{t.heightM}m</text>
-                        <text x={p.x} y={H + 12} textAnchor="middle" fontSize="11" fontWeight="700" fill="#1d1d1f">{t.timeStr}</text>
-                        <text x={p.x} y={H + 23} textAnchor="middle" fontSize="9.5" fill="#6B7280">{isLow ? "저조" : "고조"}</text>
+                        <circle cx={p.x} cy={p.y} r={3.5} fill={isLow ? "#BFDBFE" : "#0071e3"} stroke="white" strokeWidth="1.5" />
+                        <text x={p.x} y={p.y - 5} textAnchor="middle" fontSize="8" fontWeight="700"
+                          fill={isLow ? "#9CA3AF" : "#0071e3"}>{t.heightM}m</text>
+                        <text x={p.x} y={H + 11} textAnchor="middle" fontSize="9" fontWeight="600" fill="#1d1d1f">{t.timeStr}</text>
+                        <text x={p.x} y={H + 21} textAnchor="middle" fontSize="8" fill="#9CA3AF">{isLow ? "저조" : "고조"}</text>
                       </g>
                     );
                   })}
@@ -925,8 +945,8 @@ function TideSection() {
         <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
-              className={`flex-1 py-2.5 rounded-lg text-[15px] font-bold transition-all ${
-                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
+              className={`flex-1 py-2 rounded-lg text-[13px] font-bold transition-all ${
+                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-400"
               }`}>
               {label}
             </button>
@@ -937,11 +957,11 @@ function TideSection() {
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-4 pt-4 pb-3" style={{ background: rm.bg }}>
             <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[17px] font-extrabold" style={{ color: rm.text }}>
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-extrabold" style={{ color: rm.text }}>
                   {tab === "haerujil" ? "해루질" : "낚시"} {rm.label}
                 </span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white"
                   style={{ background: rm.accent }}>
                   {activity.title}
                 </span>
@@ -953,19 +973,19 @@ function TideSection() {
                 ))}
               </div>
             </div>
-            <p className="text-[14px] leading-relaxed" style={{ color: rm.text }}>
+            <p className="text-[12px] leading-relaxed" style={{ color: rm.text }}>
               {activity.reason}
             </p>
           </div>
           <div className="px-4 py-3 border-t border-gray-50">
-            <p className="text-[14px] text-gray-700 font-medium">💡 {activity.tip}</p>
+            <p className="text-[12px] text-gray-600 font-medium">💡 {activity.tip}</p>
           </div>
         </div>
 
         {/* ── 추천 스팟 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-[14px] font-bold text-gray-700">
+            <p className="text-[12px] font-bold text-gray-700">
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
           </div>
@@ -985,30 +1005,30 @@ function TideSection() {
               return (
                 <div key={i} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-[12px] text-gray-500">{s.type} · {s.dist}</span>
+                    <p className="text-[13px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="text-[10px] text-gray-400">{s.type} · {s.dist}</span>
                       {!sameAsIncheon && nextSpotLow && (
                         <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">
                             저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
                           </span>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">조차 <span className="font-semibold">{spotRange}m</span></span>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-500">조차 <span className="font-semibold">{spotRange}m</span></span>
                         </>
                       )}
                       {sameAsIncheon && (
                         <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-500">인천과 동일</span>
+                          <span className="text-[10px] text-gray-300">·</span>
+                          <span className="text-[10px] text-gray-400">인천과 동일</span>
                         </>
                       )}
                     </div>
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[12px] font-bold text-yellow-700"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[11px] font-bold text-yellow-700"
                   >
                     지도 ↗
                   </button>
@@ -1021,7 +1041,7 @@ function TideSection() {
         {/* ── 계절 안내 ── */}
         {seasonalNote && (
           <div className="rounded-xl bg-amber-50 px-4 py-3">
-            <p className="text-[13px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
+            <p className="text-[12px] text-amber-800 leading-relaxed">🌊 {seasonalNote}</p>
           </div>
         )}
       </section>
@@ -1030,22 +1050,311 @@ function TideSection() {
   );
 }
 
-// ─── 실거래가 위젯 ────────────────────────────────────────────
-type PyeongFilter = "전체" | "20평대" | "30평대" | "40평대+";
-
-function pyeongBucket(pyeong: number): PyeongFilter {
-  if (pyeong < 30) return "20평대";
-  if (pyeong < 40) return "30평대";
-  return "40평대+";
+// ─── 스포츠 위젯 헬퍼 ────────────────────────────────────────
+function _nameToColor(name: string): string {
+  const palette = ["#1e40af","#6d28d9","#be185d","#065f46","#b45309","#991b1b","#0e7490","#4d7c0f"];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h);
+  return palette[Math.abs(h) % palette.length];
 }
 
+function _getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
+  return name.slice(0, 3).toUpperCase();
+}
+
+function _getMatchResult(m: SportsMatch): "WIN" | "LOSE" | "DRAW" | null {
+  if (m.home_score == null || m.away_score == null) return null;
+  const incheonName = TEAM_META[m.team_code].name;
+  const isHome = m.home_team === incheonName;
+  const myScore = isHome ? m.home_score : m.away_score;
+  const oppScore = isHome ? m.away_score : m.home_score;
+  if (myScore > oppScore) return "WIN";
+  if (myScore < oppScore) return "LOSE";
+  return "DRAW";
+}
+
+function SportTeamLogo({
+  teamCode, teamName, size = 44, logoUrl,
+}: { teamCode?: TeamCode; teamName: string; size?: number; logoUrl?: string }) {
+  const logo = teamCode ? TEAM_LOGOS[teamCode] : null;
+  const bg = logo?.bg ?? _nameToColor(teamName);
+  const abbr = logo?.abbr ?? _getInitials(teamName);
+  const fg = logo?.fg ?? "#ffffff";
+  return (
+    <div className="flex flex-col items-center gap-1" style={{ width: size + 20 }}>
+      <div className="rounded-full flex items-center justify-center font-black flex-shrink-0 shadow-sm overflow-hidden"
+        style={{ width: size, height: size, background: logoUrl ? "transparent" : bg, color: fg, fontSize: Math.floor(size * 0.28) }}>
+        {logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={logoUrl} alt={teamName} className="w-full h-full object-cover" />
+        ) : abbr}
+      </div>
+      <p className="text-[9px] text-gray-500 text-center font-semibold leading-tight"
+        style={{ maxWidth: size + 20, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+        {teamName}
+      </p>
+    </div>
+  );
+}
+
+// ─── 경기 카드 (결과 / 예정 공통) ────────────────────────────
+function MatchCard({ m, assets, formatMatchDate }: {
+  m: SportsMatch;
+  assets: SportsAssets;
+  formatMatchDate: (iso: string) => string;
+}) {
+  const meta = TEAM_META[m.team_code];
+  const ls = LEAGUE_STYLES[meta.league];
+  const isLive = m.status === "live";
+  const isFinished = m.status === "finished";
+  const hasScore = m.home_score != null && m.away_score != null;
+  const result = isFinished ? _getMatchResult(m) : null;
+  const incheonName = meta.name;
+  const isHome = m.home_team === incheonName;
+  const oppName = isHome ? m.away_team : m.home_team;
+  const myScore = isHome ? m.home_score : m.away_score;
+  const oppScore = isHome ? m.away_score : m.home_score;
+  const teamLogoUrl = assets.teamLogos[m.team_code];
+  const leagueLogoUrl = assets.leagueLogos[meta.league];
+  const oppLogoUrl = assets.awayTeamLogos?.[oppName];
+
+  return (
+    <div className={`shrink-0 w-[215px] rounded-2xl overflow-hidden shadow-sm border flex flex-col ${
+      isLive ? "border-red-300 ring-1 ring-red-200" : "border-gray-100"
+    } bg-white`}>
+      {/* 리그 헤더 */}
+      <div className="px-3 py-2.5 flex items-center justify-between"
+        style={{ background: ls?.gradient ?? meta.color }}>
+        <div className="flex items-center gap-1.5">
+          {leagueLogoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={leagueLogoUrl} alt={meta.league} className="w-5 h-5 object-contain rounded" />
+          )}
+          <span className="text-[12px] font-black text-white tracking-wide drop-shadow-sm">{meta.league}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          {isLive && (
+            <span className="text-[10px] font-black text-white animate-pulse bg-red-500 px-1.5 py-0.5 rounded-full">LIVE</span>
+          )}
+          {isFinished && result && (
+            <span className={`text-[11px] font-black px-2 py-0.5 rounded-full ${
+              result === "WIN" ? "bg-green-500 text-white" : result === "LOSE" ? "bg-red-500 text-white" : "bg-gray-500 text-white"
+            }`}>{result === "WIN" ? "승" : result === "LOSE" ? "패" : "무"}</span>
+          )}
+          {isFinished && !result && (
+            <span className="text-[10px] font-semibold text-white/70">종료</span>
+          )}
+          {m.status === "upcoming" && m.match_date && (
+            <span className="text-[10px] font-semibold text-white/80">{formatMatchDate(m.match_date)}</span>
+          )}
+        </div>
+      </div>
+
+      {/* 팀 + 스코어 */}
+      <div className="px-3 py-3 flex-1">
+        {hasScore ? (
+          <div className="flex items-center justify-between gap-1">
+            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
+            <div className="flex flex-col items-center flex-shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{myScore ?? "-"}</span>
+                <span className="text-[13px] font-black text-gray-300">:</span>
+                <span className="text-[28px] font-black leading-none text-[#1d1d1f]">{oppScore ?? "-"}</span>
+              </div>
+              {isFinished && <span className="text-[9px] text-gray-400 mt-0.5">최종</span>}
+            </div>
+            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
+          </div>
+        ) : (
+          <div className="flex items-center justify-between gap-1 py-1">
+            <SportTeamLogo teamCode={m.team_code} teamName={incheonName} size={44} logoUrl={teamLogoUrl} />
+            <span className="text-[14px] font-black text-gray-200 flex-shrink-0">VS</span>
+            <SportTeamLogo teamName={oppName} size={44} logoUrl={oppLogoUrl} />
+          </div>
+        )}
+        {m.venue && <p className="text-[10px] text-gray-400 text-center mt-2 truncate">📍 {m.venue}</p>}
+        {m.broadcast && <p className="text-[10px] text-gray-400 text-center mt-0.5 truncate">📺 {m.broadcast}</p>}
+      </div>
+
+      {/* 예매 버튼 (예정 경기만) */}
+      {m.ticket_url && m.status === "upcoming" ? (
+        <div className="px-3 pb-3">
+          <a href={m.ticket_url} target="_blank" rel="noopener noreferrer"
+            className="block w-full text-center py-2 rounded-xl text-[12px] font-extrabold text-white active:opacity-80"
+            style={{ background: ls?.gradient ?? meta.color }}>
+            🎟 예매하기
+          </a>
+        </div>
+      ) : (
+        <div className="h-3" />
+      )}
+    </div>
+  );
+}
+
+// ─── 스포츠 위젯 ─────────────────────────────────────────────
+function SportsSection() {
+  const [matches, setMatches] = useState<SportsMatch[] | null>(null);
+  const [assets, setAssets] = useState<SportsAssets>(DEFAULT_SPORTS_ASSETS);
+  const [filter, setFilter] = useState<string>("전체");
+
+  useEffect(() => {
+    fetchUpcomingSportsMatches(30).then(setMatches).catch(() => setMatches([]));
+    fetchSportsAssets().then(setAssets).catch(() => {});
+  }, []);
+
+  if (!matches?.length) return null;
+
+  const sports = ["전체", ...Array.from(new Set(matches.map(m => m.sport)))];
+  const filtered = filter === "전체" ? matches : matches.filter(m => m.sport === filter);
+  const standings: Standing[] | null = filter !== "전체" ? (LEAGUE_STANDINGS[filter] ?? null) : null;
+
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const resultMatches = filtered
+    .filter(m => m.status === "finished" || m.status === "live")
+    .sort((a, b) => new Date(b.match_date).getTime() - new Date(a.match_date).getTime())
+    .slice(0, 6);
+  const upcomingMatches = filtered
+    .filter(m => m.status === "upcoming")
+    .sort((a, b) => new Date(a.match_date).getTime() - new Date(b.match_date).getTime())
+    .slice(0, 6);
+
+  function formatMatchDate(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffDays = Math.ceil((d.getTime() - now.getTime()) / 86400000);
+    const month = d.getMonth() + 1;
+    const day = d.getDate();
+    const weekday = ["일","월","화","수","목","금","토"][d.getDay()];
+    const hhmm = d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 0) return `오늘 ${hhmm}`;
+    if (diffDays === 1) return `내일 ${hhmm}`;
+    return `${month}/${day}(${weekday}) ${hhmm}`;
+  }
+
+  return (
+    <>
+      <SectionLabel label="인천 스포츠" />
+      {/* 종목 필터 탭 */}
+      <div className="overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+        <div className="flex gap-2" style={{ width: "max-content" }}>
+          {sports.map(s => {
+            const ls = LEAGUE_STYLES[s];
+            return (
+              <button key={s} onClick={() => setFilter(s)}
+                className="px-3 py-1.5 rounded-full text-[12px] font-bold whitespace-nowrap transition-all"
+                style={filter === s && ls
+                  ? { background: ls.gradient, color: "#fff", border: "none" }
+                  : filter === s
+                  ? { background: "#1d1d1f", color: "#fff", border: "none" }
+                  : { background: "#fff", color: "#6b7280", border: "1px solid #e5e7eb" }
+                }>
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {/* 경기 결과 */}
+      {resultMatches.length > 0 && (
+        <div className="px-4 mb-1">
+          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 결과</p>
+        </div>
+      )}
+      {resultMatches.length > 0 && (
+        <section className="mb-3">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {resultMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 경기 예정 */}
+      {upcomingMatches.length > 0 && (
+        <div className="px-4 mb-1">
+          <p className="text-[12px] font-bold text-gray-400 mb-2">경기 예정</p>
+        </div>
+      )}
+      {upcomingMatches.length > 0 && (
+        <section className="mb-1">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {upcomingMatches.map(m => <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />)}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 결과도 예정도 없을 때 — cancelled 포함 전체 표시 */}
+      {resultMatches.length === 0 && upcomingMatches.length === 0 && (
+        <section className="mb-1">
+          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
+            <div className="flex gap-3 pb-1" style={{ width: "max-content" }}>
+              {filtered.slice(0, 10).map(m => (
+                <MatchCard key={m.id} m={m} assets={assets} formatMatchDate={formatMatchDate} />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 리그 순위표 */}
+      {standings && (
+        <div className="mx-4 mb-3 rounded-2xl overflow-hidden bg-white border border-gray-100 shadow-sm">
+          <div className="px-4 py-2.5 flex items-center gap-2"
+            style={{ background: LEAGUE_STYLES[filter]?.gradient ?? "#1d1d1f" }}>
+            <span className="text-[13px] font-black text-white">{filter} 순위</span>
+          </div>
+          {standings.map(s => {
+            const highlight = !!s.teamCode;
+            return (
+              <div key={s.rank}
+                className={`flex items-center px-4 py-2.5 border-b border-gray-50 last:border-0 ${
+                  highlight ? "bg-blue-50/60" : ""
+                }`}>
+                <span className={`text-[12px] font-black w-5 flex-shrink-0 ${
+                  s.rank === 1 ? "text-amber-500" : s.rank <= 3 ? "text-amber-400" : "text-gray-400"
+                }`}>{s.rank}</span>
+                <span className={`flex-1 text-[13px] ml-2 truncate ${
+                  highlight ? "font-black text-blue-700" : "font-semibold text-[#1d1d1f]"
+                }`}>
+                  {highlight ? "★ " : ""}{s.teamName}
+                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[11px] text-gray-500">
+                    {s.wins}승{s.draws !== undefined ? ` ${s.draws}무` : ""} {s.losses}패
+                  </span>
+                  {s.points !== undefined && (
+                    <span className={`text-[12px] font-black min-w-[28px] text-right ${
+                      highlight ? "text-blue-600" : "text-gray-700"
+                    }`}>{s.points}점</span>
+                  )}
+                  {s.winRate !== undefined && (
+                    <span className={`text-[11px] font-bold min-w-[40px] text-right ${
+                      highlight ? "text-blue-600" : "text-gray-600"
+                    }`}>{(s.winRate * 100).toFixed(1)}%</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}
+
+// ─── 실거래가 위젯 ────────────────────────────────────────────
 function RealEstateWidget() {
   const router = useRouter();
 
   // 소식 > 시세 탭과 localStorage 동기화
   const [myAptId, setMyAptId] = useState<string | null>(null);
   const [myAptSzIdx, setMyAptSzIdx] = useState(0);
-  const [pyeongFilter, setPyeongFilter] = useState<PyeongFilter>("전체");
   useEffect(() => {
     setMyAptId(localStorage.getItem("myAptId"));
     setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
@@ -1060,13 +1369,12 @@ function RealEstateWidget() {
   const myDiff  = myCurr - myPrev;
   const myPct   = myPrev ? ((Math.abs(myDiff) / myPrev) * 100).toFixed(1) : "0.0";
 
-  // 검단신도시 평균 (평수 필터 반영)
+  // 검단신도시 전체 평균
   const avgTrend = (() => {
     const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
     return months.map(month => {
       let total = 0, count = 0;
       apartments.forEach(apt => apt.sizes.forEach(sz => {
-        if (pyeongFilter !== "전체" && pyeongBucket(sz.pyeong) !== pyeongFilter) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
       }));
@@ -1080,29 +1388,25 @@ function RealEstateWidget() {
 
   const go = () => router.push("/community/?tab=시세");
 
-  const PYEONG_FILTERS: PyeongFilter[] = ["전체", "20평대", "30평대", "40평대+"];
-
   return (
     <section className="mx-4 mb-1 space-y-2">
-      {/* 내 집 시세 — 따뜻한 그라데이션 배경 */}
+      {/* 내 집 시세 */}
       <button onClick={go}
-        className="w-full rounded-2xl overflow-hidden active:opacity-95 text-left shadow-sm"
-        style={{ background: "linear-gradient(135deg, #FFF7ED 0%, #FFEDD5 100%)" }}>
-        <div className="px-4 py-3.5">
+        className="w-full bg-white rounded-2xl border border-gray-100 px-4 py-3.5 text-left active:bg-gray-50">
         {myApt && mySz ? (
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-1 mb-0.5">
-                <Star size={12} className="text-amber-500 fill-amber-500 shrink-0" />
-                <span className="text-[12px] font-bold text-amber-700">내 집 시세</span>
+                <Star size={10} className="text-amber-400 fill-amber-400 shrink-0" />
+                <span className="text-[10px] text-gray-400">내 집 시세</span>
               </div>
-              <p className="text-[16px] font-extrabold text-[#1d1d1f] truncate">{myApt.name}</p>
-              <p className="text-[12px] text-gray-600 mt-0.5">{myApt.dong} · {mySz.pyeong}평</p>
+              <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{myApt.name}</p>
+              <p className="text-[11px] text-gray-400">{myApt.dong} · {mySz.pyeong}평</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-[24px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
+              <p className="text-[20px] font-black text-[#1d1d1f] leading-tight">{formatPrice(myCurr)}</p>
               {myDiff !== 0 && (
-                <p className={`text-[12px] font-bold ${myDiff > 0 ? "text-red-600" : "text-blue-600"}`}>
+                <p className={`text-[11px] font-semibold ${myDiff > 0 ? "text-red-500" : "text-blue-500"}`}>
                   {myDiff > 0 ? "▲" : "▼"} {formatPrice(Math.abs(myDiff))} ({myPct}%)
                 </p>
               )}
@@ -1110,52 +1414,35 @@ function RealEstateWidget() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Star size={14} className="text-amber-500 fill-amber-500 shrink-0" />
+            <Star size={14} className="text-amber-400 fill-amber-400 shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-[#1d1d1f]">내 집 등록</p>
-              <p className="text-[12px] text-gray-600">소식 → 시세 탭에서 내 집을 등록하세요</p>
+              <p className="text-[13px] font-bold text-[#1d1d1f]">내 집 등록</p>
+              <p className="text-[11px] text-gray-400">소식 → 시세 탭에서 내 집을 등록하세요</p>
             </div>
-            <ChevronRight size={14} className="text-gray-400 shrink-0" />
+            <ChevronRight size={14} className="text-gray-300 shrink-0" />
           </div>
         )}
-        </div>
       </button>
 
       {/* 검단 신도시 평균 실거래가 */}
-      <div className="w-full rounded-2xl overflow-hidden text-left shadow-sm"
+      <button onClick={go}
+        className="w-full rounded-2xl overflow-hidden active:opacity-90 text-left"
         style={{ background: "linear-gradient(135deg, #059669, #0D9488)" }}>
-        <button onClick={go} className="block w-full text-left active:opacity-90">
-          <div className="px-4 pt-3.5">
-            <p className="text-[12px] font-semibold text-white mb-0.5">
-              검단신도시 {pyeongFilter !== "전체" ? `${pyeongFilter} ` : ""}평균 실거래가
+        <div className="px-4 py-3.5">
+          <p className="text-[11px] text-white/60 mb-0.5">검단 신도시 평균 실거래가</p>
+          <div className="flex items-end justify-between gap-2">
+            <p className="text-[26px] font-black text-white leading-tight">
+              {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
             </p>
-            <div className="flex items-end justify-between gap-2">
-              <p className="text-[28px] font-black text-white leading-tight">
-                {avgPrice > 0 ? formatPrice(avgPrice) : "—"}
+            {avgDiff !== 0 && (
+              <p className={`text-[12px] font-semibold pb-1 ${avgDiff > 0 ? "text-green-200" : "text-blue-200"}`}>
+                {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
               </p>
-              {avgDiff !== 0 && (
-                <p className={`text-[13px] font-bold pb-1 text-white`}>
-                  {avgDiff > 0 ? "▲" : "▼"} {avgPct}%
-                </p>
-              )}
-            </div>
-            <p className="text-[11px] text-white mt-1">최근 실거래 기준</p>
+            )}
           </div>
-        </button>
-        {/* 평수별 필터 탭 */}
-        <div className="flex gap-1.5 px-3 pt-2 pb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {PYEONG_FILTERS.map(p => (
-            <button key={p} onClick={() => setPyeongFilter(p)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-[12px] font-bold transition-all ${
-                pyeongFilter === p
-                  ? "bg-white text-[#0D9488]"
-                  : "bg-white/15 text-white border border-white/30"
-              }`}>
-              {p}
-            </button>
-          ))}
+          <p className="text-[10px] text-white/40 mt-1">최근 실거래 기준</p>
         </div>
-      </div>
+      </button>
     </section>
   );
 }
@@ -1186,51 +1473,23 @@ function isMandatoryClosed(date: Date, pattern: MartClosingPattern): boolean {
   return false;
 }
 
-/** 영업시간 문자열 안에 현재 분(0~1439)이 포함되는지 */
-function isWithinHours(hoursStr: string | null, curMinutes: number): boolean {
-  if (!hoursStr) return false;
-  if (/24시간|상시|연중무휴/.test(hoursStr)) return true;
-  for (const m of hoursStr.matchAll(/(\d{1,2}):(\d{2})\s*[~\-–]\s*(\d{1,2}):(\d{2})/g)) {
-    const s = +m[1] * 60 + +m[2];
-    const e = +m[3] * 60 + +m[4];
-    if (e <= s) {
-      // 자정 넘김 (예: 22:00~02:00)
-      if (curMinutes >= s || curMinutes < e) return true;
-    } else if (curMinutes >= s && curMinutes < e) {
-      return true;
-    }
-  }
-  return false;
-}
-
 /** 특정 날짜 기준 마트 영업 여부 */
 function getMartStatus(mart: Mart, date: Date): {
   isOpen: boolean;
   hours: string | null;
   reason?: string;
-  /** 영업일이지만 시간상 영업종료된 상태 */
-  closedNow?: boolean;
 } {
   const day = date.getDay();
   if (isMandatoryClosed(date, mart.closing_pattern)) {
     return { isOpen: false, hours: null, reason: "의무휴업일" };
   }
-  const hours =
-    day === 0 ? mart.sunday_hours
-    : day === 6 ? mart.saturday_hours
-    : mart.weekday_hours;
-  if (!hours) {
-    if (day === 0) return { isOpen: false, hours: null, reason: "일요일 휴무" };
-    return { isOpen: false, hours: null, reason: "영업시간 미등록" };
+  if (day === 0) {
+    return mart.sunday_hours
+      ? { isOpen: true, hours: mart.sunday_hours }
+      : { isOpen: false, hours: null, reason: "일요일 휴무" };
   }
-  // 오늘 날짜와 동일하면 시:분 비교, 미래 날짜면 영업일 자체로 판단
-  const sameDay = date.toDateString() === new Date().toDateString();
-  if (!sameDay) return { isOpen: true, hours };
-  const now = new Date();
-  const cur = now.getHours() * 60 + now.getMinutes();
-  return isWithinHours(hours, cur)
-    ? { isOpen: true, hours }
-    : { isOpen: false, hours, reason: "영업종료" };
+  if (day === 6) return { isOpen: true, hours: mart.saturday_hours };
+  return { isOpen: true, hours: mart.weekday_hours };
 }
 
 function martTypeBadge(type: string) {
@@ -1241,42 +1500,15 @@ function martTypeBadge(type: string) {
 }
 
 // ─── 마트 위젯 ────────────────────────────────────────────────
-const MART_INITIAL_COUNT = 5;
-
-// 검단신도시 중앙 좌표 (위치 권한 거부 시 폴백)
-const GEUMDAN_CENTER = { lat: 37.6075, lng: 126.6485 };
-
 function MartSection() {
   const [marts, setMarts] = useState<Mart[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
-  const [showAll, setShowAll] = useState(false);
-  const [locState, setLocState] = useState<"loading" | "ok" | "denied" | "idle">("idle");
-  const [userPos, setUserPos] = useState<{ lat: number; lng: number }>(GEUMDAN_CENTER);
+  const [visibleCount, setVisibleCount] = useState(4);
 
   useEffect(() => {
     fetchMarts().then(data => { setMarts(data); setLoaded(true); });
   }, []);
-
-  const requestLocation = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setLocState("denied");
-      return;
-    }
-    setLocState("loading");
-    navigator.geolocation.getCurrentPosition(
-      pos => {
-        setUserPos({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocState("ok");
-      },
-      () => setLocState("denied"),
-      { timeout: 5000, maximumAge: 60000, enableHighAccuracy: false },
-    );
-  }, []);
-
-  useEffect(() => {
-    requestLocation();
-  }, [requestLocation]);
 
   const now      = new Date();
   const today    = now.getDay();
@@ -1284,33 +1516,10 @@ function MartSection() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   const showTomorrow = today === 6;
 
-  // 거리 계산 + 정렬: 영업중→영업종료/휴무 그룹 내에서 거리 오름차순
-  const withDist = marts.map(m => {
-    const dist = m.lat != null && m.lng != null
-      ? haversineM(userPos.lat, userPos.lng, m.lat, m.lng)
-      : Number.POSITIVE_INFINITY;
-    const status = getMartStatus(m, now);
-    return { mart: m, dist, status };
-  });
-  const sorted = withDist.sort((a, b) => {
-    const aOpen = a.status.isOpen ? 0 : 1;
-    const bOpen = b.status.isOpen ? 0 : 1;
-    if (aOpen !== bOpen) return aOpen - bOpen;
-    return a.dist - b.dist;
-  });
-
-  const closedTodayCount    = withDist.filter(x => !x.status.isOpen && x.status.reason === "의무휴업일").length;
-  const closedTomorrow      = showTomorrow ? marts.filter(m => isMandatoryClosed(tomorrow, m.closing_pattern)) : [];
+  const closedToday    = marts.filter(m => !getMartStatus(m, now).isOpen);
+  const closedTomorrow = showTomorrow ? marts.filter(m => !getMartStatus(m, tomorrow).isOpen) : [];
 
   if (loaded && marts.length === 0) return null;
-
-  const locLabel = locState === "loading"
-    ? "내 위치 확인 중…"
-    : locState === "ok"
-      ? "내 위치 기준 가까운 순"
-      : locState === "denied"
-        ? "위치 권한 거부 — 검단신도시 중앙 기준"
-        : "검단신도시 중앙 기준";
 
   return (
     <>
@@ -1318,33 +1527,15 @@ function MartSection() {
       <section className="mx-4 mb-1">
       <div className="bg-white rounded-2xl overflow-hidden">
 
-        {/* 위치 기준 표시줄 */}
-        <div className="px-4 py-2 flex items-center justify-between gap-2 border-b border-[#f5f5f7]">
-          <div className="flex items-center gap-1.5">
-            <MapPin size={11} className={locState === "ok" ? "text-[#0071e3]" : "text-[#86868b]"} />
-            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#0071e3]" : "text-[#6e6e73]"}`}>
-              {locLabel}
-            </span>
-          </div>
-          <button
-            onClick={requestLocation}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg active:bg-[#f5f5f7]"
-            aria-label="위치 새로고침"
-          >
-            <RefreshCw size={11} className={`text-[#0071e3] ${locState === "loading" ? "animate-spin" : ""}`} />
-            <span className="text-[11px] text-[#0071e3] font-semibold">위치 갱신</span>
-          </button>
-        </div>
-
-        {/* 의무휴업 배너 */}
+        {/* 영업 상태 배너 */}
         <div className={`px-4 py-2.5 flex items-center gap-2 ${
-          closedTodayCount > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
+          closedToday.length > 0 ? "bg-[#FEF3C7]" : "bg-[#F0FDF4]"
         }`}>
-          <ShoppingBag size={13} className={closedTodayCount > 0 ? "text-[#D97706]" : "text-[#059669]"} />
-          <span className={`text-[13px] font-semibold ${closedTodayCount > 0 ? "text-[#D97706]" : "text-[#059669]"}`}>
-            {closedTodayCount > 0
-              ? `오늘 ${closedTodayCount}곳 의무휴업 — 미리 확인하세요`
-              : "오늘 주변 마트 모두 정상 영업일"
+          <ShoppingBag size={13} className={closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"} />
+          <span className={`text-[13px] font-semibold ${closedToday.length > 0 ? "text-[#D97706]" : "text-[#059669]"}`}>
+            {closedToday.length > 0
+              ? `오늘 ${closedToday.length}곳 휴무 — 미리 확인하세요`
+              : "오늘 주변 마트 모두 정상 영업 중"
             }
           </span>
         </div>
@@ -1360,61 +1551,43 @@ function MartSection() {
         )}
 
         {/* 마트 목록 */}
-        <div className="divide-y divide-[#f5f5f7]">
-          {(showAll ? sorted : sorted.slice(0, MART_INITIAL_COUNT)).map(({ mart, dist, status }) => {
+        <div className="divide-y divide-[#f5f5f7] md:divide-y-0 md:grid md:grid-cols-2 md:gap-px md:bg-[#f5f5f7]">
+          {marts.slice(0, visibleCount).map(mart => {
+            const todayStatus = getMartStatus(mart, now);
             const tmrStatus   = showTomorrow ? getMartStatus(mart, tomorrow) : null;
-            const distLabel   = Number.isFinite(dist) ? formatDistanceKm(dist) : null;
-
-            // 배지 색상/문구
-            let badgeClass = "bg-[#DCFCE7] text-[#059669]";
-            let badgeText  = "영업중";
-            if (!status.isOpen) {
-              if (status.reason === "의무휴업일") {
-                badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
-                badgeText  = "오늘 휴무";
-              } else if (status.reason === "일요일 휴무") {
-                badgeClass = "bg-[#FFEDD5] text-[#C2410C]";
-                badgeText  = "일요일 휴무";
-              } else {
-                badgeClass = "bg-[#E5E7EB] text-[#6B7280]";
-                badgeText  = "영업종료";
-              }
-            }
+            const mapUrl = mart.lat && mart.lng
+              ? `https://map.kakao.com/link/map/${encodeURIComponent(mart.name)},${mart.lat},${mart.lng}`
+              : `https://map.kakao.com/link/search/${encodeURIComponent(mart.address || mart.name)}`;
 
             return (
-              <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3">
+              <div key={mart.id} className="px-4 py-3.5 flex items-center gap-3 bg-white">
                 {/* 로고 */}
                 <div className={`w-14 h-14 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${
-                  status.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
+                  todayStatus.isOpen ? "bg-[#F0FDF4]" : "bg-[#f5f5f7]"
                 }`}>
                   {mart.logo_url
                     ? <img src={mart.logo_url} alt={mart.brand} className="w-full h-full object-contain p-1" />
-                    : <ShoppingBag size={22} className={status.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
+                    : <ShoppingBag size={22} className={todayStatus.isOpen ? "text-[#059669]" : "text-[#6e6e73]"} />
                   }
                 </div>
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[14px] font-bold text-[#1d1d1f] truncate">{mart.name}</span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${martTypeBadge(mart.type)}`}>
+                    <span className="text-[14px] font-bold text-[#1d1d1f]">{mart.name}</span>
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${martTypeBadge(mart.type)}`}>
                       {mart.type}
                     </span>
-                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${badgeClass}`}>
-                      {badgeText}
-                    </span>
                   </div>
 
-                  {/* 오늘 시간 정보 */}
+                  {/* 오늘 상태 */}
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className={`text-[12px] font-semibold ${status.isOpen ? "text-[#059669]" : "text-[#86868b]"}`}>
-                      {status.hours
-                        ? `${status.isOpen ? "영업 중" : "영업 마감"} · ${status.hours}`
-                        : status.reason ?? "휴무"}
+                    <span className={`text-[12px] font-semibold ${todayStatus.isOpen ? "text-[#059669]" : "text-[#F04452]"}`}>
+                      {todayStatus.isOpen ? `영업 중 · ${todayStatus.hours}` : `오늘 휴무${todayStatus.reason ? ` (${todayStatus.reason})` : ""}`}
                     </span>
                   </div>
 
-                  {/* 주말 영업시간 (평일에만 미리 보여주기) */}
-                  {(mart.saturday_hours || mart.sunday_hours) && today >= 1 && today <= 5 && (
+                  {/* 주말 영업시간 (평일이 아닐 때도 표시) */}
+                  {(mart.saturday_hours || mart.sunday_hours) && today < 6 && (
                     <div className="flex items-center gap-2 mt-0.5">
                       {mart.saturday_hours && <span className="text-[11px] text-[#86868b]">토 {mart.saturday_hours}</span>}
                       {mart.sunday_hours   && <span className="text-[11px] text-[#86868b]">일 {mart.sunday_hours}</span>}
@@ -1422,17 +1595,17 @@ function MartSection() {
                   )}
 
                   {/* 내일 의무휴업 경고 */}
-                  {tmrStatus && !tmrStatus.isOpen && tmrStatus.reason === "의무휴업일" && (
+                  {tmrStatus && !tmrStatus.isOpen && (
                     <span className="text-[11px] text-[#F04452]">⚠ 내일 의무휴업</span>
                   )}
 
                   {mart.notice && (
-                    <p className="text-[11px] text-[#86868b] mt-0.5 truncate">{mart.notice}</p>
+                    <p className="text-[11px] text-[#86868b] mt-0.5">{mart.notice}</p>
                   )}
                 </div>
 
                 <div className="flex flex-col items-end gap-1.5 shrink-0">
-                  {distLabel && <span className="text-[12px] text-[#6e6e73] font-semibold">{distLabel}</span>}
+                  {mart.distance && <span className="text-[12px] text-[#6e6e73]">{mart.distance}</span>}
                   <div className="flex gap-1.5">
                     {mart.phone && (
                       <a href={`tel:${mart.phone}`}
@@ -1452,16 +1625,13 @@ function MartSection() {
           })}
         </div>
 
-        {/* 더보기 / 접기 버튼 */}
-        {marts.length > MART_INITIAL_COUNT && (
+        {/* 더보기 버튼 */}
+        {visibleCount < marts.length && (
           <button
-            onClick={() => setShowAll(v => !v)}
-            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#0071e3] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
-          >
-            {showAll
-              ? <>접기 <ChevronUp size={14} /></>
-              : <>마트 {marts.length - MART_INITIAL_COUNT}곳 더보기 <ChevronDown size={14} /></>
-            }
+            onClick={() => setVisibleCount(c => c + 5)}
+            className="w-full py-3 flex items-center justify-center gap-1.5 border-t border-[#f5f5f7] text-[13px] font-semibold text-[#4E5968] active:bg-[#f5f5f7] transition-colors">
+            <ChevronDown size={15} className="text-[#86868b]" />
+            더보기 ({Math.min(marts.length - visibleCount, 5)}개)
           </button>
         )}
       </div>
@@ -1493,13 +1663,7 @@ function getPharmacyStatus(p: Pharmacy, now: Date): {
   const cur = h * 60 + now.getMinutes();
 
   if (isNight && p.nightHours) {
-    // 심야 시간대: 요일 적용 여부 확인 (평일 전용인데 주말이면 패스)
-    const weekdayOnly = /평일/.test(p.nightHours);
-    const weekendOnly = /주말|토요일|일요일|토·일/.test(p.nightHours);
-    const nightApplicable = weekdayOnly ? !isWeekend : weekendOnly ? isWeekend : true;
-    if (nightApplicable) {
-      return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
-    }
+    return { isOpen: withinHoursStr(p.nightHours, cur), todayHours: p.nightHours, todayLabel: "심야" };
   }
   if (isWeekend) {
     if (p.weekendHours) return { isOpen: withinHoursStr(p.weekendHours, cur), todayHours: p.weekendHours, todayLabel: "주말" };
@@ -1515,15 +1679,19 @@ function getPharmacyStatus(p: Pharmacy, now: Date): {
 interface MapTarget { name: string; address: string; lat?: number; lng?: number; }
 
 function MapBottomSheet({ name, address, lat, lng, onClose }: MapTarget & { onClose: () => void }) {
-  // 상호명으로 검색 — 주소로 검색하면 무관한 장소가 나올 수 있음
-  const q = encodeURIComponent(name);
+  const q = encodeURIComponent(address || name);
+  const n = encodeURIComponent(name);
 
-  const kakaoUrl = `https://map.kakao.com/link/search/${q}`;
-  const naverUrl = `https://map.naver.com/v5/search/${q}`;
+  const kakaoUrl = lat && lng
+    ? `https://map.kakao.com/link/map/${n},${lat},${lng}`
+    : `https://map.kakao.com/link/search/${q}`;
+  const naverUrl = lat && lng
+    ? `https://map.naver.com/v5/search/${q}`
+    : `https://map.naver.com/v5/search/${q}`;
   const tmapUrl  = `https://tmap.life/search?query=${q}`;
 
   const embedUrl = lat && lng
-    ? `https://maps.google.com/maps?q=${lat},${lng}&output=embed&hl=ko`
+    ? `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed&hl=ko`
     : `https://maps.google.com/maps?q=${q}&output=embed&hl=ko`;
 
   const apps = [
@@ -1599,8 +1767,6 @@ interface EmergencyRoom {
   isPediatric: boolean;
   level: string; // 응급의료기관 분류
   logo_url?: string | null;
-  lat?: number | null;
-  lng?: number | null;
 }
 
 const emergencyRooms: EmergencyRoom[] = [
@@ -1614,7 +1780,6 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: false,
     level: "지역응급의료기관",
-    lat: 37.5950, lng: 126.6585,
   },
   {
     id: "er2",
@@ -1626,7 +1791,6 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: false,
     level: "지역응급의료기관",
-    lat: 37.6018, lng: 126.6644,
   },
   {
     id: "er3",
@@ -1638,7 +1802,6 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
-    lat: 37.4870, lng: 126.7240,
   },
   {
     id: "er4",
@@ -1650,7 +1813,6 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
-    lat: 37.4543, lng: 126.7023,
   },
   {
     id: "er5",
@@ -1662,17 +1824,8 @@ const emergencyRooms: EmergencyRoom[] = [
     hours: "24시간 응급실 운영",
     isPediatric: true,
     level: "권역응급의료센터",
-    lat: 37.4566, lng: 126.6334,
   },
 ];
-
-// 거리(m)를 사람이 읽기 좋은 문자열로 포맷
-function formatDistanceKm(meters: number): string {
-  if (meters < 1000) return `${Math.round(meters)}m`;
-  return `${(meters / 1000).toFixed(1)}km`;
-}
-
-type GeoStatus = "idle" | "loading" | "ready" | "fallback" | "denied";
 
 function PharmacySection() {
   const [mainType, setMainType] = useState<EmergencyType>("약국");
@@ -1681,34 +1834,6 @@ function PharmacySection() {
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>(mockPharmacies);
   const [erData, setErData] = useState<EmergencyRoom[]>(emergencyRooms);
   const [mapTarget, setMapTarget] = useState<MapTarget | null>(null);
-
-  // ─── 내 위치 (검단 중심 fallback) ─────────────────────────
-  const [userLoc, setUserLoc] = useState<{ lat: number; lng: number }>(GEUMDAN_CENTER);
-  const [geoStatus, setGeoStatus] = useState<GeoStatus>("idle");
-
-  const requestLocation = useCallback(() => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      setUserLoc(GEUMDAN_CENTER);
-      setGeoStatus("fallback");
-      return;
-    }
-    setGeoStatus("loading");
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setUserLoc({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setGeoStatus("ready");
-      },
-      () => {
-        setUserLoc(GEUMDAN_CENTER);
-        setGeoStatus("denied");
-      },
-      { enableHighAccuracy: false, timeout: 8000, maximumAge: 5 * 60_000 }
-    );
-  }, []);
-
-  useEffect(() => {
-    requestLocation();
-  }, [requestLocation]);
 
   useEffect(() => {
     fetchAllPharmacies().then(data => { if (data.length > 0) setPharmacies(data); });
@@ -1724,24 +1849,7 @@ function PharmacySection() {
   const hour = now.getHours();
   const isNight = hour >= 21 || hour < 6;
 
-  // ─── 거리 + 영업중 정렬 (약국) ─────────────────────────
-  const sortedPharmacies = React.useMemo(() => {
-    const enriched = pharmacies.map(p => {
-      const hasGeo = typeof p.lat === "number" && typeof p.lng === "number";
-      const distM = hasGeo
-        ? haversineM(userLoc.lat, userLoc.lng, p.lat as number, p.lng as number)
-        : Number.POSITIVE_INFINITY;
-      const { isOpen } = getPharmacyStatus(p, now);
-      return { p, distM, isOpen };
-    });
-    enriched.sort((a, b) => {
-      if (a.isOpen !== b.isOpen) return a.isOpen ? -1 : 1;
-      return a.distM - b.distM;
-    });
-    return enriched;
-  }, [pharmacies, userLoc, now]);
-
-  const filtered = sortedPharmacies.filter(({ p }) => {
+  const filtered = pharmacies.filter(p => {
     if (filter === "주말") return p.tags.includes("주말");
     if (filter === "심야") return p.tags.includes("심야");
     return true;
@@ -1751,26 +1859,9 @@ function PharmacySection() {
 
   const filterBtns: PharmacyFilter[] = ["전체", "주말", "심야"];
 
-  // ─── 거리 + 영업중 정렬 (응급실) ───────────────────────
-  const sortedEr = React.useMemo(() => {
-    const filteredEr = erData.filter(e => mainType === "소아응급실" ? e.isPediatric : true);
-    const enriched = filteredEr.map(er => {
-      const hasGeo = typeof er.lat === "number" && typeof er.lng === "number";
-      const distM = hasGeo
-        ? haversineM(userLoc.lat, userLoc.lng, er.lat as number, er.lng as number)
-        : Number.POSITIVE_INFINITY;
-      return { er, distM };
-    });
-    enriched.sort((a, b) => a.distM - b.distM);
-    return enriched;
-  }, [erData, userLoc, mainType]);
-
-  const erList = sortedEr;
-
-  const locLabel =
-    geoStatus === "loading" ? "내 위치 확인 중…"
-    : geoStatus === "ready" ? "내 위치 기준 정렬"
-    : "검단 중심 기준 정렬 (위치 미허용)";
+  const erList = erData.filter(e =>
+    mainType === "소아응급실" ? e.isPediatric : true
+  );
 
   return (
     <section className="mx-4 mb-1">
@@ -1809,28 +1900,8 @@ function PharmacySection() {
 
         {mainType === "약국" ? (
           <>
-            {/* 내 위치 기준 정렬 헤더 */}
-            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                {geoStatus === "loading"
-                  ? <Loader2 size={12} className="text-[#0071e3] animate-spin shrink-0" />
-                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"} />
-                }
-                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-                  {locLabel}
-                </span>
-              </div>
-              <button
-                onClick={requestLocation}
-                disabled={geoStatus === "loading"}
-                className="flex items-center gap-1 h-6 px-2 rounded-full bg-[#f5f5f7] text-[11px] font-semibold text-[#424245] active:opacity-60 disabled:opacity-40">
-                <RefreshCw size={10} className={geoStatus === "loading" ? "animate-spin" : ""} />
-                새로고침
-              </button>
-            </div>
-
             {/* 약국 서브필터 */}
-            <div className="flex gap-2 px-4 pt-2 pb-2">
+            <div className="flex gap-2 px-4 pt-3 pb-2">
               {filterBtns.map(f => (
                 <button key={f} onClick={() => { setFilter(f); setShowAll(false); }}
                   className={`h-7 px-3 rounded-full text-[12px] font-semibold transition-colors ${filter === f ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
@@ -1840,9 +1911,8 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
-              {displayed.map(({ p, distM, isOpen }) => {
-                const { todayHours, todayLabel } = getPharmacyStatus(p, now);
-                const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : "거리 미정";
+              {displayed.map(p => {
+                const { isOpen, todayHours, todayLabel } = getPharmacyStatus(p, now);
                 return (
                   <div key={p.id} className="px-4 py-3.5 flex items-start gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${p.logo_url ? "bg-white border border-[#e5e5ea]" : isOpen ? "bg-[#D1FAE5]" : "bg-[#f5f5f7]"}`}>
@@ -1860,9 +1930,7 @@ function PharmacySection() {
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
-                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
-                          {distLabel}
-                        </span>
+                        {p.distance && <span className="text-[12px] text-[#86868b] shrink-0">{p.distance}</span>}
                       </div>
                       {/* 주소 */}
                       <p className="text-[12px] text-[#6e6e73] mt-0.5 truncate">{p.address}</p>
@@ -1930,30 +1998,8 @@ function PharmacySection() {
           </>
         ) : (
           /* 응급실 / 소아응급실 목록 */
-          <>
-            {/* 내 위치 기준 정렬 헤더 */}
-            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-              <div className="flex items-center gap-1.5 min-w-0">
-                {geoStatus === "loading"
-                  ? <Loader2 size={12} className="text-[#F04452] animate-spin shrink-0" />
-                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#F04452]" : "text-[#86868b]"} />
-                }
-                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#F04452]" : "text-[#86868b]"}`}>
-                  {locLabel}
-                </span>
-              </div>
-              <button
-                onClick={requestLocation}
-                disabled={geoStatus === "loading"}
-                className="flex items-center gap-1 h-6 px-2 rounded-full bg-[#f5f5f7] text-[11px] font-semibold text-[#424245] active:opacity-60 disabled:opacity-40">
-                <RefreshCw size={10} className={geoStatus === "loading" ? "animate-spin" : ""} />
-                새로고침
-              </button>
-            </div>
           <div className="divide-y divide-[#f5f5f7]">
-            {erList.map(({ er, distM }) => {
-              const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : er.distance;
-              return (
+            {erList.map(er => (
               <div key={er.id} className="px-4 py-3.5 flex items-start gap-3">
                 <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 overflow-hidden ${er.logo_url ? "bg-white border border-[#e5e5ea]" : "bg-[#FEE2E2]"}`}>
                   {er.logo_url
@@ -1967,7 +2013,7 @@ function PharmacySection() {
                   {/* 이름 + 거리 */}
                   <div className="flex items-start justify-between gap-2">
                     <span className="text-[14px] font-bold text-[#1d1d1f] leading-snug">{er.name}</span>
-                    <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#F04452]" : "text-[#86868b]"}`}>{distLabel}</span>
+                    <span className="text-[12px] text-[#86868b] shrink-0">{er.distance}</span>
                   </div>
                   {/* 분류 + 소아과 뱃지 */}
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -2001,10 +2047,8 @@ function PharmacySection() {
                   </div>
                 </div>
               </div>
-              );
-            })}
+            ))}
           </div>
-          </>
         )}
       </div>
       {mapTarget && (
@@ -2202,31 +2246,76 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
   );
 }
 
-// ─── 홈 교통 위젯 (transport 페이지와 동일한 카드 디자인) ──────
-const STOP_NAME_FALLBACK: Record<string, string> = Object.fromEntries(
+// ─── 홈 교통 위젯 (전광판 스타일) ────────────────────────────
+const STOP_NAME: Record<string, string> = Object.fromEntries(
   GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name])
 );
 const ALL_SUBWAY_STATIONS = getAllSubwayStations();
 
-// transport 페이지의 ArrivalBadge와 동일한 디자인
-function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
-  if (!live || min === -1) {
-    return (
-      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
-        <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
-      </div>
-    );
-  }
-  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
+// 버스 노선 1행
+function BusRow({ a, delay }: { a: BusArrival; delay: number }) {
+  const arriving = a.arrivalMin <= 2;
+  const close    = a.arrivalMin <= 7;
   return (
-    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
-      {min <= 0
-        ? <span className="text-white text-[12px] font-bold">곧도착</span>
-        : <>
-            <span className="text-white text-[21px] font-black leading-none">{min}</span>
-            <span className="text-white/80 text-[11px] block leading-none mt-0.5">분 후</span>
+    <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3 animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}>
+      {/* 노선 번호 */}
+      <div className={`rounded-lg px-2.5 py-1.5 shrink-0 min-w-[48px] text-center ${arriving ? "bg-[#F04452]" : "bg-[#0071e3]"}`}>
+        <span className="text-white text-[14px] font-black leading-none">{a.routeNo}</span>
+        {a.isExpress && <p className="text-yellow-200 text-[9px] font-bold leading-none mt-0.5">급행</p>}
+      </div>
+      {/* 목적지 */}
+      <div className="flex-1 min-w-0">
+        <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
+        {a.remainingStops > 0 && (
+          <p className="text-[11px] text-[#86868b] mt-0.5">{a.remainingStops}정류장 전</p>
+        )}
+      </div>
+      {/* 도착 시간 */}
+      <div className={`shrink-0 rounded-xl px-3 py-2 min-w-[56px] text-center ${
+        arriving ? "bg-[#F04452]" : close ? "bg-[#FF9500]" : "bg-[#0071e3]"
+      }`}>
+        {arriving ? (
+          <span className="text-white text-[12px] font-black">곧도착</span>
+        ) : (
+          <>
+            <span className="text-white text-[20px] font-black leading-none block">{a.arrivalMin}</span>
+            <span className="text-white/75 text-[10px] font-semibold leading-none mt-0.5">분 후</span>
           </>
-      }
+        )}
+      </div>
+    </div>
+  );
+}
+
+// 지하철 방향 1행
+function SubwayRow({ arrival, lineColor, isEst, delay }: {
+  arrival: SubwayArrival; lineColor: string; isEst: boolean; delay: number;
+}) {
+  const arriving = arrival.arrivalMin <= 2;
+  const close    = arrival.arrivalMin <= 7;
+  const hasPos   = arrival.currentStation && arrival.currentStation !== "시간표";
+
+  return (
+    <div className="flex items-start justify-between gap-2 animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1 mb-0.5">
+          <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: lineColor }} />
+          <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{arrival.terminalStation} 방면</p>
+        </div>
+        <p className="text-[11px] text-[#86868b] pl-2.5 truncate">
+          {hasPos ? `${arrival.currentStation} 출발` : isEst ? "시간표 기준" : ""}
+        </p>
+      </div>
+      <div className="text-right shrink-0">
+        <span className={`text-[18px] font-black leading-none block ${
+          arriving ? "text-[#F04452]" : close ? "text-[#FF9500]" : "text-[#0071e3]"
+        }`}>
+          {arriving ? "곧" : arrival.arrivalMin}
+        </span>
+        {!arriving && <span className="text-[10px] text-[#86868b] leading-none">분 후</span>}
+      </div>
     </div>
   );
 }
@@ -2234,8 +2323,14 @@ function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
 function HomeTransportWidget() {
   const router = useRouter();
 
-  const [favStops] = useState<FavStopMeta[]>(() => loadFavStops());
-  const [favRoutes] = useState<FavRouteMeta[]>(() => loadFavRoutes());
+  const [favStops] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favStops") ?? "[]")); } catch { return new Set(); }
+  });
+  const [favRoutes] = useState<Set<string>>(() => {
+    if (typeof window === "undefined") return new Set();
+    try { return new Set(JSON.parse(localStorage.getItem("favRoutes") ?? "[]")); } catch { return new Set(); }
+  });
   const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
   const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
 
@@ -2245,30 +2340,16 @@ function HomeTransportWidget() {
   });
   const [subwayArrivals, setSubwayArrivals] = useState<Record<string, SubwayArrival[]>>({});
   const [subwayLoading, setSubwayLoading] = useState<Set<string>>(new Set());
+  const [globalRefreshing, setGlobalRefreshing] = useState(false);
 
-  // 노선 즐겨찾기의 부모 정류장도 함께 도착정보를 조회한다
-  const favStopIds = favStops.map(s => s.id);
-  const favRouteStopIds = favRoutes.map(r => r.stopId);
-  const allBusStopIds = Array.from(new Set([...favStopIds, ...favRouteStopIds]));
-  const favRouteKeySet = new Set(favRoutes.map(r => r.key));
-
-  // 표시할 정류장 목록: 즐겨찾기 정류장 + 즐겨찾기 노선의 부모 정류장 (중복 제거)
-  const busStopsToShow: { id: string; name: string }[] = (() => {
-    const byId = new Map<string, { id: string; name: string }>();
-    favStops.forEach(s => byId.set(s.id, { id: s.id, name: s.name }));
-    favRoutes.forEach(r => {
-      if (!byId.has(r.stopId)) byId.set(r.stopId, { id: r.stopId, name: r.stopName });
-    });
-    return Array.from(byId.values());
-  })();
-
+  const favStopIds = [...favStops];
   const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
+  const routeFavKey = (stopId: string, a: BusArrival) => `${stopId}::${a.routeId || a.routeNo}`;
 
   const refreshBusStop = useCallback(async (stopId: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
-      let data = await fetchArrivalsByStationId(stopId);
-      if (data.length === 0) data = await fetchArrivalsByNodeId(stopId);
+      const data = await fetchArrivalsByStationId(stopId);
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
       setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
@@ -2285,13 +2366,22 @@ function HomeTransportWidget() {
     }
   }, []);
 
+  const refreshAll = useCallback(async () => {
+    setGlobalRefreshing(true);
+    await Promise.all([
+      ...favStopIds.map(id => refreshBusStop(id)),
+      ...favSubwayStations.map(st => refreshSubwayStation(st)),
+    ]);
+    setGlobalRefreshing(false);
+  }, [favStopIds, favSubwayStations, refreshBusStop, refreshSubwayStation]);
+
   useEffect(() => {
-    allBusStopIds.forEach(id => refreshBusStop(id));
+    favStopIds.forEach(id => refreshBusStop(id));
     favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const hasBus    = busStopsToShow.length > 0;
+  const hasBus    = favStops.size > 0;
   const hasSubway = favSubwayStations.length > 0;
   const transportHref = (hasSubway && !hasBus) ? "/transport/?tab=지하철" : "/transport/?tab=버스";
 
@@ -2319,185 +2409,82 @@ function HomeTransportWidget() {
   return (
     <>
     <SectionLabel label="교통" href={transportHref} linkLabel="전체보기" />
-    <section className="mx-4 mb-1 space-y-3">
+    <section className="mx-4 mb-1 space-y-2.5">
 
-      {/* ── 버스 정류장 카드 (transport 페이지 메인 리스트와 동일 디자인) ── */}
-      {hasBus && busStopsToShow.map(stop => {
-        const stopArrivals = busArrivals[stop.id] ?? [];
-        const hasFavRoutes = stopArrivals.some(a => favRouteKeySet.has(routeFavKey(stop.id, a)));
+      {/* ── 버스 정류장 카드 ── */}
+      {hasBus && favStopIds.map(stopId => {
+        const stopArrivals = busArrivals[stopId] ?? [];
+        const hasFavRoutes = stopArrivals.some(a => favRoutes.has(routeFavKey(stopId, a)));
         const displayed = hasFavRoutes
-          ? stopArrivals.filter(a => favRouteKeySet.has(routeFavKey(stop.id, a))).slice(0, 3)
-          : stopArrivals.slice(0, 3);
-        const stopName = stop.name && stop.name !== "정류장" ? stop.name : (STOP_NAME_FALLBACK[stop.id] ?? "알 수 없는 정류장");
-        const isLoading = busLoading.has(stop.id);
+          ? stopArrivals.filter(a => favRoutes.has(routeFavKey(stopId, a))).slice(0, 2)
+          : stopArrivals.slice(0, 2);
+        const stopName = STOP_NAME[stopId] ?? "정류장";
+        const isLoading = busLoading.has(stopId);
 
         return (
-          <div key={stop.id} className="bg-white rounded-2xl overflow-hidden">
+          <div key={stopId} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 정류장 헤더 */}
-            <div className="w-full flex items-center justify-between px-4 py-3.5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Bus size={18} className="text-[#0071e3]" />
-                </div>
-                <div className="text-left">
-                  <p className="text-[15px] font-bold text-[#1d1d1f]">{stopName}</p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <Navigation size={10} className="text-[#0071e3]" />
-                    <span className="text-[12px] font-semibold text-[#0071e3]">즐겨찾기</span>
-                    {!isLoading && stopArrivals.length > 0 && (
-                      <span className="text-[12px] text-[#86868b]">· 노선 {stopArrivals.length}개</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => refreshBusStop(stop.id)} disabled={isLoading}
-                className="p-1.5 active:opacity-60">
-                <RefreshCw size={14} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
+            <div className="px-3 py-2 flex items-center gap-2 bg-[#0071e3]">
+              <Bus size={13} className="text-white shrink-0" />
+              <span className="text-white font-extrabold text-[13px] flex-1 truncate">{stopName}</span>
+              <button onClick={() => refreshBusStop(stopId)} disabled={isLoading}
+                className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
+                <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
-
             {/* 도착 정보 */}
-            <div className="px-4 pb-4 space-y-2">
-              {isLoading ? (
-                [1, 2].map(i => (
-                  <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-10 h-8 bg-[#d2d2d7] rounded-lg" />
-                      <div className="space-y-1.5">
-                        <div className="h-3.5 w-28 bg-[#d2d2d7] rounded" />
-                        <div className="h-3 w-16 bg-[#d2d2d7] rounded" />
-                      </div>
-                    </div>
-                    <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
-                  </div>
-                ))
-              ) : displayed.length === 0 ? (
-                <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                  <p className="text-[12px] text-[#86868b]">운행 정보 없음</p>
-                </div>
-              ) : displayed.map((a, i) => (
-                <button key={i}
-                  onClick={() => router.push("/transport/?tab=버스")}
-                  className="w-full flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 active:bg-[#eaeaea] text-left">
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
-                      <span className="text-white text-[14px] font-black">{a.routeNo}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
-                        {a.isExpress && (
-                          <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
-                            <Zap size={9} />급행
-                          </span>
-                        )}
-                        {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
-                      </div>
-                      <p className="text-[12px] text-[#6e6e73]">
-                        {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
-                      </p>
-                    </div>
-                  </div>
-                  <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
-                </button>
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="px-3 pb-3 space-y-2">
+                {[1, 2].map(i => <div key={i} className="h-12 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+              </div>
+            ) : displayed.length === 0 ? (
+              <p className="px-3 pb-3 text-[#86868b] text-[13px]">도착 정보 없음</p>
+            ) : (
+              <div className="px-3 pb-3 space-y-2">
+                {displayed.map((a, i) => <BusRow key={i} a={a} delay={i * 60} />)}
+              </div>
+            )}
           </div>
         );
       })}
 
-      {/* ── 지하철 역 카드 (transport 페이지 메인 리스트와 동일 디자인) ── */}
+      {/* ── 지하철 역 카드 ── */}
       {hasSubway && favSubwayStations.map(st => {
         const live = subwayArrivals[st.id];
         const displayArrivals = live && live.length > 0 ? live : estimateNextArrivals(st.timetable);
-        const isEstimated = !live || live.length === 0;
-        const upArrivals   = displayArrivals.filter(a => a.direction === "상행");
-        const downArrivals = displayArrivals.filter(a => a.direction === "하행");
+        const isEst = !live || live.length === 0;
+        const nextUp   = displayArrivals.find(a => a.direction === "상행");
+        const nextDown = displayArrivals.find(a => a.direction === "하행");
         const isLoading = subwayLoading.has(st.id);
 
-        const rows: { a: SubwayArrival; dir: "상행" | "하행" }[] = [
-          ...upArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-          ...upArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "상행" as const })),
-          ...downArrivals.filter(a => !a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-          ...downArrivals.filter(a =>  a.isExpress).slice(0, 1).map(a => ({ a, dir: "하행" as const })),
-        ];
-
         return (
-          <div key={st.id} className="bg-white rounded-2xl overflow-hidden">
+          <div key={st.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
             {/* 역 헤더 */}
-            <div className="w-full px-4 pt-4 pb-3 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: st.lineColor + "22" }}>
-                <Train size={20} style={{ color: st.lineColor }} />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-[16px] font-bold text-[#1d1d1f]">{st.displayName}</p>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
-                    style={{ background: st.lineColor }}>{st.line}</span>
-                </div>
-                {(() => {
-                  const t = dayTimetable(st.timetable);
-                  return t.intervalMin > 0 ? (
-                    <p className="text-[12px] text-[#86868b] mt-0.5">
-                      배차 {t.intervalDisplay ?? `${t.intervalMin}분`}
-                    </p>
-                  ) : null;
-                })()}
+            <div className="px-3 py-2 flex items-center gap-2"
+              style={{ background: st.lineColor }}>
+              <Train size={13} className="text-white shrink-0" />
+              <div className="flex-1 min-w-0 flex items-baseline gap-1.5">
+                <span className="text-white font-extrabold text-[13px] truncate">{st.displayName}</span>
+                <span className="text-[10px] font-bold text-white/70 shrink-0">{st.line}</span>
               </div>
               <button onClick={() => refreshSubwayStation(st)} disabled={isLoading}
-                className="p-1.5 active:opacity-60">
-                <RefreshCw size={14} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
+                className="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center active:bg-white/30 disabled:opacity-40">
+                <RefreshCw size={12} className={`text-white ${isLoading ? "animate-spin" : ""}`} />
               </button>
             </div>
-
             {/* 도착 정보 */}
-            <div className="px-4 pb-4 space-y-2">
-              {isLoading ? (
-                [0, 1].map(i => (
-                  <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 animate-pulse">
-                    <div className="space-y-1.5">
-                      <div className="h-3.5 w-20 bg-[#d2d2d7] rounded" />
-                      <div className="h-3 w-14 bg-[#d2d2d7] rounded" />
-                    </div>
-                    <div className="w-14 h-12 bg-[#d2d2d7] rounded-xl" />
-                  </div>
-                ))
-              ) : rows.length === 0 ? (
-                <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
-                  <p className="text-[13px] text-[#6e6e73]">운행 종료</p>
-                </div>
-              ) : (
-                <>
-                  {isEstimated && (
-                    <div className="flex items-center gap-1.5 px-1 pb-1">
-                      <span className="text-[11px] text-[#86868b]">⏱ 시간표 기준 추정 도착</span>
-                    </div>
-                  )}
-                  {rows.map(({ a, dir }, i) => (
-                    <div key={i} className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3">
-                      <div className="flex-1 min-w-0 mr-2">
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
-                            dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
-                          }`}>{dir}</span>
-                          {a.isExpress && (
-                            <span className="text-[10px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
-                              {a.trainTypeName ?? "급행"}
-                            </span>
-                          )}
-                          <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{a.terminalStation} 방면</p>
-                        </div>
-                        <p className="text-[11px] text-[#6e6e73] mt-0.5">
-                          {!isEstimated && a.currentStation ? `현재: ${a.currentStation}` : a.trainNo ? `열차 ${a.trainNo}` : ""}
-                        </p>
-                      </div>
-                      <ArrivalBadge min={a.arrivalMin} live />
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
+            {isLoading ? (
+              <div className="px-3 py-3 space-y-3">
+                {[1, 2].map(i => <div key={i} className="h-10 bg-[#f5f5f7] rounded-xl animate-pulse" />)}
+              </div>
+            ) : !nextUp && !nextDown ? (
+              <p className="px-3 py-3 text-[#86868b] text-[13px]">운행 종료 또는 정보 없음</p>
+            ) : (
+              <div className="px-3 py-3 space-y-3">
+                {nextUp   && <SubwayRow arrival={nextUp}   lineColor={st.lineColor} isEst={isEst} delay={0}  />}
+                {nextDown && <SubwayRow arrival={nextDown} lineColor={st.lineColor} isEst={isEst} delay={60} />}
+              </div>
+            )}
           </div>
         );
       })}
@@ -2516,13 +2503,11 @@ export default function HomePage() {
   const [showSettings, setShowSettings] = useState(false);
   const [userNickname, setUserNickname] = useState("검단주민");
   const [homeBanners, setHomeBanners] = useState<Banner[]>([]);
-  const [popups, setPopups] = useState<Popup[]>([]);
 
   useEffect(() => {
     fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
     getUserProfile().then(p => setUserNickname(p.nickname));
-    fetchActiveBanners("home").then(setHomeBanners);
-    fetchActivePopups().then(setPopups);
+    fetchActiveBanners('home').then(setHomeBanners);
     const local = loadUserWidgets();
     if (local) {
 
@@ -2546,7 +2531,7 @@ export default function HomePage() {
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+        <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
               className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
@@ -2581,7 +2566,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/news/" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),
@@ -2594,17 +2579,19 @@ export default function HomePage() {
       </>
     ),
     places: () => <PlacesSection />,
-    sports: () => <SportsWidget />,
+    sports: () => <SportsSection />,
     tides: () => <TideSection />,
-    gas: () => <GasWidget />,
   };
 
   const activeWidgets = widgets.length > 0
     ? widgets.filter(w => w.enabled)
     : DEFAULT_WIDGETS;
 
+  // 데스크탑 2열 레이아웃: 전폭 위젯 vs 반폭 위젯 구분
+  const FULL_WIDTH_IDS = new Set(["greeting", "banners", "quickmenu", "youtube", "instagram", "realestate"]);
+
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28 lg:pb-10">
       <Header
         showLocation
         rightAction={
@@ -2623,16 +2610,22 @@ export default function HomePage() {
         />
       )}
 
-      {activeWidgets.map(w => {
-        const render = widgetRenderers[w.id];
-        if (!render) return null;
-        return <React.Fragment key={w.id}>{render()}</React.Fragment>;
-      })}
+      {/* 모바일/태블릿: 단일 컬럼 / 데스크탑(lg+): 2열 그리드 */}
+      <div className="lg:grid lg:grid-cols-2 lg:gap-x-4 lg:px-6 xl:px-10 lg:pt-2 lg:items-start">
+        {activeWidgets.map(w => {
+          const render = widgetRenderers[w.id];
+          if (!render) return null;
+          const isFullWidth = FULL_WIDTH_IDS.has(w.id);
+          return (
+            <div key={w.id} className={isFullWidth ? "lg:col-span-2" : ""}>
+              {render()}
+            </div>
+          );
+        })}
+      </div>
 
       <div className="h-4" />
       <BottomNav />
-
-      <PopupBottomSheet popups={popups} />
     </div>
   );
 }

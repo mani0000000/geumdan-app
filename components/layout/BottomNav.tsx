@@ -30,7 +30,7 @@ function MessageCircleSolid({ size = 20, className = "" }: IconProps) {
 
 const navItems = [
   { href: "/stores",    label: "상가",      icon: Store,              iconActive: StoreSolid,         match: "/stores" },
-  { href: "/community", label: "소식",      icon: MessageCircle,      iconActive: MessageCircleSolid, match: ["/community", "/news", "/real-estate"] },
+  { href: "/community", label: "소식",      icon: MessageCircle,      iconActive: MessageCircleSolid, match: ["/community", "/real-estate"] },
   { href: "/home",      label: "홈",        icon: Home,               match: "/home", center: true },
   { href: "/transport", label: "여행/교통", icon: Navigation,         match: "/transport" },
   { href: "/mypage",    label: "MY",        icon: User,               match: "/mypage" },
@@ -42,7 +42,7 @@ export default function BottomNav() {
   return (
     <>
       {isStoresPath && <SuggestFAB />}
-      <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px] md:max-w-[440px]">
+      <nav className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px] md:max-w-[440px]">
         <div className="flex items-center justify-around px-3 h-[64px] rounded-[36px]
           bg-white/60 backdrop-blur-[28px]
           border border-white/50

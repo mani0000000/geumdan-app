@@ -6,16 +6,12 @@
 import { supabase } from "@/lib/supabase";
 
 // ── 타입 ────────────────────────────────────────────────────────────
-export type UserStatus = "active" | "suspended" | "withdrawn";
-
 export interface UserProfile {
   id: string;
   nickname: string;
   dong: string;
   intro: string;
-  avatar_url: string | null;
   level: "새싹" | "주민" | "이웃" | "터줏대감";
-  status: UserStatus;
   post_count: number;
   comment_count: number;
   like_count: number;
@@ -24,8 +20,14 @@ export interface UserProfile {
   weekly_likes: number;
   weekly_posts: number;
   monthly_points: number;
-  deleted_at?: string | null;
-  deletion_reason?: string | null;
+  avatar_url?: string | null;
+}
+
+export interface DeleteAccountSummary {
+  points: number;
+  couponCount: number;
+  postCount: number;
+  commentCount: number;
 }
 
 export interface UserGameStats {
@@ -61,13 +63,6 @@ export interface FavoriteApt {
   dong?: string;
 }
 
-export interface FavoritePost {
-  id: string;
-  post_id: string;
-  title: string;
-  category?: string;
-}
-
 export interface DownloadedCoupon {
   id: string;
   coupon_id: string;
@@ -100,9 +95,7 @@ const DEFAULT_PROFILE: Omit<UserProfile, "id"> = {
   nickname: "검단주민",
   dong: "당하동",
   intro: "",
-  avatar_url: null,
   level: "새싹",
-  status: "active",
   post_count: 0,
   comment_count: 0,
   like_count: 0,
@@ -166,7 +159,7 @@ export async function getUserProfile(): Promise<UserProfile> {
     try {
       const { data } = await supabase
         .from("users")
-        .select("id,nickname,dong,intro,avatar_url,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points")
+        .select("id,nickname,dong,intro,level,post_count,comment_count,like_count,joined_at,points,weekly_likes,weekly_posts,monthly_points,avatar_url")
         .eq("id", uid)
         .single();
       if (data) {
@@ -205,50 +198,46 @@ export async function updateUserProfile(
   lsSet(PROFILE_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
-// ── 마지막 활동 시간 갱신 ────────────────────────────────────────────
-//   페이지 진입 / 글·댓글 작성 시 호출 (실패 무시)
-export async function touchLastActive(): Promise<void> {
-  const uid = lsGet("geumdan_uid");
-  if (!uid || !isConfigured()) return;
-  try {
-    await supabase
-      .from("users")
-      .update({ last_active_at: new Date().toISOString() })
-      .eq("id", uid);
-  } catch { /* silent */ }
-}
-
-// ── 포인트 추가 (내역 기록 포함) ──────────────────────────────────────
+// ── 포인트 추가/차감 (내역 기록 포함) ────────────────────────────────────
 const HISTORY_KEY = "geumdan_point_history";
 
 export async function addPoints(pts: number, desc: string): Promise<void> {
   const uid = await getOrCreateUserId();
 
   if (isConfigured()) {
-    const { data } = await supabase
-      .from("users")
-      .select("points,monthly_points")
-      .eq("id", uid)
-      .single();
-    await Promise.all([
-      supabase.from("users").update({
-        points: (data?.points ?? 0) + pts,
-        monthly_points: (data?.monthly_points ?? 0) + pts,
-        updated_at: new Date().toISOString(),
-      }).eq("id", uid),
-      supabase.from("user_point_history").insert({
-        user_id: uid, points: pts, desc_text: desc,
-      }),
-    ]);
+    try {
+      const { data } = await supabase
+        .from("users")
+        .select("points,monthly_points")
+        .eq("id", uid)
+        .single();
+      await Promise.all([
+        supabase.from("users").update({
+          points: Math.max(0, (data?.points ?? 0) + pts),
+          // 월간 포인트는 적립만 반영 (쿠폰 교환 시 차감 없음)
+          monthly_points: pts > 0
+            ? (data?.monthly_points ?? 0) + pts
+            : (data?.monthly_points ?? 0),
+          updated_at: new Date().toISOString(),
+        }).eq("id", uid),
+        supabase.from("user_point_history").insert({
+          user_id: uid, points: pts, desc_text: desc,
+        }),
+      ]);
+    } catch {
+      // Supabase 테이블 미설정 시 localStorage 폴백으로 처리
+    }
   }
 
-  // localStorage 동기화
+  // localStorage 동기화 (항상 실행)
   const cached = lsGet(PROFILE_KEY);
   const prev = cached ? JSON.parse(cached) : { id: uid, ...DEFAULT_PROFILE };
   lsSet(PROFILE_KEY, JSON.stringify({
     ...prev,
-    points: (prev.points ?? 0) + pts,
-    monthly_points: (prev.monthly_points ?? 0) + pts,
+    points: Math.max(0, (prev.points ?? 0) + pts),
+    monthly_points: pts > 0
+      ? (prev.monthly_points ?? 0) + pts
+      : (prev.monthly_points ?? 0),
   }));
 
   const history = lsGet(HISTORY_KEY);
@@ -325,14 +314,19 @@ export async function completeMission(
   const weekStart = weekStartDate();
 
   if (isConfigured()) {
-    const { error } = await supabase.from("user_mission_completions").upsert(
-      { user_id: uid, mission_id: missionId, week_start: weekStart },
-      { onConflict: "user_id,mission_id,week_start", ignoreDuplicates: true }
-    );
-    if (!error) await addPoints(reward, desc);
-    return;
+    try {
+      const { error } = await supabase.from("user_mission_completions").upsert(
+        { user_id: uid, mission_id: missionId, week_start: weekStart },
+        { onConflict: "user_id,mission_id,week_start", ignoreDuplicates: true }
+      );
+      if (!error) {
+        await addPoints(reward, desc);
+        return;
+      }
+    } catch {}
   }
 
+  // localStorage 폴백
   const prev: string[] = JSON.parse(lsGet(MISSIONS_KEY) ?? "[]");
   if (!prev.includes(missionId)) {
     lsSet(MISSIONS_KEY, JSON.stringify([...prev, missionId]));
@@ -347,13 +341,16 @@ export async function redeemReward(
   const uid = await getOrCreateUserId();
 
   if (isConfigured()) {
-    await supabase.from("user_reward_redemptions").insert({
-      user_id: uid, reward_id: rewardId, cost,
-    });
-    await addPoints(-cost, `포인트 교환: ${title}`);
-    return;
+    try {
+      await supabase.from("user_reward_redemptions").insert({
+        user_id: uid, reward_id: rewardId, cost,
+      });
+      await addPoints(-cost, `포인트 교환: ${title}`);
+      return;
+    } catch {}
   }
 
+  // localStorage 폴백
   const prev: string[] = JSON.parse(lsGet(REDEEMED_KEY) ?? "[]");
   lsSet(REDEEMED_KEY, JSON.stringify([...prev, rewardId]));
   await addPoints(-cost, `포인트 교환: ${title}`);
@@ -380,26 +377,72 @@ export async function getMyCommentCount(): Promise<number> {
   return count ?? 0;
 }
 
-// ── 마이페이지 요약 (글/댓글/즐겨찾기 합계) ──────────────────────
-export interface MyPageSummary {
-  postCount: number;
-  commentCount: number;
-  favoriteCount: number;
+/** 이번 주(월~일) 게시글을 1개 이상 작성했는지 */
+export async function hasPostedThisWeek(): Promise<boolean> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) return false;
+  const weekStart = weekStartDate();
+  const { count } = await supabase
+    .from("community_posts")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", uid)
+    .gte("created_at", weekStart);
+  return (count ?? 0) > 0;
 }
 
-export async function getMyPageSummary(): Promise<MyPageSummary> {
-  const [postCount, commentCount, buses, stores, apts] = await Promise.all([
-    getMyPostCount(),
-    getMyCommentCount(),
-    getFavoriteBuses(),
-    getFavoriteStores(),
-    getFavoriteApts(),
+/** 이번 주(월~일) 댓글을 2개 이상 작성했는지 */
+export async function hasCommentedThisWeek(minCount = 2): Promise<boolean> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) return false;
+  const weekStart = weekStartDate();
+  const { count } = await supabase
+    .from("community_comments")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", uid)
+    .gte("created_at", weekStart);
+  return (count ?? 0) >= minCount;
+}
+
+/** DB 집계 기반 활동 점수 계산 및 등급 결정 */
+export async function computeActivityScore(): Promise<{
+  postCount: number;
+  commentCount: number;
+  likeCount: number;
+  activityScore: number;
+  level: UserProfile["level"];
+}> {
+  const uid = lsGet("geumdan_uid");
+  if (!uid || !isConfigured()) {
+    return { postCount: 0, commentCount: 0, likeCount: 0, activityScore: 0, level: "새싹" };
+  }
+
+  const [postRes, commentRes, profileRes] = await Promise.all([
+    supabase.from("community_posts").select("*", { count: "exact", head: true }).eq("user_id", uid),
+    supabase.from("community_comments").select("*", { count: "exact", head: true }).eq("user_id", uid),
+    supabase.from("users").select("like_count").eq("id", uid).single(),
   ]);
-  return {
-    postCount,
-    commentCount,
-    favoriteCount: buses.length + stores.length + apts.length,
-  };
+
+  const postCount = postRes.count ?? 0;
+  const commentCount = commentRes.count ?? 0;
+  const likeCount = (profileRes.data as { like_count?: number } | null)?.like_count ?? 0;
+
+  // 점수: 글 +10P, 댓글 +3P, 받은 좋아요 +2P
+  const activityScore = postCount * 10 + commentCount * 3 + likeCount * 2;
+
+  let level: UserProfile["level"] = "새싹";
+  if (activityScore >= 300) level = "터줏대감";
+  else if (activityScore >= 100) level = "이웃";
+  else if (activityScore >= 30) level = "주민";
+
+  // users 테이블 동기화
+  await supabase.from("users").update({
+    post_count: postCount,
+    comment_count: commentCount,
+    level,
+    updated_at: new Date().toISOString(),
+  }).eq("id", uid);
+
+  return { postCount, commentCount, likeCount, activityScore, level };
 }
 
 // ── 쿠폰 ─────────────────────────────────────────────────────────────
@@ -626,62 +669,6 @@ export async function isFavoriteBus(routeId: string): Promise<boolean> {
   return list.some(b => b.route_id === routeId);
 }
 
-// ── 북마크한 커뮤니티 글 ───────────────────────────────────────────────
-const FAV_POSTS_KEY = "geumdan_fav_posts";
-
-export async function getFavoritePosts(): Promise<FavoritePost[]> {
-  const uid = lsGet("geumdan_uid");
-  if (!uid) return [];
-
-  if (isConfigured()) {
-    try {
-      const { data } = await supabase
-        .from("user_favorite_posts")
-        .select("id,post_id,title,category")
-        .eq("user_id", uid).order("created_at", { ascending: false });
-      if (data) return data as FavoritePost[];
-    } catch {}
-  }
-
-  const cached = lsGet(FAV_POSTS_KEY);
-  return cached ? JSON.parse(cached) : [];
-}
-
-export async function addFavoritePost(post: Omit<FavoritePost, "id">): Promise<void> {
-  const uid = await getOrCreateUserId();
-
-  if (isConfigured()) {
-    await supabase.from("user_favorite_posts").upsert(
-      { user_id: uid, ...post }, { onConflict: "user_id,post_id" }
-    );
-  }
-
-  const cached = lsGet(FAV_POSTS_KEY);
-  const prev: FavoritePost[] = cached ? JSON.parse(cached) : [];
-  if (!prev.find(p => p.post_id === post.post_id)) {
-    lsSet(FAV_POSTS_KEY, JSON.stringify([{ id: crypto.randomUUID(), ...post }, ...prev]));
-  }
-}
-
-export async function removeFavoritePost(postId: string): Promise<void> {
-  const uid = lsGet("geumdan_uid");
-  if (!uid) return;
-
-  if (isConfigured()) {
-    await supabase.from("user_favorite_posts").delete()
-      .eq("user_id", uid).eq("post_id", postId);
-  }
-
-  const cached = lsGet(FAV_POSTS_KEY);
-  const prev: FavoritePost[] = cached ? JSON.parse(cached) : [];
-  lsSet(FAV_POSTS_KEY, JSON.stringify(prev.filter(p => p.post_id !== postId)));
-}
-
-export async function isFavoritePost(postId: string): Promise<boolean> {
-  const list = await getFavoritePosts();
-  return list.some(p => p.post_id === postId);
-}
-
 // ── 설정 ─────────────────────────────────────────────────────────────
 const SETTINGS_KEY = "geumdan_settings";
 
@@ -718,78 +705,65 @@ export async function updateUserSettings(patch: Partial<UserSettings>): Promise<
   lsSet(SETTINGS_KEY, JSON.stringify({ ...prev, ...patch }));
 }
 
-// ── 회원 탈퇴 (soft delete) ───────────────────────────────────────────
-export interface DeleteAccountSummary {
-  points: number;
-  couponCount: number;
-  postCount: number;
-  commentCount: number;
-}
-
-/** 탈퇴 안내 화면에 보여줄 소멸 예정 데이터 요약 */
+// ── 회원탈퇴 ───────────────────────────────────────────────────────────
 export async function getDeleteAccountSummary(): Promise<DeleteAccountSummary> {
-  const [profile, coupons, postCount, commentCount] = await Promise.all([
-    getUserProfile(),
-    getDownloadedCoupons(),
-    getMyPostCount(),
-    getMyCommentCount(),
-  ]);
+  const uid = lsGet("geumdan_uid");
+  if (!uid) return { points: 0, couponCount: 0, postCount: 0, commentCount: 0 };
+
+  if (isConfigured()) {
+    try {
+      const [profileRes, couponRes, postRes, commentRes] = await Promise.all([
+        supabase.from("users").select("points").eq("id", uid).single(),
+        supabase.from("user_coupons").select("*", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("community_posts").select("*", { count: "exact", head: true }).eq("user_id", uid),
+        supabase.from("community_comments").select("*", { count: "exact", head: true }).eq("user_id", uid),
+      ]);
+      return {
+        points: (profileRes.data as { points?: number } | null)?.points ?? 0,
+        couponCount: couponRes.count ?? 0,
+        postCount: postRes.count ?? 0,
+        commentCount: commentRes.count ?? 0,
+      };
+    } catch {}
+  }
+
+  // localStorage 폴백
+  const cached = lsGet(PROFILE_KEY);
+  const profile = cached ? JSON.parse(cached) : DEFAULT_PROFILE;
+  const coupons = lsGet(COUPONS_KEY);
+  const couponList = coupons ? JSON.parse(coupons) : [];
   return {
     points: profile.points ?? 0,
-    couponCount: coupons.length,
-    postCount,
-    commentCount,
+    couponCount: couponList.length,
+    postCount: 0,
+    commentCount: 0,
   };
 }
 
-const LOCAL_KEYS = [
-  PROFILE_KEY, HISTORY_KEY, MISSIONS_KEY, REDEEMED_KEY, COUPONS_KEY,
-  FAV_BUSES_KEY, FAV_STORES_KEY, FAV_APTS_KEY, SETTINGS_KEY,
-  "geumdan_uid", "gd_nickname",
-];
-
-/**
- * 회원 탈퇴 — 실제 삭제 대신 users.deleted_at 기록 (soft delete).
- * 소멸 포인트/쿠폰 수를 스냅샷으로 남기고, 작성 글·댓글은 익명 처리,
- * 즐겨찾기·쿠폰 등 개인 데이터는 삭제한다.
- */
-export async function deleteAccount(reason: string): Promise<void> {
+export async function deleteAccount(reason?: string): Promise<void> {
   const uid = lsGet("geumdan_uid");
+  if (!uid) return;
 
-  if (uid && isConfigured()) {
-    const summary = await getDeleteAccountSummary();
-
-    await supabase.from("users").update({
-      deleted_at: new Date().toISOString(),
-      deletion_reason: reason || null,
-      deleted_points: summary.points,
-      deleted_coupon_count: summary.couponCount,
-      points: 0,
-      monthly_points: 0,
-      updated_at: new Date().toISOString(),
-    }).eq("id", uid);
-
-    // 작성 글·댓글 익명 처리 (삭제하지 않고 작성자 정보만 분리)
-    await Promise.all([
-      supabase.from("community_posts")
-        .update({ is_anonymous: true, author: "탈퇴한 회원", user_id: null })
-        .eq("user_id", uid),
-      supabase.from("community_comments")
-        .update({ is_anonymous: true, author: "탈퇴한 회원", user_id: null })
-        .eq("user_id", uid),
-    ]);
-
-    // 개인 데이터(즐겨찾기·쿠폰·포인트 내역) 삭제
-    await Promise.all([
-      supabase.from("user_coupons").delete().eq("user_id", uid),
-      supabase.from("user_favorite_buses").delete().eq("user_id", uid),
-      supabase.from("user_favorite_stores").delete().eq("user_id", uid),
-      supabase.from("user_favorite_apts").delete().eq("user_id", uid),
-      supabase.from("user_point_history").delete().eq("user_id", uid),
-    ]);
+  if (isConfigured()) {
+    if (reason) {
+      try {
+        await supabase.from("users").update({
+          delete_reason: reason,
+          deleted_at: new Date().toISOString(),
+        }).eq("id", uid);
+      } catch {}
+    }
+    try {
+      await supabase.from("users").delete().eq("id", uid);
+    } catch {}
   }
 
+  // 로컬 데이터 삭제
   if (typeof window !== "undefined") {
-    for (const k of LOCAL_KEYS) localStorage.removeItem(k);
+    const keys = [
+      "geumdan_uid", PROFILE_KEY, HISTORY_KEY, MISSIONS_KEY, REDEEMED_KEY,
+      COUPONS_KEY, FAV_BUSES_KEY, FAV_STORES_KEY, FAV_APTS_KEY, SETTINGS_KEY,
+    ];
+    keys.forEach(k => localStorage.removeItem(k));
   }
 }
