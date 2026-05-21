@@ -38,43 +38,85 @@ interface CardItem {
   thumbnail?: string;
 }
 
-function NewsCard({ item, gradient }: { item: CardItem; gradient: string; index: number }) {
-  const typeTag = item.type === "유튜브" ? "▶ 유튜브" : item.type === "인스타" ? "📷 인스타" : "📰 뉴스";
+function NewsCard({ item, gradient, index }: { item: CardItem; gradient: string; index: number }) {
+  const hasThumb = !!item.thumbnail;
+  const typeLabel = item.type === "유튜브" ? "▶ 유튜브" : item.type === "인스타" ? "📷 인스타" : "📰 뉴스";
+  const typePillCls = item.type === "유튜브"
+    ? "bg-[#FF0000] text-white"
+    : item.type === "인스타"
+    ? "bg-gradient-to-r from-[#E1306C] to-[#833AB4] text-white"
+    : "bg-white/20 text-white backdrop-blur-sm";
+
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer"
-      className="shrink-0 w-[280px] rounded-2xl overflow-hidden active:opacity-80"
-      style={{ minHeight: 320 }}>
-      {/* Image area */}
-      <div className="relative w-full" style={{ height: 180 }}>
-        {item.thumbnail ? (
-          <img src={item.thumbnail} alt={item.title}
-            className="w-full h-full object-cover" />
-        ) : (
-          <div className={`w-full h-full bg-gradient-to-br ${gradient}`} />
-        )}
-        {/* Dark overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-        {/* Type badge */}
-        <span className="absolute top-3 left-3 text-[12px] font-bold bg-black/40 text-white px-2.5 py-1 rounded-full backdrop-blur-sm">
-          {typeTag}
+      className="shrink-0 w-[260px] h-[350px] rounded-2xl overflow-hidden relative active:scale-[0.97] transition-transform block shadow-md">
+
+      {/* ── 배경 ── */}
+      {hasThumb ? (
+        <img src={item.thumbnail} alt={item.title}
+          className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient}`}>
+          {/* 큰 원 장식 */}
+          <div className="absolute -top-10 -right-10 w-44 h-44 rounded-full bg-white/10" />
+          <div className="absolute top-16 -left-6 w-24 h-24 rounded-full bg-white/8" />
+          <div className="absolute bottom-28 right-6 w-12 h-12 rounded-full bg-white/15" />
+          {/* 점 그리드 */}
+          <div className="absolute top-4 right-4 grid grid-cols-4 gap-[5px]">
+            {Array.from({ length: 16 }).map((_, i) => (
+              <div key={i} className="w-[3px] h-[3px] rounded-full bg-white/30" />
+            ))}
+          </div>
+          {/* 사선 액센트 */}
+          <div className="absolute top-0 left-[55%] w-px h-full bg-white/10" style={{ transform: "rotate(-12deg)", transformOrigin: "top" }} />
+          {/* 대형 번호 워터마크 */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
+            <span className="text-[110px] font-black text-white/[0.06] leading-none">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── 오버레이 ── */}
+      {hasThumb ? (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-black/10" />
+      ) : (
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      )}
+
+      {/* ── 상단 배지 ── */}
+      <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">
+        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${typePillCls}`}>
+          {typeLabel}
         </span>
-        <span className="absolute top-3 right-3 text-[12px] text-white/80 font-medium">
+        <span className="text-[11px] text-white/80 font-semibold bg-black/25 backdrop-blur-sm px-2.5 py-1 rounded-full truncate max-w-[100px]">
           {item.source}
         </span>
       </div>
-      {/* Text area */}
-      <div className="bg-white px-4 py-3 flex flex-col gap-1" style={{ minHeight: 140 }}>
-        <p className="text-[16px] font-bold text-[#1d1d1f] leading-snug line-clamp-3">{item.title}</p>
+
+      {/* ── 하단 콘텐츠 ── */}
+      <div className="absolute bottom-0 left-0 right-0 px-4 pb-4 pt-10">
+        {/* 프레임 액센트 바 */}
+        <div className="w-8 h-[3px] rounded-full bg-white/70 mb-2.5" />
+        <p className="text-white text-[15px] font-extrabold leading-snug line-clamp-3 drop-shadow-sm">
+          {item.title}
+        </p>
         {item.summary && (
-          <p className="text-[13px] text-[#6e6e73] line-clamp-2 mt-0.5">{item.summary}</p>
+          <p className="text-white/60 text-[12px] mt-1.5 line-clamp-2 leading-snug">
+            {item.summary}
+          </p>
         )}
-        <div className="flex items-center justify-between mt-auto pt-2">
-          <span className="text-[12px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
-          <div className="w-7 h-7 bg-[#e8f1fd] rounded-full flex items-center justify-center">
-            <ExternalLink size={13} className="text-[#0071e3]" />
+        <div className="flex items-center gap-1.5 mt-2.5">
+          <span className="text-white/50 text-[11px]">{formatRelativeTime(item.publishedAt)}</span>
+          <div className="ml-auto w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+            <ExternalLink size={10} className="text-white" />
           </div>
         </div>
       </div>
+
+      {/* ── 코너 프레임 장식 ── */}
+      <div className="absolute bottom-0 right-0 w-10 h-10 border-b-2 border-r-2 border-white/20 rounded-br-2xl" />
     </a>
   );
 }
@@ -196,7 +238,7 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
 
   const scroll = (dir: "left" | "right") => {
     if (!scrollRef.current) return;
-    const card = 296; // 280 + gap
+    const card = 276; // 260 + gap
     scrollRef.current.scrollBy({ left: dir === "left" ? -card : card, behavior: "smooth" });
   };
 
@@ -205,7 +247,7 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
     const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
     setCanLeft(scrollLeft > 0);
     setCanRight(scrollLeft < scrollWidth - clientWidth - 4);
-    setCurrent(Math.round(scrollLeft / 296));
+    setCurrent(Math.round(scrollLeft / 276));
   };
 
   if (loading) {
@@ -223,7 +265,7 @@ function CardNewsRow({ items, loading }: { items: CardItem[]; loading: boolean }
   return (
     <div className="relative">
       <div ref={scrollRef} onScroll={onScroll}
-        className="flex gap-3 px-4 overflow-x-auto scroll-smooth"
+        className="flex gap-3 px-4 py-2 overflow-x-auto scroll-smooth"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
         {items.map((item, i) => (
           <NewsCard key={item.id} item={item}
