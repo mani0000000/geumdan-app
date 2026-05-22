@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText, MapPin } from "lucide-react";
+import { ChevronRight, Star, FileText, MessageSquare, Tag, Bell, Shield, HelpCircle, LogOut, Settings, Gift, Zap, Trophy, CheckCircle2, Bookmark, ScrollText, MapPin, Megaphone } from "lucide-react";
 import Header from "@/components/layout/Header";
 import BottomNav from "@/components/layout/BottomNav";
 import { posts } from "@/lib/mockData";
@@ -235,6 +235,13 @@ export default function MyPage() {
         { icon: Bell, label: "알림 설정", badge: null, color: "text-[#6e6e73]", href: "/mypage/notifications/" },
         { icon: Shield, label: "개인정보 보호", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
         { icon: Settings, label: "앱 설정", badge: null, color: "text-[#6e6e73]", href: "/mypage/settings/" },
+        { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#6e6e73]", href: null },
+      ],
+    },
+    {
+      title: "약관 및 정책",
+      items: [
+        { icon: Megaphone, label: "공지사항", badge: null, color: "text-[#F59E0B]", href: "/notices/" },
         ...TERMS_MENU.map(t => ({
           icon: ScrollText,
           label: t.label,
@@ -242,7 +249,6 @@ export default function MyPage() {
           color: "text-[#6e6e73]",
           href: `/mypage/terms/${t.type}`,
         })),
-        { icon: HelpCircle, label: "고객센터 / 신고", badge: null, color: "text-[#6e6e73]", href: null },
       ],
     },
   ];
