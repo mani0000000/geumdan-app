@@ -10,9 +10,10 @@ const NAV_GROUPS = [
   {
     title: "홈화면 관리",
     items: [
-      { href: "/admin/banners", icon: Image,      label: "배너 관리"    },
-      { href: "/admin/popups",  icon: Megaphone,  label: "팝업 관리"    },
-      { href: "/admin/widgets", icon: LayoutGrid, label: "홈 위젯 구성" },
+      { href: "/admin/banners", icon: Image,      label: "배너 관리"       },
+      { href: "/admin/popups",  icon: Megaphone,  label: "팝업 관리"       },
+      { href: "/admin/widgets", icon: LayoutGrid, label: "홈 위젯 구성"    },
+      { href: "/admin/mypage",  icon: User,       label: "마이페이지 위젯" },
     ],
   },
   {
@@ -53,7 +54,6 @@ const NAV_GROUPS = [
     items: [
       { href: "/admin/keywords",  icon: Search,   label: "검색어 관리"      },
       { href: "/admin/instagram", icon: Camera,   label: "인스타그램 관리"  },
-      { href: "/admin/mypage",    icon: User,     label: "마이페이지 위젯"  },
       { href: "/admin/settings",  icon: Settings, label: "앱 설정"          },
     ],
   },
