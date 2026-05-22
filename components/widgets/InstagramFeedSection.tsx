@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Heart, MessageCircle, Play, Loader2, X, ExternalLink } from "lucide-react";
 import { fetchInstagramFeeds, type InstagramPost } from "@/lib/api/instagram";
 
@@ -225,118 +225,111 @@ export default function InstagramFeedSection() {
   );
 }
 
-// ── 릴스 카드 ──────────────────────────────────────────────────────────────
+// ── 인스타그램 임베드 모달 (바텀시트) ────────────────────────────────────────
 
-function ReelCard({ post, wide }: { post: InstagramPost; wide?: boolean }) {
-  const [playing, setPlaying] = useState(false);
-  const shortcode = getShortcode(post.permalink);
-  const w = wide ? "w-full" : "w-36 shrink-0";
-  const h = wide ? "aspect-[9/16]" : "h-64";
+function EmbedModal({
+  shortcode,
+  isReel,
+  permalink,
+  onClose,
+}: {
+  shortcode: string;
+  isReel: boolean;
+  permalink: string;
+  onClose: () => void;
+}) {
+  // 열려있는 동안 body 스크롤 잠금
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
 
-  if (playing && shortcode) {
-    return (
-      <div className={`${w} ${h} rounded-2xl overflow-hidden relative bg-black`}>
+  const src = isReel
+    ? `https://www.instagram.com/reel/${shortcode}/embed/`
+    : `https://www.instagram.com/p/${shortcode}/embed/`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={onClose}>
+      {/* 배경 딤 */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+
+      {/* 바텀시트 */}
+      <div
+        className="relative bg-[#111] rounded-t-3xl overflow-hidden flex flex-col"
+        style={{ maxHeight: "92vh" }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* 핸들 바 */}
+        <div className="flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-white/20" />
+        </div>
+
+        {/* 헤더 */}
+        <div className="flex items-center justify-between px-4 pb-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <div
+              className="w-5 h-5 rounded-md flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888)" }}
+            >
+              <span className="text-white text-[8px] font-black">IG</span>
+            </div>
+            <span className="text-white text-[13px] font-bold">Instagram</span>
+            {isReel && (
+              <span className="flex items-center gap-0.5 bg-white/15 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <Play size={8} fill="white" /> REEL
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href={permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"
+              onClick={e => e.stopPropagation()}
+            >
+              <ExternalLink size={13} className="text-white/70" />
+            </a>
+            <button
+              onClick={onClose}
+              className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"
+            >
+              <X size={14} className="text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* 임베드 iframe */}
         <iframe
-          src={`https://www.instagram.com/reel/${shortcode}/embed/`}
-          className="w-full h-full border-0"
+          src={src}
+          className="w-full border-0 shrink-0"
+          style={{ height: isReel ? "75vh" : "68vh" }}
           allowFullScreen
           scrolling="no"
           loading="lazy"
         />
-        <button
-          onClick={() => setPlaying(false)}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center z-10"
-        >
-          <X size={14} className="text-white" />
-        </button>
       </div>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => setPlaying(true)}
-      className={`${w} ${h} rounded-2xl overflow-hidden relative flex flex-col shrink-0`}
-      style={{ background: "linear-gradient(160deg,#833AB4,#FD1D1D,#F77737)" }}
-    >
-      {post.thumbnailUrl && (
-        <img
-          src={post.thumbnailUrl}
-          alt=""
-          loading="lazy"
-          className="absolute inset-0 w-full h-full object-cover"
-          onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
-        />
-      )}
-      {/* 오버레이 */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
-
-      {/* 재생 버튼 */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-lg">
-          <Play size={20} className="text-white fill-white ml-0.5" />
-        </div>
-      </div>
-
-      {/* REEL 배지 */}
-      <span className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
-        <Play size={9} fill="white" />
-        REEL
-      </span>
-
-      {/* 외부 링크 */}
-      <a
-        href={post.permalink}
-        target="_blank"
-        rel="noopener noreferrer"
-        onClick={e => e.stopPropagation()}
-        className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center"
-      >
-        <ExternalLink size={11} className="text-white" />
-      </a>
-
-      {/* 하단 정보 */}
-      <div className="absolute bottom-0 left-0 right-0 p-2.5">
-        {post.username && (
-          <p className="text-white text-[11px] font-semibold truncate">@{post.username}</p>
-        )}
-        {post.caption && (
-          <p className="text-white/80 text-[10px] mt-0.5 line-clamp-2 leading-snug">
-            {post.caption.replace(/#\S+/g, "").trim().slice(0, 40)}
-          </p>
-        )}
-        {(post.likeCount > 0 || post.commentCount > 0) && (
-          <div className="flex items-center gap-2 mt-1.5">
-            {post.likeCount > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] text-white/70">
-                <Heart size={9} className="text-pink-300" />
-                {formatCount(post.likeCount)}
-              </span>
-            )}
-            {post.viewCount && post.viewCount > 0 && (
-              <span className="text-[10px] text-white/70">
-                👁 {formatCount(post.viewCount)}
-              </span>
-            )}
-          </div>
-        )}
-      </div>
-    </button>
+    </div>
   );
 }
 
-// ── 일반 피드 카드 ──────────────────────────────────────────────────────────
+// ── 릴스 카드 ──────────────────────────────────────────────────────────────
 
-function FeedCard({ post }: { post: InstagramPost }) {
+function ReelCard({ post, wide }: { post: InstagramPost; wide?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const shortcode = getShortcode(post.permalink);
+  const w = wide ? "w-full" : "w-36 shrink-0";
+  const h = wide ? "aspect-[9/16]" : "h-64";
+
   return (
-    <a
-      href={post.permalink || undefined}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:opacity-80 flex flex-col"
-    >
-      <div className="relative w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200">
-        {post.thumbnailUrl ? (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className={`${w} ${h} rounded-2xl overflow-hidden relative flex flex-col shrink-0`}
+        style={{ background: "linear-gradient(160deg,#833AB4,#FD1D1D,#F77737)" }}
+      >
+        {post.thumbnailUrl && (
           <img
             src={post.thumbnailUrl}
             alt=""
@@ -344,31 +337,119 @@ function FeedCard({ post }: { post: InstagramPost }) {
             className="absolute inset-0 w-full h-full object-cover"
             onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-[28px]">📷</div>
         )}
-      </div>
-      <div className="p-2.5 flex-1 flex flex-col gap-1">
-        {post.caption && (
-          <p className="text-[12px] text-gray-900 leading-snug line-clamp-2">
-            {caption50(post.caption)}
-          </p>
-        )}
-        <div className="mt-auto flex items-center justify-between pt-1">
-          <div className="flex items-center gap-2">
-            <span className="flex items-center gap-0.5 text-[11px] font-semibold text-gray-600">
-              <Heart size={11} className="text-[#DD2A7B]" />
-              {formatCount(post.likeCount)}
-            </span>
-            <span className="flex items-center gap-0.5 text-[11px] font-semibold text-gray-600">
-              <MessageCircle size={11} className="text-[#0071e3]" />
-              {formatCount(post.commentCount)}
-            </span>
+        {/* 오버레이 */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/10" />
+
+        {/* 재생 버튼 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-lg">
+            <Play size={20} className="text-white fill-white ml-0.5" />
           </div>
-          <span className="text-[10px] text-gray-400">{formatDate(post.postedAt)}</span>
         </div>
-      </div>
-    </a>
+
+        {/* REEL 배지 */}
+        <span className="absolute top-2.5 left-2.5 flex items-center gap-1 bg-black/50 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+          <Play size={9} fill="white" />
+          REEL
+        </span>
+
+        {/* 하단 정보 */}
+        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+          {post.username && (
+            <p className="text-white text-[11px] font-semibold truncate">@{post.username}</p>
+          )}
+          {post.caption && (
+            <p className="text-white/80 text-[10px] mt-0.5 line-clamp-2 leading-snug">
+              {post.caption.replace(/#\S+/g, "").trim().slice(0, 40)}
+            </p>
+          )}
+          {(post.likeCount > 0 || post.viewCount != null) && (
+            <div className="flex items-center gap-2 mt-1.5">
+              {post.likeCount > 0 && (
+                <span className="flex items-center gap-0.5 text-[10px] text-white/70">
+                  <Heart size={9} className="text-pink-300" />
+                  {formatCount(post.likeCount)}
+                </span>
+              )}
+              {post.viewCount != null && post.viewCount > 0 && (
+                <span className="text-[10px] text-white/70">
+                  👁 {formatCount(post.viewCount)}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      </button>
+
+      {open && shortcode && (
+        <EmbedModal
+          shortcode={shortcode}
+          isReel={true}
+          permalink={post.permalink}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+}
+
+// ── 일반 피드 카드 ──────────────────────────────────────────────────────────
+
+function FeedCard({ post }: { post: InstagramPost }) {
+  const [open, setOpen] = useState(false);
+  const shortcode = getShortcode(post.permalink);
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 active:opacity-80 flex flex-col text-left w-full"
+      >
+        <div className="relative w-full aspect-square bg-gradient-to-br from-gray-100 to-gray-200">
+          {post.thumbnailUrl ? (
+            <img
+              src={post.thumbnailUrl}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 w-full h-full object-cover"
+              onError={e => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-[28px]">📷</div>
+          )}
+        </div>
+        <div className="p-2.5 flex-1 flex flex-col gap-1">
+          {post.caption && (
+            <p className="text-[12px] text-gray-900 leading-snug line-clamp-2">
+              {caption50(post.caption)}
+            </p>
+          )}
+          <div className="mt-auto flex items-center justify-between pt-1">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-gray-600">
+                <Heart size={11} className="text-[#DD2A7B]" />
+                {formatCount(post.likeCount)}
+              </span>
+              <span className="flex items-center gap-0.5 text-[11px] font-semibold text-gray-600">
+                <MessageCircle size={11} className="text-[#0071e3]" />
+                {formatCount(post.commentCount)}
+              </span>
+            </div>
+            <span className="text-[10px] text-gray-400">{formatDate(post.postedAt)}</span>
+          </div>
+        </div>
+      </button>
+
+      {open && shortcode && (
+        <EmbedModal
+          shortcode={shortcode}
+          isReel={false}
+          permalink={post.permalink}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
