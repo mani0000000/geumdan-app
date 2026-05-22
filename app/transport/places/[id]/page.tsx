@@ -12,6 +12,15 @@ import {
 import {
   addFavoritePlace, removeFavoritePlace, isFavoritePlace,
 } from "@/lib/db/placeFavorites";
+import { supabase } from "@/lib/supabase";
+
+export async function generateStaticParams() {
+  try {
+    const { data } = await supabase.from("places").select("id").eq("is_published", true);
+    if (data && data.length > 0) return data.map((p: { id: string }) => ({ id: String(p.id) }));
+  } catch { /* fallback */ }
+  return [];
+}
 
 // ── 카테고리별 그라디언트 ──────────────────────────────────────
 const CAT_GRADS: Record<PlaceCategory, [string, string]> = {

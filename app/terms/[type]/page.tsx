@@ -4,6 +4,15 @@ import { useParams, useRouter } from "next/navigation";
 import { ChevronLeft, FileText } from "lucide-react";
 import { fetchTerm, type Term } from "@/lib/db/terms";
 
+export function generateStaticParams() {
+  return [
+    { type: "service" },
+    { type: "privacy" },
+    { type: "location" },
+    { type: "marketing" },
+  ];
+}
+
 const TYPE_MAP: Record<string, Term["type"]> = {
   service: "service",
   privacy: "privacy",

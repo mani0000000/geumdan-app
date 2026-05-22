@@ -3,6 +3,15 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { fetchNoticeById, type Notice } from "@/lib/db/notices";
+import { supabase } from "@/lib/supabase";
+
+export async function generateStaticParams() {
+  try {
+    const { data } = await supabase.from("notices").select("id");
+    if (data && data.length > 0) return data.map((n: { id: string }) => ({ id: String(n.id) }));
+  } catch { /* fallback */ }
+  return [];
+}
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
