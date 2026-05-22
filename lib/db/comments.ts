@@ -1,5 +1,8 @@
 /**
- * community_comments Supabase CRUD
+ * community_comments CRUD
+ *
+ * 읽기: Supabase anon client (SELECT은 RLS 없어도 공개 허용)
+ * 쓰기: /api/admin/db 서버 라우트 (service key → RLS 우회)
  *
  * ── Supabase에서 먼저 실행하세요 ──────────────────────────────
  *
@@ -24,61 +27,54 @@
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
  */
 
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export interface DBComment {
   id: string;
   postId: string;
-  postTitle?: string;
   author: string;
   authorDong: string;
-  authorAvatarUrl?: string | null;
-  authorUserId?: string | null;
   content: string;
   likeCount: number;
   isAnonymous: boolean;
   createdAt: string;
 }
 
-function isConfigured(): boolean {
-  return isSupabaseConfigured;
-}
-
-const COMMENT_SELECT = '*, users:user_id (nickname, dong, avatar_url, status)';
-
 function rowToComment(row: Record<string, unknown>): DBComment {
-  const isAnon = Boolean(row.is_anonymous);
   return {
     id: row.id as string,
     postId: row.post_id as string,
-    author: (isAnon ? '익명' : row.author) as string,
+    author: row.author as string,
     authorDong: row.author_dong as string,
-    authorAvatarUrl: isAnon ? null : ((row.author_avatar_url as string | null) ?? null),
-    authorUserId: (row.user_id as string | null) ?? null,
     content: row.content as string,
     likeCount: (row.like_count as number) ?? 0,
-    isAnonymous: isAnon,
+    isAnonymous: (row.is_anonymous as boolean) ?? false,
     createdAt: row.created_at as string,
   };
 }
 
+/** 서버 라우트를 통해 service key로 Supabase 쓰기 */
+async function dbPost(
+  method: "POST" | "PATCH" | "DELETE",
+  rows: unknown,
+  opts: { eq?: string } = {}
+): Promise<Response> {
+  return fetch("/api/admin/db", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ table: "community_comments", method, rows, ...opts }),
+  });
+}
+
 // ── 목록 조회 ────────────────────────────────────────────────
 export async function fetchComments(postId: string): Promise<DBComment[]> {
-  if (!isConfigured()) return [];
   try {
     const { data, error } = await supabase
       .from('community_comments')
-      .select(COMMENT_SELECT)
+      .select('*')
       .eq('post_id', postId)
       .order('created_at', { ascending: true });
-    if (error) {
-      const fb = await supabase
-        .from('community_comments')
-        .select('*')
-        .eq('post_id', postId)
-        .order('created_at', { ascending: true });
-      return (fb.data ?? []).map(row => rowToComment(row as Record<string, unknown>));
-    }
+    if (error) throw error;
     return (data ?? []).map(row => rowToComment(row as Record<string, unknown>));
   } catch (e) {
     console.error('[comments] fetchComments error:', e);
@@ -91,8 +87,6 @@ export interface CommentInput {
   postId: string;
   author: string;
   authorDong: string;
-  authorAvatarUrl?: string | null;
-  userId?: string | null;
   content: string;
   isAnonymous: boolean;
 }
@@ -100,86 +94,50 @@ export interface CommentInput {
 export async function createComment(
   input: CommentInput
 ): Promise<DBComment | null> {
-  if (!isConfigured()) return null;
   try {
-    const { data, error } = await supabase
-      .from('community_comments')
-      .insert({
-        post_id: input.postId,
-        author: input.author,
-        author_dong: input.authorDong,
-        author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-        user_id: input.userId ?? null,
-        content: input.content,
-        is_anonymous: input.isAnonymous,
-      })
-      .select(COMMENT_SELECT)
-      .single();
-    if (error) throw error;
-    return rowToComment(data as Record<string, unknown>);
+    const id = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const row = {
+      id,
+      post_id: input.postId,
+      author: input.author,
+      author_dong: input.authorDong,
+      content: input.content,
+      is_anonymous: input.isAnonymous,
+      like_count: 0,
+      created_at: now,
+    };
+    const res = await dbPost("POST", [row]);
+    if (!res.ok) {
+      const body = await res.text();
+      console.error('[comments] createComment server error:', res.status, body);
+      return null;
+    }
+    // 서버 응답에서 실제 row 반환하거나 로컬 객체 반환
+    return {
+      id,
+      postId: input.postId,
+      author: input.author,
+      authorDong: input.authorDong,
+      content: input.content,
+      likeCount: 0,
+      isAnonymous: input.isAnonymous,
+      createdAt: now,
+    };
   } catch (e) {
     console.error('[comments] createComment error:', e);
     return null;
   }
 }
 
-// ── 수정 ─────────────────────────────────────────────────────
-export async function updateComment(id: string, content: string): Promise<boolean> {
-  if (!isConfigured()) return false;
-  try {
-    const { error } = await supabase
-      .from('community_comments')
-      .update({ content })
-      .eq('id', id);
-    if (error) throw error;
-    return true;
-  } catch (e) {
-    console.error('[comments] updateComment error:', e);
-    return false;
-  }
-}
-
-// ── 내가 쓴 댓글 ────────────────────────────────────────────
-export interface MyCommentWithPost extends DBComment {
-  postTitle: string;
-  postCategory: string;
-}
-
-export async function fetchMyComments(userId: string, limit = 100): Promise<MyCommentWithPost[]> {
-  if (!isConfigured() || !userId) return [];
-  try {
-    const { data, error } = await supabase
-      .from('community_comments')
-      .select('*, community_posts!inner(title,category)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(limit);
-    if (error) throw error;
-    return (data ?? []).map(row => {
-      const r = row as Record<string, unknown>;
-      const c = rowToComment(r);
-      const post = r.community_posts as { title?: string; category?: string } | null;
-      return {
-        ...c,
-        postTitle: post?.title ?? '(원글 없음)',
-        postCategory: post?.category ?? '',
-      };
-    });
-  } catch (e) {
-    console.error('[comments] fetchMyComments error:', e);
-    return [];
-  }
-}
-
 // ── 삭제 ─────────────────────────────────────────────────────
 export async function deleteComment(id: string): Promise<boolean> {
-  if (!isConfigured()) return false;
   try {
-    const { error } = await supabase
-      .from('community_comments')
-      .delete()
-      .eq('id', id);
-    if (error) throw error;
+    const res = await dbPost("DELETE", null, { eq: `id=eq.${id}` });
+    if (!res.ok) {
+      console.error('[comments] deleteComment error:', res.status);
+      return false;
+    }
     return true;
   } catch (e) {
     console.error('[comments] deleteComment error:', e);
@@ -192,17 +150,14 @@ export async function toggleCommentLike(
   id: string,
   delta: 1 | -1
 ): Promise<void> {
-  if (!isConfigured()) return;
   try {
+    // 현재값 조회
     const { data } = await supabase
       .from('community_comments')
       .select('like_count')
       .eq('id', id)
       .single();
     const current = (data as Record<string, number> | null)?.like_count ?? 0;
-    await supabase
-      .from('community_comments')
-      .update({ like_count: Math.max(0, current + delta) })
-      .eq('id', id);
+    await dbPost("PATCH", { like_count: Math.max(0, current + delta) }, { eq: `id=eq.${id}` });
   } catch { /* silent */ }
 }
