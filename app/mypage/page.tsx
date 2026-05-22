@@ -217,7 +217,7 @@ export default function MyPage() {
         { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
         { icon: Bookmark, label: "저장한 글", badge: savedCount > 0 ? String(savedCount) : null, color: "text-[#00C471]", href: "/mypage/saved/" },
-        { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: null },
+        { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: "/mypage/coupons/" },
       ],
     },
     {
