@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, RefreshCw, Camera, ExternalLink } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Camera, ExternalLink, Play } from "lucide-react";
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 interface InstaPost {
@@ -67,15 +67,18 @@ export default function AdminInstagramPage() {
     setSaving(true);
     setSaveErr("");
     try {
-      const id = "ig_" + Date.now().toString(36);
+      const trimmedUrl = url.trim();
+      const isReel = trimmedUrl.includes("/reel/");
       await adminApiPost("instagram_posts", "POST", [{
-        id,
+        id: crypto.randomUUID(),
         account_name: accountName || preview?.author_name || "Instagram",
-        post_url: url.trim(),
+        post_url: trimmedUrl,
         image_url: preview?.thumbnail_url ?? "",
         caption: caption || preview?.title || "",
         posted_at: new Date().toISOString(),
-      }], { onConflict: "id" });
+        is_reel: isReel,
+        media_type: isReel ? "REEL" : "IMAGE",
+      }], { onConflict: "post_url" });
       setUrl("");
       setAccountName("");
       setCaption("");
@@ -137,13 +140,18 @@ export default function AdminInstagramPage() {
         {/* 미리보기 */}
         {preview && (
           <div className="flex gap-3 p-3 bg-[#F8F9FB] rounded-xl border border-[#E5E8EB]">
-            {preview.thumbnail_url && (
+            {preview.thumbnail_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={preview.thumbnail_url} alt="" className="w-20 h-20 object-cover rounded-xl shrink-0" />
+            ) : (
+              <div className="w-20 h-20 bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737] rounded-xl shrink-0 flex items-center justify-center">
+                <Play size={24} className="text-white fill-white" />
+              </div>
             )}
             <div className="flex-1 min-w-0">
               <p className="text-[12px] font-bold text-[#191F28]">@{preview.author_name}</p>
               <p className="text-[12px] text-[#4E5968] mt-0.5 line-clamp-3">{preview.title}</p>
+              {!preview.thumbnail_url && <p className="text-[11px] text-[#8B95A1] mt-1">릴스 — 썸네일 없이 저장됩니다</p>}
             </div>
           </div>
         )}
