@@ -88,7 +88,7 @@ export default function AdminInstagramPage() {
         posted_at: new Date().toISOString(),
         is_reel: isReel,
         media_type: isReel ? "REEL" : "IMAGE",
-      }], { onConflict: "post_url" });
+      }]);
       setUrl("");
       setAccountName("");
       setCaption("");
