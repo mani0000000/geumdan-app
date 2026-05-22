@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { Plus, Trash2, RefreshCw, Camera, ExternalLink, Play } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Camera, ExternalLink, Play, X } from "lucide-react";
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 interface InstaPost {
@@ -10,6 +10,16 @@ interface InstaPost {
   image_url: string;
   caption: string;
   posted_at: string;
+  is_reel?: boolean;
+  media_type?: string;
+}
+
+function getShortcode(url: string): string | null {
+  return url.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/)?.[2] ?? null;
+}
+
+function isReelPost(p: InstaPost): boolean {
+  return !!(p.is_reel || p.post_url.includes("/reel/"));
 }
 
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
@@ -185,30 +195,82 @@ export default function AdminInstagramPage() {
           <div className="py-8 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
         ) : posts.length === 0 ? (
           <div className="py-8 text-center text-[#B0B8C1] text-[13px]">저장된 게시물 없음</div>
-        ) : posts.map(p => (
-          <div key={p.id} className="bg-white rounded-2xl border border-[#E5E8EB] p-4 flex gap-3 items-start">
-            {p.image_url
-              // eslint-disable-next-line @next/next/no-img-element
-              ? <img src={p.image_url} alt="" className="w-16 h-16 object-cover rounded-xl shrink-0" />
-              : <div className="w-16 h-16 bg-[#F2F4F6] rounded-xl shrink-0 flex items-center justify-center">
-                  <Camera size={20} className="text-[#B0B8C1]" />
-                </div>
-            }
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-[#191F28]">@{p.account_name}</p>
-              <p className="text-[12px] text-[#4E5968] mt-0.5 line-clamp-2">{p.caption || "—"}</p>
-              <a href={p.post_url} target="_blank" rel="noreferrer"
-                className="inline-flex items-center gap-1 mt-1 text-[11px] text-[#3182F6] hover:underline">
-                <ExternalLink size={10} /> 원본 보기
-              </a>
-            </div>
-            <button onClick={() => handleDelete(p.id)}
-              className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452] shrink-0">
-              <Trash2 size={14} />
-            </button>
-          </div>
-        ))}
+        ) : posts.map(p => <PostCard key={p.id} post={p} onDelete={handleDelete} />)}
       </div>
+    </div>
+  );
+}
+
+function PostCard({ post: p, onDelete }: { post: InstaPost; onDelete: (id: string) => void }) {
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const reel = isReelPost(p);
+  const shortcode = getShortcode(p.post_url);
+  const embedSrc = shortcode
+    ? reel
+      ? `https://www.instagram.com/reel/${shortcode}/embed/`
+      : `https://www.instagram.com/p/${shortcode}/embed/`
+    : null;
+
+  return (
+    <div className="bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
+      <div className="p-4 flex gap-3 items-start">
+        {p.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={p.image_url} alt="" className="w-16 h-16 object-cover rounded-xl shrink-0" />
+        ) : (
+          <div className={`w-16 h-16 rounded-xl shrink-0 flex items-center justify-center ${reel ? "bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737]" : "bg-[#F2F4F6]"}`}>
+            {reel
+              ? <Play size={20} className="text-white fill-white" />
+              : <Camera size={20} className="text-[#B0B8C1]" />
+            }
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-[13px] font-bold text-[#191F28]">@{p.account_name}</p>
+            {reel && (
+              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-[#FFF0F8] border border-[#F9C0D9] text-[10px] font-bold text-[#E1306C]">
+                <Play size={8} className="fill-[#E1306C]" /> 릴스
+              </span>
+            )}
+          </div>
+          <p className="text-[12px] text-[#4E5968] mt-0.5 line-clamp-2">{p.caption || "—"}</p>
+          <div className="flex items-center gap-3 mt-1">
+            <a href={p.post_url} target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1 text-[11px] text-[#3182F6] hover:underline">
+              <ExternalLink size={10} /> 원본 보기
+            </a>
+            {embedSrc && (
+              <button
+                onClick={() => setEmbedOpen(v => !v)}
+                className="inline-flex items-center gap-1 text-[11px] text-[#8B95A1] hover:text-[#191F28]"
+              >
+                {embedOpen
+                  ? <><X size={10} /> 닫기</>
+                  : <><Play size={10} /> 미리보기</>
+                }
+              </button>
+            )}
+          </div>
+        </div>
+        <button onClick={() => onDelete(p.id)}
+          className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452] shrink-0">
+          <Trash2 size={14} />
+        </button>
+      </div>
+
+      {embedOpen && embedSrc && (
+        <div className="px-4 pb-4">
+          <iframe
+            src={embedSrc}
+            className="w-full rounded-xl border border-[#E5E8EB]"
+            style={{ height: 400 }}
+            allowFullScreen
+            scrolling="no"
+            loading="lazy"
+          />
+        </div>
+      )}
     </div>
   );
 }
