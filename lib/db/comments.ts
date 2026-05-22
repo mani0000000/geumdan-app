@@ -161,3 +161,49 @@ export async function toggleCommentLike(
     await dbPost("PATCH", { like_count: Math.max(0, current + delta) }, { eq: `id=eq.${id}` });
   } catch { /* silent */ }
 }
+
+// ── 내 댓글 조회 ──────────────────────────────────────────────
+export interface MyCommentWithPost extends DBComment {
+  postTitle?: string;
+  postCategory?: string;
+}
+
+export async function fetchMyComments(userId: string): Promise<MyCommentWithPost[]> {
+  try {
+    // author_user_id 컬럼으로 필터 (없으면 빈 배열 반환)
+    const { data, error } = await supabase
+      .from('community_comments')
+      .select('*')
+      .eq('author_user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (error) return [];
+
+    const comments = (data ?? []).map(
+      row => rowToComment(row as Record<string, unknown>) as MyCommentWithPost
+    );
+
+    // 게시글 제목/카테고리 일괄 조회
+    const postIds = [...new Set(comments.map(c => c.postId))];
+    if (postIds.length > 0) {
+      const { data: posts } = await supabase
+        .from('community_posts')
+        .select('id,title,category')
+        .in('id', postIds);
+      if (posts) {
+        const postMap = new Map(
+          (posts as { id: string; title: string; category: string }[]).map(p => [p.id, p])
+        );
+        comments.forEach(c => {
+          const post = postMap.get(c.postId);
+          if (post) { c.postTitle = post.title; c.postCategory = post.category; }
+        });
+      }
+    }
+
+    return comments;
+  } catch {
+    return [];
+  }
+}
