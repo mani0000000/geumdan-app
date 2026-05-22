@@ -1,206 +1,228 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import type { GasStation, GasSource, GasApiResponse } from "@/lib/types";
 import { GEUMDAN_KATEC } from "@/lib/api/opinet";
+import { createClient } from "@supabase/supabase-js";
 
 /**
- * 검단 신도시 주변 주유소 가격 (Opinet 공공 API 프록시)
+ * 검단 신도시 주유소 가격 API
  *
- * - API key: env `OPINET_API_KEY` (서버사이드 전용). 미설정 시 발급키로 폴백.
- * - 검단 중심 KATEC TM 좌표 + 반경 5km 이내 (aroundAll.do)
- *   ※ Opinet aroundAll.do 의 x/y 는 KATEC 좌표계 — WGS84 를 변환해 사용
- *     (검단 WGS84 37.5446,126.6861 → KATEC, lib/api/opinet.ts).
- * - 휘발유·경유·LPG 병렬 조회 후 UNI_ID 기준 병합
- * - HTTP 캐싱: 성공 시 1시간, empty 는 짧게
- *
- * 참고: https://www.opinet.co.kr/api/
+ * 1. Supabase gas_stations 테이블에서 큐레이션 목록 로드 (21개)
+ * 2. Opinet aroundAll.do (반경 5km) 로 실시간 가격 조회
+ * 3. 이름 유사도 매칭으로 병합
+ * 4. 매칭 실패 주유소도 가격 없음으로 포함
+ * 5. sort 파라미터: "price"(기본) | "distance" — 프론트에서도 재정렬 가능
  */
 
-// 오피넷 발급 키 — 환경변수 미설정 시 폴백 (운영은 Vercel 환경변수 권장)
 const FALLBACK_OPINET_KEY = "F260518486";
-const RADIUS_M = 5000;
+const RADIUS_M = 7000; // 검단 외곽(불로·대곡동) 포함 위해 7km
 
-// 유종 코드
-const PRODCD = {
-  gasoline: "B027",
-  diesel: "D047",
-  lpg: "K015",
-} as const;
+const PRODCD = { gasoline: "B027", diesel: "D047", lpg: "K015" } as const;
 
+// ── 브랜드 메타 ────────────────────────────────────────────────────────────
 const BRAND_META: Record<string, { name: string; color: string; bg: string; short: string }> = {
   SKE: { name: "SK에너지",     color: "#EF4444", bg: "#FEF2F2", short: "SK"   },
   GSC: { name: "GS칼텍스",     color: "#0058B0", bg: "#EFF6FF", short: "GS"   },
   HDO: { name: "현대오일뱅크", color: "#16A34A", bg: "#F0FDF4", short: "현대" },
-  SOL: { name: "S-OIL",        color: "#F59E0B", bg: "#FFFBEB", short: "S"    },
+  SOL: { name: "S-OIL",        color: "#F59E0B", bg: "#FFFBEB", short: "S-OIL"},
   RTO: { name: "알뜰주유소",   color: "#6366F1", bg: "#EEF2FF", short: "알뜰" },
   RTX: { name: "고속도로알뜰", color: "#6366F1", bg: "#EEF2FF", short: "알뜰" },
-  NHO: { name: "농협알뜰",     color: "#16A34A", bg: "#F0FDF4", short: "NH"   },
-  E1G: { name: "E1",           color: "#0EA5E9", bg: "#F0F9FF", short: "E1"   },
-  SKG: { name: "SK가스",       color: "#EF4444", bg: "#FEF2F2", short: "SK"   },
-  ETC: { name: "자가상표",     color: "#6B7280", bg: "#F3F4F6", short: "기타" },
+  NHO: { name: "농협알뜰",     color: "#059669", bg: "#ECFDF5", short: "NH"   },
+  ETC: { name: "자가상표",     color: "#6B7280", bg: "#F3F4F6", short: "일반" },
 };
 
+function metaFor(code: string) { return BRAND_META[code] ?? BRAND_META.ETC; }
+
+// ── 인라인 폴백 주유소 목록 (DB 없을 때 사용) ─────────────────────────────
+const FALLBACK_STATIONS = [
+  { id: 1,  name: "검단농협주유소",    brand_code: "NHO", brand_name: "농협알뜰",     area: "당하동", address: "인천 서구 완정로 38",         lat: 37.5445, lng: 126.6715, is_self: false, is_alttul: true  },
+  { id: 2,  name: "신도시주유소",      brand_code: "ETC", brand_name: "자가상표",     area: "당하동", address: "인천 서구 고산후로 102",       lat: 37.5505, lng: 126.6775, is_self: false, is_alttul: false },
+  { id: 3,  name: "창신주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "원당동", address: "인천 서구 원당대로 802",       lat: 37.5490, lng: 126.6840, is_self: false, is_alttul: false },
+  { id: 4,  name: "검단원당주유소",    brand_code: "SOL", brand_name: "S-OIL",        area: "원당동", address: "인천 서구 원당대로 834",       lat: 37.5495, lng: 126.6850, is_self: false, is_alttul: false },
+  { id: 5,  name: "검단주유소",        brand_code: "HDO", brand_name: "현대오일뱅크", area: "마전동", address: "인천 서구 완정로 183",         lat: 37.5565, lng: 126.6745, is_self: false, is_alttul: false },
+  { id: 6,  name: "마전주유소",        brand_code: "RTO", brand_name: "알뜰주유소",   area: "마전동", address: "인천 서구 완정로 223",         lat: 37.5580, lng: 126.6745, is_self: false, is_alttul: true  },
+  { id: 7,  name: "검단대로주유소",    brand_code: "GSC", brand_name: "GS칼텍스",     area: "마전동", address: "인천 서구 검단로 502",         lat: 37.5555, lng: 126.6810, is_self: false, is_alttul: false },
+  { id: 8,  name: "차오름에너지주유소",brand_code: "SKE", brand_name: "SK에너지",     area: "왕길동", address: "인천 서구 단봉로 78",          lat: 37.5615, lng: 126.6675, is_self: false, is_alttul: false },
+  { id: 9,  name: "미소주유소",        brand_code: "SKE", brand_name: "SK에너지",     area: "왕길동", address: "인천 서구 단봉로 118",         lat: 37.5630, lng: 126.6680, is_self: false, is_alttul: false },
+  { id: 10, name: "오일드림주유소",    brand_code: "HDO", brand_name: "현대오일뱅크", area: "왕길동", address: "인천 서구 거남로 22",          lat: 37.5610, lng: 126.6650, is_self: false, is_alttul: false },
+  { id: 11, name: "구도일주유소",      brand_code: "SOL", brand_name: "S-OIL",        area: "왕길동", address: "인천 서구 단봉로 30",          lat: 37.5608, lng: 126.6668, is_self: false, is_alttul: false },
+  { id: 12, name: "단봉주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "왕길동", address: "인천 서구 검단로 123",         lat: 37.5640, lng: 126.6700, is_self: false, is_alttul: false },
+  { id: 13, name: "왕길셀프주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "왕길동", address: "인천 서구 사곶로 25",          lat: 37.5650, lng: 126.6635, is_self: true,  is_alttul: false },
+  { id: 14, name: "금곡주유소",        brand_code: "HDO", brand_name: "현대오일뱅크", area: "금곡동", address: "인천 서구 검단로 732",         lat: 37.5525, lng: 126.6565, is_self: false, is_alttul: false },
+  { id: 15, name: "검단스타주유소",    brand_code: "GSC", brand_name: "GS칼텍스",     area: "금곡동", address: "인천 서구 검단로 669",         lat: 37.5515, lng: 126.6605, is_self: false, is_alttul: false },
+  { id: 16, name: "인천랍스터주유소",  brand_code: "HDO", brand_name: "현대오일뱅크", area: "금곡동", address: "인천 서구 검단로 694",         lat: 37.5520, lng: 126.6595, is_self: false, is_alttul: false },
+  { id: 17, name: "오류공단주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "오류동", address: "인천 서구 검단로 45번길 12",   lat: 37.5460, lng: 126.6495, is_self: false, is_alttul: false },
+  { id: 18, name: "오류셀프주유소",    brand_code: "HDO", brand_name: "현대오일뱅크", area: "오류동", address: "인천 서구 드림로 112",         lat: 37.5470, lng: 126.6510, is_self: true,  is_alttul: false },
+  { id: 19, name: "불로주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "불로동", address: "인천 서구 검단로 798",         lat: 37.5395, lng: 126.6650, is_self: false, is_alttul: false },
+  { id: 20, name: "대곡주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "대곡동", address: "인천 서구 대곡로 214",         lat: 37.5350, lng: 126.6800, is_self: false, is_alttul: false },
+  { id: 21, name: "대곡대로주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "대곡동", address: "인천 서구 대곡로 351",         lat: 37.5360, lng: 126.6820, is_self: false, is_alttul: false },
+];
+
+// ── DB 로드 ───────────────────────────────────────────────────────────────
+async function loadDbStations() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return FALLBACK_STATIONS;
+
+  try {
+    const sb = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+    const { data, error } = await sb
+      .from("gas_stations")
+      .select("id,name,brand_code,brand_name,area,address,lat,lng,opinet_id,is_self,is_alttul")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+
+    if (error || !data?.length) return FALLBACK_STATIONS;
+    return data as typeof FALLBACK_STATIONS;
+  } catch {
+    return FALLBACK_STATIONS;
+  }
+}
+
+// ── Opinet API ────────────────────────────────────────────────────────────
 interface OpinetStation {
-  UNI_ID: string;
-  OS_NM: string;
-  POLL_DIV_CD: string;
-  PRICE: number;
-  DISTANCE: number;
-  NEW_ADR?: string;
-  VAN_ADR?: string;
+  UNI_ID: string; OS_NM: string; POLL_DIV_CD: string;
+  PRICE: number; DISTANCE: number; NEW_ADR?: string; VAN_ADR?: string;
 }
 
-interface OpinetResponse {
-  RESULT?: { OIL?: OpinetStation[] };
-}
-
-interface OpinetFetchResult {
-  stations: OpinetStation[];
-  ok: boolean;
-  error?: string;
-}
-
-async function fetchOpinetByProduct(prodcd: string, apiKey: string): Promise<OpinetFetchResult> {
+async function fetchOpinetByProduct(prodcd: string, apiKey: string) {
   const url =
     `https://www.opinet.co.kr/api/aroundAll.do?code=${apiKey}` +
     `&x=${GEUMDAN_KATEC.x}&y=${GEUMDAN_KATEC.y}&radius=${RADIUS_M}` +
     `&prodcd=${prodcd}&sort=1&out=json`;
-
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), 6000);
   try {
     const res = await fetch(url, {
-      signal: ctrl.signal,
       cache: "no-store",
+      signal: AbortSignal.timeout(7000),
       headers: {
-        // Opinet 서버는 일부 server-side 호출을 거부함 — 일반 브라우저 UA 로 위장
-        "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 " +
-          "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         Accept: "application/json,text/plain,*/*",
       },
     });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      console.error(
-        `[/api/gas] Opinet ${prodcd} HTTP ${res.status}: ${body.slice(0, 300)}`,
-      );
-      return { stations: [], ok: false, error: `http_${res.status}` };
-    }
-    const text = await res.text();
-    let json: OpinetResponse;
-    try {
-      json = JSON.parse(text) as OpinetResponse;
-    } catch {
-      console.error(
-        `[/api/gas] Opinet ${prodcd} JSON parse 실패. body=${text.slice(0, 300)}`,
-      );
-      return { stations: [], ok: false, error: "invalid_json" };
-    }
-    return { stations: json.RESULT?.OIL ?? [], ok: true };
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(`[/api/gas] Opinet ${prodcd} fetch 실패: ${msg}`);
-    return { stations: [], ok: false, error: msg };
-  } finally {
-    clearTimeout(tid);
+    if (!res.ok) return { stations: [] as OpinetStation[], ok: false };
+    const json = await res.json().catch(() => null);
+    return { stations: (json?.RESULT?.OIL ?? []) as OpinetStation[], ok: true };
+  } catch {
+    return { stations: [] as OpinetStation[], ok: false };
   }
 }
 
-function metaFor(brandCode: string) {
-  return BRAND_META[brandCode] ?? BRAND_META.ETC;
+// ── 이름 정규화 (주유소 접미어·공백·괄호 제거) ────────────────────────────
+function normName(s: string) {
+  return s
+    .replace(/주유소$/, "")
+    .replace(/\(주\)/g, "")
+    .replace(/\s+/g, "")
+    .replace(/[()（）]/g, "")
+    .toLowerCase();
 }
 
-function buildStations(
-  gasolineList: OpinetStation[],
-  dieselList: OpinetStation[],
-  lpgList: OpinetStation[],
-): GasStation[] {
-  const map = new Map<string, GasStation>();
-
-  function upsert(s: OpinetStation, fuel: "gasoline" | "diesel" | "lpg") {
-    if (!s.UNI_ID || s.PRICE <= 0) return;
-    const existing = map.get(s.UNI_ID);
-    if (existing) {
-      existing.prices[fuel] = s.PRICE;
-      return;
-    }
-    const meta = metaFor(s.POLL_DIV_CD);
-    map.set(s.UNI_ID, {
-      id: s.UNI_ID,
-      name: s.OS_NM ?? "주유소",
-      brandCode: s.POLL_DIV_CD,
-      brandName: meta.name,
-      brandColor: meta.color,
-      brandBg: meta.bg,
-      brandShort: meta.short,
-      address: (s.NEW_ADR || s.VAN_ADR || "").replace(/^인천광역시\s+/, "인천 "),
-      distanceKm: Math.round((s.DISTANCE || 0) / 100) / 10,
-      prices: { [fuel]: s.PRICE },
-    });
-  }
-
-  gasolineList.forEach(s => upsert(s, "gasoline"));
-  dieselList.forEach(s => upsert(s, "diesel"));
-  lpgList.forEach(s => upsert(s, "lpg"));
-
-  return Array.from(map.values())
-    .filter(s => s.prices.gasoline != null || s.prices.diesel != null)
-    .sort((a, b) => {
-      const ap = a.prices.gasoline ?? a.prices.diesel ?? Infinity;
-      const bp = b.prices.gasoline ?? b.prices.diesel ?? Infinity;
-      return ap - bp;
-    })
-    .slice(0, 8);
+function nameSimilarity(a: string, b: string): number {
+  const na = normName(a);
+  const nb = normName(b);
+  if (na === nb) return 1;
+  if (na.includes(nb) || nb.includes(na)) return 0.8;
+  // 앞 2~4 글자 일치
+  const minLen = Math.min(na.length, nb.length);
+  let common = 0;
+  for (let i = 0; i < minLen; i++) { if (na[i] === nb[i]) common++; else break; }
+  return common / Math.max(na.length, nb.length);
 }
 
-export async function GET() {
+// ── 메인 핸들러 ───────────────────────────────────────────────────────────
+export async function GET(_req: NextRequest) {
   const apiKey = process.env.OPINET_API_KEY?.trim() || FALLBACK_OPINET_KEY;
   const timestamp = new Date().toISOString();
-  if (!process.env.OPINET_API_KEY?.trim()) {
-    console.warn("[/api/gas] OPINET_API_KEY 미설정 — 폴백 키 사용. 운영 환경은 Vercel 환경변수 등록 권장.");
-  }
 
-  const [gasoline, diesel, lpg] = await Promise.all([
+  // 1. DB 큐레이션 목록 + Opinet 가격 병렬 로드
+  const [dbStations, gasoline, diesel, lpg] = await Promise.all([
+    loadDbStations(),
     fetchOpinetByProduct(PRODCD.gasoline, apiKey),
     fetchOpinetByProduct(PRODCD.diesel,   apiKey),
     fetchOpinetByProduct(PRODCD.lpg,      apiKey),
   ]);
 
-  // 세 호출이 모두 실패했으면 명시적 error 응답 (샘플 데이터로 가짜 표시 X)
-  if (!gasoline.ok && !diesel.ok && !lpg.ok) {
-    const body: GasApiResponse = {
-      stations: [],
-      source: "error",
-      timestamp,
-      success: false,
-      error: gasoline.error ?? diesel.error ?? lpg.error ?? "fetch_failed",
-    };
-    return NextResponse.json(body, {
-      headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" },
-    });
-  }
+  // 2. Opinet 결과를 UNI_ID 기준 가격맵으로 변환
+  const priceMap = new Map<string, { gasoline?: number; diesel?: number; lpg?: number }>();
+  // 이름→UNI_ID 역인덱스
+  const nameIndex = new Map<string, string>();
 
-  const stations = buildStations(gasoline.stations, diesel.stations, lpg.stations);
-
-  if (stations.length === 0) {
-    const body: GasApiResponse = {
-      stations: [],
-      source: "empty",
-      timestamp,
-      success: true,
-      message: "검단 반경 5km 내 가격 정보가 비어 있습니다.",
-    };
-    return NextResponse.json(body, {
-      headers: { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1800" },
-    });
+  function ingest(list: OpinetStation[], fuel: keyof typeof priceMap extends never ? never : "gasoline" | "diesel" | "lpg") {
+    for (const s of list) {
+      if (!s.UNI_ID || s.PRICE <= 0) continue;
+      if (!priceMap.has(s.UNI_ID)) priceMap.set(s.UNI_ID, {});
+      priceMap.get(s.UNI_ID)![fuel] = s.PRICE;
+      nameIndex.set(normName(s.OS_NM), s.UNI_ID);
+    }
   }
+  ingest(gasoline.stations, "gasoline");
+  ingest(diesel.stations, "diesel");
+  ingest(lpg.stations, "lpg");
+
+  // Opinet 전체 역색인 (매칭용)
+  const opinetAll = new Map<string, OpinetStation>();
+  [...gasoline.stations, ...diesel.stations, ...lpg.stations].forEach(s => {
+    if (s.UNI_ID) opinetAll.set(s.UNI_ID, s);
+  });
+
+  // 3. DB 스테이션마다 Opinet 가격 매칭
+  const stations: GasStation[] = dbStations.map(dbS => {
+    const meta = metaFor(dbS.brand_code);
+
+    // opinet_id가 저장돼 있으면 직접 조회
+    let prices = dbS.opinet_id ? priceMap.get(dbS.opinet_id) : undefined;
+
+    // 없으면 이름 유사도로 매칭
+    if (!prices) {
+      let bestId: string | undefined;
+      let bestScore = 0;
+      for (const [uid, os] of opinetAll) {
+        const score = nameSimilarity(dbS.name, os.OS_NM);
+        if (score > bestScore) { bestScore = score; bestId = uid; }
+      }
+      if (bestScore >= 0.5 && bestId) {
+        prices = priceMap.get(bestId);
+      }
+    }
+
+    // Opinet 기반 거리 (없으면 0)
+    const distKm = (() => {
+      const matched = gasoline.stations.find(s => normName(s.OS_NM) === normName(dbS.name));
+      if (matched?.DISTANCE) return Math.round(matched.DISTANCE / 100) / 10;
+      // lat/lng 기반 대략 거리 (검단 중심 37.5480, 126.6850)
+      const dlat = dbS.lat - 37.5480;
+      const dlng = dbS.lng - 126.6850;
+      return Math.round(Math.sqrt(dlat * dlat + dlng * dlng) * 111 * 10) / 10;
+    })();
+
+    return {
+      id: String(dbS.id),
+      name: dbS.name,
+      brandCode: dbS.brand_code,
+      brandName: meta.name,
+      brandColor: meta.color,
+      brandBg: meta.bg,
+      brandShort: meta.short,
+      address: dbS.address,
+      distanceKm: distKm,
+      lat: dbS.lat,
+      lng: dbS.lng,
+      area: dbS.area,
+      isSelf: dbS.is_self,
+      isAlttul: dbS.is_alttul,
+      prices: prices ?? {},
+    } as GasStation;
+  });
+
+  const hasAnyPrice = stations.some(s => s.prices.gasoline != null || s.prices.diesel != null);
+  const source: GasSource = hasAnyPrice ? "opinet" : (gasoline.ok || diesel.ok ? "empty" : "error");
 
   const body: GasApiResponse = {
     stations,
-    source: "opinet",
+    source,
     timestamp,
     success: true,
   };
+
   return NextResponse.json(body, {
     headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
   });

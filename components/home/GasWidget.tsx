@@ -1,56 +1,127 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import {
-  AlertTriangle,
-  ChevronRight,
-  Fuel,
-  Info,
-  MapPin,
-  RefreshCw,
-  TrendingDown,
+  AlertTriangle, ChevronDown, ChevronUp, Fuel, Info,
+  MapPin, Navigation, RefreshCw, TrendingDown, Zap,
 } from "lucide-react";
 import type { GasApiResponse, GasStation } from "@/lib/types";
 
-const won = (n: number) => n.toLocaleString("ko-KR");
+// ── 유틸 ─────────────────────────────────────────────────────────────────
+const won = (n: number) =>
+  n.toLocaleString("ko-KR") + "원";
 
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+}
+
+// ── 브랜드 뱃지 ────────────────────────────────────────────────────────────
 function BrandBadge({ s }: { s: GasStation }) {
   return (
     <div
-      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-      style={{ background: s.brandBg }}
+      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-[11px] font-black leading-none"
+      style={{ background: s.brandBg, color: s.brandColor }}
     >
-      <span className="text-[12px] font-black" style={{ color: s.brandColor }}>
-        {s.brandShort}
-      </span>
+      {s.brandShort}
     </div>
   );
 }
 
-function PriceRow({
-  label, value, lowest,
-}: { label: string; value?: number; lowest?: boolean }) {
+// ── 가격 칩 ────────────────────────────────────────────────────────────────
+function PriceChip({
+  label, value, highlight, dimmed,
+}: {
+  label: string; value?: number; highlight?: boolean; dimmed?: boolean;
+}) {
   return (
-    <div className="flex items-baseline justify-between gap-2 text-[12px]">
-      <span className="text-[#86868b]">{label}</span>
+    <div className="flex items-center gap-1">
+      <span
+        className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+          highlight
+            ? "bg-[#FEE2E2] text-[#DC2626]"
+            : dimmed
+            ? "bg-[#f5f5f7] text-[#aeaeb2]"
+            : "bg-[#f5f5f7] text-[#86868b]"
+        }`}
+      >
+        {label}
+      </span>
       {value != null ? (
         <span
-          className={`font-bold tabular-nums ${
-            lowest ? "text-[#F04452]" : "text-[#1d1d1f]"
+          className={`text-[13px] font-bold tabular-nums ${
+            highlight ? "text-[#DC2626]" : dimmed ? "text-[#c7c7cc]" : "text-[#1d1d1f]"
           }`}
         >
-          {won(value)}원
+          {won(value)}
         </span>
       ) : (
-        <span className="text-[#c7c7cc]">—</span>
+        <span className="text-[12px] text-[#c7c7cc]">—</span>
       )}
     </div>
   );
 }
 
+// ── 태그 뱃지 ─────────────────────────────────────────────────────────────
+function Tag({ children, color }: { children: React.ReactNode; color?: string }) {
+  return (
+    <span
+      className="inline-flex items-center text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+      style={{
+        background: color ? `${color}18` : "#f0f0f3",
+        color: color ?? "#86868b",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+// ── 스켈레톤 ─────────────────────────────────────────────────────────────
+function Skeleton() {
+  return (
+    <div className="space-y-2 px-4">
+      {[0, 1, 2, 3].map(i => (
+        <div key={i} className="h-[68px] bg-[#f5f5f7] rounded-2xl animate-pulse" />
+      ))}
+    </div>
+  );
+}
+
+// ── 메인 컴포넌트 ─────────────────────────────────────────────────────────
+type SortKey = "price" | "distance";
+
 export default function GasWidget() {
-  const [data, setData] = useState<GasApiResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]           = useState<GasApiResponse | null>(null);
+  const [loading, setLoading]     = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [sort, setSort]           = useState<SortKey>("price");
+  const [userLat, setUserLat]     = useState<number | null>(null);
+  const [userLng, setUserLng]     = useState<number | null>(null);
+  const [locating, setLocating]   = useState(false);
+  const [expanded, setExpanded]   = useState(false);
+
+  // 위치 취득
+  const locate = useCallback(() => {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        setUserLat(pos.coords.latitude);
+        setUserLng(pos.coords.longitude);
+        setSort("distance");
+        setLocating(false);
+      },
+      () => setLocating(false),
+      { timeout: 8000 },
+    );
+  }, []);
 
   const load = useCallback(async (bust = false) => {
     try {
@@ -60,19 +131,11 @@ export default function GasWidget() {
       const json = (await res.json()) as GasApiResponse;
       setData(json);
     } catch {
-      setData({
-        stations: [],
-        source: "error",
-        timestamp: new Date().toISOString(),
-        success: false,
-        error: "network",
-      });
+      setData({ stations: [], source: "error", timestamp: new Date().toISOString(), success: false, error: "network" });
     }
   }, []);
 
-  useEffect(() => {
-    load().finally(() => setLoading(false));
-  }, [load]);
+  useEffect(() => { load().finally(() => setLoading(false)); }, [load]);
 
   async function refresh() {
     if (refreshing) return;
@@ -81,149 +144,229 @@ export default function GasWidget() {
     setRefreshing(false);
   }
 
-  const stations = data?.stations ?? [];
-  const source = data?.source;
+  const raw = data?.stations ?? [];
 
-  // 휘발유 최저가 (있는 것만 비교)
-  const lowestGasoline = stations
+  // ── 정렬 ───────────────────────────────────────────────────────────────
+  const sorted = [...raw].sort((a, b) => {
+    if (sort === "price") {
+      const ap = a.prices.gasoline ?? Infinity;
+      const bp = b.prices.gasoline ?? Infinity;
+      return ap !== bp ? ap - bp : a.distanceKm - b.distanceKm;
+    }
+    // distance
+    if (userLat != null && userLng != null) {
+      const ad = haversineKm(userLat, userLng, a.lat, a.lng);
+      const bd = haversineKm(userLat, userLng, b.lat, b.lng);
+      return ad - bd;
+    }
+    return a.distanceKm - b.distanceKm;
+  });
+
+  const displayed = expanded ? sorted : sorted.slice(0, 5);
+
+  // 최저가 주유소
+  const lowestGasoline = sorted
     .map(s => s.prices.gasoline)
     .filter((n): n is number => n != null)
-    .reduce<number | undefined>((m, n) => (m == null || n < m ? n : m), undefined);
+    .at(0);
+  const lowestStation = lowestGasoline != null
+    ? sorted.find(s => s.prices.gasoline === lowestGasoline)
+    : undefined;
+
+  const source = data?.source;
 
   return (
     <>
+      {/* ── 헤더 ── */}
       <div className="flex items-center justify-between px-4 pt-6 pb-3">
         <div className="flex items-center gap-2">
+          <Fuel size={17} className="text-[#FF6B35]" />
           <span className="text-[19px] font-extrabold text-[#1d1d1f]">주유소 가격</span>
-          <Fuel size={15} className="text-[#0071e3]" />
+          <span className="text-[11px] font-medium text-[#86868b]">검단 전체</span>
         </div>
-        <button
-          onClick={refresh}
-          disabled={refreshing || loading}
-          className="w-8 h-8 rounded-lg bg-white border border-[#e5e5ea] flex items-center justify-center active:bg-[#f5f5f7] disabled:opacity-40"
-          aria-label="새로고침"
-        >
-          <RefreshCw
-            size={14}
-            className={`text-[#0071e3] ${refreshing ? "animate-spin" : ""}`}
-          />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {/* 위치 버튼 */}
+          <button
+            onClick={locate}
+            disabled={locating || loading}
+            className={`h-7 px-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-colors ${
+              sort === "distance" && userLat != null
+                ? "bg-[#0071e3] text-white"
+                : "bg-[#f5f5f7] text-[#636366]"
+            } disabled:opacity-40`}
+            title="내 위치 기준 거리순"
+          >
+            {locating ? (
+              <RefreshCw size={11} className="animate-spin" />
+            ) : (
+              <Navigation size={11} />
+            )}
+            거리순
+          </button>
+          {/* 가격순 버튼 */}
+          <button
+            onClick={() => setSort("price")}
+            className={`h-7 px-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-colors ${
+              sort === "price"
+                ? "bg-[#DC2626] text-white"
+                : "bg-[#f5f5f7] text-[#636366]"
+            }`}
+          >
+            <TrendingDown size={11} />
+            최저가순
+          </button>
+          {/* 새로고침 */}
+          <button
+            onClick={refresh}
+            disabled={refreshing || loading}
+            className="w-7 h-7 rounded-full bg-[#f5f5f7] flex items-center justify-center active:bg-[#e5e5ea] disabled:opacity-40"
+          >
+            <RefreshCw size={12} className={`text-[#86868b] ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+        </div>
       </div>
 
-      <section className="mb-1">
+      {/* ── 최저가 배너 ── */}
+      {!loading && lowestStation && (
+        <div className="mx-4 mb-3 px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-[#FEF2F2] to-[#FFF5F5] border border-[#FECACA] flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-[#DC2626] flex items-center justify-center shrink-0">
+            <TrendingDown size={14} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-[#DC2626]">검단 휘발유 최저가</p>
+            <p className="text-[13px] font-extrabold text-[#1d1d1f] truncate">
+              {won(lowestGasoline!)} · {lowestStation.name}
+              <span className="ml-1 text-[11px] font-medium text-[#86868b]">{lowestStation.area}</span>
+            </p>
+          </div>
+          {lowestStation.isAlttul && (
+            <Tag color="#059669">알뜰</Tag>
+          )}
+        </div>
+      )}
+
+      {/* ── 본문 ── */}
+      <section className="px-4 space-y-2 mb-3">
         {loading ? (
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3" style={{ width: "max-content" }}>
-              {[0, 1, 2].map(i => (
-                <div
-                  key={i}
-                  className="shrink-0 w-[210px] h-[150px] bg-white rounded-2xl animate-pulse border border-[#f0f0f3]"
-                />
-              ))}
+          <Skeleton />
+        ) : source === "error" ? (
+          <div className="p-3 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] flex items-start gap-2.5">
+            <AlertTriangle size={15} className="text-[#DC2626] mt-0.5 shrink-0" />
+            <div className="text-[12px]">
+              <p className="font-bold text-[#991B1B]">오피넷 API 호출 실패</p>
+              <p className="text-[#991B1B]">잠시 후 새로고침해 주세요.{data?.error ? ` (${data.error})` : ""}</p>
             </div>
           </div>
         ) : source === "no_key" ? (
-          <div className="mx-4 p-3 rounded-2xl bg-[#FFF8E1] border border-[#FFE082] flex items-start gap-2.5">
-            <Info size={16} className="text-[#B45309] mt-0.5 shrink-0" />
-            <div className="text-[12px] leading-relaxed">
+          <div className="p-3 rounded-2xl bg-[#FFF8E1] border border-[#FFE082] flex items-start gap-2.5">
+            <Info size={15} className="text-[#B45309] mt-0.5 shrink-0" />
+            <div className="text-[12px]">
               <p className="font-bold text-[#92400E]">오피넷 API 키 미등록</p>
-              <p className="text-[#92400E] mt-0.5">
-                관리자가 환경변수{" "}
-                <code className="font-mono bg-white/70 px-1 rounded">OPINET_API_KEY</code>
-                를 설정해야 실제 검단 주변 가격이 표시됩니다.
-              </p>
-              <a
-                href="https://www.opinet.co.kr/api/info.do"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-1 text-[#0071e3] font-semibold"
-              >
-                키 발급 안내 →
-              </a>
+              <p className="text-[#92400E]">환경변수 <code className="font-mono bg-white/70 px-1 rounded">OPINET_API_KEY</code> 를 설정해야 가격이 표시됩니다.</p>
             </div>
           </div>
-        ) : source === "error" ? (
-          <div className="mx-4 p-3 rounded-2xl bg-[#FEF2F2] border border-[#FECACA] flex items-start gap-2.5">
-            <AlertTriangle size={16} className="text-[#DC2626] mt-0.5 shrink-0" />
-            <div className="text-[12px] leading-relaxed">
-              <p className="font-bold text-[#991B1B]">오피넷 API 호출 실패</p>
-              <p className="text-[#991B1B] mt-0.5">
-                잠시 후 새로고침해 주세요.
-                {data?.error ? ` (${data.error})` : ""}
-              </p>
-            </div>
-          </div>
-        ) : stations.length === 0 ? (
-          <p className="px-4 text-[#86868b] text-[13px]">
-            검단 반경 5km 내 가격 정보가 비어 있어요.
-          </p>
         ) : (
-          <div className="overflow-x-auto px-4" style={{ scrollbarWidth: "none" }}>
-            <div className="flex gap-3" style={{ width: "max-content" }}>
-              {stations.slice(0, 5).map(s => {
-                const isLowest =
-                  lowestGasoline != null &&
-                  s.prices.gasoline != null &&
-                  s.prices.gasoline === lowestGasoline;
-                return (
-                  <article
-                    key={s.id}
-                    className={`shrink-0 w-[210px] bg-white rounded-2xl overflow-hidden border ${
-                      isLowest ? "border-[#F04452]" : "border-[#f0f0f3]"
-                    } shadow-sm`}
-                  >
-                    {isLowest && (
-                      <div className="flex items-center gap-1 bg-[#F04452] px-3 py-1">
-                        <TrendingDown size={11} className="text-white" />
-                        <span className="text-[10px] font-black text-white tracking-tight">
-                          휘발유 최저가
-                        </span>
-                      </div>
+          <>
+            {displayed.map((s, idx) => {
+              const isLowest = lowestGasoline != null && s.prices.gasoline === lowestGasoline;
+              const distDisplay = (() => {
+                if (userLat != null && userLng != null) {
+                  return `${haversineKm(userLat, userLng, s.lat, s.lng)}km`;
+                }
+                return s.distanceKm > 0 ? `${s.distanceKm}km` : null;
+              })();
+              const hasPrice = s.prices.gasoline != null || s.prices.diesel != null;
+
+              return (
+                <article
+                  key={s.id}
+                  className={`flex items-center gap-3 px-3 py-3 rounded-2xl border transition-all ${
+                    isLowest
+                      ? "bg-[#FFF5F5] border-[#FECACA]"
+                      : "bg-white border-[#f0f0f3]"
+                  }`}
+                >
+                  {/* 순위 */}
+                  <div className="w-5 text-center shrink-0">
+                    {sort === "price" && hasPrice ? (
+                      <span className={`text-[12px] font-black ${idx === 0 ? "text-[#DC2626]" : idx === 1 ? "text-[#EA580C]" : "text-[#aeaeb2]"}`}>
+                        {idx + 1}
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-[#c7c7cc]">{idx + 1}</span>
                     )}
-                    <div className="px-3 pt-3 pb-2 flex items-start gap-2.5">
-                      <BrandBadge s={s} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-bold text-[#1d1d1f] truncate">
-                          {s.name}
-                        </p>
-                        <p className="text-[11px] text-[#86868b] mt-0.5 truncate">
-                          {s.brandName}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="px-3 pb-2 space-y-0.5">
-                      <PriceRow label="휘발유" value={s.prices.gasoline} lowest={isLowest} />
-                      <PriceRow label="경유"   value={s.prices.diesel} />
-                      {s.prices.lpg != null && (
-                        <PriceRow label="LPG"  value={s.prices.lpg} />
-                      )}
-                    </div>
-                    <div className="px-3 pb-3 pt-1.5 border-t border-[#f5f5f7] flex items-center gap-1">
-                      <MapPin size={10} className="text-[#86868b] shrink-0" />
-                      <span className="text-[11px] text-[#86868b] truncate flex-1">
-                        {s.address || "주소 정보 없음"}
+                  </div>
+
+                  {/* 브랜드 */}
+                  <BrandBadge s={s} />
+
+                  {/* 이름 + 지역 + 태그 */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[13px] font-bold truncate ${isLowest ? "text-[#DC2626]" : "text-[#1d1d1f]"}`}>
+                        {s.name}
                       </span>
-                      <span className="text-[11px] font-semibold text-[#0071e3] shrink-0">
-                        {s.distanceKm > 0 ? `${s.distanceKm}km` : "—"}
-                      </span>
+                      {s.isAlttul && <Tag color="#059669">알뜰</Tag>}
+                      {s.isSelf && <Tag color="#0071e3">셀프</Tag>}
                     </div>
-                  </article>
-                );
-              })}
-              <a
-                href="https://www.opinet.co.kr/searRgSelect.do"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="shrink-0 w-[110px] bg-white/60 rounded-2xl border border-dashed border-[#d2d2d7] flex flex-col items-center justify-center gap-1.5 active:bg-white/80"
+                    <p className="text-[11px] text-[#86868b] mt-0.5 flex items-center gap-1">
+                      <MapPin size={9} className="shrink-0" />
+                      {s.area} · {s.address.replace(/^인천 서구 /, "")}
+                    </p>
+                  </div>
+
+                  {/* 가격 + 거리 */}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {hasPrice ? (
+                      <>
+                        <PriceChip label="휘발유" value={s.prices.gasoline} highlight={isLowest} />
+                        {s.prices.diesel != null && (
+                          <PriceChip label="경유" value={s.prices.diesel} dimmed />
+                        )}
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-[#c7c7cc]">가격 없음</span>
+                    )}
+                    {distDisplay && (
+                      <span className="text-[10px] font-semibold text-[#86868b] flex items-center gap-0.5">
+                        <Zap size={9} />
+                        {distDisplay}
+                      </span>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+
+            {/* 더보기 / 접기 */}
+            {sorted.length > 5 && (
+              <button
+                onClick={() => setExpanded(v => !v)}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-2xl border border-dashed border-[#d2d2d7] text-[12px] font-semibold text-[#0071e3] bg-white/60 active:bg-white"
               >
-                <ChevronRight size={18} className="text-[#0071e3]" />
-                <span className="text-[12px] font-semibold text-[#0071e3]">전체보기</span>
-                <span className="text-[10px] text-[#86868b]">오피넷</span>
-              </a>
-            </div>
-          </div>
+                {expanded ? (
+                  <>
+                    <ChevronUp size={14} />
+                    접기
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown size={14} />
+                    나머지 {sorted.length - 5}개 더보기
+                  </>
+                )}
+              </button>
+            )}
+          </>
         )}
       </section>
+
+      {/* ── 업데이트 시각 ── */}
+      {data?.timestamp && !loading && (
+        <p className="px-4 pb-1 text-[10px] text-[#c7c7cc]">
+          오피넷 기준 · {new Date(data.timestamp).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })} 업데이트
+        </p>
+      )}
     </>
   );
 }

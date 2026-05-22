@@ -269,6 +269,11 @@ export interface GasStation {
   brandShort: string;
   address: string;
   distanceKm: number;
+  lat: number;
+  lng: number;
+  area: string;
+  isSelf: boolean;
+  isAlttul: boolean;
   prices: {
     gasoline?: number;
     diesel?: number;
