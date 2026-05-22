@@ -409,6 +409,62 @@ function CommunityTab() {
   );
 }
 
+// ─── 유튜브 인라인 플레이어 카드 ──────────────────────────────
+function YouTubeCard({ video }: { video: { id: string; videoId: string; title: string; channelName: string; thumbnail: string; url: string } }) {
+  const [playing, setPlaying] = useState(false);
+
+  if (playing) {
+    return (
+      <div className="shrink-0 w-[280px] rounded-2xl overflow-hidden bg-black relative">
+        <iframe
+          src={`https://www.youtube.com/embed/${video.videoId}?autoplay=1`}
+          className="w-full border-0"
+          style={{ aspectRatio: "16/9" }}
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          loading="lazy"
+        />
+        <button
+          onClick={() => setPlaying(false)}
+          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center z-10"
+        >
+          <X size={14} className="text-white" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setPlaying(true)}
+      className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80 text-left"
+    >
+      <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+        <img
+          src={video.thumbnail}
+          alt={video.title}
+          className="w-full h-full object-cover"
+          onError={e => {
+            (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
+          }}
+        />
+        <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+          <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
+            <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
+          </div>
+        </div>
+        <span className="absolute bottom-1.5 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+          YouTube
+        </span>
+      </div>
+      <div className="px-3 pt-2.5 pb-3">
+        <p className="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2">{video.title}</p>
+        <p className="text-[11px] text-gray-500 mt-1.5">{video.channelName}</p>
+      </div>
+    </button>
+  );
+}
+
 // ─── 카드뉴스 그라디언트 팔레트 ──────────────────────────────
 const NEWS_GRADIENTS = [
   { from: "#0058b0", to: "#0071e3" },
@@ -513,29 +569,7 @@ function NewsTab() {
               </div>
             ))
           ) : ytVideos.length > 0 ? (
-            ytVideos.map(video => (
-              <a key={video.id} href={video.url} target="_blank" rel="noopener noreferrer"
-                className="shrink-0 w-[220px] bg-white rounded-2xl overflow-hidden shadow-sm active:opacity-80">
-                <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-                  <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover"
-                    onError={e => {
-                      (e.target as HTMLImageElement).src = `https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`;
-                    }} />
-                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-                    <div className="w-10 h-10 bg-white/90 rounded-full flex items-center justify-center shadow-md">
-                      <Play size={16} fill="#FF0000" className="text-[#FF0000] ml-0.5" />
-                    </div>
-                  </div>
-                  <span className="absolute bottom-1.5 right-2 bg-[#FF0000] text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
-                    YouTube
-                  </span>
-                </div>
-                <div className="px-3 pt-2.5 pb-3">
-                  <p className="text-[13px] font-semibold text-gray-900 leading-snug line-clamp-2">{video.title}</p>
-                  <p className="text-[11px] text-gray-500 mt-1.5">{video.channelName}</p>
-                </div>
-              </a>
-            ))
+            ytVideos.map(video => <YouTubeCard key={video.id} video={video} />)
           ) : null}
           <div className="shrink-0 w-2" />
         </div>
