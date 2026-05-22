@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-22T02:05:24.244Z",
+  "fetchedAt": "2026-05-22T06:37:42.354Z",
   "count": 20,
   "videos": [
     {
@@ -44,11 +44,11 @@
     },
     {
       "id": "yt-1",
-      "videoId": "E2SJ6MBFnvA",
-      "title": "검단에 이런 곳이?🙄 여행 느낌 물씬 인천 맛집 단풍나무/육계장, 오리 주물럭",
-      "channelName": "댕아DAENG.A",
-      "thumbnail": "https://img.youtube.com/vi/E2SJ6MBFnvA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=E2SJ6MBFnvA"
+      "videoId": "VHHn1bR4fgo",
+      "title": "[인천]봄기운 가득한 샤브샤브 무한리필 봄담아 검단신도시점 방문 후기",
+      "channelName": "푸드맥스",
+      "thumbnail": "https://img.youtube.com/vi/VHHn1bR4fgo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=VHHn1bR4fgo"
     },
     {
       "id": "yt-1",
@@ -60,11 +60,11 @@
     },
     {
       "id": "yt-1",
-      "videoId": "cb5up4scQh8",
-      "title": "힐스테이트방향에서 신검단중앙역 방향 #신검단중앙역",
-      "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/cb5up4scQh8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=cb5up4scQh8"
+      "videoId": "Dm4OptxUlNg",
+      "title": "검단 GTX-D  Y노선 어디로 지나갈까?",
+      "channelName": "부동산눈팅TV",
+      "thumbnail": "https://img.youtube.com/vi/Dm4OptxUlNg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Dm4OptxUlNg"
     },
     {
       "id": "yt-1",
@@ -73,6 +73,14 @@
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/IEewmTTVtSM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=IEewmTTVtSM"
+    },
+    {
+      "id": "yt-2",
+      "videoId": "gx0Qjm93_s4",
+      "title": "인천 계양 검단 신도시 맛집, 자연 속에서 즐기는 굴림만두전골 맛집, 인천식 한우숯불 불고기, 아라뱃길 맛집",
+      "channelName": "여행하는 안젤라",
+      "thumbnail": "https://img.youtube.com/vi/gx0Qjm93_s4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=gx0Qjm93_s4"
     },
     {
       "id": "yt-2",
@@ -108,27 +116,35 @@
     },
     {
       "id": "yt-3",
-      "videoId": "Wo53itx7yXY",
-      "title": "60만 유튜버 순자엄마도 다녀간 맛집! 검단신도시 맛집 위찜 검단아라점",
-      "channelName": "위찜TV",
-      "thumbnail": "https://img.youtube.com/vi/Wo53itx7yXY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Wo53itx7yXY"
+      "videoId": "htuYdQnFsG8",
+      "title": "\"점심 뭐 먹지?  직장인 고민 해결!\"  인천 검단 맛집 BEST 3 (1편)",
+      "channelName": "꽁쓰 미식노트",
+      "thumbnail": "https://img.youtube.com/vi/htuYdQnFsG8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=htuYdQnFsG8"
     },
     {
       "id": "yt-3",
-      "videoId": "Dm4OptxUlNg",
-      "title": "검단 GTX-D  Y노선 어디로 지나갈까?",
-      "channelName": "부동산눈팅TV",
-      "thumbnail": "https://img.youtube.com/vi/Dm4OptxUlNg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Dm4OptxUlNg"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "3f5f3Q4cPp4",
-      "title": "[신축 아파트 입주 VLOG] 38평_LG전자 6종 가전_가구 언박싱_대기업 연구원 추천 TV_신검단중앙역_검단신도시",
+      "videoId": "qq3ZhX3fQzY",
+      "title": "홍대의 맛집과 카페 그리고 검단신도시 아파트 탐방(금강3차)(푸글렌커피,하카타분코)",
       "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/3f5f3Q4cPp4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3f5f3Q4cPp4"
+      "thumbnail": "https://img.youtube.com/vi/qq3ZhX3fQzY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=qq3ZhX3fQzY"
+    },
+    {
+      "id": "yt-3",
+      "videoId": "wzBqS3AmZqE",
+      "title": "검단신도시 봐라",
+      "channelName": "부동산은 땅땅무슨땅",
+      "thumbnail": "https://img.youtube.com/vi/wzBqS3AmZqE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=wzBqS3AmZqE"
+    },
+    {
+      "id": "yt-3",
+      "videoId": "QWuVN1h-F1A",
+      "title": "[내빚(빛)마련 VLOG] 신축아파트 입주박람회 다녀온 찐후기 _검단_검단신도시_금강3차",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/QWuVN1h-F1A/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=QWuVN1h-F1A"
     },
     {
       "id": "yt-3",
@@ -140,27 +156,11 @@
     },
     {
       "id": "yt-4",
-      "videoId": "htuYdQnFsG8",
-      "title": "\"점심 뭐 먹지?  직장인 고민 해결!\"  인천 검단 맛집 BEST 3 (1편)",
-      "channelName": "꽁쓰 미식노트",
-      "thumbnail": "https://img.youtube.com/vi/htuYdQnFsG8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=htuYdQnFsG8"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "Je3gyiFDewk",
-      "title": "신축 아파트 부엌 조명 쇼핑 여행_검단신도시 근처 조명, 맛집, 카페 소개",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/Je3gyiFDewk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Je3gyiFDewk"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "SEQDfQ8AoGQ",
-      "title": "동탄호수공원의 대항마 검단호수공원 분양 성공할 것인가!",
-      "channelName": "부테크랩",
-      "thumbnail": "https://img.youtube.com/vi/SEQDfQ8AoGQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=SEQDfQ8AoGQ"
+      "videoId": "ZsxOcWwtDgs",
+      "title": "[인천]미친 고물가 시대에 꼭 필요했던 가성비 최고의 패밀리 레스토랑 #코지하우스 #패밀리레스토랑 #인천맛집",
+      "channelName": "푸드맥스",
+      "thumbnail": "https://img.youtube.com/vi/ZsxOcWwtDgs/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ZsxOcWwtDgs"
     }
   ]
 }
