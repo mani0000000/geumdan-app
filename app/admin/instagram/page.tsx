@@ -35,7 +35,11 @@ function formatDate(iso: string) {
 }
 
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
-const DEFAULT_KEYWORDS = ["검단신도시", "검단", "인천검단", "검단라이프"];
+const DEFAULT_KEYWORDS = [
+  "검단신도시", "검단", "인천검단", "검단라이프",
+  "검단맛집", "검단카페", "검단동", "검단원당",
+  "검단아파트", "인천서구맛집",
+];
 const KEYWORD_KEY = "instagram_keywords";
 const MODE_KEY = "instagram_mode"; // "auto" | "manual" | "both"
 

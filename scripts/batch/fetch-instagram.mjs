@@ -5,7 +5,9 @@
  * Instagram 해시태그 페이지의 공개 JSON API를 사용해
  * 최신 게시물(이미지·릴스)을 Supabase instagram_posts 테이블에 upsert.
  *
- * 수집 해시태그: 검단신도시, 검단, 인천검단, 검단라이프
+ * 수집 해시태그 (기본값):
+ *   검단신도시, 검단, 인천검단, 검단라이프, 검단맛집, 검단카페,
+ *   검단동, 검단원당, 검단아파트, 인천서구맛집
  * (INSTAGRAM_HASHTAGS 환경 변수로 덮어쓸 수 있음)
  *
  * Usage:
@@ -16,13 +18,28 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
-const HASHTAGS = (process.env.INSTAGRAM_HASHTAGS ?? '검단신도시,검단,인천검단,검단라이프')
-  .split(',').map(h => h.trim()).filter(Boolean);
+
+const DEFAULT_HASHTAGS = [
+  '검단신도시',
+  '검단',
+  '인천검단',
+  '검단라이프',
+  '검단맛집',
+  '검단카페',
+  '검단동',
+  '검단원당',
+  '검단아파트',
+  '인천서구맛집',
+];
+
+const HASHTAGS = process.env.INSTAGRAM_HASHTAGS
+  ? process.env.INSTAGRAM_HASHTAGS.split(',').map(h => h.trim()).filter(Boolean)
+  : DEFAULT_HASHTAGS;
 
 // 설정
-const POSTS_PER_TAG = 12;   // 해시태그당 수집 건수
-const MAX_STORED    = 500;  // DB에 유지할 최대 레코드 수
-const DELAY_MS      = 2500; // 태그 간 요청 딜레이 (429 방지)
+const POSTS_PER_TAG = 8;    // 해시태그당 수집 건수 (태그 수가 많아 8개로 조정)
+const MAX_STORED    = 800;  // DB에 유지할 최대 레코드 수
+const DELAY_MS      = 2000; // 태그 간 요청 딜레이 (429 방지)
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ SUPABASE_URL, SUPABASE_SERVICE_KEY 가 설정되지 않았습니다.');

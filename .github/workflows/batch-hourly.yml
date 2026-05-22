@@ -41,4 +41,4 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          INSTAGRAM_HASHTAGS: ${{ secrets.INSTAGRAM_HASHTAGS || '검단신도시,검단,인천검단,검단라이프' }}
+          INSTAGRAM_HASHTAGS: ${{ secrets.INSTAGRAM_HASHTAGS || '검단신도시,검단,인천검단,검단라이프,검단맛집,검단카페,검단동,검단원당,검단아파트,인천서구맛집' }}
