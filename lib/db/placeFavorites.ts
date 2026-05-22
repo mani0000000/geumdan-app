@@ -30,10 +30,13 @@ export async function getFavoritePlaces(): Promise<FavoritePlace[]> {
   try {
     const list = JSON.parse(cached) as FavoritePlace[];
     // 구 버전 필드명 마이그레이션 (thumbnail_url → place_image_url, category → place_category)
-    return list.map(p => ({
-      ...p,
-      place_image_url: p.place_image_url ?? (p as Record<string, unknown>).thumbnail_url as string | null ?? null,
-      place_category: p.place_category ?? (p as Record<string, unknown>).category as string ?? "",
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return list.map((p: any) => ({
+      id: p.id ?? crypto.randomUUID(),
+      place_id: p.place_id,
+      place_name: p.place_name,
+      place_image_url: p.place_image_url ?? p.thumbnail_url ?? null,
+      place_category: p.place_category ?? p.category ?? "",
       place_area: p.place_area ?? "",
       place_address: p.place_address ?? "",
     }));
