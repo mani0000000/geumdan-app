@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-23T08:09:59.793Z",
+  "fetchedAt": "2026-05-23T10:20:21.386Z",
   "count": 20,
   "videos": [
     {
@@ -20,11 +20,11 @@
     },
     {
       "id": "yt-0",
-      "videoId": "vf1bIqIplMk",
-      "title": "검단신도시에서는 '여기'만 보세요",
-      "channelName": "시크릿브라더TV",
-      "thumbnail": "https://img.youtube.com/vi/vf1bIqIplMk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=vf1bIqIplMk"
+      "videoId": "cb5up4scQh8",
+      "title": "힐스테이트방향에서 신검단중앙역 방향 #신검단중앙역",
+      "channelName": "54앤써",
+      "thumbnail": "https://img.youtube.com/vi/cb5up4scQh8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=cb5up4scQh8"
     },
     {
       "id": "yt-0",
@@ -60,11 +60,19 @@
     },
     {
       "id": "yt-1",
-      "videoId": "cb5up4scQh8",
-      "title": "힐스테이트방향에서 신검단중앙역 방향 #신검단중앙역",
-      "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/cb5up4scQh8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=cb5up4scQh8"
+      "videoId": "vf1bIqIplMk",
+      "title": "검단신도시에서는 '여기'만 보세요",
+      "channelName": "시크릿브라더TV",
+      "thumbnail": "https://img.youtube.com/vi/vf1bIqIplMk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=vf1bIqIplMk"
+    },
+    {
+      "id": "yt-1",
+      "videoId": "Vi2Vw9RXxEg",
+      "title": "아크로 입주민도 감탄한 아라역 이편한세상! | 사전점검 후 전국적으로 유명해진 검단신도시 신축 아파트",
+      "channelName": "검단대장",
+      "thumbnail": "https://img.youtube.com/vi/Vi2Vw9RXxEg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Vi2Vw9RXxEg"
     },
     {
       "id": "yt-1",
@@ -76,35 +84,19 @@
     },
     {
       "id": "yt-2",
-      "videoId": "htuYdQnFsG8",
-      "title": "\"점심 뭐 먹지?  직장인 고민 해결!\"  인천 검단 맛집 BEST 3 (1편)",
-      "channelName": "꽁쓰 미식노트",
-      "thumbnail": "https://img.youtube.com/vi/htuYdQnFsG8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=htuYdQnFsG8"
+      "videoId": "VHHn1bR4fgo",
+      "title": "[인천]봄기운 가득한 샤브샤브 무한리필 봄담아 검단신도시점 방문 후기",
+      "channelName": "푸드맥스",
+      "thumbnail": "https://img.youtube.com/vi/VHHn1bR4fgo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=VHHn1bR4fgo"
     },
     {
       "id": "yt-2",
-      "videoId": "tyZnQFZObn4",
-      "title": "검단신도시 가볼만한 맛집과 카페｜실내 데이트 코스 추천｜임장오신 김에 들를 식도락  코",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/tyZnQFZObn4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tyZnQFZObn4"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "wzBqS3AmZqE",
-      "title": "검단신도시 봐라",
-      "channelName": "부동산은 땅땅무슨땅",
-      "thumbnail": "https://img.youtube.com/vi/wzBqS3AmZqE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=wzBqS3AmZqE"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "Vi2Vw9RXxEg",
-      "title": "아크로 입주민도 감탄한 아라역 이편한세상! | 사전점검 후 전국적으로 유명해진 검단신도시 신축 아파트",
-      "channelName": "검단대장",
-      "thumbnail": "https://img.youtube.com/vi/Vi2Vw9RXxEg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Vi2Vw9RXxEg"
+      "videoId": "Ey8KR6fWaNo",
+      "title": "검단신도시U공원 일대 2025. 11. 29.  #검단신도시 #여울빛공원 #검단호수공원역 #신검단중앙역 #드론영상",
+      "channelName": "54앤써",
+      "thumbnail": "https://img.youtube.com/vi/Ey8KR6fWaNo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Ey8KR6fWaNo"
     },
     {
       "id": "yt-2",
@@ -116,35 +108,35 @@
     },
     {
       "id": "yt-3",
-      "videoId": "gx0Qjm93_s4",
-      "title": "인천 계양 검단 신도시 맛집, 자연 속에서 즐기는 굴림만두전골 맛집, 인천식 한우숯불 불고기, 아라뱃길 맛집",
-      "channelName": "여행하는 안젤라",
-      "thumbnail": "https://img.youtube.com/vi/gx0Qjm93_s4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=gx0Qjm93_s4"
+      "videoId": "htuYdQnFsG8",
+      "title": "\"점심 뭐 먹지?  직장인 고민 해결!\"  인천 검단 맛집 BEST 3 (1편)",
+      "channelName": "꽁쓰 미식노트",
+      "thumbnail": "https://img.youtube.com/vi/htuYdQnFsG8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=htuYdQnFsG8"
     },
     {
       "id": "yt-3",
-      "videoId": "KvRirX6Jbp0",
-      "title": "[VLOG] 인천서구카페/카페브이로그/인천서구한옥카페/한옥카페자미궁제빵소/검단신도시한옥카페",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/KvRirX6Jbp0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=KvRirX6Jbp0"
+      "videoId": "tyZnQFZObn4",
+      "title": "검단신도시 가볼만한 맛집과 카페｜실내 데이트 코스 추천｜임장오신 김에 들를 식도락  코",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/tyZnQFZObn4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=tyZnQFZObn4"
     },
     {
       "id": "yt-3",
-      "videoId": "Dm4OptxUlNg",
-      "title": "검단 GTX-D  Y노선 어디로 지나갈까?",
-      "channelName": "부동산눈팅TV",
-      "thumbnail": "https://img.youtube.com/vi/Dm4OptxUlNg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Dm4OptxUlNg"
+      "videoId": "qWx0pIfSi-0",
+      "title": "검단신도시 신검단중앙역 호수공원역 드론 영상으로 샅샅이 알아보자",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/qWx0pIfSi-0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=qWx0pIfSi-0"
     },
     {
       "id": "yt-3",
-      "videoId": "xHTpC7OaeWQ",
-      "title": "EP13. 검단신도시 신축아파트 간단 랜선집들이 VLOG",
-      "channelName": "귀리아빠",
-      "thumbnail": "https://img.youtube.com/vi/xHTpC7OaeWQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=xHTpC7OaeWQ"
+      "videoId": "3f5f3Q4cPp4",
+      "title": "[신축 아파트 입주 VLOG] 38평_LG전자 6종 가전_가구 언박싱_대기업 연구원 추천 TV_신검단중앙역_검단신도시",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/3f5f3Q4cPp4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3f5f3Q4cPp4"
     },
     {
       "id": "yt-3",
@@ -156,11 +148,19 @@
     },
     {
       "id": "yt-4",
-      "videoId": "v_pzdvjft3A",
-      "title": "현지인 피셜 인천 0순위 술집 맛집. 사장님, 이렇게 다 퍼주시면 뭐가 남아요?",
-      "channelName": "술맛여행놈",
-      "thumbnail": "https://img.youtube.com/vi/v_pzdvjft3A/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=v_pzdvjft3A"
+      "videoId": "gx0Qjm93_s4",
+      "title": "인천 계양 검단 신도시 맛집, 자연 속에서 즐기는 굴림만두전골 맛집, 인천식 한우숯불 불고기, 아라뱃길 맛집",
+      "channelName": "여행하는 안젤라",
+      "thumbnail": "https://img.youtube.com/vi/gx0Qjm93_s4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=gx0Qjm93_s4"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "KvRirX6Jbp0",
+      "title": "[VLOG] 인천서구카페/카페브이로그/인천서구한옥카페/한옥카페자미궁제빵소/검단신도시한옥카페",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/KvRirX6Jbp0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=KvRirX6Jbp0"
     }
   ]
 }
