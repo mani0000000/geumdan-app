@@ -6,25 +6,9 @@ import StoreLogo from "@/components/ui/StoreLogo";
 import { fetchBuildings, fetchBuildingWithFloors } from "@/lib/db/buildings";
 import type { Store, StoreCategory, Building } from "@/lib/types";
 import type { BuildingRow } from "@/lib/db/buildings";
+import { CAT_EMOJI as catEmoji, CAT_BG as catBg } from "@/lib/constants/store-categories";
 
-const catEmoji: Record<StoreCategory, string> = {
-  카페: "☕", 음식점: "🍽️", 편의점: "🏪", "병원/약국": "💊", 미용: "💇",
-  학원: "📚", 마트: "🛒", "헬스/운동": "💪", 반려동물: "🐾", 세탁: "👕",
-  베이커리: "🥐", 부동산: "🏘️", 스터디카페: "📖", 안경원: "👓", 꽃집: "💐",
-  기타: "🏢",
-}
-const catBg: Record<StoreCategory, string> = {
-  카페: "bg-[#FEF3C7] text-[#92400E]", 음식점: "bg-[#FFF0E6] text-[#C2410C]",
-  편의점: "bg-[#e8f1fd] text-[#1E40AF]", "병원/약국": "bg-[#FEE2E2] text-[#991B1B]",
-  미용: "bg-[#FCE7F3] text-[#9D174D]", 학원: "bg-[#EDE9FE] text-[#5B21B6]",
-  마트: "bg-[#D1FAE5] text-[#065F46]", "헬스/운동": "bg-[#E0F2FE] text-[#0369A1]",
-  반려동물: "bg-[#FDF2F8] text-[#9D174D]", 세탁: "bg-[#EEF2FF] text-[#4338CA]",
-  베이커리: "bg-[#FEF3C7] text-[#9A3412]", 부동산: "bg-[#CCFBF1] text-[#115E59]",
-  스터디카페: "bg-[#F3E8FF] text-[#6B21A8]", 안경원: "bg-[#CFFAFE] text-[#155E75]",
-  꽃집: "bg-[#FCE7F3] text-[#9D174D]",
-  기타: "bg-[#F3F4F6] text-[#374151]",
-};
-
+// 건물 이미지 매핑 (Unsplash 무료 이미지)
 const BUILDING_IMAGES: Record<string, string> = {
   "b_jk":     "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=600&h=280&fit=crop&auto=format",
   "b_metro2": "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=600&h=280&fit=crop&auto=format",
@@ -101,6 +85,7 @@ function BuildingDetailContent() {
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
+      {/* 헤더 — 뒤로가기 */}
       <div className="flex items-center px-3 h-14 bg-white sticky top-0 z-20 border-b border-[#f5f5f7]">
         <button onClick={() => router.back()} className="w-9 h-9 flex items-center justify-center active:opacity-60">
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
@@ -108,9 +93,9 @@ function BuildingDetailContent() {
         <h1 className="text-[18px] font-bold text-[#1d1d1f] truncate mx-1">{name}</h1>
       </div>
 
+      {/* 건물 이미지 헤더 */}
       <div className="relative shrink-0" style={{ height: 200 }}>
         {!imgFailed && image ? (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={image} alt={name} onError={() => setImgFailed(true)}
             className="w-full h-full object-cover" />
         ) : (
@@ -126,6 +111,7 @@ function BuildingDetailContent() {
         </div>
       </div>
 
+      {/* 데이터 없음 — 정보 준비 중 */}
       {!buildingData && (
         <div className="flex flex-col items-center justify-center flex-1 py-16 px-8">
           <span className="text-5xl mb-3">🏗️</span>
@@ -140,8 +126,10 @@ function BuildingDetailContent() {
         </div>
       )}
 
+      {/* 매장 목록 */}
       {buildingData && (
         <>
+          {/* 층 탭 */}
           <div className="flex gap-2 px-4 py-2.5 border-b border-[#f5f5f7] overflow-x-auto shrink-0 sticky top-14 bg-white z-10" style={{ scrollbarWidth: "none" }}>
             <button onClick={() => setFloorIdx(-1)}
               className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${floorIdx === -1 ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
@@ -154,6 +142,7 @@ function BuildingDetailContent() {
               </button>
             ))}
           </div>
+          {/* 매장 리스트 */}
           <div className="flex-1 pb-8">
             {visible.length === 0 ? (
               <div className="flex items-center justify-center py-10 text-[13px] text-[#86868b]">입점 매장 없음</div>

@@ -184,7 +184,8 @@ export default function StoreMapView({ buildings, selectedId, onSelect, dimmedId
   const [locating, setLocating] = useState(false);
   const [flyTo,    setFlyTo]    = useState<[number, number] | null>(null);
 
-  const center: [number, number] = [37.593, 126.710];
+  // 검단신도시 중심 좌표 (gas-stations.ts의 CENTER와 동일)
+  const center: [number, number] = [37.5550, 126.6861];
 
   function locate() {
     if (!navigator.geolocation) return;

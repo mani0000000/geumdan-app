@@ -19,24 +19,7 @@ import { fetchActiveCoupons, fetchActiveOpenings, fetchStoreDetail, type StoreDe
 import type { Store, StoreCategory, Floor, Building } from "@/lib/types";
 import type { BuildingRow, FlatStore } from "@/lib/db/buildings";
 
-const catDot: Record<StoreCategory, string> = {
-  카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
-  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
-  마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
-  세탁: "#6366F1", 기타: "#9CA3AF",
-};
-const catEmoji: Record<StoreCategory, string> = {
-  카페:"☕", 음식점:"🍽️", 편의점:"🏪", "병원/약국":"💊", 미용:"💇",
-  학원:"📚", 마트:"🛒", "헬스/운동":"💪", 반려동물:"🐾", 세탁:"👕", 기타:"🏢",
-};
-const catBg: Record<StoreCategory, string> = {
-  카페:"bg-[#FEF3C7] text-[#92400E]", 음식점:"bg-[#FFF0E6] text-[#C2410C]",
-  편의점:"bg-[#e8f1fd] text-[#1E40AF]", "병원/약국":"bg-[#FEE2E2] text-[#991B1B]",
-  미용:"bg-[#FCE7F3] text-[#9D174D]", 학원:"bg-[#EDE9FE] text-[#5B21B6]",
-  마트:"bg-[#D1FAE5] text-[#065F46]", "헬스/운동":"bg-[#E0F2FE] text-[#0369A1]",
-  반려동물:"bg-[#FDF2F8] text-[#9D174D]", 세탁:"bg-[#EEF2FF] text-[#4338CA]",
-  기타:"bg-[#F3F4F6] text-[#374151]",
-};
+import { CAT_DOT as catDot, CAT_EMOJI as catEmoji, CAT_BG as catBg, CAT_GRADS as catGrads, CAT_HERO_IMAGE as catHeroImage, ALL_CATEGORIES } from "@/lib/constants/store-categories";
 
 // 건물 이미지 매핑 (Unsplash 무료 이미지)
 const BUILDING_IMAGES: Record<string, string> = {
@@ -162,20 +145,6 @@ function StoreSheet({ store, onClose, onDetail }: { store: Store; onClose: () =>
   );
 }
 
-// 업종별 대표 이미지 (Unsplash 특정 사진 ID — 안정적으로 로드됨)
-const catHeroImage: Record<StoreCategory, string> = {
-  카페:       "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&h=260&fit=crop&auto=format",
-  음식점:     "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&h=260&fit=crop&auto=format",
-  편의점:     "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600&h=260&fit=crop&auto=format",
-  "병원/약국":"https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=600&h=260&fit=crop&auto=format",
-  미용:       "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600&h=260&fit=crop&auto=format",
-  학원:       "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&h=260&fit=crop&auto=format",
-  마트:       "https://images.unsplash.com/photo-1534723452862-4c874986a2f6?w=600&h=260&fit=crop&auto=format",
-  "헬스/운동":"https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=600&h=260&fit=crop&auto=format",
-  반려동물:   "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=600&h=260&fit=crop&auto=format",
-  세탁:       "https://images.unsplash.com/photo-1545173168-9f1947eebb7f?w=600&h=260&fit=crop&auto=format",
-  기타:       "https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&h=260&fit=crop&auto=format",
-};
 
 // ─── 상가 건물 바텀시트 (리스트뷰용) ─────────────────────────
 function BuildingBottomSheet({
@@ -584,21 +553,7 @@ function classifyOpening(openDate: string): "week" | "month" | "none" {
 }
 
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
-const ALL_CATS = Object.keys(catDot) as StoreCategory[];
-
-const catGrads: Record<StoreCategory, [string, string]> = {
-  카페:       ["#F59E0B", "#FB923C"],
-  음식점:     ["#EF4444", "#F97316"],
-  편의점:     ["#3B82F6", "#06B6D4"],
-  "병원/약국":["#EF4444", "#F472B6"],
-  미용:       ["#EC4899", "#C026D3"],
-  학원:       ["#8B5CF6", "#6366F1"],
-  마트:       ["#10B981", "#059669"],
-  "헬스/운동":["#0EA5E9", "#6366F1"],
-  반려동물:   ["#F472B6", "#EC4899"],
-  세탁:       ["#6366F1", "#8B5CF6"],
-  기타:       ["#6B7280", "#4B5563"],
-};
+const ALL_CATS = ALL_CATEGORIES;
 
 function StoreListView() {
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
@@ -897,8 +852,16 @@ function StoreListView() {
 // ─── 검색 결과 ────────────────────────────────────────────────
 interface SearchResult { store: Store; floorLabel: string; buildingName: string; }
 
-function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelect: (s: Store) => void }) {
-  if (results.length === 0) {
+function SearchResults({
+  results, gasResults, onSelect, onGasSelect,
+}: {
+  results: SearchResult[];
+  gasResults: BasicGasStation[];
+  onSelect: (s: Store) => void;
+  onGasSelect: (s: BasicGasStation) => void;
+}) {
+  const total = results.length + gasResults.length;
+  if (total === 0) {
     return (
       <div className="flex flex-col items-center py-16 gap-3">
         <span className="text-4xl">🔍</span>
@@ -908,26 +871,62 @@ function SearchResults({ results, onSelect }: { results: SearchResult[]; onSelec
     );
   }
   return (
-    <div className="px-4 pt-3 pb-4">
-      <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">총 {results.length}건</p>
-      <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-        {results.map(({ store, floorLabel, buildingName }) => (
-          <button key={store.id} onClick={() => onSelect(store)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-            <StoreLogo name={store.name} category={store.category} size={42} />
-            <div className="flex-1 min-w-0">
-              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-              <p className="text-[12px] text-[#6e6e73]">{buildingName} · {floorLabel}</p>
-            </div>
-            <div className="flex flex-col items-end gap-1 shrink-0">
-              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
-              <span className={`text-[11px] font-bold ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
-                {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
-              </span>
-            </div>
-          </button>
-        ))}
-      </div>
+    <div className="px-4 pt-3 pb-4 space-y-3">
+      <p className="text-[12px] font-semibold text-[#86868b]">총 {total}건</p>
+
+      {/* 매장 결과 */}
+      {results.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-wide mb-2">매장 {results.length}건</p>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+            {results.map(({ store, floorLabel, buildingName }) => (
+              <button key={store.id} onClick={() => onSelect(store)}
+                className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
+                <StoreLogo name={store.name} category={store.category} size={42} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
+                  <p className="text-[12px] text-[#6e6e73]">{buildingName} · {floorLabel}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>{store.category}</span>
+                  <span className={`text-[11px] font-bold ${store.isOpen !== false ? "text-[#00C471]" : "text-[#F04452]"}`}>
+                    {store.isOpen !== false ? "● 영업 중" : "● 영업 종료"}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 주유소 결과 */}
+      {gasResults.length > 0 && (
+        <div>
+          <p className="text-[11px] font-bold text-[#86868b] uppercase tracking-wide mb-2">주유소 {gasResults.length}건</p>
+          <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
+            {gasResults.map(s => (
+              <button key={s.id} onClick={() => onGasSelect(s)}
+                className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
+                <div className="w-[42px] h-[42px] rounded-xl flex items-center justify-center shrink-0"
+                  style={{ background: s.brandBg }}>
+                  <div className="text-center">
+                    <div style={{ fontSize: 16 }}>⛽</div>
+                    <div style={{ fontSize: 8, fontWeight: 900, color: s.brandColor }}>{s.brandShort}</div>
+                  </div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{s.name}</p>
+                  <p className="text-[12px] text-[#6e6e73]">{s.area} · {s.address.replace(/^인천 서구 /, "")}</p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {s.isAlttul && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#ECFDF5] text-[#059669]">알뜰</span>}
+                  {s.isSelf  && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EFF6FF] text-[#0058B0]">셀프</span>}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1124,6 +1123,52 @@ function MapBuildingSheet({
         )}
       </div>
     </div>
+  );
+}
+
+// ─── 층 평면도 SVG ───────────────────────────────────────────
+function FloorSVG({
+  floor,
+  selectedId,
+  onSelect,
+}: {
+  floor: import("@/lib/types").Floor;
+  selectedId: string | null;
+  onSelect: (s: Store | null) => void;
+}) {
+  const stores = floor.stores.filter(s => s.name !== "공실");
+  if (stores.length === 0) return (
+    <div className="flex items-center justify-center py-8 text-[13px] text-[#86868b]">입점 매장 없음</div>
+  );
+  return (
+    <svg viewBox="0 0 100 100" className="w-full" style={{ aspectRatio: "1", maxHeight: 240 }}>
+      <rect x="0" y="0" width="100" height="100" rx="4" fill="#f5f5f7" />
+      {stores.map(s => {
+        const selected = s.id === selectedId;
+        const color = catDot[s.category] ?? "#9CA3AF";
+        return (
+          <g key={s.id} onClick={() => onSelect(selected ? null : s)} style={{ cursor: "pointer" }}>
+            <rect
+              x={s.x} y={s.y} width={s.w} height={s.h}
+              rx="2"
+              fill={selected ? color : `${color}33`}
+              stroke={color}
+              strokeWidth={selected ? "1.5" : "1"}
+            />
+            <text
+              x={s.x + s.w / 2} y={s.y + s.h / 2 + 2}
+              textAnchor="middle"
+              fontSize={Math.min(s.w, s.h) > 12 ? "4" : "3"}
+              fontWeight={selected ? "700" : "500"}
+              fill={selected ? "white" : "#1d1d1f"}
+              style={{ pointerEvents: "none" }}
+            >
+              {s.name.length > 6 ? s.name.slice(0, 6) + "…" : s.name}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
   );
 }
 
@@ -1374,7 +1419,7 @@ export default function StoresPage() {
     fetchBuildingWithFloors(selectedBuildingId).then(data => setSelectedBuildingData(data));
   }, [selectedBuildingId]);
 
-  // 검색 결과
+  // 검색 결과 — 매장
   const searchResults = useMemo<SearchResult[]>(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
@@ -1382,6 +1427,18 @@ export default function StoresPage() {
       .filter(s => s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q))
       .map(s => ({ store: s, floorLabel: s.floorLabel, buildingName: s.buildingName }));
   }, [searchQuery, allDbStores]);
+
+  // 검색 결과 — 주유소
+  const gasSearchResults = useMemo<BasicGasStation[]>(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return gasStations.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.area.toLowerCase().includes(q) ||
+      s.brandShort.toLowerCase().includes(q) ||
+      "주유소".includes(q)
+    );
+  }, [searchQuery, gasStations]);
 
   // 주변 건물 거리 계산
   const nearbyWithDist = useMemo<NearbyBuilding[]>(() => {
@@ -1445,6 +1502,16 @@ export default function StoresPage() {
       {/* 키워드 검색 패널 */}
       {searchFocused && !isSearching && (
         <div className="bg-white min-h-[calc(100dvh-170px)]" onMouseDown={e => e.preventDefault()}>
+          {/* 닫기 버튼 */}
+          <div className="flex justify-end px-4 pt-3">
+            <button
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => { setSearchFocused(false); searchInputRef.current?.blur(); }}
+              className="flex items-center gap-1 h-8 px-3 bg-[#f5f5f7] rounded-full text-[13px] font-semibold text-[#424245] active:bg-[#e5e5ea]">
+              <X size={13} className="text-[#86868b]" />
+              닫기
+            </button>
+          </div>
           {recommendedKws.length > 0 && (
             <div className="px-4 pt-5 pb-4 border-b border-[#f5f5f7]">
               <p className="text-[12px] font-bold text-[#86868b] mb-3 uppercase tracking-wide">추천 검색어</p>
@@ -1486,7 +1553,17 @@ export default function StoresPage() {
       )}
 
       {isSearching ? (
-        <SearchResults results={searchResults} onSelect={(s) => { setSelected(s); setSearchFocused(false); }} />
+        <SearchResults
+          results={searchResults}
+          gasResults={gasSearchResults}
+          onSelect={(s) => { setSelected(s); setSearchFocused(false); }}
+          onGasSelect={(s) => {
+            setSearchFocused(false);
+            setSearchQuery("");
+            setGasDetailSheet(s);
+            setSelectedGasId(s.id);
+          }}
+        />
       ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
         /* ─── 건물 상세 뷰 (리스트 모드) ─── */
         <BuildingDetail
