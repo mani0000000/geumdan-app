@@ -361,6 +361,19 @@ export default function GasWidget() {
         )}
       </section>
 
+      {/* ── 지도 전체보기 버튼 ── */}
+      {!loading && (
+        <div className="px-4 pb-3">
+          <a
+            href="/gas"
+            className="w-full h-10 rounded-2xl border border-dashed border-[#FF6B35]/50 bg-[#FFF5F0] flex items-center justify-center gap-2 text-[13px] font-bold text-[#FF6B35] active:bg-[#FFE8DC]"
+          >
+            <span style={{ fontSize: 14 }}>⛽</span>
+            지도에서 전체 주유소 보기
+          </a>
+        </div>
+      )}
+
       {/* ── 업데이트 시각 ── */}
       {data?.timestamp && !loading && (
         <p className="px-4 pb-1 text-[10px] text-[#c7c7cc]">
