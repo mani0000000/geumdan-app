@@ -1,53 +1,31 @@
 import { supabase } from "@/lib/supabase";
-import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 
 export interface Popup {
   id: string;
-  sort_order: number;
   title: string;
-  image_url?: string | null;
-  link_url?: string | null;
-  link_label: string;
-  start_at?: string | null;
-  end_at?: string | null;
-  is_active: boolean;
-  created_at: string;
+  body?: string;
+  image_url?: string;
+  link_url?: string;
+  button_text?: string;
+  starts_at?: string;
+  ends_at?: string;
+  priority: number;
 }
 
-// 노출 조건: is_active=true, (start_at NULL 또는 <= now), (end_at NULL 또는 >= now)
 export async function fetchActivePopups(): Promise<Popup[]> {
-  const now = new Date().toISOString();
-  const { data, error } = await supabase
-    .from("popups")
-    .select("*")
-    .eq("is_active", true)
-    .or(`start_at.is.null,start_at.lte.${now}`)
-    .or(`end_at.is.null,end_at.gte.${now}`)
-    .order("sort_order");
-  if (error) return [];
-  return (data ?? []) as Popup[];
-}
+  try {
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
+      .from("popups")
+      .select("id,title,body,image_url,link_url,button_text,starts_at,ends_at,priority")
+      .eq("active", true)
+      .or(`starts_at.is.null,starts_at.lte.${now}`)
+      .or(`ends_at.is.null,ends_at.gte.${now}`)
+      .order("priority", { ascending: false });
 
-// ── Admin ───────────────────────────────────────────────────────
-
-export async function adminFetchPopups(): Promise<Popup[]> {
-  return adminApiGet<Popup>("popups", { order: "sort_order" });
-}
-
-export async function adminCreatePopup(
-  p: Omit<Popup, "id" | "created_at">
-): Promise<void> {
-  const id = "pop_" + Date.now().toString(36);
-  await adminApiPost("popups", "POST", [{ ...p, id }]);
-}
-
-export async function adminUpdatePopup(
-  id: string,
-  data: Partial<Omit<Popup, "id" | "created_at">>
-): Promise<void> {
-  await adminApiPost("popups", "PATCH", data, { eq: `id=eq.${id}` });
-}
-
-export async function adminDeletePopup(id: string): Promise<void> {
-  await adminApiPost("popups", "DELETE", null, { eq: `id=eq.${id}` });
+    if (error || !data?.length) return [];
+    return data as Popup[];
+  } catch {
+    return [];
+  }
 }

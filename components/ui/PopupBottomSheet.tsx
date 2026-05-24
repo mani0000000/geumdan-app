@@ -1,114 +1,186 @@
 "use client";
-import { useState, useRef, useCallback, useEffect } from "react";
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, ExternalLink } from "lucide-react";
 import type { Popup } from "@/lib/db/popups";
-
-const HIDE_KEY = "popupHideDate";
-
-function todayStr() {
-  return new Date().toISOString().slice(0, 10);
-}
 
 interface Props {
   popups: Popup[];
 }
 
 export default function PopupBottomSheet({ popups }: Props) {
-  const [closed, setClosed] = useState(false);
-  const [current, setCurrent] = useState(0);
-  const [imgFailed, setImgFailed] = useState(false);
-  const touchStartX = useRef<number | null>(null);
+  const [visible,   setVisible]   = useState(false);
+  const [idx,       setIdx]       = useState(0);
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
-  useEffect(() => { setImgFailed(false); }, [current]);
+  const activePopups = popups.filter(p => !dismissed.has(p.id));
 
-  const goTo = useCallback(
-    (idx: number) => setCurrent(((idx % popups.length) + popups.length) % popups.length),
-    [popups.length]
-  );
-
-  if (closed || popups.length === 0) return null;
-
-  // "오늘 하루 보지 않음" 처리 — 렌더 시점 검사
-  try {
-    if (typeof window !== "undefined" && localStorage.getItem(HIDE_KEY) === todayStr()) {
-      return null;
+  useEffect(() => {
+    if (popups.length > 0) {
+      setVisible(true);
+      setIdx(0);
     }
-  } catch { /* noop */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [popups.length]);
 
-  const p = popups[current];
-  const multi = popups.length > 1;
+  // ─── 팝업이 열려 있는 동안 배경 스크롤 완전 잠금 ─────────────
+  useEffect(() => {
+    const on = visible && activePopups.length > 0;
+    if (!on) {
+      document.body.style.overflow    = "";
+      document.body.style.touchAction = "";
+      return;
+    }
+    // scrollY 기억 후 body를 fixed → 스크롤 위치 고정
+    const savedY = window.scrollY;
+    document.body.style.overflow    = "hidden";
+    document.body.style.position    = "fixed";
+    document.body.style.top         = `-${savedY}px`;
+    document.body.style.width       = "100%";
+    document.body.style.touchAction = "none";
+    return () => {
+      document.body.style.overflow    = "";
+      document.body.style.position    = "";
+      document.body.style.top         = "";
+      document.body.style.width       = "";
+      document.body.style.touchAction = "";
+      window.scrollTo(0, savedY);
+    };
+  }, [visible, activePopups.length]);
 
-  function hideToday() {
-    try { localStorage.setItem(HIDE_KEY, todayStr()); } catch { /* noop */ }
-    setClosed(true);
+  if (!visible || activePopups.length === 0) return null;
+
+  const current = activePopups[Math.min(idx, activePopups.length - 1)];
+  if (!current) return null;
+
+  function dismissCurrent() {
+    const next = new Set([...dismissed, current.id]);
+    setDismissed(next);
+    const remaining = activePopups.filter(p => p.id !== current.id);
+    if (remaining.length === 0) setVisible(false);
+    else setIdx(i => Math.min(i, remaining.length - 1));
+  }
+
+  function closeAll() {
+    setDismissed(new Set(activePopups.map(p => p.id)));
+    setVisible(false);
   }
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-end justify-center">
-      <div className="absolute inset-0 bg-black/60" onClick={() => setClosed(true)} />
+    <>
+      {/* ─── 딤 배경 — 클릭·터치 차단 ─────────────────────────── */}
+      <div
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.55)",
+          zIndex: 19000,         // BottomNav(9000) 보다 확실히 위
+          backdropFilter: "blur(3px)",
+          WebkitBackdropFilter: "blur(3px)",
+        }}
+        onClick={closeAll}
+        onTouchMove={e => e.preventDefault()}
+      />
 
-      <div className="relative z-10 w-full max-w-md bg-white rounded-t-3xl overflow-hidden">
-        {/* 이미지 캐러셀 (배너 방식 — 꽉 차게) */}
-        <div
-          className="relative w-full select-none bg-[#f5f5f7]"
-          style={{ aspectRatio: "1 / 1" }}
-          onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
-          onTouchEnd={e => {
-            if (touchStartX.current !== null && multi) {
-              const dx = e.changedTouches[0].clientX - touchStartX.current;
-              if (Math.abs(dx) > 44) goTo(current + (dx < 0 ? 1 : -1));
-            }
-            touchStartX.current = null;
-          }}
-        >
-          {p.image_url && !imgFailed ? (
-            <img
-              key={p.id}
-              src={p.image_url}
-              alt={p.title}
-              onError={() => setImgFailed(true)}
-              onClick={() => { if (p.link_url) window.location.href = p.link_url; }}
-              className={`absolute inset-0 w-full h-full object-cover ${p.link_url ? "cursor-pointer" : ""}`}
-            />
+      {/* ─── 팝업 카드 ─────────────────────────────────────────── */}
+      <div
+        style={{
+          position:     "fixed",
+          left:         "50%",
+          bottom:       90,                        // BottomNav(64px + 20px gap) 위
+          transform:    "translateX(-50%)",
+          width:        "calc(100% - 32px)",
+          maxWidth:     400,
+          zIndex:       20000,
+          borderRadius: 24,
+          overflow:     "hidden",
+          background:   "white",
+          boxShadow:    "0 8px 48px rgba(0,0,0,0.26), 0 2px 8px rgba(0,0,0,0.12)",
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* 닫기 버튼 (카드 오른쪽 상단) */}
+        <button
+          onClick={closeAll}
+          style={{
+            position: "absolute", top: 12, right: 12,
+            width: 30, height: 30, borderRadius: "50%",
+            background: "rgba(0,0,0,0.45)",
+            border: "none", cursor: "pointer",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 1,
+          }}>
+          <X size={15} color="white" strokeWidth={2.5} />
+        </button>
+
+        {/* 이미지 */}
+        {current.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={current.image_url}
+            alt={current.title}
+            style={{ width: "100%", aspectRatio: "16/9", objectFit: "cover", display: "block" }}
+          />
+        )}
+
+        {/* 텍스트 */}
+        <div style={{ padding: "20px 20px 16px" }}>
+          <p style={{ fontSize: 17, fontWeight: 700, color: "#1d1d1f", marginBottom: 6, lineHeight: 1.4 }}>
+            {current.title}
+          </p>
+          {current.body && (
+            <p style={{ fontSize: 14, color: "#6e6e73", lineHeight: 1.6 }}>{current.body}</p>
+          )}
+        </div>
+
+        {/* 액션 버튼 */}
+        <div style={{ display: "flex", gap: 8, padding: "0 16px 16px" }}>
+          <button onClick={dismissCurrent} style={{
+            flex: 1, height: 44, borderRadius: 14,
+            border: "1.5px solid #e5e5ea",
+            background: "transparent",
+            fontSize: 14, fontWeight: 600, color: "#86868b", cursor: "pointer",
+          }}>
+            닫기
+          </button>
+          {current.link_url ? (
+            <a href={current.link_url} target="_blank" rel="noopener noreferrer" style={{
+              flex: 2, height: 44, borderRadius: 14,
+              background: "#0071e3",
+              fontSize: 14, fontWeight: 700, color: "white",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
+              textDecoration: "none",
+            }}>
+              {current.button_text ?? "자세히 보기"}
+              <ExternalLink size={13} />
+            </a>
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-300 text-[13px]">
-              이미지 없음
-            </div>
-          )}
-
-          {/* 인디케이터 도트 */}
-          {multi && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
-              {popups.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  className={`h-1.5 rounded-full transition-all ${
-                    i === current ? "w-5 bg-white" : "w-1.5 bg-white/50"
-                  }`}
-                  style={{ boxShadow: "0 0 2px rgba(0,0,0,.4)" }}
-                />
-              ))}
-            </div>
+            <button onClick={closeAll} style={{
+              flex: 2, height: 44, borderRadius: 14,
+              background: "#0071e3",
+              fontSize: 14, fontWeight: 700, color: "white",
+              border: "none", cursor: "pointer",
+            }}>
+              {current.button_text ?? "확인"}
+            </button>
           )}
         </div>
 
-        {/* 하단 액션 — 작게 */}
-        <div className="flex items-center justify-between px-4 py-2">
-          <button
-            onClick={hideToday}
-            className="text-[12px] text-gray-400 px-1.5 py-1 active:text-gray-600"
-          >
-            오늘 하루 보지 않음
-          </button>
-          <button
-            onClick={() => setClosed(true)}
-            className="flex items-center gap-0.5 text-[12px] text-gray-500 px-1.5 py-1 active:text-gray-700"
-          >
-            닫기 <X size={13} />
-          </button>
-        </div>
+        {/* 여러 팝업 → 페이지 인디케이터 */}
+        {activePopups.length > 1 && (
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, padding: "0 0 14px" }}>
+            {activePopups.map((_, i) => (
+              <button key={i} onClick={() => setIdx(i)} style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}>
+                <div style={{
+                  width: i === idx ? 18 : 6, height: 6,
+                  borderRadius: 3,
+                  background: i === idx ? "#0071e3" : "#d2d2d7",
+                  transition: "all 0.2s",
+                }} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
