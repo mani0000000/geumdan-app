@@ -26,7 +26,6 @@ This version has breaking changes — APIs, conventions, and file structure may 
 - 활성 탭 색상: **검정** (`text-black`), 비활성: `text-[#8e8e93]`
 - 홈 탭만 파란 원형 배경 (`bg-[#2563EB]`)
 - Tailwind 클래스 기반, `backdrop-blur-[28px]` 글래스모피즘 `rounded-[36px]`
-- `/stores` 경로에서 `SuggestFAB` 렌더링
 
 ## 작업 전 필수 확인 절차
 

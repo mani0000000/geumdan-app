@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Navigation, Store, User, MessageCircle } from "lucide-react";
-import SuggestFAB from "@/components/ui/SuggestFAB";
 
 type IconProps = {
   size?: number;
@@ -38,11 +37,8 @@ const navItems = [
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const isStoresPath = pathname.startsWith("/stores");
   return (
-    <>
-      {isStoresPath && <SuggestFAB />}
-      <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px] md:max-w-[440px]">
+    <nav className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-40px)] max-w-[390px] md:max-w-[440px]">
         <div className="flex items-center justify-around px-3 h-[64px] rounded-[36px]
           bg-white/60 backdrop-blur-[28px]
           border border-white/50
@@ -92,7 +88,6 @@ export default function BottomNav() {
             );
           })}
         </div>
-      </nav>
-    </>
+    </nav>
   );
 }
