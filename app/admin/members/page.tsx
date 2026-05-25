@@ -1,21 +1,28 @@
 "use client";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
-  RefreshCw, Search, X, Users, UserX, Shield, ShieldOff,
-  ChevronRight, Calendar, Clock, MessageSquare, FileText,
+  RefreshCw, Search, X, Users, UserX, ShieldOff,
+  ChevronRight, Clock, FileText,
   AlertTriangle, CheckCircle, Ban, LogIn, StickyNote,
-  ChevronLeft, Filter,
+  ChevronLeft, Filter, Tag, Coins, PenLine, Bookmark,
+  Bus, Building2, Home, Star,
 } from "lucide-react";
 import {
   adminFetchMembers, adminSuspendMember, adminUnsuspendMember,
   adminWithdrawMember, adminUpdateMemberNotes,
   adminFetchMemberLogs, adminFetchLoginHistory,
+  adminFetchMemberCoupons, adminFetchMemberPoints,
+  adminFetchMemberPosts, adminFetchMemberComments,
+  adminFetchMemberSavedPosts,
+  adminFetchMemberFavBuses, adminFetchMemberFavStores, adminFetchMemberFavApts,
   type AdminMember, type MemberLog, type LoginHistory, type MemberStatus,
+  type MemberCoupon, type MemberPointRecord, type MemberPost, type MemberComment,
+  type MemberSavedPost, type MemberFavBus, type MemberFavStore, type MemberFavApt,
 } from "@/lib/db/admin-members";
 
 type StatusFilter  = "all" | MemberStatus;
 type PeriodFilter  = "all" | "today" | "7d" | "30d" | "90d" | "custom";
-type DetailTab     = "log" | "login";
+type DetailTab     = "points" | "coupon" | "posts" | "saved" | "log" | "login";
 
 // ─── 포맷 헬퍼 ────────────────────────────────────────────────
 function fmtDate(iso: string | null) {
@@ -203,6 +210,19 @@ function WithdrawModal({
 }
 
 // ─── 회원 상세 패널 ───────────────────────────────────────────
+// ─── 빈 상태 공통 컴포넌트 ────────────────────────────────────────
+function EmptyState({ label }: { label: string }) {
+  return <div className="py-8 text-center text-[12px] text-[#B0B8C1]">{label}</div>;
+}
+function LoadingState() {
+  return (
+    <div className="py-8 flex justify-center">
+      <RefreshCw size={16} className="animate-spin text-[#3182F6]" />
+    </div>
+  );
+}
+
+// ─── 회원 상세 패널 ───────────────────────────────────────────
 function MemberDetail({
   member: initialMember,
   onClose,
@@ -218,29 +238,59 @@ function MemberDetail({
   onUnsuspend: () => Promise<void>;
   onWithdraw: () => void;
 }) {
-  const [member, setMember] = useState(initialMember);
-  const [detailTab, setDetailTab]     = useState<DetailTab>("log");
-  const [logs, setLogs]               = useState<MemberLog[]>([]);
-  const [logins, setLogins]           = useState<LoginHistory[]>([]);
-  const [logsLoading, setLogsLoading] = useState(true);
+  const [member, setMember]           = useState(initialMember);
+  const [detailTab, setDetailTab]     = useState<DetailTab>("points");
   const [notes, setNotes]             = useState(initialMember.admin_notes ?? "");
   const [notesSaving, setNotesSaving] = useState(false);
   const [unsuspending, setUnsuspending] = useState(false);
 
-  // sync if parent updates member
+  // 탭별 데이터 (lazy load)
+  const [tabLoading, setTabLoading] = useState<Record<string, boolean>>({});
+  const [coupons,    setCoupons]    = useState<MemberCoupon[]>([]);
+  const [points,     setPoints]     = useState<MemberPointRecord[]>([]);
+  const [posts,      setPosts]      = useState<MemberPost[]>([]);
+  const [comments,   setComments]   = useState<MemberComment[]>([]);
+  const [saved,      setSaved]      = useState<MemberSavedPost[]>([]);
+  const [favBuses,   setFavBuses]   = useState<MemberFavBus[]>([]);
+  const [favStores,  setFavStores]  = useState<MemberFavStore[]>([]);
+  const [favApts,    setFavApts]    = useState<MemberFavApt[]>([]);
+  const [logs,       setLogs]       = useState<MemberLog[]>([]);
+  const [logins,     setLogins]     = useState<LoginHistory[]>([]);
+
+  const loadedTabs = useState<Set<string>>(new Set())[0];
+
   useEffect(() => { setMember(initialMember); setNotes(initialMember.admin_notes ?? ""); }, [initialMember]);
 
+  // 탭 변경 시 해당 데이터 lazy load
   useEffect(() => {
-    setLogsLoading(true);
-    Promise.all([
-      adminFetchMemberLogs(member.id),
-      adminFetchLoginHistory(member.id),
-    ]).then(([l, lh]) => {
-      setLogs(l);
-      setLogins(lh);
-      setLogsLoading(false);
-    }).catch(() => setLogsLoading(false));
-  }, [member.id]);
+    if (loadedTabs.has(detailTab)) return;
+    loadedTabs.add(detailTab);
+    setTabLoading(prev => ({ ...prev, [detailTab]: true }));
+
+    const uid = member.id;
+    const done = () => setTabLoading(prev => ({ ...prev, [detailTab]: false }));
+
+    if (detailTab === "points") {
+      adminFetchMemberPoints(uid).then(d => { setPoints(d); done(); }).catch(done);
+    } else if (detailTab === "coupon") {
+      adminFetchMemberCoupons(uid).then(d => { setCoupons(d); done(); }).catch(done);
+    } else if (detailTab === "posts") {
+      Promise.all([adminFetchMemberPosts(uid), adminFetchMemberComments(uid)])
+        .then(([p, c]) => { setPosts(p); setComments(c); done(); }).catch(done);
+    } else if (detailTab === "saved") {
+      Promise.all([
+        adminFetchMemberSavedPosts(uid),
+        adminFetchMemberFavBuses(uid),
+        adminFetchMemberFavStores(uid),
+        adminFetchMemberFavApts(uid),
+      ]).then(([sp, fb, fs, fa]) => { setSaved(sp); setFavBuses(fb); setFavStores(fs); setFavApts(fa); done(); }).catch(done);
+    } else if (detailTab === "log") {
+      adminFetchMemberLogs(uid).then(d => { setLogs(d); done(); }).catch(done);
+    } else if (detailTab === "login") {
+      adminFetchLoginHistory(uid).then(d => { setLogins(d); done(); }).catch(done);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detailTab, member.id]);
 
   async function saveNotes() {
     setNotesSaving(true);
@@ -248,8 +298,9 @@ function MemberDetail({
     const updated = { ...member, admin_notes: notes };
     setMember(updated);
     onMemberUpdate(updated);
-    // re-fetch logs
-    adminFetchMemberLogs(member.id).then(setLogs);
+    // 로그 갱신
+    loadedTabs.delete("log");
+    setTabLoading(prev => ({ ...prev, log: false }));
     setNotesSaving(false);
   }
 
@@ -262,10 +313,35 @@ function MemberDetail({
   const isSuspExpired = member.status === "suspended" && member.suspended_until && new Date(member.suspended_until) < new Date();
   const effectiveStatus: MemberStatus = isSuspExpired ? "active" : member.status;
 
+  // 포인트 등급 정보
+  const GRADES = [
+    { name: "검단 새내기", min: 0,    max: 499  },
+    { name: "검단 단골",   min: 500,  max: 1499 },
+    { name: "검단 일꾼",   min: 1500, max: 2999 },
+    { name: "검단 지킴이", min: 3000, max: Infinity },
+  ];
+  const currentGrade = GRADES.findLast(g => (member.points ?? 0) >= g.min) ?? GRADES[0];
+  const nextGrade    = GRADES.find(g => g.min > (member.points ?? 0));
+  const gradeProgress = nextGrade
+    ? Math.min(100, ((member.points ?? 0) - currentGrade.min) / (nextGrade.min - currentGrade.min) * 100)
+    : 100;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const TABS: { v: DetailTab; label: string; Icon: any }[] = [
+    { v: "points", label: "포인트",    Icon: Coins    },
+    { v: "coupon", label: "쿠폰",      Icon: Tag      },
+    { v: "posts",  label: "게시물",    Icon: PenLine  },
+    { v: "saved",  label: "저장",      Icon: Bookmark },
+    { v: "log",    label: "관리로그",  Icon: FileText },
+    { v: "login",  label: "로그인",    Icon: LogIn    },
+  ];
+
+  const isLoading = tabLoading[detailTab];
+
   return (
     <div className="flex flex-col h-full bg-[#F5F6F8]">
-      {/* 헤더 */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#E5E8EB]">
+      {/* ── 패널 헤더 ─────────────────────────────────────── */}
+      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-[#E5E8EB] shrink-0">
         <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-[#F2F4F6] text-[#8B95A1]">
           <ChevronLeft size={18} />
         </button>
@@ -280,173 +356,353 @@ function MemberDetail({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {/* 기본 정보 카드 */}
-        <div className="m-3 bg-white rounded-2xl border border-[#E5E8EB] p-4">
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center">
-              <p className="text-[10px] text-[#8B95A1] font-bold uppercase mb-0.5">등급</p>
-              <p className="text-[13px] font-bold text-[#191F28]">{member.level || "-"}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-[#8B95A1] font-bold uppercase mb-0.5">포인트</p>
-              <p className="text-[13px] font-bold text-[#3182F6]">{(member.points ?? 0).toLocaleString()}P</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-[#8B95A1] font-bold uppercase mb-0.5">게시물</p>
-              <p className="text-[13px] font-bold text-[#191F28]">글{member.post_count} / 댓{member.comment_count}</p>
-            </div>
+
+        {/* ── 기본 정보 카드 ───────────────────────────────── */}
+        <div className="mx-3 mt-3 mb-2 bg-white rounded-2xl border border-[#E5E8EB] p-4">
+          <div className="grid grid-cols-4 gap-2 mb-3">
+            {[
+              { label: "등급",   value: member.level || "-",                          color: "#9333EA" },
+              { label: "포인트", value: `${(member.points ?? 0).toLocaleString()}P`,   color: "#3182F6" },
+              { label: "작성글", value: String(member.post_count),                     color: "#059669" },
+              { label: "댓글",   value: String(member.comment_count),                  color: "#EA580C" },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="bg-[#F8F9FB] rounded-xl px-2 py-2 text-center">
+                <p className="text-[10px] text-[#8B95A1] mb-0.5">{label}</p>
+                <p className="text-[12px] font-extrabold" style={{ color }}>{value}</p>
+              </div>
+            ))}
           </div>
-          <div className="space-y-1.5 text-[12px] text-[#4E5968]">
-            <div className="flex justify-between">
-              <span className="text-[#8B95A1]">가입일</span>
-              <span className="font-medium">{fmtDate(member.joined_at)}</span>
+          <div className="space-y-1 text-[11px]">
+            <div className="flex justify-between text-[#8B95A1]">
+              <span>가입</span><span className="font-medium text-[#4E5968]">{fmtDate(member.joined_at)}</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-[#8B95A1]">최근 활동</span>
-              <span className="font-medium">{relativeTime(member.last_active_at) ?? "-"}</span>
+            <div className="flex justify-between text-[#8B95A1]">
+              <span>최근 활동</span><span className="font-medium text-[#4E5968]">{relativeTime(member.last_active_at) ?? "-"}</span>
             </div>
             {effectiveStatus === "suspended" && (
-              <>
-                <div className="flex justify-between">
-                  <span className="text-[#8B95A1]">정지 해제일</span>
-                  <span className="font-bold text-[#DC2626]">
-                    {member.suspended_until?.includes("2074") ? "영구" : fmtDate(member.suspended_until)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-[#8B95A1]">정지 사유</span>
-                  <span className="font-medium text-right max-w-[160px]">{member.suspended_reason || "-"}</span>
-                </div>
-              </>
+              <div className="flex justify-between text-[#8B95A1]">
+                <span>정지 해제</span>
+                <span className="font-bold text-[#DC2626]">
+                  {(member.suspended_until ?? "").slice(0, 4) === "2074" ? "영구" : fmtDate(member.suspended_until)}
+                  {member.suspended_reason ? ` — ${member.suspended_reason}` : ""}
+                </span>
+              </div>
             )}
             {effectiveStatus === "withdrawn" && (
-              <div className="flex justify-between">
-                <span className="text-[#8B95A1]">탈퇴일</span>
-                <span className="font-medium">{fmtDate(member.withdrawn_at)}</span>
+              <div className="flex justify-between text-[#8B95A1]">
+                <span>탈퇴일</span><span className="font-medium text-[#4E5968]">{fmtDate(member.withdrawn_at)}</span>
               </div>
             )}
           </div>
         </div>
 
-        {/* 액션 버튼 */}
+        {/* ── 액션 버튼 ─────────────────────────────────────── */}
         {effectiveStatus !== "withdrawn" && (
-          <div className="mx-3 mb-3 flex gap-2">
+          <div className="mx-3 mb-2 flex gap-2">
             {effectiveStatus === "active" && (
               <button onClick={onSuspend}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#FEF2F2] text-[#DC2626] text-[13px] font-bold border border-[#FECACA] hover:bg-[#FEE2E2] transition-colors">
-                <Ban size={14} />계정 정지
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#FEF2F2] text-[#DC2626] text-[12px] font-bold border border-[#FECACA] hover:bg-[#FEE2E2] transition-colors">
+                <Ban size={13} />계정 정지
               </button>
             )}
             {effectiveStatus === "suspended" && (
               <button onClick={handleUnsuspend} disabled={unsuspending}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#ECFDF5] text-[#059669] text-[13px] font-bold border border-[#A7F3D0] hover:bg-[#D1FAE5] transition-colors disabled:opacity-50">
-                <ShieldOff size={14} />{unsuspending ? "처리 중..." : "정지 해제"}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#ECFDF5] text-[#059669] text-[12px] font-bold border border-[#A7F3D0] hover:bg-[#D1FAE5] transition-colors disabled:opacity-50">
+                <ShieldOff size={13} />{unsuspending ? "처리 중..." : "정지 해제"}
               </button>
             )}
             <button onClick={onWithdraw}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#FAF5FF] text-[#9333EA] text-[13px] font-bold border border-[#E9D5FF] hover:bg-[#F3E8FF] transition-colors">
-              <UserX size={14} />강제 탈퇴
+              className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-[#FAF5FF] text-[#9333EA] text-[12px] font-bold border border-[#E9D5FF] hover:bg-[#F3E8FF] transition-colors">
+              <UserX size={13} />강제 탈퇴
             </button>
           </div>
         )}
 
-        {/* 관리자 메모 */}
-        <div className="mx-3 mb-3 bg-white rounded-2xl border border-[#E5E8EB] p-4">
-          <div className="flex items-center gap-1.5 mb-2">
-            <StickyNote size={13} className="text-[#3182F6]" />
-            <p className="text-[12px] font-bold text-[#4E5968]">관리자 메모</p>
+        {/* ── 관리자 메모 ──────────────────────────────────── */}
+        <div className="mx-3 mb-2 bg-white rounded-2xl border border-[#E5E8EB] p-3">
+          <div className="flex items-center gap-1.5 mb-1.5">
+            <StickyNote size={12} className="text-[#3182F6]" />
+            <p className="text-[11px] font-bold text-[#4E5968]">관리자 메모 (회원 비공개)</p>
           </div>
           <textarea
-            className="w-full border border-[#E5E8EB] rounded-xl px-3 py-2.5 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6] resize-none bg-[#F8F9FB]"
-            rows={3}
-            placeholder="내부 메모를 입력하세요 (회원에게 표시되지 않음)"
+            className="w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[12px] outline-none focus:ring-2 focus:ring-[#3182F6] resize-none bg-[#F8F9FB]"
+            rows={2}
+            placeholder="내부 메모 입력..."
             value={notes}
             onChange={e => setNotes(e.target.value)}
           />
           <button onClick={saveNotes} disabled={notesSaving || notes === member.admin_notes}
-            className="mt-2 w-full py-2 rounded-xl bg-[#3182F6] text-white text-[12px] font-bold disabled:opacity-40 hover:bg-[#1c6ef0] transition-colors">
-            {notesSaving ? "저장 중..." : "메모 저장"}
+            className="mt-1.5 w-full py-1.5 rounded-xl bg-[#3182F6] text-white text-[12px] font-bold disabled:opacity-40">
+            {notesSaving ? "저장 중..." : "저장"}
           </button>
         </div>
 
-        {/* 활동 로그 / 로그인 이력 탭 */}
+        {/* ── 데이터 탭 ─────────────────────────────────────── */}
         <div className="mx-3 mb-3 bg-white rounded-2xl border border-[#E5E8EB] overflow-hidden">
-          <div className="flex border-b border-[#E5E8EB]">
-            {([
-              { v: "log" as DetailTab,   label: "활동 로그",    Icon: FileText },
-              { v: "login" as DetailTab, label: "로그인 이력",  Icon: LogIn },
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ] as { v: DetailTab; label: string; Icon: any }[]).map(t => (
+          {/* 탭 헤더 (가로 스크롤) */}
+          <div className="flex overflow-x-auto scrollbar-hide border-b border-[#E5E8EB]">
+            {TABS.map(t => (
               <button key={t.v} onClick={() => setDetailTab(t.v)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[12px] font-bold border-b-2 transition-colors ${
+                className={`shrink-0 flex items-center gap-1 px-3 py-2.5 text-[11px] font-bold border-b-2 transition-colors whitespace-nowrap ${
                   detailTab === t.v
                     ? "border-[#3182F6] text-[#3182F6] bg-[#F0F6FF]"
                     : "border-transparent text-[#8B95A1] hover:bg-[#F8F9FB]"
                 }`}>
-                <t.Icon size={13} />{t.label}
+                <t.Icon size={12} />{t.label}
               </button>
             ))}
           </div>
 
-          {logsLoading ? (
-            <div className="py-8 text-center text-[12px] text-[#B0B8C1]">불러오는 중...</div>
-          ) : detailTab === "log" ? (
-            logs.length === 0 ? (
-              <div className="py-8 text-center text-[12px] text-[#B0B8C1]">활동 로그 없음</div>
-            ) : (
-              <div className="divide-y divide-[#F2F4F6]">
-                {logs.map(log => {
-                  const meta = ACTION_META[log.action] ?? { label: log.action, color: "#8B95A1", Icon: Clock };
-                  return (
-                    <div key={log.id} className="flex items-start gap-3 px-4 py-3">
-                      <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ background: meta.color + "20" }}>
-                        <meta.Icon size={11} style={{ color: meta.color }} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[12px] font-bold" style={{ color: meta.color }}>{meta.label}</p>
-                        {log.detail && <p className="text-[11px] text-[#4E5968] mt-0.5 leading-snug">{log.detail}</p>}
-                        <p className="text-[10px] text-[#B0B8C1] mt-0.5">{fmtDateTime(log.created_at)}</p>
-                      </div>
+          {/* ── 포인트 탭 ────────────────────────────────── */}
+          {detailTab === "points" && (
+            isLoading ? <LoadingState /> : (
+              <div>
+                {/* 등급 진행 */}
+                <div className="px-4 py-3 border-b border-[#F2F4F6]">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div>
+                      <span className="text-[13px] font-extrabold text-[#9333EA]">{currentGrade.name}</span>
+                      {nextGrade && (
+                        <span className="text-[11px] text-[#8B95A1] ml-2">→ {nextGrade.name} ({(nextGrade.min - (member.points ?? 0)).toLocaleString()}P 필요)</span>
+                      )}
                     </div>
-                  );
-                })}
+                    <span className="text-[13px] font-black text-[#3182F6]">{(member.points ?? 0).toLocaleString()}P</span>
+                  </div>
+                  <div className="h-2 bg-[#F2F4F6] rounded-full overflow-hidden">
+                    <div className="h-full bg-[#9333EA] rounded-full transition-all" style={{ width: `${gradeProgress}%` }} />
+                  </div>
+                </div>
+                {/* 포인트 내역 */}
+                {points.length === 0 ? <EmptyState label="포인트 내역 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {points.map(p => (
+                      <div key={p.id} className="flex items-center justify-between px-4 py-2.5">
+                        <div>
+                          <p className="text-[12px] font-medium text-[#191F28]">{p.desc_text || "포인트 변동"}</p>
+                          <p className="text-[10px] text-[#B0B8C1]">{fmtDateTime(p.created_at)}</p>
+                        </div>
+                        <span className={`text-[13px] font-extrabold ${p.points >= 0 ? "text-[#059669]" : "text-[#DC2626]"}`}>
+                          {p.points >= 0 ? "+" : ""}{p.points.toLocaleString()}P
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )
-          ) : (
-            logins.length === 0 ? (
-              <div className="py-8 text-center text-[12px] text-[#B0B8C1]">로그인 이력 없음</div>
-            ) : (
-              <div className="divide-y divide-[#F2F4F6]">
-                {logins.map(l => (
-                  <div key={l.id} className="flex items-center gap-3 px-4 py-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${
-                      l.success ? "bg-[#ECFDF5]" : "bg-[#FEF2F2]"
-                    }`}>
-                      <LogIn size={11} className={l.success ? "text-[#059669]" : "text-[#DC2626]"} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className={`text-[12px] font-bold ${l.success ? "text-[#059669]" : "text-[#DC2626]"}`}>
-                          {l.success ? "로그인 성공" : "로그인 실패"}
-                        </span>
-                        <span className="text-[10px] bg-[#F2F4F6] text-[#8B95A1] px-1.5 py-0.5 rounded-full">{l.login_type}</span>
+          )}
+
+          {/* ── 쿠폰 탭 ─────────────────────────────────── */}
+          {detailTab === "coupon" && (
+            isLoading ? <LoadingState /> : (
+              coupons.length === 0 ? <EmptyState label="다운로드한 쿠폰 없음" /> : (
+                <div className="divide-y divide-[#F2F4F6]">
+                  {coupons.map(c => (
+                    <div key={c.id} className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[12px] font-bold text-[#191F28] truncate">{c.title}</p>
+                          <p className="text-[11px] text-[#4E5968]">{c.store_name}</p>
+                          <p className="text-[11px] text-[#3182F6] font-bold mt-0.5">{c.discount}</p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                            c.status === "사용완료"
+                              ? "bg-[#F2F4F6] text-[#8B95A1]"
+                              : "bg-[#ECFDF5] text-[#059669]"
+                          }`}>{c.status}</span>
+                          <p className="text-[10px] text-[#B0B8C1] mt-1">만료 {c.expiry}</p>
+                          <p className="text-[10px] text-[#B0B8C1]">다운 {fmtDate(c.downloaded_at)}</p>
+                        </div>
                       </div>
-                      {!l.success && l.fail_reason && (
-                        <p className="text-[11px] text-[#F04452] mt-0.5">{l.fail_reason}</p>
-                      )}
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <p className="text-[10px] text-[#B0B8C1]">{fmtDateTime(l.login_at)}</p>
-                        {l.ip_address && <p className="text-[10px] text-[#B0B8C1] font-mono">{l.ip_address}</p>}
-                      </div>
                     </div>
+                  ))}
+                </div>
+              )
+            )
+          )}
+
+          {/* ── 게시물 탭 ─────────────────────────────── */}
+          {detailTab === "posts" && (
+            isLoading ? <LoadingState /> : (
+              <div>
+                {/* 작성글 */}
+                <div className="px-4 py-2 bg-[#F8F9FB] border-b border-[#E5E8EB]">
+                  <span className="text-[11px] font-extrabold text-[#4E5968]">작성글 {posts.length}건</span>
+                </div>
+                {posts.length === 0 ? <EmptyState label="작성한 글 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {posts.map(p => (
+                      <div key={p.id} className="px-4 py-2.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[12px] font-medium text-[#191F28] flex-1 min-w-0 truncate">{p.title || "(제목없음)"}</p>
+                          <span className="text-[10px] bg-[#F2F4F6] text-[#8B95A1] px-1.5 py-0.5 rounded-full shrink-0">{p.category}</span>
+                        </div>
+                        <div className="flex items-center gap-3 mt-1 text-[10px] text-[#B0B8C1]">
+                          <span>❤️ {p.like_count}</span>
+                          <span>💬 {p.comment_count}</span>
+                          <span>{fmtDateTime(p.created_at)}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+                {/* 댓글 */}
+                <div className="px-4 py-2 bg-[#F8F9FB] border-t border-b border-[#E5E8EB]">
+                  <span className="text-[11px] font-extrabold text-[#4E5968]">작성댓글 {comments.length}건</span>
+                </div>
+                {comments.length === 0 ? <EmptyState label="작성한 댓글 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {comments.map(c => (
+                      <div key={c.id} className="px-4 py-2.5">
+                        <p className="text-[12px] text-[#191F28] leading-snug line-clamp-2">{c.content}</p>
+                        <p className="text-[10px] text-[#B0B8C1] mt-1">{fmtDateTime(c.created_at)}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
+            )
+          )}
+
+          {/* ── 저장·즐겨찾기 탭 ─────────────────────── */}
+          {detailTab === "saved" && (
+            isLoading ? <LoadingState /> : (
+              <div>
+                {/* 저장한 글 */}
+                <SectionHeader label="저장한 글" count={saved.length} Icon={Bookmark} />
+                {saved.length === 0 ? <EmptyState label="저장한 글 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {saved.map(s => (
+                      <div key={s.id} className="flex items-center gap-2 px-4 py-2.5">
+                        <Bookmark size={11} className="text-[#3182F6] shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-medium text-[#191F28] truncate">{s.title || "(제목없음)"}</p>
+                          <p className="text-[10px] text-[#B0B8C1]">{s.category} · {fmtDate(s.created_at)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* 즐겨찾기 버스 */}
+                <SectionHeader label="즐겨찾기 버스" count={favBuses.length} Icon={Bus} />
+                {favBuses.length === 0 ? <EmptyState label="즐겨찾기 버스 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {favBuses.map(b => (
+                      <div key={b.id} className="flex items-center gap-2 px-4 py-2">
+                        <Star size={11} className="text-[#FFBB00] fill-[#FFBB00] shrink-0" />
+                        <div>
+                          <p className="text-[12px] font-bold text-[#191F28]">{b.route_name}</p>
+                          {b.stop_name && <p className="text-[10px] text-[#B0B8C1]">정류장: {b.stop_name}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* 즐겨찾기 상가 */}
+                <SectionHeader label="즐겨찾기 상가" count={favStores.length} Icon={Building2} />
+                {favStores.length === 0 ? <EmptyState label="즐겨찾기 상가 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {favStores.map(s => (
+                      <div key={s.id} className="flex items-center gap-2 px-4 py-2">
+                        <Star size={11} className="text-[#FFBB00] fill-[#FFBB00] shrink-0" />
+                        <div>
+                          <p className="text-[12px] font-bold text-[#191F28]">{s.store_name}</p>
+                          {s.building_name && <p className="text-[10px] text-[#B0B8C1]">{s.building_name}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* 관심 아파트 */}
+                <SectionHeader label="관심 아파트" count={favApts.length} Icon={Home} />
+                {favApts.length === 0 ? <EmptyState label="관심 아파트 없음" /> : (
+                  <div className="divide-y divide-[#F2F4F6]">
+                    {favApts.map(a => (
+                      <div key={a.id} className="flex items-center gap-2 px-4 py-2">
+                        <Star size={11} className="text-[#FFBB00] fill-[#FFBB00] shrink-0" />
+                        <div>
+                          <p className="text-[12px] font-bold text-[#191F28]">{a.apt_name}</p>
+                          {a.dong && <p className="text-[10px] text-[#B0B8C1]">{a.dong}</p>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          )}
+
+          {/* ── 관리 로그 탭 ─────────────────────────── */}
+          {detailTab === "log" && (
+            isLoading ? <LoadingState /> : (
+              logs.length === 0 ? <EmptyState label="관리 로그 없음" /> : (
+                <div className="divide-y divide-[#F2F4F6]">
+                  {logs.map(log => {
+                    const meta = ACTION_META[log.action] ?? { label: log.action, color: "#8B95A1", Icon: Clock };
+                    return (
+                      <div key={log.id} className="flex items-start gap-3 px-4 py-3">
+                        <div className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                          style={{ background: meta.color + "20" }}>
+                          <meta.Icon size={11} style={{ color: meta.color }} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[12px] font-bold" style={{ color: meta.color }}>{meta.label}</p>
+                          {log.detail && <p className="text-[11px] text-[#4E5968] mt-0.5 leading-snug">{log.detail}</p>}
+                          <p className="text-[10px] text-[#B0B8C1] mt-0.5">{fmtDateTime(log.created_at)}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            )
+          )}
+
+          {/* ── 로그인 이력 탭 ───────────────────────── */}
+          {detailTab === "login" && (
+            isLoading ? <LoadingState /> : (
+              logins.length === 0 ? <EmptyState label="로그인 이력 없음" /> : (
+                <div className="divide-y divide-[#F2F4F6]">
+                  {logins.map(l => (
+                    <div key={l.id} className="flex items-center gap-3 px-4 py-2.5">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${l.success ? "bg-[#ECFDF5]" : "bg-[#FEF2F2]"}`}>
+                        <LogIn size={11} className={l.success ? "text-[#059669]" : "text-[#DC2626]"} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[12px] font-bold ${l.success ? "text-[#059669]" : "text-[#DC2626]"}`}>
+                            {l.success ? "성공" : "실패"}
+                          </span>
+                          <span className="text-[10px] bg-[#F2F4F6] text-[#8B95A1] px-1.5 py-0.5 rounded-full">{l.login_type}</span>
+                          {!l.success && l.fail_reason && (
+                            <span className="text-[10px] text-[#F04452]">{l.fail_reason}</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-[#B0B8C1]">
+                          <span>{fmtDateTime(l.login_at)}</span>
+                          {l.ip_address && <span className="font-mono">{l.ip_address}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )
             )
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function SectionHeader({ label, count, Icon }: { label: string; count: number; Icon: any }) {
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-2 bg-[#F8F9FB] border-t border-[#E5E8EB]">
+      <Icon size={11} className="text-[#3182F6]" />
+      <span className="text-[11px] font-extrabold text-[#4E5968]">{label}</span>
+      <span className="text-[10px] text-[#8B95A1]">{count}건</span>
     </div>
   );
 }

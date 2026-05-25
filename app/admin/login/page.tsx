@@ -5,14 +5,38 @@ import { Lock, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [pw, setPw] = useState("");
-  const [show, setShow] = useState(false);
-  const [err, setErr] = useState(false);
+  const [pw, setPw]       = useState("");
+  const [show, setShow]   = useState(false);
+  const [err, setErr]     = useState("");
+  const [loading, setLoading] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    sessionStorage.setItem("admin_auth", "1");
-    router.replace("/admin/stores");
+    if (!pw.trim()) return;
+    setLoading(true);
+    setErr("");
+
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: pw }),
+        credentials: "include",  // httpOnly 쿠키를 브라우저에 저장
+      });
+
+      if (res.ok) {
+        sessionStorage.setItem("admin_auth", "1");
+        router.replace("/admin/stores");
+      } else {
+        const json = await res.json().catch(() => ({}));
+        setErr(json.error ?? "비밀번호가 올바르지 않습니다.");
+        setPw("");
+      }
+    } catch {
+      setErr("서버 연결 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -35,7 +59,7 @@ export default function AdminLoginPage() {
               <input
                 type={show ? "text" : "password"}
                 value={pw}
-                onChange={e => { setPw(e.target.value); setErr(false); }}
+                onChange={e => { setPw(e.target.value); setErr(""); }}
                 placeholder="비밀번호 입력"
                 className="w-full bg-white/10 text-white placeholder-white/30 rounded-xl px-4 py-3 pr-11
                   text-[14px] outline-none focus:ring-2 focus:ring-[#3182F6] border border-white/10"
@@ -47,14 +71,14 @@ export default function AdminLoginPage() {
               </button>
             </div>
             {err && (
-              <p className="text-[#F04452] text-[12px] mt-1.5">비밀번호가 올바르지 않습니다.</p>
+              <p className="text-[#F04452] text-[12px] mt-1.5">{err}</p>
             )}
           </div>
 
-          <button type="submit"
+          <button type="submit" disabled={loading || !pw.trim()}
             className="w-full h-11 bg-[#3182F6] hover:bg-[#2563EB] text-white font-bold rounded-xl
-              text-[14px] transition-colors active:scale-[.98]">
-            로그인
+              text-[14px] transition-colors active:scale-[.98] disabled:opacity-50">
+            {loading ? "확인 중..." : "로그인"}
           </button>
         </form>
       </div>

@@ -1,19 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_TABLES = new Set([
+// 공개 읽기 전용 테이블 (인증 없이 접근 가능 — 콘텐츠 데이터)
+const PUBLIC_TABLES = new Set([
   "banners", "buildings", "floors", "stores", "store_coupons", "store_openings",
-  "pharmacies", "emergency_rooms", "community_posts", "community_comments", "news_articles",
+  "pharmacies", "emergency_rooms", "news_articles",
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
   "home_widget_config", "places", "search_keywords", "marts",
   "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
   "sport_categories", "leagues", "teams", "broadcasters",
   "notices",
-  // 회원 관리
+]);
+
+// 관리자 인증 필요 테이블 (민감 데이터)
+const ADMIN_TABLES = new Set([
+  "community_posts", "community_comments",
   "users", "admin_member_logs", "user_login_history", "user_consent_history",
 ]);
+
+const ALLOWED_TABLES = new Set([...PUBLIC_TABLES, ...ADMIN_TABLES]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
 const DEFAULT_ANON  = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
@@ -88,6 +96,10 @@ export async function GET(req: NextRequest) {
   if (!table || !ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: "허용되지 않은 테이블" }, { status: 400 });
   }
+  // 민감 테이블은 어드민 세션 필수
+  if (ADMIN_TABLES.has(table) && !validateAdminCookie(req)) {
+    return NextResponse.json({ error: "관리자 인증이 필요합니다." }, { status: 401 });
+  }
 
   const select = req.nextUrl.searchParams.get("select") || "*";
   const order  = req.nextUrl.searchParams.get("order");
@@ -111,6 +123,10 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/db  { table, method, rows, onConflict, eq }
 export async function POST(req: NextRequest) {
+  // 쓰기 작업은 항상 어드민 세션 필수
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "관리자 인증이 필요합니다." }, { status: 401 });
+  }
   const body = await req.json().catch(() => null);
   if (!body?.table || !ALLOWED_TABLES.has(body.table)) {
     return NextResponse.json({ error: "허용되지 않은 테이블" }, { status: 400 });

@@ -146,3 +146,73 @@ export async function adminFetchLoginHistory(userId: string): Promise<LoginHisto
     limit: 50,
   });
 }
+
+// ── 회원 상세 데이터 (보안 전용 엔드포인트 경유) ─────────────────────────
+export interface MemberCoupon {
+  id: string;
+  coupon_id: string;
+  store_name: string;
+  title: string;
+  discount: string;
+  expiry: string;
+  status: string;
+  downloaded_at: string;
+}
+
+export interface MemberPointRecord {
+  id: string;
+  points: number;
+  desc_text: string;
+  created_at: string;
+}
+
+export interface MemberPost {
+  id: string;
+  title: string;
+  category: string;
+  created_at: string;
+  like_count: number;
+  comment_count: number;
+}
+
+export interface MemberComment {
+  id: string;
+  content: string;
+  created_at: string;
+  post_id: string;
+}
+
+export interface MemberSavedPost {
+  id: string;
+  post_id: string;
+  title: string;
+  category: string;
+  created_at: string;
+}
+
+export interface MemberFavBus   { id: string; route_id: string; route_name: string; stop_name: string | null; created_at: string }
+export interface MemberFavStore { id: string; store_id: string; store_name: string; building_name: string | null; created_at: string }
+export interface MemberFavApt   { id: string; apt_id: string;   apt_name: string;   dong: string | null; created_at: string }
+
+async function fetchMemberDetail<T>(userId: string, type: string): Promise<T[]> {
+  try {
+    const res = await fetch(
+      `/api/admin/member-detail?userId=${encodeURIComponent(userId)}&type=${type}`,
+      { credentials: "include" },  // httpOnly 쿠키 전송
+    );
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json.data ?? []) as T[];
+  } catch {
+    return [];
+  }
+}
+
+export const adminFetchMemberCoupons    = (uid: string) => fetchMemberDetail<MemberCoupon>(uid, "coupons");
+export const adminFetchMemberPoints     = (uid: string) => fetchMemberDetail<MemberPointRecord>(uid, "points");
+export const adminFetchMemberPosts      = (uid: string) => fetchMemberDetail<MemberPost>(uid, "posts");
+export const adminFetchMemberComments   = (uid: string) => fetchMemberDetail<MemberComment>(uid, "comments");
+export const adminFetchMemberSavedPosts = (uid: string) => fetchMemberDetail<MemberSavedPost>(uid, "saved_posts");
+export const adminFetchMemberFavBuses   = (uid: string) => fetchMemberDetail<MemberFavBus>(uid, "fav_buses");
+export const adminFetchMemberFavStores  = (uid: string) => fetchMemberDetail<MemberFavStore>(uid, "fav_stores");
+export const adminFetchMemberFavApts    = (uid: string) => fetchMemberDetail<MemberFavApt>(uid, "fav_apts");
