@@ -1,11 +1,17 @@
 // 인천 서해안 조석 및 해루질/낚시 조건 계산
-// 음력 기반 근사 계산 (실제 조석표와 ±30~60분 오차)
+// 바다타임(badatime.com) 실측 데이터 기반 근사 계산 (±10~30분 오차)
 //
-// 서해안 물때 15일 주기 기준:
-//   음력 8일·23일  = 조금(무시) = 15물   ← 최소 조차
-//   음력 1일·16일  = 한사리     = 8물    ← 최대 조차 (삭·망 다음 날)
-//   음력 9일·24일  = 1물        (조금 직후)
-//   음력 15일·30일 = 7물        (보름 당일)
+// ★ 서해안 물때 15-카운트 주기 (바다타임 기준):
+//   음력  8일·23일 = 조금 (14번)   ← 소조기 진입
+//   음력  9일·24일 = 무시 (15번)   ← 소조기 최저
+//   음력 10일·25일 = 1물            ← 물 증가 시작
+//   음력 15일·30일 = 6물
+//   음력  1일·16일 = 7물
+//   음력  2일·17일 = 8물(한사리)   ← 대조기 최대
+//
+// ★ 기준일: 2026-05-17 = 음력 4월 1일 (바다타임 실측 확인)
+//   - 음력 4.2(5/18) = 8물 한사리, 고조 926cm(9.26m)
+//   - 음력 4.8(5/24) = 조금, 음력 4.9(5/25) = 무시
 
 export interface TideEntry {
   type: "high" | "low";
@@ -15,11 +21,11 @@ export interface TideEntry {
 }
 
 export interface MulttaeInfo {
-  day: number;           // 음력 날짜 (1-30)
-  number: number;        // 물때 번호 (1=한물 … 15=조금)
-  name: string;          // 한물·두물 … 한사리·조금
+  day: number;           // 음력 날짜 (1~30)
+  number: number;        // 물때 번호 (1~15)
+  name: string;          // 한물~열세물·조금·무시
   size: "large" | "medium" | "small";
-  rangeM: number;        // 조차 (m)
+  rangeM: number;        // 조차 (m) 근사값
   lunarMonth: number;
   lunarDay: number;
 }
@@ -45,8 +51,9 @@ export interface TideReport {
 }
 
 // ── 음력 날짜 계산 ─────────────────────────────────────────────────
-// 기준: 2026-04-28 04:31 KST = 음력 병오년 4월 1일 (삭/신월)
-const KNOWN_NEW_MOON_KST = new Date("2026-04-28T04:31:00+09:00").getTime();
+// 기준: 2026-05-17 00:00 KST = 음력 4월 1일 (바다타임 실측 검증)
+// 음력 4.2(5/18)=8물(한사리), 음력 4.8(5/24)=조금, 음력 4.9(5/25)=무시
+const KNOWN_NEW_MOON_KST = new Date("2026-05-17T00:00:00+09:00").getTime();
 const LUNAR_MONTH_MS = 29.530589 * 24 * 3600 * 1000;
 
 export function getLunarAge(date: Date): number {
@@ -60,7 +67,7 @@ export function getLunarDay(date: Date): number {
 }
 
 function getLunarMonthApprox(date: Date): number {
-  // 2026-04-28 = 음력 4월 1일 기준
+  // 기준: 2026-05-17 = 음력 4월 1일
   const monthsElapsed = Math.floor(
     (date.getTime() - KNOWN_NEW_MOON_KST) / LUNAR_MONTH_MS
   );
@@ -68,12 +75,14 @@ function getLunarMonthApprox(date: Date): number {
 }
 
 // ── 물때 이름 ──────────────────────────────────────────────────────
+// 1~13물: 숫자 이름 / 14=조금 / 15=무시
+// 8물(한사리) = 대조기 최대 (음력 2일·17일)
 const MULTTAE_NAMES: Record<number, string> = {
   1:  "한물",    2:  "두물",    3:  "세물",
   4:  "네물",    5:  "다섯물",  6:  "여섯물",
   7:  "일곱물",  8:  "한사리",  9:  "아홉물",
   10: "열물",    11: "열한물",  12: "열두물",
-  13: "열세물",  14: "열네물",  15: "조금",
+  13: "열세물",  14: "조금",    15: "무시",
 };
 
 // ── 물때 정보 ──────────────────────────────────────────────────────
@@ -81,21 +90,23 @@ export function getMulttaeInfo(date: Date): MulttaeInfo {
   const lunarDay = getLunarDay(date);
   const lunarMonth = getLunarMonthApprox(date);
 
-  // 물때 번호: 음력 9일 = 1물, 음력 8일·23일 = 15물(조금)
-  // number = ((lunarDay - 9) mod 15) + 1  (JS-safe 양수 mod)
-  const number = ((((lunarDay - 9) % 15) + 15) % 15) + 1;
+  // 물때 번호 수식 (바다타임 실측 검증):
+  //   음력 10일 → 1물, 음력 8일·23일 → 14물(조금), 음력 9일·24일 → 15물(무시)
+  //   음력  2일 → 8물(한사리 최대), 음력 1일·16일 → 7물
+  const number = ((((lunarDay - 10) % 15) + 15) % 15) + 1;
   const name = MULTTAE_NAMES[number] ?? `${number}물`;
 
-  // ── 조차 계산 ──────────────────────────────────────────────────
-  // 인천 평균 대조차(8물) ≈ 8.2 m, 소조차(15물) ≈ 3.0 m
-  // rangeM = 5.6 - 2.6 * cos(2π * (number%15) / 15)
-  //   phase=0 → 15물(조금) = min  /  phase≈7.5 → 7·8물(사리) = max
-  const phase = number % 15; // 15물 → 0, 1물 → 1, …, 14물 → 14
+  // ── 조차 근사 ────────────────────────────────────────────────────
+  // 인천 실측: 8물(한사리) 926cm 고조 / 1물(소조기) 665cm 고조
+  // rangeM = midRange - amplitude * cos(2π*(number-1)/15)
+  //   number=1(1물) → min(3.9m)   number=8(한사리) → max(8.25m)
+  const phase = number - 1;
   const rangeM = parseFloat(
-    (5.6 - 2.6 * Math.cos((2 * Math.PI * phase) / 15)).toFixed(1)
+    (6.1 - 2.2 * Math.cos((2 * Math.PI * phase) / 15)).toFixed(1)
   );
 
-  // 크기 분류 (5~11물=large, 3~4물·12~13물=medium, 나머지=small)
+  // 크기 분류 (물흐름 기준)
+  // large: 5~11물 (60~98%), medium: 3~4·12~13물 (25~60%), small: 1~2·14~15물 (<25%)
   const size: "large" | "medium" | "small" =
     number >= 5 && number <= 11 ? "large"
     : (number >= 3 && number <= 4) || (number >= 12 && number <= 13) ? "medium"
@@ -105,16 +116,15 @@ export function getMulttaeInfo(date: Date): MulttaeInfo {
 }
 
 // ── 인천 조석 시각 계산 ─────────────────────────────────────────────
-// 기준: 음력 1일(8물/한사리) 첫 고조 ≈ 07:00 KST
-//   인천항 HWI 약 11h 38min / 반일주조 주기 ≈ 12h 25min
-//   매일 약 +50분 지연
-const BASE_HIGH_MIN = 7 * 60;        // 07:00 KST (음력 1일 기준)
-const DAILY_SHIFT_MIN = 50;          // 일 평균 지연
-const HALF_PERIOD_MIN = 6 * 60 + 13; // 고조 → 저조 간격
-const FULL_PERIOD_MIN = 12 * 60 + 25;// 반일주조 전주기
-
-// 인천항 평균해면 ≈ 기본수준면 기준 4.7 m
-const INCHEON_MSL = 4.7;
+// 기준: 음력 4.1(5/17, 7물) 첫 고조 = 04:55 KST (바다타임 실측)
+// 일일 지연: 약 50분 (실측: 5/17~5/24 기간 평균 50.6분/일)
+// 반일주조 주기 ≈ 12시간 25분
+// ※ 무시(15물)·1물(1물) 주변은 1일 1회조(하루 1회 고조)로 오차 증가
+const BASE_HIGH_MIN  = 4 * 60 + 55; // 04:55 KST (음력 4.1 기준)
+const DAILY_SHIFT_MIN = 50;
+const HALF_PERIOD_MIN = 6 * 60 + 13;
+const FULL_PERIOD_MIN = 12 * 60 + 25;
+const INCHEON_MSL = 4.9; // 인천 평균해면 (기본수준면 기준, m)
 
 function minutesToTimeStr(min: number): string {
   const total = ((min % 1440) + 1440) % 1440;
@@ -126,14 +136,14 @@ function minutesToTimeStr(min: number): string {
 export function getIncheonTides(date: Date): TideEntry[] {
   const { day: lunarDay, rangeM } = getMulttaeInfo(date);
 
-  // 음력 1일 기준으로 lunarDay-1 만큼 시각 이동
+  // 음력 1일 기준 lunarDay-1 일 이동
   const shiftMin = ((lunarDay - 1) * DAILY_SHIFT_MIN) % 1440;
   const high1 = (BASE_HIGH_MIN + shiftMin) % 1440;
   const low1  = (high1 + HALF_PERIOD_MIN) % 1440;
   const high2 = (high1 + FULL_PERIOD_MIN) % 1440;
   const low2  = (low1  + FULL_PERIOD_MIN) % 1440;
 
-  // 조위: 평균해면 ± 조차/2
+  // 조위 계산: 평균해면 ± 조차/2
   const highH = parseFloat((INCHEON_MSL + rangeM / 2).toFixed(1));
   const lowH  = parseFloat(Math.max(0.1, INCHEON_MSL - rangeM / 2).toFixed(1));
 
@@ -164,7 +174,7 @@ export function getHaerujilCondition(
   const seasonBad  = month <= 2 || month === 12;
   const seasonBest = (month >= 5 && month <= 6) || (month >= 9 && month <= 10);
 
-  // 저조 시각이 오후~저녁(15-21시)이면 유리
+  // 저조 시각이 오후~저녁(15~21시)이면 유리
   const eveningLow = tides.some(t => t.type === "low" && t.minutes >= 900 && t.minutes <= 1260);
 
   let stars: 1 | 2 | 3 = size === "large" ? 3 : size === "medium" ? 2 : 1;
@@ -217,7 +227,7 @@ export function getFishingCondition(
   tides: TideEntry[],
 ): ActivityCondition {
   const month = date.getMonth() + 1;
-  const { size, rangeM, name, number } = multtae;
+  const { size, rangeM, name } = multtae;
   const fish = FISH_BY_SEASON[month] ?? [];
 
   const seasonBest = month >= 5 && month <= 10;
@@ -226,8 +236,8 @@ export function getFishingCondition(
   let stars: 1 | 2 | 3 = size === "large" ? 3 : size === "medium" ? 2 : 1;
   if (seasonBad  && stars > 1) stars = (stars - 1) as 1 | 2;
   if (seasonBest && stars < 3) stars = (stars + 1) as 2 | 3;
-  // 조금(소조기) — 낚시 조류 약해 1단계 하향
-  if (number >= 14 || number <= 2) stars = Math.max(1, stars - 1) as 1 | 2 | 3;
+  // 소조기(조금·무시·1~2물) — 낚시 조류 약해 1단계 하향
+  if (size === "small") stars = Math.max(1, stars - 1) as 1 | 2 | 3;
 
   const rating: ConditionRating = stars === 3 ? "excellent" : stars === 2 ? "good" : "poor";
 
