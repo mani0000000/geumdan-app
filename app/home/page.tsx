@@ -2212,19 +2212,19 @@ const ALL_SUBWAY_STATIONS = getAllSubwayStations();
 function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
   if (!live || min === -1) {
     return (
-      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[54px]">
-        <span className="text-[#6e6e73] text-[14px] font-bold">--</span>
+      <div className="bg-[#d2d2d7] rounded-xl px-3 py-1.5 text-center min-w-[64px]">
+        <span className="text-[#6e6e73] text-[16px] font-bold">--</span>
       </div>
     );
   }
   const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
   return (
-    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[54px]`}>
-      {min <= 0
-        ? <span className="text-white text-[12px] font-bold">곧도착</span>
+    <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[68px]`}>
+      {min <= 1
+        ? <span className="text-white text-[13px] font-extrabold">곧 도착 예정</span>
         : <>
-            <span className="text-white text-[21px] font-black leading-none">{min}</span>
-            <span className="text-white/80 text-[11px] block leading-none mt-0.5">분 후</span>
+            <span className="text-white text-[22px] font-black leading-none">{min}</span>
+            <span className="text-white/80 text-[12px] block leading-none mt-0.5">분 후</span>
           </>
       }
     </div>
