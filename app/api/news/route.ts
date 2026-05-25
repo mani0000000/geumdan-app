@@ -1,7 +1,4 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-export const runtime = "nodejs";
 
 interface NewsItem {
   title: string;
@@ -9,7 +6,6 @@ interface NewsItem {
   pubDate: string;
   source: string;
   description: string;
-  thumbnail: string | null;
 }
 
 /**
@@ -64,7 +60,6 @@ function parseRssXml(xml: string): NewsItem[] {
         pubDate: pub ? new Date(pub).toISOString() : new Date().toISOString(),
         source: src,
         description: desc,
-        thumbnail: null,
       });
     }
 
@@ -117,7 +112,7 @@ async function fetchRssWithCors(rssUrl: string): Promise<string> {
 }
 
 /**
- * Google News RSS 페칭 (썸네일 없음)
+ * Google News RSS 페칭
  */
 async function fetchGoogleNewsRss(): Promise<NewsItem[]> {
   const rssUrl =
@@ -132,57 +127,12 @@ async function fetchGoogleNewsRss(): Promise<NewsItem[]> {
   }
 }
 
-/**
- * Supabase news_articles 우선 조회 (썸네일 포함, 배치 스크립트가 og:image 추출 후 저장)
- */
-async function fetchFromSupabase(): Promise<NewsItem[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return [];
-
-  try {
-    const supabase = createClient(url, key, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
-
-    const { data, error } = await supabase
-      .from("news_articles")
-      .select("title, url, source, summary, thumbnail, published_at")
-      .order("published_at", { ascending: false })
-      .limit(50);
-
-    if (error || !data) return [];
-
-    return data
-      .filter((r) => r.title && r.url)
-      .map((r) => ({
-        title: r.title as string,
-        link: r.url as string,
-        pubDate: (r.published_at as string) ?? new Date().toISOString(),
-        source: (r.source as string) ?? "뉴스",
-        description: (r.summary as string) ?? "",
-        thumbnail: (r.thumbnail as string) ?? null,
-      }));
-  } catch (err) {
-    console.error("[/api/news] Supabase fetch failed:", err);
-    return [];
-  }
-}
-
 export async function GET() {
   try {
-    // 1순위: 배치로 채워둔 Supabase 데이터 (썸네일 포함)
-    let items = await fetchFromSupabase();
-    let source: "supabase" | "rss" = "supabase";
-
-    // 2순위: 라이브 RSS (썸네일 없음, 비상시)
-    if (items.length === 0) {
-      items = await fetchGoogleNewsRss();
-      source = "rss";
-    }
+    const items = await fetchGoogleNewsRss();
 
     return NextResponse.json(
-      { items, success: true, source, timestamp: new Date().toISOString() },
+      { items, success: true, timestamp: new Date().toISOString() },
       {
         headers: {
           "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600",

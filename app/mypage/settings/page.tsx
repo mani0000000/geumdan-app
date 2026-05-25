@@ -140,9 +140,7 @@ export default function SettingsPage() {
 
         {/* Delete account */}
         <div className="mx-4 mb-6">
-          <button
-            onClick={() => router.push("/mypage/delete-account/")}
-            className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
+          <button className="w-full h-12 bg-white rounded-2xl text-[#F04452] text-[15px] font-medium active:bg-[#FEE2E2] transition-colors">
             회원 탈퇴
           </button>
         </div>

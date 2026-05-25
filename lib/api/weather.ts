@@ -1,5 +1,6 @@
-// 날씨: 기상청 API 서버 프록시 (/api/weather) 우선 호출
-// 프록시 실패 시 Open-Meteo 직접 호출 폴백
+// 날씨: Open-Meteo primary (무료·키없음·CORS OK)
+// 미세먼지: Open-Meteo air quality API (무료·키없음·CORS OK)
+// 기상청 단기예보는 CORS 제한으로 브라우저 직접 호출 불가 → Open-Meteo 사용
 // 검단신도시 좌표: 37.5446, 126.6861
 
 const WMO: Record<number, { label: string; emoji: string }> = {
@@ -86,8 +87,7 @@ async function fetchAirQuality(): Promise<{ pm10: number | null; pm25: number | 
   } catch { return { pm10: null, pm25: null }; }
 }
 
-// Open-Meteo 직접 호출 (폴백용)
-async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
+export async function fetchWeather(): Promise<WeatherData | null> {
   try {
     const url = [
       "https://api.open-meteo.com/v1/forecast",
@@ -107,15 +107,16 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
     const d = await res.json();
 
     const code: number = d.current.weather_code;
-    const now = new Date();
-    const nowH = now.getHours();
+    const nowH = new Date().getHours();
     const todayStr = new Date().toISOString().slice(0, 10);
 
+    // 어제 동시간 온도 (past_days=1 → hourly[nowH] = 어제 같은 시각)
     const yesterdayTemp: number | null =
       d.hourly?.temperature_2m?.[nowH] != null
         ? Math.round(d.hourly.temperature_2m[nowH] as number)
         : null;
 
+    // 오늘 이후 시간별 예보 (최대 6개)
     const hourly = (d.hourly.time as string[])
       .map((t: string, i: number) => ({
         t,
@@ -130,10 +131,33 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
         emoji: wmo(h.code).emoji,
       }));
 
+    // 주간 예보 (past_days=1 → daily[0]=어제, daily[1]=오늘)
+    const weekly: WeeklyDay[] = (d.daily.time as string[])
+      .map((date: string, i: number) => {
+        const d2 = new Date(date + "T00:00:00");
+        return {
+          date: `${d2.getMonth() + 1}/${d2.getDate()}`,
+          dayLabel: DAY_KO[d2.getDay()],
+          emoji: wmo(d.daily.weather_code[i] as number).emoji,
+          high: Math.round(d.daily.temperature_2m_max[i] as number),
+          low: Math.round(d.daily.temperature_2m_min[i] as number),
+          precipitation: Math.round(d.daily.precipitation_sum[i] as number),
+          isToday: date === todayStr,
+        };
+      })
+      .filter(day => !day.isToday
+        ? (d.daily.time as string[]).indexOf(
+            (d.daily.time as string[]).find(t => t === todayStr) ?? ""
+          ) <= (d.daily.time as string[]).indexOf(todayStr)
+        : true
+      );
+
+    // daily[1] = 오늘 (past_days=1이므로 0=어제)
     const todayIdx = (d.daily.time as string[]).findIndex((t: string) => t === todayStr);
     const high = todayIdx >= 0 ? Math.round(d.daily.temperature_2m_max[todayIdx] as number) : 0;
     const low  = todayIdx >= 0 ? Math.round(d.daily.temperature_2m_min[todayIdx] as number) : 0;
 
+    // 오늘 이후 주간만
     const weeklyFiltered = (d.daily.time as string[])
       .map((date: string, i: number) => {
         const d2 = new Date(date + "T00:00:00");
@@ -147,7 +171,12 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
           isToday: date === todayStr,
         };
       })
-      .filter((_, i) => i >= Math.max(0, todayIdx))
+      .filter(day => {
+        const idx = (d.daily.time as string[]).findIndex(
+          (t: string) => `${new Date(t + "T00:00:00").getMonth() + 1}/${new Date(t + "T00:00:00").getDate()}` === day.date
+        );
+        return idx >= todayIdx;
+      })
       .slice(0, 7);
 
     return {
@@ -169,46 +198,7 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
       pm25Label: pmLabel(air.pm25, "pm25"),
     };
   } catch (e) {
-    console.error("[weather] open-meteo fetch failed:", e);
+    console.error("[weather] fetch failed:", e);
     return null;
   }
-}
-
-export async function fetchWeather(): Promise<WeatherData | null> {
-  // 기상청 API 서버 프록시 우선 시도 (DATA_GO_KR_API_KEY 필요)
-  try {
-    const res = await fetch("/api/weather", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json() as WeatherData & { error?: string; source?: string };
-      if (!data.error) {
-        // 기상청 데이터는 주간예보가 3일 → Open-Meteo 연장으로 보완
-        if (data.weekly && data.weekly.length < 5) {
-          try {
-            const fallback = await fetchFromOpenMeteo();
-            if (fallback) {
-              // KMA 3일 + Open-Meteo 나머지 날 병합
-              const kmaWeekly = data.weekly;
-              const kmaDates = new Set(kmaWeekly.map(w => w.date));
-              const extra = fallback.weekly.filter(w => !kmaDates.has(w.date));
-              data.weekly = [...kmaWeekly, ...extra].slice(0, 7);
-              // 어제 기온도 Open-Meteo에서 보완
-              if (data.yesterdayTemp == null) data.yesterdayTemp = fallback.yesterdayTemp;
-              // 공기질도 보완
-              if (data.pm10 == null && fallback.pm10 != null) {
-                data.pm10 = fallback.pm10;
-                data.pm25 = fallback.pm25;
-                data.pm10Label = fallback.pm10Label;
-                data.pm25Label = fallback.pm25Label;
-              }
-            }
-          } catch { /* ignore, just return KMA data */ }
-        }
-        return data;
-      }
-    }
-  } catch { /* fall through to Open-Meteo */ }
-
-  // 기상청 실패 시 Open-Meteo 직접 호출
-  console.warn("[weather] KMA proxy failed, falling back to Open-Meteo");
-  return fetchFromOpenMeteo();
 }

@@ -166,8 +166,6 @@ create table if not exists community_posts (
   comment_count integer default 0,
   is_pinned   boolean default false,
   is_hot      boolean default false,
-  image_urls  text[] not null default '{}'::text[],
-  video_url   text,
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );

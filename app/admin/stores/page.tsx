@@ -17,15 +17,7 @@ const EMPTY: Omit<AdminBuilding, "id"> = {
   floors: null, total_stores: null,
   parking_info: null, open_time: null,
   has_data: true, categories: null, image_url: null,
-  photo_north: null, photo_south: null, photo_east: null, photo_west: null,
 };
-
-const DIRECTIONS = [
-  { key: "photo_north" as const, label: "북쪽 (N)" },
-  { key: "photo_east" as const, label: "동쪽 (E)" },
-  { key: "photo_south" as const, label: "남쪽 (S)" },
-  { key: "photo_west" as const, label: "서쪽 (W)" },
-];
 
 function BuildingModal({
   initial, onSave, onClose,
@@ -104,33 +96,13 @@ function BuildingModal({
               <input className={INPUT} value={form.open_time ?? ""}
                 onChange={e => set("open_time", e.target.value || null)} placeholder="예: 매일 10:00~22:00" />
             </Field>
-            <Field label="대표 이미지">
+            <Field label="이미지">
               <ImageUpload
                 value={form.image_url}
                 onChange={url => set("image_url", url)}
                 folder="buildings"
               />
             </Field>
-
-            <div className="pt-1">
-              <p className="text-[11px] font-semibold text-[#8B95A1] mb-1">방향별 로드뷰 사진</p>
-              <p className="text-[11px] text-[#B0B8C1] mb-2.5 leading-relaxed">
-                건물을 동·서·남·북에서 바라본 사진을 올리면 상가지도 바텀시트에서
-                방향 탭 로드뷰로 보여줍니다. (비워두면 “준비중” 표시)
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {DIRECTIONS.map(d => (
-                  <div key={d.key} className="border border-[#E5E8EB] rounded-xl p-2.5">
-                    <p className="text-[12px] font-bold text-[#4E5968] mb-1.5">{d.label}</p>
-                    <ImageUpload
-                      value={form[d.key]}
-                      onChange={url => set(d.key, url)}
-                      folder="buildings/roadview"
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={form.has_data}
                 onChange={e => set("has_data", e.target.checked)}

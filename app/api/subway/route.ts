@@ -3,58 +3,64 @@ import type { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const TAGO_SUBWAY_BASE = "https://apis.data.go.kr/1613000/SubwayInfoService";
-const IC_SUBWAY_BASE   = "https://apis.data.go.kr/6280000/IcSubwayInfoService";
-
-const ACTIONS: Record<string, { url: string; required: string[] }> = {
-  // 인천교통공사 — 인천1·2호선 실시간 도착정보 (동일 엔드포인트로 양 노선 모두 제공)
-  ic1:          { url: `${IC_SUBWAY_BASE}/getIcSubwayArvlList`,                       required: ["stationId"] },
-  // TAGO 국토교통부 지하철정보 — 키워드 기반 역 검색 (subwayStationId 발견용)
-  tagoSearch:   { url: `${TAGO_SUBWAY_BASE}/getKwrdFndSubwaySttnList`,                required: ["subwayStationName"] },
-  // TAGO — 역별 시간표 조회 (정확한 첫차/막차/배차)
-  tagoSchedule: { url: `${TAGO_SUBWAY_BASE}/getSubwaySttnAcctoSchdulList`,            required: ["subwayStationId", "dailyTypeCode", "upDownTypeCode"] },
-  // TAGO — 역별 실시간 도착정보 (제공 시)
-  tagoArvl:     { url: `${TAGO_SUBWAY_BASE}/getSubwaySttnAcctoArvlMvmnInfoList`,      required: ["subwayStationId"] },
-};
-
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams;
-  const action = sp.get("type") ?? sp.get("action") ?? "";
-  const meta = ACTIONS[action];
-  if (!meta) {
-    return Response.json({ error: "invalid_type", allowed: Object.keys(ACTIONS) }, { status: 400 });
+  const type = sp.get("type") ?? "";
+
+  if (type === "ic1") {
+    const key = process.env.DATA_GO_KR_API_KEY
+      ?? process.env.NEXT_PUBLIC_BUS_API_KEY
+      ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
+    if (!key) return Response.json({ error: "api_key_not_configured" }, { status: 500 });
+    const stationId = sp.get("stationId");
+    if (!stationId) return Response.json({ error: "missing_stationId" }, { status: 400 });
+
+    const url =
+      `https://apis.data.go.kr/6280000/IcSubwayInfoService/getIcSubwayArvlList` +
+      `?serviceKey=${encodeURIComponent(key)}&_type=json&stationId=${encodeURIComponent(stationId)}` +
+      `&pageNo=1&numOfRows=10`;
+
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const text = await res.text();
+      return new Response(text, {
+        status: res.status,
+        headers: {
+          "Content-Type": res.headers.get("content-type") ?? "application/json",
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (err) {
+      return Response.json({ error: "upstream_failed", message: String(err) }, { status: 502 });
+    }
   }
 
-  const key = process.env.DATA_GO_KR_API_KEY
-    ?? process.env.NEXT_PUBLIC_BUS_API_KEY
-    ?? process.env.NEXT_PUBLIC_MOLIT_API_KEY;
-  if (!key) return Response.json({ error: "api_key_not_configured" }, { status: 500 });
+  if (type === "seoul") {
+    const key = process.env.SEOUL_SUBWAY_KEY
+      ?? process.env.NEXT_PUBLIC_SEOUL_SUBWAY_KEY
+      ?? "617a4341466d616e3133314941656442";
+    if (!key) return Response.json({ error: "seoul_key_not_configured" }, { status: 500 });
+    const stationName = sp.get("stationName");
+    if (!stationName) return Response.json({ error: "missing_stationName" }, { status: 400 });
 
-  for (const k of meta.required) {
-    if (!sp.get(k)) return Response.json({ error: `missing_${k}` }, { status: 400 });
+    const url =
+      `http://swopenapi.seoul.go.kr/api/subway/${encodeURIComponent(key)}` +
+      `/json/realtimeStationArrival/0/20/${encodeURIComponent(stationName)}`;
+
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const text = await res.text();
+      return new Response(text, {
+        status: res.status,
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        },
+      });
+    } catch (err) {
+      return Response.json({ error: "upstream_failed", message: String(err) }, { status: 502 });
+    }
   }
 
-  const params = new URLSearchParams({ serviceKey: key, _type: "json" });
-  sp.forEach((v, k) => {
-    if (k === "type" || k === "action") return;
-    params.set(k, v);
-  });
-  if (!params.has("pageNo"))    params.set("pageNo", "1");
-  if (!params.has("numOfRows")) params.set("numOfRows", "20");
-
-  const upstream = `${meta.url}?${params.toString()}`;
-
-  try {
-    const res = await fetch(upstream, { signal: AbortSignal.timeout(8000) });
-    const text = await res.text();
-    return new Response(text, {
-      status: res.status,
-      headers: {
-        "Content-Type": res.headers.get("content-type") ?? "application/json",
-        "Cache-Control": "no-store",
-      },
-    });
-  } catch (err) {
-    return Response.json({ error: "upstream_failed", message: String(err) }, { status: 502 });
-  }
+  return Response.json({ error: "invalid_type", allowed: ["ic1", "seoul"] }, { status: 400 });
 }

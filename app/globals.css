@@ -33,18 +33,6 @@ html, body {
   outline-offset: 2px;
 }
 
-input:focus,
-input:focus-visible,
-textarea:focus,
-textarea:focus-visible,
-select:focus,
-select:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  --tw-ring-shadow: 0 0 transparent !important;
-  --tw-ring-offset-shadow: 0 0 transparent !important;
-}
-
 /* ── 전광판 애니메이션 ─────────────────────────────────── */
 @keyframes led-blink {
   0%, 100% { opacity: 1; }

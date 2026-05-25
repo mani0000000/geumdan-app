@@ -1,11 +1,9 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2 } from "lucide-react";
+import { ChevronLeft, Image as ImageIcon, ChevronDown } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
-import VideoUpload from "@/components/ui/VideoUpload";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -25,80 +23,29 @@ export default function WritePage() {
   const [content, setContent] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
-  const [authorDong, setAuthorDong] = useState("검단");
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [images, setImages] = useState<string[]>([]);
-  const [videos, setVideos] = useState<string[]>([]);
-  const [uploading, setUploading] = useState(false);
-
-  useEffect(() => {
-    getUserProfile().then(p => {
-      setNickname(p.nickname);
-      setAuthorDong(p.dong);
-      setAvatarUrl(p.avatar_url ?? null);
-    });
-  }, []);
-
-  const canSubmit =
-    category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
-
-  // 이미지는 /api/upload 로 보낸다 (압축된 base64 폴백 가능).
-  // 영상은 Vercel 4.5MB 본문 한도를 우회하기 위해 VideoUpload 컴포넌트가
-  // Supabase Storage 로 직접 올린다 — 여기서는 처리하지 않는다.
-  const handleFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    setError("");
-    try {
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) continue;
-        const form = new FormData();
-        form.append("file", file);
-        form.append("folder", "community");
-        const res = await fetch("/api/upload", { method: "POST", body: form });
-        const json = (await res.json()) as { url?: string; error?: string };
-        if (!res.ok || !json.url) {
-          throw new Error(json.error ?? "업로드 실패");
-        }
-        setImages(prev => [...prev, json.url!]);
-      }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "파일 업로드에 실패했습니다.");
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
+  const canSubmit = category !== "" && title.trim().length > 0 && content.trim().length > 0;
 
   const submit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
     setError("");
     try {
-      const uid = await getOrCreateUserId();
-      const result = await createPost({
+      const post = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
         author: nickname.trim() || "검단주민",
-        authorDong,
-        authorAvatarUrl: avatarUrl,
-        userId: uid,
+        authorDong: "검단",
         isAnonymous: anonymous,
-        images,
-        videos,
       });
-      if (result?.post) {
-        saveMyPostId(result.post.id);
-        if (result.imagesDropped && (images.length > 0 || videos.length > 0)) {
-          alert("사진·영상 저장 기능이 아직 준비 중이라 글만 등록되었어요.");
-        }
-        router.push(`/community/detail/?id=${result.post.id}`);
+      if (post) {
+        saveMyPostId(post.id);
+        router.push(`/community/detail/?id=${post.id}`);
       } else {
+        // Supabase 미설정 시 목록으로 이동
         router.push("/community/");
       }
     } catch {
@@ -167,54 +114,11 @@ export default function WritePage() {
             className="w-full h-full min-h-[200px] px-5 py-4 text-[16px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none resize-none leading-relaxed" />
         </div>
 
-        {/* Image previews */}
-        {(images.length > 0 || uploading) && (
-          <div className="px-4 py-3 border-t border-[#f5f5f7] flex flex-wrap gap-2">
-            {images.map((src, i) => (
-              <div key={`img-${i}`} className="relative w-20 h-20 rounded-xl overflow-hidden bg-[#f5f5f7]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={src} alt="" className="w-full h-full object-cover" />
-                <button
-                  type="button"
-                  onClick={() => setImages(prev => prev.filter((_, idx) => idx !== i))}
-                  className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/55 text-white rounded-full flex items-center justify-center active:opacity-70">
-                  <X size={11} />
-                </button>
-              </div>
-            ))}
-            {uploading && (
-              <div className="w-20 h-20 rounded-xl bg-[#f5f5f7] flex items-center justify-center">
-                <Loader2 size={20} className="text-[#0071e3] animate-spin" />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Video upload — Supabase Storage 직접 업로드(Vercel 4.5MB 한도 우회) */}
-        <div className="border-t border-[#f5f5f7] px-5 py-4 space-y-2">
-          <p className="text-[13px] font-semibold text-[#424245]">영상 첨부</p>
-          <VideoUpload value={videos} onChange={setVideos} disabled={submitting} />
-        </div>
-
         {/* Bottom toolbar */}
         <div className="px-4 py-3 flex items-center justify-between border-t border-[#f5f5f7]">
           <div className="flex items-center gap-3">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={e => handleFiles(e.target.files)}
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
-              className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60 disabled:opacity-50">
-              {uploading
-                ? <Loader2 size={18} className="text-[#6e6e73] animate-spin" />
-                : <ImageIcon size={18} className="text-[#6e6e73]" />}
+            <button className="w-9 h-9 rounded-xl bg-[#f5f5f7] flex items-center justify-center active:opacity-60">
+              <ImageIcon size={18} className="text-[#6e6e73]" />
             </button>
             {!anonymous && (
               <input value={nickname} onChange={e => setNickname(e.target.value)}
@@ -241,7 +145,7 @@ export default function WritePage() {
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
           <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
           <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
-            광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
+            광고·홍보 목적 게시글, 타인 비방·혐오 표현, 개인정보 노출, 불법 정보 공유
           </p>
         </div>
       </div>
