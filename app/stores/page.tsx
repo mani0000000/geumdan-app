@@ -1,6 +1,7 @@
 "use client";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   MapPin, Phone, Clock, Lock, Tag,
@@ -554,19 +555,128 @@ function classifyOpening(openDate: string): "week" | "month" | "none" {
 
 // ─── 매장 리스트 뷰 ──────────────────────────────────────────
 const ALL_CATS = ALL_CATEGORIES;
+const PAGE_SIZE = 20;
+const POPULAR_LIMIT = 8;
+
+// 매거진형 2열 그리드 카드
+const StoreCard = memo(function StoreCard({
+  store, hasNew, hasCoupon,
+}: {
+  store: EnrichedStore;
+  hasNew: boolean;
+  hasCoupon: boolean;
+}) {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const [heroFailed, setHeroFailed] = useState(false);
+  const heroThumb = !!store.thumbnail_url && !thumbFailed ? store.thumbnail_url : null;
+  const [gFrom, gTo] = catGrads[store.category];
+  const isOpen = store.isOpen !== false;
+  return (
+    <Link href={`/stores/${store.id}`}
+      className="bg-white rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform shadow-[0_2px_10px_rgba(0,0,0,0.04)] border border-[#eeeef0] flex flex-col h-full">
+      <div className="relative overflow-hidden" style={{ aspectRatio: "5/3" }}>
+        {heroThumb ? (
+          <img src={heroThumb} alt={store.name}
+            loading="lazy" decoding="async"
+            onError={() => setThumbFailed(true)}
+            className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full relative">
+            {!heroFailed && (
+              <img src={catHeroImage[store.category]} alt=""
+                loading="lazy" decoding="async"
+                onError={() => setHeroFailed(true)}
+                className="absolute inset-0 w-full h-full object-cover" />
+            )}
+            <div className="absolute inset-0"
+              style={{ background: `linear-gradient(135deg, ${gFrom}cc, ${gTo}99)` }} />
+          </div>
+        )}
+        <div className="absolute inset-0"
+          style={{ background: "linear-gradient(to bottom, transparent 40%, rgba(0,0,0,0.45) 100%)" }} />
+        <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
+          {hasNew && <span className="text-[9px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>}
+          {store.isPremium && <span className="text-[9px] font-black bg-[#F59E0B] text-white px-1.5 py-0.5 rounded-full">★</span>}
+        </div>
+        <div className="absolute bottom-2 left-2 right-2 flex items-end justify-between">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>
+            {catEmoji[store.category]} {store.category}
+          </span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm ${
+            isOpen ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
+          }`}>
+            {isOpen ? "영업중" : "종료"}
+          </span>
+        </div>
+      </div>
+      <div className="px-3 py-2.5 flex-1 flex flex-col gap-1">
+        <p className="text-[14px] font-bold text-[#1d1d1f] leading-snug line-clamp-1">{store.name}</p>
+        <p className="text-[11px] text-[#86868b] line-clamp-1">{store.buildingName} · {store.floorLabel}</p>
+        {hasCoupon && (
+          <div className="flex items-center gap-1 mt-0.5">
+            <Tag size={9} className="text-[#0071e3]" />
+            <span className="text-[10px] font-bold text-[#0071e3]">쿠폰</span>
+          </div>
+        )}
+      </div>
+    </Link>
+  );
+});
+
+// 인기매장 가로 스크롤 카드
+const PopularCard = memo(function PopularCard({
+  store, hasNew, hasCoupon,
+}: {
+  store: EnrichedStore;
+  hasNew: boolean;
+  hasCoupon: boolean;
+}) {
+  const [thumbFailed, setThumbFailed] = useState(false);
+  const heroThumb = !!store.thumbnail_url && !thumbFailed ? store.thumbnail_url : null;
+  const [gFrom, gTo] = catGrads[store.category];
+  return (
+    <Link href={`/stores/${store.id}`}
+      className="relative rounded-2xl overflow-hidden active:scale-[0.97] transition-transform shadow-sm flex flex-col"
+      style={{ width: 140, height: 110 }}>
+      {heroThumb ? (
+        <img src={heroThumb} alt={store.name}
+          loading="lazy" decoding="async"
+          onError={() => setThumbFailed(true)}
+          className="absolute inset-0 w-full h-full object-cover" />
+      ) : (
+        <div className="absolute inset-0"
+          style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }} />
+      )}
+      <div className="absolute inset-0"
+        style={{ background: "linear-gradient(to bottom, transparent 30%, rgba(0,0,0,0.6) 100%)" }} />
+      {(hasNew || store.isPremium) && (
+        <div className="absolute top-2 left-2 flex gap-1">
+          {hasNew && <span className="text-[9px] font-black bg-[#F04452] text-white px-1.5 py-0.5 rounded-full">NEW</span>}
+          {store.isPremium && <span className="text-[9px] font-black bg-[#F59E0B] text-white px-1.5 py-0.5 rounded-full">★</span>}
+        </div>
+      )}
+      {hasCoupon && (
+        <div className="absolute top-2 right-2">
+          <Tag size={11} className="text-white drop-shadow" />
+        </div>
+      )}
+      <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5">
+        <p className="text-[13px] font-black text-white leading-tight line-clamp-1 drop-shadow">{store.name}</p>
+        <p className="text-[10px] text-white/75 mt-0.5 line-clamp-1">{store.buildingName}</p>
+      </div>
+    </Link>
+  );
+});
 
 function StoreListView() {
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
-  const [selectedStore, setSelectedStore] = useState<EnrichedStore | null>(null);
   const [dbStores, setDbStores] = useState<FlatStore[]>([]);
   const [dbCoupons, setDbCoupons] = useState<import("@/lib/types").Coupon[]>([]);
   const [dbOpenings, setDbOpenings] = useState<import("@/lib/types").NewStoreOpening[]>([]);
-  // 상가 바텀시트
-  const [selectedBuilding, setSelectedBuilding] = useState<NearbyBuilding | null>(null);
-  const [buildingDetail, setBuildingDetail] = useState<Building | null>(null);
-  const [buildingLoading, setBuildingLoading] = useState(false);
   const [dlState, setDlState] = useState<Set<string>>(() => loadDownloaded());
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchAllStoresFlat().then(setDbStores);
@@ -580,98 +690,59 @@ function StoreListView() {
     [dbStores]
   );
 
-  const filtered = useMemo(() =>
-    catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter),
-    [allStores, catFilter]
+  const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
+  const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
+
+  const popularStores = useMemo(() => {
+    return allStores
+      .map(s => {
+        let score = 0;
+        if (s.isPremium) score += 100;
+        if (couponStoreIds.has(s.id)) score += 50;
+        if (newOpeningIds.has(s.id)) score += 30;
+        if (s.isOpen !== false) score += 5;
+        return { s, score };
+      })
+      .filter(({ score }) => score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, POPULAR_LIMIT)
+      .map(({ s }) => s);
+  }, [allStores, couponStoreIds, newOpeningIds]);
+
+  const baseList = useMemo<EnrichedStore[]>(
+    () => (catFilter === "전체" ? allStores : allStores.filter(s => s.category === catFilter)),
+    [catFilter, allStores]
   );
+  const hasMore = visibleCount < baseList.length;
+  const visibleList = useMemo(() => baseList.slice(0, visibleCount), [baseList, visibleCount]);
 
   const grouped = useMemo(() => {
     if (catFilter !== "전체") return null;
     const map = new Map<StoreCategory, EnrichedStore[]>();
     ALL_CATS.forEach(c => {
-      const group = allStores.filter(s => s.category === c);
+      const group = visibleList.filter(s => s.category === c);
       if (group.length > 0) map.set(c, group);
     });
     return map;
-  }, [allStores, catFilter]);
+  }, [catFilter, visibleList]);
 
-  const newOpeningIds = useMemo(() => new Set(dbOpenings.map(o => o.storeId)), [dbOpenings]);
-  const couponStoreIds = useMemo(() => new Set(dbCoupons.map(c => c.storeId)), [dbCoupons]);
+  useEffect(() => { setVisibleCount(PAGE_SIZE); }, [catFilter]);
 
-  function StoreCard({ store }: { store: EnrichedStore }) {
-    const hasNew = newOpeningIds.has(store.id);
-    const hasCoupon = couponStoreIds.has(store.id);
-    const [thumbFailed, setThumbFailed] = useState(false);
-    const hasThumb = !!store.thumbnail_url && !thumbFailed;
-    return (
-      <button onClick={() => setSelectedStore(store)}
-        className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
-        <div className="w-[3px] shrink-0" style={{ background: catDot[store.category] }} />
-        <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
-          <div className="relative shrink-0">
-            <StoreLogo name={store.name} category={store.category} size={46} />
-            {hasNew && (
-              <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-[#F04452] rounded-full border-2 border-white" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{store.name}</p>
-              {hasNew && <span className="shrink-0 text-[9px] font-black text-[#F04452] bg-[#FFF0F0] px-1.5 py-0.5 rounded-full">NEW</span>}
-              {store.isPremium && <span className="shrink-0 text-[9px] font-black bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full">PREMIUM</span>}
-            </div>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <span className="text-[12px] text-[#6e6e73]">{store.buildingName}</span>
-              <span className="text-[11px] text-[#d2d2d7]">·</span>
-              <span className="text-[12px] font-semibold" style={{ color: catDot[store.category] }}>{store.floorLabel}</span>
-              {store.hours && <>
-                <span className="text-[11px] text-[#d2d2d7]">·</span>
-                <span className="text-[12px] text-[#86868b]">{store.hours}</span>
-              </>}
-            </div>
-            {hasCoupon && (
-              <div className="flex items-center gap-1 mt-1.5">
-                <Tag size={10} className="text-[#0071e3]" />
-                <span className="text-[11px] font-bold text-[#0071e3]">쿠폰 사용 가능</span>
-              </div>
-            )}
-          </div>
-          {!hasThumb && (
-            <div className="shrink-0 flex flex-col items-end gap-2">
-              <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#F3F4F6] text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업 중" : "영업 종료"}
-              </span>
-              <ChevronRight size={14} className="text-[#d2d2d7]" />
-            </div>
-          )}
-        </div>
-        {hasThumb && (
-          <div className="shrink-0 relative" style={{ width: 88 }}>
-            <img
-              src={store.thumbnail_url!}
-              alt={store.name}
-              onError={() => setThumbFailed(true)}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute inset-0" style={{ background: "linear-gradient(to right, rgba(255,255,255,0.15) 0%, transparent 40%)" }} />
-            <div className="absolute top-2 right-2">
-              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm ${
-                store.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-white/80 text-[#9CA3AF]"
-              }`}>
-                {store.isOpen !== false ? "영업" : "종료"}
-              </span>
-            </div>
-          </div>
-        )}
-      </button>
+  useEffect(() => {
+    if (!hasMore) return;
+    const target = sentinelRef.current;
+    if (!target) return;
+    const io = new IntersectionObserver(
+      entries => { if (entries[0]?.isIntersecting) setVisibleCount(c => Math.min(c + PAGE_SIZE, baseList.length)); },
+      { rootMargin: "200px" }
     );
-  }
+    io.observe(target);
+    return () => io.disconnect();
+  }, [hasMore, baseList.length]);
 
   return (
     <div>
-      {/* ── 이번 주 행사 배너 ── */}
+      {/* ── 행사 배너 ── */}
       {banners.length > 0 && <BannerCarousel banners={banners} />}
 
       {/* ── 신규 오픈 ── */}
@@ -679,72 +750,63 @@ function StoreListView() {
         const weekOpenings  = dbOpenings.filter(o => classifyOpening(o.openDate) === "week");
         const monthOpenings = dbOpenings.filter(o => classifyOpening(o.openDate) === "month");
         if (weekOpenings.length === 0 && monthOpenings.length === 0) return null;
-
-        function OpeningGroup({ items, label, badge, color }: {
-          items: import("@/lib/types").NewStoreOpening[];
-          label: string; badge: string; color: string;
-        }) {
-          if (items.length === 0) return null;
-          const [featured, ...rest] = items;
-          const store = allStores.find(s => s.id === featured.storeId);
-          const [gFrom, gTo] = catGrads[featured.category] ?? ["#6B7280", "#4B5563"];
-          return (
-            <div>
-              <div className="flex items-center gap-2.5 px-4 mb-3">
-                <div className="w-1.5 h-5 rounded-full shrink-0" style={{ background: color }} />
-                <span className="text-[16px] font-black text-[#1d1d1f]">{label}</span>
-                <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white" style={{ background: color }}>{badge}</span>
-                <span className="text-[11px] text-[#86868b]">{items.length}개</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
-              </div>
-              <div className="px-4 space-y-2">
-                <button onClick={() => store && setSelectedStore(store)}
-                  className="w-full rounded-2xl overflow-hidden text-left active:scale-[0.98] transition-transform shadow-sm"
-                  style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
-                  <div className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">{featured.category}</span>
-                      <span className="text-[10px] font-black bg-black/20 text-white px-2 py-0.5 rounded-full">{badge}</span>
-                    </div>
-                    <p className="text-[22px] font-black text-white leading-tight">{featured.storeName}</p>
-                    <p className="text-[13px] text-white/70 mt-1">{featured.floor} · {featured.openDate.slice(5).replace("-", "/")} 오픈</p>
-                    {featured.openBenefit && (
-                      <div className="mt-3 bg-black/20 rounded-xl px-3 py-2.5">
-                        <p className="text-[12px] text-white font-semibold leading-snug">{featured.openBenefit.summary}</p>
-                      </div>
-                    )}
-                  </div>
-                </button>
-                {rest.length > 0 && (
-                  <div className="bg-white rounded-2xl overflow-hidden divide-y divide-[#f5f5f7]">
-                    {rest.map(o => {
-                      const s = allStores.find(x => x.id === o.storeId);
-                      return (
-                        <button key={o.id} onClick={() => s && setSelectedStore(s)}
-                          className="w-full px-4 py-3.5 flex items-center gap-3 active:bg-[#f5f5f7] text-left">
-                          <StoreLogo name={o.storeName} category={o.category} size={42} />
-                          <div className="flex-1 min-w-0">
-                            <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
-                            <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
-                            {o.openBenefit && (
-                              <p className="text-[12px] text-[#F04452] font-medium line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>
-                            )}
-                          </div>
-                          <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          );
-        }
-
         return (
-          <div className="pt-4 pb-3 space-y-5">
-            <OpeningGroup items={weekOpenings} label="이번 주 신규 오픈" badge="NEW" color="#F04452" />
-            <OpeningGroup items={monthOpenings} label="이번달 오픈" badge="이달" color="#FF9500" />
+          <div className="pb-3 space-y-5">
+            {weekOpenings.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+                  <span className="text-[19px] font-extrabold text-[#1d1d1f]">이번 주 신규 오픈</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white bg-[#F04452]">NEW</span>
+                  <span className="text-[11px] text-[#86868b]">{weekOpenings.length}개</span>
+                </div>
+                <div className="px-4 space-y-2">
+                  {weekOpenings.map((o, idx) => (
+                    <Link key={o.id} href={`/stores/${o.storeId}`}
+                      className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
+                      <div className="w-[3px] shrink-0 bg-[#F04452]" />
+                      <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
+                        <StoreLogo name={o.storeName} category={o.category} size={46} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
+                            {idx === 0 && <span className="shrink-0 text-[9px] font-black text-white bg-[#F04452] px-1.5 py-0.5 rounded-full">NEW</span>}
+                          </div>
+                          <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.category} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                          {o.openBenefit && <p className="text-[12px] text-[#F04452] font-semibold line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>}
+                        </div>
+                        <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+            {monthOpenings.length > 0 && (
+              <div>
+                <div className="flex items-center gap-2 px-4 pt-2 pb-3">
+                  <span className="text-[19px] font-extrabold text-[#1d1d1f]">이번달 오픈</span>
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white bg-[#FF9500]">이달</span>
+                  <span className="text-[11px] text-[#86868b]">{monthOpenings.length}개</span>
+                </div>
+                <div className="px-4 space-y-2">
+                  {monthOpenings.map(o => (
+                    <Link key={o.id} href={`/stores/${o.storeId}`}
+                      className="w-full bg-white rounded-2xl overflow-hidden flex items-stretch active:scale-[0.99] transition-transform text-left shadow-sm">
+                      <div className="w-[3px] shrink-0 bg-[#FF9500]" />
+                      <div className="flex items-center gap-3 px-4 py-3.5 flex-1 min-w-0">
+                        <StoreLogo name={o.storeName} category={o.category} size={46} />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[15px] font-bold text-[#1d1d1f] truncate">{o.storeName}</p>
+                          <p className="text-[12px] text-[#6e6e73] mt-0.5">{o.floor} · {o.openDate.slice(5).replace("-", "/")} 오픈</p>
+                          {o.openBenefit && <p className="text-[12px] text-[#F04452] font-semibold line-clamp-1 mt-0.5">{o.openBenefit.summary}</p>}
+                        </div>
+                        <ChevronRight size={14} className="shrink-0 text-[#d2d2d7]" />
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         );
       })()}
@@ -755,45 +817,53 @@ function StoreListView() {
           Math.ceil((new Date(c.expiry).getTime() - Date.now()) / 86400000) > 0
         );
         if (validCoupons.length === 0) return null;
-
-        function toggleCoupon(id: string) {
-          setDlState(prev => {
-            const n = new Set(prev);
-            n.has(id) ? n.delete(id) : n.add(id);
-            saveDownloaded(n);
-            return n;
-          });
-        }
-
         return (
-          <div className="pt-1 pb-3">
-            <div className="flex items-center gap-3 px-4 mb-3">
-              <div className="w-1.5 h-5 rounded-full bg-[#F04452] shrink-0" />
-              <span className="text-[16px] font-black text-[#1d1d1f]">이번 주 쿠폰</span>
+          <div className="pb-3">
+            <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+              <span className="text-[19px] font-extrabold text-[#1d1d1f]">이번 주 쿠폰</span>
               <span className="text-[11px] font-bold bg-[#FEE2E2] text-[#F04452] px-2 py-0.5 rounded-full">{validCoupons.length}장</span>
-              <div className="flex-1 h-px bg-[#e5e5ea]" />
             </div>
             <div className="flex gap-3 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
               {validCoupons.map(c => (
-                <CouponCard
-                  key={c.id}
-                  coupon={c}
-                  downloaded={dlState.has(c.id)}
-                  onToggle={() => toggleCoupon(c.id)}
-                />
+                <CouponCard key={c.id} coupon={c} downloaded={dlState.has(c.id)}
+                  onToggle={() => setDlState(prev => {
+                    const n = new Set(prev);
+                    n.has(c.id) ? n.delete(c.id) : n.add(c.id);
+                    saveDownloaded(n);
+                    return n;
+                  })} />
               ))}
             </div>
           </div>
         );
       })()}
 
-      {/* ── 업종 필터 + 매장 목록 ── */}
-      <div className="pt-3 pb-1">
-        <div className="flex items-center gap-3 px-4 mb-3">
-          <div className="w-1.5 h-5 rounded-full bg-[#0071e3] shrink-0" />
-          <span className="text-[16px] font-black text-[#1d1d1f]">전체 매장</span>
+      {/* ── 🔥 인기 매장 ── */}
+      {popularStores.length > 0 && (
+        <div className="pb-2">
+          <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+            <span className="text-[19px] font-extrabold text-[#1d1d1f]">🔥 인기 매장</span>
+            <span className="text-[11px] font-bold bg-[#FFF0F0] text-[#F04452] px-2 py-0.5 rounded-full">TOP {popularStores.length}</span>
+          </div>
+          <div className="flex gap-2.5 overflow-x-auto px-4 pb-2 snap-x" style={{ scrollbarWidth: "none" }}>
+            {popularStores.map(s => (
+              <div key={s.id} className="shrink-0 snap-start">
+                <PopularCard
+                  store={s}
+                  hasNew={newOpeningIds.has(s.id)}
+                  hasCoupon={couponStoreIds.has(s.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── 전체 매장 — 업종 필터 + 2열 그리드 ── */}
+      <div className="pb-1">
+        <div className="flex items-center gap-2 px-4 pt-6 pb-3">
+          <span className="text-[19px] font-extrabold text-[#1d1d1f]">전체 매장</span>
           <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{allStores.length}개</span>
-          <div className="flex-1 h-px bg-[#e5e5ea]" />
         </div>
         <div className="flex gap-2 overflow-x-auto px-4 pb-1" style={{ scrollbarWidth: "none" }}>
           {(["전체", ...ALL_CATS] as (StoreCategory | "전체")[]).map(cat => {
@@ -813,38 +883,64 @@ function StoreListView() {
       </div>
 
       <div className="px-4 pt-2 pb-6">
-        {grouped ? (
-          Array.from(grouped.entries()).map(([cat, stores]) => (
-            <div key={cat} className="mb-5">
-              <div className="flex items-center gap-3 mb-2.5">
-                <div className="w-1.5 h-[18px] rounded-full shrink-0" style={{ background: catDot[cat] }} />
-                <span className="text-[15px] font-bold text-[#1d1d1f]">{cat}</span>
-                <span className="text-[11px] font-semibold bg-[#f5f5f7] text-[#86868b] px-2 py-0.5 rounded-full">{stores.length}</span>
-                <div className="flex-1 h-px bg-[#e5e5ea]" />
-              </div>
-              <div className="space-y-2">
-                {stores.map(s => <StoreCard key={s.id} store={s} />)}
-              </div>
-            </div>
-          ))
-        ) : (
-          <div className="space-y-2">
-            {catFilter !== "전체" && (
-              <p className="text-[12px] font-semibold text-[#86868b] mb-2">{filtered.length}개 매장</p>
-            )}
-            {filtered.map(s => <StoreCard key={s.id} store={s} />)}
+        {visibleList.length === 0 ? (
+          <div className="flex flex-col items-center py-14 gap-2">
+            <span className="text-3xl">🏪</span>
+            <p className="text-[14px] font-semibold text-[#424245]">조건에 맞는 매장이 없어요</p>
+            <p className="text-[12px] text-[#86868b]">다른 업종을 선택해 보세요</p>
           </div>
+        ) : grouped ? (
+          <>
+            {Array.from(grouped.entries()).map(([cat, stores]) => {
+              const [gFrom, gTo] = catGrads[cat];
+              return (
+                <div key={cat} className="mb-6">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-7 h-7 rounded-xl flex items-center justify-center shrink-0 shadow-sm"
+                      style={{ background: `linear-gradient(135deg, ${gFrom}, ${gTo})` }}>
+                      <span className="text-[14px]">{catEmoji[cat]}</span>
+                    </div>
+                    <span className="text-[15px] font-black text-[#1d1d1f]">{cat}</span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white"
+                      style={{ background: catDot[cat] }}>
+                      {stores.length}
+                    </span>
+                    <div className="flex-1 h-px bg-[#e5e5ea]" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+                    {stores.map(s => (
+                      <StoreCard key={s.id} store={s} hasNew={newOpeningIds.has(s.id)} hasCoupon={couponStoreIds.has(s.id)} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
+                <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                <p className="text-[11px] text-[#86868b]">매장 더 불러오는 중...</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-[12px] font-semibold text-[#86868b] mb-2.5">
+              {hasMore ? `${visibleList.length} / ${baseList.length}개 표시 중` : `${visibleList.length}개 매장`}
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2.5">
+              {visibleList.map(s => (
+                <StoreCard key={s.id} store={s} hasNew={newOpeningIds.has(s.id)} hasCoupon={couponStoreIds.has(s.id)} />
+              ))}
+            </div>
+            {hasMore && (
+              <div ref={sentinelRef} className="flex flex-col items-center justify-center py-6 gap-2">
+                <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                <p className="text-[11px] text-[#86868b]">매장 더 불러오는 중...</p>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {selectedStore && (
-        <StoreListDetailSheet
-          store={selectedStore}
-          onClose={() => setSelectedStore(null)}
-          allCoupons={dbCoupons}
-          allOpenings={dbOpenings}
-        />
-      )}
     </div>
   );
 }
