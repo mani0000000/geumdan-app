@@ -6,7 +6,7 @@ import {
   List, Map as MapIcon,
   MapPin, Navigation, RefreshCw, TrendingDown, X, Zap,
 } from "lucide-react";
-import type { GasStation } from "@/lib/types";
+import type { GasStation, GasApiResponse } from "@/lib/types";
 import { fetchGasStationsWithPrices } from "@/lib/db/gas-stations";
 
 // ── Leaflet 지도 동적 로드 (SSR 비활성화) ─────────────────────
@@ -206,8 +206,22 @@ export default function GasWidget() {
 
   const PAGE = 4; // 초기 표시 개수
 
-  // ── 데이터 로드 (Supabase 직접 — 정적 빌드에서도 동작) ───────
+  // ── 데이터 로드 ────────────────────────────────────────────────
+  // 1) /api/gas (오피넷 실시간 — 서버 환경) 시도
+  // 2) 실패 시 Supabase 캐시 폴백 (정적 내보내기/모바일 앱 환경)
   const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/gas", { signal: AbortSignal.timeout(9000) });
+      if (res.ok) {
+        const json: GasApiResponse = await res.json();
+        if (json.success && json.stations.length > 0) {
+          const hasPrice = json.stations.some(s => s.prices.gasoline != null || s.prices.diesel != null);
+          setData({ stations: json.stations, timestamp: json.timestamp, hasPrice, error: false });
+          return;
+        }
+      }
+    } catch { /* fall through to Supabase */ }
+
     try {
       const result = await fetchGasStationsWithPrices();
       setData({ ...result, error: result.stations.length === 0 });
