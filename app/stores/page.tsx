@@ -1441,6 +1441,7 @@ export default function StoresPage() {
   const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"리스트" | "지도">("리스트");
+  const [prevViewMode, setPrevViewMode] = useState<"리스트" | "지도" | null>(null);
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
@@ -1672,12 +1673,18 @@ export default function StoresPage() {
             setSelectedGasId(s.id);
           }}
         />
-      ) : searchFocused ? null : selectedBuildingId && selectedNearby && viewMode !== "지도" ? (
-        /* ─── 건물 상세 뷰 (리스트 모드) ─── */
+      ) : searchFocused ? null : selectedBuildingId && selectedNearby ? (
+        /* ─── 건물 상세 뷰 (리스트/지도 공통) ─── */
         <BuildingDetail
           buildingData={selectedBuildingData}
           nearbyInfo={selectedNearby}
-          onBack={() => setSelectedBuildingId(null)}
+          onBack={() => {
+            setSelectedBuildingId(null);
+            if (prevViewMode === "지도") {
+              setViewMode("지도");
+              setPrevViewMode(null);
+            }
+          }}
         />
       ) : viewMode === "지도" ? (
         /* ─── 지도 모드 ─── */
@@ -1700,7 +1707,15 @@ export default function StoresPage() {
             <StoreMapView
               buildings={nearbyWithDist}
               selectedId={selectedBuildingId}
-              onSelect={id => setSelectedBuildingId(selectedBuildingId === id ? null : id)}
+              onSelect={id => {
+                if (selectedBuildingId === id) {
+                  setSelectedBuildingId(null);
+                } else {
+                  setPrevViewMode("지도");
+                  setSelectedBuildingId(id);
+                  setViewMode("리스트");
+                }
+              }}
               dimmedIds={dimmedIds}
               gasStations={gasStations}
               selectedGasId={selectedGasId}
@@ -1710,16 +1725,6 @@ export default function StoresPage() {
               }}
             />
           </div>
-
-          {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
-          {selectedBuildingId && selectedNearby && (
-            <MapBuildingSheet
-              nearbyInfo={selectedNearby}
-              buildingData={selectedBuildingData}
-              onClose={() => setSelectedBuildingId(null)}
-              onSelectStore={(store) => router.push(`/stores/detail/?id=${store.id}`)}
-            />
-          )}
         </>
       ) : (
         /* ─── 리스트 모드 ─── */
