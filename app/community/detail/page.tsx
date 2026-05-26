@@ -17,6 +17,7 @@ import {
 import { syncCommentCount } from "@/lib/db/posts";
 import type { Post } from "@/lib/types";
 import ThreadAvatar from "@/components/ui/ThreadAvatar";
+import { getUserProfile, getLocalUserId } from "@/lib/db/userdata";
 
 // mock 댓글 (mock 포스트 전용 초기 데이터)
 const MOCK_COMMENTS: DBComment[] = [
@@ -35,6 +36,13 @@ const catColor: Record<string, string> = {
   동네질문: "bg-[#e8f1fd] text-[#1565C0]",
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
   전체: "bg-[#e8f1fd] text-[#0071e3]",
+  생활정보: "bg-[#F0FDF4] text-[#166534]",
+  "육아/교육": "bg-[#FFF7ED] text-[#9A3412]",
+  "취미/운동": "bg-[#EFF6FF] text-[#1D4ED8]",
+  반려동물: "bg-[#FDF4FF] text-[#7E22CE]",
+  교통정보: "bg-[#F0F9FF] text-[#0369A1]",
+  이웃모임: "bg-[#FFF1F2] text-[#BE123C]",
+  "공구/나눔": "bg-[#FFFBEB] text-[#92400E]",
 };
 
 // localStorage 기반 소유권 확인
@@ -256,6 +264,9 @@ function DetailContent() {
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
+  const [commentAuthor, setCommentAuthor] = useState("검단주민");
+  const [commentAuthorDong, setCommentAuthorDong] = useState("검단");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   // 포스트 로드
   useEffect(() => {
@@ -295,6 +306,18 @@ function DetailContent() {
 
   useEffect(() => { loadComments(); }, [loadComments]);
 
+  // 로그인 사용자 프로필 로드
+  useEffect(() => {
+    const uid = getLocalUserId();
+    setIsLoggedIn(!!uid);
+    if (uid) {
+      getUserProfile().then(p => {
+        setCommentAuthor(p.nickname);
+        setCommentAuthorDong(p.dong);
+      });
+    }
+  }, []);
+
   // 공유하기
   const handleShare = async () => {
     const url = window.location.href;
@@ -326,20 +349,21 @@ function DetailContent() {
   // 댓글 작성
   const submitComment = async () => {
     if (!commentText.trim() || submittingComment) return;
+    if (!isLoggedIn) { router.push("/login/"); return; }
     setSubmittingComment(true);
     if (isMock) {
       // mock 포스트는 클라이언트 상태에만 추가
       setComments(prev => [...prev, {
         id: `c${Date.now()}`, postId,
-        author: "검단주민",
-        authorDong: "검단",
+        author: commentAuthor,
+        authorDong: commentAuthorDong,
         content: commentText.trim(),
         likeCount: 0, isAnonymous: false,
         createdAt: new Date().toISOString(),
       }]);
     } else {
       const saved = await createComment({
-        postId, author: "검단주민", authorDong: "검단",
+        postId, author: commentAuthor, authorDong: commentAuthorDong,
         content: commentText.trim(), isAnonymous: false,
       });
       if (saved) {
@@ -533,19 +557,28 @@ function DetailContent() {
 
       {/* Comment input */}
       <div className="sticky bottom-0 bg-white border-t border-[#f5f5f7] px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
-          <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
-            <input value={commentText} onChange={e => setCommentText(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
-              placeholder="따뜻한 댓글을 남겨보세요"
-              className="flex-1 bg-transparent text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none" />
-            <button onClick={submitComment} disabled={!commentText.trim() || submittingComment}
-              className="shrink-0 active:opacity-60 disabled:opacity-30">
-              <Send size={18} className="text-[#0071e3]" />
-            </button>
+        {isLoggedIn === false ? (
+          <button
+            onClick={() => router.push("/login/")}
+            className="w-full h-11 rounded-2xl bg-[#f5f5f7] text-[14px] text-[#86868b] font-medium active:bg-[#e5e5ea] transition-colors"
+          >
+            댓글을 작성하려면 로그인해주세요
+          </button>
+        ) : (
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm shrink-0">👤</div>
+            <div className="flex-1 flex items-center bg-[#f5f5f7] rounded-2xl px-3 py-2 gap-2">
+              <input value={commentText} onChange={e => setCommentText(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && !e.shiftKey && submitComment()}
+                placeholder="따뜻한 댓글을 남겨보세요"
+                className="flex-1 bg-transparent text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none" />
+              <button onClick={submitComment} disabled={!commentText.trim() || submittingComment}
+                className="shrink-0 active:opacity-60 disabled:opacity-30">
+                <Send size={18} className="text-[#0071e3]" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 공유 토스트 */}

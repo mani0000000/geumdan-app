@@ -4,10 +4,13 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2 } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
-import { getUserProfile, getOrCreateUserId } from "@/lib/db/userdata";
+import { getUserProfile, getOrCreateUserId, getLocalUserId } from "@/lib/db/userdata";
 import VideoUpload from "@/components/ui/VideoUpload";
 
-const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
+const categories: CommunityCategory[] = [
+  "맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임",
+  "생활정보","육아/교육","취미/운동","반려동물","교통정보","이웃모임","공구/나눔",
+];
 
 // 내가 작성한 글 ID를 localStorage에 저장 (수정/삭제 권한 판단)
 function saveMyPostId(id: string) {
@@ -35,12 +38,14 @@ export default function WritePage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    const uid = getLocalUserId();
+    if (!uid) { router.replace("/login/"); return; }
     getUserProfile().then(p => {
       setNickname(p.nickname);
       setAuthorDong(p.dong);
       setAvatarUrl(p.avatar_url ?? null);
     });
-  }, []);
+  }, [router]);
 
   const canSubmit =
     category !== "" && title.trim().length > 0 && content.trim().length > 0 && !uploading;
@@ -114,13 +119,7 @@ export default function WritePage() {
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <h1 className="text-[18px] font-bold text-[#1d1d1f]">글쓰기</h1>
-        <button
-          onClick={submit}
-          disabled={!canSubmit || submitting}
-          className="h-9 px-4 rounded-xl bg-[#0071e3] text-white text-[15px] font-bold disabled:opacity-40 active:bg-[#0058b0] transition-colors"
-        >
-          {submitting ? "등록 중..." : "등록"}
-        </button>
+        <div className="w-10" />
       </div>
 
       {/* Category picker */}
@@ -224,6 +223,17 @@ export default function WritePage() {
         {error && (
           <p className="mx-4 mb-2 text-[13px] text-[#F04452] text-center">{error}</p>
         )}
+
+        {/* 등록 버튼 */}
+        <div className="px-4 pb-3">
+          <button
+            onClick={submit}
+            disabled={!canSubmit || submitting}
+            className="w-full h-12 rounded-xl bg-[#0071e3] text-white text-[16px] font-bold disabled:opacity-40 active:bg-[#0058b0] transition-colors"
+          >
+            {submitting ? "등록 중..." : "등록하기"}
+          </button>
+        </div>
 
         {/* Tips */}
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
