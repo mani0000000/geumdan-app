@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone, User,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone, User, Fuel,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -44,9 +44,10 @@ const NAV_GROUPS = [
     items: [
       { href: "/admin/pharmacy",   icon: Pill,       label: "약국 관리"      },
       { href: "/admin/emergency",  icon: Siren,      label: "응급실 관리"    },
-      { href: "/admin/realestate", icon: TrendingUp, label: "부동산 시세"    },
-      { href: "/admin/marts",      icon: ShoppingBag,label: "주변 마트 관리" },
-      { href: "/admin/places",     icon: MapPin,     label: "가볼만한곳 관리"},
+      { href: "/admin/realestate",    icon: TrendingUp, label: "부동산 시세"    },
+      { href: "/admin/gas-stations", icon: Fuel,       label: "주유소 관리"    },
+      { href: "/admin/marts",        icon: ShoppingBag,label: "주변 마트 관리" },
+      { href: "/admin/places",       icon: MapPin,     label: "가볼만한곳 관리"},
     ],
   },
   {

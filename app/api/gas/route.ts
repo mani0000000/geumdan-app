@@ -78,20 +78,17 @@ async function loadDbStations() {
   }
 }
 
-// ── KATEC → WGS84 근사 변환 (검단 권역 ±10km 내 오차 ~10m 이내) ─────────
-// GEUMDAN_KATEC(검단 중심 KATEC)을 기준으로 선형 근사
+// ── KATEC → WGS84 근사 변환 ───────────────────────────────────────────────
+// GEUMDAN_KATEC(wgs84ToKatec 으로 정확히 계산된 값)을 기준점으로 선형 근사
 function katecToWgs84(x: number, y: number): { lat: number; lng: number } | null {
   if (!x || !y || x < 200000 || x > 500000 || y < 400000 || y > 700000) return null;
-  // 검단 중심 WGS84 / KATEC (opinet.ts의 GEUMDAN_KATEC과 동일 기준)
   const LAT_C = 37.5446, LNG_C = 126.6861;
   const COS_C = Math.cos(LAT_C * Math.PI / 180);
-  const M_PER_DEG_LAT = 111320;
-  const M_PER_DEG_LNG = 111320 * COS_C;
-  // GEUMDAN_KATEC 값 (wgs84ToKatec(37.5446, 126.6861) 계산 결과 근사)
-  const KX_C = 285960, KY_C = 549090;
-  const lat = LAT_C + (y - KY_C) / M_PER_DEG_LAT;
-  const lng = LNG_C + (x - KX_C) / M_PER_DEG_LNG;
-  if (lat < 37.4 || lat > 37.7 || lng < 126.5 || lng > 126.9) return null;
+  // wgs84ToKatec(37.5446, 126.6861) 의 정확한 출력값을 기준으로 사용
+  const KX_C = GEUMDAN_KATEC.x, KY_C = GEUMDAN_KATEC.y;
+  const lat = LAT_C + (y - KY_C) / 111320;
+  const lng = LNG_C + (x - KX_C) / (111320 * COS_C);
+  if (lat < 37.3 || lat > 37.8 || lng < 126.4 || lng > 127.0) return null;
   return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
 }
 
