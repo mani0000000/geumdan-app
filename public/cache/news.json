@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-26T19:53:16.101Z",
+  "fetchedAt": "2026-05-26T22:14:23.203Z",
   "count": 40,
   "articles": [
     {
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-15",
       "title": "유정복 후보, 교통·교육·환경 현안…민선 9기서 반드시 해결 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-16",
       "title": "유정복 인천시장 후보 “검단 현안 해결하겠다” - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -93,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-8",
       "title": "이대형 인천교육감 후보, “검단 과밀학급 해결” 제안 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-12",
       "title": "유정복 “검단 발전 완성할 사람은 준비된 인물…시민 선택이 미래 결정” - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -120,7 +120,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
+      "id": "gr3-0",
+      "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 서울일보",
+      "summary": "",
+      "source": "서울일보",
+      "publishedAt": "2026-05-25T22:08:29.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9IZkszSmtkRlZSVXRnWUt1RDRScmtxM0p0dTI3MzY3Q2Q3NC1UMENNUGkyMW9ESlpXUXp4aElqV0tETk5IVjc3NzI1ZVRkenBVRHN5MWx5N2dGRE53cXhUU2JzSm5ockFFd3JVeG8yTdIBb0FVX3lxTE9IZkszSmtkRlZSVXRnWUt1RDRScmtxM0p0dTI3MzY3Q2Q3NC1UMENNUGkyMW9ESlpXUXp4aElqV0tETk5IVjc3NzI1ZVRkenBVRHN5MWx5N2dGRE53cXhUU2JzSm5ockFFd3JVeG8yTQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-18",
       "title": "유정복, 검신총연 대담회 \"검단예술회관 건립, 시 재정 50% 지원\" - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -138,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
+      "id": "gr2-15",
       "title": "유정복 인천시장 후보, 서구 검단 유세서 “승기 잡았다” 자신감 드러내 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -183,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-5",
       "title": "검단신도시 총연합회 주최 토론회… 박세훈, ‘비예산 혁신 모델’로 김진규 공세 판세 압도 - 우리일보",
       "summary": "",
       "source": "우리일보",
@@ -192,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-19",
       "title": "이대형 “검단 과밀학급·돌봄·통학안전 해결”… 검단 맞춤형 교육청사진 제시 - 우리일보",
       "summary": "",
       "source": "우리일보",
@@ -201,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-42",
+      "id": "gr0-40",
       "title": "도성훈, 검단지역 과밀학급 해소 약속…학교 신설 계획 밝혀 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -210,7 +219,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-76",
+      "id": "gr2-77",
       "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 내외일보",
       "summary": "",
       "source": "내외일보",
@@ -219,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-20",
       "title": "검단 찾은 유정복 후보 “5호선·학교 신설·매립지 종료 반드시 해낸다” - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -228,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-39",
+      "id": "gr0-37",
       "title": "유정복 후보, 검단 교통난 해소 공약…\"5호선 연장·원당역 신설 추진\" - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -273,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-3",
+      "id": "gr3-4",
       "title": "5호선 김포검단 연장사업 ‘본궤도’… 광역교통시행계획에 확정 - 매일건설신문",
       "summary": "",
       "source": "매일건설신문",
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-51",
+      "id": "gr2-49",
       "title": "'26만 신도시' 첫 인천 검단구청장…김진규·박세훈 '격돌' - 네이트",
       "summary": "",
       "source": "네이트",
@@ -291,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-4",
       "title": "서구·검단청소년센터 청소년과 지도자 7명 수상 영예 - 인천신문",
       "summary": "",
       "source": "인천신문",
@@ -318,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-57",
+      "id": "gr0-56",
       "title": "임병구 인천시교육감 후보, 검단 과밀학급 해결 방안 제시 - 더팩트",
       "summary": "",
       "source": "더팩트",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-8",
+      "id": "gr3-9",
       "title": "\"인천2호선 연장하라\" 김포·고양·검단 후보 결집 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-37",
+      "id": "gr0-35",
       "title": "교통과 교육에 집중…초대 검단구청장 후보의 공약은? - B world",
       "summary": "",
       "source": "B world",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-9",
+      "id": "gr3-10",
       "title": "민주당 김포·고양·검단 후보들 한목소리 - 경인신문",
       "summary": "",
       "source": "경인신문",
       "publishedAt": "2026-05-21T06:13:38.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE1uRWxpZzVHYl9naTFac2thcU1YcGtkOGl6RGRfMXBrcFhSWEFRLWJOeEoxWE5VVFBycWE1UmNXRG1fcjFVTXlpWjRSWnRSMkhjVHBvQmlwOTQxQlQtUklKNmRCdldtNzQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-16",
-      "title": "민주당 김포·고양·검단 후보들 “인천2호선 연장 예타 반드시 통과해야”… 수도권 서북부 교통 혁신 촉구 - 월드장애인사랑뉴스",
-      "summary": "",
-      "source": "월드장애인사랑뉴스",
-      "publishedAt": "2026-05-21T04:00:12.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9tQmE3S3VQOHFtRm9JXzBoM0M4YVVnaVFoZkpYYU5WbFBiRGJqc1hSUjVXOUtEaURSTVlscGxNMWZQWmdBSzlyVDRhUkhQc3k5NUNCUWZoeGVRTWJ2OXluYTUzX2R4UTM5SnNma0tOaw?oc=5",
       "type": "뉴스"
     }
   ]
