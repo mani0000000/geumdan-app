@@ -19,7 +19,14 @@ export type CommunityCategory =
   | "중고거래"
   | "분실/목격"
   | "동네질문"
-  | "소모임";
+  | "소모임"
+  | "생활정보"
+  | "육아/교육"
+  | "취미/운동"
+  | "반려동물"
+  | "교통정보"
+  | "이웃모임"
+  | "공구/나눔";
 
 export interface Post {
   id: string;

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, AlertTriangle, RefreshCw, Building2 } from "lucide-react";
+import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 
@@ -79,6 +79,30 @@ export default function RealestatePage() {
   const [error, setError] = useState<string>("");
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [latestFetchedAt, setLatestFetchedAt] = useState<string | null>(null);
+  const [favApts, setFavApts] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const raw = localStorage.getItem("realestateFavApts");
+    if (raw) setFavApts(new Set((JSON.parse(raw) as {name: string}[]).map(a => a.name)));
+  }, []);
+
+  function toggleFavApt(name: string, dong: string) {
+    setFavApts(prev => {
+      const next = new Set(prev);
+      if (next.has(name)) {
+        next.delete(name);
+      } else {
+        next.add(name);
+      }
+      const raw = localStorage.getItem("realestateFavApts");
+      const current: {name: string; dong: string}[] = raw ? JSON.parse(raw) : [];
+      const updated = next.has(name)
+        ? [...current.filter(a => a.name !== name), { name, dong }]
+        : current.filter(a => a.name !== name);
+      localStorage.setItem("realestateFavApts", JSON.stringify(updated));
+      return next;
+    });
+  }
 
   // ── 환경 체크 ──────────────────────────────────────────────
   useEffect(() => {
@@ -284,7 +308,14 @@ export default function RealestatePage() {
                   {t.build_year ? ` · ${t.build_year}년 준공` : ""}
                 </p>
               </div>
-              <div className="text-right shrink-0">
+              <div className="flex flex-col items-end shrink-0 gap-1">
+                <button
+                  onClick={() => toggleFavApt(t.apt_name, t.dong)}
+                  className="active:opacity-60 transition-colors"
+                  aria-label={favApts.has(t.apt_name) ? "즐겨찾기 해제" : "즐겨찾기"}
+                >
+                  <Star size={16} className={favApts.has(t.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
+                </button>
                 <p className="text-[15px] font-extrabold text-[#0071e3]">{fmt만원(t.deal_amount)}</p>
                 <p className="text-[10px] text-[#86868b]">{fmtDealDate(t.deal_year, t.deal_month, t.deal_day)}</p>
               </div>
@@ -306,7 +337,14 @@ export default function RealestatePage() {
                   {r.build_year ? ` · ${r.build_year}년 준공` : ""}
                 </p>
               </div>
-              <div className="text-right shrink-0">
+              <div className="flex flex-col items-end shrink-0 gap-1">
+                <button
+                  onClick={() => toggleFavApt(r.apt_name, r.dong)}
+                  className="active:opacity-60 transition-colors"
+                  aria-label={favApts.has(r.apt_name) ? "즐겨찾기 해제" : "즐겨찾기"}
+                >
+                  <Star size={16} className={favApts.has(r.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
+                </button>
                 {r.rent_type === "전세" ? (
                   <p className="text-[15px] font-extrabold text-[#10B981]">{fmt만원(r.deposit)}</p>
                 ) : (

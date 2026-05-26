@@ -23,6 +23,8 @@ import {
 } from "@/lib/db/userdata";
 import { getSavedPostCount } from "@/lib/db/savedposts";
 import { getFavoritePlaces } from "@/lib/db/placeFavorites";
+import { fetchMyComments, type MyCommentWithPost } from "@/lib/db/comments";
+import { getLocalUserId } from "@/lib/db/userdata";
 import { TERMS_MENU } from "@/lib/db/terms";
 import {
   fetchMypageWidgetConfig,
@@ -137,6 +139,13 @@ export default function MyPage() {
   const [weeklyCommentDone, setWeeklyCommentDone] = useState(false);
   // 위젯 노출 설정
   const [widgetCfg, setWidgetCfg] = useState<MypageWidgetConfig>({ ...MYPAGE_WIDGET_DEFAULT });
+  // 내가 쓴 댓글 인라인 표시
+  const [showMyComments, setShowMyComments] = useState(false);
+  const [myComments, setMyComments] = useState<MyCommentWithPost[]>([]);
+  const [myCommentsLoading, setMyCommentsLoading] = useState(false);
+  // 관심 아파트 인라인 표시
+  const [showFavApts, setShowFavApts] = useState(false);
+  const [favAptList, setFavAptList] = useState<{name: string; dong: string}[]>([]);
 
   useEffect(() => {
     fetchMypageWidgetConfig().then(setWidgetCfg);
@@ -180,6 +189,36 @@ export default function MyPage() {
     }
   }, [weeklyCommentDone]);
 
+  // 관심 아파트 localStorage 카운트 반영
+  useEffect(() => {
+    const raw = localStorage.getItem("realestateFavApts");
+    if (raw) {
+      const parsed: {name: string; dong: string}[] = JSON.parse(raw);
+      if (parsed.length > 0) setAptCount(parsed.length);
+    }
+  }, []);
+
+  async function handleShowMyComments() {
+    if (showMyComments) { setShowMyComments(false); return; }
+    setShowMyComments(true);
+    setMyCommentsLoading(true);
+    const uid = getLocalUserId();
+    if (uid) {
+      const data = await fetchMyComments(uid);
+      setMyComments(data);
+    }
+    setMyCommentsLoading(false);
+  }
+
+  function handleShowFavApts() {
+    if (showFavApts) { setShowFavApts(false); return; }
+    const raw = localStorage.getItem("realestateFavApts");
+    const parsed: {name: string; dong: string}[] = raw ? JSON.parse(raw) : [];
+    setFavAptList(parsed);
+    setAptCount(parsed.length);
+    setShowFavApts(true);
+  }
+
   const monthlyLevel = getMonthlyLevel(gameStats.monthlyPoints);
   const nextLevel = getNextLevel(monthlyLevel);
   const mlv = monthlyLevelColor[monthlyLevel];
@@ -214,7 +253,7 @@ export default function MyPage() {
       title: "내 활동",
       items: [
         { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
-        { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: "/community/" },
+        { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: null, action: handleShowMyComments },
         { icon: Bookmark, label: "저장한 글", badge: savedCount > 0 ? String(savedCount) : null, color: "text-[#00C471]", href: "/mypage/saved/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: "/mypage/coupons/" },
       ],
@@ -225,7 +264,7 @@ export default function MyPage() {
         { icon: MapPin, label: "저장한 가볼만한곳", badge: placeCount > 0 ? String(placeCount) : null, color: "text-[#F04452]", href: "/mypage/saved-places/" },
         { icon: Star, label: "즐겨찾는 버스", badge: String(busCount), color: "text-[#FBBF24]", href: "/transport/" },
         { icon: Star, label: "즐겨찾는 상가", badge: String(storeCount), color: "text-[#FBBF24]", href: "/stores/" },
-        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: "/community/?tab=시세" },
+        { icon: Star, label: "관심 아파트", badge: String(aptCount), color: "text-[#FBBF24]", href: null, action: handleShowFavApts },
       ],
     },
     {
@@ -483,18 +522,80 @@ export default function MyPage() {
         <div key={grp.title}>
           <SectionLabel label={grp.title} />
           <div className={`mx-4 ${CARD} divide-y divide-[#f5f5f7]`}>
-            {grp.items.map(({ icon: Icon, label, badge, color, href }) => (
-              <button key={label} onClick={() => href && router.push(href)}
-                className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
-                <Icon size={18} className={`${color} mr-3 shrink-0`} />
-                <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
-                {badge !== null && badge !== "0" && (
-                  <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
-                )}
-                <ChevronRight size={16} className="text-[#d2d2d7]" />
-              </button>
-            ))}
+            {grp.items.map((item) => {
+              const { icon: Icon, label, badge, color, href } = item as {icon: typeof Star; label: string; badge: string|null; color: string; href: string|null; action?: () => void};
+              const action = (item as {action?: () => void}).action;
+              return (
+                <button key={label} onClick={() => action ? action() : (href && router.push(href))}
+                  className="w-full flex items-center px-4 py-3.5 active:bg-[#f5f5f7] transition-colors">
+                  <Icon size={18} className={`${color} mr-3 shrink-0`} />
+                  <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
+                  {badge !== null && badge !== "0" && (
+                    <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
+                  )}
+                  <ChevronRight size={16} className="text-[#d2d2d7]" />
+                </button>
+              );
+            })}
           </div>
+
+          {/* 내가 쓴 댓글 인라인 패널 */}
+          {grpIdx === 0 && showMyComments && (
+            <div className={`mx-4 mt-2 ${CARD}`}>
+              <div className="px-4 py-4">
+                <p className="text-[15px] font-bold text-[#1d1d1f] mb-3">내가 쓴 댓글 {myComments.length > 0 && `(${myComments.length}개)`}</p>
+                {myCommentsLoading ? (
+                  <p className="text-center text-[13px] text-[#86868b] py-4">불러오는 중...</p>
+                ) : myComments.length === 0 ? (
+                  <p className="text-center text-[13px] text-[#86868b] py-4">작성한 댓글이 없습니다</p>
+                ) : (
+                  <div className="space-y-2">
+                    {myComments.map(c => (
+                      <button key={c.id}
+                        onClick={() => router.push(`/community/detail/?id=${c.postId}`)}
+                        className="w-full text-left bg-[#f5f5f7] rounded-xl p-3 active:opacity-70 transition-opacity">
+                        <div className="flex items-center gap-2 mb-1">
+                          {c.postCategory && (
+                            <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{c.postCategory}</span>
+                          )}
+                          <span className="text-[11px] text-[#86868b] truncate">{c.postTitle}</span>
+                        </div>
+                        <p className="text-[14px] text-[#1d1d1f] line-clamp-2">{c.content}</p>
+                        <p className="text-[11px] text-[#86868b] mt-1">{c.createdAt.slice(0, 10)}</p>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 관심 아파트 인라인 패널 */}
+          {grpIdx === 1 && showFavApts && (
+            <div className={`mx-4 mt-2 ${CARD}`}>
+              <div className="px-4 py-4">
+                <p className="text-[15px] font-bold text-[#1d1d1f] mb-3">관심 아파트 {favAptList.length > 0 && `(${favAptList.length}개)`}</p>
+                {favAptList.length === 0 ? (
+                  <p className="text-center text-[13px] text-[#86868b] py-4">저장한 아파트가 없습니다<br /><span className="text-[12px]">부동산 시세 페이지에서 ★을 눌러 저장하세요</span></p>
+                ) : (
+                  <div className="space-y-2">
+                    {favAptList.map((apt, i) => (
+                      <button key={i}
+                        onClick={() => router.push("/realestate/")}
+                        className="w-full text-left flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-3 active:opacity-70 transition-opacity">
+                        <Star size={14} className="fill-[#FBBF24] text-[#FBBF24] shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{apt.name}</p>
+                          {apt.dong && <p className="text-[12px] text-[#86868b]">{apt.dong}</p>}
+                        </div>
+                        <ChevronRight size={14} className="text-[#d2d2d7]" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
         );
       })}
