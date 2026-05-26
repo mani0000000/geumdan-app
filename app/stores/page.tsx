@@ -1281,7 +1281,6 @@ function BuildingDetail({
 }) {
   const [tab, setTab] = useState<"층별" | "업종별">("층별");
   const [floorIdx, setFloorIdx] = useState(1);
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [showCode, setShowCode] = useState(false);
   const [catFilter, setCatFilter] = useState<StoreCategory | "전체">("전체");
   const router = useRouter();
@@ -1338,20 +1337,20 @@ function BuildingDetail({
       {tab === "층별" ? (
         <div className="mx-4 mt-3">
           <div className="bg-white rounded-2xl px-4 py-3 mb-3 flex items-center justify-between">
-            <button onClick={() => { setFloorIdx(i => Math.max(0, i-1)); setSelectedStore(null); }}
+            <button onClick={() => { setFloorIdx(i => Math.max(0, i-1)); }}
               disabled={floorIdx === 0}
               className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
               <ChevronLeft size={18} className="text-[#1d1d1f]" />
             </button>
             <div className="flex items-center gap-2">
               {buildingData.floors.map((f, i) => (
-                <button key={f.label} onClick={() => { setFloorIdx(i); setSelectedStore(null); }}
+                <button key={f.label} onClick={() => { setFloorIdx(i); }}
                   className={`w-10 h-10 rounded-xl text-[14px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                   {f.label}
                 </button>
               ))}
             </div>
-            <button onClick={() => { setFloorIdx(i => Math.min(buildingData.floors.length-1, i+1)); setSelectedStore(null); }}
+            <button onClick={() => { setFloorIdx(i => Math.min(buildingData.floors.length-1, i+1)); }}
               disabled={floorIdx === buildingData.floors.length-1}
               className="w-9 h-9 bg-[#f5f5f7] rounded-xl flex items-center justify-center disabled:opacity-30 active:opacity-60">
               <ChevronRight size={18} className="text-[#1d1d1f]" />
@@ -1359,7 +1358,7 @@ function BuildingDetail({
           </div>
           <div className="bg-white rounded-2xl overflow-hidden mb-3">
             <div className="p-3">
-              <FloorSVG floor={currentFloor} selectedId={selectedStore?.id ?? null} onSelect={setSelectedStore} />
+              <FloorSVG floor={currentFloor} selectedId={null} onSelect={(store) => store && router.push(`/stores/detail/?id=${store.id}`)} />
             </div>
             <div className="px-4 py-3 border-t border-[#f5f5f7] flex items-center gap-4">
               <div className="flex items-center gap-1.5">
@@ -1377,8 +1376,8 @@ function BuildingDetail({
           <p className="text-[15px] font-bold text-[#1d1d1f] mb-2.5">{currentFloor.label} 입점 매장</p>
           <div className="space-y-2">
             {currentFloor.stores.filter(s => s.name !== "공실").map(s => (
-              <button key={s.id} onClick={() => setSelectedStore(s)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === s.id ? "ring-2 ring-[#0071e3]" : ""}`}>
+              <button key={s.id} onClick={() => router.push(`/stores/detail/?id=${s.id}`)}
+                className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
                 <div className="flex items-center gap-3">
                   <StoreLogo name={s.name} category={s.category} size={40} />
                   <div className="text-left">
@@ -1406,8 +1405,8 @@ function BuildingDetail({
           <div className="px-4 space-y-2">
             <p className="text-[13px] text-[#6e6e73]">총 {filteredStores.length}개 매장</p>
             {filteredStores.map(({ store, floorLabel }) => (
-              <button key={store.id} onClick={() => setSelectedStore(store)}
-                className={`w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7] ${selectedStore?.id === store.id ? "ring-2 ring-[#0071e3]" : ""}`}>
+              <button key={store.id} onClick={() => router.push(`/stores/detail/?id=${store.id}`)}
+                className="w-full bg-white rounded-xl px-4 py-3 flex items-center justify-between active:bg-[#f5f5f7]">
                 <div className="flex items-center gap-3">
                   <StoreLogo name={store.name} category={store.category} size={40} />
                   <div className="text-left">
@@ -1427,10 +1426,6 @@ function BuildingDetail({
         </div>
       )}
 
-      {selectedStore && (
-        <StoreSheet store={selectedStore} onClose={() => setSelectedStore(null)}
-          onDetail={() => { setSelectedStore(null); router.push(`/stores/detail/?id=${selectedStore.id}`); }} />
-      )}
     </div>
   );
 }
@@ -1438,7 +1433,6 @@ function BuildingDetail({
 // ─── 메인 ────────────────────────────────────────────────────
 export default function StoresPage() {
   const router = useRouter();
-  const [selected, setSelected] = useState<Store | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
   const [recommendedKws, setRecommendedKws] = useState<string[]>([]);
@@ -1450,7 +1444,6 @@ export default function StoresPage() {
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [selectedBuildingData, setSelectedBuildingData] = useState<Building | null>(null);
   const [mapCatFilter, setMapCatFilter] = useState<StoreCategory | "전체">("전체");
-  const [mapDetailStore, setMapDetailStore] = useState<EnrichedStore | null>(null);
   const [dbBuildings, setDbBuildings] = useState<BuildingRow[]>([]);
   const [allDbStores, setAllDbStores] = useState<FlatStore[]>([]);
   const [mapCoupons,     setMapCoupons]     = useState<import("@/lib/types").Coupon[]>([]);
@@ -1671,7 +1664,7 @@ export default function StoresPage() {
         <SearchResults
           results={searchResults}
           gasResults={gasSearchResults}
-          onSelect={(s) => { setSelected(s); setSearchFocused(false); }}
+          onSelect={(s) => { setSearchFocused(false); router.push(`/stores/detail/?id=${s.id}`); }}
           onGasSelect={(s) => {
             setSearchFocused(false);
             setSearchQuery("");
@@ -1719,12 +1712,12 @@ export default function StoresPage() {
           </div>
 
           {/* 건물 탭 시 매장 시트 — fixed로 전체 뷰포트 덮음 */}
-          {selectedBuildingId && selectedNearby && !mapDetailStore && (
+          {selectedBuildingId && selectedNearby && (
             <MapBuildingSheet
               nearbyInfo={selectedNearby}
               buildingData={selectedBuildingData}
               onClose={() => setSelectedBuildingId(null)}
-              onSelectStore={setMapDetailStore}
+              onSelectStore={(store) => router.push(`/stores/detail/?id=${store.id}`)}
             />
           )}
         </>
@@ -1739,21 +1732,6 @@ export default function StoresPage() {
           station={gasDetailSheet}
           onClose={() => { setGasDetailSheet(null); setSelectedGasId(null); }}
         />
-      )}
-
-      {/* 지도 모드 매장 상세 — viewport 기준 fixed, 최상위 레이어 */}
-      {mapDetailStore && (
-        <StoreListDetailSheet
-          store={mapDetailStore}
-          onClose={() => setMapDetailStore(null)}
-          allCoupons={mapCoupons}
-          allOpenings={mapOpenings}
-        />
-      )}
-
-      {selected && selected.name !== "공실" && (
-        <StoreSheet store={selected} onClose={() => setSelected(null)}
-          onDetail={() => { setSelected(null); router.push(`/stores/detail/?id=${selected.id}`); }} />
       )}
     </div>
   );
