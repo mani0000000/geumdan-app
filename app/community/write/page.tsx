@@ -23,7 +23,6 @@ export default function WritePage() {
   const [showCatPicker, setShowCatPicker] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
   const [nickname, setNickname] = useState("검단주민");
   const [authorDong, setAuthorDong] = useState("검단");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -88,7 +87,7 @@ export default function WritePage() {
         authorDong,
         authorAvatarUrl: avatarUrl,
         userId: uid,
-        isAnonymous: anonymous,
+        isAnonymous: false,
         images,
         videos,
       });
@@ -216,21 +215,10 @@ export default function WritePage() {
                 ? <Loader2 size={18} className="text-[#6e6e73] animate-spin" />
                 : <ImageIcon size={18} className="text-[#6e6e73]" />}
             </button>
-            {!anonymous && (
-              <input value={nickname} onChange={e => setNickname(e.target.value)}
-                placeholder="닉네임" maxLength={12}
-                className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] outline-none w-28" />
-            )}
-          </div>
-          <button onClick={() => setAnonymous(!anonymous)}
-            className={`flex items-center gap-2 h-8 px-3 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
-              anonymous ? "bg-[#1d1d1f] text-white" : "bg-[#f5f5f7] text-[#424245]"
-            }`}>
-            <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${anonymous ? "border-white" : "border-[#86868b]"}`}>
-              {anonymous && <div className="w-2 h-2 rounded-full bg-white" />}
+            <div className="h-9 px-3 bg-[#f5f5f7] rounded-xl text-[14px] text-[#1d1d1f] flex items-center min-w-[80px]">
+              {nickname}
             </div>
-            익명
-          </button>
+          </div>
         </div>
 
         {error && (
