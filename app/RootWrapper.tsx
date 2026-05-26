@@ -5,6 +5,7 @@ import BottomNav from "@/components/layout/BottomNav";
 export default function RootWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isAdmin  = pathname?.startsWith("/admin");
+  const hideNav  = pathname?.startsWith("/community/detail") || pathname?.startsWith("/community/write");
 
   if (isAdmin) {
     return <>{children}</>;
@@ -17,7 +18,7 @@ export default function RootWrapper({ children }: { children: React.ReactNode })
         {children}
       </div>
       {/* fixed 포지셔닝이 overflow 컨테이너에 갇히지 않도록 바깥에 배치 */}
-      <BottomNav />
+      {!hideNav && <BottomNav />}
     </>
   );
 }

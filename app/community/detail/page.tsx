@@ -2,8 +2,8 @@
 import { Suspense, useState, useEffect, useCallback, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ChevronLeft, ThumbsUp, MessageSquare, Share2,
-  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, Play,
+  ChevronLeft, ChevronRight, ThumbsUp, MessageSquare, Share2,
+  MoreHorizontal, Send, Flag, Bookmark, Trash2, Pencil, Play, X, ZoomIn, ZoomOut,
 } from "lucide-react";
 import { posts } from "@/lib/mockData";
 import { formatRelativeTime } from "@/lib/utils";
@@ -83,7 +83,115 @@ function PostVideo({ src }: { src: string }) {
   );
 }
 
-function PostMedia({ images, videos }: { images: string[]; videos: string[] }) {
+function ImageLightbox({
+  images,
+  startIndex,
+  onClose,
+}: {
+  images: string[];
+  startIndex: number;
+  onClose: () => void;
+}) {
+  const [idx, setIdx] = useState(startIndex);
+  const [zoom, setZoom] = useState(1);
+  const lastDist = useRef<number | null>(null);
+  const clamp = (z: number) => Math.min(5, Math.max(1, z));
+
+  function onTouchStart(e: React.TouchEvent) {
+    if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastDist.current = Math.sqrt(dx * dx + dy * dy);
+    }
+  }
+  function onTouchMove(e: React.TouchEvent) {
+    if (e.touches.length === 2 && lastDist.current !== null) {
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      setZoom(z => clamp(z * (dist / lastDist.current!)));
+      lastDist.current = dist;
+    }
+  }
+  function onTouchEnd() { lastDist.current = null; }
+
+  function prev() { setIdx(i => i - 1); setZoom(1); }
+  function next() { setIdx(i => i + 1); setZoom(1); }
+
+  return (
+    <div
+      className="fixed inset-0 z-[99999] bg-black flex items-center justify-center select-none"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      {/* 닫기 */}
+      <button onClick={onClose}
+        className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center active:opacity-70">
+        <X size={20} className="text-white" />
+      </button>
+
+      {/* 이미지 카운터 */}
+      {images.length > 1 && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 px-3 py-1 bg-black/60 rounded-full text-white text-[13px]">
+          {idx + 1} / {images.length}
+        </div>
+      )}
+
+      {/* 이미지 */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={images[idx]}
+        alt=""
+        draggable={false}
+        style={{
+          transform: `scale(${zoom})`,
+          transition: lastDist.current ? "none" : "transform 0.15s",
+          maxWidth: "100%",
+          maxHeight: "100%",
+          objectFit: "contain",
+        }}
+        onClick={e => e.stopPropagation()}
+      />
+
+      {/* 이전/다음 */}
+      {idx > 0 && (
+        <button onClick={prev}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center active:opacity-70">
+          <ChevronLeft size={22} className="text-white" />
+        </button>
+      )}
+      {idx < images.length - 1 && (
+        <button onClick={next}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center active:opacity-70">
+          <ChevronRight size={22} className="text-white" />
+        </button>
+      )}
+
+      {/* 확대/축소 버튼 */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex items-center gap-4 bg-black/60 rounded-full px-5 py-2.5">
+        <button onClick={() => setZoom(z => clamp(z - 0.5))} className="text-white active:opacity-70">
+          <ZoomOut size={20} />
+        </button>
+        <span className="text-white text-[13px] w-10 text-center">{Math.round(zoom * 100)}%</span>
+        <button onClick={() => setZoom(z => clamp(z + 0.5))} className="text-white active:opacity-70">
+          <ZoomIn size={20} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PostMedia({
+  images,
+  videos,
+  onImageClick,
+}: {
+  images: string[];
+  videos: string[];
+  onImageClick: (index: number) => void;
+}) {
   if (images.length === 0 && videos.length === 0) return null;
   return (
     <div className="mt-5 space-y-2">
@@ -96,8 +204,9 @@ function PostMedia({ images, videos }: { images: string[]; videos: string[] }) {
           {images.map((src, i) => (
             <div
               key={i}
-              className="relative bg-[#f5f5f7] rounded-xl overflow-hidden"
+              className="relative bg-[#f5f5f7] rounded-xl overflow-hidden cursor-zoom-in active:opacity-80"
               style={{ aspectRatio: images.length === 1 ? "auto" : "1/1" }}
+              onClick={() => onImageClick(i)}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -146,6 +255,7 @@ function DetailContent() {
   const [myCommentIds, setMyCommentIds] = useState<Set<string>>(new Set());
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [shareToast, setShareToast] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
 
   // 포스트 로드
   useEffect(() => {
@@ -358,7 +468,11 @@ function DetailContent() {
             </div>
           </div>
           <p className="text-[16px] text-[#1d1d1f] leading-relaxed whitespace-pre-line">{post.content}</p>
-          <PostMedia images={post.images ?? []} videos={post.videos ?? []} />
+          <PostMedia
+            images={post.images ?? []}
+            videos={post.videos ?? []}
+            onImageClick={(i) => setLightbox({ images: post.images ?? [], index: i })}
+          />
 
           {/* Reaction bar */}
           <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
@@ -436,9 +550,18 @@ function DetailContent() {
 
       {/* 공유 토스트 */}
       {shareToast && (
-        <div className="fixed left-1/2 -translate-x-1/2 bottom-28 z-50 px-4 py-2.5 bg-black/80 text-white text-[13px] rounded-xl pointer-events-none whitespace-nowrap">
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-16 z-50 px-4 py-2.5 bg-black/80 text-white text-[13px] rounded-xl pointer-events-none whitespace-nowrap">
           {shareToast}
         </div>
+      )}
+
+      {/* 이미지 라이트박스 */}
+      {lightbox && (
+        <ImageLightbox
+          images={lightbox.images}
+          startIndex={lightbox.index}
+          onClose={() => setLightbox(null)}
+        />
       )}
     </div>
   );
