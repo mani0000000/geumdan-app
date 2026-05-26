@@ -78,10 +78,29 @@ async function loadDbStations() {
   }
 }
 
+// ── KATEC → WGS84 근사 변환 (검단 권역 ±10km 내 오차 ~10m 이내) ─────────
+// GEUMDAN_KATEC(검단 중심 KATEC)을 기준으로 선형 근사
+function katecToWgs84(x: number, y: number): { lat: number; lng: number } | null {
+  if (!x || !y || x < 200000 || x > 500000 || y < 400000 || y > 700000) return null;
+  // 검단 중심 WGS84 / KATEC (opinet.ts의 GEUMDAN_KATEC과 동일 기준)
+  const LAT_C = 37.5446, LNG_C = 126.6861;
+  const COS_C = Math.cos(LAT_C * Math.PI / 180);
+  const M_PER_DEG_LAT = 111320;
+  const M_PER_DEG_LNG = 111320 * COS_C;
+  // GEUMDAN_KATEC 값 (wgs84ToKatec(37.5446, 126.6861) 계산 결과 근사)
+  const KX_C = 285960, KY_C = 549090;
+  const lat = LAT_C + (y - KY_C) / M_PER_DEG_LAT;
+  const lng = LNG_C + (x - KX_C) / M_PER_DEG_LNG;
+  if (lat < 37.4 || lat > 37.7 || lng < 126.5 || lng > 126.9) return null;
+  return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+}
+
 // ── Opinet API ────────────────────────────────────────────────────────────
 interface OpinetStation {
   UNI_ID: string; OS_NM: string; POLL_DIV_CD: string;
-  PRICE: number; DISTANCE: number; NEW_ADR?: string; VAN_ADR?: string;
+  PRICE: number; DISTANCE: number;
+  GIS_X_COOR?: number; GIS_Y_COOR?: number;
+  NEW_ADR?: string; VAN_ADR?: string;
 }
 
 async function fetchOpinetByProduct(prodcd: string, apiKey: string) {
@@ -164,12 +183,22 @@ export async function GET(_req: NextRequest) {
     if (s.UNI_ID) opinetAll.set(s.UNI_ID, s);
   });
 
-  // 3. DB 스테이션마다 Opinet 가격 매칭
+  // Opinet GIS 좌표 맵 (UNI_ID → {lat, lng}) — 정확한 위치
+  const gisMap = new Map<string, { lat: number; lng: number }>();
+  [...gasoline.stations, ...diesel.stations, ...lpg.stations].forEach(s => {
+    if (s.UNI_ID && s.GIS_X_COOR && s.GIS_Y_COOR && !gisMap.has(s.UNI_ID)) {
+      const wgs = katecToWgs84(s.GIS_X_COOR, s.GIS_Y_COOR);
+      if (wgs) gisMap.set(s.UNI_ID, wgs);
+    }
+  });
+
+  // 3. DB 스테이션마다 Opinet 가격 + 위치 매칭
   const stations: GasStation[] = dbStations.map(dbS => {
     const meta = metaFor(dbS.brand_code);
 
     // opinet_id가 저장돼 있으면 직접 조회
-    let prices = dbS.opinet_id ? priceMap.get(dbS.opinet_id) : undefined;
+    let matchedId: string | undefined = dbS.opinet_id ?? undefined;
+    let prices = matchedId ? priceMap.get(matchedId) : undefined;
 
     // 없으면 이름 유사도로 매칭
     if (!prices) {
@@ -181,16 +210,24 @@ export async function GET(_req: NextRequest) {
       }
       if (bestScore >= 0.5 && bestId) {
         prices = priceMap.get(bestId);
+        matchedId = bestId;
       }
     }
 
-    // Opinet 기반 거리 (없으면 0)
+    // Opinet GIS 좌표 사용 (있을 때만 — 없으면 DB 좌표 유지)
+    const gis = matchedId ? gisMap.get(matchedId) : undefined;
+    const lat = gis?.lat ?? dbS.lat;
+    const lng = gis?.lng ?? dbS.lng;
+
+    // 거리: Opinet DISTANCE 필드 우선, 없으면 GIS/DB 좌표 기반
     const distKm = (() => {
-      const matched = gasoline.stations.find(s => normName(s.OS_NM) === normName(dbS.name));
+      const matched = [...gasoline.stations, ...diesel.stations].find(
+        s => s.UNI_ID === matchedId && s.DISTANCE > 0
+      );
       if (matched?.DISTANCE) return Math.round(matched.DISTANCE / 100) / 10;
-      // lat/lng 기반 대략 거리 (검단 중심 37.5480, 126.6850)
-      const dlat = dbS.lat - 37.5480;
-      const dlng = dbS.lng - 126.6850;
+      const CENTER_LAT = 37.5446, CENTER_LNG = 126.6861;
+      const dlat = lat - CENTER_LAT;
+      const dlng = (lng - CENTER_LNG) * Math.cos(CENTER_LAT * Math.PI / 180);
       return Math.round(Math.sqrt(dlat * dlat + dlng * dlng) * 111 * 10) / 10;
     })();
 
@@ -204,8 +241,7 @@ export async function GET(_req: NextRequest) {
       brandShort: meta.short,
       address: dbS.address,
       distanceKm: distKm,
-      lat: dbS.lat,
-      lng: dbS.lng,
+      lat, lng,
       area: dbS.area,
       isSelf: dbS.is_self,
       isAlttul: dbS.is_alttul,

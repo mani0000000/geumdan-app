@@ -13,6 +13,7 @@ import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
 import { fetchBuildingWithFloors, fetchBuildings, fetchAllStoresFlat } from "@/lib/db/buildings";
 import { fetchBasicGasStations, type BasicGasStation } from "@/lib/db/gas-stations";
+import type { GasApiResponse } from "@/lib/types";
 import { fetchRecommendedKeywords, fetchPopularKeywords, logSearch } from "@/lib/db/search-keywords";
 import { fetchActiveBanners, type Banner } from "@/lib/db/banners";
 import BannerCarousel from "@/components/ui/BannerCarousel";
@@ -1466,7 +1467,25 @@ export default function StoresPage() {
     fetchActiveOpenings().then(setMapOpenings);
     fetchRecommendedKeywords().then(setRecommendedKws);
     fetchPopularKeywords().then(setPopularKws);
-    fetchBasicGasStations().then(setGasStations);
+    // /api/gas (오피넷 GIS 정확 좌표 포함) → 폴백: fetchBasicGasStations
+    (async () => {
+      try {
+        const res = await fetch("/api/gas", { signal: AbortSignal.timeout(7000) });
+        if (res.ok) {
+          const json: GasApiResponse = await res.json();
+          if (json.success && json.stations.length > 0) {
+            setGasStations(json.stations.map(s => ({
+              id: s.id, name: s.name, brandCode: s.brandCode,
+              brandColor: s.brandColor, brandBg: s.brandBg, brandShort: s.brandShort,
+              lat: s.lat, lng: s.lng, area: s.area, address: s.address,
+              isSelf: s.isSelf, isAlttul: s.isAlttul,
+            })));
+            return;
+          }
+        }
+      } catch { /* fall through */ }
+      fetchBasicGasStations().then(setGasStations);
+    })();
   }, []);
 
   function handleSearchSelect(kw: string) {

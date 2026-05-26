@@ -37,6 +37,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   auth:   { autoRefreshToken: false, persistSession: false },
 });
 
+// ── KATEC → WGS84 근사 변환 (검단 권역 ±10km 내) ────────────────
+// GIS_X_COOR / GIS_Y_COOR (KATEC) → 위경도 (WGS84)
+// 검단 중심(37.5446, 126.6861)을 기준점으로 선형 근사
+const LAT_C = 37.5446, LNG_C = 126.6861;
+const KX_C = 285960, KY_C = 549090; // wgs84ToKatec(LAT_C, LNG_C) 근사값
+const COS_C = Math.cos(LAT_C * Math.PI / 180);
+const M_DEG_LAT = 111320, M_DEG_LNG = 111320 * COS_C;
+
+function katecToWgs84(x, y) {
+  if (!x || !y || x < 200000 || x > 500000 || y < 400000 || y > 700000) return null;
+  const lat = LAT_C + (y - KY_C) / M_DEG_LAT;
+  const lng = LNG_C + (x - KX_C) / M_DEG_LNG;
+  if (lat < 37.4 || lat > 37.7 || lng < 126.5 || lng > 126.9) return null;
+  return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+}
+
 // ── WGS84 → KATEC 변환 (오피넷 API 파라미터 용) ─────────────────
 const D2R = Math.PI / 180;
 function wgs84ToKatec(lat, lng) {
@@ -158,7 +174,7 @@ async function main() {
   addToMap(diesel,   'diesel');
   addToMap(lpg,      'lpg');
 
-  // UNI_ID → station 역인덱스 (name 매칭용)
+  // UNI_ID → station 역인덱스 (name 매칭용 + GIS 좌표)
   const opinetAll = [...gasoline, ...diesel, ...lpg].reduce((m, s) => {
     if (s.UNI_ID && !m.has(s.UNI_ID)) m.set(s.UNI_ID, s);
     return m;
@@ -193,6 +209,12 @@ async function main() {
       continue;
     }
 
+    // Opinet GIS 좌표 → WGS84 변환 (정확한 위치 업데이트)
+    const opiStation = uid ? opinetAll.get(uid) : null;
+    const gisWgs = opiStation?.GIS_X_COOR && opiStation?.GIS_Y_COOR
+      ? katecToWgs84(opiStation.GIS_X_COOR, opiStation.GIS_Y_COOR)
+      : null;
+
     // 5. Supabase 업데이트
     const update = {
       price_gasoline:   prices.gasoline ?? null,
@@ -200,6 +222,8 @@ async function main() {
       price_lpg:        prices.lpg      ?? null,
       price_updated_at: now,
       ...(uid && uid !== dbS.opinet_id ? { opinet_id: uid } : {}),
+      // GIS 좌표가 유효할 때만 위치 업데이트
+      ...(gisWgs ? { lat: gisWgs.lat, lng: gisWgs.lng } : {}),
     };
 
     const { error: upErr } = await supabase
@@ -215,7 +239,8 @@ async function main() {
         prices.diesel   ? `경유 ${prices.diesel}원`   : null,
         prices.lpg      ? `LPG ${prices.lpg}원`       : null,
       ].filter(Boolean).join(' / ');
-      console.log(`  ✅ ${dbS.name}: ${priceStr}`);
+      const coordStr = gisWgs ? ` [${gisWgs.lat}, ${gisWgs.lng}]` : '';
+      console.log(`  ✅ ${dbS.name}: ${priceStr}${coordStr}`);
       updated++;
     }
   }
