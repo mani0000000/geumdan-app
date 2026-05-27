@@ -14,7 +14,7 @@ import { createClient } from "@supabase/supabase-js";
  */
 
 const FALLBACK_OPINET_KEY = "F260518486";
-const RADIUS_M = 7000; // 검단 외곽(불로·대곡동) 포함 위해 7km
+const RADIUS_M = 10000; // 검단 외곽(불로·대곡동·왕길동) 포함 위해 10km
 
 const PRODCD = { gasoline: "B027", diesel: "D047", lpg: "K015" } as const;
 
@@ -122,26 +122,37 @@ async function fetchOpinetByProduct(prodcd: string, apiKey: string) {
   }
 }
 
-// ── 이름 정규화 (주유소 접미어·공백·괄호 제거) ────────────────────────────
-function normName(s: string) {
+// ── 이름 정규화 (브랜드명·공통 접미어 완전 제거) ─────────────────────────
+// sync-gas 배치와 동일한 알고리즘을 사용해 매칭 정확도를 통일
+function normName(s: string): string {
   return s
-    .replace(/주유소$/, "")
-    .replace(/\(주\)/g, "")
+    .toLowerCase()
+    .replace(/sk에너지|sk|gs칼텍스|gs|현대오일뱅크|현대|에스오일|s-oil|s\.oil/g, "")
+    .replace(/농협|알뜰주유소|알뜰|셀프주유소|셀프|주유소/g, "")
+    .replace(/\(주\)|\(유\)/g, "")
+    .replace(/에너지|오일뱅크|오일드림/g, "")
     .replace(/\s+/g, "")
-    .replace(/[()（）]/g, "")
-    .toLowerCase();
+    .replace(/[()（）[\]]/g, "")
+    .trim();
+}
+
+function bigrams(s: string): Set<string> {
+  const r = new Set<string>();
+  for (let i = 0; i < s.length - 1; i++) r.add(s.slice(i, i + 2));
+  return r;
 }
 
 function nameSimilarity(a: string, b: string): number {
-  const na = normName(a);
-  const nb = normName(b);
-  if (na === nb) return 1;
-  if (na.includes(nb) || nb.includes(na)) return 0.8;
-  // 앞 2~4 글자 일치
-  const minLen = Math.min(na.length, nb.length);
-  let common = 0;
-  for (let i = 0; i < minLen; i++) { if (na[i] === nb[i]) common++; else break; }
-  return common / Math.max(na.length, nb.length);
+  const na = normName(a), nb = normName(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1.0;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  const bga = bigrams(na), bgb = bigrams(nb);
+  if (!bga.size && !bgb.size) return 0;
+  let inter = 0;
+  for (const g of bga) if (bgb.has(g)) inter++;
+  const union = bga.size + bgb.size - inter;
+  return union ? inter / union : 0;
 }
 
 // ── 메인 핸들러 ───────────────────────────────────────────────────────────
@@ -193,21 +204,25 @@ export async function GET(_req: NextRequest) {
   const stations: GasStation[] = dbStations.map(dbS => {
     const meta = metaFor(dbS.brand_code);
 
-    // opinet_id가 저장돼 있으면 직접 조회
+    // opinet_id가 저장돼 있으면 직접 조회 (가격·위치 모두)
     let matchedId: string | undefined = dbS.opinet_id ?? undefined;
     let prices = matchedId ? priceMap.get(matchedId) : undefined;
 
-    // 없으면 이름 유사도로 매칭
-    if (!prices) {
+    // opinet_id로 가격을 못 찾았거나 opinet_id 자체가 없으면 이름 유사도로 매칭
+    if (!matchedId || !prices) {
       let bestId: string | undefined;
       let bestScore = 0;
       for (const [uid, os] of opinetAll) {
         const score = nameSimilarity(dbS.name, os.OS_NM);
         if (score > bestScore) { bestScore = score; bestId = uid; }
       }
-      if (bestScore >= 0.5 && bestId) {
-        prices = priceMap.get(bestId);
-        matchedId = bestId;
+      if (bestScore >= 0.35 && bestId) {
+        const candidatePrices = priceMap.get(bestId);
+        // 이름 매칭 결과가 opinet_id 직접 조회보다 실제 가격이 있으면 우선
+        if (candidatePrices || !prices) {
+          prices = candidatePrices;
+          matchedId = bestId;
+        }
       }
     }
 
@@ -257,6 +272,6 @@ export async function GET(_req: NextRequest) {
   };
 
   return NextResponse.json(body, {
-    headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" },
+    headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
   });
 }
