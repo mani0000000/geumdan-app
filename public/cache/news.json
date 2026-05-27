@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-27T17:49:39.011Z",
+  "fetchedAt": "2026-05-27T19:57:05.328Z",
   "count": 40,
   "articles": [
     {
@@ -12,7 +12,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-5",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -39,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-6",
       "title": "인천서구문화재단, 터‧틀 (검단) 기획 전시 인천지역작가展 ‘당신이 머문 풍경, 변하는 시선’ 개최 - 인천교육일보",
       "summary": "",
       "source": "인천교육일보",
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-7",
       "title": "인천 검단구청 임시청사 6월 8일부터 검단행정과 민원업무 시작…행정체제 개편 선제 대응 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-15",
       "title": "인천 검단구 임시청사서 내달 8일부터 민원업무 개시 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-33",
+      "id": "gr2-34",
       "title": "인천서구문화재단, 인천지역작가전 ‘당신이 머문 풍경, 변하는 시선’ 개최 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -219,6 +219,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr3-1",
+      "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 서울일보",
+      "summary": "",
+      "source": "서울일보",
+      "publishedAt": "2026-05-25T22:08:29.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9IZkszSmtkRlZSVXRnWUt1RDRScmtxM0p0dTI3MzY3Q2Q3NC1UMENNUGkyMW9ESlpXUXp4aElqV0tETk5IVjc3NzI1ZVRkenBVRHN5MWx5N2dGRE53cXhUU2JzSm5ockFFd3JVeG8yTdIBb0FVX3lxTE9IZkszSmtkRlZSVXRnWUt1RDRScmtxM0p0dTI3MzY3Q2Q3NC1UMENNUGkyMW9ESlpXUXp4aElqV0tETk5IVjc3NzI1ZVRkenBVRHN5MWx5N2dGRE53cXhUU2JzSm5ockFFd3JVeG8yTQ?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr0-14",
       "title": "유정복, 검신총연 대담회 \"검단예술회관 건립, 시 재정 50% 지원\" - 미디어인천신문",
       "summary": "",
@@ -300,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-35",
+      "id": "gr0-37",
       "title": "도성훈, 검단지역 과밀학급 해소 약속…학교 신설 계획 밝혀 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-33",
+      "id": "gr0-35",
       "title": "유정복 후보, 검단 교통난 해소 공약…\"5호선 연장·원당역 신설 추진\" - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -351,15 +360,6 @@
       "source": "v.daum.net",
       "publishedAt": "2026-05-25T05:18:04.000Z",
       "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1ybUs4WlRwa25WSlNLcjFNTU82RlNXZ0xGNld0VUQwV1ZmWmNsZzZTQVlBRkE1RmNnXy1LWXo2UThiWlRGWDBvYVdJXy1BSDg?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-44",
-      "title": "더불어민주당 박찬대 인천시장 후보, 김진규 검단구청장 후보, 서구 한상민사거리서 집중유세… “민생·교통·경제 살리겠다” - 매일뉴스",
-      "summary": "",
-      "source": "매일뉴스",
-      "publishedAt": "2026-05-25T03:08:57.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBWX3BSZ2JjNktSUGI3cl8zRDlNQV9ldlpFMlFJbFRYdU1IVU8tNzFKYjJPZVJpdWlZSld5QlJEN01fcW9nWXpxMUNXSDRrZ28xRllkSFRwMC00NlExaENjVw?oc=5",
       "type": "뉴스"
     }
   ]
