@@ -1,14 +1,14 @@
 {
-  "fetchedAt": "2026-05-28T06:41:45.078Z",
+  "fetchedAt": "2026-05-28T12:18:00.378Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-2",
-      "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 네이트",
+      "id": "gr0-1",
+      "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 더팩트",
       "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-28T06:38:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE5EdzhvaUQ0ejlqV25keEtVeUYzeWV6anNKVWVNTTMxTU1vWFhkMl9IMVJtM2JLaVFkX2hmNXVoSzFTQWc4bl9jckJsc3FPNkZpY0FkaGl5bGJvdU15VGpxYQ?oc=5",
+      "source": "더팩트",
+      "publishedAt": "2026-05-28T06:33:04.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTFA1NG16S1NiWk9qMDRCSFMydXlBTFM4WkRBNVFhZ2FmVEo4VExMUHY2SFc1X1RGSHBCaUZ0elF0UkZLWi1LbkprTzdILWFQUWVRelVDQTA3SEx3Z9IBVEFVX3lxTE45T2d2amxkT2JTc3pobEpVX0t2VEROVmE5eHVJa1dOMC0wOEhzTHNhUklNY3FkSkhLbE1GdmtVM0pYMndYYkEzZFZ5Mm9ZZFZTMXAyaw?oc=5",
       "type": "뉴스"
     },
     {
@@ -21,8 +21,8 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-0",
-      "title": "인천 서구, 장마 전 공사장 16곳 안전점검 - 오늘경제",
+      "id": "gr2-4",
+      "title": "인천 서구, 장마 전 공사장 16곳 안전점검 강화 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
       "publishedAt": "2026-05-28T01:06:33.000Z",
@@ -30,7 +30,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-6",
+      "title": "인천 서구, 3주간 우기 대비 건설현장 '현미경 점검' - 위키트리",
+      "summary": "",
+      "source": "위키트리",
+      "publishedAt": "2026-05-28T00:46:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE9QQ1c4NVVxNFA3WERsVGRfWjlEVzNtNE1EY3VEaEstUGU4ZFdIenB3TXU3cmp5RE1zVWxTbktkcHRuUjZwQXp2U0dLYUh2TEJXUGpZZ0l3?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-18",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 네이트",
       "summary": "",
       "source": "네이트",
@@ -39,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-8",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -75,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-10",
       "title": "인천서구문화재단, 터‧틀 (검단) 기획 전시 인천지역작가展 ‘당신이 머문 풍경, 변하는 시선’ 개최 - 인천교육일보",
       "summary": "",
       "source": "인천교육일보",
@@ -84,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-9",
       "title": "인천 검단구청 임시청사 6월 8일부터 검단행정과 민원업무 시작…행정체제 개편 선제 대응 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -93,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-7",
       "title": "인천 서구 검단행정과 새 청사 업무 개시…검단구 출범 준비 본격화 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -102,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-11",
       "title": "인천 서구 검단행정과, 검단구청 청사로 이전 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -111,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-24",
+      "id": "gr2-22",
       "title": "인천 검단구 임시청사서 내달 8일부터 민원업무 개시 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -120,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-1",
       "title": "인천 서구 '검단행정과(舊 검단출장소)' 검단구청 청사로 이전 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -138,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "과밀학급 문제 ‘몸살’난 검단신도시 인천교육감 후보들 처방전은 제각각 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -192,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-3",
       "title": "인천서구문화재단, 터‧틀 (검단) 인천지역작가展 개최 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -237,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-25",
+      "id": "gr2-23",
       "title": "유정복 “검단 발전 완성할 사람은 준비된 인물…시민 선택이 미래 결정” - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-21",
       "title": "박찬대·유정복, 검단서 집중 유세…교통·교육 공약에 개인적 인연 강조 - 뉴스핌",
       "summary": "",
       "source": "뉴스핌",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-85",
+      "id": "gr2-46",
       "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 내외일보",
       "summary": "",
       "source": "내외일보",
@@ -351,15 +360,6 @@
       "source": "브릿지경제",
       "publishedAt": "2026-05-25T10:02:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5hU2tqYmtKWXJ6S1RXanptd01WTzhmZkhQS21QVHR0QUxMOFJyWWpiM0h4QVhibnFIUFdfdUY0RkFVU19ZZDdMSW1rVndhSFFZWTZvRlRSR0R1dw?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-37",
-      "title": "유정복 후보, 검단 교통난 해소 공약…\"5호선 연장·원당역 신설 추진\" - gukjenews.com",
-      "summary": "",
-      "source": "gukjenews.com",
-      "publishedAt": "2026-05-25T09:30:53.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE55cld4ZkRQZlZRS1NXRFZqU3U0bVhuQmRKZmZleFhuOVNIZHlteDQ2dVNGUVE0SHJScGdkajhkb0ZEV3VCcXkwSE94UFVIaGp6aTJqNWVtN3NTTkRKd2dvYUVqZDVqOU5nMkQ5SVh3?oc=5",
       "type": "뉴스"
     }
   ]
