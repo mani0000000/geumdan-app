@@ -1,14 +1,14 @@
 {
-  "fetchedAt": "2026-05-28T20:03:03.522Z",
+  "fetchedAt": "2026-05-28T22:25:03.185Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-2",
-      "title": "인천 서구, 장마철 앞두고 공동주택 공사현장 16곳 안전점검 실시 - 경인신문",
+      "id": "gr0-0",
+      "title": "[분양 포커스] 인천 검단신도시에 위치, 희소성 높은 브랜드 대단지 - 중앙일보",
       "summary": "",
-      "source": "경인신문",
-      "publishedAt": "2026-05-28T15:16:24.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9vbUtUZmJCVmYzSzJsNGRrUjhXRFRrM2NQaVhjaGc2cjljZzJwaVVkQUdhbGlHeG80RHJTVXhxVlI3UEF2bUItdlFLS1JlR2gtbWJkTDVUM21DbGFaaXRxa1lMbXVacjA?oc=5",
+      "source": "중앙일보",
+      "publishedAt": "2026-05-28T20:32:01.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiVkFVX3lxTE84TXhxNi1zZDhFTjI1YVVSZHZtcTZCY21iUUp0eU94SHp3YWg0eXFBbmVaQjN0bGdldXVNY1FmYUNxa2ZYS0pfVFFsZkRpNnFwcE1wSWRn?oc=5",
       "type": "뉴스"
     },
     {
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-1",
       "title": "포스코이앤씨, 검단신도시에 첫 '더샵' 공급…2857가구 대단지 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -39,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-9",
       "title": "인천 서구, 3주간 우기 대비 건설현장 '현미경 점검' - 위키트리",
       "summary": "",
       "source": "위키트리",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-7",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -93,7 +93,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-8",
       "title": "인천 검단구청 임시청사 6월 8일부터 검단행정과 민원업무 시작…행정체제 개편 선제 대응 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -120,12 +120,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
-      "title": "인천 검단구 임시청사서 내달 8일부터 민원업무 개시 - 연합뉴스",
+      "id": "gr2-17",
+      "title": "인천 검단구 임시청사서 내달 8일부터 민원업무 개시 - 파이낸셜뉴스",
       "summary": "",
-      "source": "연합뉴스",
-      "publishedAt": "2026-05-27T02:06:36.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE9ZSWp3R0pGUlhTUGsxd3BBckw4VWVBcHVaRlRIamtSNXZrLXUzZjJDRDhnZmlxMGE5OGV5U1VCV3Y2dUdPYWtkOENEaVlaUUl4ejFzWm1HYldVRkXSAWBBVV95cUxQcVV0dERSUVdlbzZ0Z2F0WVZvcW5qU1lkZlpWM0lyTUp5UVN3MUdzSTZxdUVJeG04MmJsbl9tZXV6d0dHVlBXVUZGMUlublcwRnFoTXQtQ2VfYTQ1ajJvUVE?oc=5",
+      "source": "파이낸셜뉴스",
+      "publishedAt": "2026-05-27T02:07:12.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9pek53dUhkaEJHUEtHb2NYM0dsRmxOLXZGRlFKenlDSEgyQUN5dTI2Sk5FdnZxcS02MlZ0MXdQOWVfM01aVTRDNkoyOGJZdUdYV2xZMkJ2Wkx1d9IBXkFVX3lxTE1ESXFHOHNQSzBPYmdfNUFDb1RTY3AzMUpEeWtETmxZdllCYURxM0xvVFFSa3VZdFU4RGtDTFFrRk9LaWFUMWpZM19mT0dhYWJnZTI3V0V4N05MSl9ieFE?oc=5",
       "type": "뉴스"
     },
     {
@@ -147,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "과밀학급 문제 ‘몸살’난 검단신도시 인천교육감 후보들 처방전은 제각각 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -174,7 +174,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-13",
       "title": "도성훈, 검단 과밀학급 해소 위한 특별예산 투입 약속 - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -201,6 +201,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-3",
+      "title": "인천서구문화재단, 터‧틀 (검단) 인천지역작가展 개최 - v.daum.net",
+      "summary": "",
+      "source": "v.daum.net",
+      "publishedAt": "2026-05-26T02:24:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTFB6YzZxZHM5dzV3ZUdzZ1EtMTh6eVJBbVg2Tk9CTG5pNkNSR3Q0aFFMVXlpT2lOVi1MNU5PVjEwcmRPdUhrck1KYl9aRQ?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr0-6",
       "title": "도성훈 후보, 검단신도시 학부모 만나 과밀학급 해소 방안 제시 - 인천게릴라뉴스",
       "summary": "",
@@ -219,7 +228,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-17",
       "title": "이대형 인천교육감 후보, “검단 과밀학급 해결” 제안 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -237,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-21",
+      "id": "gr2-22",
       "title": "유정복 “검단 발전 완성할 사람은 준비된 인물…시민 선택이 미래 결정” - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -246,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
+      "id": "gr0-15",
       "title": "유정복, 검신총연 대담회 \"검단예술회관 건립, 시 재정 50% 지원\" - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -264,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-20",
       "title": "유정복 인천시장 후보, 서구 검단 유세서 “승기 잡았다” 자신감 드러내 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-17",
+      "id": "gr0-16",
       "title": "이대형 “검단 과밀학급·돌봄·통학안전 해결”… 검단 맞춤형 교육청사진 제시 - 우리일보",
       "summary": "",
       "source": "우리일보",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-46",
+      "id": "gr0-50",
       "title": "도성훈, 검단지역 과밀학급 해소 약속…학교 신설 계획 밝혀 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-44",
+      "id": "gr0-42",
       "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 내외일보",
       "summary": "",
       "source": "내외일보",
       "publishedAt": "2026-05-25T10:09:09.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFBSNVJxLVFvY1FFaGphSVByV0Q5ZFk2bVZPbHpOY1RYZXFqaHY1T0ZMMUwwaE1kclozNUlDMlltdWFPLTFIYUN4OFE5c0Q5cDl5bWtUV2Rfdm0zeXNXOG5EY3R5OWdfVV9VVzRfY2taNA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-21",
-      "title": "검단 찾은 유정복 후보 “5호선·학교 신설·매립지 종료 반드시 해낸다” - 브릿지경제",
-      "summary": "",
-      "source": "브릿지경제",
-      "publishedAt": "2026-05-25T10:02:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE5hU2tqYmtKWXJ6S1RXanptd01WTzhmZkhQS21QVHR0QUxMOFJyWWpiM0h4QVhibnFIUFdfdUY0RkFVU19ZZDdMSW1rVndhSFFZWTZvRlRSR0R1dw?oc=5",
       "type": "뉴스"
     }
   ]
