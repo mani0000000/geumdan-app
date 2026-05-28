@@ -35,6 +35,7 @@ import BannerCarousel from "@/components/ui/BannerCarousel";
 import { fetchActivePopups, type Popup } from "@/lib/db/popups";
 import PopupBottomSheet from "@/components/ui/PopupBottomSheet";
 import GasWidget from "@/components/home/GasWidget";
+import LiveFeedWidget from "@/components/home/LiveFeedWidget";
 import { fetchYouTubeVideosFromDB } from "@/lib/db/youtube";
 import InstagramFeedSection from "@/components/widgets/InstagramFeedSection";
 import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places";
@@ -2555,6 +2556,7 @@ export default function HomePage() {
     sports: () => <SportsWidget />,
     tides: () => <TideSection />,
     gas: () => <GasWidget />,
+    livefeed: () => <LiveFeedWidget />,
   };
 
   const activeWidgets = widgets.length > 0
