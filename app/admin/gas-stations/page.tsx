@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { RefreshCw, CheckCircle2, AlertCircle, MapPin, Fuel, X } from "lucide-react";
+import { RefreshCw, CheckCircle2, AlertCircle, MapPin, Fuel, X, Search } from "lucide-react";
 
 interface SyncResult {
   id: number; name: string; status: string;
@@ -43,11 +43,30 @@ const BRAND_COLOR: Record<string, string> = {
   RTO: "#6366F1", RTX: "#6366F1", NHO: "#059669", ETC: "#6B7280",
 };
 
+interface SeedSummary {
+  opinet_discovered: number;
+  inserted: number;
+  updated: number;
+  skipped: number;
+  radius_m: number;
+  timestamp: string;
+}
+interface SeedResponse {
+  success: boolean;
+  summary?: SeedSummary;
+  inserted?: string[];
+  updated?: string[];
+  skipped?: string[];
+  error?: string;
+}
+
 export default function GasStationsAdminPage() {
   const [stations, setStations]   = useState<DbStation[]>([]);
   const [loading, setLoading]     = useState(true);
   const [syncing, setSyncing]     = useState(false);
+  const [seeding, setSeeding]     = useState(false);
   const [syncResult, setSyncResult] = useState<SyncResponse | null>(null);
+  const [seedResult, setSeedResult] = useState<SeedResponse | null>(null);
   const [showDetail, setShowDetail] = useState(false);
 
   async function loadStations() {
@@ -83,6 +102,21 @@ export default function GasStationsAdminPage() {
     setSyncing(false);
   }
 
+  async function handleSeed() {
+    if (!confirm("오피넷 API로 검단 권역 주유소를 전수 발굴해 DB를 갱신합니다.\n새로운 주유소가 추가되고 없어진 주유소는 비활성화됩니다.\n계속하시겠습니까?")) return;
+    setSeeding(true);
+    setSeedResult(null);
+    try {
+      const res = await fetch("/api/admin/seed-gas", { method: "POST" });
+      const data: SeedResponse = await res.json();
+      setSeedResult(data);
+      if (data.success) loadStations();
+    } catch (e) {
+      setSeedResult({ success: false, error: String(e) });
+    }
+    setSeeding(false);
+  }
+
   const priceTs = stations.find(s => s.price_updated_at)?.price_updated_at;
   const priceAge = priceTs ? Math.round((Date.now() - new Date(priceTs).getTime()) / 3600000) : null;
 
@@ -102,16 +136,64 @@ export default function GasStationsAdminPage() {
               )}
             </p>
           </div>
-          <button
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center gap-2 px-4 py-2.5 bg-[#3182F6] text-white rounded-xl text-[14px] font-semibold disabled:opacity-50 hover:bg-[#1C6EE8] transition-colors"
-          >
-            <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
-            {syncing ? "동기화 중..." : "Opinet 동기화"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleSeed}
+              disabled={seeding || syncing}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#059669] text-white rounded-xl text-[14px] font-semibold disabled:opacity-50 hover:bg-[#047857] transition-colors"
+            >
+              <Search size={15} className={seeding ? "animate-spin" : ""} />
+              {seeding ? "발굴 중..." : "주유소 재발굴"}
+            </button>
+            <button
+              onClick={handleSync}
+              disabled={syncing || seeding}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#3182F6] text-white rounded-xl text-[14px] font-semibold disabled:opacity-50 hover:bg-[#1C6EE8] transition-colors"
+            >
+              <RefreshCw size={15} className={syncing ? "animate-spin" : ""} />
+              {syncing ? "동기화 중..." : "가격 동기화"}
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* 재발굴 결과 */}
+      {seedResult && (
+        <div className={`mb-5 rounded-2xl p-4 border ${seedResult.success ? "bg-[#F0FDF4] border-[#BBF7D0]" : "bg-[#FFF5F5] border-[#FECACA]"}`}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {seedResult.success
+                ? <CheckCircle2 size={18} className="text-[#059669] shrink-0 mt-0.5" />
+                : <AlertCircle size={18} className="text-[#EF4444] shrink-0 mt-0.5" />
+              }
+              <div>
+                {seedResult.success && seedResult.summary ? (
+                  <>
+                    <p className="text-[14px] font-semibold text-[#065F46]">주유소 재발굴 완료</p>
+                    <p className="text-[13px] text-[#047857] mt-0.5">
+                      오피넷 발견 {seedResult.summary.opinet_discovered}개 /
+                      신규 추가 {seedResult.summary.inserted}개 /
+                      기존 갱신 {seedResult.summary.updated}개 /
+                      스킵 {seedResult.summary.skipped}개
+                      (반경 {(seedResult.summary.radius_m / 1000).toFixed(0)}km)
+                    </p>
+                    {(seedResult.inserted?.length ?? 0) > 0 && (
+                      <p className="text-[12px] text-[#059669] mt-1">
+                        신규: {seedResult.inserted!.join(", ")}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-[14px] font-semibold text-[#991B1B]">{seedResult.error ?? "오류 발생"}</p>
+                )}
+              </div>
+            </div>
+            <button onClick={() => setSeedResult(null)} className="text-[#6B7280] hover:text-[#1d1d1f]">
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 동기화 결과 */}
       {syncResult && (

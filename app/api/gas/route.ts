@@ -1,24 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { GasStation, GasSource, GasApiResponse } from "@/lib/types";
 import { GEUMDAN_KATEC } from "@/lib/api/opinet";
+import { GEUMDAN_CENTER } from "@/lib/geumdan";
 import { createClient } from "@supabase/supabase-js";
 
 /**
  * 검단 신도시 주유소 가격 API
  *
- * 1. Supabase gas_stations 테이블에서 큐레이션 목록 로드 (21개)
- * 2. Opinet aroundAll.do (반경 5km) 로 실시간 가격 조회
- * 3. 이름 유사도 매칭으로 병합
- * 4. 매칭 실패 주유소도 가격 없음으로 포함
- * 5. sort 파라미터: "price"(기본) | "distance" — 프론트에서도 재정렬 가능
+ * 1. Supabase gas_stations (opinet_id 포함 정확한 목록) 로드
+ * 2. Opinet aroundAll.do 로 실시간 가격 조회
+ * 3. opinet_id 직접 매핑 → 이름 유사도 폴백 순으로 가격 병합
+ * 4. 가격이 없는 주유소도 위치 정보와 함께 포함
  */
 
 const FALLBACK_OPINET_KEY = "F260518486";
-const RADIUS_M = 10000; // 검단 외곽(불로·대곡동·왕길동) 포함 위해 10km
-
+const RADIUS_M = 12000;
 const PRODCD = { gasoline: "B027", diesel: "D047", lpg: "K015" } as const;
 
-// ── 브랜드 메타 ────────────────────────────────────────────────────────────
+// ── 브랜드 메타 ─────────────────────────────────────────────────────────
 const BRAND_META: Record<string, { name: string; color: string; bg: string; short: string }> = {
   SKE: { name: "SK에너지",     color: "#EF4444", bg: "#FEF2F2", short: "SK"   },
   GSC: { name: "GS칼텍스",     color: "#0058B0", bg: "#EFF6FF", short: "GS"   },
@@ -29,70 +28,53 @@ const BRAND_META: Record<string, { name: string; color: string; bg: string; shor
   NHO: { name: "농협알뜰",     color: "#059669", bg: "#ECFDF5", short: "NH"   },
   ETC: { name: "자가상표",     color: "#6B7280", bg: "#F3F4F6", short: "일반" },
 };
-
 function metaFor(code: string) { return BRAND_META[code] ?? BRAND_META.ETC; }
 
-// ── 인라인 폴백 주유소 목록 (DB 없을 때 사용) ─────────────────────────────
-const FALLBACK_STATIONS = [
-  { id: 1,  name: "검단농협주유소",    brand_code: "NHO", brand_name: "농협알뜰",     area: "당하동", address: "인천 서구 완정로 38",         lat: 37.5445, lng: 126.6715, is_self: false, is_alttul: true  },
-  { id: 2,  name: "신도시주유소",      brand_code: "ETC", brand_name: "자가상표",     area: "당하동", address: "인천 서구 고산후로 102",       lat: 37.5505, lng: 126.6775, is_self: false, is_alttul: false },
-  { id: 3,  name: "창신주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "원당동", address: "인천 서구 원당대로 802",       lat: 37.5490, lng: 126.6840, is_self: false, is_alttul: false },
-  { id: 4,  name: "검단원당주유소",    brand_code: "SOL", brand_name: "S-OIL",        area: "원당동", address: "인천 서구 원당대로 834",       lat: 37.5495, lng: 126.6850, is_self: false, is_alttul: false },
-  { id: 5,  name: "검단주유소",        brand_code: "HDO", brand_name: "현대오일뱅크", area: "마전동", address: "인천 서구 완정로 183",         lat: 37.5565, lng: 126.6745, is_self: false, is_alttul: false },
-  { id: 6,  name: "마전주유소",        brand_code: "RTO", brand_name: "알뜰주유소",   area: "마전동", address: "인천 서구 완정로 223",         lat: 37.5580, lng: 126.6745, is_self: false, is_alttul: true  },
-  { id: 7,  name: "검단대로주유소",    brand_code: "GSC", brand_name: "GS칼텍스",     area: "마전동", address: "인천 서구 검단로 502",         lat: 37.5555, lng: 126.6810, is_self: false, is_alttul: false },
-  { id: 8,  name: "차오름에너지주유소",brand_code: "SKE", brand_name: "SK에너지",     area: "왕길동", address: "인천 서구 단봉로 78",          lat: 37.5615, lng: 126.6675, is_self: false, is_alttul: false },
-  { id: 9,  name: "미소주유소",        brand_code: "SKE", brand_name: "SK에너지",     area: "왕길동", address: "인천 서구 단봉로 118",         lat: 37.5630, lng: 126.6680, is_self: false, is_alttul: false },
-  { id: 10, name: "오일드림주유소",    brand_code: "HDO", brand_name: "현대오일뱅크", area: "왕길동", address: "인천 서구 거남로 22",          lat: 37.5610, lng: 126.6650, is_self: false, is_alttul: false },
-  { id: 11, name: "구도일주유소",      brand_code: "SOL", brand_name: "S-OIL",        area: "왕길동", address: "인천 서구 단봉로 30",          lat: 37.5608, lng: 126.6668, is_self: false, is_alttul: false },
-  { id: 12, name: "단봉주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "왕길동", address: "인천 서구 검단로 123",         lat: 37.5640, lng: 126.6700, is_self: false, is_alttul: false },
-  { id: 13, name: "왕길셀프주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "왕길동", address: "인천 서구 사곶로 25",          lat: 37.5650, lng: 126.6635, is_self: true,  is_alttul: false },
-  { id: 14, name: "금곡주유소",        brand_code: "HDO", brand_name: "현대오일뱅크", area: "금곡동", address: "인천 서구 검단로 732",         lat: 37.5525, lng: 126.6565, is_self: false, is_alttul: false },
-  { id: 15, name: "검단스타주유소",    brand_code: "GSC", brand_name: "GS칼텍스",     area: "금곡동", address: "인천 서구 검단로 669",         lat: 37.5515, lng: 126.6605, is_self: false, is_alttul: false },
-  { id: 16, name: "인천랍스터주유소",  brand_code: "HDO", brand_name: "현대오일뱅크", area: "금곡동", address: "인천 서구 검단로 694",         lat: 37.5520, lng: 126.6595, is_self: false, is_alttul: false },
-  { id: 17, name: "오류공단주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "오류동", address: "인천 서구 검단로 45번길 12",   lat: 37.5460, lng: 126.6495, is_self: false, is_alttul: false },
-  { id: 18, name: "오류셀프주유소",    brand_code: "HDO", brand_name: "현대오일뱅크", area: "오류동", address: "인천 서구 드림로 112",         lat: 37.5470, lng: 126.6510, is_self: true,  is_alttul: false },
-  { id: 19, name: "불로주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "불로동", address: "인천 서구 검단로 798",         lat: 37.5395, lng: 126.6650, is_self: false, is_alttul: false },
-  { id: 20, name: "대곡주유소",        brand_code: "ETC", brand_name: "자가상표",     area: "대곡동", address: "인천 서구 대곡로 214",         lat: 37.5350, lng: 126.6800, is_self: false, is_alttul: false },
-  { id: 21, name: "대곡대로주유소",    brand_code: "ETC", brand_name: "자가상표",     area: "대곡동", address: "인천 서구 대곡로 351",         lat: 37.5360, lng: 126.6820, is_self: false, is_alttul: false },
-];
-
-// ── DB 로드 ───────────────────────────────────────────────────────────────
-async function loadDbStations() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return FALLBACK_STATIONS;
-
-  try {
-    const sb = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
-    const { data, error } = await sb
-      .from("gas_stations")
-      .select("id,name,brand_code,brand_name,area,address,lat,lng,opinet_id,is_self,is_alttul")
-      .eq("active", true)
-      .order("sort_order", { ascending: true });
-
-    if (error || !data?.length) return FALLBACK_STATIONS;
-    return data as typeof FALLBACK_STATIONS;
-  } catch {
-    return FALLBACK_STATIONS;
-  }
-}
-
-// ── KATEC → WGS84 근사 변환 ───────────────────────────────────────────────
-// GEUMDAN_KATEC(wgs84ToKatec 으로 정확히 계산된 값)을 기준점으로 선형 근사
+// ── KATEC → WGS84 ────────────────────────────────────────────────────────
 function katecToWgs84(x: number, y: number): { lat: number; lng: number } | null {
-  if (!x || !y || x < 200000 || x > 500000 || y < 400000 || y > 700000) return null;
-  const LAT_C = 37.5446, LNG_C = 126.6861;
-  const COS_C = Math.cos(LAT_C * Math.PI / 180);
-  // wgs84ToKatec(37.5446, 126.6861) 의 정확한 출력값을 기준으로 사용
-  const KX_C = GEUMDAN_KATEC.x, KY_C = GEUMDAN_KATEC.y;
-  const lat = LAT_C + (y - KY_C) / 111320;
-  const lng = LNG_C + (x - KX_C) / (111320 * COS_C);
-  if (lat < 37.3 || lat > 37.8 || lng < 126.4 || lng > 127.0) return null;
+  if (!x || !y || x < 150000 || x > 600000 || y < 300000 || y > 800000) return null;
+  const COS_C = Math.cos(GEUMDAN_CENTER.lat * Math.PI / 180);
+  const lat = GEUMDAN_CENTER.lat + (y - GEUMDAN_KATEC.y) / 111320;
+  const lng = GEUMDAN_CENTER.lng + (x - GEUMDAN_KATEC.x) / (111320 * COS_C);
+  if (lat < 37.2 || lat > 37.9 || lng < 126.3 || lng > 127.2) return null;
   return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
 }
 
-// ── Opinet API ────────────────────────────────────────────────────────────
+// ── 거리 계산 (km) ────────────────────────────────────────────────────────
+function distKm(lat: number, lng: number): number {
+  const dlat = lat - GEUMDAN_CENTER.lat;
+  const dlng = (lng - GEUMDAN_CENTER.lng) * Math.cos(GEUMDAN_CENTER.lat * Math.PI / 180);
+  return Math.round(Math.sqrt(dlat * dlat + dlng * dlng) * 111 * 10) / 10;
+}
+
+// ── 이름 정규화 + Jaccard 유사도 (opinet_id 없는 레거시 레코드 폴백용) ───
+function normName(s: string): string {
+  return s.toLowerCase()
+    .replace(/sk에너지|sk|gs칼텍스|gs|현대오일뱅크|현대|에스오일|s-oil|s\.oil/g, "")
+    .replace(/농협|알뜰주유소|알뜰|셀프주유소|셀프|주유소/g, "")
+    .replace(/\(주\)|\(유\)/g, "")
+    .replace(/에너지|오일뱅크|오일드림/g, "")
+    .replace(/\s+/g, "").replace(/[()（）[\]]/g, "").trim();
+}
+function bigrams(s: string): Set<string> {
+  const r = new Set<string>();
+  for (let i = 0; i < s.length - 1; i++) r.add(s.slice(i, i + 2));
+  return r;
+}
+function nameSimilarity(a: string, b: string): number {
+  const na = normName(a), nb = normName(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1.0;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  const bga = bigrams(na), bgb = bigrams(nb);
+  if (!bga.size && !bgb.size) return 0;
+  let inter = 0;
+  for (const g of bga) if (bgb.has(g)) inter++;
+  const union = bga.size + bgb.size - inter;
+  return union ? inter / union : 0;
+}
+
+// ── Opinet API 호출 ──────────────────────────────────────────────────────
 interface OpinetStation {
   UNI_ID: string; OS_NM: string; POLL_DIV_CD: string;
   PRICE: number; DISTANCE: number;
@@ -108,10 +90,10 @@ async function fetchOpinetByProduct(prodcd: string, apiKey: string) {
   try {
     const res = await fetch(url, {
       cache: "no-store",
-      signal: AbortSignal.timeout(7000),
+      signal: AbortSignal.timeout(8000),
       headers: {
-        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        Accept: "application/json,text/plain,*/*",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+        Accept: "application/json,*/*",
       },
     });
     if (!res.ok) return { stations: [] as OpinetStation[], ok: false };
@@ -122,45 +104,31 @@ async function fetchOpinetByProduct(prodcd: string, apiKey: string) {
   }
 }
 
-// ── 이름 정규화 (브랜드명·공통 접미어 완전 제거) ─────────────────────────
-// sync-gas 배치와 동일한 알고리즘을 사용해 매칭 정확도를 통일
-function normName(s: string): string {
-  return s
-    .toLowerCase()
-    .replace(/sk에너지|sk|gs칼텍스|gs|현대오일뱅크|현대|에스오일|s-oil|s\.oil/g, "")
-    .replace(/농협|알뜰주유소|알뜰|셀프주유소|셀프|주유소/g, "")
-    .replace(/\(주\)|\(유\)/g, "")
-    .replace(/에너지|오일뱅크|오일드림/g, "")
-    .replace(/\s+/g, "")
-    .replace(/[()（）[\]]/g, "")
-    .trim();
+// ── DB 로드 ────────────────────────────────────────────────────────────
+async function loadDbStations() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  try {
+    const sb = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+    const { data, error } = await sb
+      .from("gas_stations")
+      .select("id,name,brand_code,area,address,lat,lng,opinet_id,is_self,is_alttul,price_gasoline,price_diesel,price_lpg,price_updated_at")
+      .eq("active", true)
+      .order("sort_order", { ascending: true });
+    if (error || !data?.length) return null;
+    return data;
+  } catch {
+    return null;
+  }
 }
 
-function bigrams(s: string): Set<string> {
-  const r = new Set<string>();
-  for (let i = 0; i < s.length - 1; i++) r.add(s.slice(i, i + 2));
-  return r;
-}
-
-function nameSimilarity(a: string, b: string): number {
-  const na = normName(a), nb = normName(b);
-  if (!na || !nb) return 0;
-  if (na === nb) return 1.0;
-  if (na.includes(nb) || nb.includes(na)) return 0.9;
-  const bga = bigrams(na), bgb = bigrams(nb);
-  if (!bga.size && !bgb.size) return 0;
-  let inter = 0;
-  for (const g of bga) if (bgb.has(g)) inter++;
-  const union = bga.size + bgb.size - inter;
-  return union ? inter / union : 0;
-}
-
-// ── 메인 핸들러 ───────────────────────────────────────────────────────────
+// ── 메인 핸들러 ──────────────────────────────────────────────────────────
 export async function GET(_req: NextRequest) {
-  const apiKey = process.env.OPINET_API_KEY?.trim() || FALLBACK_OPINET_KEY;
+  const apiKey    = (process.env.OPINET_API_KEY?.trim() || FALLBACK_OPINET_KEY);
   const timestamp = new Date().toISOString();
 
-  // 1. DB 큐레이션 목록 + Opinet 가격 병렬 로드
+  // 1. DB + Opinet 병렬 로드
   const [dbStations, gasoline, diesel, lpg] = await Promise.all([
     loadDbStations(),
     fetchOpinetByProduct(PRODCD.gasoline, apiKey),
@@ -168,110 +136,144 @@ export async function GET(_req: NextRequest) {
     fetchOpinetByProduct(PRODCD.lpg,      apiKey),
   ]);
 
-  // 2. Opinet 결과를 UNI_ID 기준 가격맵으로 변환
-  const priceMap = new Map<string, { gasoline?: number; diesel?: number; lpg?: number }>();
-  // 이름→UNI_ID 역인덱스
-  const nameIndex = new Map<string, string>();
+  const opinetOk = gasoline.ok || diesel.ok || lpg.ok;
 
-  function ingest(list: OpinetStation[], fuel: keyof typeof priceMap extends never ? never : "gasoline" | "diesel" | "lpg") {
+  // 2. Opinet 결과 → 가격맵(UNI_ID 키) + 전체 스테이션맵
+  const priceMap  = new Map<string, { gasoline?: number; diesel?: number; lpg?: number }>();
+  const opinetAll = new Map<string, OpinetStation>();
+  const gisMap    = new Map<string, { lat: number; lng: number }>();
+
+  function ingest(list: OpinetStation[], fuel: "gasoline" | "diesel" | "lpg") {
     for (const s of list) {
-      if (!s.UNI_ID || s.PRICE <= 0) continue;
-      if (!priceMap.has(s.UNI_ID)) priceMap.set(s.UNI_ID, {});
-      priceMap.get(s.UNI_ID)![fuel] = s.PRICE;
-      nameIndex.set(normName(s.OS_NM), s.UNI_ID);
+      if (!s.UNI_ID) continue;
+      if (!opinetAll.has(s.UNI_ID)) opinetAll.set(s.UNI_ID, s);
+      if (s.PRICE > 0) {
+        if (!priceMap.has(s.UNI_ID)) priceMap.set(s.UNI_ID, {});
+        priceMap.get(s.UNI_ID)![fuel] = s.PRICE;
+      }
+      if (s.GIS_X_COOR && s.GIS_Y_COOR && !gisMap.has(s.UNI_ID)) {
+        const wgs = katecToWgs84(s.GIS_X_COOR, s.GIS_Y_COOR);
+        if (wgs) gisMap.set(s.UNI_ID, wgs);
+      }
     }
   }
   ingest(gasoline.stations, "gasoline");
-  ingest(diesel.stations, "diesel");
-  ingest(lpg.stations, "lpg");
+  ingest(diesel.stations,   "diesel");
+  ingest(lpg.stations,      "lpg");
 
-  // Opinet 전체 역색인 (매칭용)
-  const opinetAll = new Map<string, OpinetStation>();
-  [...gasoline.stations, ...diesel.stations, ...lpg.stations].forEach(s => {
-    if (s.UNI_ID) opinetAll.set(s.UNI_ID, s);
-  });
+  // 3-A. DB 주유소가 있는 경우 — opinet_id 직접 매핑 우선
+  if (dbStations && dbStations.length > 0) {
+    const stations: GasStation[] = dbStations.map(row => {
+      const meta = metaFor(row.brand_code as string);
+      let lat    = row.lat  as number;
+      let lng    = row.lng  as number;
 
-  // Opinet GIS 좌표 맵 (UNI_ID → {lat, lng}) — 정확한 위치
-  const gisMap = new Map<string, { lat: number; lng: number }>();
-  [...gasoline.stations, ...diesel.stations, ...lpg.stations].forEach(s => {
-    if (s.UNI_ID && s.GIS_X_COOR && s.GIS_Y_COOR && !gisMap.has(s.UNI_ID)) {
-      const wgs = katecToWgs84(s.GIS_X_COOR, s.GIS_Y_COOR);
-      if (wgs) gisMap.set(s.UNI_ID, wgs);
-    }
-  });
+      // opinet_id 로 가격 직접 조회
+      let uid    = (row.opinet_id as string | null) ?? undefined;
+      let prices = uid ? priceMap.get(uid) : undefined;
 
-  // 3. DB 스테이션마다 Opinet 가격 + 위치 매칭
-  const stations: GasStation[] = dbStations.map(dbS => {
-    const meta = metaFor(dbS.brand_code);
-
-    // opinet_id가 저장돼 있으면 직접 조회 (가격·위치 모두)
-    let matchedId: string | undefined = dbS.opinet_id ?? undefined;
-    let prices = matchedId ? priceMap.get(matchedId) : undefined;
-
-    // opinet_id로 가격을 못 찾았거나 opinet_id 자체가 없으면 이름 유사도로 매칭
-    if (!matchedId || !prices) {
-      let bestId: string | undefined;
-      let bestScore = 0;
-      for (const [uid, os] of opinetAll) {
-        const score = nameSimilarity(dbS.name, os.OS_NM);
-        if (score > bestScore) { bestScore = score; bestId = uid; }
-      }
-      if (bestScore >= 0.35 && bestId) {
-        const candidatePrices = priceMap.get(bestId);
-        // 이름 매칭 결과가 opinet_id 직접 조회보다 실제 가격이 있으면 우선
-        if (candidatePrices || !prices) {
-          prices = candidatePrices;
-          matchedId = bestId;
+      // opinet_id 없거나 가격 없을 때 → 이름 유사도 매칭 폴백
+      if (!prices) {
+        let bestId = uid, bestScore = uid ? 0.5 : 0;
+        for (const [id, os] of opinetAll) {
+          const score = nameSimilarity(row.name as string, os.OS_NM);
+          if (score > bestScore) { bestScore = score; bestId = id; }
+        }
+        if (bestScore >= 0.35 && bestId) {
+          const candidate = priceMap.get(bestId);
+          if (candidate) { prices = candidate; uid = bestId; }
         }
       }
-    }
 
-    // Opinet GIS 좌표 사용 (있을 때만 — 없으면 DB 좌표 유지)
-    const gis = matchedId ? gisMap.get(matchedId) : undefined;
-    const lat = gis?.lat ?? dbS.lat;
-    const lng = gis?.lng ?? dbS.lng;
+      // 매칭된 opinet_id 의 GIS 좌표가 있으면 정확한 위치 사용
+      if (uid && gisMap.has(uid)) {
+        const gis = gisMap.get(uid)!;
+        lat = gis.lat;
+        lng = gis.lng;
+      }
 
-    // 거리: Opinet DISTANCE 필드 우선, 없으면 GIS/DB 좌표 기반
-    const distKm = (() => {
-      const matched = [...gasoline.stations, ...diesel.stations].find(
-        s => s.UNI_ID === matchedId && s.DISTANCE > 0
-      );
-      if (matched?.DISTANCE) return Math.round(matched.DISTANCE / 100) / 10;
-      const CENTER_LAT = 37.5446, CENTER_LNG = 126.6861;
-      const dlat = lat - CENTER_LAT;
-      const dlng = (lng - CENTER_LNG) * Math.cos(CENTER_LAT * Math.PI / 180);
-      return Math.round(Math.sqrt(dlat * dlat + dlng * dlng) * 111 * 10) / 10;
-    })();
+      // DB 에 저장된 가격이 최근 1시간 이내면 Opinet 결과 없어도 표시
+      const dbPriceTs = row.price_updated_at as string | null;
+      const dbPriceFresh = dbPriceTs &&
+        (Date.now() - new Date(dbPriceTs).getTime()) < 3_600_000;
+      if (!prices && dbPriceFresh) {
+        prices = {
+          gasoline: (row.price_gasoline as number | null) ?? undefined,
+          diesel:   (row.price_diesel   as number | null) ?? undefined,
+          lpg:      (row.price_lpg      as number | null) ?? undefined,
+        };
+      }
 
-    return {
-      id: String(dbS.id),
-      name: dbS.name,
-      brandCode: dbS.brand_code,
-      brandName: meta.name,
+      return {
+        id:         String(row.id),
+        name:       row.name       as string,
+        brandCode:  row.brand_code as string,
+        brandName:  meta.name,
+        brandColor: meta.color,
+        brandBg:    meta.bg,
+        brandShort: meta.short,
+        address:    row.address as string,
+        distanceKm: distKm(lat, lng),
+        lat, lng,
+        area:       row.area    as string,
+        isSelf:     row.is_self as boolean,
+        isAlttul:   row.is_alttul as boolean,
+        prices:     prices ?? {},
+      } as GasStation;
+    });
+
+    const hasPrice = stations.some(s => s.prices.gasoline != null || s.prices.diesel != null);
+    const source: GasSource = hasPrice ? "opinet" : (opinetOk ? "empty" : "error");
+
+    return NextResponse.json(
+      { stations, source, timestamp, success: true } as GasApiResponse,
+      { headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" } },
+    );
+  }
+
+  // 3-B. DB 없을 때 — Opinet 결과를 직접 stations 로 변환
+  if (opinetAll.size === 0) {
+    return NextResponse.json(
+      { stations: [], source: "error" as GasSource, timestamp, success: false } as GasApiResponse,
+      { headers: { "Cache-Control": "public, s-maxage=60" } },
+    );
+  }
+
+  const stations: GasStation[] = [];
+  const seen = new Set<string>();
+
+  // 가솔린·디젤 각각 merge (LP 가스만 있는 주유소는 제외)
+  for (const [uid, s] of opinetAll) {
+    if (seen.has(uid)) continue;
+    seen.add(uid);
+    const wgs = gisMap.get(uid);
+    if (!wgs) continue;
+    const meta   = metaFor(s.POLL_DIV_CD);
+    const prices = priceMap.get(uid) ?? {};
+    if (!prices.gasoline && !prices.diesel) continue; // 유류 주유소만
+    stations.push({
+      id:         uid,
+      name:       s.OS_NM,
+      brandCode:  s.POLL_DIV_CD,
+      brandName:  meta.name,
       brandColor: meta.color,
-      brandBg: meta.bg,
+      brandBg:    meta.bg,
       brandShort: meta.short,
-      address: dbS.address,
-      distanceKm: distKm,
-      lat, lng,
-      area: dbS.area,
-      isSelf: dbS.is_self,
-      isAlttul: dbS.is_alttul,
-      prices: prices ?? {},
-    } as GasStation;
-  });
+      address:    s.NEW_ADR || s.VAN_ADR || "",
+      distanceKm: Math.round(s.DISTANCE / 100) / 10,
+      lat:        wgs.lat,
+      lng:        wgs.lng,
+      area:       "",
+      isSelf:     /셀프/i.test(s.OS_NM),
+      isAlttul:   ["RTO", "RTX", "NHO"].includes(s.POLL_DIV_CD),
+      prices,
+    } as GasStation);
+  }
 
-  const hasAnyPrice = stations.some(s => s.prices.gasoline != null || s.prices.diesel != null);
-  const source: GasSource = hasAnyPrice ? "opinet" : (gasoline.ok || diesel.ok ? "empty" : "error");
+  stations.sort((a, b) => a.distanceKm - b.distanceKm);
 
-  const body: GasApiResponse = {
-    stations,
-    source,
-    timestamp,
-    success: true,
-  };
-
-  return NextResponse.json(body, {
-    headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
-  });
+  return NextResponse.json(
+    { stations, source: "opinet" as GasSource, timestamp, success: true } as GasApiResponse,
+    { headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" } },
+  );
 }
