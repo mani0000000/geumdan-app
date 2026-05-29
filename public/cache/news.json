@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-05-29T20:25:52.836Z",
+  "fetchedAt": "2026-05-29T22:23:07.245Z",
   "count": 40,
   "articles": [
     {
@@ -66,7 +66,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-20",
       "title": "인천 서구, 유류유출사고 가정...수질오염사고 대비 방제훈련 실시 - sejungfocus.com",
       "summary": "",
       "source": "sejungfocus.com",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-16",
       "title": "인천 서구, \"검단천 수질오염\" 대응 실전훈련… 현장 방제 역량 강화 - 뉴스티앤티",
       "summary": "",
       "source": "뉴스티앤티",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-18",
       "title": "포스코이앤씨, 인천 검단신도시서 더샵 검단레이크파크 6월 분양 - 아주경제",
       "summary": "",
       "source": "아주경제",
@@ -102,7 +102,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-11",
       "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 더팩트",
       "summary": "",
       "source": "더팩트",
@@ -120,7 +120,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-13",
       "title": "인천 서구, 장마 전 공사장 16곳 안전점검 강화 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -144,6 +144,15 @@
       "source": "포커스인천",
       "publishedAt": "2026-05-27T11:32:52.000Z",
       "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9TaHEwQVM2QkdxZ1I5ME5BbUd2SnEzVXBtMzdqM0xibkRJUVROTVRzX3BrWkFKcWpVeEJEZDJVNVJDV3VtbkMwZjUzRWpBVHdyQWNXWlJtZWtFdGxQclRmQzZ0U2xfYlJGT0QzQdIBcEFVX3lxTFBkMDRMSEZEeGFjdE9IMkt1VXVxRlNKbWtXektKOEZRR1JnUlA3VW1HN3ZWVk5oaWNSTjE0b05RYndmc2Q1UGJtMWdPRnFBVVhaMTZqZFZWZnJsTmFQMDhXM3F4cnFXMmdiLU9HTkRzV1k?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-8",
+      "title": "하나은행, 맘케어센터 갖춘 검단신도시 지점 개장...수유실·임산부 휴게 공간 마련 - catchnews.kr",
+      "summary": "",
+      "source": "catchnews.kr",
+      "publishedAt": "2026-05-27T09:13:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE42WmNiVnN0QmN0b1ZjdFJPcEFmZnZrWDlwQVNqNThCYTZvS3h3WWhldGJzVG5Ec1NuR3hKb3o4bmlxb2JKRHNrcms3QnVmYURIdGh1Tm5NUzQyM2ljVzZScl8yM1Qwc3FNV2fSAW5BVV95cUxPYUs3S1RxMGxfTDQyT3FpRWxIdFc4dVlPZkRuaWZUMkFwVlBvREo1Rjh1Mm5iQ0NQTGhGRzdPd0xORHdqdTl2MF9Ec2d5TEdhU2laVDRkNEhhbGktSWxCaDVEX1NFRldGTWxDemh0QQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -246,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-5",
+      "id": "gr3-4",
       "title": "대체매립지 해법에 유정복·박찬대 소환…초대 검단구청장 후보들 '공방' - 경인방송 뉴스",
       "summary": "",
       "source": "경인방송 뉴스",
@@ -264,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-14",
       "title": "도성훈, 검단 과밀학급 해소 위한 특별예산 투입 약속 - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-19",
       "title": "도성훈 인천시교육감 후보, “검단지역 과밀학급 특별예산 투입하겠다” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -305,11 +314,11 @@
       "summary": "",
       "source": "인천게릴라뉴스",
       "publishedAt": "2026-05-26T02:22:25.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTE9tTWRGTHViZlI2a1l1YWhtNGNnTngwVGVudGxtSHVvcEhwWkV3OHVnd0h5OFd2UjI4ajgxVXhmU3U3V1A1bDQ4YmI3UEZCQkVOZXZ1UWFGRk9XR2VSeTc5TDdTQQ?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE1fbGtSbHBobmIyZl9VVDBETC0yd19aRFFMeEM2QTBtYlkxZDhzQnRDVHllTHV4Wk1qTEFUNTY3TzBXUWdnNl9HeFRPTGtPeXBEU2ZaLVByRE1MUFotaGdaMmM4OHRtZw?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-21",
       "title": "유정복 인천시장 후보 “검단 현안 해결하겠다” - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -324,15 +333,6 @@
       "source": "매일일보",
       "publishedAt": "2026-05-26T00:48:21.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE50TFZieHJ3YUVzMTJNczhLNDl1WTl4UEFib2NaZjdsN3pkSWIyMU10UUVtcTdEY21UMm5PR2dYcEZPaUtZd0dUWjByeTJOcTdtckRvMFh6OFh0SzE3bmdOZ0RlbWs?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-10",
-      "title": "국민의힘 유정복 인천시장 후보, 검단신도시 현안 관련 입장 밝혀 - 여성종합뉴스",
-      "summary": "",
-      "source": "여성종합뉴스",
-      "publishedAt": "2026-05-26T00:41:42.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9JblpsNS1RaDZmdmxWNUtVSUFQMDBtb25PNWJOME5jYWpSRElxSVlfT3YzN19IWlNUQXRDUkNJYnZwaG5CZlU0UW4yQzM3SmZjVzBXZ3NYSTM1UQ?oc=5",
       "type": "뉴스"
     },
     {
@@ -354,12 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-4",
-      "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 서울일보",
+      "id": "gr0-15",
+      "title": "유정복, 검신총연 대담회 \"검단예술회관 건립, 시 재정 50% 지원\" - 미디어인천신문",
       "summary": "",
-      "source": "서울일보",
-      "publishedAt": "2026-05-25T21:57:52.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE5SWFNzSnFnMGxUUXIySDJoRHFOYUZxdnlkcHdEb204ZVRXSTZtX3oySjN2ZEpKbHlCVG1oTzlvNnBsN0N6dkFITUcwNmZld2hIR1FzQWJ3YzljeThkRFVkaXVZMDB4d0xod0ln0gFvQVVfeXFMT0hmSzNKa2RGVlJVdGdZS3VENFJya3EzSnR1MjczNjdDZDc0LVQwQ01QaTIxb0RKWldRenhoSWpXS0ROTkhWNzc3MjVlVGR6cFVEc3kxbHk3Z0ZETndxeFRTYnNKbmhyQUV3clV4bzJN?oc=5",
+      "source": "미디어인천신문",
+      "publishedAt": "2026-05-25T21:34:56.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE1oakZ2cVYyd2FCaENnOXBTdWNKaWdDNlRleENXQW1VY3RtM0IxOGlzWGdXVWtEUWNOTTIwSnlkVWczSFBFZTZHX1BHRVBRXzZMYmdDb3Uwa1dzbDV6TWdWUEttMHJtOTdUY1U4?oc=5",
       "type": "뉴스"
     }
   ]
