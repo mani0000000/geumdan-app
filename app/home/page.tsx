@@ -2333,22 +2333,12 @@ function HomeTransportWidget() {
     <section className="mx-4 mb-3">
       <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
 
-        {/* ── 헤더 ── */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
-          <div className="flex items-center gap-2">
-            <Bus size={16} className="text-blue-600" />
-            <span className="text-[15px] font-extrabold text-gray-900">교통</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={refreshAll} disabled={anyLoading}
-              className="p-1 active:opacity-50 transition-opacity">
-              <RefreshCw size={14} className={`text-gray-400 ${anyLoading ? "animate-spin" : ""}`} />
-            </button>
-            <button onClick={() => router.push(transportHref)}
-              className="flex items-center gap-0.5 text-[13px] text-blue-600 font-semibold active:opacity-60">
-              전체보기 <ChevronRight size={13} />
-            </button>
-          </div>
+        {/* 새로고침 */}
+        <div className="flex justify-end px-4 pt-2 pb-0">
+          <button onClick={refreshAll} disabled={anyLoading}
+            className="p-1 active:opacity-50 transition-opacity">
+            <RefreshCw size={12} className={`text-gray-400 ${anyLoading ? "animate-spin" : ""}`} />
+          </button>
         </div>
 
         {/* ── 버스 정류장 ── */}
@@ -2364,7 +2354,7 @@ function HomeTransportWidget() {
           const isLoading = busLoading.has(stop.id);
 
           return (
-            <div key={stop.id} className={si > 0 ? "border-t border-gray-100" : "border-t border-gray-100"}>
+            <div key={stop.id} className={si > 0 ? "border-t border-gray-100" : ""}>
               {/* 정류장명 */}
               <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
                 <Bus size={12} className="text-blue-400 shrink-0" />
@@ -2419,52 +2409,56 @@ function HomeTransportWidget() {
         })}
 
         {/* ── 지하철 역 ── */}
-        {hasSubway && favSubwayStations.map(st => {
+        {hasSubway && favSubwayStations.map((st, si) => {
           const live = subwayArrivals[st.id];
           const displayArrivals = live && live.length > 0 ? live : estimateNextArrivals(st.timetable);
           const upFirst   = displayArrivals.filter(a => a.direction === "상행")[0];
           const downFirst = displayArrivals.filter(a => a.direction === "하행")[0];
           const isLoading = subwayLoading.has(st.id);
           const lineShort = st.line.replace(/호선|철도/g, "").slice(0, 3);
+          const borderClass = (hasBus || si > 0) ? "border-t border-gray-100" : "";
 
           return (
-            <div key={st.id} className="border-t border-gray-100">
-              {/* 역 이름 */}
-              <div className="px-4 pt-3 pb-1 flex items-center gap-1.5">
+            <div key={st.id} className={borderClass}>
+              {/* 역 이름 + 노선 뱃지 */}
+              <div className="px-4 pt-3 pb-1 flex items-center gap-2">
                 <span
-                  className="shrink-0 w-[18px] h-[18px] rounded-full flex items-center justify-center text-white text-[9px] font-extrabold leading-none"
+                  className="shrink-0 px-2.5 py-1 rounded-lg text-[12px] font-extrabold text-white"
                   style={{ backgroundColor: st.lineColor }}>
                   {lineShort}
                 </span>
-                <span className="text-[13px] font-semibold text-gray-500 truncate">{st.displayName}</span>
+                <span className="text-[14px] font-bold text-gray-900">{st.displayName}</span>
               </div>
 
-              {/* 상행 / 하행 */}
+              {/* 상행 / 하행 — 각 방향 별도 행 */}
               {isLoading ? (
-                <div className="px-4 pb-3.5 flex gap-6 animate-pulse">
-                  <div className="w-24 h-6 bg-gray-200 rounded" />
-                  <div className="w-24 h-6 bg-gray-200 rounded" />
+                <div className="px-4 pb-3 space-y-2 animate-pulse">
+                  <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-200 rounded" /><div className="flex-1 h-4 bg-gray-100 rounded" /><div className="w-10 h-4 bg-gray-200 rounded" /></div>
+                  <div className="flex items-center gap-2"><div className="w-4 h-4 bg-gray-200 rounded" /><div className="flex-1 h-4 bg-gray-100 rounded" /><div className="w-10 h-4 bg-gray-200 rounded" /></div>
                 </div>
               ) : displayArrivals.length === 0 ? (
-                <p className="px-4 pb-3.5 text-[13px] text-gray-400">운행 종료</p>
+                <p className="px-4 pb-3 text-[13px] text-gray-400">운행 종료</p>
               ) : (
                 <button
                   onClick={() => router.push("/transport/?tab=지하철")}
-                  className="w-full px-4 pb-3.5 flex items-center gap-5 active:bg-gray-50 transition-colors text-left">
+                  className="w-full px-4 pb-3 active:bg-gray-50 transition-colors text-left">
                   {[
-                    { label: st.timetable.upDirection, arr: upFirst },
-                    { label: st.timetable.downDirection, arr: downFirst },
-                  ].map(({ label, arr }, ci) => {
+                    { label: st.timetable.upDirection, arr: upFirst, dir: "↑" },
+                    { label: st.timetable.downDirection, arr: downFirst, dir: "↓" },
+                  ].map(({ label, arr, dir }, ci) => {
                     const { text, color } = arr
                       ? arrivalText(arr.arrivalMin, true)
                       : { text: "--", color: "#9ca3af" };
                     return (
-                      <div key={ci} className="flex items-baseline gap-2 min-w-0">
-                        <span className="text-[12px] text-gray-400 shrink-0">{label}</span>
-                        <span className="text-[17px] font-extrabold tabular-nums shrink-0" style={{ color }}>{text}</span>
+                      <div key={ci} className="flex items-center gap-2 py-1.5">
+                        <span className="text-[13px] font-semibold text-gray-400 w-4 shrink-0 text-center">{dir}</span>
+                        <span className="flex-1 text-[13px] text-gray-700 truncate">{label} 방면</span>
                         {arr?.terminalStation && (
-                          <span className="text-[12px] text-gray-400 truncate min-w-0">→ {arr.terminalStation}</span>
+                          <span className="text-[11px] text-gray-400 truncate max-w-[52px] shrink-0">→ {arr.terminalStation}</span>
                         )}
+                        <span className="shrink-0 text-[16px] font-extrabold tabular-nums min-w-[42px] text-right" style={{ color }}>
+                          {text}
+                        </span>
                       </div>
                     );
                   })}
@@ -2544,7 +2538,12 @@ export default function HomePage() {
         <PharmacySection />
       </>
     ),
-    transport: () => <HomeTransportWidget />,
+    transport: () => (
+      <>
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
+        <HomeTransportWidget />
+      </>
+    ),
     community: () => (
       <>
         <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />
