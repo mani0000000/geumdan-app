@@ -163,34 +163,36 @@ export async function fetchGasStationsWithPrices(): Promise<GasStationsResult> {
 
     let latestTs: string | null = null;
 
-    const stations: GasStation[] = data.map(row => {
-      const meta = metaFor(row.brand_code as string);
-      const lat  = row.lat as number;
-      const lng  = row.lng as number;
-      const ts   = row.price_updated_at as string | null;
-      if (ts && (!latestTs || ts > latestTs)) latestTs = ts;
+    const stations: GasStation[] = data
+      .filter(row => row.price_gasoline != null || row.price_diesel != null || row.price_lpg != null)
+      .map(row => {
+        const meta = metaFor(row.brand_code as string);
+        const lat  = row.lat as number;
+        const lng  = row.lng as number;
+        const ts   = row.price_updated_at as string | null;
+        if (ts && (!latestTs || ts > latestTs)) latestTs = ts;
 
-      return {
-        id:          String(row.id),
-        name:        row.name as string,
-        brandCode:   row.brand_code as string,
-        brandName:   meta.brandShort,
-        brandColor:  meta.brandColor,
-        brandBg:     meta.brandBg,
-        brandShort:  meta.brandShort,
-        address:     row.address as string,
-        distanceKm:  haversineKm(CENTER.lat, CENTER.lng, lat, lng),
-        lat, lng,
-        area:        row.area as string,
-        isSelf:      row.is_self as boolean,
-        isAlttul:    row.is_alttul as boolean,
-        prices: {
-          gasoline: row.price_gasoline as number | null ?? undefined,
-          diesel:   row.price_diesel   as number | null ?? undefined,
-          lpg:      row.price_lpg      as number | null ?? undefined,
-        },
-      };
-    });
+        return {
+          id:          String(row.id),
+          name:        row.name as string,
+          brandCode:   row.brand_code as string,
+          brandName:   meta.brandShort,
+          brandColor:  meta.brandColor,
+          brandBg:     meta.brandBg,
+          brandShort:  meta.brandShort,
+          address:     row.address as string,
+          distanceKm:  haversineKm(CENTER.lat, CENTER.lng, lat, lng),
+          lat, lng,
+          area:        row.area as string,
+          isSelf:      row.is_self as boolean,
+          isAlttul:    row.is_alttul as boolean,
+          prices: {
+            gasoline: row.price_gasoline as number | null ?? undefined,
+            diesel:   row.price_diesel   as number | null ?? undefined,
+            lpg:      row.price_lpg      as number | null ?? undefined,
+          },
+        };
+      });
 
     return {
       stations,
