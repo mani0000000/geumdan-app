@@ -1,9 +1,9 @@
 {
-  "fetchedAt": "2026-05-30T15:57:40.652Z",
+  "fetchedAt": "2026-05-30T18:56:45.785Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-9",
+      "id": "gr2-10",
       "title": "인천 서구, 유류유출사고 가정...수질오염사고 대비 방제훈련 실시 - 서울뉴스통신",
       "summary": "",
       "source": "서울뉴스통신",
@@ -48,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-5",
+      "id": "gr3-4",
       "title": "“검단 첫 4년, 시행착오 없어야”… 박세훈 검단구청장 후보, 교통·매립지·의료 공약 제시 - ppss.kr",
       "summary": "",
       "source": "ppss.kr",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-12",
+      "id": "gr3-13",
       "title": "“교통·학교·생활까지 바꾼다”… 김진규 검단구청장 후보가 말한 ‘검단의 미래’ - ppss.kr",
       "summary": "",
       "source": "ppss.kr",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-17",
       "title": "인천 서구, \"검단천 수질오염\" 대응 실전훈련… 현장 방제 역량 강화 - 뉴스티앤티",
       "summary": "",
       "source": "뉴스티앤티",
@@ -93,12 +93,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
-      "title": "포스코이앤씨, 인천 검단신도시서 더샵 검단레이크파크 6월 분양 - 아주경제",
+      "id": "gr0-8",
+      "title": "포스코이앤씨, 인천 검단신도시서 '더샵 검단레이크파크' 6월 분양 - 네이트",
       "summary": "",
-      "source": "아주경제",
-      "publishedAt": "2026-05-29T01:35:39.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9yS1VRcUdHc2tQZHpCeUtMd0pUc3BFUnN2MEk1VmZGWkFEZXNsVkJ2bHdNVk5ZQmJ3Tm5GdWJ1VVdEUUNEQmlQWDFScU4zZll2amw4RGhSQ3FJd9IBWEFVX3lxTE5JZXkzYUpLbmhoM0tEdWNYS29aSUFORWlmaC1LQmJ3SnNES0RQVWVPUDFNRkdWNzhhMnFVNTAwdnVPZzk4bDdHU3FmeEJHa2JuNEVWU0VFaU0?oc=5",
+      "source": "네이트",
+      "publishedAt": "2026-05-29T01:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE42WkhqZEs3MXM0enlZbEN3Z3J0dHpTNjRYTGZuQldhNmYxcGx1QTZ6UnBqLWJkWlIzTmptdGdlNnNmOVdILU1jRXJBa0d4Wl8xV0JN?oc=5",
       "type": "뉴스"
     },
     {
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-9",
       "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 더팩트",
       "summary": "",
       "source": "더팩트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-14",
       "title": "인천 서구, 장마 전 공사장 16곳 안전점검 강화 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -147,7 +147,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-9",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -192,6 +192,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-48",
+      "title": "인천 검단구 임시청사서 내달 8일부터 민원업무 개시 - supple.kr",
+      "summary": "",
+      "source": "supple.kr",
+      "publishedAt": "2026-05-27T02:06:36.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiXEFVX3lxTE9JZUk5Q0Y1S3psQVRqTVZ5Wkg3ZW9lb2YxMkg4MS1SM0pYT0lDX2Q5MngtQV81YnI3bWdIQWxmTGRFejg0LUFDZ2k2NlNSQUc1VjdkZUFNT3h0SWN2?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr2-1",
       "title": "인천 서구 '검단행정과(舊 검단출장소)' 검단구청 청사로 이전 - 미디어인천신문",
       "summary": "",
@@ -219,21 +228,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-4",
+      "id": "gr3-5",
       "title": "대체매립지 해법에 유정복·박찬대 소환…초대 검단구청장 후보들 '공방' - 경인방송 뉴스",
       "summary": "",
       "source": "경인방송 뉴스",
       "publishedAt": "2026-05-26T09:24:36.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5mZ1l2TEVDck9GdXpIM0tjQzV3M0tOUDkzX2R0SVNlc29mLVlhR09aQnlLMnRoMjFsbnNfdjZua1NYT1lHeTBaMnBIdHJTdFVhWmM2YWJSdkN0dk5zM251a25VTnfSAWhBVV95cUxOQVctaFdZNW53d1JWbEdNZDZjbDNOYlM0SnhiYUk5ZW80a21UQkVIOVJhMGpMT3dBRTRGQzk4aWl2cDVQRUFFRmo2eU1LeUlsczg3a01CSEkxbXhlRUM1Zl9ZOW9kOVRycA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-4",
-      "title": "검단신도시 '더샵 검단레이크파크' 6월 분양 계획 발표 - 이로운넷",
-      "summary": "",
-      "source": "이로운넷",
-      "publishedAt": "2026-05-26T08:00:46.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZkFVX3lxTE5Ib2NBRHRzdjRmZXJVdFFQWFVoZC1ydHhxdUpkY0NDUHZTMFJFQl9yb0RuQ0RGanh6RzAwWFpxUWhOc1RZeWM1VENuendfQWwyV1VFSEdScWJ4WFBNRmx6NndMMlJ1dw?oc=5",
       "type": "뉴스"
     },
     {
@@ -246,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-28",
+      "id": "gr0-26",
       "title": "유정복 후보, 교통·교육·환경 현안…민선 9기서 반드시 해결 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -255,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-13",
       "title": "도성훈 인천시교육감 후보, “검단지역 과밀학급 특별예산 투입하겠다” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -264,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-5",
       "title": "도성훈 후보, 검단신도시 학부모 만나 과밀학급 해소 방안 제시 - 인천게릴라뉴스",
       "summary": "",
       "source": "인천게릴라뉴스",
@@ -273,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-22",
       "title": "유정복 인천시장 후보 “검단 현안 해결하겠다” - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -300,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-31",
+      "id": "gr2-36",
       "title": "유정복 “검단 발전 완성할 사람은 준비된 인물…시민 선택이 미래 결정” - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -309,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-3",
+      "id": "gr3-2",
       "title": "유정복 후보, 교통·교육·환경 현안… 민선 9기서 반드시 해결 - 서울일보",
       "summary": "",
       "source": "서울일보",
@@ -327,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-12",
       "title": "도성훈, 검단총연 대담회 “검단에 과밀학급 특별예산 투입할 것” - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -336,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-27",
+      "id": "gr2-32",
       "title": "유정복 인천시장 후보, 서구 검단 유세서 “승기 잡았다” 자신감 드러내 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -345,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-27",
+      "id": "gr0-25",
       "title": "도성훈 검단 학부모 만나 “과밀학급 바로 잡겠다”…특별예산 약속 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -354,7 +354,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-11",
+      "id": "gr3-10",
       "title": "박찬대·유정복, 검단서 집중 유세…교통·교육 공약에 개인적 인연 강조 - 네이트",
       "summary": "",
       "source": "네이트",
