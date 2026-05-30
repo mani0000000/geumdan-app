@@ -1,9 +1,9 @@
 {
-  "fetchedAt": "2026-05-30T06:13:30.265Z",
+  "fetchedAt": "2026-05-30T10:42:41.363Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-6",
+      "id": "gr2-8",
       "title": "인천 서구, 유류유출사고 가정...수질오염사고 대비 방제훈련 실시 - 서울뉴스통신",
       "summary": "",
       "source": "서울뉴스통신",
@@ -21,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-4",
       "title": "금강주택, 검단신도시 ‘신검단중앙역 금강펜테리움 센트럴파크’ 입주 개시 - 서울신문",
       "summary": "",
       "source": "서울신문",
@@ -30,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-9",
       "title": "인천 서구, 검단천서 수질오염사고 대응 방제훈련 실시 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -57,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr3-13",
+      "id": "gr3-11",
       "title": "“교통·학교·생활까지 바꾼다”… 김진규 검단구청장 후보가 말한 ‘검단의 미래’ - ppss.kr",
       "summary": "",
       "source": "ppss.kr",
@@ -75,7 +75,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-9",
+      "id": "gr2-6",
       "title": "인천 서구, 검단천 유류 유출 차단…현장 방제훈련 전개 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -84,7 +84,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-19",
       "title": "인천 서구, \"검단천 수질오염\" 대응 실전훈련… 현장 방제 역량 강화 - 뉴스티앤티",
       "summary": "",
       "source": "뉴스티앤티",
@@ -93,12 +93,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
-      "title": "포스코이앤씨, 인천 검단신도시서 '더샵 검단레이크파크' 6월 분양 - 네이트",
+      "id": "gr0-7",
+      "title": "포스코이앤씨, 인천 검단신도시서 더샵 검단레이크파크 6월 분양 - 아주경제",
       "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-29T01:36:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE42WkhqZEs3MXM0enlZbEN3Z3J0dHpTNjRYTGZuQldhNmYxcGx1QTZ6UnBqLWJkWlIzTmptdGdlNnNmOVdILU1jRXJBa0d4Wl8xV0JN?oc=5",
+      "source": "아주경제",
+      "publishedAt": "2026-05-29T01:35:39.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9yS1VRcUdHc2tQZHpCeUtMd0pUc3BFUnN2MEk1VmZGWkFEZXNsVkJ2bHdNVk5ZQmJ3Tm5GdWJ1VVdEUUNEQmlQWDFScU4zZll2amw4RGhSQ3FJd9IBWEFVX3lxTE5JZXkzYUpLbmhoM0tEdWNYS29aSUFORWlmaC1LQmJ3SnNES0RQVWVPUDFNRkdWNzhhMnFVNTAwdnVPZzk4bDdHU3FmeEJHa2JuNEVWU0VFaU0?oc=5",
       "type": "뉴스"
     },
     {
@@ -111,7 +111,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-11",
       "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 더팩트",
       "summary": "",
       "source": "더팩트",
@@ -129,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-12",
+      "id": "gr2-15",
       "title": "인천 서구, 장마 전 공사장 16곳 안전점검 강화 - 오늘경제",
       "summary": "",
       "source": "오늘경제",
@@ -138,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-16",
+      "id": "gr2-17",
       "title": "인천 서구, 3주간 우기 대비 건설현장 '현미경 점검' - 위키트리",
       "summary": "",
       "source": "위키트리",
@@ -148,6 +148,15 @@
     },
     {
       "id": "gr2-11",
+      "title": "서구 검단행정과, 내달 8일 '새 검단구청 청사'로 이전 - 포커스인천",
+      "summary": "",
+      "source": "포커스인천",
+      "publishedAt": "2026-05-27T11:32:52.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTE9TaHEwQVM2QkdxZ1I5ME5BbUd2SnEzVXBtMzdqM0xibkRJUVROTVRzX3BrWkFKcWpVeEJEZDJVNVJDV3VtbkMwZjUzRWpBVHdyQWNXWlJtZWtFdGxQclRmQzZ0U2xfYlJGT0QzQdIBcEFVX3lxTFBkMDRMSEZEeGFjdE9IMkt1VXVxRlNKbWtXektKOEZRR1JnUlA3VW1HN3ZWVk5oaWNSTjE0b05RYndmc2Q1UGJtMWdPRnFBVVhaMTZqZFZWZnJsTmFQMDhXM3F4cnFXMmdiLU9HTkRzV1k?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-13",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 뉴시스",
       "summary": "",
       "source": "뉴시스",
@@ -183,7 +192,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-13",
+      "id": "gr2-12",
       "title": "인천 서구 검단행정과 새 청사 업무 개시…검단구 출범 준비 본격화 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -201,7 +210,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-5",
       "title": "인천 서구 검단행정과, 6월 8일 검단구청 신청사로 이전 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -228,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-3",
       "title": "검단신도시 '더샵 검단레이크파크' 6월 분양 계획 발표 - 이로운넷",
       "summary": "",
       "source": "이로운넷",
@@ -237,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-16",
       "title": "도성훈, 검단 과밀학급 해소 위한 특별예산 투입 약속 - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -246,7 +255,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-29",
+      "id": "gr0-28",
       "title": "유정복 후보, 교통·교육·환경 현안…민선 9기서 반드시 해결 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -255,7 +264,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-19",
+      "id": "gr0-18",
       "title": "도성훈 인천시교육감 후보, “검단지역 과밀학급 특별예산 투입하겠다” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -300,15 +309,6 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
-      "title": "국민의힘 유정복 인천시장 후보, 검단신도시 현안 관련 입장 밝혀 - 여성종합뉴스",
-      "summary": "",
-      "source": "여성종합뉴스",
-      "publishedAt": "2026-05-26T00:41:42.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9JblpsNS1RaDZmdmxWNUtVSUFQMDBtb25PNWJOME5jYWpSRElxSVlfT3YzN19IWlNUQXRDUkNJYnZwaG5CZlU0UW4yQzM3SmZjVzBXZ3NYSTM1UQ?oc=5",
-      "type": "뉴스"
-    },
-    {
       "id": "gr2-2",
       "title": "인천시교육감 후보들, 서구 검단 토론회서 일제히 “과밀학급 해결” 약속 - 인천투데이",
       "summary": "",
@@ -327,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-17",
       "title": "유정복, 검신총연 대담회 \"검단예술회관 건립, 시 재정 50% 지원\" - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -336,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-13",
       "title": "도성훈, 검단총연 대담회 “검단에 과밀학급 특별예산 투입할 것” - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -345,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-27",
+      "id": "gr2-28",
       "title": "유정복 인천시장 후보, 서구 검단 유세서 “승기 잡았다” 자신감 드러내 - 한국정경신문",
       "summary": "",
       "source": "한국정경신문",
@@ -354,7 +354,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-24",
+      "id": "gr0-26",
       "title": "도성훈 검단 학부모 만나 “과밀학급 바로 잡겠다”…특별예산 약속 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
