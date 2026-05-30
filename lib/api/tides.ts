@@ -44,6 +44,7 @@ export interface TideReport {
   multtae: MulttaeInfo;
   todayTides: TideEntry[];
   nextLowTide: TideEntry | null;
+  actualRangeM: number;
   haerujil: ActivityCondition;
   fishing: ActivityCondition;
   bestDaysThisMonth: { haerujil: number[]; fishing: number[] };
@@ -167,6 +168,7 @@ export function getHaerujilCondition(
   multtae: MulttaeInfo,
   date: Date,
   tides: TideEntry[],
+  nextLowTide: TideEntry | null,
 ): ActivityCondition {
   const month = date.getMonth() + 1;
   const { size, rangeM, name } = multtae;
@@ -174,15 +176,19 @@ export function getHaerujilCondition(
   const seasonBad  = month <= 2 || month === 12;
   const seasonBest = (month >= 5 && month <= 6) || (month >= 9 && month <= 10);
 
-  // 저조 시각이 오후~저녁(15~21시)이면 유리
-  const eveningLow = tides.some(t => t.type === "low" && t.minutes >= 900 && t.minutes <= 1260);
+  // 다음 저조가 야간(18:00~익일 06:00)이면 안전 경고
+  const isNightLow = nextLowTide
+    ? (nextLowTide.minutes >= 18 * 60 || nextLowTide.minutes < 6 * 60)
+    : false;
+  const timingNote = isNightLow
+    ? "오늘은 야간 시간대에 물이 빠집니다. 안전을 위해 헤드랜턴과 안전장비를 반드시 지참하세요."
+    : "오늘은 낮 시간대에 물이 빠집니다.";
 
   let stars: 1 | 2 | 3 = size === "large" ? 3 : size === "medium" ? 2 : 1;
   if (seasonBad  && stars > 1) stars = (stars - 1) as 1 | 2;
   if (seasonBest && stars < 3) stars = (stars + 1) as 2 | 3;
 
   const rating: ConditionRating = stars === 3 ? "excellent" : stars === 2 ? "good" : "poor";
-  const timingNote = eveningLow ? "오늘 저녁 물이 잘 빠집니다." : "오늘은 낮 시간대에 물이 빠집니다.";
 
   const titles = { excellent: "해루질 최적!", good: "해루질 가능", poor: "해루질 어려움" };
   const reasons: Record<ConditionRating, string> = {
@@ -197,7 +203,9 @@ export function getHaerujilCondition(
       : "날씨·수온 조건이 좋지 않아 해루질을 권장하지 않습니다.",
   };
   const tips: Record<ConditionRating, string> = {
-    excellent: "안전장화·헤드랜턴·물통 필수. 들물 시작 전 철수!",
+    excellent: isNightLow
+      ? "야간 해루질 — 반드시 2인 이상 동행, 들물 시작 전 철수!"
+      : "안전장화·헤드랜턴·물통 필수. 들물 시작 전 철수!",
     good:      "구명조끼 착용 권장. 조류 방향 확인 후 입수.",
     poor:      "무리한 입수는 위험합니다. 다음 기회를 노리세요.",
   };
@@ -316,10 +324,19 @@ export function getTideReport(date: Date = new Date()): TideReport {
   const multtae        = getMulttaeInfo(date);
   const todayTides     = getIncheonTides(date);
   const nextLowTide    = getNextLowTide(todayTides, date);
-  const haerujil       = getHaerujilCondition(multtae, date, todayTides);
+
+  const highTides = todayTides.filter(t => t.type === "high");
+  const lowTides  = todayTides.filter(t => t.type === "low");
+  const actualRangeM = highTides.length && lowTides.length
+    ? parseFloat(
+        (Math.max(...highTides.map(t => t.heightM)) - Math.min(...lowTides.map(t => t.heightM))).toFixed(1)
+      )
+    : multtae.rangeM;
+
+  const haerujil       = getHaerujilCondition(multtae, date, todayTides, nextLowTide);
   const fishing        = getFishingCondition(multtae, date, todayTides);
   const bestDaysThisMonth = getBestDaysThisMonth(date);
   const seasonalNote   = getSeasonalNote(date);
 
-  return { multtae, todayTides, nextLowTide, haerujil, fishing, bestDaysThisMonth, seasonalNote };
+  return { multtae, todayTides, nextLowTide, actualRangeM, haerujil, fishing, bestDaysThisMonth, seasonalNote };
 }

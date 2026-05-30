@@ -816,7 +816,7 @@ function TideSection() {
 
   if (!report) return null;
 
-  const { multtae, todayTides, nextLowTide, haerujil, fishing, seasonalNote } = report;
+  const { multtae, todayTides, nextLowTide, actualRangeM, haerujil, fishing, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
   const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
@@ -857,7 +857,7 @@ function TideSection() {
                 </span>
               </div>
               <p className="text-[13px] text-gray-500 mt-1">
-                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {actualRangeM}m
               </p>
             </div>
             {nextLowTide && (
@@ -927,7 +927,11 @@ function TideSection() {
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex-1 py-2.5 rounded-lg text-[15px] font-bold transition-all ${
-                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
+                tab === key
+                  ? key === "haerujil"
+                    ? "bg-orange-50 text-orange-700 shadow-sm"
+                    : "bg-blue-50 text-blue-700 shadow-sm"
+                  : "text-gray-400"
               }`}>
               {label}
             </button>
@@ -972,8 +976,8 @@ function TideSection() {
           </div>
           <div className="divide-y divide-gray-50">
             {spots.map((s, i) => {
-              // 스팟별 조석 보정
-              const spotRange = parseFloat((multtae.rangeM * s.rangeRatio).toFixed(1));
+              // 스팟별 조석 보정 — actualRangeM 기반
+              const spotRange = parseFloat((actualRangeM * s.rangeRatio).toFixed(1));
               const spotLowTides = todayTides
                 .filter(t => t.type === "low")
                 .map(t => {
@@ -982,21 +986,25 @@ function TideSection() {
                 });
               const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
               const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
+              const lowTimeColor = tab === "haerujil" ? "text-orange-500" : "text-blue-600";
+              const rangeColor   = tab === "haerujil" ? "text-orange-600" : "text-blue-700";
 
               return (
                 <div key={i} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-[12px] text-gray-500">{s.type} · {s.dist}</span>
+                      <span className="text-[12px] text-gray-500">{s.type} · 검단 기준 {s.dist}</span>
                       {!sameAsIncheon && nextSpotLow && (
                         <>
                           <span className="text-[12px] text-gray-300">·</span>
                           <span className="text-[12px] text-gray-600">
-                            저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
+                            저조 <span className={`font-bold ${lowTimeColor}`}>{nextSpotLow.timeStr}</span>
                           </span>
                           <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">조차 <span className="font-semibold">{spotRange}m</span></span>
+                          <span className="text-[12px] text-gray-600">
+                            조차 <span className={`font-bold ${rangeColor}`}>{spotRange}m</span>
+                          </span>
                         </>
                       )}
                       {sameAsIncheon && (
@@ -1009,7 +1017,7 @@ function TideSection() {
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[12px] font-bold text-yellow-700"
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-[12px] font-bold text-white"
                   >
                     지도 ↗
                   </button>
