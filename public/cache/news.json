@@ -1,7 +1,16 @@
 {
-  "fetchedAt": "2026-05-31T06:45:51.911Z",
+  "fetchedAt": "2026-05-31T10:50:43.341Z",
   "count": 40,
   "articles": [
+    {
+      "id": "gr0-0",
+      "title": "도성훈 후보, 검단신도시 학부모와 간담회 - gukjenews.com",
+      "summary": "",
+      "source": "gukjenews.com",
+      "publishedAt": "2026-05-31T10:10:57.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBWMWU0YnJVT05NbVo5bnR5S1VLVzRtbUlMSXVlMm1BNFpBZUVJNkhLRFBfd1hDMTlBX2M5Y1JtYnNKRDIzcUw1ZGk5Rk9rb3dGaFNtODhDMnVGMEpRZG5abDNRSXQzek4zYWpnNXdB?oc=5",
+      "type": "뉴스"
+    },
     {
       "id": "gr2-0",
       "title": "서구, 검단천 유류 유출 가상 수질오염 방제훈련 - 전국매일신문",
@@ -39,7 +48,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-4",
       "title": "금강주택, 검단신도시 ‘신검단중앙역 금강펜테리움 센트럴파크’ 입주 개시 - 서울신문",
       "summary": "",
       "source": "서울신문",
@@ -102,16 +111,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
-      "title": "포스코이앤씨, 인천 검단신도시서 더샵 검단레이크파크 6월 분양 - 아주경제",
+      "id": "gr0-7",
+      "title": "포스코이앤씨, 인천 검단신도시서 '더샵 검단레이크파크' 6월 분양 - 네이트",
       "summary": "",
-      "source": "아주경제",
-      "publishedAt": "2026-05-29T01:35:39.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9yS1VRcUdHc2tQZHpCeUtMd0pUc3BFUnN2MEk1VmZGWkFEZXNsVkJ2bHdNVk5ZQmJ3Tm5GdWJ1VVdEUUNEQmlQWDFScU4zZll2amw4RGhSQ3FJd9IBWEFVX3lxTE5JZXkzYUpLbmhoM0tEdWNYS29aSUFORWlmaC1LQmJ3SnNES0RQVWVPUDFNRkdWNzhhMnFVNTAwdnVPZzk4bDdHU3FmeEJHa2JuNEVWU0VFaU0?oc=5",
+      "source": "네이트",
+      "publishedAt": "2026-05-29T01:36:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE42WkhqZEs3MXM0enlZbEN3Z3J0dHpTNjRYTGZuQldhNmYxcGx1QTZ6UnBqLWJkWlIzTmptdGdlNnNmOVdILU1jRXJBa0d4Wl8xV0JN?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-0",
+      "id": "gr0-1",
       "title": "[분양 포커스] 인천 검단신도시에 위치, 희소성 높은 브랜드 대단지 - 중앙일보",
       "summary": "",
       "source": "중앙일보",
@@ -120,7 +129,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-9",
       "title": "포스코이앤씨, 인천 '더샵 검단레이크파크' 6월 분양 - 더팩트",
       "summary": "",
       "source": "더팩트",
@@ -129,7 +138,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "포스코이앤씨, 검단신도시에 첫 '더샵' 공급…2857가구 대단지 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -237,7 +246,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-3",
       "title": "과밀학급 문제 ‘몸살’난 검단신도시 인천교육감 후보들 처방전은 제각각 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -264,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-17",
+      "id": "gr0-13",
       "title": "도성훈, 검단 과밀학급 해소 위한 특별예산 투입 약속 - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -282,7 +291,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-18",
       "title": "도성훈 인천시교육감 후보, “검단지역 과밀학급 특별예산 투입하겠다” - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -300,7 +309,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-6",
       "title": "도성훈 후보, 검단신도시 학부모 만나 과밀학급 해소 방안 제시 - 인천게릴라뉴스",
       "summary": "",
       "source": "인천게릴라뉴스",
@@ -309,7 +318,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-24",
+      "id": "gr0-22",
       "title": "유정복 인천시장 후보 “검단 현안 해결하겠다” - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -318,7 +327,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-21",
       "title": "이대형 인천교육감 후보, “검단 과밀학급 해결” 제안 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-65",
+      "id": "gr2-69",
       "title": "유정복 “검단 발전 완성할 사람은 준비된 인물…시민 선택이 미래 결정” - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -345,21 +354,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
+      "id": "gr0-14",
       "title": "도성훈, 검단총연 대담회 “검단에 과밀학급 특별예산 투입할 것” - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
       "publishedAt": "2026-05-25T21:20:48.000Z",
       "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE0yRWpwMmFlU0NJRTJLcEJ0dTFibUU3WEFRYVh3T0FmOGtTYzFVTjRBQk80cDRoZmZfMzh5MmN6NGRqdWxQUVZjNExhOVlGQXNnQVlyUnNlSTdsaTlRZlFGNDNIZUVEVVNHQVE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-61",
-      "title": "유정복 인천시장 후보, 서구 검단 유세서 “승기 잡았다” 자신감 드러내 - 한국정경신문",
-      "summary": "",
-      "source": "한국정경신문",
-      "publishedAt": "2026-05-25T14:50:11.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE9HVG5Pak0tSDF6NGM3MU8yY1Y0dVJRRHFiR1VsaDZvd0U2TDVyeGJTSTZMMUtSeC1NWFVVN1haOVppSW5fTFgxa0lWeDhRV1FhZWc?oc=5",
       "type": "뉴스"
     }
   ]
