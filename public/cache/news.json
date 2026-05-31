@@ -1,9 +1,18 @@
 {
-  "fetchedAt": "2026-05-31T13:09:38.619Z",
+  "fetchedAt": "2026-05-31T15:58:35.722Z",
   "count": 40,
   "articles": [
     {
       "id": "gr0-0",
+      "title": "도성훈 후보, 검단신도시 교육 현안 소통 강화 약속 - 경기도민일보 미디어",
+      "summary": "",
+      "source": "경기도민일보 미디어",
+      "publishedAt": "2026-05-31T13:34:58.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9ETG5FVlJtd1N4QWpnWTZvMVlXN1R1ZFNfVFFnM1c2Vl9ISHpTSmgtSlFhamVRb1pQVV9DVHZUamJCajNVSVlEa3UyelM5MUJIekFPYlZpbU1NR3JTQ1BRSFp1LUlVQzV3QUE?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-1",
       "title": "도성훈 후보, 검단신도시 학부모들과 교육정책 간담회 가져 - 전국매일신문",
       "summary": "",
       "source": "전국매일신문",
@@ -12,7 +21,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-5",
       "title": "검단 찾은 도성훈 \"안전한 통학·미래형 고교 인프라 확충하겠다\" - 네이트",
       "summary": "",
       "source": "네이트",
@@ -21,7 +30,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "인천 1·2호선 더블역세권 더샵 검단레이크파크 - 경향신문",
       "summary": "",
       "source": "경향신문",
@@ -30,7 +39,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-3",
       "title": "도성훈 후보, 검단신도시 학부모와 간담회 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
@@ -48,7 +57,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-18",
+      "id": "gr2-19",
       "title": "인천 서구, 유류유출사고 가정...수질오염사고 대비 방제훈련 실시 - 서울뉴스통신",
       "summary": "",
       "source": "서울뉴스통신",
@@ -57,21 +66,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-3",
+      "id": "gr2-4",
       "title": "검단구 빠진 인천 서해구 구청장은? 구재용·강범석 막판 경쟁 - 연합뉴스",
       "summary": "",
       "source": "연합뉴스",
       "publishedAt": "2026-05-29T22:27:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1tMHJRTC1kZjc0N0lUU1dfLW4wMjJSQXUyTHBVYXhaWjd6X3hJTU5YVnoxN3lUQy1RcVRGc0JDTElTSXJUcWRDek9FZ1pMRU1GUmIwd1NqTjBzTmvSAWBBVV95cUxPU1Ria0tFTGtMcGhOVzNwNGl6X2xFSlJFbjNQb1ZHWFdINC1IR1pRcEphbnFvVjVmYng0eGh2Y0RfdC1ZQzdRSWtTMk9uUXR1VzVneVdOM0Q2X3E5Z293MzY?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-27",
-      "title": "검단구 빠진 인천 서해구 구청장은? 구재용·강범석 막판 경쟁 - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-05-29T22:27:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9QbEp5cWxEeE1KalFNOXRXUm1sc0QxeEVZckM4OXJ3TnA5bjkwWXN6MlR2b3RjR3BRbGktWnRtMmJnWFkzYXZ1cy1qTXpkN25DTjZnOGRyaU5tcXdLQUhncw?oc=5",
       "type": "뉴스"
     },
     {
@@ -120,12 +120,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-7",
+      "id": "gr2-6",
       "title": "인천 서구, 검단천 유류 유출 차단…현장 방제훈련 전개 - 매일일보",
       "summary": "",
       "source": "매일일보",
       "publishedAt": "2026-05-29T03:28:28.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiY0FVX3lxTFA5MFpnMUtKZkIzTU9Ec0QyZi0za09IU29Dd0F4bjcyUHpqUHNkdl9IdUVXNDZqc0ZINktnVDd6TWhwV2lkTjRkN0lEaERrMzVIUURVREV6ZHdhdWRQOTNySDNlZw?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTFBjeHpzRmFGTHg0bjVaenFuVVdMOGVSMDl2dTA1eHZtd1Q1QmZCWGI4cDlXbGxtR0F1aERpYW81UUhJMzhwQnU1MExVS1J4RjI2d1NZTFpobTV0VWJVSGRrOEhHVGk?oc=5",
       "type": "뉴스"
     },
     {
@@ -165,7 +165,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "포스코이앤씨, 검단신도시에 첫 '더샵' 공급…2857가구 대단지 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -183,7 +183,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-17",
+      "id": "gr2-18",
       "title": "인천 서구, 3주간 우기 대비 건설현장 '현미경 점검' - 위키트리",
       "summary": "",
       "source": "위키트리",
@@ -201,7 +201,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-19",
+      "id": "gr2-20",
       "title": "인천 검단구청 임시청사서 내달 8일 업무 시작…\"7월 분구\" - 네이트",
       "summary": "",
       "source": "네이트",
@@ -237,7 +237,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
+      "id": "gr2-3",
       "title": "인천 서구, 검단행정과 검단구청 청사로 이전 - 중앙신문",
       "summary": "",
       "source": "중앙신문",
@@ -255,6 +255,15 @@
       "type": "뉴스"
     },
     {
+      "id": "gr2-17",
+      "title": "인천 서구 검단행정과, 검단구청 청사로 이전 - 웹이코노미",
+      "summary": "",
+      "source": "웹이코노미",
+      "publishedAt": "2026-05-27T02:41:22.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTE1KTEpwVThLN3Y4X1h6emZzc0tSMkswSDZIWFpjTER5TDFONnFoa0g2NzZWMGpMM1VaN0dFNkdKOEJEM0tZMjlsXzIzaHBBZlNGNlJoZzYxSm9SZF9mQWJrLTlDa24tRVBFbUJQRWdZazNCZw?oc=5",
+      "type": "뉴스"
+    },
+    {
       "id": "gr2-1",
       "title": "인천 서구 '검단행정과(舊 검단출장소)' 검단구청 청사로 이전 - 미디어인천신문",
       "summary": "",
@@ -264,7 +273,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-6",
+      "id": "gr2-5",
       "title": "인천 서구 검단행정과, 6월 8일 검단구청 신청사로 이전 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
@@ -273,7 +282,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-8",
       "title": "과밀학급 문제 ‘몸살’난 검단신도시 인천교육감 후보들 처방전은 제각각 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -291,7 +300,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-9",
+      "id": "gr0-10",
       "title": "검단신도시 '더샵 검단레이크파크' 6월 분양 계획 발표 - 이로운넷",
       "summary": "",
       "source": "이로운넷",
@@ -327,7 +336,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-7",
       "title": "인천서구문화재단, 터‧틀 (검단) 인천지역작가展 개최 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -336,7 +345,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-11",
       "title": "도성훈 후보, 검단신도시 학부모 만나 과밀학급 해소 방안 제시 - 인천게릴라뉴스",
       "summary": "",
       "source": "인천게릴라뉴스",
@@ -351,15 +360,6 @@
       "source": "매일일보",
       "publishedAt": "2026-05-26T00:49:47.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE03MmJxaFZ5UThIVURnUTlLS2o0QnBsY3c2QjdEQk11NU16T0ZtbnhlRGN6RWlyTS1EMWhyYTJlbUtkaVN5dEtmcVFrTlVPTWZZSjhremYxUmJQYUh6eWI0bGFpT2Y?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-26",
-      "title": "이대형 인천교육감 후보, “검단 과밀학급 해결” 제안 - 매일일보",
-      "summary": "",
-      "source": "매일일보",
-      "publishedAt": "2026-05-26T00:48:21.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE50TFZieHJ3YUVzMTJNczhLNDl1WTl4UEFib2NaZjdsN3pkSWIyMU10UUVtcTdEY21UMm5PR2dYcEZPaUtZd0dUWjByeTJOcTdtckRvMFh6OFh0SzE3bmdOZ0RlbWs?oc=5",
       "type": "뉴스"
     }
   ]
