@@ -42,6 +42,7 @@ import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
+import { OUTDOOR_SPOTS, type OutdoorType, type OutdoorSpot } from "@/lib/data/outdoor-spots";
 import { fetchYouTubeLatest, type YouTubeVideo } from "@/lib/api/news";
 import type { NewsItem } from "@/lib/types";
 
@@ -787,23 +788,6 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
-// timeOffsetMin: 인천 기준 대비 시간 보정(분), rangeRatio: 조차 비율
-const TIDE_SPOTS = {
-  haerujil: [
-    { name: "강화 여차리 갯벌",     type: "갯벌", dist: "약 45km", timeOffsetMin:  20, rangeRatio: 1.05, lat: 37.6124, lng: 126.4343 },
-    { name: "영종도 북쪽 갯벌",     type: "갯벌", dist: "약 20km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.5396, lng: 126.4768 },
-    { name: "소래습지생태공원",     type: "갯벌", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4278, lng: 126.7373 },
-    { name: "시흥 오이도 갯벌",     type: "갯벌", dist: "약 35km", timeOffsetMin:  25, rangeRatio: 0.87, lat: 37.3476, lng: 126.6765 },
-    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
-  ],
-  fishing: [
-    { name: "소래포구 방파제",    type: "방파제", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4264, lng: 126.7456 },
-    { name: "인천항 갑문 선착장", type: "선착장", dist: "약 18km", timeOffsetMin:   0, rangeRatio: 1.00, lat: 37.4604, lng: 126.5949 },
-    { name: "영종도 삼목선착장",  type: "선착장", dist: "약 22km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.4959, lng: 126.4462 },
-    { name: "강화 외포리 선착장", type: "선착장", dist: "약 45km", timeOffsetMin:  25, rangeRatio: 1.02, lat: 37.6441, lng: 126.4176 },
-    { name: "대부도 방아머리항",  type: "항구",   dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
-  ],
-};
 
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
@@ -829,15 +813,11 @@ function TideSection() {
   };
   const rm = ratingMeta[activity.rating];
 
-  const spots = TIDE_SPOTS[tab];
-  const maxH = Math.max(...todayTides.map(t => t.heightM));
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const spots: OutdoorSpot[] = tab === "haerujil"
+    ? OUTDOOR_SPOTS.filter(s => s.type === "해루질")
+    : OUTDOOR_SPOTS.filter(s => s.type === "바다낚시" || s.type === "민물낚시");
 
-  // 분 → HH:MM 변환 (인라인)
-  const toTime = (min: number) => {
-    const m = ((min % 1440) + 1440) % 1440;
-    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-  };
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
   return (
     <>
@@ -969,55 +949,69 @@ function TideSection() {
 
         {/* ── 추천 스팟 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50">
+          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
             <p className="text-[14px] font-bold text-gray-700">
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
+            <Link href="/transport/?tab=가볼만한곳"
+              className="text-[12px] text-[#0071e3] font-medium flex items-center gap-0.5">
+              전체보기 <ChevronRight size={12} />
+            </Link>
           </div>
-          <div className="divide-y divide-gray-50">
-            {spots.map((s, i) => {
-              // 스팟별 조석 보정 — actualRangeM 기반
-              const spotRange = parseFloat((actualRangeM * s.rangeRatio).toFixed(1));
-              const spotLowTides = todayTides
-                .filter(t => t.type === "low")
-                .map(t => {
-                  const corrMin = ((t.minutes + s.timeOffsetMin) + 1440) % 1440;
-                  return { ...t, minutes: corrMin, timeStr: toTime(corrMin) };
-                });
-              const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
-              const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
-              const lowTimeColor = tab === "haerujil" ? "text-orange-500" : "text-blue-600";
-              const rangeColor   = tab === "haerujil" ? "text-orange-600" : "text-blue-700";
+
+          {/* 법 개정 안내 */}
+          <div className="mx-3 mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            <span className="text-[12px] shrink-0">⚠️</span>
+            <p className="text-[11px] text-amber-800 leading-snug">
+              <span className="font-bold">수산자원관리법 2026 개정</span> — 비어업인 해루질 시간·장소 제한 강화. 어촌계 어업권 구역 진입 시 절도죄 위험. 현지 공고 확인 필수.
+            </p>
+          </div>
+
+          <div className="divide-y divide-gray-50 mt-2">
+            {spots.map((s) => {
+              const typeColor = s.type === "해루질" ? "#0891B2"
+                : s.type === "민물낚시" ? "#2E7D32" : "#1E40AF";
+              const typeBg = s.type === "해루질" ? "#E0F7FA"
+                : s.type === "민물낚시" ? "#E8F5E9" : "#EFF6FF";
+              const typeEmoji = s.type === "해루질" ? "🌊" : s.type === "민물낚시" ? "🏞️" : "⚓";
 
               return (
-                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <div key={s.id} className="flex items-start gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-[12px] text-gray-500">{s.type} · 검단 기준 {s.dist}</span>
-                      {!sameAsIncheon && nextSpotLow && (
-                        <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">
-                            저조 <span className={`font-bold ${lowTimeColor}`}>{nextSpotLow.timeStr}</span>
-                          </span>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">
-                            조차 <span className={`font-bold ${rangeColor}`}>{spotRange}m</span>
-                          </span>
-                        </>
+                    {/* 이름 + 타입 배지 */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                        style={{ color: typeColor, background: typeBg }}>
+                        {typeEmoji} {s.type}
+                      </span>
+                      {s.boat && (
+                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">🚢 배편</span>
                       )}
-                      {sameAsIncheon && (
-                        <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-500">인천과 동일</span>
-                        </>
-                      )}
+                    </div>
+                    <p className="text-[15px] font-bold text-[#1d1d1f] leading-snug">{s.name}</p>
+                    {/* 거리 */}
+                    <p className="text-[12px] text-gray-500 mt-0.5">
+                      검단 기준 {s.distKm}km · 차로 {s.driveMin}분
+                    </p>
+                    {/* 어종 칩 */}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {s.species.slice(0, 4).map(sp => (
+                        <span key={sp} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">{sp}</span>
+                      ))}
+                    </div>
+                    {/* 금어기 경고 */}
+                    {s.regulation && (
+                      <p className="text-[11px] text-orange-600 font-medium mt-1">🚫 {s.regulation}</p>
+                    )}
+                    {/* 안전도 */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[10px] text-gray-400">안전</span>
+                      <span className="text-[11px] text-yellow-500">{"★".repeat(s.safety)}{"☆".repeat(5 - s.safety)}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-[12px] font-bold text-white"
+                    className="shrink-0 mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-[12px] font-bold text-white"
                   >
                     지도 ↗
                   </button>
