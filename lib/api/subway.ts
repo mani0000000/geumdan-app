@@ -330,3 +330,7 @@ export function estimateNextArrivals(
   if (down) results.push(down);
   return results;
 }
+
+export function dayTimetable(timetable: SubwayStationEntry["timetable"]) {
+  return timetable;
+}
