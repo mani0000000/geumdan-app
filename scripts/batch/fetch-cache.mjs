@@ -216,12 +216,16 @@ async function fetchAllYouTube() {
     '검단신도시 공원 볼거리',
     '검단신도시 브이로그 일상',
     '검단신도시 소식 뉴스',
+    '검단신도시 부동산 아파트',
+    '인천 검단 생활',
+    '검단신도시 교통',
   ];
   const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
   const buckets = results.map(r => (r.status === 'fulfilled' ? r.value : []));
   const seen = new Set();
   const merged = [];
-  for (let round = 0; round < 5; round++) {
+  const maxRounds = Math.max(...buckets.map(b => b.length), 0);
+  for (let round = 0; round < maxRounds; round++) {
     for (const bucket of buckets) {
       const v = bucket[round];
       if (!v || seen.has(v.videoId)) continue;
@@ -229,7 +233,7 @@ async function fetchAllYouTube() {
       merged.push(v);
     }
   }
-  if (merged.length > 0) return merged.slice(0, 20);
+  if (merged.length > 0) return merged.slice(0, 40); // 40개로 확대
   return [];
 }
 
