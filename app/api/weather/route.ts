@@ -239,8 +239,36 @@ async function fetchOpenMeteo() {
 }
 
 // ── Route Handler ────────────────────────────────────────────
+// 우선순위: Supabase DB (30분 배치) → 기상청 직접 → Open-Meteo 폴백
 export async function GET() {
   try {
+    // 1. Supabase DB (배치가 저장한 최신 데이터 — 가장 빠름)
+    try {
+      const { createClient } = await import("@supabase/supabase-js");
+      const sb = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+        process.env.SUPABASE_SERVICE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""
+      );
+      const { data: row } = await sb
+        .from("weather_cache")
+        .select("data, fetched_at")
+        .order("fetched_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (row?.data) {
+        const ageMs = Date.now() - new Date(row.fetched_at).getTime();
+        if (ageMs < 35 * 60 * 1000) { // 35분 이내
+          return NextResponse.json(row.data, {
+            headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" },
+          });
+        }
+      }
+    } catch (dbErr) {
+      console.warn("[weather] DB 조회 실패:", dbErr);
+    }
+
+    // 2. 기상청 직접 호출 (DB 데이터 없거나 오래됨)
     const serviceKey = process.env.DATA_GO_KR_API_KEY ?? "";
     let data;
     if (serviceKey) {
@@ -253,6 +281,7 @@ export async function GET() {
     } else {
       data = await fetchOpenMeteo();
     }
+
     return NextResponse.json(data, {
       headers: { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" },
     });

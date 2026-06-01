@@ -1,0 +1,21 @@
+name: Batch - Weather (30분)
+
+on:
+  schedule:
+    - cron: '0,30 * * * *'   # 매시 0분·30분 실행 (UTC)
+  workflow_dispatch:
+
+jobs:
+  fetch-weather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - name: 기상청 날씨 수집 → Supabase 저장
+        run: node scripts/batch/fetch-weather.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
