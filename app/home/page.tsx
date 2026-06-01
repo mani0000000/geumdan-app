@@ -2213,9 +2213,10 @@ function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; ni
 }
 
 // ─── 홈 교통 위젯 (transport 페이지와 동일한 카드 디자인) ──────
-const STOP_NAME_FALLBACK: Record<string, string> = Object.fromEntries(
-  GEUMDAN_BUS_STATIONS.map(s => [s.id, s.name])
-);
+const STOP_NAME_FALLBACK: Record<string, string> = Object.fromEntries([
+  ...GEUMDAN_BUS_STATIONS.map(s => [s.id, s.name]),
+  ...GEUMDAN_BUS_STATIONS.map(s => [s.stationId, s.name]),
+]);
 const ALL_SUBWAY_STATIONS = getAllSubwayStations();
 
 // transport 페이지의 ArrivalBadge와 동일한 디자인
