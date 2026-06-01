@@ -30,6 +30,7 @@ import {
   type SubwayStationWithDist, type SubwayArrival, type SubwayDayType,
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation, NearbyStop } from "@/lib/api/bus";
+import { GEUMDAN_BUS_STATIONS } from "@/lib/api/bus";
 
 type Tab = "가볼만한곳" | "버스" | "지하철";
 
