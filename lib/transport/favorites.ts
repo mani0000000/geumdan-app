@@ -18,17 +18,59 @@ function loadSet(storageKey: string): Set<string> {
   try { return new Set(JSON.parse(localStorage.getItem(storageKey) ?? "[]")); } catch { return new Set(); }
 }
 
+/**
+ * 정류장 이름 조회 — 두 가지 스토리지 키를 모두 확인
+ *  - favStopNames  : saveStopName()으로 직접 저장한 이름
+ *  - favStops_meta : transport/page.tsx의 toggleStop()이 저장하는 메타데이터
+ */
+function loadStopNames(): Record<string, string> {
+  if (typeof window === "undefined") return {};
+  const result: Record<string, string> = {};
+  try {
+    // 1. favStops_meta (transport 페이지가 저장하는 주 소스)
+    const meta: Record<string, { name?: string }> = JSON.parse(
+      localStorage.getItem("favStops_meta") ?? "{}"
+    );
+    for (const [id, val] of Object.entries(meta)) {
+      if (val?.name && val.name !== "정류장") result[id] = val.name;
+    }
+  } catch { /* ignore */ }
+  try {
+    // 2. favStopNames (saveStopName()으로 저장한 보조 소스) — 우선순위 낮음
+    const names: Record<string, string> = JSON.parse(
+      localStorage.getItem("favStopNames") ?? "{}"
+    );
+    for (const [id, name] of Object.entries(names)) {
+      if (name && !result[id]) result[id] = name;
+    }
+  } catch { /* ignore */ }
+  return result;
+}
+
+export function saveStopName(stopId: string, name: string) {
+  if (typeof window === "undefined" || !name) return;
+  try {
+    const names: Record<string, string> = JSON.parse(
+      localStorage.getItem("favStopNames") ?? "{}"
+    );
+    names[stopId] = name;
+    localStorage.setItem("favStopNames", JSON.stringify(names));
+  } catch { /* ignore */ }
+}
+
 export function routeFavKey(stopId: string, a: Pick<BusArrival, "routeId" | "routeNo">): string {
   return `${stopId}::${a.routeId || a.routeNo}`;
 }
 
 export function loadFavStops(): FavStopMeta[] {
-  return Array.from(loadSet("favStops")).map(id => ({ id, name: "" }));
+  const names = loadStopNames();
+  return Array.from(loadSet("favStops")).map(id => ({ id, name: names[id] ?? "" }));
 }
 
 export function loadFavRoutes(): FavRouteMeta[] {
+  const names = loadStopNames();
   return Array.from(loadSet("favRoutes")).map(key => {
     const [stopId, routeId] = key.split("::");
-    return { key, stopId: stopId ?? key, stopName: "", routeId };
+    return { key, stopId: stopId ?? key, stopName: names[stopId ?? key] ?? "", routeId };
   });
 }
