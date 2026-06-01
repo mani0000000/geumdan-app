@@ -508,3 +508,63 @@ export async function fetchStationsByRouteTago(routeId: string, cityCode = "30")
 
 // 서버 라우트가 키를 관리하므로 클라이언트에서는 항상 활성으로 취급
 export const hasBusApiKey = () => true;
+
+// ── 누락 export 보완 (transport/page.tsx 호환성) ─────────────
+
+export interface RouteSearchResult {
+  routeId: string;
+  routeNo: string;
+  routeName?: string;
+  startStation?: string;
+  endStation?: string;
+}
+
+/** TAGO 도착정보를 포함한 주변 정류장 통합 조회 */
+export async function fetchNearbyStopsWithArrivals(lat: number, lng: number): Promise<Array<NearbyStop & { arrivals: BusArrival[] }>> {
+  try {
+    const res = await fetch(`/api/bus?action=nearbyWithArrivals&lat=${lat}&lng=${lng}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
+/** 정류장 이름으로 검색 (TAGO) */
+export async function searchStationsByName(query: string): Promise<NearbyStop[]> {
+  try {
+    const res = await fetch(`/api/bus?action=searchStation&q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
+/** 정류장 이름으로 검색 (OSM) */
+export async function searchStationsByNameOsm(query: string): Promise<NearbyStop[]> {
+  try {
+    const res = await fetch(`/api/bus-stops?q=${encodeURIComponent(query)}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch { return []; }
+}
+
+/** 노선번호로 검색 */
+export async function searchRoutesByQuery(query: string): Promise<RouteSearchResult[]> {
+  try {
+    const routeId = await searchRouteByNo(query);
+    if (!routeId) return [];
+    const detail = await fetchRouteDetailFromTago(routeId);
+    if (!detail) return [];
+    return [{ routeId, routeNo: query, startStation: detail.startStation, endStation: detail.endStation }];
+  } catch { return []; }
+}
+
+/** TAGO 버스 위치 조회 (fetchBusLocations alias) */
+export const fetchBusLocationsTago = fetchBusLocations;
+
+/** HH:MM 형식 시간 포맷 */
+export function formatBusTime(time: string): string {
+  if (!time || time === "-") return "-";
+  const t = time.replace(/[^0-9]/g, "");
+  if (t.length >= 4) return `${t.slice(0, 2)}:${t.slice(2, 4)}`;
+  return time;
+}
