@@ -1,9 +1,14 @@
-name: Deploy to GitHub Pages
+# ⛔ GitHub Pages 배포 비활성화 — Vercel(geumdan-app.vercel.app)에서만 배포
+# 이 워크플로우는 실행되지 않습니다.
+name: Deploy to GitHub Pages (DISABLED)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: "GitHub Pages 배포를 의도적으로 실행하려면 'yes' 입력"
+        required: true
+        default: "no"
 
 permissions:
   contents: read
