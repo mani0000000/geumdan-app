@@ -332,18 +332,23 @@ export default function NewsPage() {
     setLoading(false);
   };
 
+  const sortByLatest = (videos: import("@/lib/api/news").YouTubeVideo[]) =>
+    [...videos].sort((a, b) =>
+      new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()
+    );
+
   const loadYouTube = async () => {
     if (ytVideos.length > 0) return;
     setYtLoading(true);
-    // DB에 등록된 영상 먼저, 없으면 API 검색
+    // 정적 캐시/DB 먼저, 없으면 API 검색
     const dbResult = await fetchYouTubeVideosFromDB();
     if (dbResult.videos.length > 0) {
-      setYtVideos(dbResult.videos);
+      setYtVideos(sortByLatest(dbResult.videos));
       setYtLoading(false);
       return;
     }
     const result = await fetchYouTubeVideos("검단신도시");
-    setYtVideos(result.videos);
+    setYtVideos(sortByLatest(result.videos));
     setYtLoading(false);
   };
 

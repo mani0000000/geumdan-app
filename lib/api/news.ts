@@ -30,6 +30,7 @@ export interface YouTubeVideo {
   channelName: string;
   thumbnail: string;
   url: string;
+  publishedAt?: string; // ISO 날짜 (캐시 수집 시 저장)
 }
 
 const BASE_PATH     = process.env.NEXT_PUBLIC_BASE_PATH     ?? "";
@@ -37,16 +38,20 @@ const YT_API_KEY    = process.env.NEXT_PUBLIC_YOUTUBE_API_KEY  ?? "";
 const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
-// 정적 export(GitHub Pages) 환경에서 /api/news 가 stripped 되므로 캐시가 유일한 소스가 된다.
-// GH Actions 가 3시간마다 갱신하지만 실패/지연을 감안해 staleness 체크를 제거하고 캐시를 항상 사용한다.
-// (캐시가 매우 오래됐다면 호출자가 라이브 fetch 로 덮어쓰도록 빈 배열 대신 캐시를 그대로 반환)
+const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
+
+// ── 캐시 ──────────────────────────────────────────────────────
+function isFresh(fetchedAt: string): boolean {
+  try { return Date.now() - new Date(fetchedAt).getTime() < CACHE_TTL_MS; }
+  catch { return false; }
+}
 
 export async function fetchCachedNews(): Promise<NewsArticle[]> {
   try {
     const res = await fetch(`${BASE_PATH}/cache/news.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.articles) && d.articles.length > 0) {
+    if (Array.isArray(d.articles) && d.articles.length > 0 && isFresh(d.fetchedAt)) {
       return d.articles as NewsArticle[];
     }
   } catch { /* ignore */ }
@@ -58,7 +63,7 @@ export async function fetchCachedYouTube(): Promise<YouTubeVideo[]> {
     const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.videos) && d.videos.length > 0) {
+    if (Array.isArray(d.videos) && d.videos.length > 0 && isFresh(d.fetchedAt)) {
       return d.videos as YouTubeVideo[];
     }
   } catch { /* ignore */ }
@@ -144,33 +149,6 @@ async function fetchNaverNews(): Promise<NewsArticle[]> {
 }
 
 // ── 2. Google News RSS ────────────────────────────────────────
-// RSS 표준 이미지 태그(<media:thumbnail>, <media:content medium="image">,
-// <enclosure type="image/...">)만 사용. description HTML 안 <img>나 본문 크롤링은 금지.
-function extractMediaImage(item: string): string | undefined {
-  const thumb = item.match(/<media:thumbnail[^>]*\burl=["']([^"']+)["']/i);
-  if (thumb?.[1]) return thumb[1];
-  const mediaContents = item.matchAll(/<media:content\b([^>]*)\/?>(?:[\s\S]*?<\/media:content>)?/gi);
-  for (const m of mediaContents) {
-    const attrs = m[1] ?? "";
-    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
-    if (!url) continue;
-    const medium = attrs.match(/\bmedium=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    if (medium === "image" || (type && type.startsWith("image/")) || /\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) {
-      return url;
-    }
-  }
-  const enclosures = item.matchAll(/<enclosure\b([^>]*)\/?>/gi);
-  for (const m of enclosures) {
-    const attrs = m[1] ?? "";
-    const url = attrs.match(/\burl=["']([^"']+)["']/i)?.[1];
-    if (!url) continue;
-    const type = attrs.match(/\btype=["']([^"']+)["']/i)?.[1]?.toLowerCase();
-    if (type?.startsWith("image/")) return url;
-  }
-  return undefined;
-}
-
 function parseRssXml(xml: string, prefix: string): NewsArticle[] {
   if (!xml.includes("<item>")) return [];
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m, i) => {
@@ -180,11 +158,10 @@ function parseRssXml(xml: string, prefix: string): NewsArticle[] {
     const desc  = stripXml(tagVal(raw, "description")).slice(0, 120);
     const pub   = tagVal(raw, "pubDate");
     const src   = tagVal(raw, "source") || extractSource(title);
-    const thumb = extractMediaImage(raw);
     return {
       id: `${prefix}-${i}`, title, summary: desc, source: src,
       publishedAt: pub ? new Date(pub).toISOString() : new Date().toISOString(),
-      url: link || "#", thumbnail: thumb, type: "뉴스" as const,
+      url: link || "#", thumbnail: undefined, type: "뉴스" as const,
     };
   }).filter(n => n.title.length > 5).slice(0, 20);
 }
@@ -243,12 +220,12 @@ async function fetchRss2json(): Promise<NewsArticle[]> {
 }
 
 // ── YouTube: API v3 ───────────────────────────────────────────
-async function fetchYouTubeDataAPI(query: string, maxResults = 12): Promise<YouTubeVideo[]> {
+async function fetchYouTubeDataAPI(query: string): Promise<YouTubeVideo[]> {
   if (!YT_API_KEY) return [];
   try {
     const params = new URLSearchParams({
       part: "snippet", q: query, type: "video",
-      maxResults: String(maxResults), key: YT_API_KEY,
+      maxResults: "12", key: YT_API_KEY,
       regionCode: "KR", relevanceLanguage: "ko", order: "date",
     });
     const ctrl = new AbortController();
@@ -396,110 +373,6 @@ async function fetchYouTubeHTML(query: string): Promise<YouTubeVideo[]> {
     }
     return extractVideoIdsOnly(html, query);
   } catch { return []; }
-}
-
-// ── /api/news 라우트 호출 (서버에서 RSS 파싱 + 캐시) ──────────
-export type NewsCategory = "검단신도시" | "인천" | "부동산" | "교통";
-
-const BASE_API = BASE_PATH; // basePath 가 있으면 prefix 자동 추가
-
-export async function fetchNewsFromApi(
-  category: NewsCategory = "검단신도시",
-): Promise<{ articles: NewsArticle[]; source: string; ms: number }> {
-  const t0 = performance.now();
-  try {
-    const ctrl = new AbortController();
-    const tid  = setTimeout(() => ctrl.abort(), 8000);
-    const res  = await fetch(
-      `${BASE_API}/api/news?category=${encodeURIComponent(category)}`,
-      { signal: ctrl.signal },
-    );
-    clearTimeout(tid);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    const articles: NewsArticle[] = Array.isArray(json.articles) ? json.articles : [];
-    if (articles.length > 0) {
-      return {
-        articles,
-        source: (json.source as string) ?? "api",
-        ms: Math.round(performance.now() - t0),
-      };
-    }
-  } catch { /* fall through */ }
-
-  // 정적 export 환경 (Capacitor) 등에서 /api/news 가 없을 때만 대체 경로 사용
-  if (category === "검단신도시") {
-    const live = await fetchGeumdanNews();
-    return live;
-  }
-  return { articles: [], source: "없음", ms: Math.round(performance.now() - t0) };
-}
-
-// ── 실시간 최신 영상 (YouTube Data API v3 order=date 우선) ──────
-// 클라이언트 localStorage 30분 캐시로 API 쿼터 보호 (revalidate 역할)
-const YT_LATEST_TTL_MS = 30 * 60 * 1000;
-
-function readLatestCache(key: string): YouTubeVideo[] | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return null;
-    const { at, videos } = JSON.parse(raw) as { at: number; videos: YouTubeVideo[] };
-    if (Date.now() - at < YT_LATEST_TTL_MS && Array.isArray(videos) && videos.length > 0) {
-      return videos;
-    }
-  } catch { /* ignore */ }
-  return null;
-}
-
-function writeLatestCache(key: string, videos: YouTubeVideo[]): void {
-  if (typeof window === "undefined" || videos.length === 0) return;
-  try {
-    window.localStorage.setItem(key, JSON.stringify({ at: Date.now(), videos }));
-  } catch { /* ignore */ }
-}
-
-/**
- * "검단신도시" 최신 영상을 실시간으로 가져온다.
- * 1. localStorage 30분 캐시 → 2. YouTube Data API v3(order=date)
- * → 3. Piped → 4. Invidious → 5. HTML 파싱
- * 모두 실패 시 빈 배열 (호출 측에서 DB/정적 캐시로 폴백)
- */
-export async function fetchYouTubeLatest(
-  query = "검단신도시",
-  limit = 10,
-  forceRefresh = false,
-): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
-  const t0 = performance.now();
-  const cacheKey = `yt-latest:${query}`;
-
-  const cached = forceRefresh ? null : readLatestCache(cacheKey);
-  if (cached) {
-    return { videos: cached.slice(0, limit), source: "캐시(30분)", ms: Math.round(performance.now() - t0) };
-  }
-
-  const api = await fetchYouTubeDataAPI(query, Math.max(limit, 12));
-  if (api.length > 0) {
-    writeLatestCache(cacheKey, api);
-    return { videos: api.slice(0, limit), source: "YouTube API", ms: Math.round(performance.now() - t0) };
-  }
-
-  const [piped, invidious] = await Promise.all([
-    fetchYouTubePiped(query),
-    fetchYouTubeInvidious(query),
-  ]);
-  if (piped.length > 0) {
-    writeLatestCache(cacheKey, piped);
-    return { videos: piped.slice(0, limit), source: "Piped API", ms: Math.round(performance.now() - t0) };
-  }
-  if (invidious.length > 0) {
-    writeLatestCache(cacheKey, invidious);
-    return { videos: invidious.slice(0, limit), source: "Invidious API", ms: Math.round(performance.now() - t0) };
-  }
-
-  const html = await fetchYouTubeHTML(query);
-  if (html.length > 0) writeLatestCache(cacheKey, html);
-  return { videos: html.slice(0, limit), source: "HTML파싱", ms: Math.round(performance.now() - t0) };
 }
 
 // ── 메인 exports ──────────────────────────────────────────────

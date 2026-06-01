@@ -130,11 +130,11 @@ async function fetchAllNews() {
 // ── 유튜브: YouTube Data API v3 ─────────────────────────────
 async function fetchYouTubeAPI() {
   if (!YT_API_KEY) return [];
-  console.log('▶️  YouTube Data API...');
+  console.log('▶️  YouTube Data API (최신순 50개)...');
   try {
     const params = new URLSearchParams({
       part: 'snippet', q: '검단신도시', type: 'video',
-      maxResults: '20', key: YT_API_KEY,
+      maxResults: '50', key: YT_API_KEY,
       regionCode: 'KR', relevanceLanguage: 'ko', order: 'date',
     });
     const res = await withTimeout(
@@ -151,16 +151,37 @@ async function fetchYouTubeAPI() {
         channelName: item.snippet?.channelTitle ?? 'YouTube',
         thumbnail: item.snippet?.thumbnails?.medium?.url ?? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         url: `https://www.youtube.com/watch?v=${videoId}`,
+        publishedAt: item.snippet?.publishedAt ?? new Date().toISOString(),
       };
     }).filter(v => v.videoId);
   } catch (e) { console.error('  YT API error:', e.message); return []; }
+}
+
+// ── 유튜브: 상대시간 → ISO 날짜 변환 ──────────────────────────
+function parseRelativeTime(text = '') {
+  const now = Date.now();
+  // 한국어: "2년 전", "3달 전", "1주 전", "5일 전", "3시간 전", "방금"
+  // 영어:   "2 years ago", "3 months ago", "1 week ago", "5 days ago"
+  const m = text.match(/(\d+)\s*(초|분|시간|일|주|달|개월|년|second|minute|hour|day|week|month|year)/i);
+  if (!m) return new Date(now).toISOString();
+  const n = parseInt(m[1]);
+  const unit = m[2].toLowerCase();
+  const msMap = {
+    초: 1e3, second: 1e3,
+    분: 6e4, minute: 6e4,
+    시간: 36e5, hour: 36e5,
+    일: 864e5, day: 864e5,
+    주: 6048e5, week: 6048e5,
+    달: 2592e6, 개월: 2592e6, month: 2592e6,
+    년: 31536e6, year: 31536e6,
+  };
+  return new Date(now - n * (msMap[unit] ?? 864e5)).toISOString();
 }
 
 // ── 유튜브: innertube API (키 불필요, 가장 안정적) ──────────
 const INNERTUBE_KEY = 'AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8';
 
 async function fetchYouTubeInnertube(query = '검단신도시') {
-  console.log(`▶️  YouTube innertube API (${query})...`);
   try {
     const res = await withTimeout(
       fetch(`https://www.youtube.com/youtubei/v1/search?key=${INNERTUBE_KEY}`, {
@@ -188,12 +209,14 @@ async function fetchYouTubeInnertube(query = '검단신도시') {
       for (const item of (section?.itemSectionRenderer?.contents ?? [])) {
         const vr = item?.videoRenderer;
         if (!vr?.videoId) continue;
+        const relTime = vr.publishedTimeText?.simpleText ?? '';
         videos.push({
           id: `yt-${videos.length}`, videoId: vr.videoId,
           title: vr.title?.runs?.[0]?.text ?? '검단 영상',
           channelName: vr.ownerText?.runs?.[0]?.text ?? 'YouTube',
           thumbnail: `https://img.youtube.com/vi/${vr.videoId}/mqdefault.jpg`,
           url: `https://www.youtube.com/watch?v=${vr.videoId}`,
+          publishedAt: parseRelativeTime(relTime),
         });
         if (videos.length >= 20) break;
       }
@@ -209,19 +232,42 @@ async function fetchAllYouTube() {
   const apiVideos = await fetchYouTubeAPI();
   if (apiVideos.length > 0) return apiVideos;
 
-  // 2. innertube API — 카테고리별 병렬, 라운드로빈 교차 정렬
+  // 2. innertube API — 25개 쿼리 병렬, 중복 제거 후 최신순 500개
   const queries = [
+    '검단신도시',
     '검단신도시 맛집',
     '검단신도시 카페',
-    '검단신도시 공원 볼거리',
-    '검단신도시 브이로그 일상',
-    '검단신도시 소식 뉴스',
-    '검단신도시 부동산 아파트',
-    '인천 검단 생활',
+    '검단신도시 브이로그',
+    '검단신도시 일상',
+    '검단신도시 부동산',
+    '검단신도시 아파트',
     '검단신도시 교통',
+    '검단신도시 뉴스',
+    '검단신도시 공원',
+    '검단신도시 쇼핑',
+    '검단신도시 학교',
+    '검단신도시 드론',
+    '검단신도시 분양',
+    '검단신도시 입주',
+    '검단신도시 산책',
+    '검단신도시 헬스장',
+    '검단신도시 리뷰',
+    '인천 검단',
+    '인천 검단 맛집',
+    '인천서구 검단',
+    '검단 아라',
+    '검단 원당',
+    '검단 호수공원',
+    '검단 지하철',
   ];
-  const results = await Promise.allSettled(queries.map(q => fetchYouTubeInnertube(q)));
-  const buckets = results.map(r => (r.status === 'fulfilled' ? r.value : []));
+  // 5개씩 묶어 배치 실행 (rate limit 방지)
+  const buckets = [];
+  for (let i = 0; i < queries.length; i += 5) {
+    const batch = queries.slice(i, i + 5);
+    const results = await Promise.allSettled(batch.map(q => fetchYouTubeInnertube(q)));
+    buckets.push(...results.map(r => (r.status === 'fulfilled' ? r.value : [])));
+    if (i + 5 < queries.length) await new Promise(r => setTimeout(r, 500)); // 0.5초 간격
+  }
   const seen = new Set();
   const merged = [];
   const maxRounds = Math.max(...buckets.map(b => b.length), 0);
@@ -233,8 +279,11 @@ async function fetchAllYouTube() {
       merged.push(v);
     }
   }
-  if (merged.length > 0) return merged.slice(0, 40); // 40개로 확대
-  return [];
+  if (merged.length === 0) return [];
+  // 최신순 정렬
+  merged.sort((a, b) => new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime());
+  console.log(`  ✓ innertube: 총 ${merged.length}개 수집`);
+  return merged.slice(0, 500);
 }
 
 // ── 인스타그램: Apify Instagram Scraper ────────────────────
