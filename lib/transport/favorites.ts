@@ -1,4 +1,5 @@
 import type { BusArrival } from "@/lib/api/bus";
+import { GEUMDAN_BUS_STATIONS } from "@/lib/api/bus";
 
 export interface FavStopMeta {
   id: string;
@@ -19,15 +20,35 @@ function loadSet(storageKey: string): Set<string> {
 }
 
 /**
- * 정류장 이름 조회 — 두 가지 스토리지 키를 모두 확인
- *  - favStopNames  : saveStopName()으로 직접 저장한 이름
- *  - favStops_meta : transport/page.tsx의 toggleStop()이 저장하는 메타데이터
+ * 정류장 이름 조회 — 3단계 폴백
+ *  1. favStops_meta  : transport/page.tsx toggleStop()이 저장
+ *  2. favStopNames   : saveStopName()이 저장
+ *  3. GEUMDAN_BUS_STATIONS : 앱 내 정적 데이터 (id 또는 stationId 매칭)
  */
 function loadStopNames(): Record<string, string> {
   if (typeof window === "undefined") return {};
   const result: Record<string, string> = {};
+
+  // 3. 정적 데이터 (가장 낮은 우선순위 — 나중에 덮어쓰여도 됨)
+  for (const s of GEUMDAN_BUS_STATIONS) {
+    if (s.name) {
+      result[s.id]        = s.name;
+      result[s.stationId] = s.name;
+    }
+  }
+
+  // 2. favStopNames (saveStopName()으로 직접 저장한 이름)
   try {
-    // 1. favStops_meta (transport 페이지가 저장하는 주 소스)
+    const names: Record<string, string> = JSON.parse(
+      localStorage.getItem("favStopNames") ?? "{}"
+    );
+    for (const [id, name] of Object.entries(names)) {
+      if (name && name !== "정류장") result[id] = name;
+    }
+  } catch { /* ignore */ }
+
+  // 1. favStops_meta (transport 페이지가 저장하는 주 소스 — 최우선)
+  try {
     const meta: Record<string, { name?: string }> = JSON.parse(
       localStorage.getItem("favStops_meta") ?? "{}"
     );
@@ -35,15 +56,7 @@ function loadStopNames(): Record<string, string> {
       if (val?.name && val.name !== "정류장") result[id] = val.name;
     }
   } catch { /* ignore */ }
-  try {
-    // 2. favStopNames (saveStopName()으로 저장한 보조 소스) — 우선순위 낮음
-    const names: Record<string, string> = JSON.parse(
-      localStorage.getItem("favStopNames") ?? "{}"
-    );
-    for (const [id, name] of Object.entries(names)) {
-      if (name && !result[id]) result[id] = name;
-    }
-  } catch { /* ignore */ }
+
   return result;
 }
 

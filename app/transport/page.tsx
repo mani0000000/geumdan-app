@@ -1113,34 +1113,44 @@ export default function TransportPage() {
   }, [loadBusData, loadSubwayData]);
 
   // ── 즐겨찾기 정류장 보강 로드 ────────────────────────────────
-  // apiStops에 없는 즐겨찾기 정류장을 메타데이터로 복원하고 도착 정보를 별도 조회.
+  // apiStops에 없는 즐겨찾기 정류장을 복원하고 도착 정보를 별도 조회.
   // 권역 밖에 있어도 저장된 검단 정류장 즐겨찾기가 항상 보이도록 한다.
+  // 폴백 순서: favStops_meta → GEUMDAN_BUS_STATIONS
   useEffect(() => {
     if (loading || !apiStops) return;
-    type FavMeta = { name: string; lat?: number; lng?: number };
+    type FavMeta = { name?: string; lat?: number; lng?: number };
     let meta: Record<string, FavMeta> = {};
     try { meta = JSON.parse(localStorage.getItem("favStops_meta") ?? "{}"); } catch { /* ignore */ }
 
     const missing = favStops.filter(id =>
       !apiStops.some(s => s.id === id) &&
-      meta[id]?.name &&
       !favStopsAddedRef.current.has(id)
     );
     if (missing.length === 0) return;
 
     missing.forEach(id => favStopsAddedRef.current.add(id));
     const ref = posRef.current ?? GEUMDAN_DEFAULT;
-    const stubs: DisplayStop[] = missing.map(id => ({
-      id,
-      name: meta[id].name,
-      distM: meta[id].lat != null && meta[id].lng != null
-        ? Math.round(haversineM(ref.lat, ref.lng, meta[id].lat!, meta[id].lng!))
-        : 0,
-      arrivals: [],
-      loadingArrivals: true,
-      lat: meta[id].lat,
-      lng: meta[id].lng,
-    }));
+    const stubs: DisplayStop[] = missing.map(id => {
+      // 1. favStops_meta
+      const m = meta[id];
+      // 2. GEUMDAN_BUS_STATIONS 정적 데이터
+      const gs = GEUMDAN_BUS_STATIONS.find(s => s.id === id || s.stationId === id);
+      const name = (m?.name && m.name !== "정류장") ? m.name
+        : (gs?.name ?? "");
+      const lat  = m?.lat  ?? gs?.lat;
+      const lng  = m?.lng  ?? gs?.lng;
+      return {
+        id,
+        name,
+        distM: lat != null && lng != null
+          ? Math.round(haversineM(ref.lat, ref.lng, lat, lng))
+          : 0,
+        arrivals: [],
+        loadingArrivals: true,
+        lat,
+        lng,
+      };
+    });
     setApiStops(prev => prev ? [...prev, ...stubs] : stubs);
     fetchArrivalsForStops(stubs);
   }, [apiStops, favStops, loading, fetchArrivalsForStops]);
