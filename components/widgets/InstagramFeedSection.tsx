@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronLeft, ChevronRight, X, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, X, Play, RefreshCw } from "lucide-react";
 import { fetchInstagramFeeds, type InstagramPost } from "@/lib/api/instagram";
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 6;
 
 function getEmbedSrc(post: InstagramPost): string | null {
   const m = post.permalink.match(/\/(reel|p)\/([A-Za-z0-9_-]+)/);
@@ -22,7 +22,7 @@ function PostCard({ post, hero = false }: { post: InstagramPost; hero?: boolean 
 
   if (playing && embed) {
     return (
-      <div className={`relative rounded-2xl overflow-hidden bg-black ${hero ? "aspect-[4/3]" : "aspect-square"}`}>
+      <div className={`relative rounded-2xl overflow-hidden bg-black ${hero ? "aspect-[16/10]" : "aspect-[4/3]"}`}>
         <iframe src={embed} className="w-full h-full" allowFullScreen scrolling="no" loading="lazy" />
         <button onClick={() => setPlaying(false)}
           className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 flex items-center justify-center z-10 text-white">
@@ -34,7 +34,7 @@ function PostCard({ post, hero = false }: { post: InstagramPost; hero?: boolean 
 
   return (
     <div
-      className={`relative rounded-2xl overflow-hidden bg-[#1a1a2e] cursor-pointer ${hero ? "aspect-[4/3]" : "aspect-square"}`}
+      className={`relative rounded-2xl overflow-hidden bg-[#1a1a2e] cursor-pointer ${hero ? "aspect-[16/10]" : "aspect-[4/3]"}`}
       onClick={() => embed && setPlaying(true)}
     >
       {post.thumbnailUrl ? (
@@ -43,23 +43,25 @@ function PostCard({ post, hero = false }: { post: InstagramPost; hero?: boolean 
       ) : (
         <div className="w-full h-full bg-gradient-to-br from-[#833AB4] via-[#FD1D1D] to-[#F77737]" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       {post.isReel && (
         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm rounded-full px-2 py-0.5 flex items-center gap-1">
-          <Play size={8} className="fill-white text-white" />
+          <Play size={9} className="fill-white text-white" />
           <span className="text-[10px] text-white font-bold">Reels</span>
         </div>
       )}
-      <div className="absolute bottom-0 left-0 right-0 px-2.5 pb-2.5">
-        {post.username && <p className="text-[11px] font-bold text-white drop-shadow">@{post.username}</p>}
-        {hero && post.caption && (
-          <p className="text-[10px] text-white/80 mt-0.5 line-clamp-2 leading-snug">{post.caption}</p>
+      <div className="absolute bottom-0 left-0 right-0 px-3 pb-3">
+        {post.username && <p className="text-[12px] font-bold text-white drop-shadow">@{post.username}</p>}
+        {post.caption && (
+          <p className={`text-white/85 mt-0.5 leading-snug drop-shadow ${hero ? "text-[11px] line-clamp-2" : "text-[10px] line-clamp-1"}`}>
+            {post.caption}
+          </p>
         )}
       </div>
       {embed && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 active:opacity-100 transition-opacity">
-          <div className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-            <Play size={16} className="fill-white text-white ml-0.5" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className={`rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center ${hero ? "w-14 h-14" : "w-10 h-10"}`}>
+            <Play size={hero ? 22 : 16} className="fill-white text-white ml-0.5" />
           </div>
         </div>
       )}
@@ -68,7 +70,24 @@ function PostCard({ post, hero = false }: { post: InstagramPost; hero?: boolean 
 }
 
 function Skeleton({ hero = false }: { hero?: boolean }) {
-  return <div className={`rounded-2xl bg-[#F2F4F6] animate-pulse ${hero ? "aspect-[4/3]" : "aspect-square"}`} />;
+  return <div className={`rounded-2xl bg-[#F2F4F6] animate-pulse ${hero ? "aspect-[16/10]" : "aspect-[4/3]"}`} />;
+}
+
+// ── 자동 수집 트리거 (Fastify 백엔드 또는 관리자 배치 호출) ───
+async function triggerAutoCollect(): Promise<boolean> {
+  const base = process.env.NEXT_PUBLIC_INSTAGRAM_API_URL;
+  if (!base) return false;
+  try {
+    const res = await fetch(`${base.replace(/\/$/, "")}/api/instagram-collect`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ keywords: ["검단신도시", "검단", "검단맛집"] }),
+      signal: AbortSignal.timeout(10000),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────
@@ -78,9 +97,10 @@ export default function InstagramFeedSection() {
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
   const [transitioning, setTransitioning] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadPage = useCallback(async (idx: number) => {
-    const posts = await fetchInstagramFeeds({ limit: PAGE_SIZE, page: idx + 1 });
+    const posts = await fetchInstagramFeeds({ limit: PAGE_SIZE, page: idx + 1, sort: "latest" });
     setPages(prev => {
       const next = [...prev];
       next[idx] = posts;
@@ -104,6 +124,16 @@ export default function InstagramFeedSection() {
     setTransitioning(false);
   }, [cur, pages, loadPage]);
 
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await triggerAutoCollect();
+    setPages([null]);
+    setCur(0);
+    setHasMore(true);
+    await loadPage(0);
+    setRefreshing(false);
+  }, [loadPage]);
+
   const current = pages[cur];
   const hero = current?.[0] ?? null;
   const grid = current?.slice(1) ?? [];
@@ -123,7 +153,11 @@ export default function InstagramFeedSection() {
           <span className="text-[15px] font-extrabold text-[#1d1d1f]">검단 인스타그램</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-[11px] text-[#8B95A1] mr-0.5">{cur + 1} / {Math.max(loadedCount + (hasMore ? 1 : 0), cur + 1)}</span>
+          <button onClick={handleRefresh} disabled={refreshing || loading}
+            className="w-7 h-7 rounded-full border border-[#E5E8EB] flex items-center justify-center disabled:opacity-30 active:bg-[#F2F4F6]">
+            <RefreshCw size={12} className={`text-[#4E5968] ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+          <span className="text-[11px] text-[#8B95A1]">{cur + 1} / {Math.max(loadedCount + (hasMore ? 1 : 0), cur + 1)}</span>
           <button onClick={() => go(-1)} disabled={cur === 0 || transitioning}
             className="w-7 h-7 rounded-full border border-[#E5E8EB] flex items-center justify-center disabled:opacity-30 active:bg-[#F2F4F6]">
             <ChevronLeft size={13} className="text-[#4E5968]" />
