@@ -1785,7 +1785,9 @@ function PharmacySection() {
     return enriched;
   }, [pharmacies, userLoc, now]);
 
-  const filtered = sortedPharmacies.filter(({ p }) => {
+  const filtered = sortedPharmacies.filter(({ p, distM }) => {
+    // 거리를 알 수 없는 항목 제외 (GPS 미허용 시 Infinity)
+    if (!Number.isFinite(distM)) return false;
     if (filter === "주말") return p.tags.includes("주말");
     if (filter === "심야") return p.tags.includes("심야");
     return true;
