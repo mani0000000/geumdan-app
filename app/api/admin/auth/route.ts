@@ -9,6 +9,12 @@ const ADMIN_PASSWORD =
   process.env.CRON_SECRET ||
   "";
 
+// admin API route들에서 공유하는 쿠키 검증 헬퍼
+export function validateAdminCookie(req: NextRequest): boolean {
+  const session = req.cookies.get("admin_session")?.value;
+  return session === "1";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json() as { password?: string };
