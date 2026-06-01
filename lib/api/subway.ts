@@ -331,6 +331,17 @@ export function estimateNextArrivals(
   return results;
 }
 
-export function dayTimetable(timetable: SubwayStationEntry["timetable"]) {
+export type SubwayDayType = "weekday" | "holiday";
+
+export function currentDayType(): SubwayDayType {
+  const day = new Date().getDay(); // 0=일, 6=토
+  return day === 0 || day === 6 ? "holiday" : "weekday";
+}
+
+export function dayTimetable(
+  timetable: SubwayStationEntry["timetable"],
+  _dayType?: SubwayDayType,
+) {
+  // 현재 데이터는 평일/휴일 구분 없이 단일 시간표 사용
   return timetable;
 }
