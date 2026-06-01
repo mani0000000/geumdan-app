@@ -2290,8 +2290,26 @@ function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
 function HomeTransportWidget() {
   const router = useRouter();
 
-  const [favStops] = useState<FavStopMeta[]>(() => loadFavStops());
-  const [favRoutes] = useState<FavRouteMeta[]>(() => loadFavRoutes());
+  const [favStops, setFavStops] = useState<FavStopMeta[]>(() => loadFavStops());
+  const [favRoutes, setFavRoutes] = useState<FavRouteMeta[]>(() => loadFavRoutes());
+
+  function removeFavStop(stopId: string) {
+    try {
+      const list: string[] = JSON.parse(localStorage.getItem("favStops") ?? "[]");
+      const next = list.filter(id => id !== stopId);
+      localStorage.setItem("favStops", JSON.stringify(next));
+    } catch { /* ignore */ }
+    setFavStops(prev => prev.filter(s => s.id !== stopId));
+  }
+
+  function removeFavRoute(routeKey: string) {
+    try {
+      const list: string[] = JSON.parse(localStorage.getItem("favRoutes") ?? "[]");
+      const next = list.filter(k => k !== routeKey);
+      localStorage.setItem("favRoutes", JSON.stringify(next));
+    } catch { /* ignore */ }
+    setFavRoutes(prev => prev.filter(r => r.key !== routeKey));
+  }
   const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
   const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
   // API에서 실시간으로 조회한 정류장명 (favStops 이름이 없을 때 덮어씀)
@@ -2429,10 +2447,16 @@ function HomeTransportWidget() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => refreshBusStop(stop.id)} disabled={isLoading}
-                className="p-1.5 active:opacity-60">
-                <RefreshCw size={14} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
-              </button>
+              <div className="flex items-center gap-1">
+                <button onClick={() => refreshBusStop(stop.id)} disabled={isLoading}
+                  className="p-1.5 active:opacity-60">
+                  <RefreshCw size={14} className={`text-[#86868b] ${isLoading ? "animate-spin" : ""}`} />
+                </button>
+                <button onClick={() => removeFavStop(stop.id)}
+                  className="p-1.5 active:opacity-60" title="즐겨찾기 해제">
+                  <Star size={15} className="text-[#FFBB00] fill-[#FFBB00]" />
+                </button>
+              </div>
             </div>
 
             {/* 도착 정보 */}
@@ -2454,32 +2478,44 @@ function HomeTransportWidget() {
                 <div className="bg-[#f5f5f7] rounded-xl px-3 py-3 text-center">
                   <p className="text-[12px] text-[#86868b]">운행 정보 없음</p>
                 </div>
-              ) : displayed.map((a, i) => (
-                <button key={i}
-                  onClick={() => router.push("/transport/?tab=버스")}
-                  className="w-full flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 active:bg-[#eaeaea] text-left">
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                    <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
-                      <span className="text-white text-[14px] font-black">{a.routeNo}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
-                        {a.isExpress && (
-                          <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
-                            <Zap size={9} />급행
-                          </span>
-                        )}
-                        {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+              ) : displayed.map((a, i) => {
+                const rKey = routeFavKey(stop.id, a);
+                const isFavRoute = favRouteKeySet.has(rKey);
+                return (
+                <div key={i} className="flex items-center gap-1">
+                  <button
+                    onClick={() => router.push("/transport/?tab=버스")}
+                    className="flex-1 flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 active:bg-[#eaeaea] text-left min-w-0">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
+                        <span className="text-white text-[14px] font-black">{a.routeNo}</span>
                       </div>
-                      <p className="text-[12px] text-[#6e6e73]">
-                        {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
-                      </p>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
+                          {a.isExpress && (
+                            <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
+                              <Zap size={9} />급행
+                            </span>
+                          )}
+                          {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+                        </div>
+                        <p className="text-[12px] text-[#6e6e73]">
+                          {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
-                </button>
-              ))}
+                    <ArrivalBadge min={a.arrivalMin} live={!a.isScheduled} />
+                  </button>
+                  {isFavRoute && (
+                    <button onClick={() => removeFavRoute(rKey)}
+                      className="p-1.5 shrink-0 active:opacity-60" title="노선 즐겨찾기 해제">
+                      <Star size={14} className="text-[#FFBB00] fill-[#FFBB00]" />
+                    </button>
+                  )}
+                </div>
+                );
+              })}
             </div>
           </div>
         );
