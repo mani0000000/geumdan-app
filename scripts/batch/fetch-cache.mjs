@@ -239,7 +239,18 @@ async function fetchInstagramApify() {
   console.log('📸 Instagram (Apify)...');
 
   // 수집 대상: 해시태그 + 계정 목록
-  const HASHTAGS = ['검단신도시', '검단'];
+  const HASHTAGS = [
+    '검단신도시',      // 핵심 태그
+    '검단',            // 짧은 형태
+    '검단맛집',        // 음식
+    '검단카페',        // 카페
+    '인천검단',        // 인천+검단 조합
+    '검단아파트',      // 부동산·생활
+    '검단신도시맛집',  // 상세 맛집
+    '검단신도시카페',  // 상세 카페
+    '검단동',          // 행정동
+    '검단원당',        // 세부 지역
+  ];
   const USERNAMES = []; // 특정 계정 추가 시 여기에 입력 (예: ['geumdan_official'])
 
   const input = {
