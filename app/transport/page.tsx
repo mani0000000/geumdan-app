@@ -36,34 +36,6 @@ type Tab = "가볼만한곳" | "버스" | "지하철";
 // 검단신도시 중심 좌표 — GPS 미취득/실패 시 폴백 기준점
 const GEUMDAN_DEFAULT = { lat: 37.5777, lng: 126.7209 } as const;
 
-type OutdoorType = "해루질" | "민물낚시" | "바다낚시";
-type OutdoorSpot = {
-  id: string;
-  type: OutdoorType;
-  name: string;
-  area: string;
-  distKm: number;
-  driveMin: number;
-  species: string[];
-  safety: number;
-  tips: string;
-  seasonal: string;
-  regulation: string | null;
-  boat: boolean;
-};
-
-const OUTDOOR_SPOTS: OutdoorSpot[] = [
-  { id: "h1", type: "해루질", name: "영종도 마시안해변", area: "영종도", distKm: 25, driveMin: 35, species: ["백합", "바지락", "소라"], safety: 5, tips: "갯벌체험장·장비대여 완비. 가족 체험 최적.", seasonal: "4~10월", regulation: null, boat: false },
-  { id: "h2", type: "해루질", name: "강화도 동막해변", area: "강화도", distKm: 30, driveMin: 40, species: ["바지락", "박하지", "꽃게", "소라"], safety: 5, tips: "수도권 최고 명소. 2025 갯벌놀이터 조성.", seasonal: "4~10월", regulation: "꽃게 6/21~8/20 금어기", boat: false },
-  { id: "h3", type: "해루질", name: "강화도 마니산해변", area: "강화도", distKm: 45, driveMin: 55, species: ["바지락", "소라", "골뱅이"], safety: 4, tips: "한적한 환경. 편의시설 부족, 물·음식 준비 필수.", seasonal: "4~10월", regulation: null, boat: false },
-  { id: "h4", type: "해루질", name: "장봉도 갯벌", area: "장봉도", distKm: 50, driveMin: 80, species: ["소라", "낙지", "박하지", "꽃게"], safety: 3, tips: "삼목선착장→장봉도 배 40분. 조과 최고.", seasonal: "5~9월", regulation: "낙지 5/11~6/30 금어기", boat: true },
-  { id: "h5", type: "해루질", name: "영흥도 십리포해변", area: "영흥도", distKm: 70, driveMin: 80, species: ["바지락", "동죽", "소라"], safety: 4, tips: "넓은 갯벌, 여유롭게 체험 가능.", seasonal: "4~10월", regulation: "바지락 5/1~6/30 금어기", boat: false },
-  { id: "f1", type: "민물낚시", name: "검단수로", area: "검단", distKm: 5, driveMin: 10, species: ["붕어", "배스", "가물치", "장어", "메기"], safety: 5, tips: "무료·주차 가능. 검단에서 가장 가까운 포인트.", seasonal: "연중", regulation: "금어기 4/20~6/10", boat: false },
-  { id: "f2", type: "민물낚시", name: "계양 굴포천", area: "계양", distKm: 12, driveMin: 15, species: ["붕어", "잉어", "배스"], safety: 5, tips: "무료. 도심 접근성 최고.", seasonal: "연중", regulation: null, boat: false },
-  { id: "f3", type: "바다낚시", name: "영종도 을왕리", area: "영종도", distKm: 32, driveMin: 40, species: ["우럭", "망둥어", "감성돔", "장어"], safety: 4, tips: "원투·루어낚시. 방파제 포인트 다수.", seasonal: "4~11월", regulation: null, boat: false },
-  { id: "f4", type: "바다낚시", name: "무의도 갯바위", area: "영종도", distKm: 40, driveMin: 50, species: ["광어", "농어", "갑오징어", "쭈꾸미"], safety: 4, tips: "무의대교 연결. 11개 갯바위 포인트. 루어낚시 인기.", seasonal: "4~11월", regulation: null, boat: false },
-  { id: "f5", type: "바다낚시", name: "장봉도 갯바위", area: "장봉도", distKm: 50, driveMin: 80, species: ["우럭", "감성돔", "광어", "농어"], safety: 3, tips: "배편 이용 필요. 조용하고 한적.", seasonal: "4~11월", regulation: null, boat: true },
-];
 
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
@@ -858,8 +830,6 @@ export default function TransportPage() {
   const [placesAreaFilter, setPlacesAreaFilter] = useState<PlaceArea | "all">("all");
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [favPlaceIds, setFavPlaceIds] = useState<Set<string>>(new Set());
-  const [outdoorTypeFilter, setOutdoorTypeFilter] = useState<OutdoorType | "all">("all");
-  const [selectedOutdoor, setSelectedOutdoor] = useState<OutdoorSpot | null>(null);
   useEffect(() => {
     getFavoritePlaces().then(list => setFavPlaceIds(new Set(list.map(f => f.place_id))));
   }, []);
@@ -2363,110 +2333,6 @@ export default function TransportPage() {
       {tab === "가볼만한곳" && (
         <div className="pb-8">
 
-          {/* ── 낚시 · 해루질 섹션 ─────────────────────────── */}
-          <div className="px-4 pt-4 pb-2">
-            {/* 섹션 헤더 */}
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <span className="text-[20px] leading-none">🎣</span>
-                <div>
-                  <p className="text-[15px] font-black text-[#1d1d1f]">낚시 · 해루질 포인트</p>
-                  <p className="text-[11px] text-[#86868b]">검단신도시 기준 거리순</p>
-                </div>
-              </div>
-            </div>
-            {/* 법 개정 안내 */}
-            <div className="flex items-start gap-2 bg-[#FFF8E1] border border-[#FDE68A] rounded-xl px-3 py-2 mb-3">
-              <span className="text-[13px] shrink-0">⚠️</span>
-              <p className="text-[11px] text-[#92400E] leading-snug">
-                <span className="font-bold">수산자원관리법 2026 개정</span> — 비어업인 해루질 시간·장소 제한 강화. 어촌계 어업권 구역은 절도죄 위험. 어획물 포획 전 현지 공고 확인 필수.
-              </p>
-            </div>
-            {/* 타입 필터 */}
-            <div className="flex gap-2 mb-3">
-              {(["all", "해루질", "민물낚시", "바다낚시"] as (OutdoorType | "all")[]).map(t => (
-                <button key={t} onClick={() => setOutdoorTypeFilter(t)}
-                  className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-all ${
-                    outdoorTypeFilter === t
-                      ? t === "해루질" ? "bg-[#0891B2] text-white"
-                        : t === "민물낚시" ? "bg-[#2E7D32] text-white"
-                        : t === "바다낚시" ? "bg-[#1E40AF] text-white"
-                        : "bg-[#1d1d1f] text-white"
-                      : "bg-white text-[#6e6e73]"
-                  }`}>
-                  {t === "all" ? "전체" : t}
-                </button>
-              ))}
-            </div>
-            {/* 가로 스크롤 카드 */}
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
-              {OUTDOOR_SPOTS
-                .filter(s => outdoorTypeFilter === "all" || s.type === outdoorTypeFilter)
-                .map(spot => {
-                  const typeColor = spot.type === "해루질" ? "#0891B2"
-                    : spot.type === "민물낚시" ? "#2E7D32"
-                    : "#1E40AF";
-                  const typeBg = spot.type === "해루질" ? "#E0F7FA"
-                    : spot.type === "민물낚시" ? "#E8F5E9"
-                    : "#EFF6FF";
-                  const typeEmoji = spot.type === "해루질" ? "🌊" : spot.type === "민물낚시" ? "🏞️" : "⚓";
-                  return (
-                    <button key={spot.id}
-                      onClick={() => setSelectedOutdoor(spot)}
-                      className="shrink-0 w-[200px] bg-white rounded-2xl overflow-hidden text-left active:scale-95 transition-transform shadow-sm border border-[#f0f0f0]">
-                      {/* 상단 컬러 헤더 */}
-                      <div className="px-3 pt-3 pb-2" style={{ background: `linear-gradient(135deg, ${typeColor}22, ${typeColor}08)` }}>
-                        <div className="flex items-center justify-between mb-1.5">
-                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
-                            style={{ color: typeColor, background: typeBg }}>
-                            {typeEmoji} {spot.type}
-                          </span>
-                          {spot.boat && (
-                            <span className="text-[10px] text-[#86868b] bg-[#f5f5f7] px-1.5 py-0.5 rounded-full">🚢 배편</span>
-                          )}
-                        </div>
-                        <p className="text-[14px] font-black text-[#1d1d1f] leading-tight">{spot.name}</p>
-                        <p className="text-[11px] text-[#6e6e73] mt-0.5">{spot.area}</p>
-                      </div>
-                      <div className="px-3 pb-3 pt-2 space-y-2">
-                        {/* 거리 */}
-                        <div className="flex items-center gap-1">
-                          <Car size={10} className="text-[#86868b]" />
-                          <span className="text-[11px] text-[#6e6e73]">차로 {spot.driveMin}분 ({spot.distKm}km)</span>
-                        </div>
-                        {/* 어종 */}
-                        <div className="flex flex-wrap gap-1">
-                          {spot.species.slice(0, 3).map(s => (
-                            <span key={s} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#f5f5f7] text-[#424245]">{s}</span>
-                          ))}
-                          {spot.species.length > 3 && (
-                            <span className="text-[10px] text-[#86868b]">+{spot.species.length - 3}</span>
-                          )}
-                        </div>
-                        {/* 안전도 */}
-                        <div className="flex items-center gap-1">
-                          <span className="text-[10px] text-[#86868b]">안전</span>
-                          <span className="text-[11px]">
-                            {"★".repeat(spot.safety)}{"☆".repeat(5 - spot.safety)}
-                          </span>
-                        </div>
-                        {/* 금어기 */}
-                        {spot.regulation && (
-                          <p className="text-[10px] text-[#C2410C] font-medium leading-snug">🚫 {spot.regulation}</p>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-            </div>
-          </div>
-
-          {/* 구분선 */}
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="flex-1 h-px bg-[#e5e5ea]" />
-            <span className="text-[11px] font-black text-[#86868b] uppercase tracking-widest">가볼만한곳</span>
-            <div className="flex-1 h-px bg-[#e5e5ea]" />
-          </div>
 
           {/* 카테고리 필터 (홈 스타일 pill) */}
           <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pt-3 pb-2">
@@ -2654,112 +2520,6 @@ export default function TransportPage() {
       )}
 
       {/* 낚시·해루질 상세 바텀 시트 */}
-      {selectedOutdoor && (() => {
-        const s = selectedOutdoor;
-        const typeColor = s.type === "해루질" ? "#0891B2" : s.type === "민물낚시" ? "#2E7D32" : "#1E40AF";
-        const typeBg = s.type === "해루질" ? "#E0F7FA" : s.type === "민물낚시" ? "#E8F5E9" : "#EFF6FF";
-        const typeEmoji = s.type === "해루질" ? "🌊" : s.type === "민물낚시" ? "🏞️" : "⚓";
-        return (
-          <>
-            <div className="fixed inset-0 bg-black/50 z-[200]" onClick={() => setSelectedOutdoor(null)} />
-            <div className="fixed left-0 right-0 bottom-0 z-[250] flex justify-center">
-              <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden"
-                style={{ maxHeight: "85dvh", display: "flex", flexDirection: "column" }}>
-                {/* 헤더 */}
-                <div className="relative shrink-0 h-40"
-                  style={{ background: `linear-gradient(135deg, ${typeColor}, ${typeColor}99)` }}>
-                  <div className="absolute top-3 left-0 right-0 flex justify-center">
-                    <div className="w-10 h-1 bg-white/40 rounded-full" />
-                  </div>
-                  <button onClick={() => setSelectedOutdoor(null)}
-                    className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/20 flex items-center justify-center">
-                    <X size={16} className="text-white" />
-                  </button>
-                  <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white backdrop-blur-sm">
-                        {typeEmoji} {s.type}
-                      </span>
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/20 text-white backdrop-blur-sm">
-                        {s.area}
-                      </span>
-                      {s.boat && (
-                        <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-black/20 text-white backdrop-blur-sm">
-                          🚢 배편
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-[22px] font-black text-white leading-tight">{s.name}</p>
-                  </div>
-                </div>
-                {/* 본문 */}
-                <div className="overflow-y-auto flex-1 px-5 py-4 space-y-4">
-                  {/* 기본 정보 */}
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-2.5 text-center">
-                      <p className="text-[10px] text-[#86868b] mb-0.5">거리</p>
-                      <p className="text-[16px] font-black text-[#1d1d1f]">{s.distKm}<span className="text-[11px] font-medium ml-0.5">km</span></p>
-                    </div>
-                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-2.5 text-center">
-                      <p className="text-[10px] text-[#86868b] mb-0.5">이동시간</p>
-                      <p className="text-[16px] font-black text-[#1d1d1f]">{s.driveMin}<span className="text-[11px] font-medium ml-0.5">분</span></p>
-                    </div>
-                    <div className="bg-[#f5f5f7] rounded-xl px-3 py-2.5 text-center">
-                      <p className="text-[10px] text-[#86868b] mb-0.5">안전도</p>
-                      <p className="text-[14px] font-black text-[#1d1d1f]">{"★".repeat(s.safety)}{"☆".repeat(5 - s.safety)}</p>
-                    </div>
-                  </div>
-                  {/* 시즌 */}
-                  <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-3 py-2.5">
-                    <span className="text-[18px]">📅</span>
-                    <div>
-                      <p className="text-[11px] text-[#86868b]">베스트 시즌</p>
-                      <p className="text-[14px] font-bold text-[#1d1d1f]">{s.seasonal}</p>
-                    </div>
-                  </div>
-                  {/* 주요 어종 */}
-                  <div>
-                    <p className="text-[12px] font-bold text-[#86868b] uppercase tracking-wider mb-2">주요 어종 / 수확물</p>
-                    <div className="flex flex-wrap gap-2">
-                      {s.species.map(sp => (
-                        <span key={sp} className="text-[13px] font-semibold px-3 py-1.5 rounded-full"
-                          style={{ color: typeColor, background: typeBg }}>
-                          {sp}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {/* 팁 */}
-                  <div>
-                    <p className="text-[12px] font-bold text-[#86868b] uppercase tracking-wider mb-2">포인트 정보</p>
-                    <div className="bg-[#f5f5f7] rounded-xl px-4 py-3">
-                      <p className="text-[14px] text-[#1d1d1f] leading-relaxed">{s.tips}</p>
-                    </div>
-                  </div>
-                  {/* 금어기/규제 */}
-                  {s.regulation && (
-                    <div className="bg-[#FFF8E1] border border-[#FDE68A] rounded-xl px-4 py-3 flex items-start gap-2">
-                      <span className="text-[16px] shrink-0">🚫</span>
-                      <div>
-                        <p className="text-[12px] font-bold text-[#92400E] mb-0.5">금어기 / 규제</p>
-                        <p className="text-[13px] text-[#92400E]">{s.regulation}</p>
-                      </div>
-                    </div>
-                  )}
-                  {/* 법 개정 공통 안내 */}
-                  <div className="bg-[#FEF2F2] border border-[#FECACA] rounded-xl px-4 py-3">
-                    <p className="text-[12px] font-bold text-[#991B1B] mb-1">⚠️ 수산자원관리법 2026 개정</p>
-                    <p className="text-[12px] text-[#991B1B] leading-relaxed">
-                      비어업인 해루질 시간·장소 제한 강화. 어촌계 어업권 구역은 절대 금지(절도죄). 출발 전 현지 공고 및 어촌계 허가 여부 반드시 확인하세요.
-                    </p>
-                  </div>
-                  <div className="h-4" />
-                </div>
-              </div>
-            </div>
-          </>
-        );
-      })()}
 
       {/* 가볼만한곳 상세 바텀 시트 */}
       {selectedPlace && (() => {
