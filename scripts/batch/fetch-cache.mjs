@@ -46,10 +46,36 @@ async function withTimeout(promise, ms, label) {
 }
 
 // ── 뉴스: Naver ────────────────────────────────────────────
+// ── OG 이미지 추출 (뉴스 썸네일용) ──────────────────────────
+async function fetchOgImage(url) {
+  if (!url || url === '#') return null;
+  try {
+    const res = await withTimeout(
+      fetch(url, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)', Range: 'bytes=0-20000' },
+      }),
+      4000, `og-${url.slice(0, 40)}`
+    );
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = html.match(/<meta[^>]+(?:property=["']og:image["']|name=["']og:image["'])[^>]+content=["']([^"']+)["']/i)
+           ?? html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+    const imgUrl = m?.[1]?.trim();
+    if (!imgUrl || imgUrl.length < 10) return null;
+    // 상대 경로 처리
+    if (imgUrl.startsWith('//')) return 'https:' + imgUrl;
+    if (imgUrl.startsWith('/')) {
+      try { return new URL(url).origin + imgUrl; } catch { return null; }
+    }
+    return imgUrl;
+  } catch { return null; }
+}
+
 async function fetchNaverNews() {
   if (!NAVER_ID || !NAVER_SECRET) return [];
+  const queries = ['검단신도시', '검단 아파트', '인천 서구 검단', '검단 교통', '검단 상가'];
   const results = await Promise.allSettled(
-    ['검단신도시', '검단 아파트', '인천 서구 검단'].map(async query => {
+    queries.map(async query => {
       const params = new URLSearchParams({ query, display: '20', sort: 'date' });
       const res = await withTimeout(
         fetch(`https://openapi.naver.com/v1/search/news.json?${params}`, {
@@ -67,10 +93,25 @@ async function fetchNaverNews() {
         publishedAt: item.pubDate ? new Date(item.pubDate).toISOString() : new Date().toISOString(),
         url: item.originallink || item.link || '#',
         type: '뉴스',
+        thumbnail: null, // OG 이미지는 아래에서 별도 수집
       })).filter(n => n.title.length > 5);
     })
   );
   return results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+}
+
+// 뉴스 상위 N개 OG 썸네일 수집
+async function enrichWithThumbnails(articles, maxFetch = 20) {
+  console.log(`  🖼  OG 썸네일 수집 (상위 ${maxFetch}개)...`);
+  const targets = articles.slice(0, maxFetch);
+  const rest = articles.slice(maxFetch);
+  const enriched = await Promise.all(
+    targets.map(async a => {
+      const thumb = await fetchOgImage(a.url);
+      return { ...a, thumbnail: thumb ?? null };
+    })
+  );
+  return [...enriched, ...rest];
 }
 
 // ── 뉴스: Google RSS ────────────────────────────────────────
@@ -110,6 +151,7 @@ async function fetchGoogleRss() {
 // ── 뉴스: 합치기 & 정리 ─────────────────────────────────────
 async function fetchAllNews() {
   console.log('📰 Fetching news...');
+  // 네이버 우선, 구글 RSS는 보조
   const [naver, google] = await Promise.all([fetchNaverNews(), fetchGoogleRss()]);
   const all = [...naver, ...google];
 
@@ -121,10 +163,19 @@ async function fetchAllNews() {
     if (!seen.has(key)) { seen.add(key); unique.push(a); }
   }
 
-  // 최신순 정렬
-  unique.sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
-  console.log(`  ✓ Naver: ${naver.length}건, Google RSS: ${google.length}건 → 중복 제거 후 ${unique.length}건`);
-  return unique.slice(0, 40);
+  // 최신순 정렬 (네이버 우선)
+  unique.sort((a, b) => {
+    // 네이버 기사를 구글 RSS보다 우선
+    const aN = a.id?.startsWith('nv-') ? 0 : 1;
+    const bN = b.id?.startsWith('nv-') ? 0 : 1;
+    if (aN !== bN) return aN - bN;
+    return new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime();
+  });
+  const sliced = unique.slice(0, 40);
+  // OG 썸네일 수집 (상위 20개)
+  const withThumbs = await enrichWithThumbnails(sliced, 20);
+  console.log(`  ✓ Naver: ${naver.length}건, Google RSS: ${google.length}건 → ${withThumbs.length}건 (썸네일 수집 완료)`);
+  return withThumbs;
 }
 
 // ── 유튜브: YouTube Data API v3 ─────────────────────────────

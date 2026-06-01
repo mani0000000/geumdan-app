@@ -516,7 +516,10 @@ function NewsTab() {
     refresh();
     setYtLoading(true);
     fetchYouTubeVideosFromDB(200).then(result => {
-      setYtVideos(result.videos);
+      const sorted = [...result.videos].sort((a, b) =>
+        new Date(b.publishedAt ?? 0).getTime() - new Date(a.publishedAt ?? 0).getTime()
+      );
+      setYtVideos(sorted);
       setYtSource(result.source);
       setYtMs(result.ms);
       setYtLoading(false);
@@ -664,7 +667,14 @@ function NewsTab() {
                 <a key={first.id} href={first.url} target="_blank" rel="noopener noreferrer"
                   onClick={() => trackNewsView(first.id)}
                   className="block mx-4 mb-3 rounded-2xl overflow-hidden shadow-lg active:scale-[0.99] transition-transform relative"
-                  style={{ background: `linear-gradient(135deg, ${g.from}, ${g.to})` }}>
+                  style={{ background: first.thumbnail ? undefined : `linear-gradient(135deg, ${g.from}, ${g.to})` }}>
+                  {/* 썸네일 배경 */}
+                  {first.thumbnail && (
+                    <div className="absolute inset-0">
+                      <img src={first.thumbnail} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
+                      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${g.from}cc, ${g.to}99)` }} />
+                    </div>
+                  )}
                   {/* 장식 요소 */}
                   <div className="absolute -top-12 -right-12 w-52 h-52 rounded-full bg-white/10" />
                   <div className="absolute top-20 -left-8 w-32 h-32 rounded-full bg-white/8" />
@@ -720,7 +730,14 @@ function NewsTab() {
                     <a key={item.id} href={item.url} target="_blank" rel="noopener noreferrer"
                       onClick={() => trackNewsView(item.id)}
                       className="rounded-2xl overflow-hidden shadow-md active:scale-[0.97] transition-transform relative"
-                      style={{ background: `linear-gradient(135deg, ${g.from}, ${g.to})`, minHeight: 160 }}>
+                      style={{ background: item.thumbnail ? undefined : `linear-gradient(135deg, ${g.from}, ${g.to})`, minHeight: 160 }}>
+                      {/* 썸네일 배경 */}
+                      {item.thumbnail && (
+                        <div className="absolute inset-0">
+                          <img src={item.thumbnail} alt="" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.display='none'; }} />
+                          <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${g.from}cc, ${g.to}99)` }} />
+                        </div>
+                      )}
                       {/* 장식: 큰 원 */}
                       <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
                       <div className="absolute bottom-10 -left-4 w-14 h-14 rounded-full bg-white/10" />
