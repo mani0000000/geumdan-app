@@ -23,7 +23,7 @@ import { fetchMarts, type Mart, type MartClosingPattern } from "@/lib/db/marts";
 import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
-import { fetchWeather, type WeatherData } from "@/lib/api/weather";
+import { fetchWeather, getCachedWeather, type WeatherData } from "@/lib/api/weather";
 import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
@@ -2626,8 +2626,9 @@ function HomeTransportWidget() {
 // ─── 메인 ────────────────────────────────────────────────────
 export default function HomePage() {
   const router = useRouter();
-  const [weather, setWeather] = useState<WeatherData | null>(null);
-  const [weatherLoading, setWeatherLoading] = useState(true);
+  // localStorage 캐시가 있으면 즉시 표시, 없으면 로딩 상태
+  const [weather, setWeather] = useState<WeatherData | null>(() => getCachedWeather());
+  const [weatherLoading, setWeatherLoading] = useState(() => getCachedWeather() === null);
   const [widgets, setWidgets] = useState<WidgetConfig[]>([]);
   const [showSettings, setShowSettings] = useState(false);
   const [userNickname, setUserNickname] = useState("검단주민");
@@ -2635,7 +2636,7 @@ export default function HomePage() {
   const [popups, setPopups] = useState<Popup[]>([]);
 
   useEffect(() => {
-    fetchWeather().then(w => { setWeather(w); setWeatherLoading(false); });
+    fetchWeather().then(w => { if (w) setWeather(w); setWeatherLoading(false); });
     getUserProfile().then(p => setUserNickname(p.nickname));
     fetchActiveBanners("home").then(setHomeBanners);
     fetchActivePopups().then(setPopups);
