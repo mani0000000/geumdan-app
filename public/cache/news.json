@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-06-01T15:56:29.623Z",
+  "fetchedAt": "2026-06-01T16:15:49.204Z",
   "count": 40,
   "articles": [
     {
@@ -9,7 +9,8 @@
       "source": "인천일보",
       "publishedAt": "2026-06-01T10:58:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5aLXppOG1haXItYXVHU1lmZmYtcU4tRUhYZGNQN0g4QmNNbG9rdDZHdUxjWE5EZ1ppZ0JxRGtZNURnbVFpNVNzTnZwTTZxYmhIZTB6RlhDWUNHdFVqajNSRG1uZXI5SU9nMG4wQUk1OA?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-1",
@@ -18,7 +19,8 @@
       "source": "인천신문",
       "publishedAt": "2026-06-01T07:16:10.000Z",
       "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5yZWpXZVNlalJiY0QzTHB4N21pOUl0bzZXQk9yNFVEOUJzYXlrMW56eGluSjVDOWNKNVN0WDVCcFhxQTBwcy1hQTdERnpZZGlDejRybWxlMVQxMGE4LVpZVDBXOFAxckpSR21VNV9GQlV3eEVMYS1UQtIBeEFVX3lxTE5yZWpXZVNlalJiY0QzTHB4N21pOUl0bzZXQk9yNFVEOUJzYXlrMW56eGluSjVDOWNKNVN0WDVCcFhxQTBwcy1hQTdERnpZZGlDejRybWxlMVQxMGE4LVpZVDBXOFAxckpSR21VNV9GQlV3eEVMYS1UQg?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-0",
@@ -27,16 +29,18 @@
       "source": "로컬세계",
       "publishedAt": "2026-06-01T05:41:01.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE45cnR6Y0JBMEpaSmxLYjZIejFYX1RxS0VqUHpOMDhoVUhHcTFzWHBEb1MtTlFKRzBBUnBqbm1zdnoyNDV6NnA4ODdaYUlLcG9zRF9NOXNXdWJiN0YtaWhkLdIBWEFVX3lxTE5ZLU1zck5LbGlVcjUwbktGcXNVY1FJWWZMcjJ1cEFrOW1vdUk4ZEU3ZzBOTzJFSncwRzR5d3Mzb0xKQ2lMZzdGT2lvWjZiSXFqR1JqRDE1ZnQ?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-8",
       "title": "아이들이 다시 뛰기 시작한다. 도성훈표 학교체육, 검단시도시 학부모들과 교육정책 간담회... “ESG·스포츠교육으로 미래인재 키운다” - stnsports.co.kr",
       "summary": "",
       "source": "stnsports.co.kr",
       "publishedAt": "2026-06-01T01:45:33.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFA2S2M1c0JVSXNiYXktcHdmY1BXMVpFNmsyOXQyN01xQ2prZHVWalZxVy1zNkFkWVpKcEZxdWpoWHZTbEV6NEducWlSWXBHMDRLTkJhbW1BYzhwX1JSUkZ3UnQyU1VWQ1lOeXpzSjRndw?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-3",
@@ -45,7 +49,8 @@
       "source": "incheonin.com",
       "publishedAt": "2026-06-01T00:30:19.000Z",
       "url": "https://news.google.com/rss/articles/CBMibEFVX3lxTFBXUTFqamNHTV9tOVRHNWhySGVCRjJ5ODBtWjEtTHh3NTMtYno2SVAxSm1Zel9DdGVsaUZoX3hITHJFUkdFM3ZwMU1EVTJ2RE1RVHV2ZDRUXzkwYTBCRFY0bEM5RmRTYTFRVlhSLQ?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr0-0",
@@ -54,16 +59,28 @@
       "source": "미디어인천신문",
       "publishedAt": "2026-05-31T21:32:50.000Z",
       "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFAwajQ0bklHTUlkamY3eTd0emsxQlVhQ0dIMHJIYldMak1xMl9fVjk2X1ZXazVoMEdBajhLaUM0Vmx4cXJaX3pMQ0hoQl9vdGpWUzYxVHJabkJwX3daX0x1dk5jVUJObk5HSERN?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
+      "title": "도성훈 후보, 검단신도시 학부모들과 교육정책 간담회 - 경인신문",
+      "summary": "",
+      "source": "경인신문",
+      "publishedAt": "2026-05-31T17:30:25.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE5kdW1kb0trMzZfMjZVbG03Tlg0T1BSemI0SWJZd2NINGdsS2RZSUU5cWE2aGFBejhfMGRFSXplOFRTdmZUTWhuVW5yUlR4d2ItVlRmRk5wbWdXTHhjYUdKUm1rSjd2NkU?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-3",
       "title": "도성훈 후보, 검단신도시 교육 현안 소통 강화 약속 - 경기도민일보 미디어",
       "summary": "",
       "source": "경기도민일보 미디어",
       "publishedAt": "2026-05-31T13:34:58.000Z",
       "url": "https://news.google.com/rss/articles/CBMiakFVX3lxTE9ETG5FVlJtd1N4QWpnWTZvMVlXN1R1ZFNfVFFnM1c2Vl9ISHpTSmgtSlFhamVRb1pQVV9DVHZUamJCajNVSVlEa3UyelM5MUJIekFPYlZpbU1NR3JTQ1BRSFp1LUlVQzV3QUE?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr0-19",
@@ -72,25 +89,28 @@
       "source": "네이트",
       "publishedAt": "2026-05-31T11:09:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE95ZUE1dFVzZUY0aV9OQTYzT21HdDZkMlJoWWhWbTJINXlfOUxjc09vdDVpclVreEZkMUpmcTNmTmEyV1RoMXo2TS1CUDRrZFpxNzNr?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-5",
       "title": "인천 1·2호선 더블역세권 더샵 검단레이크파크 - 경향신문",
       "summary": "",
       "source": "경향신문",
       "publishedAt": "2026-05-31T11:02:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE9xd2lMdm9HWGpUMUtZOEVRdmR2ZFVMeW1NVnA1dlBrWEJwb3M4ZWwxUGphUzA5bjlyN21IRF8zdERtZExCc3EtYVpvb3NxbjBoTE5KNVBXeE9sZ9IBX0FVX3lxTE41X3pPYUt6bGJmcnpuOFdLUUxJdEdXVEl5Nk9SVm1jM0Vmc1RES09LdThaYVNCZU9VWmhPeHUzclRVM1R2RHp1eTMyaXBFU3NXVnpsZmIzOURPRnhIQVZJ?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-11",
       "title": "도성훈 후보, 검단신도시 학부모와 간담회 - gukjenews.com",
       "summary": "",
       "source": "gukjenews.com",
       "publishedAt": "2026-05-31T10:10:57.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFBWMWU0YnJVT05NbVo5bnR5S1VLVzRtbUlMSXVlMm1BNFpBZUVJNkhLRFBfd1hDMTlBX2M5Y1JtYnNKRDIzcUw1ZGk5Rk9rb3dGaFNtODhDMnVGMEpRZG5abDNRSXQzek4zYWpnNXdB?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-22",
@@ -99,7 +119,8 @@
       "source": "매일뉴스",
       "publishedAt": "2026-05-31T01:26:35.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE1CNlRPb01DWjh4ak0xTkJnVmYwVXVxUEF3cU1aQWNLS3ZjSEJDS2RUSlZvdDRaaUNFM1FkZlRqZkpUTWZoTUtHRHdxdHZ6T25CbTJlQW04c054MVQwclV1RQ?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-16",
@@ -108,7 +129,8 @@
       "source": "전국매일신문",
       "publishedAt": "2026-05-31T00:25:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE1iOUk1bGtJc3doWHNSVG1TQVlVTlpicnBaMVdocjV2eFp4OGhHZ0d4eW90VXZCdkNVTlFVVmgyU1dKSUFLTXNaMUxUZEp2SjRvZFBhUURzT1VuZEkzRDVKWEZycC1BcU9UeXRPUnl3?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-27",
@@ -117,7 +139,8 @@
       "source": "서울뉴스통신",
       "publishedAt": "2026-05-29T23:10:08.000Z",
       "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9iWncxcVlSUEY0RjhheU40X0lhSVY4dUZBb2RHcUNOVWlYRTg4MjFaQjlBd1FLemVtWjRIZkZUWEFZNzlLZHpSWkItZnUxNHVLMzBnbktLa0h6LUU0c1hMSy10RWhjeldDeFU4?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-5",
@@ -126,16 +149,18 @@
       "source": "연합뉴스",
       "publishedAt": "2026-05-29T22:27:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1tMHJRTC1kZjc0N0lUU1dfLW4wMjJSQXUyTHBVYXhaWjd6X3hJTU5YVnoxN3lUQy1RcVRGc0JDTElTSXJUcWRDek9FZ1pMRU1GUmIwd1NqTjBzTmvSAWBBVV95cUxPU1Ria0tFTGtMcGhOVzNwNGl6X2xFSlJFbjNQb1ZHWFdINC1IR1pRcEphbnFvVjVmYng0eGh2Y0RfdC1ZQzdRSWtTMk9uUXR1VzVneVdOM0Q2X3E5Z293MzY?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-7",
       "title": "금강주택, 검단신도시 ‘신검단중앙역 금강펜테리움 센트럴파크’ 입주 개시 - 서울신문",
       "summary": "",
       "source": "서울신문",
       "publishedAt": "2026-05-29T08:06:47.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5zVTRER2VhSy1jTzBpNHZobjgtaGJsRHR2SWp1aVFTeXZFUUZKUEFFMk9qLUtLcHFZaS1jNXR4MjZtVXluZ3FQUVVGZzM1VE1md21ZQ3hrcnotM0xQZ0ZvaG5ObzU4R1VHSWhmV25Rcw?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-11",
@@ -144,7 +169,8 @@
       "source": "한국정경신문",
       "publishedAt": "2026-05-29T08:00:03.000Z",
       "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTE1mZHRCSV84Tng2YmtaRjNGakdQNUtDNm5TanZ6ZVg4M0Zvb2RKY2RZUzByaW5fUVBmWFhKSDA3dWc0WThLZWpuOVhuVDRuV1NxdEE?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-8",
@@ -153,7 +179,8 @@
       "source": "일간경기",
       "publishedAt": "2026-05-29T07:06:52.000Z",
       "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE5rUzRIQ3pGUUhqTHgwcG55SHZkV0s5T0lEZ3NUUnNuQ2JjS3JxVDA5OXdwTTIwbmVxSDZyVnA2UGptQTY5aThQcTQzdnJUdGJNS3NKM2JST0VhMG42M0FnaVlWTE5yY2li?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr3-3",
@@ -162,7 +189,8 @@
       "source": "ppss.kr",
       "publishedAt": "2026-05-29T06:13:22.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE5xbmVJYlB1enJGSUlodlZXWDBrajZHWTl0VlVQd21jN3k5eEkwX1JpR2hUZGNtWlMtbTRFbDBhRXg4bXhYNjhNNy02UU1ibzI0RFpSOS13azQ2MG1FV1hBaDVfTmM?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-12",
@@ -171,7 +199,8 @@
       "source": "경인매일",
       "publishedAt": "2026-05-29T05:27:26.000Z",
       "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE91T3NSRmJZazZ4Y2tPWncxME4xaEk0Tkc5cy1GaFNqQ0NQeWlBb2NCNzRXNnB6Ql9sSDRKbXZyZ3FBaWZXamdTZ0c3bGdSQ2V4S3VBaWthXzVKWkE0SEtVRk5ldEJOU2Nl?oc=5",
-      "type": "뉴스"
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
       "id": "gr2-7",
@@ -192,7 +221,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-15",
       "title": "포스코이앤씨, 인천 검단신도시서 '더샵 검단레이크파크' 6월 분양 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -201,7 +230,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "[분양 포커스] 인천 검단신도시에 위치, 희소성 높은 브랜드 대단지 - 중앙일보",
       "summary": "",
       "source": "중앙일보",
@@ -219,7 +248,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-4",
       "title": "포스코이앤씨, 검단신도시에 첫 '더샵' 공급…2857가구 대단지 - 뉴스1",
       "summary": "",
       "source": "뉴스1",
@@ -345,21 +374,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-10",
+      "id": "gr2-9",
       "title": "인천 서구 검단행정과, 6월 8일 검단구청 신청사로 이전 - 브릿지경제",
       "summary": "",
       "source": "브릿지경제",
       "publishedAt": "2026-05-27T01:21:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1QREhWd0k5Ymc1cEhNZE85ZklFSTlnSGZ5aVN3WFJZd1h0ekhOdWRBRmo1bnkybS1oeTJCMDduLVVQa1ZQZ2hpQmdha2NSN1hTVHdod2RuXzBUUQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-8",
-      "title": "과밀학급 문제 ‘몸살’난 검단신도시 인천교육감 후보들 처방전은 제각각 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-05-26T10:01:23.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE0yUDM1YzhrOFh5N2gxb1gxZmpaQzBzbFRJT2Q0QXNCWjVaTUVObGhmd05ZSy1rSTRyMnRsb1JISjlBVXk2ZExxMFpBdzRpTFFVT3JTWHgyRUdEWTlvQW1lWUdNaTJwZGxyVWdlRVNFbw?oc=5",
       "type": "뉴스"
     }
   ]
