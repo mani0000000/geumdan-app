@@ -2294,6 +2294,8 @@ function HomeTransportWidget() {
   const [favRoutes] = useState<FavRouteMeta[]>(() => loadFavRoutes());
   const [busArrivals, setBusArrivals] = useState<Record<string, BusArrival[]>>({});
   const [busLoading, setBusLoading] = useState<Set<string>>(new Set());
+  // API에서 실시간으로 조회한 정류장명 (favStops 이름이 없을 때 덮어씀)
+  const [busStopNames, setBusStopNames] = useState<Record<string, string>>({});
 
   const [favSubways] = useState<Set<string>>(() => {
     if (typeof window === "undefined") return new Set();
@@ -2330,6 +2332,21 @@ function HomeTransportWidget() {
       let data = await fetchArrivalsByNodeId(apiId);
       if (data.length === 0) data = await fetchArrivalsByStationId(apiId);
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
+
+      // 이름 자동 저장: stationName이 있으면 favStops_meta에 백필
+      const apiStationName = data[0]?.stationName;
+      if (apiStationName && apiStationName !== "정류장") {
+        try {
+          const meta: Record<string, { name?: string; lat?: number; lng?: number }> =
+            JSON.parse(localStorage.getItem("favStops_meta") ?? "{}");
+          if (!meta[stopId]?.name || meta[stopId]?.name === "정류장") {
+            meta[stopId] = { ...(meta[stopId] ?? {}), name: apiStationName };
+            localStorage.setItem("favStops_meta", JSON.stringify(meta));
+            // busStopsToShow는 useState 초기값이므로 이름을 강제 업데이트
+            setBusStopNames(prev => ({ ...prev, [stopId]: apiStationName }));
+          }
+        } catch { /* ignore */ }
+      }
     } catch { /* ignore */ } finally {
       setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
     }
@@ -2388,7 +2405,9 @@ function HomeTransportWidget() {
         const displayed = hasFavRoutes
           ? stopArrivals.filter(a => favRouteKeySet.has(routeFavKey(stop.id, a))).slice(0, 3)
           : stopArrivals.slice(0, 3);
-        const stopName = stop.name && stop.name !== "정류장" ? stop.name : (STOP_NAME_FALLBACK[stop.id] ?? "알 수 없는 정류장");
+        const stopName = (stop.name && stop.name !== "정류장")
+          ? stop.name
+          : (busStopNames[stop.id] || STOP_NAME_FALLBACK[stop.id] || "알 수 없는 정류장");
         const isLoading = busLoading.has(stop.id);
 
         return (
