@@ -19,12 +19,13 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Fetch news and YouTube cache
+      - name: Fetch news, YouTube and Instagram cache
         run: node scripts/batch/fetch-cache.mjs
         env:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
 
       - name: Commit and push if cache changed
         run: |
@@ -32,6 +33,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add public/cache/
           git diff --staged --quiet || (
-            git commit -m "chore: refresh news/youtube cache $(date -u '+%Y-%m-%d %H:%M UTC')" &&
+            git commit -m "chore: refresh news/youtube/instagram cache $(date -u '+%Y-%m-%d %H:%M UTC')" &&
             git push
           )

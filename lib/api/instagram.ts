@@ -128,6 +128,37 @@ async function fetchFromSupabase(params: FetchFeedsParams): Promise<InstagramPos
   }
 }
 
+// Static JSON cache (built by GitHub Actions via Apify) — fastest path
+async function fetchFromCache(params: FetchFeedsParams): Promise<InstagramPost[]> {
+  try {
+    const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+    const res = await fetch(`${base}/cache/instagram.json`, {
+      next: { revalidate: 3600 },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!res.ok) return [];
+    const json = await res.json();
+    let posts: InstagramPost[] = (json?.posts ?? [])
+      .map(normalize)
+      .filter((p: InstagramPost | null): p is InstagramPost => p !== null);
+
+    if (params.tag) {
+      const t = params.tag.toLowerCase();
+      posts = posts.filter(p =>
+        p.hashtags?.some(h => h.toLowerCase().includes(t)) ||
+        (p.caption ?? '').toLowerCase().includes(t)
+      );
+    }
+    if (params.reel) posts = posts.filter(p => p.isReel);
+
+    const limit = params.limit ?? 12;
+    const page  = params.page  ?? 1;
+    return posts.slice((page - 1) * limit, page * limit);
+  } catch {
+    return [];
+  }
+}
+
 export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promise<InstagramPost[]> {
   const base = getBaseUrl();
 
@@ -151,6 +182,10 @@ export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promis
       }
     } catch { /* fall through to Supabase */ }
   }
+
+  // Static cache fallback (Apify via GitHub Actions)
+  const cached = await fetchFromCache(params);
+  if (cached.length > 0) return cached;
 
   // Supabase fallback
   return fetchFromSupabase(params);

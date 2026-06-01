@@ -18,6 +18,7 @@ mkdirSync(CACHE_DIR, { recursive: true });
 const NAVER_ID     = process.env.NAVER_CLIENT_ID      ?? '';
 const NAVER_SECRET = process.env.NAVER_CLIENT_SECRET  ?? '';
 const YT_API_KEY   = process.env.YOUTUBE_API_KEY      ?? '';
+const APIFY_TOKEN  = process.env.APIFY_API_TOKEN      ?? '';
 
 // ── Helpers ────────────────────────────────────────────────
 function stripHtml(s = '') {
@@ -232,21 +233,96 @@ async function fetchAllYouTube() {
   return [];
 }
 
+// ── 인스타그램: Apify Instagram Scraper ────────────────────
+async function fetchInstagramApify() {
+  if (!APIFY_TOKEN) { console.log('  ⚠️  APIFY_API_TOKEN 없음 — 인스타그램 스킵'); return []; }
+  console.log('📸 Instagram (Apify)...');
+
+  // 수집 대상: 해시태그 + 계정 목록
+  const HASHTAGS = ['검단신도시', '검단'];
+  const USERNAMES = []; // 특정 계정 추가 시 여기에 입력 (예: ['geumdan_official'])
+
+  const input = {
+    ...(HASHTAGS.length  > 0 ? { hashtags: HASHTAGS }   : {}),
+    ...(USERNAMES.length > 0 ? { usernames: USERNAMES } : {}),
+    resultsLimit: 30,
+    addParentData: false,
+    isUserTaggedFeedURL: false,
+  };
+
+  try {
+    const res = await withTimeout(
+      fetch(
+        `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${APIFY_TOKEN}&timeout=120`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(input),
+        }
+      ),
+      130_000, 'apify-instagram'
+    );
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('  Apify error:', res.status, text.slice(0, 200));
+      return [];
+    }
+    const items = await res.json();
+    if (!Array.isArray(items)) { console.error('  Apify 응답 비정상:', typeof items); return []; }
+
+    const posts = items.map((item, i) => {
+      const shortcode = item.shortCode ?? item.id ?? '';
+      const isReel = String(item.type ?? item.productType ?? '').toLowerCase().includes('reel')
+        || String(item.productType ?? '').toLowerCase().includes('clips');
+      return {
+        id: String(item.id ?? shortcode ?? i),
+        shortcode,
+        permalink: item.url ?? `https://www.instagram.com/p/${shortcode}/`,
+        mediaType: isReel ? 'REEL' : 'IMAGE',
+        isReel,
+        thumbnailUrl: item.displayUrl ?? item.imageUrl ?? item.thumbnailUrl ?? '',
+        caption: (item.caption ?? item.alt ?? '').slice(0, 300),
+        username: item.ownerUsername ?? item.username ?? '',
+        likeCount: Number(item.likesCount ?? item.likes ?? 0),
+        commentCount: Number(item.commentsCount ?? item.comments ?? 0),
+        viewCount: item.videoViewCount ?? item.views ?? undefined,
+        hashtags: Array.isArray(item.hashtags) ? item.hashtags : [],
+        postedAt: item.timestamp
+          ? new Date(item.timestamp).toISOString()
+          : new Date().toISOString(),
+      };
+    }).filter(p => p.thumbnailUrl || p.shortcode);
+
+    console.log(`  ✓ Instagram: ${posts.length}개`);
+    return posts;
+  } catch (e) {
+    console.error('  Apify fetch error:', e.message);
+    return [];
+  }
+}
+
 // ── 실행 ──────────────────────────────────────────────────
 console.log('🚀 검단신도시 콘텐츠 캐시 갱신 시작...\n');
 const t0 = Date.now();
 
-const [news, youtube] = await Promise.all([fetchAllNews(), fetchAllYouTube()]);
+const [news, youtube, instagram] = await Promise.all([
+  fetchAllNews(),
+  fetchAllYouTube(),
+  fetchInstagramApify(),
+]);
 const now = new Date().toISOString();
 
 // 기존 캐시 유지 (새 데이터가 없으면 이전 데이터 보존)
 const prevNews = loadCache(`${CACHE_DIR}/news.json`);
 const prevYt   = loadCache(`${CACHE_DIR}/youtube.json`);
+const prevInsta = loadCache(`${CACHE_DIR}/instagram.json`);
 
-const finalNews    = news.length    > 0 ? news    : (prevNews?.articles  ?? []);
-const finalVideos  = youtube.length > 0 ? youtube : (prevYt?.videos      ?? []);
+const finalNews    = news.length      > 0 ? news      : (prevNews?.articles  ?? []);
+const finalVideos  = youtube.length   > 0 ? youtube   : (prevYt?.videos      ?? []);
+const finalInsta   = instagram.length > 0 ? instagram : (prevInsta?.posts    ?? []);
 
-writeFileSync(`${CACHE_DIR}/news.json`,    JSON.stringify({ fetchedAt: now, count: finalNews.length,   articles: finalNews   }, null, 2));
-writeFileSync(`${CACHE_DIR}/youtube.json`, JSON.stringify({ fetchedAt: now, count: finalVideos.length, videos: finalVideos   }, null, 2));
+writeFileSync(`${CACHE_DIR}/news.json`,      JSON.stringify({ fetchedAt: now, count: finalNews.length,   articles: finalNews    }, null, 2));
+writeFileSync(`${CACHE_DIR}/youtube.json`,   JSON.stringify({ fetchedAt: now, count: finalVideos.length, videos: finalVideos    }, null, 2));
+writeFileSync(`${CACHE_DIR}/instagram.json`, JSON.stringify({ fetchedAt: now, count: finalInsta.length,  posts: finalInsta      }, null, 2));
 
-console.log(`\n✅ 완료 (${((Date.now()-t0)/1000).toFixed(1)}s): 뉴스 ${finalNews.length}건, 유튜브 ${finalVideos.length}개`);
+console.log(`\n✅ 완료 (${((Date.now()-t0)/1000).toFixed(1)}s): 뉴스 ${finalNews.length}건, 유튜브 ${finalVideos.length}개, 인스타 ${finalInsta.length}개`);
