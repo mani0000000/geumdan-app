@@ -109,7 +109,9 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
     const code: number = d.current.weather_code;
     const now = new Date();
     const nowH = now.getHours();
-    const todayStr = new Date().toISOString().slice(0, 10);
+    // Open-Meteo returns times in KST (Asia/Seoul) — use local date to match
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
     const yesterdayTemp: number | null =
       d.hourly?.temperature_2m?.[nowH] != null
@@ -122,7 +124,7 @@ async function fetchFromOpenMeteo(): Promise<WeatherData | null> {
         temp: Math.round(d.hourly.temperature_2m[i] as number),
         code: d.hourly.weather_code[i] as number,
       }))
-      .filter(h => h.t.startsWith(todayStr) && new Date(h.t).getHours() >= nowH)
+      .filter(h => h.t.startsWith(todayStr) && parseInt(h.t.slice(11, 13)) >= nowH)
       .slice(0, 6)
       .map(h => ({
         hour: h.t.slice(11, 16),

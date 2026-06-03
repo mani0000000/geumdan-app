@@ -72,10 +72,22 @@ function WeeklyModal({ weekly, onClose }: {
   weekly: NonNullable<WeatherData["weekly"]>;
   onClose: () => void;
 }) {
+  // 열려있는 동안 배경 스크롤 잠금 + ESC 닫기
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-[300]">
-      {/* 배경 클릭 시 닫기 */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <div className="fixed inset-0 z-[9100]">
+      {/* 배경 — 클릭 시 닫기, 외부 조작 차단 */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       {/* 시트 */}
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
         <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
@@ -91,7 +103,8 @@ function WeeklyModal({ weekly, onClose }: {
               <X size={20} className="text-[#6e6e73]" />
             </button>
           </div>
-          <div className="px-4 py-3 pb-10 space-y-1">
+          <div className="px-4 py-3 space-y-1 overflow-y-auto"
+            style={{ paddingBottom: "max(32px, env(safe-area-inset-bottom, 32px))" }}>
             {weekly.map((day, i) => (
               <div key={i}
                 className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
