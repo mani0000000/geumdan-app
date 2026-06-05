@@ -25,6 +25,11 @@
  *
  * CREATE INDEX idx_comments_post_id    ON community_comments(post_id);
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
+ *
+ * ── user_id 컬럼 추가 마이그레이션 (미실행 시 실행하세요) ──────
+ *
+ * ALTER TABLE community_comments ADD COLUMN IF NOT EXISTS user_id TEXT;
+ * CREATE INDEX IF NOT EXISTS idx_comments_user_id ON community_comments(user_id);
  */
 
 import { supabase } from '@/lib/supabase';
@@ -32,6 +37,7 @@ import { supabase } from '@/lib/supabase';
 export interface DBComment {
   id: string;
   postId: string;
+  userId?: string;
   author: string;
   authorDong: string;
   content: string;
@@ -44,6 +50,7 @@ function rowToComment(row: Record<string, unknown>): DBComment {
   return {
     id: row.id as string,
     postId: row.post_id as string,
+    userId: row.user_id as string | undefined,
     author: row.author as string,
     authorDong: row.author_dong as string,
     content: row.content as string,
@@ -85,6 +92,7 @@ export async function fetchComments(postId: string): Promise<DBComment[]> {
 // ── 작성 ─────────────────────────────────────────────────────
 export interface CommentInput {
   postId: string;
+  userId?: string;
   author: string;
   authorDong: string;
   content: string;
@@ -97,7 +105,7 @@ export async function createComment(
   try {
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
-    const row = {
+    const row: Record<string, unknown> = {
       id,
       post_id: input.postId,
       author: input.author,
@@ -107,16 +115,17 @@ export async function createComment(
       like_count: 0,
       created_at: now,
     };
+    if (input.userId) row.user_id = input.userId;
     const res = await dbPost("POST", [row]);
     if (!res.ok) {
       const body = await res.text();
       console.error('[comments] createComment server error:', res.status, body);
       return null;
     }
-    // 서버 응답에서 실제 row 반환하거나 로컬 객체 반환
     return {
       id,
       postId: input.postId,
+      userId: input.userId,
       author: input.author,
       authorDong: input.authorDong,
       content: input.content,
@@ -168,40 +177,62 @@ export interface MyCommentWithPost extends DBComment {
   postCategory?: string;
 }
 
+/** 게시글 제목/카테고리를 comments 배열에 인라인 보강 */
+async function attachPostMeta(comments: MyCommentWithPost[]): Promise<void> {
+  const postIds = [...new Set(comments.map(c => c.postId))];
+  if (postIds.length === 0) return;
+  const { data: posts } = await supabase
+    .from('community_posts')
+    .select('id,title,category')
+    .in('id', postIds);
+  if (!posts) return;
+  const postMap = new Map(
+    (posts as { id: string; title: string; category: string }[]).map(p => [p.id, p])
+  );
+  comments.forEach(c => {
+    const post = postMap.get(c.postId);
+    if (post) { c.postTitle = post.title; c.postCategory = post.category; }
+  });
+}
+
+/** user_id 컬럼으로 내 댓글 조회 (DB 마이그레이션 필요: ADD COLUMN user_id TEXT) */
 export async function fetchMyComments(userId: string): Promise<MyCommentWithPost[]> {
   try {
-    // author_user_id 컬럼으로 필터 (없으면 빈 배열 반환)
     const { data, error } = await supabase
       .from('community_comments')
       .select('*')
-      .eq('author_user_id', userId)
+      .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50);
 
-    if (error) return [];
+    if (error || !data?.length) return [];
 
-    const comments = (data ?? []).map(
+    const comments = data.map(
       row => rowToComment(row as Record<string, unknown>) as MyCommentWithPost
     );
+    await attachPostMeta(comments);
+    return comments;
+  } catch {
+    return [];
+  }
+}
 
-    // 게시글 제목/카테고리 일괄 조회
-    const postIds = [...new Set(comments.map(c => c.postId))];
-    if (postIds.length > 0) {
-      const { data: posts } = await supabase
-        .from('community_posts')
-        .select('id,title,category')
-        .in('id', postIds);
-      if (posts) {
-        const postMap = new Map(
-          (posts as { id: string; title: string; category: string }[]).map(p => [p.id, p])
-        );
-        comments.forEach(c => {
-          const post = postMap.get(c.postId);
-          if (post) { c.postTitle = post.title; c.postCategory = post.category; }
-        });
-      }
-    }
+/** localStorage에 저장된 댓글 ID 목록으로 댓글 조회 (DB user_id 없는 구형 댓글 폴백) */
+export async function fetchMyCommentsByIds(ids: string[]): Promise<MyCommentWithPost[]> {
+  if (ids.length === 0) return [];
+  try {
+    const { data, error } = await supabase
+      .from('community_comments')
+      .select('*')
+      .in('id', ids.slice(0, 100))
+      .order('created_at', { ascending: false });
 
+    if (error || !data?.length) return [];
+
+    const comments = data.map(
+      row => rowToComment(row as Record<string, unknown>) as MyCommentWithPost
+    );
+    await attachPostMeta(comments);
     return comments;
   } catch {
     return [];

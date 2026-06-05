@@ -365,6 +365,7 @@ function DetailContent() {
       const saved = await createComment({
         postId, author: commentAuthor, authorDong: commentAuthorDong,
         content: commentText.trim(), isAnonymous: false,
+        userId: getLocalUserId() ?? undefined,
       });
       if (saved) {
         setComments(prev => [...prev, saved]);
