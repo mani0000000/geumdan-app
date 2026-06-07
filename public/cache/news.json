@@ -1,9 +1,29 @@
 {
-  "fetchedAt": "2026-06-07T00:05:05.270Z",
+  "fetchedAt": "2026-06-07T12:22:57.684Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr2-4",
+      "id": "gr0-4",
+      "title": "[6·3 정치분석] 초대 검단구청장 된 김진규 … 검단 민심은 왜 선택했나 - 인천뉴스",
+      "summary": "",
+      "source": "인천뉴스",
+      "publishedAt": "2026-06-07T04:14:01.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE1EXy00aGJtWmxnNlFPNjBXX0hhVXRPenpfNlJidXB0U0V0VUVydVl0dlhDSnNxQzRuaXZyMHgxeFNPYXNGTnpnQ1QzTnNzSXVRWmY2ODExRUhEYjdsZGNfWXdXQmxNdG9kMThESkpPOA?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-2",
+      "title": "인천도시공사, 검단신도시 에너지 특화 주거단지 사업자 공모 - 세계일보",
+      "summary": "",
+      "source": "세계일보",
+      "publishedAt": "2026-06-07T03:43:47.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWEFVX3lxTE1NaWs5MnNzZ0c4STkwZHRkb3loWlMtRVg3WG9FVG5IN25EbFFIc3hLMVhKX2FXU1dVZEROZHgtMERncDFUZjRkUUYyaGlIQ29oVVdmUXlnZ1rSAVRBVV95cUxQOEtmUy1FZC0tVzZBYnNvaHB5M1k1cmFEUVNRdUFxOEF3T3BXeEhsd0hoQmhQS1RULVZaaUlHRDNZSXFmVXNLMkFjUV91MVgzRFFxcUc?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr2-7",
       "title": "7월 1일 검단구 출범 앞두고 선제적 운영… 만성질환·체성분·치매 관리 우선 개시 - 우리일보",
       "summary": "",
       "source": "우리일보",
@@ -13,7 +33,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-20",
       "title": "[선거결과분석] 갈라진 인천 6·3 표심…신도시는 박찬대, 원도심은 유정복 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -33,7 +53,17 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-15",
+      "id": "gr0-38",
+      "title": "검단신도시 휴먼에너지타운, 16만㎡ 친환경 단지로 - gukjenews.com",
+      "summary": "",
+      "source": "gukjenews.com",
+      "publishedAt": "2026-06-05T14:58:10.000Z",
+      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTFA5RVY5eUZlRWNmS3NRVGtrclVYS2hDZGdqUmN1WVVRYmw1d0JtZVNHeVdialAwM3BrYkpORFViVlNBY2lxVERjbndnTzVDMUtyR1Fnb3E3cVRrbTVpVFBhQ2xJUjNaMHNfUnpIbHRR?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-14",
       "title": "인천도시공사, 검단신도시 휴먼에너지타운 민간사업자 공모 시작 - 경기도민일보 미디어",
       "summary": "",
       "source": "경기도민일보 미디어",
@@ -43,12 +73,22 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-7",
+      "id": "gr0-8",
       "title": "인천도시공사, 검단신도시 ‘휴먼에너지타운’ 민간사업자 공모 추진 - 경인신문",
       "summary": "",
       "source": "경인신문",
       "publishedAt": "2026-06-05T11:01:54.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTFAyRHdaQjZZZVExdzRFSThmd1hsM0xwSUtnY1FDVkMwSkdjUDRVMG40WTRQSlUtMElOZ0hRNV8yMFVQQjkzUGI4OWRrU2ZDYkRqMGM3MG1VMG9jYXZ4dnpSV0pSTzdTSUE?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-42",
+      "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 사업자 공모 - MSN",
+      "summary": "",
+      "source": "MSN",
+      "publishedAt": "2026-06-05T11:00:48.000Z",
+      "url": "https://news.google.com/rss/articles/CBMi_wJBVV95cUxQVkgxNFpCcmRWX1ZBYTVNZFZCbzlmam1xSFh6U0Uyb0pSS1gtT0pmUHpVQVhNNmZnTDUzR3p5YnoyVS1TZDFfYklKb1dOOWN3cFF6UFc1NHg0akFzcVFFN1g3bElESVZZV1NKV2JtczlaLUJWMkpZSUNmdWNPbElKVEFWdFpPZEJjMDEtY1RWUkFCVlZYRERoRVllTVd2LW5rcXpEYWIzem5BajBoTWVTLXRmdTFTR2FzZHVJdGhzeGYxc212S1NFZWJ4MURiTUNSM3pYd0l0NUlJU21wMngwOHpTbHhvcWdoYmVYaFRBQ1VodEd5eWI0ODFEei1kY2lMZUVNRENpQTZSVTJpSkdfQXIzRGhmdzZxZENDMFZERzVhNTMxQ2tIRjlWZDdMWHRYQ2JicVdDQ0dXTmhqYWEyZ2FXR3Y2Y1RZZ01tNnVNangzX3lETGpieWtaMzlIR0wwLWE4aEEwelEwT1VLc05YOGhyZm9JdTRyWGZya282RQ?oc=5",
       "type": "뉴스",
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
@@ -63,7 +103,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-28",
+      "id": "gr0-26",
       "title": "DK아시아, 검단에 미래주택전시관 개관…체험 프로그램 운영 - 한국금융신문",
       "summary": "",
       "source": "한국금융신문",
@@ -73,7 +113,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-12",
       "title": "인천도시공사, 검단신도시 휴먼에너지타운 민간사업자 공모 공고... 검단신도시 휴먼에너지타운 친환경 저에너지 특화주거단지 조성 목표 - 24news.kr",
       "summary": "",
       "source": "24news.kr",
@@ -83,7 +123,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-5",
       "title": "검단신도시에 호수공원 품은 ‘에너지 특화 주거단지’ 들어선다 - 산경e뉴스",
       "summary": "",
       "source": "산경e뉴스",
@@ -93,7 +133,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-26",
+      "id": "gr0-28",
       "title": "신검단중앙역 금강펜테리움 센트럴파크 줍줍 (’26. 6/9~10) - 홈두부",
       "summary": "",
       "source": "홈두부",
@@ -103,7 +143,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-21",
       "title": "검단에 ‘제로에너지’ 주거단지…iH, 2293억 원 규모 공모 - 서울경제",
       "summary": "",
       "source": "서울경제",
@@ -133,7 +173,17 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-12",
+      "id": "gr0-3",
+      "title": "인천도시공사, 검단신도시 에너지 특화단지 사업자 공모 - KBS 뉴스",
+      "summary": "",
+      "source": "KBS 뉴스",
+      "publishedAt": "2026-06-05T05:50:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE9KOU9FZm9kRERIRDFMdHpwSDM3Mlo1RUoxcVlqMXc2b2pGQS0yM3VqNTAzZVlkc0NPNGQ1R19oR1A4NF81STdEazVjaW9fWXg3Mjl6WFZWb2lOQnM?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-13",
       "title": "iH, 검단신도시 휴먼에너지타운 내 공동주택 건설 민간사업자 공모 - incheonin.com",
       "summary": "",
       "source": "incheonin.com",
@@ -143,24 +193,41 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-24",
+      "id": "gr0-27",
+      "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 민간사업자 공모 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-06-05T05:29:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTE5tbDZvQjBBb2JmOGk0MWE1bTd5WjY2S3d1QkFvdEJmZGpVTTRVcjBGRXgzWXVrTzY5QzJyM2hLZVFvd29CM0JKc2R2R0FMZll2aXFQUWg5TUNITy14QmxmU29ObmpkbUoydnd0bGd0cTQ2bzJaR2RDbA?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr2-36",
       "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 민간사업자 공모 - 네이트",
       "summary": "",
       "source": "네이트",
       "publishedAt": "2026-06-05T05:29:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFBDV0sycHVYLWdYdHFyRThzU2JWN05CbXFUeklhUWwwRVN3UnpobHBicTNJcGU1U0xhRzFfMXZ1T3FMUDRidVE0TmxpVzZpRWs5cUdB?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-9",
       "title": "인천 서구 청라소각장 이전 ‘표류’··· 민주당 새 검단·서구청장 물꼬 틀까 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
       "publishedAt": "2026-06-05T05:24:26.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBQR0FyWW1DWlNIeTBHaE41Q2dXTjA5ZDVTYlpfMWlTMWZmU3lkbTJfYTNrMDIwemN2UGxaYzFEc044cVNGSTBETm1Yb2xQSkdOSjFKVDFZcWNJZHZETlo2U1JuUVp4aFNwTDlJcWRBWmU?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-24",
+      "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 사업자 공모 - 네이트",
+      "summary": "",
+      "source": "네이트",
+      "publishedAt": "2026-06-05T05:01:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTFB1eW9FUTZhVUdqemZhSUJMS1B5U2UyMldvUXY3TE1zbUVUU1FMWHNld3l3WGdPaXhBRXdMaUVZV19XLXFPajNORzhJZ2dCUlBYSUlN?oc=5",
+      "type": "뉴스"
     },
     {
       "id": "gr0-0",
@@ -168,19 +235,8 @@
       "summary": "",
       "source": "연합뉴스",
       "publishedAt": "2026-06-05T05:00:24.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE9YS0VsZ0RDRXdtWG5WcTJMZ21rQWpjUEwxaHhwalBlUml0R0VmeFRoaHJURm5PQVVKbEhkaU5QZDJ0RnZPai01RENGTThFTmdGSGhUVnN2dGd5Mk3SAWBBVV95cUxQQ2lXMzE0RllLTFBVU0xxVE1rSTlUQTRlT2oyZ2tCdFNaU1NfQWR2TzJza1FrWEVRaHBfWlh0SGNtNjM0Wm4yOXZya2NiWHRtNHRHWENzbFZ1LWhRSktmWlM?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
-    },
-    {
-      "id": "gr0-2",
-      "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 사업자 공모 - 연합뉴스",
-      "summary": "",
-      "source": "연합뉴스",
-      "publishedAt": "2026-06-05T05:00:24.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTFBDaVczMTRGWUtMUFVTTHFUTWtJOVRBNGVPajJna0J0U1pTU19BZHZPMnNrUWtYRVFocF9aWHRIY202MzRabjI5dnJrY2JYdG00dEdYQ3NsVnUtaFFKS2ZaU9IBYEFVX3lxTFBDaVczMTRGWUtMUFVTTHFUTWtJOVRBNGVPajJna0J0U1pTU19BZHZPMnNrUWtYRVFocF9aWHRIY202MzRabjI5dnJrY2JYdG00dEdYQ3NsVnUtaFFKS2ZaUw?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
       "id": "gr2-3",
@@ -189,8 +245,7 @@
       "source": "여성종합뉴스",
       "publishedAt": "2026-06-05T05:00:04.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE94MmxmdGN4emFjeC15Yy1GRi15dUJoNXVlQ2pVZmxVaW1oREotREhiaUl5dTZ3SXRnd0lOSmpRdGp1MU9KRnJxOTJHWDY5ajQ0MS1Kd1lDVUNtTDQwM2RuSHYtMWtpcTlfOEpfamd3VQ?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
       "id": "gr2-2",
@@ -199,20 +254,10 @@
       "source": "매일일보",
       "publishedAt": "2026-06-05T04:46:01.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE11VTlWSG1KalZIQlRYUnA1X2xMcm1UZ0t1UUFhbWxKemRuMDNmZzBvUVFtYW9BV0dmblJVS2pRN0FfWDNvVmt3emxjWENrUzVPbmRZMVVwczZVQUFWaWZ2T1RKbEM?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
-    },
-    {
-      "id": "gr0-10",
-      "title": "인천 검단신도시 휴먼에너지타운 민간사업자 공모 - 뉴시스",
-      "summary": "",
-      "source": "뉴시스",
-      "publishedAt": "2026-06-05T04:29:38.000Z",
-      "url": "https://news.google.com/rss/articles/CBMieEFVX3lxTFAyWUYtc1cxa2dLc2F3LXhXVGlGT29aYU9UQk1wdVdaaGpGS082dXB0UmFmcWxfMElXVUVNM0JjbTF6aHRseE1aQ0JXdHFBZXY1aUNlczh3NFhyTkJGTFJTY2FxLXZ3cDhiUnlVcUlNSVBiWmdXZDZKatIBeEFVX3lxTFAyWUYtc1cxa2dLc2F3LXhXVGlGT29aYU9UQk1wdVdaaGpGS082dXB0UmFmcWxfMElXVUVNM0JjbTF6aHRseE1aQ0JXdHFBZXY1aUNlczh3NFhyTkJGTFJTY2FxLXZ3cDhiUnlVcUlNSVBiWmdXZDZKag?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-9",
       "title": "인천도시공사, 검단신도시 휴먼에너지타운 민간사업자 공모 - 한국NGO신문",
       "summary": "",
       "source": "한국NGO신문",
@@ -221,7 +266,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-4",
+      "id": "gr0-6",
       "title": "인천도시공사, 검단신도시 휴먼에너지타운 민간사업자 공모 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -248,12 +293,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-9",
+      "id": "gr0-10",
       "title": "인천도시공사, 검단신도시 휴먼에너지타운 사업자 공모 - 국민일보",
       "summary": "",
       "source": "국민일보",
       "publishedAt": "2026-06-05T02:49:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxPOF83c2hJZnltbVg3bm1kcmxqenYxYjk2MTVlOERONkotQkZwbjRJbG1aT1ZxVE9zdUJsWE5zbXJobmZhRy1TRkkxMHQ0WVlYUDI1X25sUENvVTVWdG82MTJHOUp4ZElzeURtM1RGam1KODg4d0Yxby14RGFRVHhyaXRSeHVRTEhDalVSNG93djJBME1ib3fSAWxBVV95cUxPZWxEMkZ0SC1nUlAyRmhBWFJYcXZzb3RKRi1DVUFxNko2V3dQenZlM3JhaDR2THNmWWlWYzl0Um5vekZZRk10Q19NUGozSmduRUhKWUd4bmNVX21uRjlkM3lzTlotbEMxM0NiYjA?oc=5",
+      "url": "https://news.google.com/rss/articles/CBMihgFBVV95cUxOTnk2VHdaYU1uclNsbV9DOXFXR2lJa2ljMzN3WFV4Rl9aMTZNY0dnTlhQM0lSdUpwUjNzSTVIaGpNbUwzZURsSHlUQkNNR00xNDBTU0lmeGRiTld4T0xaOTdJMk12T0hsTlhnaU9acTZyRGhBNC16cktycU96QWZKeHowWDdtQdIBbEFVX3lxTE9lbEQyRnRILWdSUDJGaEFYUlhxdnNvdEpGLUNVQXE2SjZXd1B6dmUzcmFoNHZMc2ZZaVZjOXRSbm96RllGTXRDX01QajNKZ25FSEpZR3huY1VfbW5GOWQzeXNOWi1sQzEzQ2JiMA?oc=5",
       "type": "뉴스"
     },
     {
@@ -266,7 +311,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-22",
       "title": "검단신도시 에너지 자립형 주거단지 조성…iH, 휴먼에너지타운 속도 - 데일리안",
       "summary": "",
       "source": "데일리안",
@@ -284,7 +329,25 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-56",
+      "id": "gr0-16",
+      "title": "iH, 검단신도시 휴먼에너지타운 개발 시동…2293억 규모 민간사업자 공모 - 브릿지경제",
+      "summary": "",
+      "source": "브릿지경제",
+      "publishedAt": "2026-06-05T02:02:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE8yMms4bUVnNU5PM0dKbFhMZk9ZSkpGNWpycGtacjVQOUcxY2dKNXlJWXpNYzZxdldqdmhCVUZKN0wyQ3NvWm0zbmpiWDVVb2JlU1FuVGdBeDVSQQ?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr2-4",
+      "title": "검단구보건소, 6월 8일부터 일부 업무 운영 시작 - 미디어인천신문",
+      "summary": "",
+      "source": "미디어인천신문",
+      "publishedAt": "2026-06-05T01:22:35.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBGVUFpM2JoVXJzWWVvUFFiVUttY2V6d1MxZlJ4TDZFbk1mMHFqS3NUWl9LWTJ1WHJzVkZVcXpLU1VVMVA3ZjNUcUJyZDJvWlYwU1l2Tjg2ZmtCcEhvcG95cVNrVGRfbG9fYlM0?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-67",
       "title": "주요 공공기관 도보 10분…'더샵 검단레이크파크' 6월 분양 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -293,16 +356,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-18",
-      "title": "인천도시공사, 검단신도시 '휴먼에너지타운' 사업자 공모 - 파이낸셜뉴스",
-      "summary": "",
-      "source": "파이낸셜뉴스",
-      "publishedAt": "2026-06-04T17:01:20.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTE9oRkd4MllHUFRyTmNBVDh5QXhOTXR4SXhibUx5dzNtMmRpZXlWTHkzVGNlUTNOWmxrRVdiTTdTTmtuYmpjZ3Fha3o0X21telhCYkdIMXRlV2d5Ukt1Q1HSAV5BVV95cUxPaEZHeDJZR1BUck5jQVQ4eUF4Tk10eEl4Ym1MeXczbTJkaWV5Vkx5M1RjZVEzTlpsa0VXYk03U05rbmJqY2dxYWt6NF9tbXpYQmJHSDF0ZVdneVJLdUNR?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-31",
+      "id": "gr0-35",
       "title": "신도시 생활 공백 줄인 입지 주목… ‘더샵 검단레이크파크’ 6월 분양 - 헤럴드경제",
       "summary": "",
       "source": "헤럴드경제",
@@ -311,7 +365,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-23",
+      "id": "gr2-20",
       "title": "6･3 지방선거 전국 및 인천 당선자 전체 명단 - 인천뉴스",
       "summary": "",
       "source": "인천뉴스",
@@ -326,60 +380,6 @@
       "source": "전국매일신문",
       "publishedAt": "2026-06-04T01:13:11.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9PRmJFZG5ILXJCeWR2Um03RmU5NWc2RHE5TFdHcWp0a0JsaUowRHBndUVBcEdyaWVkQmVOTDlpMmlIWk1BcDBnMGt2M3FpbERta2xaN01waHVOOVphX05xUlZscTB6d0gyUzNhRXV3?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-5",
-      "title": "‘교통망 날개’ 검단신도시… 실거주 수요 몰린다 - 경인일보",
-      "summary": "",
-      "source": "경인일보",
-      "publishedAt": "2026-06-03T13:30:22.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiUkFVX3lxTFBCWG1jM0JhN1AySDlmdnYyS3RWeV94dDdhYW5PV0U4ck9VckhEc2Z3Rk1mNjZpOFBQYTZTdC1KbWJBUVV3UGxtVjlhYmM4NFVRclE?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-7",
-      "title": "전기설비 고장에 개봉기 멈춰…인천 검단구 개표 잠시 지연 [개표 현장] - 경기일보",
-      "summary": "",
-      "source": "경기일보",
-      "publishedAt": "2026-06-03T12:36:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1oYXg4RlpMOUd3MWZhNFAyNU1pV2syaVF3QlVVQjE5WlRrRHhMMUJQOEg3cHlJZXZ1UVVMb18yVDVteDFNZkpDQ3FydzNxN25TdkdqdFZxUXUwUjQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-24",
-      "title": "[6.3지선] 투표하기 위해 기다리는 인천 시민들 - 일간경기",
-      "summary": "",
-      "source": "일간경기",
-      "publishedAt": "2026-06-03T05:48:45.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTFBzblBYRlc0OEtkVEM4V2Y2aEtCNVY0dm5mdGttYm1pZm1sbWgyeTRFVUdoQUgtbER5dnZZWUt3RWxpalFNd09DOHBoN0hkOEE0dlNmTjVzeWpfalJ4SFVpWTdkc055VHpk?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-14",
-      "title": "인천 검단신도시, 교통망 단계적 확충 복합도시 청사진 ‘착착’ [밀착 취재] - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-06-02T07:03:18.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5pWUtqTTNGaFdMSmhPbWZaRGtiYm1GWXBoLWplay1ldmNFSTNSQWlWUnI1NU1sallOOGtrcDlfWlh3MlZCUjhSdVd2SHY1Y014cllyeQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-38",
-      "title": "인천 검단신도시, 교통망 단계적 확충 복합도시 청사진 '착착' [밀착 취재] - 네이트",
-      "summary": "",
-      "source": "네이트",
-      "publishedAt": "2026-06-02T07:02:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiU0FVX3lxTE1YLVJzaWNxUm42azRfTUZYRld4LVhoLUVobTlkY1p0Sk9RbW9iS0pWYUVpLWNCTGtEbTF4R1ZnUzVBcmd2TjVURkdQZ0h5NDlBTVRz?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-27",
-      "title": "인천도시공사 ‘검단신도시’, 교통망 확충으로 날개를 달다. 미래형 복합도시로 진화 - 전국매일신문",
-      "summary": "",
-      "source": "전국매일신문",
-      "publishedAt": "2026-06-02T03:29:35.000Z",
-      "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE1vX05GZzl6UG9SdkM5eDRMVFB5NE1KZ25OMnZueVdURkhpZkFhbmE0TEYyN0tWcWhTdDMwTU9Oamt2NDR6bkExcVF1Q0NRdWl1N0ppZWxUSFplUFZQanhCRTZPZWJKVTFrTDRhUEFB?oc=5",
       "type": "뉴스"
     }
   ]
