@@ -49,9 +49,9 @@ import type { NewsItem } from "@/lib/types";
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/community/?tab=뉴스",                          color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community?tab=시세",                           color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community?tab=뉴스",                           color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community?tab=커뮤니티",                       color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
   { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },
   { icon: ShoppingBag,   label: "중고거래",href: "/community/?tab=커뮤니티&category=중고거래",    color: "#C2255C" },
@@ -541,7 +541,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/community/?tab=뉴스"
+        <Link href="/community?tab=뉴스"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -2567,7 +2567,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/community/?tab=뉴스" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),
