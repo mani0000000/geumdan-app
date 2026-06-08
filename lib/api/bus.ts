@@ -247,7 +247,7 @@ export async function fetchStationsByRoute(routeId: string): Promise<RouteStatio
   })).sort((a, b) => a.seq - b.seq);
 }
 
-// ─── TAGO 국가대중교통 API: GPS 기반 주변 정류소 조회 (cityCode 30 = 인천) ──
+// ─── TAGO 국가대중교통 API: GPS 기반 주변 정류소 조회 (cityCode 23 = 인천) ──
 export async function fetchNearbyStopsFromTago(lat: number, lng: number): Promise<NearbyStop[]> {
   const items = await apiFetch("tagoStations", {
     gpsLati: String(lat),
@@ -272,9 +272,9 @@ export async function fetchNearbyStopsFromTago(lat: number, lng: number): Promis
     .sort((a, b) => a.distanceM - b.distanceM);
 }
 
-// ─── TAGO 실시간 도착정보 (인천 cityCode=30) ─────────────────────
+// ─── TAGO 실시간 도착정보 (인천 cityCode=23) ─────────────────────
 export async function fetchArrivalsByNodeId(nodeId: string): Promise<BusArrival[]> {
-  const items = await apiFetch("tagoArrivals", { cityCode: "30", nodeId });
+  const items = await apiFetch("tagoArrivals", { cityCode: "23", nodeId });
   return items.map(d => ({
     routeNo: d.routeno ?? d.routeNo ?? "",
     routeId: d.routeid ?? d.routeId ?? "",
@@ -467,13 +467,13 @@ export const GEUMDAN_BUS_STATIONS: FallbackBusStation[] = [
 ];
 
 // ─── TAGO: 노선번호로 routeId 검색 ───────────────────────────
-export async function searchRouteByNo(routeNo: string, cityCode = "30"): Promise<string | null> {
+export async function searchRouteByNo(routeNo: string, cityCode = "23"): Promise<string | null> {
   const items = await apiFetch("tagoRoutes", { cityCode, routeNo });
   return items[0]?.routeid ?? items[0]?.routeId ?? null;
 }
 
 // ─── TAGO: routeId로 노선 상세 조회 ─────────────────────────
-export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30"): Promise<RouteDetail | null> {
+export async function fetchRouteDetailFromTago(routeId: string, cityCode = "23"): Promise<RouteDetail | null> {
   const items = await apiFetch("tagoRouteDetail", { cityCode, routeId });
   if (!items.length) return null;
   const d = items[0];
@@ -494,7 +494,7 @@ export async function fetchRouteDetailFromTago(routeId: string, cityCode = "30")
 }
 
 // ─── TAGO: routeId로 전 정류장 목록 조회 ─────────────────────
-export async function fetchStationsByRouteTago(routeId: string, cityCode = "30"): Promise<RouteStation[]> {
+export async function fetchStationsByRouteTago(routeId: string, cityCode = "23"): Promise<RouteStation[]> {
   const items = await apiFetch("tagoRouteStations", { cityCode, routeId, numOfRows: "100" });
   return items
     .map(d => ({
@@ -528,13 +528,20 @@ export async function fetchNearbyStopsWithArrivals(lat: number, lng: number): Pr
   } catch { return []; }
 }
 
-/** 정류장 이름으로 검색 (TAGO) */
+/** 정류장 이름으로 검색 (TAGO cityCode=23 인천) */
 export async function searchStationsByName(query: string): Promise<NearbyStop[]> {
-  try {
-    const res = await fetch(`/api/bus?action=searchStation&q=${encodeURIComponent(query)}`);
-    if (!res.ok) return [];
-    return await res.json();
-  } catch { return []; }
+  const items = await apiFetch("tagoStationsByName", { cityCode: "23", nodeNm: query, numOfRows: "20" });
+  return items
+    .map(d => ({
+      stationId: d.nodeid ?? d.nodeId ?? "",
+      osmNodeId: 0,
+      stationName: d.nodenm ?? d.nodeNm ?? "",
+      lat: Number(d.gpslati ?? d.gpsLati ?? 0),
+      lng: Number(d.gpslong ?? d.gpsLong ?? 0),
+      distanceM: 0,
+      osmRoutes: [],
+    }))
+    .filter(s => s.stationId && s.stationName);
 }
 
 /** 정류장 이름으로 검색 (OSM) */
