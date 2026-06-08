@@ -2266,6 +2266,10 @@ function HomeTransportWidget() {
   const favRouteStopIds = favRoutes.map(r => r.stopId);
   const allBusStopIds = Array.from(new Set([...favStopIds, ...favRouteStopIds]));
   const favRouteKeySet = new Set(favRoutes.map(r => r.key));
+  // routeNo-based fallback for when arrival has routeId but favorites were saved by routeNo
+  const favRouteNoKeySet = new Set(favRoutes.map(r => `${r.stopId}::${r.routeNo}`));
+  const isFavRoute = (stopId: string, a: BusArrival) =>
+    favRouteKeySet.has(routeFavKey(stopId, a)) || favRouteNoKeySet.has(`${stopId}::${a.routeNo}`);
 
   const busStopsToShow: { id: string; name: string }[] = (() => {
     const byId = new Map<string, { id: string; name: string }>();
@@ -2359,9 +2363,9 @@ function HomeTransportWidget() {
         {/* ── 버스 정류장 ── */}
         {hasBus && busStopsToShow.map((stop, si) => {
           const stopArrivals = busArrivals[stop.id] ?? [];
-          const hasFavRoutes = stopArrivals.some(a => favRouteKeySet.has(routeFavKey(stop.id, a)));
+          const hasFavRoutes = stopArrivals.some(a => isFavRoute(stop.id, a));
           const displayed = (hasFavRoutes
-            ? stopArrivals.filter(a => favRouteKeySet.has(routeFavKey(stop.id, a)))
+            ? stopArrivals.filter(a => isFavRoute(stop.id, a))
             : stopArrivals
           ).slice(0, 2);
           const stopName = stop.name && stop.name !== "정류장"
@@ -2575,7 +2579,7 @@ export default function HomePage() {
     instagram: () => <InstagramFeedSection />,
     realestate: () => (
       <>
-        <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
+        <SectionLabel label="실거래가" href="/community?tab=시세" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),

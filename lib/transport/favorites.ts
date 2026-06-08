@@ -92,11 +92,33 @@ export function loadFavRoutes(): FavRouteMeta[] {
       !!m && typeof m === "object" && typeof (m as FavRouteMeta).key === "string"
     );
   }
-  const keys = safeRead(ROUTES_KEY);
-  if (Array.isArray(keys)) {
-    // 구 포맷에서는 메타가 없어 즐겨찾기 카드를 표시할 수 없으므로 빈 배열로 시작
-    return [];
+
+  // 교통 페이지의 "노선 즐겨찾기" 포맷 (favBusRoutes + favBusRoutes_meta) 읽기
+  const busRoutes = safeRead("favBusRoutes");
+  if (Array.isArray(busRoutes) && busRoutes.length > 0) {
+    type BusMeta = { endStation?: string; stopId?: string; stopName?: string };
+    const rawMeta = safeRead("favBusRoutes_meta");
+    const metaMap: Record<string, BusMeta> =
+      rawMeta && typeof rawMeta === "object" && !Array.isArray(rawMeta)
+        ? (rawMeta as Record<string, BusMeta>)
+        : {};
+    return (busRoutes as string[])
+      .filter((r): r is string => typeof r === "string")
+      .map(routeNo => {
+        const m = metaMap[routeNo] ?? {};
+        const stopId = m.stopId ?? "";
+        if (!stopId) return null;
+        return {
+          key: `${stopId}::${routeNo}`,
+          stopId,
+          stopName: m.stopName ?? "정류장",
+          routeNo,
+          destination: m.endStation ?? "종점",
+        } satisfies FavRouteMeta;
+      })
+      .filter((r): r is FavRouteMeta => r !== null);
   }
+
   return [];
 }
 
