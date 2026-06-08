@@ -19,6 +19,7 @@ export const DEFAULT_WIDGETS: WidgetConfig[] = [
   { id: "pharmacy",  label: "약국·응급실",  enabled: true, sort_order: 8  },
   { id: "transport",   label: "교통",        enabled: true, sort_order: 9  },
   { id: "community",  label: "커뮤니티",    enabled: true, sort_order: 10 },
+  { id: "livefeed",   label: "라이브 피드", enabled: true, sort_order: 11 },
   { id: "news",       label: "검단 뉴스",   enabled: true, sort_order: 12 },
   { id: "youtube",    label: "유튜브 소식", enabled: true, sort_order: 13 },
   { id: "instagram",  label: "인스타 소식", enabled: true, sort_order: 14 },

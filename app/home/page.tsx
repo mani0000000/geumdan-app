@@ -14,7 +14,8 @@ import {
 import Header from "@/components/layout/Header";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { posts, newsItems, apartments as mockApartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { fetchApartments } from "@/lib/db/apartments";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchNewsFromApi, type NewsArticle } from "@/lib/api/news";
@@ -44,7 +45,8 @@ import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import { OUTDOOR_SPOTS, type OutdoorType, type OutdoorSpot } from "@/lib/data/outdoor-spots";
 import { fetchYouTubeLatest, type YouTubeVideo } from "@/lib/api/news";
-import type { NewsItem } from "@/lib/types";
+import type { NewsItem, Post } from "@/lib/types";
+import { fetchDBPosts } from "@/lib/db/posts";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -461,39 +463,71 @@ function NewOpeningsSection() {
 // ─── 커뮤니티 위젯 ────────────────────────────────────────────
 function CommunityWidget() {
   const router = useRouter();
-  const hotPosts = posts.filter(p => p.isHot).slice(0, 3);
-  if (hotPosts.length === 0) return null;
+  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDBPosts(undefined, 10)
+      .then(data => {
+        const visible = data.filter(p => !p.isHidden);
+        const hot = visible.filter(p => p.isHot);
+        setCommunityPosts(hot.length >= 3 ? hot.slice(0, 5) : visible.slice(0, 5));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7] animate-pulse">
+        {[0, 1, 2].map(i => <div key={i} className="h-[68px] px-4" />)}
+      </div>
+    </section>
+  );
+
+  if (communityPosts.length === 0) return null;
+
   return (
     <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
-        {hotPosts.map((post, idx) => (
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7]">
+        {communityPosts.slice(0, 5).map((post, idx) => (
           <button key={post.id}
             onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
+            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-[#f5f5f7] transition-colors">
             <span className={`shrink-0 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center ${
-              idx === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
+              idx === 0 ? "bg-[#2563EB] text-white" : idx === 1 ? "bg-[#f5f5f7] text-[#424245]" : "bg-[#f5f5f7] text-[#86868b]"
             }`}>
               {idx + 1}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[11px] font-semibold text-gray-500">{post.category}</span>
-                <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
-                  <Flame size={9} />HOT
+                <span className="text-[11px] font-semibold text-[#0071e3] bg-[#e8f1fd] px-1.5 py-0.5 rounded-full">
+                  {post.category}
                 </span>
+                {post.isHot && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#F04452] bg-[#FEF2F2] px-1.5 py-0.5 rounded-full">
+                    <Flame size={9} />HOT
+                  </span>
+                )}
               </div>
-              <p className="text-[14px] font-medium text-gray-900 leading-snug truncate">{post.title}</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[12px] text-gray-400">{post.authorDong}</span>
-                <span className="text-[12px] text-gray-300">·</span>
-                <span className="text-[12px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
-                <span className="text-[12px] text-gray-400 ml-auto">❤️ {post.likeCount}</span>
+              <p className="text-[14px] font-semibold text-[#1d1d1f] leading-snug truncate mt-0.5">{post.title}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[11px] text-[#86868b]">{post.authorDong}</span>
+                <span className="text-[11px] text-[#d2d2d7]">·</span>
+                <span className="text-[11px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[11px] text-[#86868b]">❤️ {post.likeCount}</span>
+                  {post.commentCount > 0 && (
+                    <span className="text-[11px] text-[#86868b]">💬 {post.commentCount}</span>
+                  )}
+                </div>
               </div>
             </div>
+            <ChevronRight size={14} className="text-[#d2d2d7] shrink-0" />
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-blue-600 font-semibold active:bg-gray-50">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold active:bg-[#f5f5f7]">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -1063,12 +1097,14 @@ function RealEstateWidget() {
   const [myAptId, setMyAptId] = useState<string | null>(null);
   const [myAptSzIdx, setMyAptSzIdx] = useState(0);
   const [pyeongFilter, setPyeongFilter] = useState<PyeongFilter>("전체");
+  const [aptData, setAptData] = useState(mockApartments);
   useEffect(() => {
     setMyAptId(localStorage.getItem("myAptId"));
     setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
+    fetchApartments().then(data => { if (data.length > 0) setAptData(data); });
   }, []);
 
-  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+  const myApt = myAptId ? aptData.find(a => a.id === myAptId) ?? null : null;
   const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
   const mySz    = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
   const myH     = mySz?.priceHistory ?? [];
@@ -1079,10 +1115,10 @@ function RealEstateWidget() {
 
   // 검단신도시 평균 (평수 필터 반영)
   const avgTrend = (() => {
-    const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
+    const months = aptData[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
     return months.map(month => {
       let total = 0, count = 0;
-      apartments.forEach(apt => apt.sizes.forEach(sz => {
+      aptData.forEach(apt => apt.sizes.forEach(sz => {
         if (pyeongFilter !== "전체" && pyeongBucket(sz.pyeong) !== pyeongFilter) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
@@ -2157,12 +2193,13 @@ function SectionLabel({
 }) {
   return (
     <div className="flex items-center justify-between px-4 pt-6 pb-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
+      <div className="flex items-center gap-2.5">
+        <div className="w-[3px] h-[18px] bg-[#0071e3] rounded-full shrink-0" />
+        <span className="text-[19px] font-extrabold text-[#1d1d1f] tracking-tight">{label}</span>
         {badge}
       </div>
       {href && (
-        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+        <Link href={href} className="text-[13px] text-[#0071e3] font-semibold flex items-center gap-0.5 active:opacity-60">
           {linkLabel} <ChevronRight size={13} />
         </Link>
       )}
@@ -2216,14 +2253,50 @@ function getPersonalizedMessage(name: string, weather: WeatherData | null): { su
 function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; nickname: string }) {
   const { sub, main } = getPersonalizedMessage(nickname, weather);
   const now = new Date();
+  const hour = now.getHours();
   const dateStr = now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
 
+  const { gradFrom, gradTo } =
+    hour < 6  ? { gradFrom: "#1a1a2e", gradTo: "#0f3460" }
+    : hour < 9  ? { gradFrom: "#1e3a8a", gradTo: "#3b82f6" }
+    : hour < 12 ? { gradFrom: "#0071e3", gradTo: "#38bdf8" }
+    : hour < 17 ? { gradFrom: "#0058b0", gradTo: "#0071e3" }
+    : hour < 20 ? { gradFrom: "#7c3aed", gradTo: "#c026d3" }
+    :             { gradFrom: "#1e1b4b", gradTo: "#312e81" };
+
   return (
-    <div className="px-4 pt-5 pb-2">
-      <p className="text-[12px] font-semibold text-[#86868b] mb-1 tracking-wide">
-        {dateStr} &nbsp;·&nbsp; {sub.replace(/^.+?님,\s*/, "")}
-      </p>
-      <h1 className="text-[26px] font-black text-[#1d1d1f] leading-tight tracking-tight">{main}</h1>
+    <div className="px-4 pt-4 pb-2">
+      <div
+        className="rounded-3xl p-5 relative overflow-hidden"
+        style={{ background: `linear-gradient(140deg, ${gradFrom}, ${gradTo})` }}>
+        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/[0.06] pointer-events-none" />
+        <div className="absolute right-6 bottom-6 w-20 h-20 rounded-full bg-white/[0.04] pointer-events-none" />
+        <p className="text-[11px] font-semibold text-white/50 tracking-widest uppercase relative z-10 mb-1">
+          {dateStr}
+        </p>
+        <p className="text-[14px] font-medium text-white/75 relative z-10 leading-snug">
+          {sub.replace(/^(.+?님),\s*/, (_, n) => `${n}, `)}
+        </p>
+        <h1 className="text-[22px] font-black text-white leading-tight tracking-tight mt-1 relative z-10">{main}</h1>
+        {weather && (
+          <div className="mt-3.5 flex items-center gap-2 relative z-10 flex-wrap">
+            <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-1.5 flex items-center gap-1.5">
+              <span className="text-[20px] leading-none">{weather.emoji}</span>
+              <span className="text-[15px] font-black text-white">{weather.temp}°C</span>
+              <span className="text-[12px] text-white/60">{weather.label}</span>
+            </div>
+            {weather.pm10 != null && (
+              <div className={`backdrop-blur-sm rounded-2xl px-3 py-1.5 ${
+                weather.pm10 <= 30 ? "bg-[#059669]/30" : weather.pm10 <= 80 ? "bg-[#D97706]/30" : "bg-[#DC2626]/30"
+              }`}>
+                <span className="text-[12px] font-bold text-white">
+                  미세먼지 {weather.pm10 <= 30 ? "😊 좋음" : weather.pm10 <= 80 ? "😐 보통" : "😷 나쁨"}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -2555,19 +2628,19 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+      <div className="px-5 mt-4 mb-2">
+        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
-              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+              <div className="w-[54px] h-[54px] rounded-[18px] flex items-center justify-center shadow-sm"
                 style={{
-                  background: "#f5f5f7",
-                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
+                  background: `${color}18`,
+                  border: `1.5px solid ${color}28`,
                 }}>
-                <Icon size={22} strokeWidth={2} color={color} />
+                <Icon size={24} strokeWidth={2} color={color} />
               </div>
-              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
+              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none text-center">{label}</span>
             </Link>
           ))}
         </div>
@@ -2579,6 +2652,22 @@ export default function HomePage() {
     pharmacy: () => (
       <>
         <SectionLabel label="약국·응급실" />
+        {/* 응급 신속 전화 버튼 */}
+        <div className="mx-4 mb-3 flex gap-2">
+          {[
+            { num: "119", label: "소방·응급", color: "#F04452", bg: "#FEF2F2" },
+            { num: "112", label: "경찰신고",  color: "#2563EB", bg: "#EFF6FF" },
+            { num: "1339", label: "의료상담", color: "#059669", bg: "#ECFDF5" },
+          ].map(({ num, label, color, bg }) => (
+            <a key={num} href={`tel:${num}`}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-2xl active:opacity-70 transition-opacity"
+              style={{ background: bg }}>
+              <Phone size={14} color={color} />
+              <span className="text-[14px] font-black" style={{ color }}>{num}</span>
+              <span className="text-[10px] font-semibold" style={{ color: `${color}99` }}>{label}</span>
+            </a>
+          ))}
+        </div>
         <PharmacySection />
       </>
     ),
