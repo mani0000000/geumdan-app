@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, MessageCircle, Heart } from "lucide-react";
-import { fetchMyComments, type MyCommentWithPost } from "@/lib/db/comments";
+import { fetchMyComments, fetchMyCommentsByIds, type MyCommentWithPost } from "@/lib/db/comments";
 import { getOrCreateUserId } from "@/lib/db/userdata";
 
 function relTime(iso: string): string {
@@ -25,10 +25,17 @@ export default function MyCommentsPage() {
 
   useEffect(() => {
     (async () => {
-      const uid = await getOrCreateUserId();
-      const list = await fetchMyComments(uid);
-      setComments(list);
-      setLoading(false);
+      try {
+        const uid = await getOrCreateUserId();
+        let list = await fetchMyComments(uid);
+        if (list.length === 0) {
+          const localIds: string[] = JSON.parse(localStorage.getItem("myCommentIds") ?? "[]");
+          if (localIds.length > 0) list = await fetchMyCommentsByIds(localIds);
+        }
+        setComments(list);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 
