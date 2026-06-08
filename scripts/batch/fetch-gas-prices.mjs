@@ -21,7 +21,19 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
+// sb_* 형식의 서비스 키는 JWT가 아니므로 PostgREST Authorization 헤더 제거 필요
+function makeFetch(key) {
+  return (input, init) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (!url.includes('/rest/v1/')) return fetch(input, init);
+    const headers = new Headers(init?.headers);
+    if (headers.get('Authorization')?.slice(7) === key) headers.delete('Authorization');
+    return fetch(input, { ...init, headers });
+  };
+}
+
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  global: { fetch: makeFetch(SUPABASE_SERVICE_KEY) },
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
@@ -184,9 +196,10 @@ async function main() {
   console.log(`  ✅ 고유 주유소: ${stationMap.size}개`);
 
   // 3. 기존 DB 레코드 로드
-  const { data: dbRows } = await supabase
+  const { data: dbRows, error: dbLoadErr } = await supabase
     .from('gas_stations')
     .select('id,opinet_id,name,sort_order');
+  if (dbLoadErr) throw new Error(`DB 로드 실패: ${dbLoadErr.message}`);
 
   const dbByOpinetId = new Map();  // opinet_id → db row id
   const dbRawRows = [];            // raw rows for name similarity fallback
@@ -289,15 +302,15 @@ async function main() {
         created_at:       now,
         updated_at:       now,
       };
-      const { error } = await supabase.from('gas_stations').insert(payload);
+      const { data: insertedRow, error } = await supabase
+        .from('gas_stations').insert(payload).select('id').single();
       if (error) {
         console.error(`  ❌ 삽입 실패 "${s.OS_NM}":`, error.message);
         skipped++;
       } else {
         console.log(`  ✨ 신규 발굴: ${s.OS_NM} (${area})`);
         inserted++;
-        // 이후 중복 삽입 방지용으로 opinet_id 등록
-        dbByOpinetId.set(uniId, sortCounter);
+        dbByOpinetId.set(uniId, insertedRow.id);
       }
     }
   }
@@ -309,7 +322,7 @@ async function main() {
       .from('gas_stations')
       .update({ active: false, updated_at: now })
       .not('opinet_id', 'is', null)
-      .not('opinet_id', 'in', `(${activeIds.map(id => `"${id}"`).join(',')})`)
+      .not('opinet_id', 'in', `(${activeIds.join(',')})`)
       .eq('active', true);
     if (deactivateErr) console.warn('  ⚠️  비활성화 오류:', deactivateErr.message);
   }

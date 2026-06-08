@@ -830,7 +830,8 @@ function TideSection() {
     ? OUTDOOR_SPOTS.filter(s => s.type === "해루질")
     : OUTDOOR_SPOTS.filter(s => s.type === "바다낚시" || s.type === "민물낚시");
 
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const _now = new Date();
+  const nowMin = _now.getHours() * 60 + _now.getMinutes();
 
   return (
     <>
@@ -2298,11 +2299,17 @@ function HomeTransportWidget() {
       const apiId = station?.stationId ?? stopId;
       let data = await fetchArrivalsByStationId(apiId);
       if (data.length === 0) data = await fetchArrivalsByNodeId(apiId);
-      // OSM ID로 저장된 정류장은 이름으로 TAGO 역 검색 후 재시도
+      // OSM ID로 저장된 정류장은 이름으로 TAGO 역 검색 후 재시도 (검단 중심에서 가장 가까운 역 선택)
       if (data.length === 0 && stopName && stopName !== "정류장" && stopName !== "버스 정류장") {
         const found = await searchStationsByName(stopName).catch(() => []);
         if (found.length > 0) {
-          const tagoId = found[0].stationId;
+          const GEUMDAN_LAT = 37.594, GEUMDAN_LNG = 126.710;
+          const closest = found.reduce((best, s) => {
+            const d = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, s.lat, s.lng);
+            const bd = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, best.lat, best.lng);
+            return d < bd ? s : best;
+          });
+          const tagoId = closest.stationId;
           data = await fetchArrivalsByStationId(tagoId);
           if (data.length === 0) data = await fetchArrivalsByNodeId(tagoId);
         }
