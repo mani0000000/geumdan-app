@@ -24,7 +24,7 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, searchStationsByName, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, currentDayType, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
@@ -1758,8 +1758,9 @@ function PharmacySection() {
   }, [pharmacies, userLoc, now]);
 
   const filtered = sortedPharmacies.filter(({ p }) => {
-    if (filter === "주말") return p.tags.includes("주말");
-    if (filter === "심야") return p.tags.includes("심야");
+    const tags = p.tags ?? [];
+    if (filter === "주말") return tags.includes("주말");
+    if (filter === "심야") return tags.includes("심야");
     return true;
   });
 
@@ -1856,6 +1857,14 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
+              {displayed.length === 0 && (
+                <div className="px-4 py-8 flex flex-col items-center gap-2">
+                  <PillBottle size={28} className="text-[#d2d2d7]" />
+                  <p className="text-[14px] text-[#86868b] font-medium">
+                    {filter === "주말" ? "주말 운영 약국 정보가 없어요" : filter === "심야" ? "심야 운영 약국 정보가 없어요" : "약국 정보를 불러오는 중이에요"}
+                  </p>
+                </div>
+              )}
               {displayed.map(({ p, distM, isOpen }) => {
                 const { todayHours, todayLabel } = getPharmacyStatus(p, now);
                 const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : "거리 미정";
@@ -1872,7 +1881,7 @@ function PharmacySection() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap min-w-0">
                           <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
-                          {p.tags.includes("24시") && (
+                          {(p.tags ?? []).includes("24시") && (
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
@@ -2282,13 +2291,22 @@ function HomeTransportWidget() {
 
   const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
 
-  const refreshBusStop = useCallback(async (stopId: string) => {
+  const refreshBusStop = useCallback(async (stopId: string, stopName?: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
       const station = GEUMDAN_BUS_STATIONS.find(s => s.id === stopId);
       const apiId = station?.stationId ?? stopId;
       let data = await fetchArrivalsByStationId(apiId);
       if (data.length === 0) data = await fetchArrivalsByNodeId(apiId);
+      // OSM ID로 저장된 정류장은 이름으로 TAGO 역 검색 후 재시도
+      if (data.length === 0 && stopName && stopName !== "정류장" && stopName !== "버스 정류장") {
+        const found = await searchStationsByName(stopName).catch(() => []);
+        if (found.length > 0) {
+          const tagoId = found[0].stationId;
+          data = await fetchArrivalsByStationId(tagoId);
+          if (data.length === 0) data = await fetchArrivalsByNodeId(tagoId);
+        }
+      }
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
     } catch { /* ignore */ } finally {
       setBusLoading(prev => { const n = new Set(prev); n.delete(stopId); return n; });
@@ -2306,7 +2324,7 @@ function HomeTransportWidget() {
   }, []);
 
   useEffect(() => {
-    allBusStopIds.forEach(id => refreshBusStop(id));
+    busStopsToShow.forEach(stop => refreshBusStop(stop.id, stop.name));
     favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2317,7 +2335,7 @@ function HomeTransportWidget() {
   const anyLoading = busLoading.size > 0 || subwayLoading.size > 0;
 
   function refreshAll() {
-    allBusStopIds.forEach(id => refreshBusStop(id));
+    busStopsToShow.forEach(stop => refreshBusStop(stop.id, stop.name));
     favSubwayStations.forEach(st => refreshSubwayStation(st));
   }
 
