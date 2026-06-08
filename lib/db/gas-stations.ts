@@ -164,7 +164,6 @@ export async function fetchGasStationsWithPrices(): Promise<GasStationsResult> {
     let latestTs: string | null = null;
 
     const stations: GasStation[] = data
-      .filter(row => row.price_gasoline != null || row.price_diesel != null || row.price_lpg != null)
       .map(row => {
         const meta = metaFor(row.brand_code as string);
         const lat  = row.lat as number;

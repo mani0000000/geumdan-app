@@ -151,8 +151,10 @@ export async function fetchWeather(): Promise<WeatherData | null> {
     const d = await res.json();
 
     const code: number = d.current.weather_code;
-    const nowH = new Date().getHours();
-    const todayStr = new Date().toISOString().slice(0, 10);
+    const now = new Date();
+    const nowH = now.getHours();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const todayStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 
     // 어제 동시간 온도 (past_days=1 → hourly[nowH] = 어제 같은 시각)
     const yesterdayTemp: number | null =
@@ -167,7 +169,7 @@ export async function fetchWeather(): Promise<WeatherData | null> {
         temp: Math.round(d.hourly.temperature_2m[i] as number),
         code: d.hourly.weather_code[i] as number,
       }))
-      .filter(h => h.t.startsWith(todayStr) && new Date(h.t).getHours() >= nowH)
+      .filter(h => h.t.startsWith(todayStr) && parseInt(h.t.slice(11, 13)) >= nowH)
       .slice(0, 6)
       .map(h => ({
         hour: h.t.slice(11, 16),

@@ -31,12 +31,12 @@ import {
 } from "@/lib/api/subway";
 import type { BusArrival, RouteDetail, RouteStation, BusLocation, NearbyStop } from "@/lib/api/bus";
 import { GEUMDAN_BUS_STATIONS } from "@/lib/api/bus";
+import { type OutdoorType, type OutdoorSpot, OUTDOOR_SPOTS } from "@/lib/data/outdoor-spots";
 
 type Tab = "가볼만한곳" | "버스" | "지하철";
 
 // 검단신도시 중심 좌표 — GPS 미취득/실패 시 폴백 기준점
 const GEUMDAN_DEFAULT = { lat: 37.5777, lng: 126.7209 } as const;
-
 
 type DisplayStop = {
   id: string;          // stationId (OSM ref 또는 node ID)
@@ -1034,7 +1034,7 @@ export default function TransportPage() {
   // 검단신도시 중심 좌표 + 권역 반경. GPS가 권역 밖이면 검단 중심으로 강제
   // 검색해서 의미 있는 정류장을 보여준다 (이 앱은 검단 전용이므로).
   useEffect(() => {
-    const GEUMDAN_RADIUS_M = 8000;
+    const GEUMDAN_RADIUS_M = 3000;
     // 1) GPS 와 무관하게 검단 기본 좌표로 지하철 목록을 즉시 채운다.
     //    GPS 가 늦게 오거나 실패해도 사용자는 검단 인근 역 전체를 바로 본다.
     posRef.current = GEUMDAN_DEFAULT;
@@ -1467,12 +1467,14 @@ export default function TransportPage() {
 
       {/* ══ 권역 밖 안내 배너 ══════════════════════════════════════ */}
       {tab === "버스" && locState === "far" && (
-        <div className="mx-4 mt-3 px-4 py-3 bg-[#FFF8E1] rounded-2xl flex items-start gap-2.5">
-          <MapPin size={15} className="text-[#F59E0B] shrink-0 mt-0.5" />
-          <div>
-            <p className="text-[13px] font-bold text-[#92400E]">검단 신도시 권역 밖</p>
-            <p className="text-[12px] text-[#92400E]/80 mt-0.5">즐겨찾기 노선은 검단 기준 실시간 정보로 표시됩니다.</p>
+        <div className="mx-4 mt-3 px-4 py-4 bg-[#FFF8E1] rounded-2xl">
+          <div className="flex items-center gap-2 mb-1">
+            <MapPin size={15} className="text-[#F59E0B] shrink-0" />
+            <p className="text-[14px] font-bold text-[#92400E]">검단신도시 밖이에요</p>
           </div>
+          <p className="text-[12px] text-[#92400E]/80 leading-relaxed">
+            현재 위치가 검단신도시 밖입니다.<br />즐겨찾기 해둔 정류장·노선 정보만 표시됩니다.
+          </p>
         </div>
       )}
 
@@ -1779,13 +1781,11 @@ export default function TransportPage() {
       })()}
 
       {/* 위치 상태 + 섹션 헤더 — 홈 SectionLabel 스타일 */}
-      {tab !== "가볼만한곳" && (
+      {tab !== "가볼만한곳" && !(tab === "버스" && locState === "far") && (
         <div className="flex items-end justify-between px-4 pt-5 pb-3">
           <div className="flex items-center gap-2">
             <span className="text-[19px] font-extrabold text-[#1d1d1f]">
-              {tab === "버스"
-                ? locState === "far" ? "버스 검색" : "주변 정류장"
-                : "주변 지하철역"}
+              {tab === "버스" ? "주변 정류장" : "주변 지하철역"}
             </span>
             <span className="flex items-center gap-1 text-[12px] text-[#86868b]">
               <MapPin size={11} className="text-[#0071e3]" />가까운 순
@@ -1938,7 +1938,7 @@ export default function TransportPage() {
           )}
 
           {/* 데이터 소스 상태 배너 */}
-          {!loading && stopSource === "fallback" && (
+          {!loading && locState !== "far" && stopSource === "fallback" && (
             <div className="bg-white rounded-2xl px-5 py-7 text-center space-y-2">
               <p className="text-[32px]">🚌</p>
               <p className="text-[15px] font-bold text-[#1d1d1f]">정류장 정보를 불러올 수 없어요</p>
@@ -1947,7 +1947,7 @@ export default function TransportPage() {
               </p>
             </div>
           )}
-          {!loading && stopSource === "osm" && (
+          {!loading && locState !== "far" && stopSource === "osm" && (
             <div className="bg-[#e8f1fd] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
               <span className="text-[13px]">🗺️</span>
               <p className="text-[12px] text-[#0071e3] font-medium">지도 기반 정류장 · 경유 노선만 표시</p>
@@ -1957,34 +1957,7 @@ export default function TransportPage() {
           {/* 검색 활성 시에는 주변 정류장 목록을 숨겨 중복 표시 방지 */}
           {busSearch.trim().length >= 2 ? null : loading ? (
             <><SkeletonStop /><SkeletonStop /><SkeletonStop /></>
-          ) : locState === "far" ? (
-            /* 권역 밖 — 검색 유도 카드로 대체 */
-            <div className="bg-white rounded-2xl overflow-hidden">
-              <div className="px-5 py-7 text-center space-y-3">
-                <div className="w-14 h-14 rounded-full bg-[#FFF3E0] flex items-center justify-center mx-auto">
-                  <MapPin size={24} className="text-[#F59E0B]" />
-                </div>
-                <div>
-                  <p className="text-[16px] font-bold text-[#1d1d1f]">주변 정류장을 표시하려면</p>
-                  <p className="text-[13px] text-[#6e6e73] mt-1.5 leading-relaxed">
-                    정류장 이름이나 노선 번호로 검색하거나<br />즐겨찾기 노선의 실시간 도착 정보를<br />위 즐겨찾기 섹션에서 확인하세요.
-                  </p>
-                </div>
-              </div>
-              <div className="border-t border-[#f5f5f7] px-4 py-3">
-                <button
-                  onClick={() => {
-                    const input = document.querySelector<HTMLInputElement>('input[placeholder*="정류장"]');
-                    input?.focus();
-                    input?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }}
-                  className="w-full flex items-center justify-center gap-2 bg-[#0071e3] text-white rounded-xl py-2.5 active:opacity-80">
-                  <Search size={14} />
-                  <span className="text-[13px] font-semibold">정류장·노선 검색하기</span>
-                </button>
-              </div>
-            </div>
-          ) : stopsWithRoutes.length === 0 ? (
+          ) : locState === "far" ? null : stopsWithRoutes.length === 0 ? (
             <div className="bg-white rounded-2xl px-4 py-10 text-center">
               <Bus size={32} className="mx-auto text-[#D1D5DB] mb-2" />
               <p className="text-[14px] font-bold text-[#6e6e73]">주변 버스 정류장을 찾을 수 없습니다</p>

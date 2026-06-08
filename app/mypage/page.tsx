@@ -23,7 +23,7 @@ import {
 } from "@/lib/db/userdata";
 import { getSavedPostCount } from "@/lib/db/savedposts";
 import { getFavoritePlaces } from "@/lib/db/placeFavorites";
-import { fetchMyComments, type MyCommentWithPost } from "@/lib/db/comments";
+import { fetchMyComments, fetchMyCommentsByIds, type MyCommentWithPost } from "@/lib/db/comments";
 import { getLocalUserId } from "@/lib/db/userdata";
 import { TERMS_MENU } from "@/lib/db/terms";
 import {
@@ -202,12 +202,25 @@ export default function MyPage() {
     if (showMyComments) { setShowMyComments(false); return; }
     setShowMyComments(true);
     setMyCommentsLoading(true);
-    const uid = getLocalUserId();
-    if (uid) {
-      const data = await fetchMyComments(uid);
+    try {
+      const uid = getLocalUserId();
+      let data: MyCommentWithPost[] = [];
+
+      // 1차: DB user_id 컬럼으로 조회 (마이그레이션 완료 후 동작)
+      if (uid) data = await fetchMyComments(uid);
+
+      // 2차: localStorage에 저장된 댓글 ID로 폴백 (user_id 없는 구형 댓글)
+      if (data.length === 0) {
+        try {
+          const localIds: string[] = JSON.parse(localStorage.getItem("myCommentIds") ?? "[]");
+          if (localIds.length > 0) data = await fetchMyCommentsByIds(localIds);
+        } catch { /* ignore */ }
+      }
+
       setMyComments(data);
+    } finally {
+      setMyCommentsLoading(false);
     }
-    setMyCommentsLoading(false);
   }
 
   function handleShowFavApts() {
@@ -542,26 +555,41 @@ export default function MyPage() {
           {/* 내가 쓴 댓글 인라인 패널 */}
           {grpIdx === 0 && showMyComments && (
             <div className={`mx-4 mt-2 ${CARD}`}>
-              <div className="px-4 py-4">
-                <p className="text-[15px] font-bold text-[#1d1d1f] mb-3">내가 쓴 댓글 {myComments.length > 0 && `(${myComments.length}개)`}</p>
+              <div className="px-4 pt-4 pb-3">
+                <p className="text-[15px] font-bold text-[#1d1d1f] mb-3">
+                  내가 쓴 댓글
+                  {myComments.length > 0 && (
+                    <span className="ml-1.5 text-[13px] font-semibold text-[#0071e3]">{myComments.length}개</span>
+                  )}
+                </p>
                 {myCommentsLoading ? (
-                  <p className="text-center text-[13px] text-[#86868b] py-4">불러오는 중...</p>
+                  <div className="py-6 flex flex-col items-center gap-2">
+                    <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                    <p className="text-[12px] text-[#86868b]">불러오는 중...</p>
+                  </div>
                 ) : myComments.length === 0 ? (
-                  <p className="text-center text-[13px] text-[#86868b] py-4">작성한 댓글이 없습니다</p>
+                  <div className="py-6 text-center">
+                    <p className="text-[14px] text-[#86868b]">작성한 댓글이 없습니다</p>
+                    <p className="text-[12px] text-[#b0b0b5] mt-1">커뮤니티에서 댓글을 남겨보세요</p>
+                  </div>
                 ) : (
                   <div className="space-y-2">
                     {myComments.map(c => (
                       <button key={c.id}
                         onClick={() => router.push(`/community/detail/?id=${c.postId}`)}
-                        className="w-full text-left bg-[#f5f5f7] rounded-xl p-3 active:opacity-70 transition-opacity">
-                        <div className="flex items-center gap-2 mb-1">
+                        className="w-full text-left bg-[#f5f5f7] rounded-2xl p-3.5 active:opacity-70 transition-opacity">
+                        {/* 원글 제목 */}
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <MessageSquare size={11} className="text-[#8B5CF6] shrink-0" />
                           {c.postCategory && (
-                            <span className="text-[11px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full">{c.postCategory}</span>
+                            <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded-full shrink-0">{c.postCategory}</span>
                           )}
-                          <span className="text-[11px] text-[#86868b] truncate">{c.postTitle}</span>
+                          <span className="text-[11px] text-[#86868b] truncate flex-1">{c.postTitle ?? "게시글"}</span>
                         </div>
-                        <p className="text-[14px] text-[#1d1d1f] line-clamp-2">{c.content}</p>
-                        <p className="text-[11px] text-[#86868b] mt-1">{c.createdAt.slice(0, 10)}</p>
+                        {/* 댓글 본문 */}
+                        <p className="text-[14px] text-[#1d1d1f] leading-relaxed line-clamp-2">{c.content}</p>
+                        {/* 날짜 */}
+                        <p className="text-[11px] text-[#b0b0b5] mt-1.5">{c.createdAt.slice(0, 10).replace(/-/g, ".")}</p>
                       </button>
                     ))}
                   </div>

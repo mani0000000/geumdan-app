@@ -1447,13 +1447,17 @@ const mainTabs: SoikTab[] = ["커뮤니티", "뉴스", "시세"];
 
 function SoikContent() {
   const router = useRouter();
-  const [tab, setTab] = useState<SoikTab>(() => {
-    if (typeof window !== "undefined") {
-      const p = new URLSearchParams(window.location.search).get("tab");
-      if (p === "뉴스" || p === "시세") return p as SoikTab;
-    }
-    return "커뮤니티";
-  });
+  const searchParams = useSearchParams();
+  const urlTab = searchParams.get("tab");
+  const [tab, setTab] = useState<SoikTab>(
+    urlTab === "뉴스" || urlTab === "시세" ? urlTab : "커뮤니티"
+  );
+
+  useEffect(() => {
+    const p = searchParams.get("tab");
+    if (p === "뉴스" || p === "시세" || p === "커뮤니티") setTab(p as SoikTab);
+    else if (!p) setTab("커뮤니티");
+  }, [searchParams]);
 
   return (
     <div className="min-h-dvh bg-gray-50 pb-28">

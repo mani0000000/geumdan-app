@@ -14,7 +14,8 @@ import {
 import Header from "@/components/layout/Header";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { posts, newsItems, apartments as mockApartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
+import { fetchApartments } from "@/lib/db/apartments";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
@@ -24,7 +25,7 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, getCachedWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, searchStationsByName, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
@@ -41,14 +42,17 @@ import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
+import { OUTDOOR_SPOTS, type OutdoorType, type OutdoorSpot } from "@/lib/data/outdoor-spots";
 import { fetchYouTubeVideos, type YouTubeVideo } from "@/lib/api/news";
+import type { NewsItem, Post } from "@/lib/types";
+import { fetchDBPosts } from "@/lib/db/posts";
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/community/?tab=뉴스",                          color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community?tab=시세",                           color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community?tab=뉴스",                           color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community?tab=커뮤니티",                       color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
   { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },
   { icon: ShoppingBag,   label: "중고거래",href: "/community/?tab=커뮤니티&category=중고거래",    color: "#C2255C" },
@@ -69,10 +73,22 @@ function WeeklyModal({ weekly, onClose }: {
   weekly: NonNullable<WeatherData["weekly"]>;
   onClose: () => void;
 }) {
+  // 열려있는 동안 배경 스크롤 잠금 + ESC 닫기
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-[300]">
-      {/* 배경 클릭 시 닫기 */}
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+    <div className="fixed inset-0 z-[9100]">
+      {/* 배경 — 클릭 시 닫기, 외부 조작 차단 */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       {/* 시트 */}
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
         <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
@@ -88,7 +104,8 @@ function WeeklyModal({ weekly, onClose }: {
               <X size={20} className="text-[#6e6e73]" />
             </button>
           </div>
-          <div className="px-4 py-3 pb-10 space-y-1">
+          <div className="px-4 py-3 space-y-1 overflow-y-auto"
+            style={{ paddingBottom: "max(32px, env(safe-area-inset-bottom, 32px))" }}>
             {weekly.map((day, i) => (
               <div key={i}
                 className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
@@ -445,39 +462,71 @@ function NewOpeningsSection() {
 // ─── 커뮤니티 위젯 ────────────────────────────────────────────
 function CommunityWidget() {
   const router = useRouter();
-  const hotPosts = posts.filter(p => p.isHot).slice(0, 3);
-  if (hotPosts.length === 0) return null;
+  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDBPosts(undefined, 10)
+      .then(data => {
+        const visible = data.filter(p => !p.isHidden);
+        const hot = visible.filter(p => p.isHot);
+        setCommunityPosts(hot.length >= 3 ? hot.slice(0, 5) : visible.slice(0, 5));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <section className="mx-4 mb-1">
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7] animate-pulse">
+        {[0, 1, 2].map(i => <div key={i} className="h-[68px] px-4" />)}
+      </div>
+    </section>
+  );
+
+  if (communityPosts.length === 0) return null;
+
   return (
     <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
-        {hotPosts.map((post, idx) => (
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7]">
+        {communityPosts.slice(0, 5).map((post, idx) => (
           <button key={post.id}
             onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
+            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-[#f5f5f7] transition-colors">
             <span className={`shrink-0 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center ${
-              idx === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
+              idx === 0 ? "bg-[#2563EB] text-white" : idx === 1 ? "bg-[#f5f5f7] text-[#424245]" : "bg-[#f5f5f7] text-[#86868b]"
             }`}>
               {idx + 1}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[11px] font-semibold text-gray-500">{post.category}</span>
-                <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
-                  <Flame size={9} />HOT
+                <span className="text-[11px] font-semibold text-[#0071e3] bg-[#e8f1fd] px-1.5 py-0.5 rounded-full">
+                  {post.category}
                 </span>
+                {post.isHot && (
+                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#F04452] bg-[#FEF2F2] px-1.5 py-0.5 rounded-full">
+                    <Flame size={9} />HOT
+                  </span>
+                )}
               </div>
-              <p className="text-[14px] font-medium text-gray-900 leading-snug truncate">{post.title}</p>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="text-[12px] text-gray-400">{post.authorDong}</span>
-                <span className="text-[12px] text-gray-300">·</span>
-                <span className="text-[12px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
-                <span className="text-[12px] text-gray-400 ml-auto">❤️ {post.likeCount}</span>
+              <p className="text-[14px] font-semibold text-[#1d1d1f] leading-snug truncate mt-0.5">{post.title}</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-[11px] text-[#86868b]">{post.authorDong}</span>
+                <span className="text-[11px] text-[#d2d2d7]">·</span>
+                <span className="text-[11px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
+                <div className="ml-auto flex items-center gap-2">
+                  <span className="text-[11px] text-[#86868b]">❤️ {post.likeCount}</span>
+                  {post.commentCount > 0 && (
+                    <span className="text-[11px] text-[#86868b]">💬 {post.commentCount}</span>
+                  )}
+                </div>
               </div>
             </div>
+            <ChevronRight size={14} className="text-[#d2d2d7] shrink-0" />
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-blue-600 font-semibold active:bg-gray-50">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold active:bg-[#f5f5f7]">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -525,7 +574,7 @@ function NewsWidget() {
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/community/?tab=뉴스"
+        <Link href="/community?tab=뉴스"
           className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
@@ -830,23 +879,6 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
-// timeOffsetMin: 인천 기준 대비 시간 보정(분), rangeRatio: 조차 비율
-const TIDE_SPOTS = {
-  haerujil: [
-    { name: "강화 여차리 갯벌",     type: "갯벌", dist: "약 45km", timeOffsetMin:  20, rangeRatio: 1.05, lat: 37.6124, lng: 126.4343 },
-    { name: "영종도 북쪽 갯벌",     type: "갯벌", dist: "약 20km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.5396, lng: 126.4768 },
-    { name: "소래습지생태공원",     type: "갯벌", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4278, lng: 126.7373 },
-    { name: "시흥 오이도 갯벌",     type: "갯벌", dist: "약 35km", timeOffsetMin:  25, rangeRatio: 0.87, lat: 37.3476, lng: 126.6765 },
-    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
-  ],
-  fishing: [
-    { name: "소래포구 방파제",    type: "방파제", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4264, lng: 126.7456 },
-    { name: "인천항 갑문 선착장", type: "선착장", dist: "약 18km", timeOffsetMin:   0, rangeRatio: 1.00, lat: 37.4604, lng: 126.5949 },
-    { name: "영종도 삼목선착장",  type: "선착장", dist: "약 22km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.4959, lng: 126.4462 },
-    { name: "강화 외포리 선착장", type: "선착장", dist: "약 45km", timeOffsetMin:  25, rangeRatio: 1.02, lat: 37.6441, lng: 126.4176 },
-    { name: "대부도 방아머리항",  type: "항구",   dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
-  ],
-};
 
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
@@ -859,7 +891,7 @@ function TideSection() {
 
   if (!report) return null;
 
-  const { multtae, todayTides, nextLowTide, haerujil, fishing, seasonalNote } = report;
+  const { multtae, todayTides, nextLowTide, actualRangeM, haerujil, fishing, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
   const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
@@ -872,15 +904,12 @@ function TideSection() {
   };
   const rm = ratingMeta[activity.rating];
 
-  const spots = TIDE_SPOTS[tab];
-  const maxH = Math.max(...todayTides.map(t => t.heightM));
-  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+  const spots: OutdoorSpot[] = tab === "haerujil"
+    ? OUTDOOR_SPOTS.filter(s => s.type === "해루질")
+    : OUTDOOR_SPOTS.filter(s => s.type === "바다낚시" || s.type === "민물낚시");
 
-  // 분 → HH:MM 변환 (인라인)
-  const toTime = (min: number) => {
-    const m = ((min % 1440) + 1440) % 1440;
-    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-  };
+  const _now = new Date();
+  const nowMin = _now.getHours() * 60 + _now.getMinutes();
 
   return (
     <>
@@ -900,7 +929,7 @@ function TideSection() {
                 </span>
               </div>
               <p className="text-[13px] text-gray-500 mt-1">
-                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {actualRangeM}m
               </p>
             </div>
             {nextLowTide && (
@@ -970,7 +999,11 @@ function TideSection() {
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex-1 py-2.5 rounded-lg text-[15px] font-bold transition-all ${
-                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
+                tab === key
+                  ? key === "haerujil"
+                    ? "bg-orange-50 text-orange-700 shadow-sm"
+                    : "bg-blue-50 text-blue-700 shadow-sm"
+                  : "text-gray-400"
               }`}>
               {label}
             </button>
@@ -1008,51 +1041,69 @@ function TideSection() {
 
         {/* ── 추천 스팟 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50">
+          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
             <p className="text-[14px] font-bold text-gray-700">
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
+            <Link href="/transport/?tab=가볼만한곳"
+              className="text-[12px] text-[#0071e3] font-medium flex items-center gap-0.5">
+              전체보기 <ChevronRight size={12} />
+            </Link>
           </div>
-          <div className="divide-y divide-gray-50">
-            {spots.map((s, i) => {
-              // 스팟별 조석 보정
-              const spotRange = parseFloat((multtae.rangeM * s.rangeRatio).toFixed(1));
-              const spotLowTides = todayTides
-                .filter(t => t.type === "low")
-                .map(t => {
-                  const corrMin = ((t.minutes + s.timeOffsetMin) + 1440) % 1440;
-                  return { ...t, minutes: corrMin, timeStr: toTime(corrMin) };
-                });
-              const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
-              const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
+
+          {/* 법 개정 안내 */}
+          <div className="mx-3 mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+            <span className="text-[12px] shrink-0">⚠️</span>
+            <p className="text-[11px] text-amber-800 leading-snug">
+              <span className="font-bold">수산자원관리법 2026 개정</span> — 비어업인 해루질 시간·장소 제한 강화. 어촌계 어업권 구역 진입 시 절도죄 위험. 현지 공고 확인 필수.
+            </p>
+          </div>
+
+          <div className="divide-y divide-gray-50 mt-2">
+            {spots.map((s) => {
+              const typeColor = s.type === "해루질" ? "#0891B2"
+                : s.type === "민물낚시" ? "#2E7D32" : "#1E40AF";
+              const typeBg = s.type === "해루질" ? "#E0F7FA"
+                : s.type === "민물낚시" ? "#E8F5E9" : "#EFF6FF";
+              const typeEmoji = s.type === "해루질" ? "🌊" : s.type === "민물낚시" ? "🏞️" : "⚓";
 
               return (
-                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                <div key={s.id} className="flex items-start gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      <span className="text-[12px] text-gray-500">{s.type} · {s.dist}</span>
-                      {!sameAsIncheon && nextSpotLow && (
-                        <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">
-                            저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
-                          </span>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-600">조차 <span className="font-semibold">{spotRange}m</span></span>
-                        </>
+                    {/* 이름 + 타입 배지 */}
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0"
+                        style={{ color: typeColor, background: typeBg }}>
+                        {typeEmoji} {s.type}
+                      </span>
+                      {s.boat && (
+                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">🚢 배편</span>
                       )}
-                      {sameAsIncheon && (
-                        <>
-                          <span className="text-[12px] text-gray-300">·</span>
-                          <span className="text-[12px] text-gray-500">인천과 동일</span>
-                        </>
-                      )}
+                    </div>
+                    <p className="text-[15px] font-bold text-[#1d1d1f] leading-snug">{s.name}</p>
+                    {/* 거리 */}
+                    <p className="text-[12px] text-gray-500 mt-0.5">
+                      검단 기준 {s.distKm}km · 차로 {s.driveMin}분
+                    </p>
+                    {/* 어종 칩 */}
+                    <div className="flex flex-wrap gap-1 mt-1.5">
+                      {s.species.slice(0, 4).map(sp => (
+                        <span key={sp} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">{sp}</span>
+                      ))}
+                    </div>
+                    {/* 금어기 경고 */}
+                    {s.regulation && (
+                      <p className="text-[11px] text-orange-600 font-medium mt-1">🚫 {s.regulation}</p>
+                    )}
+                    {/* 안전도 */}
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-[10px] text-gray-400">안전</span>
+                      <span className="text-[11px] text-yellow-500">{"★".repeat(s.safety)}{"☆".repeat(5 - s.safety)}</span>
                     </div>
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[12px] font-bold text-yellow-700"
+                    className="shrink-0 mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-[12px] font-bold text-white"
                   >
                     지도 ↗
                   </button>
@@ -1090,12 +1141,14 @@ function RealEstateWidget() {
   const [myAptId, setMyAptId] = useState<string | null>(null);
   const [myAptSzIdx, setMyAptSzIdx] = useState(0);
   const [pyeongFilter, setPyeongFilter] = useState<PyeongFilter>("전체");
+  const [aptData, setAptData] = useState(mockApartments);
   useEffect(() => {
     setMyAptId(localStorage.getItem("myAptId"));
     setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
+    fetchApartments().then(data => { if (data.length > 0) setAptData(data); });
   }, []);
 
-  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
+  const myApt = myAptId ? aptData.find(a => a.id === myAptId) ?? null : null;
   const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
   const mySz    = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
   const myH     = mySz?.priceHistory ?? [];
@@ -1106,10 +1159,10 @@ function RealEstateWidget() {
 
   // 검단신도시 평균 (평수 필터 반영)
   const avgTrend = (() => {
-    const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
+    const months = aptData[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
     return months.map(month => {
       let total = 0, count = 0;
-      apartments.forEach(apt => apt.sizes.forEach(sz => {
+      aptData.forEach(apt => apt.sizes.forEach(sz => {
         if (pyeongFilter !== "전체" && pyeongBucket(sz.pyeong) !== pyeongFilter) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
@@ -1785,11 +1838,10 @@ function PharmacySection() {
     return enriched;
   }, [pharmacies, userLoc, now]);
 
-  const filtered = sortedPharmacies.filter(({ p, distM }) => {
-    // 거리를 알 수 없는 항목 제외 (GPS 미허용 시 Infinity)
-    if (!Number.isFinite(distM)) return false;
-    if (filter === "주말") return p.tags.includes("주말");
-    if (filter === "심야") return p.tags.includes("심야");
+  const filtered = sortedPharmacies.filter(({ p }) => {
+    const tags = p.tags ?? [];
+    if (filter === "주말") return tags.includes("주말");
+    if (filter === "심야") return tags.includes("심야");
     return true;
   });
 
@@ -1886,6 +1938,14 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
+              {displayed.length === 0 && (
+                <div className="px-4 py-8 flex flex-col items-center gap-2">
+                  <PillBottle size={28} className="text-[#d2d2d7]" />
+                  <p className="text-[14px] text-[#86868b] font-medium">
+                    {filter === "주말" ? "주말 운영 약국 정보가 없어요" : filter === "심야" ? "심야 운영 약국 정보가 없어요" : "약국 정보를 불러오는 중이에요"}
+                  </p>
+                </div>
+              )}
               {displayed.map(({ p, distM, isOpen }) => {
                 const { todayHours, todayLabel } = getPharmacyStatus(p, now);
                 const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : "거리 미정";
@@ -1902,7 +1962,7 @@ function PharmacySection() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap min-w-0">
                           <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
-                          {p.tags.includes("24시") && (
+                          {(p.tags ?? []).includes("24시") && (
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
@@ -2188,12 +2248,13 @@ function SectionLabel({
 }) {
   return (
     <div className="flex items-center justify-between px-4 pt-6 pb-3">
-      <div className="flex items-center gap-2">
-        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
+      <div className="flex items-center gap-2.5">
+        <div className="w-[3px] h-[18px] bg-[#0071e3] rounded-full shrink-0" />
+        <span className="text-[19px] font-extrabold text-[#1d1d1f] tracking-tight">{label}</span>
         {badge}
       </div>
       {href && (
-        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
+        <Link href={href} className="text-[13px] text-[#0071e3] font-semibold flex items-center gap-0.5 active:opacity-60">
           {linkLabel} <ChevronRight size={13} />
         </Link>
       )}
@@ -2247,14 +2308,50 @@ function getPersonalizedMessage(name: string, weather: WeatherData | null): { su
 function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; nickname: string }) {
   const { sub, main } = getPersonalizedMessage(nickname, weather);
   const now = new Date();
+  const hour = now.getHours();
   const dateStr = now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
 
+  const { gradFrom, gradTo } =
+    hour < 6  ? { gradFrom: "#1a1a2e", gradTo: "#0f3460" }
+    : hour < 9  ? { gradFrom: "#1e3a8a", gradTo: "#3b82f6" }
+    : hour < 12 ? { gradFrom: "#0071e3", gradTo: "#38bdf8" }
+    : hour < 17 ? { gradFrom: "#0058b0", gradTo: "#0071e3" }
+    : hour < 20 ? { gradFrom: "#7c3aed", gradTo: "#c026d3" }
+    :             { gradFrom: "#1e1b4b", gradTo: "#312e81" };
+
   return (
-    <div className="px-4 pt-5 pb-2">
-      <p className="text-[12px] font-semibold text-[#86868b] mb-1 tracking-wide">
-        {dateStr} &nbsp;·&nbsp; {sub.replace(/^.+?님,\s*/, "")}
-      </p>
-      <h1 className="text-[26px] font-black text-[#1d1d1f] leading-tight tracking-tight">{main}</h1>
+    <div className="px-4 pt-4 pb-2">
+      <div
+        className="rounded-3xl p-5 relative overflow-hidden"
+        style={{ background: `linear-gradient(140deg, ${gradFrom}, ${gradTo})` }}>
+        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/[0.06] pointer-events-none" />
+        <div className="absolute right-6 bottom-6 w-20 h-20 rounded-full bg-white/[0.04] pointer-events-none" />
+        <p className="text-[11px] font-semibold text-white/50 tracking-widest uppercase relative z-10 mb-1">
+          {dateStr}
+        </p>
+        <p className="text-[14px] font-medium text-white/75 relative z-10 leading-snug">
+          {sub.replace(/^(.+?님),\s*/, (_, n) => `${n}, `)}
+        </p>
+        <h1 className="text-[22px] font-black text-white leading-tight tracking-tight mt-1 relative z-10">{main}</h1>
+        {weather && (
+          <div className="mt-3.5 flex items-center gap-2 relative z-10 flex-wrap">
+            <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-1.5 flex items-center gap-1.5">
+              <span className="text-[20px] leading-none">{weather.emoji}</span>
+              <span className="text-[15px] font-black text-white">{weather.temp}°C</span>
+              <span className="text-[12px] text-white/60">{weather.label}</span>
+            </div>
+            {weather.pm10 != null && (
+              <div className={`backdrop-blur-sm rounded-2xl px-3 py-1.5 ${
+                weather.pm10 <= 30 ? "bg-[#059669]/30" : weather.pm10 <= 80 ? "bg-[#D97706]/30" : "bg-[#DC2626]/30"
+              }`}>
+                <span className="text-[12px] font-bold text-white">
+                  미세먼지 {weather.pm10 <= 30 ? "😊 좋음" : weather.pm10 <= 80 ? "😐 보통" : "😷 나쁨"}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -2329,6 +2426,10 @@ function HomeTransportWidget() {
   const favRouteStopIds = favRoutes.map(r => r.stopId);
   const allBusStopIds = Array.from(new Set([...favStopIds, ...favRouteStopIds]));
   const favRouteKeySet = new Set(favRoutes.map(r => r.key));
+  // routeNo-based fallback for when arrival has routeId but favorites were saved by routeNo
+  const favRouteNoKeySet = new Set(favRoutes.map(r => `${r.stopId}::${r.routeNo}`));
+  const isFavRoute = (stopId: string, a: BusArrival) =>
+    favRouteKeySet.has(routeFavKey(stopId, a)) || favRouteNoKeySet.has(`${stopId}::${a.routeNo}`);
 
   // 표시할 정류장 목록: 즐겨찾기 정류장 + 즐겨찾기 노선의 부모 정류장 (중복 제거)
   const busStopsToShow: { id: string; name: string }[] = (() => {
@@ -2342,15 +2443,29 @@ function HomeTransportWidget() {
 
   const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
 
-  const refreshBusStop = useCallback(async (stopId: string) => {
+  const refreshBusStop = useCallback(async (stopId: string, stopName?: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
       // stationId lookup: 구버전 "gd-X" 형식 저장 호환
       const station = GEUMDAN_BUS_STATIONS.find(s => s.id === stopId);
       const apiId = station?.stationId ?? stopId;
-      // NodeId(TAGO) 먼저: 권역 밖 정류장도 전국 단위로 조회 가능
-      let data = await fetchArrivalsByNodeId(apiId);
-      if (data.length === 0) data = await fetchArrivalsByStationId(apiId);
+      let data = await fetchArrivalsByStationId(apiId);
+      if (data.length === 0) data = await fetchArrivalsByNodeId(apiId);
+      // OSM ID로 저장된 정류장은 이름으로 TAGO 역 검색 후 재시도 (검단 중심에서 가장 가까운 역 선택)
+      if (data.length === 0 && stopName && stopName !== "정류장" && stopName !== "버스 정류장") {
+        const found = await searchStationsByName(stopName).catch(() => []);
+        if (found.length > 0) {
+          const GEUMDAN_LAT = 37.594, GEUMDAN_LNG = 126.710;
+          const closest = found.reduce((best, s) => {
+            const d = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, s.lat, s.lng);
+            const bd = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, best.lat, best.lng);
+            return d < bd ? s : best;
+          });
+          const tagoId = closest.stationId;
+          data = await fetchArrivalsByStationId(tagoId);
+          if (data.length === 0) data = await fetchArrivalsByNodeId(tagoId);
+        }
+      }
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
 
       // 이름 자동 저장: stationName이 있으면 favStops_meta에 백필
@@ -2383,7 +2498,7 @@ function HomeTransportWidget() {
   }, []);
 
   useEffect(() => {
-    allBusStopIds.forEach(id => refreshBusStop(id));
+    busStopsToShow.forEach(stop => refreshBusStop(stop.id, stop.name));
     favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2664,19 +2779,19 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
-      <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+      <div className="px-5 mt-4 mb-2">
+        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
-              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
+              className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
+              <div className="w-[54px] h-[54px] rounded-[18px] flex items-center justify-center shadow-sm"
                 style={{
-                  background: "#f5f5f7",
-                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
+                  background: `${color}18`,
+                  border: `1.5px solid ${color}28`,
                 }}>
-                <Icon size={22} strokeWidth={2} color={color} />
+                <Icon size={24} strokeWidth={2} color={color} />
               </div>
-              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
+              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none text-center">{label}</span>
             </Link>
           ))}
         </div>
@@ -2688,10 +2803,31 @@ export default function HomePage() {
     pharmacy: () => (
       <>
         <SectionLabel label="약국·응급실" />
+        {/* 응급 신속 전화 버튼 */}
+        <div className="mx-4 mb-3 flex gap-2">
+          {[
+            { num: "119", label: "소방·응급", color: "#F04452", bg: "#FEF2F2" },
+            { num: "112", label: "경찰신고",  color: "#2563EB", bg: "#EFF6FF" },
+            { num: "1339", label: "의료상담", color: "#059669", bg: "#ECFDF5" },
+          ].map(({ num, label, color, bg }) => (
+            <a key={num} href={`tel:${num}`}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-2xl active:opacity-70 transition-opacity"
+              style={{ background: bg }}>
+              <Phone size={14} color={color} />
+              <span className="text-[14px] font-black" style={{ color }}>{num}</span>
+              <span className="text-[10px] font-semibold" style={{ color: `${color}99` }}>{label}</span>
+            </a>
+          ))}
+        </div>
         <PharmacySection />
       </>
     ),
-    transport: () => <HomeTransportWidget />,
+    transport: () => (
+      <>
+        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
+        <HomeTransportWidget />
+      </>
+    ),
     community: () => (
       <>
         <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />
@@ -2700,7 +2836,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/community/?tab=뉴스" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),
@@ -2708,7 +2844,7 @@ export default function HomePage() {
     instagram: () => <InstagramFeedSection />,
     realestate: () => (
       <>
-        <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
+        <SectionLabel label="실거래가" href="/community?tab=시세" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),
