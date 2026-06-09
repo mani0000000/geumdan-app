@@ -944,6 +944,7 @@ function TideSection() {
           {(() => {
             const W = 320; const H = 78; const PAD_X = 14; const PAD_Y = 8;
             const minH2 = Math.min(...todayTides.map(t => t.heightM));
+            const maxH = Math.max(...todayTides.map(t => t.heightM));
             const range = maxH - minH2 || 1;
             const toX = (i: number) => PAD_X + (i / (todayTides.length - 1)) * (W - PAD_X * 2);
             const toY = (h: number) => PAD_Y + (1 - (h - minH2) / range) * (H - PAD_Y * 2);
