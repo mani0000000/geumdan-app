@@ -2115,156 +2115,165 @@ function GreetingBanner({ weather, weatherLoading, nickname }: {
     :             { gradFrom: "#1e1b4b", gradTo: "#312e81" };
 
   const tempDiff = weather?.yesterdayTemp != null ? weather.temp - weather.yesterdayTemp : null;
+  const hasHourly = !!(weather && weather.hourly.length > 0);
+  const hasWeekly = !!(weather && weather.weekly && weather.weekly.length > 0);
+
+  function toggleHourly() { setShowHourly(v => !v); if (!showHourly) setShowWeekly(false); }
+  function toggleWeekly() { setShowWeekly(v => !v); if (!showWeekly) setShowHourly(false); }
 
   return (
-    <div className="px-4 pt-4 pb-2">
+    <div className="px-4 pt-3 pb-2">
       <div
         className="rounded-3xl relative overflow-hidden"
         style={{ background: `linear-gradient(140deg, ${gradFrom}, ${gradTo})` }}>
         {/* 장식용 원 */}
-        <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/[0.06] pointer-events-none" />
-        <div className="absolute right-6 bottom-6 w-20 h-20 rounded-full bg-white/[0.04] pointer-events-none" />
+        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/[0.06] pointer-events-none" />
+        <div className="absolute right-5 bottom-5 w-16 h-16 rounded-full bg-white/[0.04] pointer-events-none" />
 
         {/* 인사 + 날씨 요약 */}
-        <div className="p-5 relative z-10">
-          <p className="text-[11px] font-semibold text-white/50 tracking-widest uppercase mb-1">{dateStr}</p>
-          <p className="text-[14px] font-medium text-white/75 leading-snug">
+        <div className="px-4 pt-4 pb-3 relative z-10">
+          <p className="text-[10px] font-semibold text-white/45 tracking-widest uppercase mb-0.5">{dateStr}</p>
+          <p className="text-[13px] font-medium text-white/70 leading-snug">
             {sub.replace(/^(.+?님),\s*/, (_, n) => `${n}, `)}
           </p>
-          <h1 className="text-[22px] font-black text-white leading-tight tracking-tight mt-1">{main}</h1>
+          <h1 className="text-[20px] font-black text-white leading-tight tracking-tight mt-0.5">{main}</h1>
 
           {weather ? (
-            <div className="mt-3.5 flex items-center gap-2 flex-wrap">
+            <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
               {/* 현재 기온 */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-1.5 flex items-center gap-1.5">
-                <span className="text-[20px] leading-none">{weather.emoji}</span>
-                <span className="text-[15px] font-black text-white">{weather.temp}°</span>
-                <span className="text-[11px] text-white/60">{weather.label}</span>
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-1">
+                <span className="text-[17px] leading-none">{weather.emoji}</span>
+                <span className="text-[14px] font-black text-white">{weather.temp}°</span>
+                <span className="text-[11px] text-white/55">{weather.label}</span>
               </div>
               {/* 최고·최저 */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-3 py-1.5 flex items-center gap-1">
-                <span className="text-[13px] font-bold text-[#fca5a5]">최고 {weather.high}°</span>
-                <span className="text-[11px] text-white/30 mx-0.5">·</span>
-                <span className="text-[13px] font-bold text-[#93c5fd]">최저 {weather.low}°</span>
+              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-1">
+                <span className="text-[12px] font-bold text-[#fca5a5]">최고 {weather.high}°</span>
+                <span className="text-[10px] text-white/25">·</span>
+                <span className="text-[12px] font-bold text-[#93c5fd]">최저 {weather.low}°</span>
               </div>
               {/* 어제 대비 */}
               {tempDiff !== null && (
-                <div className={`backdrop-blur-sm rounded-2xl px-3 py-1.5 flex items-center gap-0.5 ${
+                <div className={`backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-0.5 ${
                   tempDiff > 0 ? "bg-red-400/30" : tempDiff < 0 ? "bg-blue-300/30" : "bg-white/15"
                 }`}>
                   {tempDiff > 0
-                    ? <TrendingUp size={11} className="text-red-200" />
+                    ? <TrendingUp size={10} className="text-red-200" />
                     : tempDiff < 0
-                    ? <TrendingDown size={11} className="text-blue-200" />
+                    ? <TrendingDown size={10} className="text-blue-200" />
                     : null}
-                  <span className="text-[12px] font-bold text-white ml-0.5">
+                  <span className="text-[11px] font-bold text-white ml-0.5">
                     어제보다 {tempDiff > 0 ? `+${tempDiff}°` : tempDiff < 0 ? `${tempDiff}°` : "동일"}
                   </span>
                 </div>
               )}
               {/* 미세먼지 */}
               {weather.pm10 != null && (
-                <div className={`backdrop-blur-sm rounded-2xl px-3 py-1.5 ${
+                <div className={`backdrop-blur-sm rounded-xl px-2.5 py-1 ${
                   weather.pm10 <= 30 ? "bg-[#059669]/30"
                   : weather.pm10 <= 80 ? "bg-[#D97706]/30"
                   : "bg-[#DC2626]/30"
                 }`}>
-                  <span className="text-[12px] font-bold text-white">
+                  <span className="text-[11px] font-bold text-white">
                     미세먼지 {weather.pm10 <= 30 ? "😊 좋음" : weather.pm10 <= 80 ? "😐 보통" : "😷 나쁨"}
                   </span>
                 </div>
               )}
             </div>
           ) : weatherLoading ? (
-            <div className="mt-3.5 flex gap-2">
-              <div className="h-8 w-28 bg-white/15 rounded-2xl animate-pulse" />
-              <div className="h-8 w-20 bg-white/15 rounded-2xl animate-pulse" />
+            <div className="mt-2.5 flex gap-1.5">
+              <div className="h-7 w-24 bg-white/15 rounded-xl animate-pulse" />
+              <div className="h-7 w-20 bg-white/15 rounded-xl animate-pulse" />
             </div>
           ) : null}
         </div>
 
-        {/* 시간별 날씨 아코디언 */}
-        {weather && weather.hourly.length > 0 && (
-          <div className="border-t border-white/10 relative z-10">
-            <button
-              onClick={() => setShowHourly(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-3 active:opacity-70 transition-opacity">
-              <div className="flex items-center gap-1.5">
-                <Clock size={13} className="text-white/60" />
-                <span className="text-[13px] font-semibold text-white/80">시간별 날씨</span>
-              </div>
-              {showHourly
-                ? <ChevronUp size={14} className="text-white/50" />
-                : <ChevronDown size={14} className="text-white/50" />}
-            </button>
-            {showHourly && (
-              <div className="px-5 pb-4">
-                <div className="flex gap-5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-                  {weather.hourly.map(h => (
-                    <div key={h.hour} className="flex flex-col items-center gap-1.5 shrink-0">
-                      <span className="text-[12px] text-white/55">{h.hour}</span>
-                      <span className="text-[20px]">{h.emoji}</span>
-                      <span className="text-[13px] font-bold text-white">{h.temp}°</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex items-center gap-4 mt-3 pt-2.5 border-t border-white/10 flex-wrap">
-                  <div className="flex items-center gap-1.5">
-                    <Droplets size={12} className="text-white/60" />
-                    <span className="text-[13px] text-white/70">습도 {weather.humidity}%</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Wind size={12} className="text-white/60" />
-                    <span className="text-[13px] text-white/70">바람 {weather.windSpeed}m/s</span>
-                  </div>
-                  <span className="text-[13px] text-white/60 ml-auto">체감 {weather.feelsLike}°</span>
-                </div>
-              </div>
+        {/* 아코디언 토글 버튼 행 — 아이콘+화살표만 */}
+        {(hasHourly || hasWeekly) && (
+          <div className="border-t border-white/10 flex relative z-10">
+            {hasHourly && (
+              <button
+                onClick={toggleHourly}
+                className={`flex-1 flex items-center justify-center gap-1 py-2 active:opacity-60 transition-opacity ${
+                  showHourly ? "bg-white/10" : ""
+                } ${hasWeekly ? "border-r border-white/10" : ""}`}>
+                <Clock size={12} className="text-white/50" />
+                {showHourly
+                  ? <ChevronUp size={13} className="text-white/50" />
+                  : <ChevronDown size={13} className="text-white/50" />}
+              </button>
+            )}
+            {hasWeekly && (
+              <button
+                onClick={toggleWeekly}
+                className={`flex-1 flex items-center justify-center gap-1 py-2 active:opacity-60 transition-opacity ${
+                  showWeekly ? "bg-white/10" : ""
+                }`}>
+                <Calendar size={12} className="text-white/50" />
+                {showWeekly
+                  ? <ChevronUp size={13} className="text-white/50" />
+                  : <ChevronDown size={13} className="text-white/50" />}
+              </button>
             )}
           </div>
         )}
 
-        {/* 주간 날씨 아코디언 */}
-        {weather && weather.weekly && weather.weekly.length > 0 && (
-          <div className="border-t border-white/10 relative z-10">
-            <button
-              onClick={() => setShowWeekly(v => !v)}
-              className="w-full flex items-center justify-between px-5 py-3 active:opacity-70 transition-opacity">
-              <div className="flex items-center gap-1.5">
-                <Calendar size={13} className="text-white/60" />
-                <span className="text-[13px] font-semibold text-white/80">주간 날씨</span>
+        {/* 시간별 날씨 펼침 */}
+        {showHourly && weather && (
+          <div className="border-t border-white/10 relative z-10 px-4 pt-3 pb-4">
+            <p className="text-[11px] font-bold text-white/50 uppercase tracking-wide mb-2.5">시간별 날씨</p>
+            <div className="flex gap-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+              {weather.hourly.map(h => (
+                <div key={h.hour} className="flex flex-col items-center gap-1 shrink-0">
+                  <span className="text-[11px] text-white/50">{h.hour}</span>
+                  <span className="text-[19px]">{h.emoji}</span>
+                  <span className="text-[13px] font-bold text-white">{h.temp}°</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-white/10 flex-wrap">
+              <div className="flex items-center gap-1">
+                <Droplets size={11} className="text-white/50" />
+                <span className="text-[12px] text-white/65">습도 {weather.humidity}%</span>
               </div>
-              {showWeekly
-                ? <ChevronUp size={14} className="text-white/50" />
-                : <ChevronDown size={14} className="text-white/50" />}
-            </button>
-            {showWeekly && (
-              <div className="px-4 pb-4 space-y-1">
-                {weather.weekly.map((day, i) => (
-                  <div key={i} className={`flex items-center gap-3 px-3 py-2.5 rounded-2xl ${
-                    day.isToday ? "bg-white/20" : "bg-white/[0.07]"
-                  }`}>
-                    <div className="w-[52px] shrink-0">
-                      <p className={`text-[14px] font-bold ${day.isToday ? "text-white" : "text-white/80"}`}>
-                        {day.isToday ? "오늘" : day.dayLabel}
-                      </p>
-                      <p className="text-[11px] text-white/45">{day.date}</p>
-                    </div>
-                    <span className="text-[22px] w-8 shrink-0">{day.emoji}</span>
-                    <div className="flex-1 text-left">
-                      {day.precipitation > 0 && (
-                        <p className="text-[11px] text-[#93c5fd]">💧 {day.precipitation}mm</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-[14px] font-bold text-[#fca5a5]">{day.high}°</span>
-                      <span className="text-[11px] text-white/30">/</span>
-                      <span className="text-[14px] font-semibold text-[#93c5fd]">{day.low}°</span>
-                    </div>
+              <div className="flex items-center gap-1">
+                <Wind size={11} className="text-white/50" />
+                <span className="text-[12px] text-white/65">바람 {weather.windSpeed}m/s</span>
+              </div>
+              <span className="text-[12px] text-white/50 ml-auto">체감 {weather.feelsLike}°</span>
+            </div>
+          </div>
+        )}
+
+        {/* 주간 날씨 펼침 */}
+        {showWeekly && weather && weather.weekly && (
+          <div className="border-t border-white/10 relative z-10 px-4 pt-3 pb-4">
+            <p className="text-[11px] font-bold text-white/50 uppercase tracking-wide mb-2">주간 날씨</p>
+            <div className="space-y-1">
+              {weather.weekly.map((day, i) => (
+                <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
+                  day.isToday ? "bg-white/20" : "bg-white/[0.07]"
+                }`}>
+                  <div className="w-[48px] shrink-0">
+                    <p className={`text-[13px] font-bold leading-tight ${day.isToday ? "text-white" : "text-white/80"}`}>
+                      {day.isToday ? "오늘" : day.dayLabel}
+                    </p>
+                    <p className="text-[10px] text-white/40">{day.date}</p>
                   </div>
-                ))}
-              </div>
-            )}
+                  <span className="text-[20px] w-7 shrink-0">{day.emoji}</span>
+                  <div className="flex-1 text-left">
+                    {day.precipitation > 0 && (
+                      <p className="text-[10px] text-[#93c5fd]">💧{day.precipitation}mm</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[13px] font-bold text-[#fca5a5]">{day.high}°</span>
+                    <span className="text-[10px] text-white/25">/</span>
+                    <span className="text-[13px] font-semibold text-[#93c5fd]">{day.low}°</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>

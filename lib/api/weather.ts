@@ -139,7 +139,7 @@ export async function fetchWeather(): Promise<WeatherData | null> {
       "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m",
       "&hourly=temperature_2m,weather_code",
       "&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum",
-      "&timezone=Asia%2FSeoul&forecast_days=7&past_days=1",
+      "&timezone=Asia%2FSeoul&forecast_days=8&past_days=1",
     ].join("");
 
     const [res, air] = await Promise.all([
