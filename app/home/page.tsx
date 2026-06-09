@@ -2734,13 +2734,13 @@ export default function HomePage() {
             { num: "112", label: "경찰신고",  color: "#2563EB", bg: "#EFF6FF" },
             { num: "1339", label: "의료상담", color: "#059669", bg: "#ECFDF5" },
           ].map(({ num, label, color, bg }) => (
-            <a key={num} href={`tel:${num}`}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-2xl active:opacity-70 transition-opacity"
+            <div key={num}
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-2xl"
               style={{ background: bg }}>
               <Phone size={14} color={color} />
               <span className="text-[14px] font-black" style={{ color }}>{num}</span>
               <span className="text-[10px] font-semibold" style={{ color: `${color}99` }}>{label}</span>
-            </a>
+            </div>
           ))}
         </div>
         <PharmacySection />
