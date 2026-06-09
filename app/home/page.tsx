@@ -2694,19 +2694,19 @@ export default function HomePage() {
     greeting: () => <GreetingBanner weather={weather} weatherLoading={weatherLoading} nickname={userNickname} />,
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     quickmenu: () => (
-      <div className="px-5 mt-4 mb-2">
-        <div className="grid grid-cols-4 gap-x-3 gap-y-4">
+      <div className="px-5 mt-10 mb-10">
+        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
-              <div className="w-[54px] h-[54px] rounded-[18px] flex items-center justify-center shadow-sm"
+              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
+              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
                 style={{
-                  background: `${color}18`,
-                  border: `1.5px solid ${color}28`,
+                  background: "#f5f5f7",
+                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
                 }}>
-                <Icon size={24} strokeWidth={2} color={color} />
+                <Icon size={22} strokeWidth={2} color={color} />
               </div>
-              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none text-center">{label}</span>
+              <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>
           ))}
         </div>
