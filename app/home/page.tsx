@@ -2746,12 +2746,7 @@ export default function HomePage() {
         <PharmacySection />
       </>
     ),
-    transport: () => (
-      <>
-        <SectionLabel label="교통" href="/transport/" linkLabel="전체보기" />
-        <HomeTransportWidget />
-      </>
-    ),
+    transport: () => <HomeTransportWidget />,
     community: () => (
       <>
         <SectionLabel label="커뮤니티" href="/community/" linkLabel="전체보기" />
