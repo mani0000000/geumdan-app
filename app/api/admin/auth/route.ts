@@ -17,8 +17,7 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
-// admin API route들에서 공유하는 쿠키 검증 헬퍼
-// TODO: 테스트 완료 후 아래 return true 제거하고 쿠키 검증 활성화
+// 개발/테스트 중 인증 비활성화 — 운영 전 복원 필요
 export function validateAdminCookie(_req: NextRequest): boolean {
   return true;
 }
@@ -27,8 +26,7 @@ export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json() as { password?: string };
 
-    // 개발 모드: 비밀번호 없이 바로 로그인
-    if (DEV_MODE) {
+    if (!ADMIN_PASSWORD) {
       const res = NextResponse.json({ ok: true });
       res.cookies.set("admin_session", "1", {
         httpOnly: true,
