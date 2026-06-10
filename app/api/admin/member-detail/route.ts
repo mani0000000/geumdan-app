@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const SUPABASE_URL  = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_KEY   = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+const DEFAULT_KEY   = "";
 
 type DataType =
   | "coupons" | "points" | "posts" | "comments"

@@ -7,7 +7,7 @@ export const maxDuration = 300;
 
 function isAuthorized(req: NextRequest): boolean {
   const expected = process.env.CRON_SECRET || "";
-  if (!expected) return true; // 미설정 시 검증 생략 (개발 환경)
+  if (!expected) return false; // CRON_SECRET 미설정 시 접근 거부
   const auth = req.headers.get("authorization") || "";
   if (auth === `Bearer ${expected}`) return true;
   // 어드민 수동 호출 호환: x-cron-secret 헤더

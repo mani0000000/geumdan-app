@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+const DEFAULT_ANON = "";
 
 function candidateKeys(): string[] {
   return [
@@ -41,7 +42,10 @@ ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS images TEXT[] DEFAULT '{}';
 CREATE INDEX IF NOT EXISTS idx_posts_has_images ON community_posts USING GIN(images);
 `;
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const result = await runSQL(SQL);
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 });
   return NextResponse.json({ success: true });

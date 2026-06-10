@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -98,7 +99,10 @@ async function testWrite(key: string): Promise<{ ok: boolean; msg: string }> {
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const key = getServiceKey();
   if (!key) {
     return NextResponse.json({ error: "키 없음" }, { status: 500 });

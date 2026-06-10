@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runRealestateBatch } from "@/lib/realestate-batch";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,9 @@ export const maxDuration = 300;
  * 본 라우트는 동일 패턴(/api/admin/db 등)을 따른다.
  */
 export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const apiKey =
     process.env.MOLIT_API_KEY ||
     process.env.DATA_GO_KR_API_KEY ||

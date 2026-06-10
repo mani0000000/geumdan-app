@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { GEUMDAN_KATEC } from "@/lib/api/opinet";
 import { GEUMDAN_CENTER } from "@/lib/geumdan";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime  = "nodejs";
 export const dynamic  = "force-dynamic";
@@ -109,7 +110,10 @@ async function fetchOpinet(prodcd: string, apiKey: string): Promise<OpinetStatio
 }
 
 // ── 메인 핸들러 ─────────────────────────────────────────────────────────
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const serviceKey  = process.env.SUPABASE_SERVICE_KEY || "";
   const apiKey      = (process.env.OPINET_API_KEY || OPINET_FALLBACK_KEY).trim();
