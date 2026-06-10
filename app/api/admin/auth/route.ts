@@ -17,8 +17,12 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
+// ADMIN_PASSWORD 미설정 = 개발/테스트 모드 → 인증 불필요
+const DEV_MODE = !ADMIN_PASSWORD;
+
 // admin API route들에서 공유하는 쿠키 검증 헬퍼
 export function validateAdminCookie(req: NextRequest): boolean {
+  if (DEV_MODE) return true; // 개발 모드: 환경변수 미설정 시 인증 생략
   const session = req.cookies.get("admin_session")?.value;
   return session === "1";
 }
@@ -27,13 +31,21 @@ export async function POST(req: NextRequest) {
   try {
     const { password } = await req.json() as { password?: string };
 
-    if (!password) {
-      return NextResponse.json({ error: "비밀번호를 입력해주세요." }, { status: 400 });
+    // 개발 모드: 비밀번호 없이 바로 로그인
+    if (DEV_MODE) {
+      const res = NextResponse.json({ ok: true });
+      res.cookies.set("admin_session", "1", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24 * 7,
+        path: "/",
+      });
+      return res;
     }
 
-    if (!ADMIN_PASSWORD) {
-      console.error("[admin/auth] ADMIN_PASSWORD 환경변수가 설정되지 않았습니다. 관리자 로그인이 비활성화됩니다.");
-      return NextResponse.json({ error: "서버 설정 오류입니다. 관리자에게 문의하세요." }, { status: 503 });
+    if (!password) {
+      return NextResponse.json({ error: "비밀번호를 입력해주세요." }, { status: 400 });
     }
 
     if (!safeEqual(password, ADMIN_PASSWORD)) {

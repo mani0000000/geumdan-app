@@ -11,7 +11,6 @@ export default function AdminLoginPage() {
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!password) return;
     setLoading(true);
     setError("");
     try {
