@@ -8,6 +8,7 @@
  *   app/api/cron/realestate/route.ts                (Vercel Cron)
  *   app/api/admin/realestate/run-batch/route.ts     (어드민 수동 실행)
  */
+import { fetchRebPriceIndex } from "./reb-price";
 // ── API 엔드포인트 ──────────────────────────────────────────────
 // data.go.kr HTTPS 엔드포인트 (구 openapi.molit.go.kr는 해외에서 접근 불가)
 const TRADE_API  = "https://apis.data.go.kr/1613000/RTMSDataSvcAptTrade/getRTMSDataSvcAptTrade";
@@ -150,22 +151,36 @@ async function callMolit(
     numOfRows:  String(numOfRows),
   });
   const url = `${base}?${params.toString()}`;
-  const res = await fetch(url, { method: "GET" });
-  if (!res.ok) {
-    const errBody = await res.text().catch(() => '(no body)');
-    throw new Error(`MOLIT HTTP ${res.status} (${dealYmd}): ${errBody.substring(0, 300)}`);
-  }
-  const xml = await res.text();
 
-  const resultCode = extract(xml, "resultCode");
-  if (resultCode && resultCode !== "00" && resultCode !== "000") {
-    const msg = extract(xml, "resultMsg") || "(no msg)";
-    throw new Error(`MOLIT resultCode=${resultCode}: ${msg}`);
-  }
+  const MAX_ATTEMPTS = 3;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, { method: "GET" });
+      if (!res.ok) {
+        const errBody = await res.text().catch(() => '(no body)');
+        throw new Error(`MOLIT HTTP ${res.status} (${dealYmd}): ${errBody.substring(0, 300)}`);
+      }
+      const xml = await res.text();
 
-  const items = parseItems(xml);
-  const totalCount = parseInt(extract(xml, "totalCount") || "0", 10) || items.length;
-  return { items, totalCount };
+      const resultCode = extract(xml, "resultCode");
+      if (resultCode && resultCode !== "00" && resultCode !== "000") {
+        const msg = extract(xml, "resultMsg") || "(no msg)";
+        throw new Error(`MOLIT resultCode=${resultCode}: ${msg}`);
+      }
+
+      const items = parseItems(xml);
+      const totalCount = parseInt(extract(xml, "totalCount") || "0", 10) || items.length;
+      return { items, totalCount };
+    } catch (err) {
+      lastErr = err;
+      if (attempt < MAX_ATTEMPTS) {
+        console.warn(`[realestate-batch] callMolit attempt ${attempt} failed, retrying in 2s…`, err);
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 async function fetchAll(
@@ -472,6 +487,36 @@ export async function runRealestateBatch(opts: BatchOptions): Promise<BatchResul
   const status: BatchResult["status"] =
     hadError ? (totalTrades + totalRentals > 0 ? "partial" : "failed") : "success";
 
+  // ── REB 폴백: 매매/전월세 데이터가 전혀 없을 때 ────────────────
+  let rebFallbackUsed = false;
+  if (totalTrades === 0 && totalRentals === 0) {
+    console.log("[realestate-batch] 실거래 데이터 없음 → 한국부동산원 지수 폴백 시도");
+    try {
+      const rebResult = await fetchRebPriceIndex(apiKey);
+      if (rebResult) {
+        const { period, indexValue, changeRate } = rebResult;
+        await pgrest(
+          supabaseUrl, supabaseKey, "POST",
+          `apt_price_index?on_conflict=${encodeURIComponent("source,region,period")}`,
+          {
+            source:       "reb",
+            region:       "인천 서구",
+            period,
+            index_value:  indexValue,
+            change_rate:  changeRate,
+          },
+          "resolution=merge-duplicates,return=minimal",
+        );
+        rebFallbackUsed = true;
+        console.log(`[realestate-batch] REB 폴백 성공: period=${period}, index=${indexValue}, changeRate=${changeRate}`);
+      } else {
+        console.log("[realestate-batch] REB 폴백: 데이터 없음 또는 API 오류");
+      }
+    } catch (e) {
+      console.warn("[realestate-batch] REB 폴백 저장 실패:", e);
+    }
+  }
+
   // 로그 업데이트
   if (logId != null) {
     try {
@@ -483,7 +528,7 @@ export async function runRealestateBatch(opts: BatchOptions): Promise<BatchResul
           status,
           trades_count:   totalTrades,
           rentals_count:  totalRentals,
-          detail:         { months: details },
+          detail:         { months: details, reb_fallback: rebFallbackUsed },
           error_message:  hadError ? details.find(d => d.error)?.error ?? null : null,
         },
       );

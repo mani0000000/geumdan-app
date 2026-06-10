@@ -1,8 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star } from "lucide-react";
+import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
+import type { AptMarketSummary } from "@/lib/reb-price";
 
 type RentalType = "all" | "전세" | "월세";
 type Tab = "trade" | "jeonse" | "wolse";
@@ -80,6 +81,9 @@ export default function RealestatePage() {
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
   const [latestFetchedAt, setLatestFetchedAt] = useState<string | null>(null);
   const [favApts, setFavApts] = useState<Set<string>>(new Set());
+  const [summaries, setSummaries] = useState<AptMarketSummary[]>([]);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryOpen, setSummaryOpen] = useState(false);
 
   useEffect(() => {
     const raw = localStorage.getItem("realestateFavApts");
@@ -111,6 +115,17 @@ export default function RealestatePage() {
       .then((j: { hasApiKey: boolean }) => setHasApiKey(j.hasApiKey))
       .catch(() => setHasApiKey(null));
   }, []);
+
+  // ── 시세 현황 (단지별 평균) ────────────────────────────────
+  useEffect(() => {
+    if (!summaryOpen) return;
+    setSummaryLoading(true);
+    fetch("/api/realestate/market-summary")
+      .then(r => r.json())
+      .then((j: { summaries?: AptMarketSummary[] }) => setSummaries(j.summaries ?? []))
+      .catch(() => setSummaries([]))
+      .finally(() => setSummaryLoading(false));
+  }, [summaryOpen]);
 
   // ── 데이터 로드 ────────────────────────────────────────────
   useEffect(() => {
@@ -227,6 +242,69 @@ export default function RealestatePage() {
         <p className="text-[10px] text-[#86868b] leading-relaxed">
           출처: 국토교통부 실거래가 공개시스템 (apis.data.go.kr) — 인천광역시 서구
         </p>
+      </div>
+
+      {/* ── 시세 현황 (단지별 평균, 국토부 실거래가 기반) ── */}
+      <div className="px-4 mt-3">
+        <button
+          onClick={() => setSummaryOpen(v => !v)}
+          className="w-full flex items-center justify-between bg-white border border-[#d2d2d7] rounded-2xl px-4 py-3"
+        >
+          <div className="flex items-center gap-2">
+            <BarChart2 size={15} className="text-[#0071e3]" />
+            <span className="text-[13px] font-semibold text-[#1d1d1f]">단지별 평균 시세</span>
+            <span className="text-[10px] text-[#86868b] bg-[#F2F4F6] rounded px-1.5 py-0.5">최근 6개월 기반</span>
+          </div>
+          {summaryOpen ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
+        </button>
+
+        {summaryOpen && (
+          <div className="mt-2 bg-white border border-[#d2d2d7] rounded-2xl overflow-hidden">
+            {summaryLoading && (
+              <div className="py-6 text-center text-[#86868b] text-[12px]">
+                <RefreshCw size={14} className="inline-block animate-spin mr-1.5" />
+                시세 계산 중...
+              </div>
+            )}
+
+            {!summaryLoading && summaries.length === 0 && (
+              <div className="py-6 text-center text-[#86868b]">
+                <Building2 size={24} className="mx-auto mb-2 text-[#B0B8C1]" />
+                <p className="text-[12px] font-semibold text-[#1d1d1f]">실거래 데이터가 아직 없습니다</p>
+                <p className="text-[11px] mt-1">관리자 → 부동산 시세 → 배치 실행 후 표시됩니다</p>
+              </div>
+            )}
+
+            {!summaryLoading && summaries.length > 0 && (
+              <>
+                <div className="grid grid-cols-4 gap-0 px-3 py-2 border-b border-[#F2F4F6] bg-[#F8F9FA]">
+                  <span className="text-[10px] font-semibold text-[#86868b] col-span-2">단지</span>
+                  <span className="text-[10px] font-semibold text-[#86868b] text-right">매매 평균</span>
+                  <span className="text-[10px] font-semibold text-[#86868b] text-right">전세 평균</span>
+                </div>
+                <div className="divide-y divide-[#F2F4F6] max-h-80 overflow-y-auto">
+                  {summaries.map((s, i) => (
+                    <div key={i} className="grid grid-cols-4 gap-0 px-3 py-2.5 items-center">
+                      <div className="col-span-2 min-w-0">
+                        <p className="text-[12px] font-semibold text-[#1d1d1f] truncate">{s.apt_name}</p>
+                        <p className="text-[10px] text-[#86868b]">{s.dong} · {s.sqm}㎡대</p>
+                      </div>
+                      <p className="text-[12px] font-bold text-[#0071e3] text-right">
+                        {s.avg_trade_price ? fmt만원(s.avg_trade_price) : "—"}
+                      </p>
+                      <p className="text-[12px] font-bold text-[#10B981] text-right">
+                        {s.avg_jeonse_price ? fmt만원(s.avg_jeonse_price) : "—"}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="px-3 py-2 border-t border-[#F2F4F6] bg-[#F8F9FA]">
+                  <p className="text-[10px] text-[#86868b]">국토부 실거래가 기반 추산 · 실제 시세와 다를 수 있음</p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ── 매매/전세/월세 탭 ── */}
