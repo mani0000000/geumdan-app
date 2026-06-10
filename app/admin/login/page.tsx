@@ -1,7 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock } from "lucide-react";
+import Link from "next/link";
+import { Lock, ExternalLink } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -64,6 +65,13 @@ export default function AdminLoginPage() {
             {loading ? "확인 중..." : "로그인"}
           </button>
         </form>
+        <div className="mt-6 text-center">
+          <Link href="/home"
+            className="inline-flex items-center gap-1.5 text-white/40 hover:text-white/70 text-[13px] transition-colors">
+            <ExternalLink size={13} />
+            검단앱 홈으로 이동
+          </Link>
+        </div>
       </div>
     </div>
   );
