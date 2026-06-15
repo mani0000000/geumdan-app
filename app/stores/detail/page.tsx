@@ -1,52 +1,155 @@
 "use client";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
-import { ChevronLeft, Clock, Phone, MapPin, Star, ParkingSquare, Lock, Pencil, CheckCircle2, ChevronRight } from "lucide-react";
-import { findStoreById } from "@/lib/utils";
-import type { StoreCategory } from "@/lib/types";
-import { CAT_EMOJI as catEmoji, CAT_BG as catBg, CAT_DOT as catDot } from "@/lib/constants/store-categories";
+import {
+  ChevronLeft, Clock, Phone, MapPin, Star,
+  ParkingSquare, Lock, Pencil, CheckCircle2, ChevronRight,
+  Globe, BookOpen, ExternalLink,
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import StoreLogo from "@/components/ui/StoreLogo";
+import { CAT_BG as catBg } from "@/lib/constants/store-categories";
 
-// Mock reviews per store
-const mockReviews: Record<string, { author: string; text: string; rating: number; date: string }[]> = {
-  "s_b1_3": [
-    { author: "당하맘", rating: 5, text: "검단에서 제일 좋은 스타벅스예요! 자리도 넓고 조용해요 ☕", date: "2026-03-25" },
-    { author: "커피러버", rating: 4, text: "드라이브스루 빠르고 직원분들 친절해요.", date: "2026-03-20" },
-  ],
-  "s_1f_1": [
-    { author: "뷰티퀸", rating: 5, text: "제품 종류가 다양해서 자주 들러요. 멤버십 할인도 좋아요!", date: "2026-03-26" },
-  ],
-  "s_2f_1": [
-    { author: "먹부림러", rating: 4, text: "버거 퀄리티가 진짜 좋아요. 점심시간엔 좀 붐비지만 맛있어요!", date: "2026-03-27" },
-    { author: "검단주민", rating: 5, text: "가성비 최고. 세트 메뉴 추천!", date: "2026-03-22" },
-  ],
-  "s_3f_1": [
-    { author: "외식러버", rating: 5, text: "백종원 브랜드라서 믿고 먹어요. 맛도 가격도 다 좋아요!", date: "2026-03-28" },
-    { author: "가족외식", rating: 4, text: "아이들도 잘 먹어서 자주 와요. 주차도 편리해요.", date: "2026-03-24" },
-    { author: "점심파", rating: 4, text: "점심 런치 메뉴 가성비 좋아요!", date: "2026-03-18" },
-  ],
-};
-
-function StarRating({ rating }: { rating: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {[1, 2, 3, 4, 5].map(i => (
-        <Star key={i} size={13} className={i <= rating ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#d2d2d7]"} />
-      ))}
-    </div>
-  );
+// ─── Local types matching Supabase rows ────────────────────────
+interface StoreDetailRow {
+  id: string;
+  building_id: string;
+  floor_label: string;
+  name: string;
+  category: string;
+  phone: string | null;
+  hours: string | null;
+  is_open: boolean | null;
+  is_premium: boolean | null;
+  logo_url: string | null;
+  thumbnail_url: string | null;
+  description: string | null;
+  extra_info: Record<string, unknown> | null;
 }
 
+interface BuildingRow {
+  id: string;
+  name: string;
+  address: string;
+  parking_info: string | null;
+  open_time: string | null;
+}
+
+interface FloorRow {
+  id: string;
+  label: string;
+  has_restroom: boolean;
+  restroom_code: string | null;
+  restroom_location: string | null;
+}
+
+interface SiblingStore {
+  id: string;
+  name: string;
+  category: string;
+  is_open: boolean | null;
+}
+
+// ─── Constants ─────────────────────────────────────────────────
+const AMENITY_EMOJI: Record<string, string> = {
+  "예약": "📅", "무선인터넷": "📶", "남녀화장실 구분": "🚻",
+  "장애인 출입": "♿", "장애인 주차구역": "🅿", "영유아 동반": "👶",
+  "반려동물 동반": "🐾", "포장가능": "📦", "배달가능": "🛵",
+  "단체이용": "👥", "노키즈존": "🚫", "오픈키친": "👨‍🍳",
+};
+
+const CAT_EXTRA_LABELS: Partial<Record<string, Record<string, string>>> = {
+  "병원/약국": { specialties: "진료과목", doctor_count: "의료진", reservation_required: "예약", reservation_url: "예약 링크" },
+  "카페": { menu_highlights: "대표 메뉴", price_range: "가격대", seats: "좌석", wifi: "와이파이", delivery: "배달" },
+  "음식점": { menu_highlights: "대표 메뉴", price_range: "가격대", delivery: "배달", reservation_required: "예약", private_room: "단체룸" },
+  "편의점": { brand: "브랜드", is_24h: "24시간" },
+  "미용": { services: "주요 시술", price_range: "가격대", reservation_required: "예약", reservation_url: "예약 링크" },
+  "학원": { courses: "강좌", age_range: "대상", tuition: "수강료", trial_class: "체험수업" },
+  "헬스/운동": { programs: "프로그램", price_range: "가격대", trial_available: "체험", pt_available: "PT" },
+  "마트": { brand: "브랜드", fresh_food: "신선식품", delivery: "배달" },
+  "반려동물": { pet_types: "동물 종류", service_types: "서비스", grooming: "미용", boarding: "호텔링" },
+  "세탁": { service_types: "서비스", same_day: "당일 처리", dry_clean: "드라이클리닝" },
+  "베이커리": { specialty: "대표 제품", custom_order: "맞춤 주문", delivery: "배달" },
+  "안경원": { services: "취급 제품/서비스" },
+  "부동산": { specialties: "전문 분야" },
+  "스터디카페": { seats: "좌석", price_range: "가격대", wifi: "와이파이", locker: "사물함", is_24h: "24시간" },
+  "꽃집": { services: "서비스", delivery: "배달", custom_order: "맞춤 주문" },
+};
+
+// ─── Main content ───────────────────────────────────────────────
 function DetailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const storeId = searchParams.get("id") ?? "";
-  const result = findStoreById(storeId);
+
+  const [store, setStore] = useState<StoreDetailRow | null>(null);
+  const [building, setBuilding] = useState<BuildingRow | null>(null);
+  const [floor, setFloor] = useState<FloorRow | null>(null);
+  const [siblings, setSiblings] = useState<SiblingStore[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showCode, setShowCode] = useState(false);
   const [editSent, setEditSent] = useState(false);
-  const [favorited, setFavorited] = useState(false);
 
-  if (!result) {
+  useEffect(() => {
+    if (!storeId) { setLoading(false); return; }
+
+    async function fetchData() {
+      setLoading(true);
+      try {
+        // 1. Fetch store
+        const { data: storeData, error: storeErr } = await supabase
+          .from("stores")
+          .select("*")
+          .eq("id", storeId)
+          .single();
+        if (storeErr || !storeData) { setLoading(false); return; }
+
+        const s = storeData as StoreDetailRow;
+        setStore(s);
+
+        // 2. Fetch building, floor, siblings in parallel
+        const [bRes, fRes, sibRes] = await Promise.all([
+          supabase
+            .from("buildings")
+            .select("id,name,address,parking_info,open_time")
+            .eq("id", s.building_id)
+            .single(),
+          supabase
+            .from("floors")
+            .select("id,label,has_restroom,restroom_code,restroom_location")
+            .eq("building_id", s.building_id)
+            .eq("label", s.floor_label)
+            .maybeSingle(),
+          supabase
+            .from("stores")
+            .select("id,name,category,is_open")
+            .eq("building_id", s.building_id)
+            .eq("floor_label", s.floor_label)
+            .neq("id", storeId)
+            .neq("name", "공실")
+            .limit(4),
+        ]);
+
+        if (bRes.data) setBuilding(bRes.data as BuildingRow);
+        if (fRes.data) setFloor(fRes.data as FloorRow);
+        setSiblings((sibRes.data ?? []) as SiblingStore[]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, [storeId]);
+
+  if (loading) {
+    return (
+      <div className="min-h-dvh bg-[#f5f5f7] flex items-center justify-center">
+        <p className="text-[#86868b] text-[15px]">불러오는 중...</p>
+      </div>
+    );
+  }
+
+  if (!store) {
     return (
       <div className="min-h-dvh bg-[#f5f5f7] flex items-center justify-center">
         <div className="text-center px-8">
@@ -60,14 +163,28 @@ function DetailContent() {
     );
   }
 
-  const { store, floor, building } = result;
-  const reviews = mockReviews[store.id] ?? [];
-  const avgRating = reviews.length > 0
-    ? Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length * 10) / 10
-    : null;
+  const extra = store.extra_info ?? {};
+  const amenities = Array.isArray(extra.amenities) ? (extra.amenities as string[]) : [];
+  const paymentMethods = Array.isArray(extra.payment_methods) ? (extra.payment_methods as string[]) : [];
+  const keywords = Array.isArray(extra.keywords) ? (extra.keywords as string[]) : [];
+  const snsWebsite = (extra.sns_website as string | undefined) ?? "";
+  const snsBlog = (extra.sns_blog as string | undefined) ?? "";
+  const snsYoutube = (extra.sns_youtube as string | undefined) ?? "";
+  const snsInstagram = (extra.sns_instagram as string | undefined) ?? "";
+  const hasSns = snsWebsite || snsBlog || snsYoutube || snsInstagram;
+  const parkingNote = (extra.parking_note as string | undefined) ?? "";
+  const parkingType = (extra.parking as string | undefined) ?? "";
+  const parkingLabel = parkingType === "free" ? "무료" : parkingType === "paid" ? "유료" : parkingType === "none" ? "없음" : "";
 
-  // Nearby stores on same floor
-  const nearbyStores = floor.stores.filter(s => s.id !== store.id && s.name !== "공실").slice(0, 4);
+  const catExtraLabels = CAT_EXTRA_LABELS[store.category] ?? {};
+  const catExtraEntries = Object.entries(catExtraLabels).filter(([k]) => {
+    const v = extra[k];
+    return v !== undefined && v !== null && v !== "";
+  });
+
+  const parkingDisplay = parkingLabel
+    ? (parkingNote ? `${parkingLabel} · ${parkingNote}` : parkingLabel)
+    : (parkingNote || building?.parking_info || null);
 
   return (
     <div className="min-h-dvh bg-[#f5f5f7]">
@@ -77,52 +194,70 @@ function DetailContent() {
           <ChevronLeft size={24} className="text-[#1d1d1f]" />
         </button>
         <h1 className="text-[18px] font-bold text-[#1d1d1f] truncate mx-2">{store.name}</h1>
-        <button onClick={() => setFavorited(f => !f)} className="active:opacity-60">
-          <Star size={22} className={favorited ? "text-[#FFBB00] fill-[#FFBB00]" : "text-[#86868b]"} />
-        </button>
+        <div className="w-6" />
       </div>
 
       <div className="pb-8 space-y-3">
-        {/* Hero */}
+        {/* Hero card */}
         <div className="bg-white px-5 py-5">
-          <div className="flex items-start gap-4 mb-4">
-            <div className="w-[72px] h-[72px] rounded-2xl flex items-center justify-center text-4xl shrink-0"
-              style={{ background: catDot[store.category] + "18" }}>
-              {catEmoji[store.category]}
-            </div>
+          <div className="flex items-start gap-4 mb-5">
+            <StoreLogo name={store.name} category={store.category} size={72} rounded="rounded-2xl" />
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category]}`}>
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category as keyof typeof catBg] ?? "bg-[#F3F4F6] text-[#374151]"}`}>
                   {store.category}
                 </span>
-                {store.isPremium && (
+                {store.is_premium && (
                   <span className="text-[12px] font-bold bg-[#FEF3C7] text-[#92400E] px-2 py-0.5 rounded-full">⭐ 인기</span>
                 )}
               </div>
               <h2 className="text-[23px] font-black text-[#1d1d1f]">{store.name}</h2>
-              <div className="flex items-center gap-2 mt-1">
-                {store.isOpen !== undefined && (
-                  <span className={`text-[14px] font-semibold ${store.isOpen ? "text-[#00C471]" : "text-[#F04452]"}`}>
-                    {store.isOpen ? "● 영업 중" : "● 영업 종료"}
+              <div className="flex items-center gap-3 mt-1">
+                {store.is_open !== null && (
+                  <span className={`text-[14px] font-semibold ${store.is_open ? "text-[#00C471]" : "text-[#F04452]"}`}>
+                    {store.is_open ? "● 영업 중" : "● 영업 종료"}
                   </span>
                 )}
-                {avgRating && (
-                  <span className="text-[14px] text-[#424245]">★ {avgRating} ({reviews.length})</span>
+                {store.phone && (
+                  <a href={`tel:${store.phone}`}
+                    className="h-8 px-4 bg-[#0071e3] rounded-xl text-white text-[13px] font-bold flex items-center active:opacity-80">
+                    전화
+                  </a>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Info rows */}
-          <div className="space-y-2.5">
-            <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
-              <MapPin size={16} className="text-[#6e6e73] shrink-0" />
-              <div>
-                <p className="text-[12px] text-[#6e6e73]">위치</p>
-                <p className="text-[15px] font-medium text-[#1d1d1f]">{building.name} {floor.label}</p>
-                <p className="text-[13px] text-[#6e6e73]">{building.address}</p>
-              </div>
+          {/* 소개 */}
+          {(store.description || keywords.length > 0) && (
+            <div className="mb-4 space-y-2">
+              {store.description && (
+                <p className="text-[14px] text-[#424245] leading-relaxed">{store.description}</p>
+              )}
+              {keywords.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {keywords.map(kw => (
+                    <span key={kw} className="text-[12px] font-medium bg-[#F2F4F6] text-[#4E5968] px-2.5 py-1 rounded-full">
+                      #{kw}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
+          )}
+
+          {/* 상세 정보 rows */}
+          <div className="space-y-2.5">
+            {building && (
+              <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+                <MapPin size={16} className="text-[#6e6e73] shrink-0" />
+                <div>
+                  <p className="text-[12px] text-[#6e6e73]">위치</p>
+                  <p className="text-[15px] font-medium text-[#1d1d1f]">{building.name} {store.floor_label}</p>
+                  <p className="text-[13px] text-[#6e6e73]">{building.address}</p>
+                </div>
+              </div>
+            )}
             {store.hours && (
               <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
                 <Clock size={16} className="text-[#6e6e73] shrink-0" />
@@ -147,25 +282,32 @@ function DetailContent() {
                 </a>
               </div>
             )}
-            <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
-              <ParkingSquare size={16} className="text-[#0071e3] shrink-0" />
-              <div>
-                <p className="text-[12px] text-[#6e6e73]">주차</p>
-                <p className="text-[15px] font-medium text-[#1d1d1f]">{building.parkingInfo}</p>
+            {parkingDisplay && (
+              <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+                <ParkingSquare size={16} className="text-[#0071e3] shrink-0" />
+                <div>
+                  <p className="text-[12px] text-[#6e6e73]">주차</p>
+                  <p className="text-[15px] font-medium text-[#1d1d1f]">{parkingDisplay}</p>
+                </div>
               </div>
-            </div>
-            {floor.hasRestroom && (
+            )}
+            {floor?.has_restroom && (
               <div className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-4 py-3">
                 <div className="flex items-center gap-3">
                   <Lock size={16} className="text-[#6e6e73] shrink-0" />
                   <div>
-                    <p className="text-[12px] text-[#6e6e73]">{floor.label} 화장실</p>
+                    <p className="text-[12px] text-[#6e6e73]">{store.floor_label} 화장실</p>
                     <p className="text-[15px] font-medium text-[#1d1d1f]">
-                      {showCode && floor.restroomCode ? `비밀번호: ${floor.restroomCode}` : "비밀번호 잠금"}
+                      {showCode && floor.restroom_code
+                        ? `비밀번호: ${floor.restroom_code}`
+                        : "비밀번호 잠금"}
                     </p>
+                    {floor.restroom_location && (
+                      <p className="text-[12px] text-[#6e6e73]">{floor.restroom_location}</p>
+                    )}
                   </div>
                 </div>
-                {floor.restroomCode && (
+                {floor.restroom_code && (
                   <button onClick={() => setShowCode(s => !s)}
                     className="h-9 px-4 bg-[#e8f1fd] rounded-xl text-[#0071e3] text-[14px] font-bold flex items-center active:opacity-80">
                     {showCode ? "숨기기" : "보기"}
@@ -176,69 +318,126 @@ function DetailContent() {
           </div>
         </div>
 
-        {/* Reviews */}
-        <div className="bg-white px-5 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-[16px] font-bold text-[#1d1d1f]">방문 후기</p>
-            {avgRating && (
-              <div className="flex items-center gap-2">
-                <StarRating rating={Math.round(avgRating)} />
-                <span className="text-[15px] font-bold text-[#1d1d1f]">{avgRating}</span>
-                <span className="text-[13px] text-[#6e6e73]">({reviews.length})</span>
-              </div>
-            )}
-          </div>
-          {reviews.length > 0 ? (
-            <div className="space-y-3">
-              {reviews.map((r, i) => (
-                <div key={i} className={`pb-3 ${i < reviews.length - 1 ? "border-b border-[#f5f5f7]" : ""}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-full bg-[#e8f1fd] flex items-center justify-center text-sm">
-                        {r.author[0]}
-                      </div>
-                      <span className="text-[14px] font-medium text-[#1d1d1f]">{r.author}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <StarRating rating={r.rating} />
-                      <span className="text-[12px] text-[#86868b]">{r.date}</span>
-                    </div>
-                  </div>
-                  <p className="text-[14px] text-[#424245] leading-relaxed pl-9">{r.text}</p>
-                </div>
+        {/* 편의시설 */}
+        {amenities.length > 0 && (
+          <div className="bg-white px-5 py-4">
+            <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">편의시설</p>
+            <div className="flex flex-wrap gap-2">
+              {amenities.map(a => (
+                <span key={a} className="flex items-center gap-1.5 px-3 py-1.5 bg-[#F2F4F6] rounded-full text-[13px] text-[#4E5968]">
+                  <span>{AMENITY_EMOJI[a] ?? "✓"}</span> {a}
+                </span>
               ))}
             </div>
-          ) : (
-            <div className="py-6 text-center">
-              <p className="text-3xl mb-2">💬</p>
-              <p className="text-[15px] font-medium text-[#1d1d1f]">아직 후기가 없어요</p>
-              <p className="text-[14px] text-[#6e6e73] mt-1">첫 번째 후기를 남겨보세요</p>
+          </div>
+        )}
+
+        {/* 결제수단 */}
+        {paymentMethods.length > 0 && (
+          <div className="bg-white px-5 py-4">
+            <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">결제수단</p>
+            <div className="flex flex-wrap gap-2">
+              {paymentMethods.map(p => (
+                <span key={p} className="px-3 py-1.5 bg-[#e8f1fd] rounded-full text-[13px] text-[#0071e3] font-medium">
+                  {p}
+                </span>
+              ))}
             </div>
-          )}
-          <button className="mt-3 w-full h-11 border border-[#d2d2d7] rounded-xl text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7] flex items-center justify-center gap-1.5">
+          </div>
+        )}
+
+        {/* 업종별 정보 */}
+        {catExtraEntries.length > 0 && (
+          <div className="bg-white px-5 py-4">
+            <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">상세 정보</p>
+            <div className="space-y-2.5">
+              {catExtraEntries.map(([key, label]) => {
+                const val = extra[key];
+                let display: string;
+                if (typeof val === "boolean") {
+                  display = val ? "예" : "아니오";
+                } else {
+                  display = String(val);
+                }
+                return (
+                  <div key={key} className="flex items-start gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
+                    <div>
+                      <p className="text-[12px] text-[#6e6e73]">{label}</p>
+                      <p className="text-[15px] font-medium text-[#1d1d1f]">{display}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* SNS */}
+        {hasSns && (
+          <div className="bg-white px-5 py-4">
+            <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">온라인</p>
+            <div className="flex flex-wrap gap-2">
+              {snsWebsite && (
+                <a href={snsWebsite} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 h-9 px-4 bg-[#f5f5f7] rounded-xl text-[13px] text-[#1d1d1f] font-medium active:opacity-70">
+                  <Globe size={14} /> 홈페이지
+                </a>
+              )}
+              {snsBlog && (
+                <a href={snsBlog} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 h-9 px-4 bg-[#f5f5f7] rounded-xl text-[13px] text-[#1d1d1f] font-medium active:opacity-70">
+                  <BookOpen size={14} /> 블로그
+                </a>
+              )}
+              {snsYoutube && (
+                <a href={snsYoutube} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 h-9 px-4 bg-[#f5f5f7] rounded-xl text-[13px] text-[#FF0000] font-medium active:opacity-70">
+                  <ExternalLink size={14} /> 유튜브
+                </a>
+              )}
+              {snsInstagram && (
+                <a href={`https://instagram.com/${snsInstagram.replace(/^@/, "")}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 h-9 px-4 bg-[#f5f5f7] rounded-xl text-[13px] text-[#E1306C] font-medium active:opacity-70">
+                  <ExternalLink size={14} /> 인스타그램
+                </a>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 방문 후기 (placeholder) */}
+        <div className="bg-white px-5 py-4">
+          <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">방문 후기</p>
+          <div className="py-6 text-center">
+            <p className="text-3xl mb-2">💬</p>
+            <p className="text-[15px] font-medium text-[#1d1d1f]">아직 후기가 없어요</p>
+            <p className="text-[14px] text-[#6e6e73] mt-1">첫 번째 후기를 남겨보세요</p>
+          </div>
+          <button className="mt-2 w-full h-11 border border-[#d2d2d7] rounded-xl text-[14px] text-[#424245] font-medium active:bg-[#f5f5f7] flex items-center justify-center gap-1.5">
             <Star size={14} className="text-[#FFBB00]" /> 후기 작성하기
           </button>
         </div>
 
-        {/* Same floor stores */}
-        {nearbyStores.length > 0 && (
+        {/* 같은 층 매장 */}
+        {siblings.length > 0 && (
           <div className="bg-white px-5 py-4">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-[16px] font-bold text-[#1d1d1f]">{floor.label} 다른 매장</p>
+              <p className="text-[16px] font-bold text-[#1d1d1f]">{store.floor_label} 다른 매장</p>
               <button onClick={() => router.push("/stores/")} className="flex items-center gap-0.5 text-[14px] text-[#0071e3] font-medium active:opacity-60">
                 지도 보기 <ChevronRight size={14} />
               </button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {nearbyStores.map(s => (
+              {siblings.map(s => (
                 <button key={s.id}
                   onClick={() => router.push(`/stores/detail/?id=${s.id}`)}
                   className="flex items-center gap-2.5 bg-[#f5f5f7] rounded-xl px-3 py-3 active:opacity-70 text-left">
-                  <span className="text-xl shrink-0">{catEmoji[s.category]}</span>
+                  <StoreLogo name={s.name} category={s.category} size={32} rounded="rounded-lg" />
                   <div className="min-w-0">
                     <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{s.name}</p>
-                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${s.isOpen !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-                      {s.isOpen !== false ? "영업 중" : "영업 종료"}
+                    <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${s.is_open !== false ? "bg-[#D1FAE5] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+                      {s.is_open !== false ? "영업 중" : "영업 종료"}
                     </span>
                   </div>
                 </button>
@@ -247,7 +446,7 @@ function DetailContent() {
           </div>
         )}
 
-        {/* Edit suggestion */}
+        {/* 정보 수정 제안 */}
         <div className="mx-4">
           {!editSent ? (
             <button onClick={() => setEditSent(true)}

@@ -20,56 +20,93 @@ const SELECT = INPUT + " bg-white";
 const TEXTAREA = INPUT + " resize-none";
 
 // ─── 업종별 상세 필드 정의 ────────────────────────────────────
-type ExtraField = { key: string; label: string; type: "text" | "boolean" | "select"; options?: string[] };
+type ExtraField = { key: string; label: string; type: "text" | "boolean" | "select"; options?: string[]; placeholder?: string };
 const EXTRA_FIELDS: Partial<Record<StoreCategory, ExtraField[]>> = {
   카페: [
-    { key: "menu_highlights", label: "대표 메뉴 (자유 입력)", type: "text" },
-    { key: "seats",           label: "좌석 수",               type: "text" },
-    { key: "delivery",        label: "배달 가능",             type: "boolean" },
-    { key: "wifi",            label: "와이파이",               type: "boolean" },
+    { key: "menu_highlights", label: "대표 메뉴", type: "text", placeholder: "아메리카노, 크루아상" },
+    { key: "price_range", label: "가격대", type: "text", placeholder: "5,000원~10,000원" },
+    { key: "seats", label: "좌석 수", type: "text", placeholder: "50석" },
+    { key: "wifi", label: "와이파이", type: "boolean" },
+    { key: "delivery", label: "배달 가능", type: "boolean" },
   ],
   음식점: [
-    { key: "menu_highlights", label: "대표 메뉴 (자유 입력)", type: "text" },
-    { key: "price_range",     label: "가격대 (예: 1만원대)",  type: "text" },
-    { key: "delivery",        label: "배달 가능",             type: "boolean" },
-    { key: "reservation",     label: "예약 가능",             type: "boolean" },
+    { key: "menu_highlights", label: "대표 메뉴", type: "text", placeholder: "삼겹살, 된장찌개" },
+    { key: "price_range", label: "가격대", type: "text", placeholder: "10,000원~20,000원" },
+    { key: "delivery", label: "배달 가능", type: "boolean" },
+    { key: "reservation_required", label: "예약 가능", type: "boolean" },
+    { key: "private_room", label: "단체룸/개인룸", type: "boolean" },
   ],
   편의점: [
-    { key: "brand",   label: "브랜드",       type: "select",  options: ["GS25", "CU", "세븐일레븐", "이마트24", "기타"] },
-    { key: "is_24h",  label: "24시간 운영",  type: "boolean" },
+    { key: "brand", label: "브랜드", type: "select", options: ["GS25", "CU", "세븐일레븐", "이마트24", "기타"] },
+    { key: "is_24h", label: "24시간 운영", type: "boolean" },
   ],
   "병원/약국": [
-    { key: "specialties",      label: "진료과목 / 취급 서비스", type: "text" },
-    { key: "reservation_info", label: "예약 방법",               type: "text" },
+    { key: "specialties", label: "진료과목 / 전문분야", type: "text", placeholder: "피부과, 성형외과" },
+    { key: "doctor_count", label: "의료진", type: "text", placeholder: "전문의 3명" },
+    { key: "reservation_required", label: "예약 필수", type: "boolean" },
+    { key: "reservation_url", label: "예약 URL / 카카오채널", type: "text", placeholder: "https://..." },
   ],
   미용: [
-    { key: "services",         label: "주요 시술 (쉼표 구분)",  type: "text" },
-    { key: "price_range",      label: "가격대",                 type: "text" },
-    { key: "reservation_info", label: "예약 방법",              type: "text" },
+    { key: "services", label: "주요 시술", type: "text", placeholder: "커트, 펌, 염색, 클리닉" },
+    { key: "price_range", label: "가격대", type: "text", placeholder: "커트 20,000원~" },
+    { key: "reservation_required", label: "예약 필수", type: "boolean" },
+    { key: "reservation_url", label: "예약 URL / 카카오채널", type: "text", placeholder: "https://..." },
   ],
   학원: [
-    { key: "courses",    label: "강좌명 (쉼표 구분)",     type: "text" },
-    { key: "age_range",  label: "대상 연령/학년",         type: "text" },
-    { key: "tuition",    label: "수강료",                 type: "text" },
+    { key: "courses", label: "강좌 / 과목", type: "text", placeholder: "수학, 영어, 과학" },
+    { key: "age_range", label: "대상 연령/학년", type: "text", placeholder: "초등~고등" },
+    { key: "tuition", label: "수강료", type: "text", placeholder: "월 30만원~" },
+    { key: "trial_class", label: "체험수업 가능", type: "boolean" },
   ],
   "헬스/운동": [
-    { key: "programs",        label: "운동 종류 / 프로그램", type: "text" },
-    { key: "price_range",     label: "가격대",               type: "text" },
-    { key: "trial_available", label: "체험 가능",            type: "boolean" },
+    { key: "programs", label: "운동 종류 / 프로그램", type: "text", placeholder: "헬스, PT, 필라테스" },
+    { key: "price_range", label: "가격대", type: "text", placeholder: "월 6만원~" },
+    { key: "trial_available", label: "체험 가능", type: "boolean" },
+    { key: "pt_available", label: "PT 가능", type: "boolean" },
   ],
   마트: [
-    { key: "fresh_food", label: "신선식품 취급",  type: "boolean" },
-    { key: "delivery",   label: "배달 가능",      type: "boolean" },
+    { key: "brand", label: "브랜드/상호", type: "text", placeholder: "홈플러스 익스프레스" },
+    { key: "fresh_food", label: "신선식품 취급", type: "boolean" },
+    { key: "delivery", label: "배달 가능", type: "boolean" },
   ],
   반려동물: [
-    { key: "pet_types",    label: "취급 동물 (쉼표 구분)",   type: "text" },
-    { key: "service_types",label: "서비스 종류 (쉼표 구분)", type: "text" },
+    { key: "pet_types", label: "취급 동물", type: "text", placeholder: "강아지, 고양이" },
+    { key: "service_types", label: "서비스 종류", type: "text", placeholder: "미용, 호텔링, 훈련" },
+    { key: "grooming", label: "미용 가능", type: "boolean" },
+    { key: "boarding", label: "호텔링/위탁", type: "boolean" },
   ],
   세탁: [
-    { key: "service_types", label: "서비스 종류", type: "text" },
-    { key: "same_day",      label: "당일 처리",   type: "boolean" },
+    { key: "service_types", label: "서비스 종류", type: "text", placeholder: "세탁, 드라이클리닝, 수선" },
+    { key: "same_day", label: "당일 처리", type: "boolean" },
+    { key: "dry_clean", label: "드라이클리닝", type: "boolean" },
+  ],
+  베이커리: [
+    { key: "specialty", label: "대표 제품", type: "text", placeholder: "크루아상, 소금빵, 케이크" },
+    { key: "custom_order", label: "맞춤 주문", type: "boolean" },
+    { key: "delivery", label: "배달 가능", type: "boolean" },
+  ],
+  안경원: [
+    { key: "services", label: "취급 제품/서비스", type: "text", placeholder: "안경, 선글라스, 콘택트렌즈" },
+  ],
+  부동산: [
+    { key: "specialties", label: "전문 분야", type: "text", placeholder: "아파트 매매, 전세, 상가" },
+  ],
+  스터디카페: [
+    { key: "seats", label: "좌석 수", type: "text", placeholder: "80석" },
+    { key: "price_range", label: "가격대", type: "text", placeholder: "시간당 1,000원~" },
+    { key: "wifi", label: "와이파이", type: "boolean" },
+    { key: "locker", label: "사물함", type: "boolean" },
+    { key: "is_24h", label: "24시간 운영", type: "boolean" },
+  ],
+  꽃집: [
+    { key: "services", label: "서비스 종류", type: "text", placeholder: "꽃다발, 화환, 웨딩, 장례화환" },
+    { key: "delivery", label: "배달 가능", type: "boolean" },
+    { key: "custom_order", label: "맞춤 주문", type: "boolean" },
   ],
 };
+
+const PAYMENT_OPTIONS = ["현금", "신용카드", "체크카드", "간편결제", "지역화폐", "제로페이", "고유가 피해지원금"];
+const AMENITY_OPTIONS = ["예약", "무선인터넷", "남녀화장실 구분", "장애인 출입", "장애인 주차구역", "영유아 동반", "반려동물 동반", "포장가능", "배달가능", "단체이용", "노키즈존", "오픈키친"];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -181,6 +218,10 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
   const [benefitSummary, setBenefitSummary] = useState(initial?.open_benefit?.summary ?? "");
   const [benefitDetails, setBenefitDetails] = useState((initial?.open_benefit?.details ?? []).join("\n"));
   const [benefitValidUntil, setBenefitValidUntil] = useState(initial?.open_benefit?.validUntil ?? "");
+  const [keywords, setKeywords] = useState<string[]>(
+    (initial?.extra_info?.keywords as string[]) ?? []
+  );
+  const [keywordInput, setKeywordInput] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
@@ -194,6 +235,20 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
     const v = (form.extra_info as Record<string, unknown> | null)?.[key];
     return (v as string | boolean) ?? "";
   }
+  function getExtraArr(key: string): string[] {
+    const v = (form.extra_info as Record<string, unknown> | null)?.[key];
+    return Array.isArray(v) ? (v as string[]) : [];
+  }
+  function toggleExtraArr(key: string, val: string) {
+    const arr = getExtraArr(key);
+    setForm(f => ({
+      ...f,
+      extra_info: {
+        ...(f.extra_info ?? {}),
+        [key]: arr.includes(val) ? arr.filter(x => x !== val) : [...arr, val],
+      }
+    }));
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -206,7 +261,12 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
       ...(benefitValidUntil ? { validUntil: benefitValidUntil } : {}),
     } : null;
     try {
-      const payload = { ...form, open_benefit, building_id: buildingId };
+      const final_extra_info: Record<string, unknown> = {
+        ...(form.extra_info ?? {}),
+        keywords: keywords.length > 0 ? keywords : undefined,
+      };
+      Object.keys(final_extra_info).forEach(k => final_extra_info[k] === undefined && delete final_extra_info[k]);
+      const payload = { ...form, extra_info: Object.keys(final_extra_info).length > 0 ? final_extra_info : null, open_benefit, building_id: buildingId };
       if (initial) {
         await adminUpdateStore(initial.id, payload);
       } else {
@@ -282,6 +342,106 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                 placeholder="매장 한 줄 소개" />
             </Field>
 
+            {/* ── SNS / 온라인 ── */}
+            <SectionTitle>SNS / 온라인</SectionTitle>
+            <Field label="홈페이지 URL">
+              <input className={INPUT} value={(getExtra("sns_website") as string) || ""}
+                onChange={e => setExtra("sns_website", e.target.value || "")}
+                placeholder="https://example.com" />
+            </Field>
+            <Field label="블로그 URL">
+              <input className={INPUT} value={(getExtra("sns_blog") as string) || ""}
+                onChange={e => setExtra("sns_blog", e.target.value || "")}
+                placeholder="https://blog.naver.com/..." />
+            </Field>
+            <Field label="유튜브 URL">
+              <input className={INPUT} value={(getExtra("sns_youtube") as string) || ""}
+                onChange={e => setExtra("sns_youtube", e.target.value || "")}
+                placeholder="https://youtube.com/@..." />
+            </Field>
+            <Field label="인스타그램 아이디">
+              <input className={INPUT} value={(getExtra("sns_instagram") as string) || ""}
+                onChange={e => setExtra("sns_instagram", e.target.value || "")}
+                placeholder="@아이디" />
+            </Field>
+
+            {/* ── 주차 ── */}
+            <SectionTitle>주차</SectionTitle>
+            <Field label="주차 여부">
+              <div className="flex gap-3">
+                {(["free", "paid", "none"] as const).map(v => {
+                  const label = v === "free" ? "무료" : v === "paid" ? "유료" : "없음";
+                  return (
+                    <label key={v} className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="radio" name="parking" value={v}
+                        checked={(getExtra("parking") as string) === v}
+                        onChange={() => setExtra("parking", v)}
+                        className="w-4 h-4" />
+                      <span className="text-[13px] text-[#4E5968]">{label}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </Field>
+            <Field label="주차 안내 (추가 메모)">
+              <input className={INPUT} value={(getExtra("parking_note") as string) || ""}
+                onChange={e => setExtra("parking_note", e.target.value || "")}
+                placeholder="예: 건물 지하 2시간 무료" />
+            </Field>
+
+            {/* ── 결제수단 ── */}
+            <SectionTitle>결제수단</SectionTitle>
+            <div className="flex flex-wrap gap-2">
+              {PAYMENT_OPTIONS.map(opt => {
+                const checked = getExtraArr("payment_methods").includes(opt);
+                return (
+                  <label key={opt} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer text-[12px] font-medium transition-colors ${checked ? "bg-[#3182F6] border-[#3182F6] text-white" : "border-[#E5E8EB] text-[#4E5968] hover:border-[#3182F6]"}`}>
+                    <input type="checkbox" className="hidden" checked={checked}
+                      onChange={() => toggleExtraArr("payment_methods", opt)} />
+                    {opt}
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* ── 편의시설 ── */}
+            <SectionTitle>편의시설</SectionTitle>
+            <div className="flex flex-wrap gap-2">
+              {AMENITY_OPTIONS.map(opt => {
+                const checked = getExtraArr("amenities").includes(opt);
+                return (
+                  <label key={opt} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border cursor-pointer text-[12px] font-medium transition-colors ${checked ? "bg-[#3182F6] border-[#3182F6] text-white" : "border-[#E5E8EB] text-[#4E5968] hover:border-[#3182F6]"}`}>
+                    <input type="checkbox" className="hidden" checked={checked}
+                      onChange={() => toggleExtraArr("amenities", opt)} />
+                    {opt}
+                  </label>
+                );
+              })}
+            </div>
+
+            {/* ── 대표 키워드 ── */}
+            <SectionTitle>대표 키워드</SectionTitle>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {keywords.map(kw => (
+                <span key={kw} className="flex items-center gap-1 px-2.5 py-1 bg-[#F2F4F6] rounded-full text-[12px] text-[#4E5968]">
+                  {kw}
+                  <button type="button" onClick={() => setKeywords(ks => ks.filter(k => k !== kw))}
+                    className="text-[#B0B8C1] hover:text-[#F04452] ml-0.5">✕</button>
+                </span>
+              ))}
+            </div>
+            <input className={INPUT} value={keywordInput}
+              onChange={e => setKeywordInput(e.target.value)}
+              onKeyDown={e => {
+                if ((e.key === "Enter" || e.key === ",") && keywordInput.trim()) {
+                  e.preventDefault();
+                  const kw = keywordInput.trim().replace(/,/g, "");
+                  if (kw && !keywords.includes(kw)) setKeywords(ks => [...ks, kw]);
+                  setKeywordInput("");
+                }
+              }}
+              placeholder="키워드 입력 후 Enter 또는 쉼표" />
+
             {/* ── 오픈 정보 ── */}
             <SectionTitle>오픈 정보</SectionTitle>
             <div className="grid grid-cols-2 gap-3">
@@ -353,7 +513,8 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                       </select>
                     ) : (
                       <input className={INPUT} value={(getExtra(f.key) as string) || ""}
-                        onChange={e => setExtra(f.key, e.target.value || "")} />
+                        onChange={e => setExtra(f.key, e.target.value || "")}
+                        placeholder={f.placeholder ?? ""} />
                     )}
                   </Field>
                 ))}

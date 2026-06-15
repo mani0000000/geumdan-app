@@ -313,4 +313,6 @@ export interface Store {
   isOpen?: boolean;
   isPremium?: boolean;
   thumbnail_url?: string | null;
+  logo_url?: string | null;
+  extra_info?: Record<string, unknown> | null;
 }
