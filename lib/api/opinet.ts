@@ -105,3 +105,83 @@ export const GEUMDAN_KATEC = wgs84ToKatec(
   GEUMDAN_CENTER.lat,
   GEUMDAN_CENTER.lng,
 );
+
+/**
+ * KATEC → WGS84 역변환
+ * 정역방향(wgs84ToKatec)의 역연산: 역 TM 투영 + 역 Molodensky
+ */
+export function katecToWgs84(kx: number, ky: number): { lat: number; lng: number } | null {
+  if (!kx || !ky || kx < 100000 || kx > 700000 || ky < 200000 || ky > 1000000) return null;
+
+  const a = BES_A, f = BES_F;
+  const b = a * (1 - f);
+  const e2 = (a * a - b * b) / (a * a);
+  const ep2 = (a * a - b * b) / (b * b);
+
+  // 역 TM: (kx,ky) → Bessel (bLat, bLon)
+  const x1 = (kx - K_FE) / K_SCALE;
+  const y1 = (ky - K_FN) / K_SCALE;
+
+  const c0 = 1 - e2/4 - 3*e2**2/64 - 5*e2**3/256;
+  const c2 = 3*e2/8 + 3*e2**2/32 + 45*e2**3/1024;
+  const c4 = 15*e2**2/256 + 45*e2**3/1024;
+  const c6 = 35*e2**3/3072;
+  const M0 = a * (c0*K_LAT0 - c2*Math.sin(2*K_LAT0) + c4*Math.sin(4*K_LAT0) - c6*Math.sin(6*K_LAT0));
+
+  const M1 = M0 + y1;
+  const mu = M1 / (a * c0);
+  const e1 = (1 - Math.sqrt(1 - e2)) / (1 + Math.sqrt(1 - e2));
+  const phi1 = mu
+    + (3*e1/2 - 27*e1**3/32) * Math.sin(2*mu)
+    + (21*e1**2/16 - 55*e1**4/32) * Math.sin(4*mu)
+    + (151*e1**3/96) * Math.sin(6*mu)
+    + (1097*e1**4/512) * Math.sin(8*mu);
+
+  const sp1 = Math.sin(phi1), cp1 = Math.cos(phi1), tp1 = Math.tan(phi1);
+  const N1 = a / Math.sqrt(1 - e2 * sp1 * sp1);
+  const T1 = tp1 * tp1;
+  const C1 = ep2 * cp1 * cp1;
+  const R1 = a * (1 - e2) / Math.pow(1 - e2 * sp1 * sp1, 1.5);
+  const D = x1 / N1;
+
+  const bLat = phi1 - (N1 * tp1 / R1) * (
+    D**2/2
+    - (5 + 3*T1 + 10*C1 - 4*C1**2 - 9*ep2) * D**4 / 24
+    + (61 + 90*T1 + 298*C1 + 45*T1**2 - 252*ep2 - 3*C1**2) * D**6 / 720
+  );
+  const bLon = K_LON0 + (
+    D - (1 + 2*T1 + C1) * D**3 / 6
+    + (5 - 2*C1 + 28*T1 - 3*C1**2 + 8*ep2 + 24*T1**2) * D**5 / 120
+  ) / cp1;
+
+  // 역 Molodensky: Bessel → WGS84 (역방향 이동량)
+  const sb = Math.sin(bLat), cb = Math.cos(bLat);
+  const sl = Math.sin(bLon), cl = Math.cos(bLon);
+  const Rn2 = a / Math.sqrt(1 - e2 * sb * sb);
+  const Rm2 = a * (1 - e2) / Math.pow(1 - e2 * sb * sb, 1.5);
+
+  const iDX = -DX; // 146.43
+  const iDY = -DY; // -507.89
+  const iDZ = -DZ; // -681.46
+  const iDa = WGS_A - BES_A;
+  const iDf = WGS_F - BES_F;
+
+  const dphi = (
+    -iDX * sb * cl - iDY * sb * sl + iDZ * cb
+    + iDa * (Rn2 * e2 * sb * cb) / a
+    + iDf * (Rm2 * (a / b) + Rn2 * (b / a)) * sb * cb
+  ) / Rm2;
+  const dlam = (-iDX * sl + iDY * cl) / (Rn2 * cb);
+
+  const lat = (bLat + dphi) / D2R;
+  const lng = (bLon + dlam) / D2R;
+  if (lat < 33 || lat > 41 || lng < 124 || lng > 131) return null;
+  return { lat: Math.round(lat * 1e6) / 1e6, lng: Math.round(lng * 1e6) / 1e6 };
+}
+
+// 검단+김포 커버를 위한 다중 검색 중심점 (WGS84)
+export const SCAN_CENTERS = [
+  { lat: 37.545, lng: 126.686, label: "인천 서구(구검단)" },
+  { lat: 37.593, lng: 126.712, label: "검단신도시(신)" },
+  { lat: 37.620, lng: 126.718, label: "김포시" },
+] as const;

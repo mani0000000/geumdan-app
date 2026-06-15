@@ -60,6 +60,17 @@ interface SeedResponse {
   error?: string;
 }
 
+interface ScanStation {
+  uniId: string; name: string; brandCode: string; brandName: string;
+  address: string; lat: number | null; lng: number | null;
+  isSelf: boolean; gasoline: number | null; diesel: number | null; lpg: number | null;
+  isTargetArea: boolean; alreadyInDb: boolean;
+}
+interface ScanResponse {
+  success: boolean; total: number; targetCount: number;
+  stations: ScanStation[]; timestamp: string; error?: string;
+}
+
 export default function GasStationsAdminPage() {
   const [stations, setStations]   = useState<DbStation[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -68,6 +79,12 @@ export default function GasStationsAdminPage() {
   const [syncResult, setSyncResult] = useState<SyncResponse | null>(null);
   const [seedResult, setSeedResult] = useState<SeedResponse | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanResponse | null>(null);
+  const [scanFilter, setScanFilter] = useState<"all" | "target" | "new">("target");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [adding, setAdding] = useState(false);
+  const [addMsg, setAddMsg] = useState<string | null>(null);
 
   async function loadStations() {
     setLoading(true);
@@ -115,6 +132,43 @@ export default function GasStationsAdminPage() {
       setSeedResult({ success: false, error: String(e) });
     }
     setSeeding(false);
+  }
+
+  async function handleScan() {
+    setScanning(true);
+    setScanResult(null);
+    setSelectedIds(new Set());
+    try {
+      const res = await fetch("/api/admin/scan-gas", { method: "POST" });
+      const data: ScanResponse = await res.json();
+      setScanResult(data);
+      // 타겟 지역 & 미등록 자동 선택
+      if (data.success) {
+        setSelectedIds(new Set(data.stations.filter(s => s.isTargetArea && !s.alreadyInDb).map(s => s.uniId)));
+      }
+    } catch (e) {
+      setScanResult({ success: false, total: 0, targetCount: 0, stations: [], timestamp: "", error: String(e) });
+    }
+    setScanning(false);
+  }
+
+  async function handleAddSelected() {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`선택한 ${selectedIds.size}개 주유소를 DB에 추가할까요?`)) return;
+    setAdding(true);
+    setAddMsg(null);
+    const toAdd = scanResult!.stations.filter(s => selectedIds.has(s.uniId));
+    try {
+      const res = await fetch("/api/admin/add-gas-stations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stations: toAdd }),
+      });
+      const data = await res.json() as { success?: boolean; inserted?: number; error?: string };
+      setAddMsg(data.success ? `✅ ${data.inserted}개 추가 완료` : `❌ ${data.error}`);
+      if (data.success) loadStations();
+    } catch (e) { setAddMsg(`❌ ${String(e)}`); }
+    setAdding(false);
   }
 
   const priceTs = stations.find(s => s.price_updated_at)?.price_updated_at;
@@ -259,6 +313,104 @@ export default function GasStationsAdminPage() {
           )}
         </div>
       )}
+
+      {/* 인천+김포 전체 스캔 섹션 */}
+      <div className="mb-6 rounded-2xl border border-[#E5E7EB] overflow-hidden">
+        <div className="bg-[#F9FAFB] px-4 py-3 flex items-center justify-between">
+          <div>
+            <p className="text-[14px] font-bold text-[#191F28]">인천+김포 전체 스캔</p>
+            <p className="text-[12px] text-[#6B7280]">오피넷에서 인천 서구·김포 전 주유소 조회 후 검단 인근 주소 기준 필터</p>
+          </div>
+          <button onClick={handleScan} disabled={scanning}
+            className="flex items-center gap-2 px-4 py-2 bg-[#7C3AED] text-white rounded-xl text-[13px] font-bold disabled:opacity-50">
+            <Search size={14} className={scanning ? "animate-spin" : ""} />
+            {scanning ? "스캔 중..." : "전체 스캔"}
+          </button>
+        </div>
+
+        {scanResult && scanResult.success && (
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[13px] text-[#374151]">
+                전체 <strong>{scanResult.total}</strong>개 발견 / 검단+인천서구+김포 <strong>{scanResult.targetCount}</strong>개
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex rounded-xl border border-[#E5E7EB] overflow-hidden text-[12px]">
+                  {(["target","new","all"] as const).map(f => (
+                    <button key={f} onClick={() => setScanFilter(f)}
+                      className={`px-3 py-1.5 ${scanFilter===f ? "bg-[#3182F6] text-white" : "text-[#374151] hover:bg-[#F3F4F6]"}`}>
+                      {f==="target" ? "검단+인근" : f==="new" ? "미등록만" : "전체"}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={handleAddSelected} disabled={adding || selectedIds.size===0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-[#059669] text-white rounded-xl text-[12px] font-bold disabled:opacity-50">
+                  {adding ? "추가 중..." : `선택 추가 (${selectedIds.size})`}
+                </button>
+              </div>
+            </div>
+            {addMsg && <p className="mb-3 text-[12px] font-medium">{addMsg}</p>}
+            <div className="overflow-x-auto max-h-96 overflow-y-auto border border-[#E5E7EB] rounded-xl">
+              <table className="w-full text-[12px]">
+                <thead className="sticky top-0 bg-[#F9FAFB]">
+                  <tr>
+                    <th className="px-3 py-2 text-left w-8">
+                      <input type="checkbox" onChange={e => {
+                        const visible = scanResult.stations.filter(s =>
+                          scanFilter==="target" ? s.isTargetArea :
+                          scanFilter==="new" ? (!s.alreadyInDb && s.isTargetArea) : true
+                        );
+                        setSelectedIds(e.target.checked ? new Set(visible.map(s=>s.uniId)) : new Set());
+                      }} />
+                    </th>
+                    <th className="px-3 py-2 text-left text-[#6B7280] font-semibold">주유소명</th>
+                    <th className="px-3 py-2 text-left text-[#6B7280] font-semibold">주소</th>
+                    <th className="px-3 py-2 text-right text-[#6B7280] font-semibold">휘발유</th>
+                    <th className="px-3 py-2 text-right text-[#6B7280] font-semibold">경유</th>
+                    <th className="px-3 py-2 text-center text-[#6B7280] font-semibold">상태</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {scanResult.stations
+                    .filter(s =>
+                      scanFilter==="target" ? s.isTargetArea :
+                      scanFilter==="new" ? (!s.alreadyInDb && s.isTargetArea) : true
+                    )
+                    .map(s => (
+                      <tr key={s.uniId} className={`border-t border-[#F3F4F6] ${s.isTargetArea ? "" : "opacity-50"}`}>
+                        <td className="px-3 py-2">
+                          <input type="checkbox" checked={selectedIds.has(s.uniId)}
+                            onChange={e => setSelectedIds(prev => {
+                              const next = new Set(prev);
+                              e.target.checked ? next.add(s.uniId) : next.delete(s.uniId);
+                              return next;
+                            })} />
+                        </td>
+                        <td className="px-3 py-2">
+                          <span className="font-medium text-[#191F28]">{s.name}</span>
+                          <span className="ml-1.5 text-[10px] text-[#6B7280]">{s.brandName}</span>
+                          {s.isSelf && <span className="ml-1 text-[10px] text-[#3182F6]">셀프</span>}
+                        </td>
+                        <td className="px-3 py-2 text-[#4B5563] max-w-[200px] truncate">{s.address}</td>
+                        <td className="px-3 py-2 text-right font-medium">{s.gasoline ? `${s.gasoline.toLocaleString()}원` : "—"}</td>
+                        <td className="px-3 py-2 text-right font-medium">{s.diesel ? `${s.diesel.toLocaleString()}원` : "—"}</td>
+                        <td className="px-3 py-2 text-center">
+                          {s.alreadyInDb
+                            ? <span className="text-[10px] text-[#059669] font-medium">등록됨</span>
+                            : <span className="text-[10px] text-[#F59E0B] font-medium">미등록</span>
+                          }
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+        {scanResult && !scanResult.success && (
+          <p className="p-4 text-[13px] text-[#EF4444]">❌ {scanResult.error}</p>
+        )}
+      </div>
 
       {/* 주유소 테이블 */}
       {loading ? (
