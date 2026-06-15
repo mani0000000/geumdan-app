@@ -654,9 +654,9 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
   const [storeModal, setStoreModal] = useState<"add" | AdminStore | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string; hint?: string } | null>(null);
   const [syncingNaver, setSyncingNaver] = useState(false);
-  const [syncNaverMsg, setSyncNaverMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [syncNaverMsg, setSyncNaverMsg] = useState<{ ok: boolean; text: string; hint?: string } | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -696,10 +696,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
       });
       const data = await res.json() as { success?: boolean; message?: string; error?: string; hint?: string; inserted?: number; total?: number };
       if (res.ok && data.success) {
-        setSyncMsg({ ok: true, text: data.message ?? "동기화 완료" });
+        setSyncMsg({ ok: true, text: data.message ?? "동기화 완료", hint: data.hint });
         loadData();
       } else {
-        setSyncMsg({ ok: false, text: data.error ?? "오류 발생" });
+        setSyncMsg({ ok: false, text: data.error ?? "오류 발생", hint: data.hint });
       }
     } catch (e: unknown) {
       setSyncMsg({ ok: false, text: e instanceof Error ? e.message : "네트워크 오류" });
@@ -719,10 +719,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
       });
       const data = await res.json() as { success?: boolean; message?: string; error?: string; hint?: string; inserted?: number; total?: number };
       if (res.ok && data.success) {
-        setSyncNaverMsg({ ok: true, text: data.message ?? "동기화 완료" });
+        setSyncNaverMsg({ ok: true, text: data.message ?? "동기화 완료", hint: data.hint });
         loadData();
       } else {
-        setSyncNaverMsg({ ok: false, text: data.error ?? "오류 발생" });
+        setSyncNaverMsg({ ok: false, text: data.error ?? "오류 발생", hint: data.hint });
       }
     } catch (e: unknown) {
       setSyncNaverMsg({ ok: false, text: e instanceof Error ? e.message : "네트워크 오류" });
@@ -755,9 +755,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
           </button>
         </div>
         {syncMsg && (
-          <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-            {syncMsg.ok ? "✅" : "❌"} {syncMsg.text}
-          </p>
+          <div className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+            <p>{syncMsg.ok ? "✅" : "❌"} {syncMsg.text}</p>
+            {syncMsg.hint && <p className="mt-0.5 opacity-70 text-[11px]">💡 {syncMsg.hint}</p>}
+          </div>
         )}
       </div>
 
@@ -780,9 +781,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
           </button>
         </div>
         {syncNaverMsg && (
-          <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncNaverMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
-            {syncNaverMsg.ok ? "✅" : "❌"} {syncNaverMsg.text}
-          </p>
+          <div className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncNaverMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+            <p>{syncNaverMsg.ok ? "✅" : "❌"} {syncNaverMsg.text}</p>
+            {syncNaverMsg.hint && <p className="mt-0.5 opacity-70 text-[11px]">💡 {syncNaverMsg.hint}</p>}
+          </div>
         )}
       </div>
 

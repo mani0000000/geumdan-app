@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
   // 1. 건물 조회
   const { data: bld, error: bErr } = await sb
     .from("buildings")
-    .select("id, name, lat, lng")
+    .select("id, name, address, lat, lng")
     .eq("id", building_id)
     .single();
 
@@ -189,7 +189,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "카카오 API 호출 실패", detail: errors }, { status: 502 });
   }
 
-  const places = [...seen.values()];
+  const allPlaces = [...seen.values()];
+
+  // 3. 주소 필터링 — 건물 도로명 주소와 일치하는 매장만 추출
+  function addressMatchKakao(storeAddr: string, buildingAddr: string | null): boolean {
+    if (!buildingAddr || !storeAddr) return true;
+    const s = storeAddr.replace(/\s/g, "");
+    const b = buildingAddr.replace(/\s/g, "");
+    // "이음대로384", "완대로819번길21" 같은 도로명+번지 패턴으로 매칭
+    const roads = b.match(/[가-힣]+(로|길)\s*\d+(?:번길\s*\d+)?/g);
+    if (!roads) return true;
+    return roads.some(r => s.includes(r.replace(/\s/g, "")));
+  }
+
+  const bldAddr = bld.address as string | null;
+  const filtered = bldAddr
+    ? allPlaces.filter(p => addressMatchKakao(p.road_address_name || p.address_name, bldAddr))
+    : allPlaces;
+
+  // 필터링 후 0건이면 전체 결과 사용 (주소가 DB에 없거나 형식 불일치)
+  const places = filtered.length > 0 ? filtered : allPlaces;
+  const addressFiltered = filtered.length > 0 && filtered.length < allPlaces.length;
+
   if (places.length === 0) {
     return NextResponse.json({
       success: true,
@@ -251,12 +272,18 @@ export async function POST(req: NextRequest) {
 
   const newCount = rows.filter(r => !existingIds.has(r.id)).length;
 
+  const filterNote = addressFiltered
+    ? ` (전체 ${allPlaces.length}건 중 주소 매칭 ${places.length}건)`
+    : "";
+
   return NextResponse.json({
     success: true,
     total:    places.length,
     inserted: newCount,
     updated:  rows.length - newCount,
-    message:  `${places.length}개 매장 동기화 완료 (신규 ${newCount}개 추가)`,
+    raw_count: allPlaces.length,
+    message:  `${places.length}개 매장 동기화 완료 (신규 ${newCount}개 추가)${filterNote}`,
+    hint:     "영업시간·전문분야 등 세부정보는 카카오 API에서 제공하지 않습니다. 어드민에서 직접 입력해 주세요.",
     errors:   errors.length > 0 ? errors : undefined,
   });
 }
