@@ -1,7 +1,7 @@
 "use client";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, ChevronLeft, RefreshCw, Check, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronLeft, RefreshCw, Check, X, Zap } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBuildings, adminUpdateBuilding,
@@ -653,6 +653,8 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
   const [floorModal, setFloorModal] = useState(false);
   const [storeModal, setStoreModal] = useState<"add" | AdminStore | null>(null);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -681,10 +683,59 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
     loadData();
   }
 
+  async function syncKakao() {
+    setSyncing(true);
+    setSyncMsg(null);
+    try {
+      const res = await fetch("/api/admin/kakao-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ building_id: building.id, radius: 150 }),
+      });
+      const data = await res.json() as { success?: boolean; message?: string; error?: string; hint?: string; inserted?: number; total?: number };
+      if (res.ok && data.success) {
+        setSyncMsg({ ok: true, text: data.message ?? "동기화 완료" });
+        loadData();
+      } else {
+        setSyncMsg({ ok: false, text: data.error ?? "오류 발생" });
+      }
+    } catch (e: unknown) {
+      setSyncMsg({ ok: false, text: e instanceof Error ? e.message : "네트워크 오류" });
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   const floorStores = stores.filter(s => s.floor_label === selFloor);
 
   return (
     <div>
+      {/* 카카오 자동 조회 */}
+      <div className="mb-4 p-3 bg-[#F8F9FB] rounded-xl border border-[#E5E8EB]">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[13px] font-bold text-[#191F28]">카카오 매장 자동 조회</p>
+            <p className="text-[11px] text-[#8B95A1] mt-0.5">
+              건물 좌표 기준 반경 150m 내 카카오맵 등록 매장을 가져옵니다
+              {!building.lat && <span className="text-[#F04452] ml-1">— 좌표를 먼저 입력하세요</span>}
+            </p>
+          </div>
+          <button
+            onClick={syncKakao}
+            disabled={syncing || !building.lat || !building.lng}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#FEE500] text-[#191919] rounded-xl text-[12px] font-bold hover:bg-[#F5DC00] disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+            {syncing
+              ? <><RefreshCw size={13} className="animate-spin" /> 조회 중...</>
+              : <><Zap size={13} /> 카카오 자동 조회</>}
+          </button>
+        </div>
+        {syncMsg && (
+          <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+            {syncMsg.ok ? "✅" : "❌"} {syncMsg.text}
+          </p>
+        )}
+      </div>
+
       {/* 층 탭 바 - 모바일에서 가로 스크롤 */}
       <div className="overflow-x-auto mb-4">
         <div className="flex items-center gap-2 whitespace-nowrap pb-1">
