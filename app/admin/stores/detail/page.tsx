@@ -657,6 +657,8 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
   const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string; hint?: string } | null>(null);
   const [syncingNaver, setSyncingNaver] = useState(false);
   const [syncNaverMsg, setSyncNaverMsg] = useState<{ ok: boolean; text: string; hint?: string } | null>(null);
+  const [enriching, setEnriching] = useState(false);
+  const [enrichMsg, setEnrichMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -731,6 +733,29 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
     }
   }
 
+  async function enrichStores() {
+    setEnriching(true);
+    setEnrichMsg(null);
+    try {
+      const res = await fetch("/api/admin/enrich-stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ building_id: building.id }),
+      });
+      const data = await res.json() as { success?: boolean; message?: string; error?: string; enriched?: number; total?: number; details?: string[] };
+      if (res.ok && data.success) {
+        setEnrichMsg({ ok: true, text: data.message ?? "완료" });
+        loadData();
+      } else {
+        setEnrichMsg({ ok: false, text: data.error ?? "오류 발생" });
+      }
+    } catch (e: unknown) {
+      setEnrichMsg({ ok: false, text: e instanceof Error ? e.message : "네트워크 오류" });
+    } finally {
+      setEnriching(false);
+    }
+  }
+
   const floorStores = stores.filter(s => s.floor_label === selFloor);
 
   return (
@@ -785,6 +810,31 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
             <p>{syncNaverMsg.ok ? "✅" : "❌"} {syncNaverMsg.text}</p>
             {syncNaverMsg.hint && <p className="mt-0.5 opacity-70 text-[11px]">💡 {syncNaverMsg.hint}</p>}
           </div>
+        )}
+      </div>
+
+      {/* 카카오 상세정보 보완 */}
+      <div className="mb-4 p-3 bg-[#F8F9FB] rounded-xl border border-[#E5E8EB]">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[13px] font-bold text-[#191F28]">상세정보 자동 채우기</p>
+            <p className="text-[11px] text-[#8B95A1] mt-0.5">
+              카카오 자동 조회 후 실행 — 영업시간·메뉴·키워드를 카카오 플레이스에서 가져옵니다
+            </p>
+          </div>
+          <button
+            onClick={enrichStores}
+            disabled={enriching}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#3182F6] text-white rounded-xl text-[12px] font-bold hover:bg-[#1C6CEB] disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+            {enriching
+              ? <><RefreshCw size={13} className="animate-spin" /> 채우는 중...</>
+              : <><Zap size={13} /> 상세정보 채우기</>}
+          </button>
+        </div>
+        {enrichMsg && (
+          <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${enrichMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+            {enrichMsg.ok ? "✅" : "❌"} {enrichMsg.text}
+          </p>
         )}
       </div>
 
