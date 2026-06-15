@@ -655,6 +655,8 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [syncingNaver, setSyncingNaver] = useState(false);
+  const [syncNaverMsg, setSyncNaverMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -706,6 +708,29 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
     }
   }
 
+  async function syncNaver() {
+    setSyncingNaver(true);
+    setSyncNaverMsg(null);
+    try {
+      const res = await fetch("/api/admin/naver-sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ building_id: building.id }),
+      });
+      const data = await res.json() as { success?: boolean; message?: string; error?: string; hint?: string; inserted?: number; total?: number };
+      if (res.ok && data.success) {
+        setSyncNaverMsg({ ok: true, text: data.message ?? "동기화 완료" });
+        loadData();
+      } else {
+        setSyncNaverMsg({ ok: false, text: data.error ?? "오류 발생" });
+      }
+    } catch (e: unknown) {
+      setSyncNaverMsg({ ok: false, text: e instanceof Error ? e.message : "네트워크 오류" });
+    } finally {
+      setSyncingNaver(false);
+    }
+  }
+
   const floorStores = stores.filter(s => s.floor_label === selFloor);
 
   return (
@@ -732,6 +757,31 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
         {syncMsg && (
           <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
             {syncMsg.ok ? "✅" : "❌"} {syncMsg.text}
+          </p>
+        )}
+      </div>
+
+      {/* 네이버 자동 조회 */}
+      <div className="mb-4 p-3 bg-[#F8F9FB] rounded-xl border border-[#E5E8EB]">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-[13px] font-bold text-[#191F28]">네이버 매장 자동 조회</p>
+            <p className="text-[11px] text-[#8B95A1] mt-0.5">
+              건물명으로 네이버 로컬 검색 후 주소 매칭으로 매장을 가져옵니다
+            </p>
+          </div>
+          <button
+            onClick={syncNaver}
+            disabled={syncingNaver}
+            className="flex items-center gap-1.5 px-3 py-2 bg-[#03C75A] text-white rounded-xl text-[12px] font-bold hover:bg-[#02B351] disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+            {syncingNaver
+              ? <><RefreshCw size={13} className="animate-spin" /> 조회 중...</>
+              : <><Zap size={13} /> 네이버 자동 조회</>}
+          </button>
+        </div>
+        {syncNaverMsg && (
+          <p className={`mt-2 text-[12px] font-medium px-2 py-1 rounded-lg ${syncNaverMsg.ok ? "bg-[#E6F7EE] text-[#065F46]" : "bg-[#FEE2E2] text-[#991B1B]"}`}>
+            {syncNaverMsg.ok ? "✅" : "❌"} {syncNaverMsg.text}
           </p>
         )}
       </div>
