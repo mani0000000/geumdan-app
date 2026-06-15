@@ -280,6 +280,7 @@ export async function POST(req: NextRequest) {
     updated:  rows.length - newCount,
     raw_count: rawPlaces.length,
     message:  `${places.length}개 매장 동기화 완료 (신규 ${newCount}개, 전체 검색 ${rawPlaces.length}건)`,
+    hint:     "영업시간·전문분야 등 세부정보는 네이버 API에서 제공하지 않습니다. 어드민에서 직접 입력해 주세요.",
   });
 }
 
