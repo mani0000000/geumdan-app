@@ -89,6 +89,9 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
         h: (row.h as number) ?? 10,
         isOpen: (row.is_open as boolean | undefined) ?? undefined,
         isPremium: (row.is_premium as boolean | undefined) ?? false,
+        logo_url: (row.logo_url as string | null) ?? null,
+        description: (row.description as string | undefined) ?? undefined,
+        extra_info: (row.extra_info as Record<string, unknown> | null) ?? null,
       });
     }
 
@@ -177,6 +180,8 @@ export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
         buildingId: (row.building_id as string) ?? '',
         buildingName: buildingNames[(row.building_id as string) ?? ''] ?? '',
         thumbnail_url: (row.thumbnail_url as string | null) ?? null,
+        logo_url: (row.logo_url as string | null) ?? null,
+        extra_info: (row.extra_info as Record<string, unknown> | null) ?? null,
       }));
   } catch (err) {
     console.error('[buildings] fetchAllStoresFlat error:', err);
@@ -206,6 +211,8 @@ export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]
       h: (row.h as number) ?? 10,
       isOpen: (row.is_open as boolean | undefined) ?? undefined,
       isPremium: (row.is_premium as boolean | undefined) ?? false,
+      logo_url: (row.logo_url as string | null) ?? null,
+      extra_info: (row.extra_info as Record<string, unknown> | null) ?? null,
     }));
   } catch (err) {
     console.error(`[buildings] fetchStoresByBuilding error for ${buildingId}:`, err);
