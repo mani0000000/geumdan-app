@@ -72,12 +72,10 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
     const floorRows = floorsRes.data ?? [];
     const storeRows = storesRes.data ?? [];
 
-    if (floorRows.length === 0) return null;
-
-    // Group stores by floor_label
+    // floors 레코드가 없어도 stores의 floor_label로 가상 층을 파생한다
     const storesByFloor: Record<string, Store[]> = {};
     for (const row of storeRows) {
-      const label = row.floor_label as string;
+      const label = (row.floor_label as string) || '1F';
       if (!storesByFloor[label]) storesByFloor[label] = [];
       storesByFloor[label].push({
         id: row.id as string,
@@ -94,16 +92,36 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
       });
     }
 
-    const floors: Floor[] = floorRows.map((row) => ({
-      level: row.level as number,
-      label: row.label as string,
-      hasRestroom: (row.has_restroom as boolean) ?? false,
-      restroomCode: (row.restroom_code as string | undefined) ?? undefined,
-      restroomLocation: (row.restroom_location as string | undefined) ?? undefined,
-      restroomGender: (row.restroom_gender as string | undefined) ?? undefined,
-      restroomNote: (row.restroom_note as string | undefined) ?? undefined,
-      stores: storesByFloor[row.label as string] ?? [],
-    }));
+    // DB floors 우선, 없으면 store floor_label에서 파생
+    let floors: Floor[];
+    if (floorRows.length > 0) {
+      floors = floorRows.map((row) => ({
+        level: row.level as number,
+        label: row.label as string,
+        hasRestroom: (row.has_restroom as boolean) ?? false,
+        restroomCode: (row.restroom_code as string | undefined) ?? undefined,
+        restroomLocation: (row.restroom_location as string | undefined) ?? undefined,
+        restroomGender: (row.restroom_gender as string | undefined) ?? undefined,
+        restroomNote: (row.restroom_note as string | undefined) ?? undefined,
+        stores: storesByFloor[row.label as string] ?? [],
+      }));
+    } else {
+      // 매장 데이터도 없으면 null 반환
+      if (storeRows.length === 0) return null;
+      // floor_label 정렬: B숫자 → 숫자F 순
+      const labelOrder = (l: string) => {
+        if (l.startsWith('B')) return -parseInt(l.slice(1) || '1', 10);
+        return parseInt(l.replace('F', '') || '1', 10);
+      };
+      floors = Object.keys(storesByFloor)
+        .sort((a, b) => labelOrder(a) - labelOrder(b))
+        .map((label, i) => ({
+          level: labelOrder(label),
+          label,
+          hasRestroom: false,
+          stores: storesByFloor[label],
+        }));
+    }
 
     return {
       id: bRow.id as string,
