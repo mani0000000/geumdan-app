@@ -32,7 +32,10 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
   }, [showLocation]);
 
   return (
-    <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]">
+    <header
+      className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
+      style={{ top: "env(safe-area-inset-top, 0px)" }}
+    >
       <div className="flex items-center justify-between px-4 h-[52px]">
         <div className="flex items-center gap-1">
           {showBack && (
