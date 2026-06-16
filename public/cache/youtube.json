@@ -1,33 +1,51 @@
 {
-  "fetchedAt": "2026-06-15T16:20:29.831Z",
-  "count": 253,
+  "fetchedAt": "2026-06-16T01:41:36.865Z",
+  "count": 265,
   "videos": [
     {
-      "id": "yt-10",
+      "id": "yt-4",
+      "videoId": "yBYRHGnrURU",
+      "title": "[🔴생중계] 인천 서구 기계제조 공장 화재 확산…20여개 동으로 확산 / 연합뉴스TV(YonhapnewsTV)",
+      "channelName": "연합뉴스TV",
+      "thumbnail": "https://img.youtube.com/vi/yBYRHGnrURU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=yBYRHGnrURU",
+      "publishedAt": "2026-06-16T01:41:36.863Z"
+    },
+    {
+      "id": "yt-6",
       "videoId": "F78K8UmzO9Q",
       "title": "검단도 10억? 검단신도시 1분 주간브리핑 by.둥이아빠",
       "channelName": "둥이아빠부동산TV",
       "thumbnail": "https://img.youtube.com/vi/F78K8UmzO9Q/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=F78K8UmzO9Q",
-      "publishedAt": "2026-06-15T14:20:26.186Z"
+      "publishedAt": "2026-06-15T13:41:33.433Z"
     },
     {
-      "id": "yt-2",
+      "id": "yt-16",
+      "videoId": "3gp9bq81_z4",
+      "title": "검단신도시 주요 20여개 단지 매매가 시세현황, 2026년 6월 15일 기준",
+      "channelName": "티파니부동산",
+      "thumbnail": "https://img.youtube.com/vi/3gp9bq81_z4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3gp9bq81_z4",
+      "publishedAt": "2026-06-15T11:41:35.727Z"
+    },
+    {
+      "id": "yt-8",
       "videoId": "U873Dn7g3V4",
       "title": "검단 전세 궁금해요? 검단신도시 1분 주간브리핑 by.둥이아빠",
       "channelName": "둥이아빠부동산TV",
       "thumbnail": "https://img.youtube.com/vi/U873Dn7g3V4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=U873Dn7g3V4",
-      "publishedAt": "2026-06-15T11:20:26.186Z"
+      "publishedAt": "2026-06-15T11:41:33.433Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-7",
       "videoId": "iqzXr9U4bcI",
       "title": "검단신도시 9억(89,500) !",
       "channelName": "검단신도시 이야기",
       "thumbnail": "https://img.youtube.com/vi/iqzXr9U4bcI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=iqzXr9U4bcI",
-      "publishedAt": "2026-06-15T11:20:25.099Z"
+      "publishedAt": "2026-06-15T10:41:35.727Z"
     },
     {
       "id": "yt-0",
@@ -36,7 +54,7 @@
       "channelName": "검단21세기부동산",
       "thumbnail": "https://img.youtube.com/vi/UUvDlm2eYEA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=UUvDlm2eYEA",
-      "publishedAt": "2026-06-15T10:20:27.285Z"
+      "publishedAt": "2026-06-15T10:41:34.581Z"
     },
     {
       "id": "yt-0",
@@ -45,43 +63,25 @@
       "channelName": "부동산프로 남수란",
       "thumbnail": "https://img.youtube.com/vi/B1Jv0zx7I5E/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=B1Jv0zx7I5E",
-      "publishedAt": "2026-06-15T10:20:25.099Z"
+      "publishedAt": "2026-06-15T09:41:32.443Z"
     },
     {
-      "id": "yt-2",
-      "videoId": "oEiWyyX8fBQ",
-      "title": "검단 중흥S-클래스 에듀파크 / 드론 촬영 영상 5탄 공개! [With 목수와칠쟁이]",
-      "channelName": "주식회사 목수와 칠쟁이",
-      "thumbnail": "https://img.youtube.com/vi/oEiWyyX8fBQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=oEiWyyX8fBQ",
-      "publishedAt": "2026-06-15T08:20:27.411Z"
-    },
-    {
-      "id": "yt-1",
+      "id": "yt-0",
       "videoId": "PtYvVoUmP6w",
       "title": "인천 부동산 아파트 집값, 이것만 보세요",
       "channelName": "부동산 시민교수 - 부티인",
       "thumbnail": "https://img.youtube.com/vi/PtYvVoUmP6w/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=PtYvVoUmP6w",
-      "publishedAt": "2026-06-15T08:20:25.099Z"
+      "publishedAt": "2026-06-15T08:41:33.523Z"
     },
     {
-      "id": "yt-7",
-      "videoId": "7f2RSO6wXEo",
-      "title": "검단호수공원역 풍경채어바니티 / 드론 촬영 영상 3탄 공개! [With 목수와칠쟁이]",
-      "channelName": "주식회사 목수와 칠쟁이",
-      "thumbnail": "https://img.youtube.com/vi/7f2RSO6wXEo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=7f2RSO6wXEo",
-      "publishedAt": "2026-06-15T05:20:29.707Z"
-    },
-    {
-      "id": "yt-1",
+      "id": "yt-2",
       "videoId": "0xZh6P7g86M",
       "title": "더샵 검단레이크파크 분양 - 입지와 분양가, 안전마진, 필요 금액 분석(검단신도시 내 아파트와 비교)",
       "channelName": "돈다방(Money-Cafe)",
       "thumbnail": "https://img.youtube.com/vi/0xZh6P7g86M/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=0xZh6P7g86M",
-      "publishedAt": "2026-06-14T22:20:27.285Z"
+      "publishedAt": "2026-06-15T01:41:34.581Z"
     },
     {
       "id": "yt-1",
@@ -90,106 +90,106 @@
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/zg6RGlPzQGc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=zg6RGlPzQGc",
-      "publishedAt": "2026-06-14T16:20:25.079Z"
+      "publishedAt": "2026-06-15T01:41:33.465Z"
     },
     {
-      "id": "yt-2",
-      "videoId": "UPYG2tglRMM",
-      "title": "검단 포스코 더샵 6억5천 뭘 고민해?  해야지",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/UPYG2tglRMM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UPYG2tglRMM",
-      "publishedAt": "2026-06-13T16:20:28.520Z"
-    },
-    {
-      "id": "yt-10",
+      "id": "yt-7",
       "videoId": "MBHcYkivOVs",
       "title": "검단신도시 검단-경명로 속이 뻥",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/MBHcYkivOVs/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=MBHcYkivOVs",
-      "publishedAt": "2026-06-13T16:20:25.099Z"
+      "publishedAt": "2026-06-14T01:41:32.443Z"
     },
     {
-      "id": "yt-0",
-      "videoId": "N3yNJvYmyTU",
-      "title": "하늘에서 본 검단신도시🛸허허벌판이었는데, 완전히 달라졌습니다💯인천1호선 개통 후 검단 근황🔥 워라밸빌리지/호수공원역/신검단중앙역전철/더샵검단레이크파크",
-      "channelName": "부동산프로 남수란",
-      "thumbnail": "https://img.youtube.com/vi/N3yNJvYmyTU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=N3yNJvYmyTU",
-      "publishedAt": "2026-06-12T16:20:29.707Z"
-    },
-    {
-      "id": "yt-12",
+      "id": "yt-3",
       "videoId": "2bzkpAhLiKE",
       "title": "검단신도시 검단호수공원역의 미래 중흥s클래스에듀파크,풍경채3차,아테라자이",
       "channelName": "부동산보좌관",
       "thumbnail": "https://img.youtube.com/vi/2bzkpAhLiKE/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=2bzkpAhLiKE",
-      "publishedAt": "2026-06-12T16:20:29.707Z"
+      "publishedAt": "2026-06-13T01:41:36.769Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-2",
+      "videoId": "N3yNJvYmyTU",
+      "title": "하늘에서 본 검단신도시🛸허허벌판이었는데, 완전히 달라졌습니다💯인천1호선 개통 후 검단 근황🔥 워라밸빌리지/호수공원역/신검단중앙역전철/더샵검단레이크파크",
+      "channelName": "부동산프로 남수란",
+      "thumbnail": "https://img.youtube.com/vi/N3yNJvYmyTU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=N3yNJvYmyTU",
+      "publishedAt": "2026-06-13T01:41:32.443Z"
+    },
+    {
+      "id": "yt-15",
       "videoId": "OUJwIottZD0",
       "title": "검단신도시 불로동 산책vlog(feat.여울빛공원)",
       "channelName": "심플라이프 simple life",
       "thumbnail": "https://img.youtube.com/vi/OUJwIottZD0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=OUJwIottZD0",
-      "publishedAt": "2026-06-11T16:20:28.488Z"
+      "publishedAt": "2026-06-12T01:41:35.648Z"
     },
     {
-      "id": "yt-6",
-      "videoId": "-vNawhm3J7M",
-      "title": "[굿모닝 인천] 검단 초대 구청장 김진규의 약속!",
-      "channelName": "경인방송",
-      "thumbnail": "https://img.youtube.com/vi/-vNawhm3J7M/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=-vNawhm3J7M",
-      "publishedAt": "2026-06-10T16:20:28.587Z"
+      "id": "yt-15",
+      "videoId": "JPrT5UOX6lc",
+      "title": "[법무법인 아크로] 검단호수공원역 풍경채 어바니티 현장드론 5탄",
+      "channelName": "법무법인 아크로",
+      "thumbnail": "https://img.youtube.com/vi/JPrT5UOX6lc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=JPrT5UOX6lc",
+      "publishedAt": "2026-06-11T01:41:34.611Z"
     },
     {
-      "id": "yt-19",
+      "id": "yt-4",
       "videoId": "XOYjRZMy_o4",
-      "title": "검단신도시 지금 가봤더니... 🛸검단구청·우체국·소방서·경찰서까지 완전히 달라졌습니다💯현장임장/더샵검단레이크파크/이편한세상에코비스타/푸르지오더파크/아테라자이",
+      "title": "완정역? 검단호수공원역? 역세권 맞나요..?😤 더샵 검단레이크파크 입지 직접 확인했습니다👍검단신도시/ 더샵검단레이크파크/이편한세상에코비스타/푸르지오더파크/아테라자이",
       "channelName": "부동산프로 남수란",
       "thumbnail": "https://img.youtube.com/vi/XOYjRZMy_o4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=XOYjRZMy_o4",
-      "publishedAt": "2026-06-10T16:20:25.099Z"
+      "publishedAt": "2026-06-11T01:41:32.443Z"
     },
     {
-      "id": "yt-11",
+      "id": "yt-10",
       "videoId": "lBLSujtSyOw",
       "title": "검단구 출범!검단신도시 인프라 총정리,교통·행정·입주까지! 완전히 달라지는 검단의 미래가치",
       "channelName": "검단21세기부동산",
       "thumbnail": "https://img.youtube.com/vi/lBLSujtSyOw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=lBLSujtSyOw",
-      "publishedAt": "2026-06-09T16:20:26.165Z"
+      "publishedAt": "2026-06-10T01:41:33.495Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-10",
+      "videoId": "hFVz2K140lQ",
+      "title": "검단신도시소식종합정리 26년5월2부",
+      "channelName": "부동산윤소장",
+      "thumbnail": "https://img.youtube.com/vi/hFVz2K140lQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=hFVz2K140lQ",
+      "publishedAt": "2026-06-10T01:41:32.443Z"
+    },
+    {
+      "id": "yt-18",
+      "videoId": "XWRWrmXou8A",
+      "title": "임장왕 분석 검단신도시 미래는? (인천시장,검단구청장 당선을 축하하며~)",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/XWRWrmXou8A/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=XWRWrmXou8A",
+      "publishedAt": "2026-06-06T01:41:32.443Z"
+    },
+    {
+      "id": "yt-2",
       "videoId": "ftw84KFQnPo",
       "title": "검단신도시 찐주민의 인근 데이트 코스_핫플레이스 추천_맛집 추천_카페 추천",
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/ftw84KFQnPo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ftw84KFQnPo",
-      "publishedAt": "2026-06-04T16:20:28.526Z"
+      "publishedAt": "2026-06-05T01:41:35.753Z"
     },
     {
-      "id": "yt-6",
-      "videoId": "ENuVNWiVu60",
-      "title": "260522일자 검단신도시 5단계, 7단계, 3단계 드론 촬영 편집 영상",
-      "channelName": "검단 통합 정보 허브 플랫폼",
-      "thumbnail": "https://img.youtube.com/vi/ENuVNWiVu60/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ENuVNWiVu60",
-      "publishedAt": "2026-06-04T16:20:27.411Z"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "3tQcE-P-xVo",
-      "title": "검단신도시 대장 홍대선 꼭 들어와야하는 이유?",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/3tQcE-P-xVo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3tQcE-P-xVo",
-      "publishedAt": "2026-06-03T16:20:28.509Z"
+      "id": "yt-19",
+      "videoId": "OkYr-FlaFxA",
+      "title": "더샵검단레이크파크,#검단신도시더샵레아크파크",
+      "channelName": "아라부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/OkYr-FlaFxA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=OkYr-FlaFxA",
+      "publishedAt": "2026-06-03T01:41:34.581Z"
     },
     {
       "id": "yt-2",
@@ -198,124 +198,106 @@
       "channelName": "양부연 (양대표의 부동산 연구소)",
       "thumbnail": "https://img.youtube.com/vi/sVoNxD6qczI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=sVoNxD6qczI",
-      "publishedAt": "2026-06-01T16:20:28.587Z"
+      "publishedAt": "2026-06-02T01:41:35.759Z"
     },
     {
-      "id": "yt-11",
-      "videoId": "4Vl4AO66w34",
-      "title": "[검단신도시 푸르지오 더 파크] 주간 드론 영상 8탄 입니다.",
-      "channelName": "주관사 (주)홍대INT기획",
-      "thumbnail": "https://img.youtube.com/vi/4Vl4AO66w34/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=4Vl4AO66w34",
-      "publishedAt": "2026-06-01T16:20:27.411Z"
-    },
-    {
-      "id": "yt-10",
+      "id": "yt-15",
       "videoId": "csUB0FOBKnY",
       "title": "검단신도시 단지내상가 편의점 건물주되기?! [추천매물 TOP4] 부동산.미용실.세탁소.태권도.밀키트 상가매매물건정보",
       "channelName": "검단21세기부동산",
       "thumbnail": "https://img.youtube.com/vi/csUB0FOBKnY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=csUB0FOBKnY",
-      "publishedAt": "2026-06-01T16:20:27.316Z"
+      "publishedAt": "2026-06-02T01:41:34.688Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-2",
+      "videoId": "4Vl4AO66w34",
+      "title": "[검단신도시 푸르지오 더 파크] 주간 드론 영상 8탄 입니다.",
+      "channelName": "주관사 (주)홍대INT기획",
+      "thumbnail": "https://img.youtube.com/vi/4Vl4AO66w34/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=4Vl4AO66w34",
+      "publishedAt": "2026-06-02T01:41:34.611Z"
+    },
+    {
+      "id": "yt-2",
       "videoId": "MPD71nStyJQ",
       "title": "260317 검단호수공원(중앙호수공원) 시뮬레이션 영상 제작 및 LH측에 제안 완료",
       "channelName": "검단 통합 정보 허브 플랫폼",
       "thumbnail": "https://img.youtube.com/vi/MPD71nStyJQ/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=MPD71nStyJQ",
-      "publishedAt": "2026-06-01T16:20:26.176Z"
+      "publishedAt": "2026-06-02T01:41:33.465Z"
     },
     {
-      "id": "yt-14",
+      "id": "yt-15",
       "videoId": "MzP8YypR8rA",
       "title": "검단신도시 불장 진입하나? 어서타! 신검단중앙역 풍경채어바니티 와우~",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/MzP8YypR8rA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=MzP8YypR8rA",
-      "publishedAt": "2026-06-01T16:20:25.099Z"
+      "publishedAt": "2026-06-02T01:41:32.443Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-10",
       "videoId": "VjhdCsRJS7Y",
       "title": "EP16. 검단신도시에서 공덕역까지 얼마나 걸릴까?(공덕역 먹자골목을 곁들인 일상 VLOG)",
       "channelName": "귀리아빠",
       "thumbnail": "https://img.youtube.com/vi/VjhdCsRJS7Y/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=VjhdCsRJS7Y",
-      "publishedAt": "2026-06-01T16:20:25.055Z"
+      "publishedAt": "2026-06-02T01:41:32.407Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-6",
       "videoId": "AztC2cxJIZg",
       "title": "검단신도시 호수공원 어디까지? / 2단계도 거의 완공, 이제 3단계 차례",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/AztC2cxJIZg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=AztC2cxJIZg",
-      "publishedAt": "2026-05-25T16:20:29.707Z"
+      "publishedAt": "2026-05-26T01:41:36.769Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-6",
       "videoId": "CUer765ZBpw",
       "title": "검단신도시 1단계 완성직전 / 법원검찰청, 검단-경명로,산책길연결 등",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/CUer765ZBpw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=CUer765ZBpw",
-      "publishedAt": "2026-05-25T16:20:28.488Z"
+      "publishedAt": "2026-05-26T01:41:35.648Z"
     },
     {
-      "id": "yt-9",
+      "id": "yt-14",
+      "videoId": "oXu8T4t6efo",
+      "title": "교통과 교육에 집중…초대 검단구청장 후보의 공약은? [인천]",
+      "channelName": "B tv 뉴스",
+      "thumbnail": "https://img.youtube.com/vi/oXu8T4t6efo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=oXu8T4t6efo",
+      "publishedAt": "2026-05-26T01:41:34.593Z"
+    },
+    {
+      "id": "yt-12",
       "videoId": "7mmMcKCj3Xw",
       "title": "공원뷰 아파트 6개월 살아보고 느낀 공원뷰 특장점과 단점_검단신도시 공원뷰 신축아파트",
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/7mmMcKCj3Xw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=7mmMcKCj3Xw",
-      "publishedAt": "2026-05-25T16:20:26.176Z"
+      "publishedAt": "2026-05-26T01:41:33.465Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-12",
       "videoId": "QWtf6kLYREg",
       "title": "검단구, 완성되기 시작한 도시",
       "channelName": "도시리뷰어 | city reviewer",
       "thumbnail": "https://img.youtube.com/vi/QWtf6kLYREg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=QWtf6kLYREg",
-      "publishedAt": "2026-05-18T16:20:26.231Z"
-    },
-    {
-      "id": "yt-5",
-      "videoId": "-Q7P_1kNbBg",
-      "title": "5호선 연장 호재! 아라역 VS 신검단중앙역, 여러분의 선택은? 김포보단 검단!?",
-      "channelName": "동탐남",
-      "thumbnail": "https://img.youtube.com/vi/-Q7P_1kNbBg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=-Q7P_1kNbBg",
-      "publishedAt": "2026-05-16T16:20:29.829Z"
-    },
-    {
-      "id": "yt-6",
-      "videoId": "J4OA6LjriYg",
-      "title": "검단신도시 신검단중앙,호수공원 현황 (26년 4월 26일.. 점점채워진다)",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/J4OA6LjriYg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=J4OA6LjriYg",
-      "publishedAt": "2026-05-16T16:20:29.707Z"
-    },
-    {
-      "id": "yt-8",
-      "videoId": "MN2wnt-cUaU",
-      "title": "검단 호수공원 이라고? / 이정도면 진짜 랜드마크 될 듯",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/MN2wnt-cUaU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=MN2wnt-cUaU",
-      "publishedAt": "2026-05-16T16:20:29.707Z"
+      "publishedAt": "2026-05-19T01:41:33.546Z"
     },
     {
       "id": "yt-13",
-      "videoId": "bwz2zG4V6jw",
-      "title": "검단신도시 5단계 임장 (검단호수공원역 일대 )",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/bwz2zG4V6jw/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=bwz2zG4V6jw",
-      "publishedAt": "2026-05-16T16:20:29.707Z"
+      "videoId": "Q3qlTST6k78",
+      "title": "[검단임장] 중개사가 자기 동생 밀어넣은 아파트, 3년 뒤 현재 모습은? #검단신도시 #부동산임장 #내집마련",
+      "channelName": "부동산언니김도영",
+      "thumbnail": "https://img.youtube.com/vi/Q3qlTST6k78/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Q3qlTST6k78",
+      "publishedAt": "2026-05-19T01:41:32.443Z"
     },
     {
       "id": "yt-1",
@@ -324,70 +306,124 @@
       "channelName": "하마TV 집에 대한 모든 정보",
       "thumbnail": "https://img.youtube.com/vi/TSbpUXPVxG8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=TSbpUXPVxG8",
-      "publishedAt": "2026-05-16T16:20:29.636Z"
+      "publishedAt": "2026-05-17T01:41:36.863Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-8",
       "videoId": "5oYwkmYX4Y4",
       "title": "검단구 인사권 행사 중단…신설구 행정 혼란 예상 [인천]",
       "channelName": "B tv 뉴스",
       "thumbnail": "https://img.youtube.com/vi/5oYwkmYX4Y4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5oYwkmYX4Y4",
-      "publishedAt": "2026-05-16T16:20:29.636Z"
+      "publishedAt": "2026-05-17T01:41:36.863Z"
     },
     {
-      "id": "yt-10",
+      "id": "yt-11",
       "videoId": "5zPp5Vuib4Y",
       "title": "인천 서구 당하동 빌라 대형평수 #급매빌라 #당하동빌라 #검단신도시빌라 #아라역빌라",
       "channelName": "빌라만바라봐",
       "thumbnail": "https://img.youtube.com/vi/5zPp5Vuib4Y/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5zPp5Vuib4Y",
-      "publishedAt": "2026-05-16T16:20:29.636Z"
+      "publishedAt": "2026-05-17T01:41:36.863Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-4",
+      "videoId": "db1_CUunphM",
+      "title": "검단신도시, 지금 들어가도 될까? 아라역,신검단중앙역,검단호수공원역 기준 정리했습니다.",
+      "channelName": "검단신도시 이재홍부동산",
+      "thumbnail": "https://img.youtube.com/vi/db1_CUunphM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=db1_CUunphM",
+      "publishedAt": "2026-05-17T01:41:36.808Z"
+    },
+    {
+      "id": "yt-5",
+      "videoId": "-Q7P_1kNbBg",
+      "title": "5호선 연장 호재! 아라역 VS 신검단중앙역, 여러분의 선택은? 김포보단 검단!?",
+      "channelName": "동탐남",
+      "thumbnail": "https://img.youtube.com/vi/-Q7P_1kNbBg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=-Q7P_1kNbBg",
+      "publishedAt": "2026-05-17T01:41:36.808Z"
+    },
+    {
+      "id": "yt-8",
+      "videoId": "J4OA6LjriYg",
+      "title": "검단신도시 신검단중앙,호수공원 현황 (26년 4월 26일.. 점점채워진다)",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/J4OA6LjriYg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=J4OA6LjriYg",
+      "publishedAt": "2026-05-17T01:41:36.769Z"
+    },
+    {
+      "id": "yt-14",
+      "videoId": "bwz2zG4V6jw",
+      "title": "검단신도시 5단계 임장 (검단호수공원역 일대 )",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/bwz2zG4V6jw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=bwz2zG4V6jw",
+      "publishedAt": "2026-05-17T01:41:36.769Z"
+    },
+    {
+      "id": "yt-1",
       "videoId": "3s6rigBJxvQ",
       "title": "[4K] 2026 검단신도시 인프라 총정리(검단구청, 법원검찰청, 서울5호선연장, 인천2호선연장, 검단드림로, 검단경명로, 호수공원, 넥스티엘)",
       "channelName": "홍익부동산TV",
       "thumbnail": "https://img.youtube.com/vi/3s6rigBJxvQ/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=3s6rigBJxvQ",
-      "publishedAt": "2026-05-16T16:20:29.573Z"
+      "publishedAt": "2026-05-17T01:41:36.755Z"
     },
     {
-      "id": "yt-10",
-      "videoId": "QuU30_NRRyk",
-      "title": "검단신도시 푸르지오 더 파크 - 건설 현장 드론 임장 (26년 5월 2주)",
-      "channelName": "하늘누리",
-      "thumbnail": "https://img.youtube.com/vi/QuU30_NRRyk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=QuU30_NRRyk",
-      "publishedAt": "2026-05-16T16:20:27.411Z"
+      "id": "yt-0",
+      "videoId": "lWqciUK7UD8",
+      "title": "헬스장 빌런 때문에 스트레스라면? '운동 고수'들만 모인다는 숨은 머신 성지 발견 | 검단 새로이짐",
+      "channelName": "짐로드 Gym Road",
+      "thumbnail": "https://img.youtube.com/vi/lWqciUK7UD8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=lWqciUK7UD8",
+      "publishedAt": "2026-05-17T01:41:35.641Z"
     },
     {
-      "id": "yt-17",
-      "videoId": "go9A7q_yae4",
-      "title": "넥스티엘 스트리트! 검단신도시 롯데캐슬 넥스티엘ㅣ준공드론촬영",
-      "channelName": "니드랩 NIEDLAB",
-      "thumbnail": "https://img.youtube.com/vi/go9A7q_yae4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=go9A7q_yae4",
-      "publishedAt": "2026-05-16T16:20:27.411Z"
-    },
-    {
-      "id": "yt-9",
+      "id": "yt-8",
       "videoId": "x8mZ8UAD0_A",
       "title": "검단신도시 대형마트 오픈",
       "channelName": "부테크랩",
       "thumbnail": "https://img.youtube.com/vi/x8mZ8UAD0_A/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=x8mZ8UAD0_A",
-      "publishedAt": "2026-05-16T16:20:27.316Z"
+      "publishedAt": "2026-05-17T01:41:34.688Z"
     },
     {
-      "id": "yt-11",
+      "id": "yt-14",
       "videoId": "BnUBWN8fI1M",
       "title": "검단신도시 저평가 🔥TOP 2",
       "channelName": "으뜸부동산 서민정",
       "thumbnail": "https://img.youtube.com/vi/BnUBWN8fI1M/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=BnUBWN8fI1M",
-      "publishedAt": "2026-05-16T16:20:27.316Z"
+      "publishedAt": "2026-05-17T01:41:34.688Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "JTh2KD8gtAo",
+      "title": "검단신도시 넥스티엘 마피5천 물건 보셨나요?",
+      "channelName": "부테크랩",
+      "thumbnail": "https://img.youtube.com/vi/JTh2KD8gtAo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=JTh2KD8gtAo",
+      "publishedAt": "2026-05-17T01:41:34.688Z"
+    },
+    {
+      "id": "yt-3",
+      "videoId": "QuU30_NRRyk",
+      "title": "검단신도시 푸르지오 더 파크 - 건설 현장 드론 임장 (26년 5월 2주)",
+      "channelName": "하늘누리",
+      "thumbnail": "https://img.youtube.com/vi/QuU30_NRRyk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=QuU30_NRRyk",
+      "publishedAt": "2026-05-17T01:41:34.611Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "go9A7q_yae4",
+      "title": "넥스티엘 스트리트! 검단신도시 롯데캐슬 넥스티엘ㅣ준공드론촬영",
+      "channelName": "니드랩 NIEDLAB",
+      "thumbnail": "https://img.youtube.com/vi/go9A7q_yae4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=go9A7q_yae4",
+      "publishedAt": "2026-05-17T01:41:34.611Z"
     },
     {
       "id": "yt-3",
@@ -396,97 +432,61 @@
       "channelName": "JTBC News",
       "thumbnail": "https://img.youtube.com/vi/HUmc2429IKM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=HUmc2429IKM",
-      "publishedAt": "2026-05-16T16:20:27.303Z"
+      "publishedAt": "2026-05-17T01:41:34.593Z"
     },
     {
-      "id": "yt-10",
+      "id": "yt-13",
       "videoId": "hhDNLY52768",
       "title": "- 71% 폭락, 송도 청라 검단도 쫄딱 망했다! 인천 아파트 하락 10곳. 반값된 인천 아파트[부동산 아파트 미분양 분양권 입주권 재개발 재건축]",
       "channelName": "김부자 TV_구독하면 부자",
       "thumbnail": "https://img.youtube.com/vi/hhDNLY52768/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=hhDNLY52768",
-      "publishedAt": "2026-05-16T16:20:26.199Z"
+      "publishedAt": "2026-05-17T01:41:33.523Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-11",
       "videoId": "ruewKwWhtSc",
       "title": "검단신도시 행정, 교통, 문화 점점 갖춰가고 주목받는 검단 자세히 알아보자",
       "channelName": "부동산보좌관",
       "thumbnail": "https://img.youtube.com/vi/ruewKwWhtSc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ruewKwWhtSc",
-      "publishedAt": "2026-05-16T16:20:26.165Z"
+      "publishedAt": "2026-05-17T01:41:33.495Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-8",
+      "videoId": "MN2wnt-cUaU",
+      "title": "검단 호수공원 이라고? / 이정도면 진짜 랜드마크 될 듯",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/MN2wnt-cUaU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=MN2wnt-cUaU",
+      "publishedAt": "2026-05-17T01:41:33.465Z"
+    },
+    {
+      "id": "yt-7",
       "videoId": "xHTpC7OaeWQ",
       "title": "EP13. 검단신도시 신축아파트 간단 랜선집들이 VLOG",
       "channelName": "귀리아빠",
       "thumbnail": "https://img.youtube.com/vi/xHTpC7OaeWQ/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=xHTpC7OaeWQ",
-      "publishedAt": "2026-05-16T16:20:25.079Z"
+      "publishedAt": "2026-05-17T01:41:32.407Z"
     },
     {
-      "id": "yt-3",
-      "videoId": "krDQtxvAsR4",
-      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
-      "channelName": "실거주부동산",
-      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4",
-      "publishedAt": "2026-04-16T16:20:29.829Z"
-    },
-    {
-      "id": "yt-6",
-      "videoId": "j7ymUXzJGsc",
-      "title": "인천에서 여기를 사야 26년 돈 벌 수 있습니다(검단신도시 전망) | 언제 살지, 언제 팔지, 어디를 살지까지 완벽 정리",
-      "channelName": "임장여지도 : 부동산으로 자본주의 살아남기",
-      "thumbnail": "https://img.youtube.com/vi/j7ymUXzJGsc/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=j7ymUXzJGsc",
-      "publishedAt": "2026-04-16T16:20:29.829Z"
-    },
-    {
-      "id": "yt-19",
-      "videoId": "GTg1nvQCn4c",
-      "title": "검단신도시 검단호수공원역 파라곤 메트로파크 분양가 입지 모델하우스 영상",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/GTg1nvQCn4c/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=GTg1nvQCn4c",
-      "publishedAt": "2026-04-16T16:20:29.708Z"
-    },
-    {
-      "id": "yt-14",
-      "videoId": "AzSqP-lVVg0",
-      "title": "검단호수공원역 파라곤 분양  이가격이면 오호~",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/AzSqP-lVVg0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=AzSqP-lVVg0",
-      "publishedAt": "2026-04-16T16:20:29.707Z"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "1fuMX-GYMh4",
-      "title": "옆단지는 이미 9억대! 1.5억 마진 '검단호수공원역 파라곤' 입지 분석 (5호선 연장·GTX-D 호재)",
-      "channelName": "홈두부",
-      "thumbnail": "https://img.youtube.com/vi/1fuMX-GYMh4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=1fuMX-GYMh4",
-      "publishedAt": "2026-04-16T16:20:29.707Z"
-    },
-    {
-      "id": "yt-0",
+      "id": "yt-5",
       "videoId": "y3l55krDGXU",
       "title": "검단 주민 \"5호선 원당역 추가 해야\"… 김포 설득 난관",
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/y3l55krDGXU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=y3l55krDGXU",
-      "publishedAt": "2026-04-16T16:20:29.610Z"
+      "publishedAt": "2026-04-17T01:41:36.829Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-10",
       "videoId": "uL1MZLEwptg",
       "title": "검단신도시에서 서울가는 가장 빠른 길 | 아라계양로 개통 임박! | 검단드림로간 도로 | 원당태리도로",
       "channelName": "검단대장",
       "thumbnail": "https://img.youtube.com/vi/uL1MZLEwptg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=uL1MZLEwptg",
-      "publishedAt": "2026-04-16T16:20:29.610Z"
+      "publishedAt": "2026-04-17T01:41:36.829Z"
     },
     {
       "id": "yt-14",
@@ -495,16 +495,97 @@
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/nznefL65D14/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=nznefL65D14",
-      "publishedAt": "2026-04-16T16:20:29.610Z"
+      "publishedAt": "2026-04-17T01:41:36.829Z"
     },
     {
-      "id": "yt-14",
+      "id": "yt-6",
+      "videoId": "krDQtxvAsR4",
+      "title": "5호선 예타 통과한 검단, 추가역 두고 또 논란 |📍실거주임장 | 검단신도시는 10억을 넘어설 수 있을까?",
+      "channelName": "실거주부동산",
+      "thumbnail": "https://img.youtube.com/vi/krDQtxvAsR4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=krDQtxvAsR4",
+      "publishedAt": "2026-04-17T01:41:36.808Z"
+    },
+    {
+      "id": "yt-11",
+      "videoId": "AzSqP-lVVg0",
+      "title": "검단호수공원역 파라곤 분양  이가격이면 오호~",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/AzSqP-lVVg0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=AzSqP-lVVg0",
+      "publishedAt": "2026-04-17T01:41:36.769Z"
+    },
+    {
+      "id": "yt-15",
+      "videoId": "1fuMX-GYMh4",
+      "title": "옆단지는 이미 9억대! 1.5억 마진 '검단호수공원역 파라곤' 입지 분석 (5호선 연장·GTX-D 호재)",
+      "channelName": "홈두부",
+      "thumbnail": "https://img.youtube.com/vi/1fuMX-GYMh4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=1fuMX-GYMh4",
+      "publishedAt": "2026-04-17T01:41:36.769Z"
+    },
+    {
+      "id": "yt-5",
+      "videoId": "4JemUG-u7oI",
+      "title": "🚇 지하철 5호선 연장 특집 김포•검단 아파트 BEST5 🚇 [🏘️ 김구라 경제연구소 EP.90 - 부동산편]",
+      "channelName": "그리구라 GreeGura",
+      "thumbnail": "https://img.youtube.com/vi/4JemUG-u7oI/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=4JemUG-u7oI",
+      "publishedAt": "2026-04-17T01:41:36.755Z"
+    },
+    {
+      "id": "yt-6",
+      "videoId": "RhySUqvRGIk",
+      "title": "누구를 위한 지하철? 김포·인천 기싸움이 낳은 ‘5호선 국자 노선’의 결말",
+      "channelName": "역쟁이TV",
+      "thumbnail": "https://img.youtube.com/vi/RhySUqvRGIk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=RhySUqvRGIk",
+      "publishedAt": "2026-04-17T01:41:36.755Z"
+    },
+    {
+      "id": "yt-8",
+      "videoId": "BsPQjNdUSm8",
+      "title": "'검단구'로 새 도약...역사와 정체성 회복 [인천]",
+      "channelName": "B tv 뉴스",
+      "thumbnail": "https://img.youtube.com/vi/BsPQjNdUSm8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=BsPQjNdUSm8",
+      "publishedAt": "2026-04-17T01:41:35.759Z"
+    },
+    {
+      "id": "yt-2",
+      "videoId": "_3ADO624vH4",
+      "title": "검단신도시, 결국 오를 수밖에 없는 이유",
+      "channelName": "부동산은 땅땅무슨땅",
+      "thumbnail": "https://img.youtube.com/vi/_3ADO624vH4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=_3ADO624vH4",
+      "publishedAt": "2026-04-17T01:41:35.727Z"
+    },
+    {
+      "id": "yt-13",
       "videoId": "wbeoIpLBzL0",
       "title": "검단신도시 어서타! (26년 3월 21일 동네 소식들 싸그리 모아옴)",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/wbeoIpLBzL0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=wbeoIpLBzL0",
-      "publishedAt": "2026-04-16T16:20:28.488Z"
+      "publishedAt": "2026-04-17T01:41:35.648Z"
+    },
+    {
+      "id": "yt-17",
+      "videoId": "7tPW09aijfk",
+      "title": "검단신도시 신검단중앙역 F4 점포형상가 창업 지금이 돈법니다 이주자택지",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/7tPW09aijfk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=7tPW09aijfk",
+      "publishedAt": "2026-04-17T01:41:34.688Z"
+    },
+    {
+      "id": "yt-6",
+      "videoId": "DmLQKHcq5H0",
+      "title": "[VLOG]  🏠신축아파트 사전점검 브이로그ㅣ입주 박람회 구경하고 롯데캐슬 42평 사전점검 하는 일상 🌸",
+      "channelName": "MISORO 미소로",
+      "thumbnail": "https://img.youtube.com/vi/DmLQKHcq5H0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=DmLQKHcq5H0",
+      "publishedAt": "2026-04-17T01:41:34.626Z"
     },
     {
       "id": "yt-0",
@@ -513,25 +594,7 @@
       "channelName": "청산 이호우  ",
       "thumbnail": "https://img.youtube.com/vi/0xdsPLpiFHQ/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=0xdsPLpiFHQ",
-      "publishedAt": "2026-04-16T16:20:27.411Z"
-    },
-    {
-      "id": "yt-14",
-      "videoId": "DmLQKHcq5H0",
-      "title": "[VLOG]  🏠신축아파트 사전점검 브이로그ㅣ입주 박람회 구경하고 롯데캐슬 42평 사전점검 하는 일상 🌸",
-      "channelName": "MISORO 미소로",
-      "thumbnail": "https://img.youtube.com/vi/DmLQKHcq5H0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=DmLQKHcq5H0",
-      "publishedAt": "2026-04-16T16:20:27.324Z"
-    },
-    {
-      "id": "yt-16",
-      "videoId": "7tPW09aijfk",
-      "title": "검단신도시 신검단중앙역 F4 점포형상가 창업 지금이 돈법니다 이주자택지",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/7tPW09aijfk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=7tPW09aijfk",
-      "publishedAt": "2026-04-16T16:20:27.316Z"
+      "publishedAt": "2026-04-17T01:41:34.611Z"
     },
     {
       "id": "yt-0",
@@ -540,7 +603,7 @@
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/QhVaDF2soIM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=QhVaDF2soIM",
-      "publishedAt": "2026-04-16T16:20:27.303Z"
+      "publishedAt": "2026-04-17T01:41:34.593Z"
     },
     {
       "id": "yt-1",
@@ -549,106 +612,106 @@
       "channelName": "검단대장",
       "thumbnail": "https://img.youtube.com/vi/zXqfqja5wk4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=zXqfqja5wk4",
-      "publishedAt": "2026-04-16T16:20:27.303Z"
+      "publishedAt": "2026-04-17T01:41:34.593Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-5",
       "videoId": "RCQ-ZezNhFA",
       "title": "충격! 검단신도시 이음초 과밀의 현주소... 학교배정을 둘러싼 갈등 원인은??",
       "channelName": "둥이아빠부동산TV",
       "thumbnail": "https://img.youtube.com/vi/RCQ-ZezNhFA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=RCQ-ZezNhFA",
-      "publishedAt": "2026-04-16T16:20:27.303Z"
+      "publishedAt": "2026-04-17T01:41:34.593Z"
     },
     {
-      "id": "yt-7",
-      "videoId": "BsPQjNdUSm8",
-      "title": "'검단구'로 새 도약...역사와 정체성 회복 [인천]",
-      "channelName": "B tv 뉴스",
-      "thumbnail": "https://img.youtube.com/vi/BsPQjNdUSm8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=BsPQjNdUSm8",
-      "publishedAt": "2026-04-16T16:20:27.303Z"
-    },
-    {
-      "id": "yt-6",
+      "id": "yt-1",
       "videoId": "t_9blV0PCDM",
       "title": "검단신도시 아파트 줍줍? 분양가 상한제 마지막 4억대! 1주택자도 가능한 엘리프 검단 포레듀",
       "channelName": "온하우스",
       "thumbnail": "https://img.youtube.com/vi/t_9blV0PCDM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=t_9blV0PCDM",
-      "publishedAt": "2026-04-16T16:20:27.285Z"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "_3ADO624vH4",
-      "title": "검단신도시, 결국 오를 수밖에 없는 이유",
-      "channelName": "부동산은 땅땅무슨땅",
-      "thumbnail": "https://img.youtube.com/vi/_3ADO624vH4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=_3ADO624vH4",
-      "publishedAt": "2026-04-16T16:20:26.231Z"
+      "publishedAt": "2026-04-17T01:41:34.581Z"
     },
     {
       "id": "yt-3",
-      "videoId": "IEewmTTVtSM",
-      "title": "[뉴스'함'] \"검단·김포 호재 굉장히 많아\"... '집값 상승' 징후 솔솔?",
-      "channelName": "OBS뉴스",
-      "thumbnail": "https://img.youtube.com/vi/IEewmTTVtSM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=IEewmTTVtSM",
-      "publishedAt": "2026-04-16T16:20:26.186Z"
-    },
-    {
-      "id": "yt-14",
-      "videoId": "TzfKeFOhgQ0",
-      "title": "검단신도시 뉴스(도로,법원) / 26년 4월 10일 (검찰청 꼭대기층 타설)",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/TzfKeFOhgQ0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=TzfKeFOhgQ0",
-      "publishedAt": "2026-04-16T16:20:26.186Z"
-    },
-    {
-      "id": "yt-11",
-      "videoId": "Viw7hVE7QUk",
-      "title": "#검단신도시#검단호수공원역파라곤#검단호수공원역파라곤플렉스#단지내상가",
-      "channelName": "아라부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/Viw7hVE7QUk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Viw7hVE7QUk",
-      "publishedAt": "2026-04-16T16:20:26.176Z"
-    },
-    {
-      "id": "yt-4",
       "videoId": "cKTzW5EXex8",
       "title": "[도로투데이] 인천 검단~드림로 8일 전면개통 장제로 교통혼잡 완화 기대",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/cKTzW5EXex8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=cKTzW5EXex8",
-      "publishedAt": "2026-04-16T16:20:26.165Z"
+      "publishedAt": "2026-04-17T01:41:33.495Z"
     },
     {
-      "id": "yt-12",
+      "id": "yt-9",
+      "videoId": "YcbxKC5xKps",
+      "title": "'검단~드림로 연결도로'  8일 오후 2시 개통 [인천]",
+      "channelName": "B tv 뉴스",
+      "thumbnail": "https://img.youtube.com/vi/YcbxKC5xKps/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=YcbxKC5xKps",
+      "publishedAt": "2026-04-17T01:41:33.495Z"
+    },
+    {
+      "id": "yt-15",
       "videoId": "j_pa4YsCFS8",
       "title": "김포·검단 5호선 추가역 신설가능성, GTX-D환승에 정답있다. , 1년동안 검단신도시에 살면서 느낀점 !",
       "channelName": "검단신도시 이야기",
       "thumbnail": "https://img.youtube.com/vi/j_pa4YsCFS8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=j_pa4YsCFS8",
-      "publishedAt": "2026-04-16T16:20:26.165Z"
+      "publishedAt": "2026-04-17T01:41:33.495Z"
     },
     {
-      "id": "yt-7",
-      "videoId": "UVOdna5B1KU",
-      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU",
-      "publishedAt": "2026-04-16T16:20:25.079Z"
+      "id": "yt-6",
+      "videoId": "Viw7hVE7QUk",
+      "title": "#검단신도시#검단호수공원역파라곤#검단호수공원역파라곤플렉스#단지내상가",
+      "channelName": "아라부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/Viw7hVE7QUk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Viw7hVE7QUk",
+      "publishedAt": "2026-04-17T01:41:33.465Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-13",
+      "videoId": "j7ymUXzJGsc",
+      "title": "인천에서 여기를 사야 26년 돈 벌 수 있습니다(검단신도시 전망) | 언제 살지, 언제 팔지, 어디를 살지까지 완벽 정리",
+      "channelName": "임장여지도 : 부동산으로 자본주의 살아남기",
+      "thumbnail": "https://img.youtube.com/vi/j7ymUXzJGsc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=j7ymUXzJGsc",
+      "publishedAt": "2026-04-17T01:41:33.465Z"
+    },
+    {
+      "id": "yt-2",
+      "videoId": "IEewmTTVtSM",
+      "title": "[뉴스'함'] \"검단·김포 호재 굉장히 많아\"... '집값 상승' 징후 솔솔?",
+      "channelName": "OBS뉴스",
+      "thumbnail": "https://img.youtube.com/vi/IEewmTTVtSM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=IEewmTTVtSM",
+      "publishedAt": "2026-04-17T01:41:33.433Z"
+    },
+    {
+      "id": "yt-13",
+      "videoId": "TzfKeFOhgQ0",
+      "title": "검단신도시 뉴스(도로,법원) / 26년 4월 10일 (검찰청 꼭대기층 타설)",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/TzfKeFOhgQ0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=TzfKeFOhgQ0",
+      "publishedAt": "2026-04-17T01:41:33.433Z"
+    },
+    {
+      "id": "yt-4",
       "videoId": "VLXd65RR7Rg",
       "title": "검단신도시 집중 탐구",
       "channelName": "부동산 시민교수 - 부티인",
       "thumbnail": "https://img.youtube.com/vi/VLXd65RR7Rg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=VLXd65RR7Rg",
-      "publishedAt": "2026-04-16T16:20:25.055Z"
+      "publishedAt": "2026-04-17T01:41:32.432Z"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "UVOdna5B1KU",
+      "title": "검단신도시 찐주민의 주말 갓생 브이로그ㅣ예비 트리플 역세권 탐방ㅣ임장전 필수 영상",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/UVOdna5B1KU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UVOdna5B1KU",
+      "publishedAt": "2026-04-17T01:41:32.407Z"
     },
     {
       "id": "yt-0",
@@ -657,7 +720,7 @@
       "channelName": "연합뉴스TV",
       "thumbnail": "https://img.youtube.com/vi/Mnn0k6rAG4I/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Mnn0k6rAG4I",
-      "publishedAt": "2026-03-17T16:20:29.636Z"
+      "publishedAt": "2026-03-18T01:41:36.863Z"
     },
     {
       "id": "yt-11",
@@ -666,7 +729,34 @@
       "channelName": "검단복있는부동산",
       "thumbnail": "https://img.youtube.com/vi/jI8bvgv20Zw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=jI8bvgv20Zw",
-      "publishedAt": "2026-03-17T16:20:29.610Z"
+      "publishedAt": "2026-03-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-13",
+      "videoId": "gI4N23qJL8Y",
+      "title": "검단신도시 신검단중앙역 칸타빌 더스위트 주목할만한 단지",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/gI4N23qJL8Y/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=gI4N23qJL8Y",
+      "publishedAt": "2026-03-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "UHDs8rzniOQ",
+      "title": "구도심인데 초역세권? 신도시 인프라까지 누리는 아파트｜검단 칸타빌 더 스위트",
+      "channelName": "검단신도시 이재홍부동산",
+      "thumbnail": "https://img.youtube.com/vi/UHDs8rzniOQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UHDs8rzniOQ",
+      "publishedAt": "2026-03-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-17",
+      "videoId": "RV0U9gNhhKQ",
+      "title": "3베이 평면,, 아쉽네요ㅠ_검단호수공원역 파라곤┃#뉴빌드#리모델링#인테리어",
+      "channelName": "뉴빌드TV",
+      "thumbnail": "https://img.youtube.com/vi/RV0U9gNhhKQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=RV0U9gNhhKQ",
+      "publishedAt": "2026-03-18T01:41:36.769Z"
     },
     {
       "id": "yt-11",
@@ -675,7 +765,7 @@
       "channelName": "B tv 뉴스",
       "thumbnail": "https://img.youtube.com/vi/3IlERzUIE3w/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=3IlERzUIE3w",
-      "publishedAt": "2026-03-17T16:20:29.573Z"
+      "publishedAt": "2026-03-18T01:41:36.755Z"
     },
     {
       "id": "yt-12",
@@ -684,169 +774,7 @@
       "channelName": "JTBC News",
       "thumbnail": "https://img.youtube.com/vi/w9PE0H9X7oc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=w9PE0H9X7oc",
-      "publishedAt": "2026-03-17T16:20:29.573Z"
-    },
-    {
-      "id": "yt-0",
-      "videoId": "4ZIxxa32LYA",
-      "title": "2026년 인천 검단과 김포 한강신도시 아파트는 수도권 최고의 가성비 지역입니다! 서울 부동산의 강력한 규제의 최대 수혜지역 미리 선점해야 할 이유가 있습니다",
-      "channelName": "리얼재테크",
-      "thumbnail": "https://img.youtube.com/vi/4ZIxxa32LYA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=4ZIxxa32LYA",
-      "publishedAt": "2026-03-17T16:20:28.520Z"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "RkBphj0rseU",
-      "title": "신검단중앙역 디에트르더에듀 드론촬영(오후1시반)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/RkBphj0rseU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=RkBphj0rseU",
-      "publishedAt": "2026-03-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-7",
-      "videoId": "9VElMVH_UMc",
-      "title": "e편한세상 검단웰카운티 드론촬영(오전11시반)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/9VElMVH_UMc/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=9VElMVH_UMc",
-      "publishedAt": "2026-03-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-14",
-      "videoId": "pJ2aXj-EU54",
-      "title": "제일풍경채 검단3차 드론촬영(오후1시)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/pJ2aXj-EU54/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=pJ2aXj-EU54",
-      "publishedAt": "2026-03-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-15",
-      "videoId": "UvcZp0y43bw",
-      "title": "검단신도시 호반써밋3차 드론촬영(오후12시)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/UvcZp0y43bw/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UvcZp0y43bw",
-      "publishedAt": "2026-03-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-16",
-      "videoId": "Jqx_k327ID4",
-      "title": "검단신도시 롯데캐슬 넥스티엘 드론촬영(오후2시반)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/Jqx_k327ID4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Jqx_k327ID4",
-      "publishedAt": "2026-03-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-6",
-      "videoId": "ID1JwfvhDcg",
-      "title": "검단신도시 힐스테이트 34평 마지막 4억대 + 입주지원금까지!? 단지안 조경 아시아 디자인상 수상 아파트. 여기가 검단신도시 그 길목! 무조건 돈 버는 집",
-      "channelName": "집을담다",
-      "thumbnail": "https://img.youtube.com/vi/ID1JwfvhDcg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ID1JwfvhDcg",
-      "publishedAt": "2026-03-17T16:20:27.324Z"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "Q3RNoT7Q3Sw",
-      "title": "\"2026 검단신도시 완전 정복 | 입주 단지별 분양권 시세·전월세 가격·교통 호재 총정리\"",
-      "channelName": "검단복있는부동산",
-      "thumbnail": "https://img.youtube.com/vi/Q3RNoT7Q3Sw/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Q3RNoT7Q3Sw",
-      "publishedAt": "2026-03-17T16:20:27.324Z"
-    },
-    {
-      "id": "yt-0",
-      "videoId": "Je3gyiFDewk",
-      "title": "신축 아파트 부엌 조명 쇼핑 여행_검단신도시 근처 조명, 맛집, 카페 소개",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/Je3gyiFDewk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Je3gyiFDewk",
-      "publishedAt": "2026-03-17T16:20:27.316Z"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "1B8wYea__Hs",
-      "title": "#롯데넥스티엘#검단신도시#복합상가#검단신도시롯데캐슬넥스티엘오피스텔#검단롯데캐슬넥스티엘아파트#복합문화시설#임대#상가임대#검단신도시상가#인천상가#인천상가임대",
-      "channelName": "아라부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/1B8wYea__Hs/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=1B8wYea__Hs",
-      "publishedAt": "2026-03-17T16:20:27.316Z"
-    },
-    {
-      "id": "yt-5",
-      "videoId": "sJmMqa1mTzM",
-      "title": "검단신도시 투자 최신 근황",
-      "channelName": "부동산 시민교수 - 부티인",
-      "thumbnail": "https://img.youtube.com/vi/sJmMqa1mTzM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=sJmMqa1mTzM",
-      "publishedAt": "2026-03-17T16:20:27.316Z"
-    },
-    {
-      "id": "yt-19",
-      "videoId": "XpYgt3U7AiI",
-      "title": "#롯데캐슬넥스티엘오피스텔#검단신도시롯데넥스티엘아파트#검단신도시상가#검단신도시오피스텔#분양#임대#아라부동산",
-      "channelName": "아라부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/XpYgt3U7AiI/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=XpYgt3U7AiI",
-      "publishedAt": "2026-03-17T16:20:27.316Z"
-    },
-    {
-      "id": "yt-8",
-      "videoId": "XDXrw3oyGGQ",
-      "title": "아직 있었습니다, 검단신도시 4억대 줍줍 분양물건",
-      "channelName": "미분양 줍줍TV",
-      "thumbnail": "https://img.youtube.com/vi/XDXrw3oyGGQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=XDXrw3oyGGQ",
-      "publishedAt": "2026-03-17T16:20:27.285Z"
-    },
-    {
-      "id": "yt-16",
-      "videoId": "3aubizs08lU",
-      "title": "검단호수공원역 AA36파라곤 메트로파크 분양가 분양일정 입지 알아보자",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/3aubizs08lU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3aubizs08lU",
-      "publishedAt": "2026-03-17T16:20:27.285Z"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "dgAFGl2NEjs",
-      "title": "[속보] 검단호수공원역 파라곤 메트로파크 569세대 분양 일정 나왔다 + 분양가 상한제 적용 + 수도권 50% 배정 + 인천 아파트 + 검단 아파트 + 인천 부동산",
-      "channelName": "베테랑부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/dgAFGl2NEjs/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=dgAFGl2NEjs",
-      "publishedAt": "2026-03-17T16:20:27.285Z"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "zp66YAf-8tg",
-      "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
-      "channelName": "마청플",
-      "thumbnail": "https://img.youtube.com/vi/zp66YAf-8tg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=zp66YAf-8tg",
-      "publishedAt": "2026-03-17T16:20:26.231Z"
-    },
-    {
-      "id": "yt-7",
-      "videoId": "ZNebIeN37gk",
-      "title": "[NIB 뉴스] 서울5호선 검단·김포 연장…시민단체 “원당역 추가해야”",
-      "channelName": "NIB남인천방송",
-      "thumbnail": "https://img.youtube.com/vi/ZNebIeN37gk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ZNebIeN37gk",
-      "publishedAt": "2026-03-17T16:20:26.186Z"
-    },
-    {
-      "id": "yt-15",
-      "videoId": "CFFpgfbmLQE",
-      "title": "확 바뀌는 300만 인천 지도...검단·서해·영종·제물포구 출범 신규 교통망 노선",
-      "channelName": "개발그림",
-      "thumbnail": "https://img.youtube.com/vi/CFFpgfbmLQE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=CFFpgfbmLQE",
-      "publishedAt": "2026-03-17T16:20:26.165Z"
+      "publishedAt": "2026-03-18T01:41:36.755Z"
     },
     {
       "id": "yt-5",
@@ -855,34 +783,187 @@
       "channelName": "정슐랭",
       "thumbnail": "https://img.youtube.com/vi/WhBQVurAgTo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=WhBQVurAgTo",
-      "publishedAt": "2026-03-17T16:20:25.087Z"
+      "publishedAt": "2026-03-18T01:41:35.753Z"
+    },
+    {
+      "id": "yt-0",
+      "videoId": "Je3gyiFDewk",
+      "title": "신축 아파트 부엌 조명 쇼핑 여행_검단신도시 근처 조명, 맛집, 카페 소개",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/Je3gyiFDewk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Je3gyiFDewk",
+      "publishedAt": "2026-03-18T01:41:34.688Z"
+    },
+    {
+      "id": "yt-3",
+      "videoId": "1B8wYea__Hs",
+      "title": "#롯데넥스티엘#검단신도시#복합상가#검단신도시롯데캐슬넥스티엘오피스텔#검단롯데캐슬넥스티엘아파트#복합문화시설#임대#상가임대#검단신도시상가#인천상가#인천상가임대",
+      "channelName": "아라부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/1B8wYea__Hs/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=1B8wYea__Hs",
+      "publishedAt": "2026-03-18T01:41:34.688Z"
+    },
+    {
+      "id": "yt-5",
+      "videoId": "sJmMqa1mTzM",
+      "title": "검단신도시 투자 최신 근황",
+      "channelName": "부동산 시민교수 - 부티인",
+      "thumbnail": "https://img.youtube.com/vi/sJmMqa1mTzM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=sJmMqa1mTzM",
+      "publishedAt": "2026-03-18T01:41:34.688Z"
+    },
+    {
+      "id": "yt-11",
+      "videoId": "ID1JwfvhDcg",
+      "title": "검단신도시 힐스테이트 34평 마지막 4억대 + 입주지원금까지!? 단지안 조경 아시아 디자인상 수상 아파트. 여기가 검단신도시 그 길목! 무조건 돈 버는 집",
+      "channelName": "집을담다",
+      "thumbnail": "https://img.youtube.com/vi/ID1JwfvhDcg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ID1JwfvhDcg",
+      "publishedAt": "2026-03-18T01:41:34.626Z"
+    },
+    {
+      "id": "yt-9",
+      "videoId": "9VElMVH_UMc",
+      "title": "e편한세상 검단웰카운티 드론촬영(오전11시반)",
+      "channelName": "검단조은부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/9VElMVH_UMc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=9VElMVH_UMc",
+      "publishedAt": "2026-03-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-10",
+      "videoId": "RkBphj0rseU",
+      "title": "신검단중앙역 디에트르더에듀 드론촬영(오후1시반)",
+      "channelName": "검단조은부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/RkBphj0rseU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=RkBphj0rseU",
+      "publishedAt": "2026-03-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-14",
+      "videoId": "Jqx_k327ID4",
+      "title": "검단신도시 롯데캐슬 넥스티엘 드론촬영(오후2시반)",
+      "channelName": "검단조은부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/Jqx_k327ID4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Jqx_k327ID4",
+      "publishedAt": "2026-03-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-17",
+      "videoId": "pJ2aXj-EU54",
+      "title": "제일풍경채 검단3차 드론촬영(오후1시)",
+      "channelName": "검단조은부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/pJ2aXj-EU54/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=pJ2aXj-EU54",
+      "publishedAt": "2026-03-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-18",
+      "videoId": "UvcZp0y43bw",
+      "title": "검단신도시 호반써밋3차 드론촬영(오후12시)",
+      "channelName": "검단조은부동산TV",
+      "thumbnail": "https://img.youtube.com/vi/UvcZp0y43bw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UvcZp0y43bw",
+      "publishedAt": "2026-03-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-11",
+      "videoId": "XDXrw3oyGGQ",
+      "title": "아직 있었습니다, 검단신도시 4억대 줍줍 분양물건",
+      "channelName": "미분양 줍줍TV",
+      "thumbnail": "https://img.youtube.com/vi/XDXrw3oyGGQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=XDXrw3oyGGQ",
+      "publishedAt": "2026-03-18T01:41:34.581Z"
+    },
+    {
+      "id": "yt-15",
+      "videoId": "3aubizs08lU",
+      "title": "검단호수공원역 AA36파라곤 메트로파크 분양가 분양일정 입지 알아보자",
+      "channelName": "부동산보좌관",
+      "thumbnail": "https://img.youtube.com/vi/3aubizs08lU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3aubizs08lU",
+      "publishedAt": "2026-03-18T01:41:34.581Z"
     },
     {
       "id": "yt-1",
+      "videoId": "zp66YAf-8tg",
+      "title": "🟩✅ \"지금부터 갈립니다\" 인천 검단신도시 집값 전망",
+      "channelName": "마청플",
+      "thumbnail": "https://img.youtube.com/vi/zp66YAf-8tg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=zp66YAf-8tg",
+      "publishedAt": "2026-03-18T01:41:33.546Z"
+    },
+    {
+      "id": "yt-7",
+      "videoId": "4ZIxxa32LYA",
+      "title": "2026년 인천 검단과 김포 한강신도시 아파트는 수도권 최고의 가성비 지역입니다! 서울 부동산의 강력한 규제의 최대 수혜지역 미리 선점해야 할 이유가 있습니다",
+      "channelName": "리얼재테크",
+      "thumbnail": "https://img.youtube.com/vi/4ZIxxa32LYA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=4ZIxxa32LYA",
+      "publishedAt": "2026-03-18T01:41:33.523Z"
+    },
+    {
+      "id": "yt-13",
+      "videoId": "CFFpgfbmLQE",
+      "title": "확 바뀌는 300만 인천 지도...검단·서해·영종·제물포구 출범 신규 교통망 노선",
+      "channelName": "개발그림",
+      "thumbnail": "https://img.youtube.com/vi/CFFpgfbmLQE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=CFFpgfbmLQE",
+      "publishedAt": "2026-03-18T01:41:33.495Z"
+    },
+    {
+      "id": "yt-14",
+      "videoId": "Vw6xpH4lxfQ",
+      "title": "올7월 검단에 진짜 큰거 하나 또 옵니다 교통이슈의 블랙홀 gtxd ! , 검단신도시 아라역 창고형약국은 인테리어 공사중..",
+      "channelName": "검단신도시 이야기",
+      "thumbnail": "https://img.youtube.com/vi/Vw6xpH4lxfQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Vw6xpH4lxfQ",
+      "publishedAt": "2026-03-18T01:41:33.495Z"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "ZNebIeN37gk",
+      "title": "[NIB 뉴스] 서울5호선 검단·김포 연장…시민단체 “원당역 추가해야”",
+      "channelName": "NIB남인천방송",
+      "thumbnail": "https://img.youtube.com/vi/ZNebIeN37gk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ZNebIeN37gk",
+      "publishedAt": "2026-03-18T01:41:33.433Z"
+    },
+    {
+      "id": "yt-2",
       "videoId": "tyZnQFZObn4",
       "title": "검단신도시 가볼만한 맛집과 카페｜실내 데이트 코스 추천｜임장오신 김에 들를 식도락  코",
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/tyZnQFZObn4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=tyZnQFZObn4",
-      "publishedAt": "2026-03-17T16:20:25.067Z"
+      "publishedAt": "2026-03-18T01:41:32.414Z"
+    },
+    {
+      "id": "yt-14",
+      "videoId": "A1QJHgqpyWE",
+      "title": "공무원 임금도 반영 못해…서구·검단구 재정 '초비상'",
+      "channelName": "ch B tv 인천",
+      "thumbnail": "https://img.youtube.com/vi/A1QJHgqpyWE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=A1QJHgqpyWE",
+      "publishedAt": "2026-02-16T01:41:36.863Z"
     },
     {
       "id": "yt-0",
-      "videoId": "uyStkCmwap0",
-      "title": "검단 신도시 복층오피스텔 I 검단 아라역 성문 어반스테이 리버센트",
-      "channelName": "집공략_월세부터 내집마련까지 및 집공략 급매물",
-      "thumbnail": "https://img.youtube.com/vi/uyStkCmwap0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=uyStkCmwap0",
-      "publishedAt": "2026-02-15T16:20:29.829Z"
-    },
-    {
-      "id": "yt-1",
       "videoId": "EveUgMUAuLo",
       "title": "일촉즉발, 검단신도시 3대 상권 비교분석",
       "channelName": "부동산 시민교수 - 부티인",
       "thumbnail": "https://img.youtube.com/vi/EveUgMUAuLo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=EveUgMUAuLo",
-      "publishedAt": "2026-02-15T16:20:29.829Z"
+      "publishedAt": "2026-02-16T01:41:36.808Z"
+    },
+    {
+      "id": "yt-1",
+      "videoId": "uyStkCmwap0",
+      "title": "검단 신도시 복층오피스텔 I 검단 아라역 성문 어반스테이 리버센트",
+      "channelName": "집공략_월세부터 내집마련까지 및 집공략 급매물",
+      "thumbnail": "https://img.youtube.com/vi/uyStkCmwap0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=uyStkCmwap0",
+      "publishedAt": "2026-02-16T01:41:36.808Z"
     },
     {
       "id": "yt-2",
@@ -891,25 +972,34 @@
       "channelName": "진짜중개사",
       "thumbnail": "https://img.youtube.com/vi/1JlYPJMh81s/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=1JlYPJMh81s",
-      "publishedAt": "2026-02-15T16:20:29.829Z"
+      "publishedAt": "2026-02-16T01:41:36.808Z"
     },
     {
-      "id": "yt-15",
-      "videoId": "A1QJHgqpyWE",
-      "title": "공무원 임금도 반영 못해…서구·검단구 재정 '초비상'",
-      "channelName": "ch B tv 인천",
-      "thumbnail": "https://img.youtube.com/vi/A1QJHgqpyWE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=A1QJHgqpyWE",
-      "publishedAt": "2026-02-15T16:20:29.636Z"
-    },
-    {
-      "id": "yt-5",
+      "id": "yt-7",
       "videoId": "w4ChR1vhcTc",
       "title": "검단신도시 철도망 계획 김포 검단 서울5호선연장 GTX-D 알아보자",
       "channelName": "부동산보좌관",
       "thumbnail": "https://img.youtube.com/vi/w4ChR1vhcTc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=w4ChR1vhcTc",
-      "publishedAt": "2026-02-15T16:20:29.573Z"
+      "publishedAt": "2026-02-16T01:41:36.755Z"
+    },
+    {
+      "id": "yt-10",
+      "videoId": "iO4WO7hoLo8",
+      "title": "검단신도시 롯데캐슬 넥스티엘 아파트, 26년 4월 입주, 철저한 자금준비로 성공적인 입주가 되시길 바랍니다",
+      "channelName": "검단신도시탑부동산tv",
+      "thumbnail": "https://img.youtube.com/vi/iO4WO7hoLo8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=iO4WO7hoLo8",
+      "publishedAt": "2026-02-16T01:41:34.688Z"
+    },
+    {
+      "id": "yt-12",
+      "videoId": "LKfg4fJBi-I",
+      "title": "검단신도시, 지금 이타이밍에 '아무것도 안 하는 사람'이 제일 위험합니다. 디에트르더에듀 아파트까지 총정리 해드립니다",
+      "channelName": "검단신도시 이재홍부동산",
+      "thumbnail": "https://img.youtube.com/vi/LKfg4fJBi-I/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=LKfg4fJBi-I",
+      "publishedAt": "2026-02-16T01:41:34.688Z"
     },
     {
       "id": "yt-1",
@@ -918,52 +1008,34 @@
       "channelName": "부동산보좌관",
       "thumbnail": "https://img.youtube.com/vi/2g4MIAK0UlY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=2g4MIAK0UlY",
-      "publishedAt": "2026-02-15T16:20:27.324Z"
+      "publishedAt": "2026-02-16T01:41:34.626Z"
     },
     {
-      "id": "yt-15",
+      "id": "yt-18",
       "videoId": "KnRwBZKYgdM",
       "title": "검단신도시 2026년, 2027년 입주일정 및 전매가능일 정리",
       "channelName": "티파니부동산",
       "thumbnail": "https://img.youtube.com/vi/KnRwBZKYgdM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=KnRwBZKYgdM",
-      "publishedAt": "2026-02-15T16:20:27.324Z"
+      "publishedAt": "2026-02-16T01:41:34.626Z"
     },
     {
-      "id": "yt-17",
-      "videoId": "LKfg4fJBi-I",
-      "title": "검단신도시, 지금 이타이밍에 '아무것도 안 하는 사람'이 제일 위험합니다. 디에트르더에듀 아파트까지 총정리 해드립니다",
-      "channelName": "검단신도시 이재홍부동산",
-      "thumbnail": "https://img.youtube.com/vi/LKfg4fJBi-I/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=LKfg4fJBi-I",
-      "publishedAt": "2026-02-15T16:20:27.316Z"
-    },
-    {
-      "id": "yt-7",
+      "id": "yt-9",
       "videoId": "nij_N1VE6OM",
       "title": "AA17 vs AA36 2026년 검단신도시 청약 어디넣을까? 안전마진이 1억5천만원 이상?!",
       "channelName": "검단21세기부동산",
       "thumbnail": "https://img.youtube.com/vi/nij_N1VE6OM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=nij_N1VE6OM",
-      "publishedAt": "2026-02-15T16:20:27.285Z"
+      "publishedAt": "2026-02-16T01:41:34.581Z"
     },
     {
-      "id": "yt-11",
-      "videoId": "Py97zRFWS5c",
-      "title": "검단신도시 풍경채 검단호수공원역 레이크포레 AA25 군인공제회 입지 분양가 전매 알아보자",
-      "channelName": "부동산보좌관",
-      "thumbnail": "https://img.youtube.com/vi/Py97zRFWS5c/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Py97zRFWS5c",
-      "publishedAt": "2026-02-15T16:20:27.285Z"
-    },
-    {
-      "id": "yt-18",
+      "id": "yt-10",
       "videoId": "bzyCqc6KPus",
       "title": "요즘 보기힘든 가격 4억대, 인천 검단신도시 줍줍",
       "channelName": "미분양 줍줍TV",
       "thumbnail": "https://img.youtube.com/vi/bzyCqc6KPus/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=bzyCqc6KPus",
-      "publishedAt": "2026-02-15T16:20:27.285Z"
+      "publishedAt": "2026-02-16T01:41:34.581Z"
     },
     {
       "id": "yt-11",
@@ -972,16 +1044,34 @@
       "channelName": "마청플",
       "thumbnail": "https://img.youtube.com/vi/8C6v0_tEdjw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=8C6v0_tEdjw",
-      "publishedAt": "2026-02-15T16:20:26.231Z"
+      "publishedAt": "2026-02-16T01:41:33.546Z"
     },
     {
-      "id": "yt-15",
+      "id": "yt-12",
       "videoId": "IVF21yuteds",
       "title": "검단신도시 마지막 4억원대 아파트 '엘리프 검단 포레듀'",
       "channelName": "YNN 경제뉴스TV",
       "thumbnail": "https://img.youtube.com/vi/IVF21yuteds/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=IVF21yuteds",
-      "publishedAt": "2026-02-15T16:20:26.199Z"
+      "publishedAt": "2026-02-16T01:41:33.523Z"
+    },
+    {
+      "id": "yt-4",
+      "videoId": "pUTUjS6G5wU",
+      "title": "뻥 뚫리는 검단신도시?! 검단신도시 교통의 모든 것 /철도망 교통망 현장드론",
+      "channelName": "검단21세기부동산",
+      "thumbnail": "https://img.youtube.com/vi/pUTUjS6G5wU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=pUTUjS6G5wU",
+      "publishedAt": "2026-02-16T01:41:33.495Z"
+    },
+    {
+      "id": "yt-7",
+      "videoId": "_nX2fSlWh5M",
+      "title": "[미리보는 인천-검단구] “GTX D·E, 서울5호선 연장 등 광역 교통망 확충”",
+      "channelName": "ch B tv 인천",
+      "thumbnail": "https://img.youtube.com/vi/_nX2fSlWh5M/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=_nX2fSlWh5M",
+      "publishedAt": "2026-02-16T01:41:33.495Z"
     },
     {
       "id": "yt-1",
@@ -990,43 +1080,16 @@
       "channelName": "헬로tv뉴스",
       "thumbnail": "https://img.youtube.com/vi/leebvMGaNkU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=leebvMGaNkU",
-      "publishedAt": "2026-02-15T16:20:26.186Z"
+      "publishedAt": "2026-02-16T01:41:33.433Z"
     },
     {
-      "id": "yt-5",
-      "videoId": "pUTUjS6G5wU",
-      "title": "뻥 뚫리는 검단신도시?! 검단신도시 교통의 모든 것 /철도망 교통망 현장드론",
-      "channelName": "검단21세기부동산",
-      "thumbnail": "https://img.youtube.com/vi/pUTUjS6G5wU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=pUTUjS6G5wU",
-      "publishedAt": "2026-02-15T16:20:26.165Z"
-    },
-    {
-      "id": "yt-6",
-      "videoId": "_nX2fSlWh5M",
-      "title": "[미리보는 인천-검단구] “GTX D·E, 서울5호선 연장 등 광역 교통망 확충”",
-      "channelName": "ch B tv 인천",
-      "thumbnail": "https://img.youtube.com/vi/_nX2fSlWh5M/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=_nX2fSlWh5M",
-      "publishedAt": "2026-02-15T16:20:26.165Z"
-    },
-    {
-      "id": "yt-12",
-      "videoId": "MwlQkSRuqRE",
-      "title": "[홈투어]신축아파트 38평 인테리어와 필수 가전가구 _검단신도시_신축입주_입주브이로그",
-      "channelName": "여가여행자",
-      "thumbnail": "https://img.youtube.com/vi/MwlQkSRuqRE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=MwlQkSRuqRE",
-      "publishedAt": "2026-02-15T16:20:25.079Z"
-    },
-    {
-      "id": "yt-4",
+      "id": "yt-2",
       "videoId": "HCfr5FCnBC4",
       "title": "검단신도시 퇴근길 밤거리 풍경",
       "channelName": "검단 자가에 대기업 다니는 김수석",
       "thumbnail": "https://img.youtube.com/vi/HCfr5FCnBC4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=HCfr5FCnBC4",
-      "publishedAt": "2026-02-15T16:20:25.055Z"
+      "publishedAt": "2026-02-16T01:41:32.432Z"
     },
     {
       "id": "yt-7",
@@ -1035,52 +1098,97 @@
       "channelName": "스티그tv",
       "thumbnail": "https://img.youtube.com/vi/OKN8sv2vCpU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=OKN8sv2vCpU",
-      "publishedAt": "2026-02-15T16:20:25.055Z"
+      "publishedAt": "2026-02-16T01:41:32.432Z"
     },
     {
-      "id": "yt-4",
-      "videoId": "IdZJ2VkuvHM",
-      "title": "26년 1월2일 아라-계양로 현황 / 곧 도로도 개통한다! 서울이 빨라진다!",
+      "id": "yt-5",
+      "videoId": "MwlQkSRuqRE",
+      "title": "[홈투어]신축아파트 38평 인테리어와 필수 가전가구 _검단신도시_신축입주_입주브이로그",
+      "channelName": "여가여행자",
+      "thumbnail": "https://img.youtube.com/vi/MwlQkSRuqRE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=MwlQkSRuqRE",
+      "publishedAt": "2026-02-16T01:41:32.407Z"
+    },
+    {
+      "id": "yt-9",
+      "videoId": "5IV7I2PKXSw",
+      "title": "이 금액으로 검단신도시 인프라를 누린다고?",
+      "channelName": "빌라만바라봐",
+      "thumbnail": "https://img.youtube.com/vi/5IV7I2PKXSw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=5IV7I2PKXSw",
+      "publishedAt": "2026-01-17T01:41:36.829Z"
+    },
+    {
+      "id": "yt-10",
+      "videoId": "1j_OAx2oo44",
+      "title": "검단신도시 부동산 3부작-26년 검단 아라역, 완성형 신도시로 거듭난다/호우금 동향 및 입주예정 아파트분양권, 상가, 토지 분위기는?",
+      "channelName": "검단21세기부동산",
+      "thumbnail": "https://img.youtube.com/vi/1j_OAx2oo44/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=1j_OAx2oo44",
+      "publishedAt": "2026-01-17T01:41:36.808Z"
+    },
+    {
+      "id": "yt-12",
+      "videoId": "k67FihmBFBM",
+      "title": "26년 검단신도시 넥스티엘 드디어 오픈 /  아라역 일대 99% 완성",
       "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/IdZJ2VkuvHM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=IdZJ2VkuvHM",
-      "publishedAt": "2026-01-16T16:20:29.829Z"
+      "thumbnail": "https://img.youtube.com/vi/k67FihmBFBM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=k67FihmBFBM",
+      "publishedAt": "2026-01-17T01:41:36.808Z"
     },
     {
-      "id": "yt-14",
-      "videoId": "tGxY5tLuXfQ",
-      "title": "[인천아파트매매](5-566)마전동 검단힐스테이트 1단지! 완벽한 화이트톤 리모델링 완료! 모든 방 사이즈 크게 나오고 거실과 주방 통베란다까지! 인천 서구 마전동 [대단지아파트]",
-      "channelName": "낭만하우스",
-      "thumbnail": "https://img.youtube.com/vi/tGxY5tLuXfQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=tGxY5tLuXfQ",
-      "publishedAt": "2026-01-16T16:20:29.636Z"
-    },
-    {
-      "id": "yt-2",
+      "id": "yt-3",
       "videoId": "sRti67IhhuA",
       "title": "[철도투데이] 서울5호선 검단·김포 연장 예타 마무리 단계···“내년 B/C값 나와”",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/sRti67IhhuA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=sRti67IhhuA",
-      "publishedAt": "2026-01-16T16:20:29.573Z"
+      "publishedAt": "2026-01-17T01:41:36.755Z"
     },
     {
-      "id": "yt-7",
+      "id": "yt-8",
       "videoId": "OuJwShrQR04",
       "title": "[인천 철도 이슈 총정리 ⑧] 2026년 초 예타결과 발표예정 서울5호선 검단·김포 연장선",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/OuJwShrQR04/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=OuJwShrQR04",
-      "publishedAt": "2026-01-16T16:20:29.573Z"
+      "publishedAt": "2026-01-17T01:41:36.755Z"
     },
     {
       "id": "yt-6",
+      "videoId": "3TAIXUazVc0",
+      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
+      "channelName": "정슐랭",
+      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0",
+      "publishedAt": "2026-01-17T01:41:35.753Z"
+    },
+    {
+      "id": "yt-3",
       "videoId": "LXwIX_av8fw",
       "title": "검단신도시는 깔 게 없다",
       "channelName": "부동산 시민교수 - 부티인",
       "thumbnail": "https://img.youtube.com/vi/LXwIX_av8fw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=LXwIX_av8fw",
-      "publishedAt": "2026-01-16T16:20:28.488Z"
+      "publishedAt": "2026-01-17T01:41:35.648Z"
+    },
+    {
+      "id": "yt-7",
+      "videoId": "vMLyWJZi8fM",
+      "title": "계양천 산책로 연결 (26년 3월착공 11월 완공 /  땡길순 없을까? )",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/vMLyWJZi8fM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=vMLyWJZi8fM",
+      "publishedAt": "2026-01-17T01:41:35.648Z"
+    },
+    {
+      "id": "yt-13",
+      "videoId": "UfDgOAknxoo",
+      "title": "인천 검단신도시 부동산, 상가 투자 전 필수 시청",
+      "channelName": "부동산 시민교수 - 부티인",
+      "thumbnail": "https://img.youtube.com/vi/UfDgOAknxoo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=UfDgOAknxoo",
+      "publishedAt": "2026-01-17T01:41:34.688Z"
     },
     {
       "id": "yt-0",
@@ -1089,52 +1197,52 @@
       "channelName": "귀리아빠",
       "thumbnail": "https://img.youtube.com/vi/K-t22JcmOjo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=K-t22JcmOjo",
-      "publishedAt": "2026-01-16T16:20:27.324Z"
+      "publishedAt": "2026-01-17T01:41:34.626Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-10",
       "videoId": "3f5f3Q4cPp4",
       "title": "[신축 아파트 입주 VLOG] 38평_LG전자 6종 가전_가구 언박싱_대기업 연구원 추천 TV_신검단중앙역_검단신도시",
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/3f5f3Q4cPp4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=3f5f3Q4cPp4",
-      "publishedAt": "2026-01-16T16:20:27.324Z"
+      "publishedAt": "2026-01-17T01:41:34.626Z"
     },
     {
-      "id": "yt-14",
-      "videoId": "UfDgOAknxoo",
-      "title": "인천 검단신도시 부동산, 상가 투자 전 필수 시청",
-      "channelName": "부동산 시민교수 - 부티인",
-      "thumbnail": "https://img.youtube.com/vi/UfDgOAknxoo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=UfDgOAknxoo",
-      "publishedAt": "2026-01-16T16:20:27.316Z"
-    },
-    {
-      "id": "yt-15",
+      "id": "yt-12",
       "videoId": "0OStcny8MOE",
       "title": "충격!!  검단에 분양가 3억인데, 1.5억 시세차익 무순위가 또나왔어!!!Ft 신검단중앙역 센트레빌",
       "channelName": "집배부_집에서 배우는 부동산",
       "thumbnail": "https://img.youtube.com/vi/0OStcny8MOE/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=0OStcny8MOE",
-      "publishedAt": "2026-01-16T16:20:27.285Z"
+      "publishedAt": "2026-01-17T01:41:34.581Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-18",
+      "videoId": "f21Lm4eZnHI",
+      "title": "검단신도시 부동산 3부작-4단계 검단호수공원역, 미래를 위한 기회/2026 입주.분양.호재 총정리",
+      "channelName": "검단21세기부동산",
+      "thumbnail": "https://img.youtube.com/vi/f21Lm4eZnHI/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=f21Lm4eZnHI",
+      "publishedAt": "2026-01-17T01:41:34.581Z"
+    },
+    {
+      "id": "yt-7",
       "videoId": "t1wCzwVUlG4",
       "title": "검단신도시, 지금 시점에서 투자해도 되는지 제대로 따져봤습니다",
       "channelName": "부동산은 땅땅무슨땅",
       "thumbnail": "https://img.youtube.com/vi/t1wCzwVUlG4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=t1wCzwVUlG4",
-      "publishedAt": "2026-01-16T16:20:26.231Z"
+      "publishedAt": "2026-01-17T01:41:33.546Z"
     },
     {
-      "id": "yt-14",
+      "id": "yt-10",
       "videoId": "6aKGbxyc8kk",
       "title": "검단신도시 아파트는 2026년은 폭등의 한해가 될 것 같습니다 서울의 규제로 인한 강력한 수혜지역 1순위 검단신도시 아파트들에 대해 궁금하시다면 이 영상을 보시면 되겠습니다",
       "channelName": "리얼재테크",
       "thumbnail": "https://img.youtube.com/vi/6aKGbxyc8kk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=6aKGbxyc8kk",
-      "publishedAt": "2026-01-16T16:20:26.199Z"
+      "publishedAt": "2026-01-17T01:41:33.523Z"
     },
     {
       "id": "yt-16",
@@ -1143,25 +1251,16 @@
       "channelName": "검단21세기부동산",
       "thumbnail": "https://img.youtube.com/vi/avGoVv-60Wc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=avGoVv-60Wc",
-      "publishedAt": "2026-01-16T16:20:26.165Z"
+      "publishedAt": "2026-01-17T01:41:33.495Z"
     },
     {
-      "id": "yt-0",
-      "videoId": "3TAIXUazVc0",
-      "title": "[검단신도시맛집] 돌판짜장에 중화비빔밥 섞어서먹으면 얼마나 맛있게여..?🥳문어가 통으로 들어간 짬뽕전골👍",
-      "channelName": "정슐랭",
-      "thumbnail": "https://img.youtube.com/vi/3TAIXUazVc0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3TAIXUazVc0",
-      "publishedAt": "2026-01-16T16:20:25.087Z"
-    },
-    {
-      "id": "yt-2",
+      "id": "yt-1",
       "videoId": "mNAdRWbJxn0",
       "title": "인천검단신도시 34평아파트가 4억대? 검단 힐스테이트 포레스트 계약해지분 딱 10세대! 김포,검단신도시 생활권. 숲을 품은 대단지 아파트",
       "channelName": "집을담다",
       "thumbnail": "https://img.youtube.com/vi/mNAdRWbJxn0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=mNAdRWbJxn0",
-      "publishedAt": "2026-01-16T16:20:25.055Z"
+      "publishedAt": "2026-01-17T01:41:32.432Z"
     },
     {
       "id": "yt-2",
@@ -1170,106 +1269,115 @@
       "channelName": "서구TV",
       "thumbnail": "https://img.youtube.com/vi/WnW-HP8d2XY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=WnW-HP8d2XY",
-      "publishedAt": "2025-12-17T16:20:29.636Z"
+      "publishedAt": "2025-12-18T01:41:36.863Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-3",
       "videoId": "dBsQfOm948M",
       "title": "지금 사면 돈버는 인천아파트 TOP10. 가장 싼 인천 서구 신축 30평형대 아파트. #청라 #검단 #시세 #전망 #급매물 #분양가",
       "channelName": "부동산그래프",
       "thumbnail": "https://img.youtube.com/vi/dBsQfOm948M/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=dBsQfOm948M",
-      "publishedAt": "2025-12-17T16:20:29.636Z"
+      "publishedAt": "2025-12-18T01:41:36.863Z"
     },
     {
-      "id": "yt-12",
-      "videoId": "vG-RqggQaI8",
-      "title": "호반써밋 인천검단3 청약가치 분석합니다",
-      "channelName": "김인만의 부다방TV",
-      "thumbnail": "https://img.youtube.com/vi/vG-RqggQaI8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=vG-RqggQaI8",
-      "publishedAt": "2025-12-17T16:20:28.587Z"
+      "id": "yt-5",
+      "videoId": "QtZu26nH5kE",
+      "title": "인천 서구 부동산, 지금 어디를 사야 할까? 검단 vs 청라 철저 분석",
+      "channelName": "집톡탑텐",
+      "thumbnail": "https://img.youtube.com/vi/QtZu26nH5kE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=QtZu26nH5kE",
+      "publishedAt": "2025-12-18T01:41:36.863Z"
     },
     {
-      "id": "yt-0",
-      "videoId": "Ey8KR6fWaNo",
-      "title": "검단신도시U공원 일대 2025. 11. 29.  #검단신도시 #여울빛공원 #검단호수공원역 #신검단중앙역 #드론영상",
-      "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/Ey8KR6fWaNo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Ey8KR6fWaNo",
-      "publishedAt": "2025-12-17T16:20:28.488Z"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "MeaOwYfxF8o",
-      "title": "핫한 검단신도시 아라역 주변",
-      "channelName": "스티그tv",
-      "thumbnail": "https://img.youtube.com/vi/MeaOwYfxF8o/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=MeaOwYfxF8o",
-      "publishedAt": "2025-12-17T16:20:27.411Z"
-    },
-    {
-      "id": "yt-3",
+      "id": "yt-4",
       "videoId": "aNQBSvfRGJA",
       "title": "검단신도시 26년 입주아파트들 / 검단신도시 시간이 좀 필요해~ (입주장)",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/aNQBSvfRGJA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=aNQBSvfRGJA",
-      "publishedAt": "2025-12-17T16:20:27.324Z"
+      "publishedAt": "2025-12-18T01:41:34.626Z"
     },
     {
-      "id": "yt-13",
-      "videoId": "kZijjXVGeio",
-      "title": "검단신도시 1500세대 비규제 줍줍 시작, 보금자리론 가능 단지 공개",
-      "channelName": "미분양 줍줍TV",
-      "thumbnail": "https://img.youtube.com/vi/kZijjXVGeio/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=kZijjXVGeio",
-      "publishedAt": "2025-12-17T16:20:27.316Z"
+      "id": "yt-19",
+      "videoId": "AVAMI0mtOWc",
+      "title": "\"1년 단축된 입주 지정, 보상금 줄이려고?\" 붕괴 이후 또 쑥대밭 된 검단 l 땅집고GO",
+      "channelName": "땅집고",
+      "thumbnail": "https://img.youtube.com/vi/AVAMI0mtOWc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=AVAMI0mtOWc",
+      "publishedAt": "2025-12-18T01:41:34.626Z"
     },
     {
-      "id": "yt-3",
-      "videoId": "YLtikc5V_iM",
-      "title": "검단신도시 5억대 신축, 이 가격이면 진짜 잘나왔다 1500세대 대단지 무순위 줍줍",
-      "channelName": "미분양 줍줍TV",
-      "thumbnail": "https://img.youtube.com/vi/YLtikc5V_iM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=YLtikc5V_iM",
-      "publishedAt": "2025-12-17T16:20:27.285Z"
+      "id": "yt-1",
+      "videoId": "Ey8KR6fWaNo",
+      "title": "검단신도시U공원 일대 2025. 11. 29.  #검단신도시 #여울빛공원 #검단호수공원역 #신검단중앙역 #드론영상",
+      "channelName": "54앤써",
+      "thumbnail": "https://img.youtube.com/vi/Ey8KR6fWaNo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Ey8KR6fWaNo",
+      "publishedAt": "2025-12-18T01:41:34.611Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-4",
+      "videoId": "MeaOwYfxF8o",
+      "title": "핫한 검단신도시 아라역 주변",
+      "channelName": "스티그tv",
+      "thumbnail": "https://img.youtube.com/vi/MeaOwYfxF8o/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=MeaOwYfxF8o",
+      "publishedAt": "2025-12-18T01:41:34.611Z"
+    },
+    {
+      "id": "yt-4",
       "videoId": "9_uwFndVdc0",
       "title": "2026년 검단신도시 마지막 분양 17,493세대｜지도 기반으로 ‘진짜 들어갈 곳’ 알려드립니다",
       "channelName": "예다네 복덕방",
       "thumbnail": "https://img.youtube.com/vi/9_uwFndVdc0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=9_uwFndVdc0",
-      "publishedAt": "2025-12-17T16:20:27.285Z"
+      "publishedAt": "2025-12-18T01:41:34.581Z"
     },
     {
-      "id": "yt-19",
+      "id": "yt-6",
+      "videoId": "YLtikc5V_iM",
+      "title": "검단신도시 5억대 신축, 이 가격이면 진짜 잘나왔다 1500세대 대단지 무순위 줍줍",
+      "channelName": "미분양 줍줍TV",
+      "thumbnail": "https://img.youtube.com/vi/YLtikc5V_iM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=YLtikc5V_iM",
+      "publishedAt": "2025-12-18T01:41:34.581Z"
+    },
+    {
+      "id": "yt-8",
       "videoId": "5P1f8LakVcA",
       "title": "검단신도시 호반써밋3차! \"진짜\" 막차 기회?! 분양가 vs 현재 시세 충격! + 안전마진 1억 확정?",
       "channelName": "과천아빠 TV",
       "thumbnail": "https://img.youtube.com/vi/5P1f8LakVcA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5P1f8LakVcA",
-      "publishedAt": "2025-12-17T16:20:27.285Z"
+      "publishedAt": "2025-12-18T01:41:34.581Z"
     },
     {
-      "id": "yt-10",
-      "videoId": "FImcD1yAAVA",
-      "title": "신검단중앙역 호수공원역 주변 둘러보기(12월14일 오전10시반)",
-      "channelName": "검단조은부동산TV",
-      "thumbnail": "https://img.youtube.com/vi/FImcD1yAAVA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=FImcD1yAAVA",
-      "publishedAt": "2025-12-17T16:20:26.176Z"
+      "id": "yt-14",
+      "videoId": "kZijjXVGeio",
+      "title": "검단신도시 1500세대 비규제 줍줍 시작, 보금자리론 가능 단지 공개",
+      "channelName": "미분양 줍줍TV",
+      "thumbnail": "https://img.youtube.com/vi/kZijjXVGeio/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=kZijjXVGeio",
+      "publishedAt": "2025-12-18T01:41:34.581Z"
     },
     {
-      "id": "yt-9",
+      "id": "yt-14",
+      "videoId": "c7JGhO5kdgA",
+      "title": "[인천신축아파트] 인천검단신도시 힐스테이트 \"인기많았던\" 바로그집 84타입 대출부결로 13세대 재분양! 4억대부터~줍줍 (5-1111)",
+      "channelName": "누나홀집",
+      "thumbnail": "https://img.youtube.com/vi/c7JGhO5kdgA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=c7JGhO5kdgA",
+      "publishedAt": "2025-12-18T01:41:33.523Z"
+    },
+    {
+      "id": "yt-8",
       "videoId": "g2nyZ7zjPIo",
       "title": "2027년 검단-여의도 직선도로 개통! 이동시간 30분 시대 열린다",
       "channelName": "예다네 복덕방",
       "thumbnail": "https://img.youtube.com/vi/g2nyZ7zjPIo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=g2nyZ7zjPIo",
-      "publishedAt": "2025-12-17T16:20:26.165Z"
+      "publishedAt": "2025-12-18T01:41:33.495Z"
     },
     {
       "id": "yt-1",
@@ -1278,7 +1386,7 @@
       "channelName": "정슐랭",
       "thumbnail": "https://img.youtube.com/vi/tqRdYmgZjUE/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=tqRdYmgZjUE",
-      "publishedAt": "2025-12-17T16:20:25.087Z"
+      "publishedAt": "2025-12-18T01:41:32.414Z"
     },
     {
       "id": "yt-0",
@@ -1287,34 +1395,52 @@
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/Wj0GaaXDbWw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Wj0GaaXDbWw",
-      "publishedAt": "2025-12-17T16:20:25.079Z"
+      "publishedAt": "2025-12-18T01:41:32.406Z"
     },
     {
-      "id": "yt-12",
-      "videoId": "qlBbWCdfiVM",
-      "title": "검단신도시 상권의 현실😲 직접 걸어봤습니다🦵인천지방검찰청,인천지방법원북부지원 공사현장🏛️여긴 진짜 다르네요🔥코벤트워크/마스터리스/다이소/애슐리퀸즈/인천1호선/5호선/ GTX-D",
-      "channelName": "부동산프로 남수란",
-      "thumbnail": "https://img.youtube.com/vi/qlBbWCdfiVM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=qlBbWCdfiVM",
-      "publishedAt": "2025-11-17T16:20:29.829Z"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "Gs4usIW_qeY",
-      "title": "원당태리간도로(검단드림로) 공사 현황 4K 항공 동영상 (2025년 11월 4일) ",
-      "channelName": "내이름TJ",
-      "thumbnail": "https://img.youtube.com/vi/Gs4usIW_qeY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Gs4usIW_qeY",
-      "publishedAt": "2025-11-17T16:20:29.610Z"
-    },
-    {
-      "id": "yt-3",
+      "id": "yt-0",
       "videoId": "_J9OGBm-r9U",
       "title": "[도로투데이] 검단~드림로 간 도로 내년 3월 개통··· ‘멀고 먼’ 유현사거리 지하차도",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/_J9OGBm-r9U/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=_J9OGBm-r9U",
-      "publishedAt": "2025-11-17T16:20:29.610Z"
+      "publishedAt": "2025-11-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-3",
+      "videoId": "Gs4usIW_qeY",
+      "title": "원당태리간도로(검단드림로) 공사 현황 4K 항공 동영상 (2025년 11월 4일) ",
+      "channelName": "내이름TJ",
+      "thumbnail": "https://img.youtube.com/vi/Gs4usIW_qeY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Gs4usIW_qeY",
+      "publishedAt": "2025-11-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-17",
+      "videoId": "_IYn4bnE-2U",
+      "title": "(GTX) 칸타빌스위트부터 신검단중앙역까지 걸어보자!",
+      "channelName": "부테크랩",
+      "thumbnail": "https://img.youtube.com/vi/_IYn4bnE-2U/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=_IYn4bnE-2U",
+      "publishedAt": "2025-11-18T01:41:36.829Z"
+    },
+    {
+      "id": "yt-8",
+      "videoId": "qlBbWCdfiVM",
+      "title": "검단신도시 상권의 현실😲 직접 걸어봤습니다🦵인천지방검찰청,인천지방법원북부지원 공사현장🏛️여긴 진짜 다르네요🔥코벤트워크/마스터리스/다이소/애슐리퀸즈/인천1호선/5호선/ GTX-D",
+      "channelName": "부동산프로 남수란",
+      "thumbnail": "https://img.youtube.com/vi/qlBbWCdfiVM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=qlBbWCdfiVM",
+      "publishedAt": "2025-11-18T01:41:36.808Z"
+    },
+    {
+      "id": "yt-5",
+      "videoId": "FBYcTmTdyNk",
+      "title": "(특집) 검단신도시 호수공원 / 검단 완성을 책임져~ 검단신도시 호수공원역 RC7 까지 완공되면 끝",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/FBYcTmTdyNk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=FBYcTmTdyNk",
+      "publishedAt": "2025-11-18T01:41:36.769Z"
     },
     {
       "id": "yt-0",
@@ -1323,178 +1449,178 @@
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/DQe38oJEkW4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=DQe38oJEkW4",
-      "publishedAt": "2025-11-17T16:20:29.573Z"
+      "publishedAt": "2025-11-18T01:41:36.755Z"
     },
     {
-      "id": "yt-8",
-      "videoId": "gsfqhf0pfJg",
-      "title": "[OpenBVE] 인천 1호선 검단호수공원 - 송도달빛축제공원",
-      "channelName": "OpenBVE",
-      "thumbnail": "https://img.youtube.com/vi/gsfqhf0pfJg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=gsfqhf0pfJg",
-      "publishedAt": "2025-11-17T16:20:29.573Z"
-    },
-    {
-      "id": "yt-7",
+      "id": "yt-9",
       "videoId": "SMb-cjpjJYo",
       "title": "\"공급 폭탄 vs 인천의 강남\"..관짝 열고 나와 인천의 대장 노리는 \"검단신도시\"",
       "channelName": "지식세포",
       "thumbnail": "https://img.youtube.com/vi/SMb-cjpjJYo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=SMb-cjpjJYo",
-      "publishedAt": "2025-11-17T16:20:28.587Z"
+      "publishedAt": "2025-11-18T01:41:35.759Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-5",
       "videoId": "ehfN7DTLGxw",
       "title": "\" 인천 \" 검단신도시 \" 최고의 공원 \" ( 여울빛공원 )  탐방 [ 드론항공촬영 ] ( 촬영 2025년 10월 19일 오후 17시경 )",
       "channelName": "청산 이호우  ",
       "thumbnail": "https://img.youtube.com/vi/ehfN7DTLGxw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ehfN7DTLGxw",
-      "publishedAt": "2025-11-17T16:20:27.411Z"
+      "publishedAt": "2025-11-18T01:41:34.611Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-7",
       "videoId": "zDYbgQ2m5mA",
       "title": "검단신도시 / 특급분양 / AA36BL / 파라곤 분양지 드론 임장",
       "channelName": "도심드론",
       "thumbnail": "https://img.youtube.com/vi/zDYbgQ2m5mA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=zDYbgQ2m5mA",
-      "publishedAt": "2025-11-17T16:20:27.411Z"
+      "publishedAt": "2025-11-18T01:41:34.611Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-6",
       "videoId": "8TDZpcl0IF4",
       "title": "신검단중앙역 / 신축 학교 드론임장",
       "channelName": "도심드론",
       "thumbnail": "https://img.youtube.com/vi/8TDZpcl0IF4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=8TDZpcl0IF4",
-      "publishedAt": "2025-11-17T16:20:27.303Z"
+      "publishedAt": "2025-11-18T01:41:34.593Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-5",
       "videoId": "SEwqFUQVV5o",
       "title": "검단신도시 핵심입지 분양!  (AA36) 초역세권",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/SEwqFUQVV5o/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=SEwqFUQVV5o",
-      "publishedAt": "2025-11-17T16:20:27.285Z"
+      "publishedAt": "2025-11-18T01:41:34.581Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-16",
       "videoId": "5n3qnmjYwpk",
       "title": "검단신도시 최고규모 최고 퀄리티 1,534세대 아파트분양 선착순분양",
       "channelName": "똑똑! 우리집",
       "thumbnail": "https://img.youtube.com/vi/5n3qnmjYwpk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5n3qnmjYwpk",
-      "publishedAt": "2025-11-17T16:20:27.285Z"
+      "publishedAt": "2025-11-18T01:41:34.581Z"
     },
     {
-      "id": "yt-4",
-      "videoId": "30svggHOYek",
-      "title": "검단신도시 4단계 사업 올해 말 준공 8조 4천억 원 투입..2028년 완공 예정",
-      "channelName": "OBS뉴스",
-      "thumbnail": "https://img.youtube.com/vi/30svggHOYek/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=30svggHOYek",
-      "publishedAt": "2025-11-17T16:20:26.186Z"
-    },
-    {
-      "id": "yt-17",
-      "videoId": "xZthEI15Ceg",
-      "title": "(특집) 검단신도시 핵심 뉴스~ ( 남쪽 체육관 소식 및 여러가지 소식들..)",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/xZthEI15Ceg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=xZthEI15Ceg",
-      "publishedAt": "2025-11-17T16:20:26.186Z"
-    },
-    {
-      "id": "yt-8",
-      "videoId": "FBYcTmTdyNk",
-      "title": "(특집) 검단신도시 호수공원 / 검단 완성을 책임져~ 검단신도시 호수공원역 RC7 까지 완공되면 끝",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/FBYcTmTdyNk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=FBYcTmTdyNk",
-      "publishedAt": "2025-11-17T16:20:26.176Z"
-    },
-    {
-      "id": "yt-13",
+      "id": "yt-16",
       "videoId": "qWx0pIfSi-0",
       "title": "검단신도시 신검단중앙역 호수공원역 드론 영상으로 샅샅이 알아보자",
       "channelName": "부동산보좌관",
       "thumbnail": "https://img.youtube.com/vi/qWx0pIfSi-0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=qWx0pIfSi-0",
-      "publishedAt": "2025-11-17T16:20:26.176Z"
+      "publishedAt": "2025-11-18T01:41:33.465Z"
     },
     {
-      "id": "yt-11",
+      "id": "yt-3",
+      "videoId": "30svggHOYek",
+      "title": "검단신도시 4단계 사업 올해 말 준공 8조 4천억 원 투입..2028년 완공 예정",
+      "channelName": "OBS뉴스",
+      "thumbnail": "https://img.youtube.com/vi/30svggHOYek/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=30svggHOYek",
+      "publishedAt": "2025-11-18T01:41:33.433Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "xZthEI15Ceg",
+      "title": "(특집) 검단신도시 핵심 뉴스~ ( 남쪽 체육관 소식 및 여러가지 소식들..)",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/xZthEI15Ceg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=xZthEI15Ceg",
+      "publishedAt": "2025-11-18T01:41:33.433Z"
+    },
+    {
+      "id": "yt-12",
+      "videoId": "RhRiyYsNcxA",
+      "title": "검단신도시 128세대 타운하우스급 규모 28평형 2억대 + 전액대출 가능한 대단지 인천신축빌라  (No.5776)",
+      "channelName": "내집한채TV",
+      "thumbnail": "https://img.youtube.com/vi/RhRiyYsNcxA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=RhRiyYsNcxA",
+      "publishedAt": "2025-10-19T01:41:36.863Z"
+    },
+    {
+      "id": "yt-18",
       "videoId": "b8pVwZh4zZI",
       "title": "검단호수공원 / 박물관 (28년 상반기 개관)",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/b8pVwZh4zZI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=b8pVwZh4zZI",
-      "publishedAt": "2025-10-18T16:20:29.707Z"
+      "publishedAt": "2025-10-19T01:41:36.769Z"
     },
     {
-      "id": "yt-12",
+      "id": "yt-14",
+      "videoId": "ZmsMa0N_EDo",
+      "title": "[철도투데이] 인천1호선 검단 연장선 계양역~아라역 사이 신설역 요구 확산",
+      "channelName": "인투TV",
+      "thumbnail": "https://img.youtube.com/vi/ZmsMa0N_EDo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ZmsMa0N_EDo",
+      "publishedAt": "2025-10-19T01:41:36.755Z"
+    },
+    {
+      "id": "yt-6",
       "videoId": "g3a-nyCY8K4",
       "title": "검단신도시의 중심 / 인천1호선 아라역 / 넥스트콤플렉스 / 인천지방법원북부지원 진척상황",
       "channelName": "도심드론",
       "thumbnail": "https://img.youtube.com/vi/g3a-nyCY8K4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=g3a-nyCY8K4",
-      "publishedAt": "2025-10-18T16:20:27.411Z"
+      "publishedAt": "2025-10-19T01:41:34.611Z"
     },
     {
-      "id": "yt-18",
+      "id": "yt-11",
       "videoId": "duHR1HYVXJc",
       "title": "검단신도시 신검단중앙역 인근 드론으로 둘러보세요! (4K촬영) 25.09.27 오전11시촬영본",
       "channelName": "소금쟁이TV",
       "thumbnail": "https://img.youtube.com/vi/duHR1HYVXJc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=duHR1HYVXJc",
-      "publishedAt": "2025-10-18T16:20:27.411Z"
+      "publishedAt": "2025-10-19T01:41:34.611Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-1",
       "videoId": "-614HO1tPD4",
       "title": "🟩🟩“정말 왜 이럴까요ㅠ” 인천 검단신도시 아파트 집값 전망",
       "channelName": "마청플",
       "thumbnail": "https://img.youtube.com/vi/-614HO1tPD4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=-614HO1tPD4",
-      "publishedAt": "2025-10-18T16:20:26.199Z"
+      "publishedAt": "2025-10-19T01:41:33.523Z"
     },
     {
-      "id": "yt-10",
+      "id": "yt-12",
       "videoId": "ACUYAJGgXUo",
       "title": "인천 검단구(黔丹區)의 시대! 동별 개발잠재력 순위 - 검단신도시는 과연 어느정도 급(級) 도시일까? (feat.검단구를 지나는 모든 신규철도노선 + 신설도로 + 도시개발사업)",
       "channelName": "부동산공학",
       "thumbnail": "https://img.youtube.com/vi/ACUYAJGgXUo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ACUYAJGgXUo",
-      "publishedAt": "2025-10-18T16:20:26.165Z"
+      "publishedAt": "2025-10-19T01:41:33.495Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-0",
       "videoId": "1SWlkGa6T0A",
       "title": "검단신도시 한식뷔페!!",
       "channelName": "독거또랭이",
       "thumbnail": "https://img.youtube.com/vi/1SWlkGa6T0A/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=1SWlkGa6T0A",
-      "publishedAt": "2025-10-18T16:20:25.087Z"
+      "publishedAt": "2025-10-19T01:41:32.414Z"
     },
     {
-      "id": "yt-9",
+      "id": "yt-2",
       "videoId": "ATiqi2mjUiQ",
       "title": "[사전점검 VLOG] 분양받은 38평 인생 첫아파트 사전점검 풀스토리 _꿀팁_검단_금강펜테리움_신검단중앙역",
       "channelName": "여가여행자",
       "thumbnail": "https://img.youtube.com/vi/ATiqi2mjUiQ/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ATiqi2mjUiQ",
-      "publishedAt": "2025-10-18T16:20:25.079Z"
+      "publishedAt": "2025-10-19T01:41:32.407Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-2",
       "videoId": "KGdSBQ-IzkM",
       "title": "서울 5호선 김포 검단 연장...예타 bc값 0.4 왜?",
       "channelName": "개발그림",
       "thumbnail": "https://img.youtube.com/vi/KGdSBQ-IzkM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=KGdSBQ-IzkM",
-      "publishedAt": "2025-09-18T16:20:29.573Z"
+      "publishedAt": "2025-09-19T01:41:36.755Z"
     },
     {
       "id": "yt-1",
@@ -1503,61 +1629,52 @@
       "channelName": "범글의부동산",
       "thumbnail": "https://img.youtube.com/vi/8Vf_sO0AQgk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=8Vf_sO0AQgk",
-      "publishedAt": "2025-09-18T16:20:28.509Z"
+      "publishedAt": "2025-09-19T01:41:35.727Z"
     },
     {
-      "id": "yt-12",
+      "id": "yt-9",
       "videoId": "HYRpCSkz4Ho",
       "title": "(검단신도시 아파트 단지 구경/임장투어)  신안인스빌 어반퍼스트의 모든 것! 교통호재 등장, 실거주 만족도 vs 투자 가치, 이 아파트가 주목받는 이유. 린비트",
       "channelName": "노비처럼 일하다 가는 세상이다",
       "thumbnail": "https://img.youtube.com/vi/HYRpCSkz4Ho/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=HYRpCSkz4Ho",
-      "publishedAt": "2025-09-18T16:20:27.316Z"
+      "publishedAt": "2025-09-19T01:41:34.688Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-4",
       "videoId": "XI9F3aevTOc",
       "title": "1km 걷는 통학길… 초교 배정 두고 입주자 반발",
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/XI9F3aevTOc/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=XI9F3aevTOc",
-      "publishedAt": "2025-09-18T16:20:27.303Z"
+      "publishedAt": "2025-09-19T01:41:34.593Z"
     },
     {
-      "id": "yt-18",
+      "id": "yt-7",
       "videoId": "v_pzdvjft3A",
       "title": "현지인 피셜 인천 0순위 술집 맛집. 사장님, 이렇게 다 퍼주시면 뭐가 남아요?",
       "channelName": "술맛여행놈",
       "thumbnail": "https://img.youtube.com/vi/v_pzdvjft3A/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=v_pzdvjft3A",
-      "publishedAt": "2025-09-18T16:20:25.087Z"
+      "publishedAt": "2025-09-19T01:41:32.414Z"
     },
     {
-      "id": "yt-5",
+      "id": "yt-7",
       "videoId": "sTtovw-g8aI",
       "title": "대박 교통호재 터진 검단, 주민들이 싸움난 이유는 | 당장! 임장",
       "channelName": "집코노미",
       "thumbnail": "https://img.youtube.com/vi/sTtovw-g8aI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=sTtovw-g8aI",
-      "publishedAt": "2025-08-19T16:20:29.707Z"
+      "publishedAt": "2025-08-20T01:41:36.769Z"
     },
     {
-      "id": "yt-16",
-      "videoId": "3BaHcJAflgs",
-      "title": "검단신도시 U공원 일대 2025. 07. 20. #검단신도시 #검단호수공원역 #신검단중앙역 #드론영상",
-      "channelName": "54앤써",
-      "thumbnail": "https://img.youtube.com/vi/3BaHcJAflgs/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=3BaHcJAflgs",
-      "publishedAt": "2025-08-19T16:20:29.707Z"
-    },
-    {
-      "id": "yt-15",
-      "videoId": "iuJlooAzl28",
-      "title": "대한민국 터널 기술의 미래🚆 인천 1호선 검단연장선의 현장 속으로! | INSIDE 현장 Ep.4",
-      "channelName": "현대건설",
-      "thumbnail": "https://img.youtube.com/vi/iuJlooAzl28/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=iuJlooAzl28",
-      "publishedAt": "2025-08-19T16:20:29.573Z"
+      "id": "yt-6",
+      "videoId": "5q_B6XbHPA4",
+      "title": "현장고수TV 현장답사 | 인천 검단신도시 (인천1호선 검단연장 개통)",
+      "channelName": "현장고수",
+      "thumbnail": "https://img.youtube.com/vi/5q_B6XbHPA4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=5q_B6XbHPA4",
+      "publishedAt": "2025-08-20T01:41:35.759Z"
     },
     {
       "id": "yt-0",
@@ -1566,7 +1683,16 @@
       "channelName": "꽁쓰 미식노트",
       "thumbnail": "https://img.youtube.com/vi/htuYdQnFsG8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=htuYdQnFsG8",
-      "publishedAt": "2025-08-19T16:20:28.526Z"
+      "publishedAt": "2025-08-20T01:41:35.753Z"
+    },
+    {
+      "id": "yt-8",
+      "videoId": "3BaHcJAflgs",
+      "title": "검단신도시 U공원 일대 2025. 07. 20. #검단신도시 #검단호수공원역 #신검단중앙역 #드론영상",
+      "channelName": "54앤써",
+      "thumbnail": "https://img.youtube.com/vi/3BaHcJAflgs/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=3BaHcJAflgs",
+      "publishedAt": "2025-08-20T01:41:34.611Z"
     },
     {
       "id": "yt-0",
@@ -1575,133 +1701,133 @@
       "channelName": "부동산 마스터_박소장의 내집마련 끝내기",
       "thumbnail": "https://img.youtube.com/vi/zmDgmDX20XU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=zmDgmDX20XU",
-      "publishedAt": "2025-08-19T16:20:26.231Z"
+      "publishedAt": "2025-08-20T01:41:33.546Z"
     },
     {
-      "id": "yt-2",
-      "videoId": "Tw_Bzqbv128",
-      "title": "무인도급 허허벌판에 전철역부터 박았다… 간판값도 못 하는 ‘호수공원역’의 실체",
-      "channelName": "역쟁이TV",
-      "thumbnail": "https://img.youtube.com/vi/Tw_Bzqbv128/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Tw_Bzqbv128",
-      "publishedAt": "2025-07-20T16:20:29.707Z"
-    },
-    {
-      "id": "yt-5",
+      "id": "yt-12",
       "videoId": "7LLidNfoeHk",
       "title": "30평 3억 실화? 인천 검단 핵심 아파트 TOP 7 공개",
       "channelName": "부동산무물",
       "thumbnail": "https://img.youtube.com/vi/7LLidNfoeHk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=7LLidNfoeHk",
-      "publishedAt": "2025-07-20T16:20:29.610Z"
+      "publishedAt": "2025-07-21T01:41:36.829Z"
     },
     {
-      "id": "yt-6",
-      "videoId": "19aNKVnAmU4",
-      "title": "올해 개통하는 유일한 전철? \"인천 1호선 검단연장선 탑승기!\"",
-      "channelName": "교덕이",
-      "thumbnail": "https://img.youtube.com/vi/19aNKVnAmU4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=19aNKVnAmU4",
-      "publishedAt": "2025-07-20T16:20:29.573Z"
+      "id": "yt-1",
+      "videoId": "Tw_Bzqbv128",
+      "title": "무인도급 허허벌판에 전철역부터 박았다… 간판값도 못 하는 ‘호수공원역’의 실체",
+      "channelName": "역쟁이TV",
+      "thumbnail": "https://img.youtube.com/vi/Tw_Bzqbv128/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Tw_Bzqbv128",
+      "publishedAt": "2025-07-21T01:41:36.769Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-10",
       "videoId": "M98hSZK5v6M",
       "title": "인천1호선 검단연장선 개통…\"검단~서울역 38분\" / SBS / 문화현장",
       "channelName": "SBS 뉴스",
       "thumbnail": "https://img.youtube.com/vi/M98hSZK5v6M/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=M98hSZK5v6M",
-      "publishedAt": "2025-07-20T16:20:29.573Z"
+      "publishedAt": "2025-07-21T01:41:36.755Z"
     },
     {
-      "id": "yt-0",
+      "id": "yt-15",
+      "videoId": "7OkyXNbRvoY",
+      "title": "\"공원에서 공원을 가는 전철\" 탄생.. 인천1호선 검단연장 개통당일 타봄!",
+      "channelName": "Hagoon 하군",
+      "thumbnail": "https://img.youtube.com/vi/7OkyXNbRvoY/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=7OkyXNbRvoY",
+      "publishedAt": "2025-07-21T01:41:36.755Z"
+    },
+    {
+      "id": "yt-1",
       "videoId": "YFbdV6tGCuk",
       "title": "검단 ↔ 서울 출퇴근 40분! 그래도 서울보다 저렴한 이유는?  |📍실거주임장",
       "channelName": "실거주부동산",
       "thumbnail": "https://img.youtube.com/vi/YFbdV6tGCuk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=YFbdV6tGCuk",
-      "publishedAt": "2025-07-20T16:20:26.165Z"
+      "publishedAt": "2025-07-21T01:41:33.495Z"
     },
     {
-      "id": "yt-9",
-      "videoId": "O8olvUKFfSo",
-      "title": "검단 vs 삼송 '2030 트렌드?'✨ [📺 김구라의 경제연구소 EP.49]",
-      "channelName": "그리구라 GreeGura",
-      "thumbnail": "https://img.youtube.com/vi/O8olvUKFfSo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=O8olvUKFfSo",
-      "publishedAt": "2025-06-15T16:20:29.829Z"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "-dieo9m7LGE",
-      "title": "[AD] 호수공원+지하철 기다리는 검단아테라자이 | 흥청망청",
-      "channelName": "집코노미",
-      "thumbnail": "https://img.youtube.com/vi/-dieo9m7LGE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=-dieo9m7LGE",
-      "publishedAt": "2025-06-15T16:20:29.707Z"
-    },
-    {
-      "id": "yt-11",
+      "id": "yt-13",
       "videoId": "aB83-jiohf8",
       "title": "2027년 인천이 달라진다?... '서구-검단구' 2개 구로 분리",
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/aB83-jiohf8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=aB83-jiohf8",
-      "publishedAt": "2025-06-15T16:20:29.636Z"
+      "publishedAt": "2025-06-16T01:41:36.863Z"
     },
     {
-      "id": "yt-18",
+      "id": "yt-15",
       "videoId": "JahFmLWIfwA",
       "title": "[인천TV] 인천 서구 검단3구역 도시개발사업 2025년 말로 지연",
       "channelName": "인투TV",
       "thumbnail": "https://img.youtube.com/vi/JahFmLWIfwA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=JahFmLWIfwA",
-      "publishedAt": "2025-06-15T16:20:29.636Z"
+      "publishedAt": "2025-06-16T01:41:36.863Z"
     },
     {
-      "id": "yt-7",
+      "id": "yt-4",
       "videoId": "llV1UsNmVe0",
       "title": "검단원도심 원당자이아파트 분석 (938세대, 3억대, 인천1호선 연장, 서울5호선 연장, GTX D 노선)",
       "channelName": "아파트경제",
       "thumbnail": "https://img.youtube.com/vi/llV1UsNmVe0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=llV1UsNmVe0",
-      "publishedAt": "2025-06-15T16:20:29.610Z"
+      "publishedAt": "2025-06-16T01:41:36.829Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-7",
       "videoId": "E-lvBdKBxAI",
       "title": "(특집) 검단 원도심 (지도상으로는 우리가 중심?) /",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/E-lvBdKBxAI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=E-lvBdKBxAI",
-      "publishedAt": "2025-06-15T16:20:29.610Z"
+      "publishedAt": "2025-06-16T01:41:36.829Z"
     },
     {
-      "id": "yt-1",
+      "id": "yt-4",
+      "videoId": "-dieo9m7LGE",
+      "title": "[AD] 호수공원+지하철 기다리는 검단아테라자이 | 흥청망청",
+      "channelName": "집코노미",
+      "thumbnail": "https://img.youtube.com/vi/-dieo9m7LGE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=-dieo9m7LGE",
+      "publishedAt": "2025-06-16T01:41:36.769Z"
+    },
+    {
+      "id": "yt-4",
       "videoId": "ZsxOcWwtDgs",
       "title": "[인천]미친 고물가 시대에 꼭 필요했던 가성비 최고의 패밀리 레스토랑 #코지하우스 #패밀리레스토랑 #인천맛집",
       "channelName": "푸드맥스",
       "thumbnail": "https://img.youtube.com/vi/ZsxOcWwtDgs/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ZsxOcWwtDgs",
-      "publishedAt": "2025-06-15T16:20:28.526Z"
+      "publishedAt": "2025-06-16T01:41:35.753Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-7",
       "videoId": "sw-h5qxuaOk",
       "title": "인천에 이런곳이 있었네요..인천 검단 김포 분들은 무조건 가보세요",
       "channelName": "달달맛",
       "thumbnail": "https://img.youtube.com/vi/sw-h5qxuaOk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=sw-h5qxuaOk",
-      "publishedAt": "2025-06-15T16:20:28.526Z"
+      "publishedAt": "2025-06-16T01:41:35.753Z"
     },
     {
-      "id": "yt-1",
-      "videoId": "ioZCUPBiIY8",
-      "title": "[짐단속] 한국에서 몸이 가장 빨리 좋아질 수 있는 곳 새로이짐",
-      "channelName": "스코형",
-      "thumbnail": "https://img.youtube.com/vi/ioZCUPBiIY8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ioZCUPBiIY8",
-      "publishedAt": "2025-06-15T16:20:28.520Z"
+      "id": "yt-13",
+      "videoId": "5EbD9auFhJw",
+      "title": "검단신도시 힐스테이트 현장임장 현실리뷰☠️내부랑 커뮤니티까지 실제로 가봤더니🤔신검단중앙역/제일풍경채/공원/내집마련/신혼집/지하철/인천1호선",
+      "channelName": "부동산프로 남수란",
+      "thumbnail": "https://img.youtube.com/vi/5EbD9auFhJw/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=5EbD9auFhJw",
+      "publishedAt": "2025-06-16T01:41:35.727Z"
+    },
+    {
+      "id": "yt-15",
+      "videoId": "ZEdcJ5S1-3k",
+      "title": "아파트를 지으랬더니 궁전을 만들어놓은... 난생 처음 보는 역대급 현장 [신검단 로열파크씨티2 탐방기]",
+      "channelName": "Turbo832 TV",
+      "thumbnail": "https://img.youtube.com/vi/ZEdcJ5S1-3k/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ZEdcJ5S1-3k",
+      "publishedAt": "2025-06-16T01:41:35.727Z"
     },
     {
       "id": "yt-2",
@@ -1710,124 +1836,160 @@
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/8AYBXpDQ-ok/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=8AYBXpDQ-ok",
-      "publishedAt": "2025-06-15T16:20:28.488Z"
+      "publishedAt": "2025-06-16T01:41:35.648Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-5",
       "videoId": "VGLXyOkmjlA",
       "title": "검단신도시 U공원 산책II / U공원과 힐스 두번째 임장 / 도색중인 힐스 / 두번째 봐도 펜트하우스는 너무 부럽네요^^",
       "channelName": "경인서부 임장왕",
       "thumbnail": "https://img.youtube.com/vi/VGLXyOkmjlA/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=VGLXyOkmjlA",
-      "publishedAt": "2025-06-15T16:20:28.488Z"
+      "publishedAt": "2025-06-16T01:41:35.648Z"
     },
     {
-      "id": "yt-10",
-      "videoId": "opdlf2NVt3s",
-      "title": "검단신도시 산책코스/ 계양천! 이렇게 변하고 있다./오리 대가족도 검단에 터잡았다! ㅎㅎ",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/opdlf2NVt3s/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=opdlf2NVt3s",
-      "publishedAt": "2025-06-15T16:20:28.488Z"
-    },
-    {
-      "id": "yt-16",
+      "id": "yt-11",
       "videoId": "RVxA0s_Jyco",
       "title": "검단신도시 산책 (1)",
       "channelName": "장보고",
       "thumbnail": "https://img.youtube.com/vi/RVxA0s_Jyco/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=RVxA0s_Jyco",
-      "publishedAt": "2025-06-15T16:20:28.488Z"
+      "publishedAt": "2025-06-16T01:41:35.648Z"
     },
     {
-      "id": "yt-10",
-      "videoId": "_sNpSVhbesk",
-      "title": "검단신도시 2단계 첫 입주단지 입주자 사전점검행사 제일풍경채1차 신검단중앙역풍경채어바니티 사전점검 브이로그 라고 쓰고 단지자랑하는 영상",
-      "channelName": "샤톳",
-      "thumbnail": "https://img.youtube.com/vi/_sNpSVhbesk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=_sNpSVhbesk",
-      "publishedAt": "2025-06-15T16:20:27.324Z"
+      "id": "yt-2",
+      "videoId": "8aZ4ENyqa-8",
+      "title": "검단신도시는 지금이 가장 싸다!!",
+      "channelName": "돈근육허벅지",
+      "thumbnail": "https://img.youtube.com/vi/8aZ4ENyqa-8/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=8aZ4ENyqa-8",
+      "publishedAt": "2025-06-16T01:41:35.641Z"
     },
     {
-      "id": "yt-8",
-      "videoId": "WdRiC8-eHME",
-      "title": "아라역 과 바로 연결되는 검단신도시 랜드마크 복합상업시설! '롯데 넥스티엘 애비뉴'",
-      "channelName": "세나부(세상에 나쁜 부동산은 없다)",
-      "thumbnail": "https://img.youtube.com/vi/WdRiC8-eHME/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=WdRiC8-eHME",
-      "publishedAt": "2025-06-15T16:20:27.316Z"
-    },
-    {
-      "id": "yt-15",
+      "id": "yt-18",
       "videoId": "1wq6N401o-w",
       "title": "검단신도시 온 지 1주일 된 부부의 빵집 쇼핑 중계",
       "channelName": "이검단",
       "thumbnail": "https://img.youtube.com/vi/1wq6N401o-w/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=1wq6N401o-w",
-      "publishedAt": "2025-06-15T16:20:27.316Z"
+      "publishedAt": "2025-06-16T01:41:34.688Z"
     },
     {
-      "id": "yt-9",
+      "id": "yt-8",
+      "videoId": "_sNpSVhbesk",
+      "title": "검단신도시 2단계 첫 입주단지 입주자 사전점검행사 제일풍경채1차 신검단중앙역풍경채어바니티 사전점검 브이로그 라고 쓰고 단지자랑하는 영상",
+      "channelName": "샤톳",
+      "thumbnail": "https://img.youtube.com/vi/_sNpSVhbesk/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=_sNpSVhbesk",
+      "publishedAt": "2025-06-16T01:41:34.626Z"
+    },
+    {
+      "id": "yt-7",
       "videoId": "Ti_ajUX6hkM",
       "title": "반쪽 신도시에서 완성형 신도시로 (인천 검단신도시 신검단중앙역) | 주거시설, 교통, 상권, 학군",
       "channelName": "범글의부동산",
       "thumbnail": "https://img.youtube.com/vi/Ti_ajUX6hkM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Ti_ajUX6hkM",
-      "publishedAt": "2025-06-15T16:20:27.303Z"
+      "publishedAt": "2025-06-16T01:41:34.593Z"
     },
     {
-      "id": "yt-15",
+      "id": "yt-11",
       "videoId": "N2vAq7DTZCs",
       "title": "검단신도시2단계 유치원 초 중학교 공사 근황 입니다 !!",
       "channelName": "믿음이TV_검단신도시금호믿음 부동산",
       "thumbnail": "https://img.youtube.com/vi/N2vAq7DTZCs/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=N2vAq7DTZCs",
-      "publishedAt": "2025-06-15T16:20:27.303Z"
+      "publishedAt": "2025-06-16T01:41:34.593Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-6",
       "videoId": "4RoFoB6ac34",
       "title": "검단신도시 VS 김포 풍무 당신의 선택은⁉️입주민 찐 후기 솔직하게 말씀드립니다📢지금 투자는 여기 입니다🔍김포공항/신혼부부/부동산재테크/한강신도시/김포도시철도/인천1호선/5호선",
       "channelName": "부동산프로 남수란",
       "thumbnail": "https://img.youtube.com/vi/4RoFoB6ac34/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=4RoFoB6ac34",
-      "publishedAt": "2025-06-15T16:20:26.231Z"
+      "publishedAt": "2025-06-16T01:41:33.546Z"
     },
     {
-      "id": "yt-13",
-      "videoId": "ZEdcJ5S1-3k",
-      "title": "아파트를 지으랬더니 궁전을 만들어놓은... 난생 처음 보는 역대급 현장 [신검단 로열파크씨티2 탐방기]",
-      "channelName": "Turbo832 TV",
-      "thumbnail": "https://img.youtube.com/vi/ZEdcJ5S1-3k/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ZEdcJ5S1-3k",
-      "publishedAt": "2025-06-15T16:20:26.199Z"
-    },
-    {
-      "id": "yt-1",
+      "id": "yt-0",
       "videoId": "F_lZugzynKg",
       "title": "검단에 생길 4대 핵심 도로...검단~드림로·중봉터널·검단~경명로·풍무IC까지! (도로 교통편)",
       "channelName": "개발그림",
       "thumbnail": "https://img.youtube.com/vi/F_lZugzynKg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=F_lZugzynKg",
-      "publishedAt": "2025-06-15T16:20:26.165Z"
+      "publishedAt": "2025-06-16T01:41:33.495Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-17",
+      "videoId": "caBUMzxgcDE",
+      "title": "검단신도시 호수공원 크기는?/다른 신도시와 비교해보자/겁나 쪼그메..나는 검단 이중스파이 인가?조사하고 나니 방송해야 맞나?보너스: 넥스티엘 미래 모습",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/caBUMzxgcDE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=caBUMzxgcDE",
+      "publishedAt": "2025-06-16T01:41:33.465Z"
+    },
+    {
+      "id": "yt-0",
+      "videoId": "7lZu-y35ye4",
+      "title": "[우리동네 탐방]/검단신도시브런치카페/브런치빈/아라동브런치카페/동네자",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/7lZu-y35ye4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=7lZu-y35ye4",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-1",
+      "videoId": "CMQ5gR8ZIuQ",
+      "title": "[VLOG] 검단신도시대형카페/힐링카페/아라뱃길카페/카페브이로그",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/CMQ5gR8ZIuQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=CMQ5gR8ZIuQ",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-6",
+      "videoId": "KvRirX6Jbp0",
+      "title": "[VLOG] 인천서구카페/카페브이로그/인천서구한옥카페/한옥카페자미궁제빵소/검단신도시한옥카페",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/KvRirX6Jbp0/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=KvRirX6Jbp0",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-7",
+      "videoId": "OOAqsHLejWg",
+      "title": "[VLOG] 검단신도시대형카페/검단신도시애견동반카페/카페브이로그/카페서원안길",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/OOAqsHLejWg/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=OOAqsHLejWg",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-9",
+      "videoId": "jLlu5W0RezE",
+      "title": "[VLOG] 검단신도시카페/검단신도시사진맛집카페/로즈스텔라정원카페 분위기 미쳤네!!",
+      "channelName": "언니처럼",
+      "thumbnail": "https://img.youtube.com/vi/jLlu5W0RezE/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=jLlu5W0RezE",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-10",
+      "videoId": "aMW7xr55v_g",
+      "title": "현시각 맘카페에서 난리난 파스타?! 인천 검단신도시 장악한 맛집 비결 | 미태리 인천검단신도시점 점주 인터뷰",
+      "channelName": "미태리파스타",
+      "thumbnail": "https://img.youtube.com/vi/aMW7xr55v_g/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=aMW7xr55v_g",
+      "publishedAt": "2025-06-16T01:41:32.421Z"
+    },
+    {
+      "id": "yt-3",
       "videoId": "gx0Qjm93_s4",
       "title": "인천 계양 검단 신도시 맛집, 자연 속에서 즐기는 굴림만두전골 맛집, 인천식 한우숯불 불고기, 아라뱃길 맛집",
       "channelName": "여행하는 안젤라",
       "thumbnail": "https://img.youtube.com/vi/gx0Qjm93_s4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=gx0Qjm93_s4",
-      "publishedAt": "2025-06-15T16:20:25.087Z"
-    },
-    {
-      "id": "yt-16",
-      "videoId": "Qik3yaX9E4E",
-      "title": "#검단신도시 맛집 #아라주먹고기 #생삼겹살  #된장밥 후기",
-      "channelName": "정화 일상 공감",
-      "thumbnail": "https://img.youtube.com/vi/Qik3yaX9E4E/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Qik3yaX9E4E",
-      "publishedAt": "2025-06-15T16:20:25.087Z"
+      "publishedAt": "2025-06-16T01:41:32.414Z"
     },
     {
       "id": "yt-3",
@@ -1836,223 +1998,160 @@
       "channelName": "흥정망정",
       "thumbnail": "https://img.youtube.com/vi/75Pe8oN-G_o/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=75Pe8oN-G_o",
-      "publishedAt": "2025-06-15T16:20:25.079Z"
+      "publishedAt": "2025-06-16T01:41:32.407Z"
     },
     {
-      "id": "yt-6",
+      "id": "yt-17",
+      "videoId": "01D9z5ykU44",
+      "title": "인천검단신도시임장여행 Korea Travel Incheon Geomdan New Town",
+      "channelName": "SHA.L 샤엘",
+      "thumbnail": "https://img.youtube.com/vi/01D9z5ykU44/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=01D9z5ykU44",
+      "publishedAt": "2025-06-16T01:41:32.407Z"
+    },
+    {
+      "id": "yt-1",
       "videoId": "wmGyrt9AU-A",
       "title": "신축아파트입주브이로그 입주시공 셀프시공 신혼가전 풀셋 Lg가전 로보락 휴젠뜨 120인치빔스크린 JBL스피커 신검단중앙역풍경채어바니티 입주 #검단신도시#신축입주##이사브이로그",
       "channelName": "샤톳",
       "thumbnail": "https://img.youtube.com/vi/wmGyrt9AU-A/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=wmGyrt9AU-A",
-      "publishedAt": "2025-06-15T16:20:25.079Z"
+      "publishedAt": "2025-06-16T01:41:32.406Z"
     },
     {
-      "id": "yt-0",
-      "videoId": "CMQ5gR8ZIuQ",
-      "title": "[VLOG] 검단신도시대형카페/힐링카페/아라뱃길카페/카페브이로그",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/CMQ5gR8ZIuQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=CMQ5gR8ZIuQ",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-2",
-      "videoId": "7lZu-y35ye4",
-      "title": "[우리동네 탐방]/검단신도시브런치카페/브런치빈/아라동브런치카페/동네자",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/7lZu-y35ye4/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=7lZu-y35ye4",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-3",
-      "videoId": "KvRirX6Jbp0",
-      "title": "[VLOG] 인천서구카페/카페브이로그/인천서구한옥카페/한옥카페자미궁제빵소/검단신도시한옥카페",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/KvRirX6Jbp0/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=KvRirX6Jbp0",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-4",
-      "videoId": "OOAqsHLejWg",
-      "title": "[VLOG] 검단신도시대형카페/검단신도시애견동반카페/카페브이로그/카페서원안길",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/OOAqsHLejWg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=OOAqsHLejWg",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-5",
-      "videoId": "jLlu5W0RezE",
-      "title": "[VLOG] 검단신도시카페/검단신도시사진맛집카페/로즈스텔라정원카페 분위기 미쳤네!!",
-      "channelName": "언니처럼",
-      "thumbnail": "https://img.youtube.com/vi/jLlu5W0RezE/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=jLlu5W0RezE",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-9",
-      "videoId": "aMW7xr55v_g",
-      "title": "현시각 맘카페에서 난리난 파스타?! 인천 검단신도시 장악한 맛집 비결 | 미태리 인천검단신도시점 점주 인터뷰",
-      "channelName": "미태리파스타",
-      "thumbnail": "https://img.youtube.com/vi/aMW7xr55v_g/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=aMW7xr55v_g",
-      "publishedAt": "2025-06-15T16:20:25.067Z"
-    },
-    {
-      "id": "yt-5",
+      "id": "yt-10",
       "videoId": "ul9ChKGIzJs",
       "title": "40대의 자취 ll 의외로 많은 분들이 원하는 미래의 모습일지도 ll 인천 서구 검단신도시 빌라 전세",
       "channelName": "자취남",
       "thumbnail": "https://img.youtube.com/vi/ul9ChKGIzJs/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ul9ChKGIzJs",
-      "publishedAt": "2024-06-15T16:20:29.636Z"
+      "publishedAt": "2024-06-16T01:41:36.863Z"
     },
     {
       "id": "yt-1",
-      "videoId": "U49A0AiHJPA",
-      "title": "검단신도시 와 원도심 /원도심 아파트는 향후 어떻게 될까? /원도심 계속보유  VS 갈아타야하나?",
-      "channelName": "경인서부 임장왕",
-      "thumbnail": "https://img.youtube.com/vi/U49A0AiHJPA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=U49A0AiHJPA",
-      "publishedAt": "2024-06-15T16:20:29.610Z"
-    },
-    {
-      "id": "yt-10",
       "videoId": "sXFh8hRIfmw",
       "title": "입지는 검단신도시인데 위치는 원당동인 칸타빌더스위트 아파트 마실다녀왔습니다!",
       "channelName": "마실TV",
       "thumbnail": "https://img.youtube.com/vi/sXFh8hRIfmw/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=sXFh8hRIfmw",
-      "publishedAt": "2024-06-15T16:20:29.610Z"
+      "publishedAt": "2024-06-16T01:41:36.829Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-2",
+      "videoId": "U49A0AiHJPA",
+      "title": "검단신도시 와 원도심 /원도심 아파트는 향후 어떻게 될까? /원도심 계속보유  VS 갈아타야하나?",
+      "channelName": "경인서부 임장왕",
+      "thumbnail": "https://img.youtube.com/vi/U49A0AiHJPA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=U49A0AiHJPA",
+      "publishedAt": "2024-06-16T01:41:36.829Z"
+    },
+    {
+      "id": "yt-5",
       "videoId": "EiOKnHz9Avo",
       "title": "인천의 떠오르는 뜨거운 동네, 인천 검단신도시 | 그대걸어 동네탐방",
       "channelName": "짐싸 - 이사할 땐, 짐싸",
       "thumbnail": "https://img.youtube.com/vi/EiOKnHz9Avo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=EiOKnHz9Avo",
-      "publishedAt": "2024-06-15T16:20:28.587Z"
+      "publishedAt": "2024-06-16T01:41:35.759Z"
     },
     {
-      "id": "yt-2",
+      "id": "yt-1",
       "videoId": "ASVnmq2WmeY",
       "title": "인천,검단,김포 사람들이 줄서서 먹는 이유가 있었네요",
       "channelName": "달달맛",
       "thumbnail": "https://img.youtube.com/vi/ASVnmq2WmeY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=ASVnmq2WmeY",
-      "publishedAt": "2024-06-15T16:20:28.526Z"
+      "publishedAt": "2024-06-16T01:41:35.753Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-3",
       "videoId": "OpyrX2HKMI0",
       "title": "5년 동안 가봤던 인천 맛집 213곳 중 베스트 PART 2 (13곳)",
       "channelName": "쏘울맛집",
       "thumbnail": "https://img.youtube.com/vi/OpyrX2HKMI0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=OpyrX2HKMI0",
-      "publishedAt": "2024-06-15T16:20:28.526Z"
+      "publishedAt": "2024-06-16T01:41:35.753Z"
     },
     {
-      "id": "yt-13",
-      "videoId": "w7r22HgFuYI",
-      "title": "검단신도시 신규상권 둘러보기 , 주말 낮 식당가 산책 , 변화 중인 검단,  신규 아파트 단지 와 상가들 City View In Korea (2023. 07)",
-      "channelName": "Seoul Spector",
-      "thumbnail": "https://img.youtube.com/vi/w7r22HgFuYI/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=w7r22HgFuYI",
-      "publishedAt": "2024-06-15T16:20:28.488Z"
+      "id": "yt-12",
+      "videoId": "OFh6F9s_MiI",
+      "title": "검단 예미지 2탄!!! 예미지 더 시그너스 대형평수 리뷰해보았습니다(40평)",
+      "channelName": "느그집 your fancy house",
+      "thumbnail": "https://img.youtube.com/vi/OFh6F9s_MiI/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=OFh6F9s_MiI",
+      "publishedAt": "2024-06-16T01:41:35.727Z"
     },
     {
-      "id": "yt-17",
-      "videoId": "WcaHgIT38Ck",
-      "title": "검단신도시 우미린파크뷰 산책",
-      "channelName": "검단 우미린대표부동산",
-      "thumbnail": "https://img.youtube.com/vi/WcaHgIT38Ck/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=WcaHgIT38Ck",
-      "publishedAt": "2024-06-15T16:20:28.488Z"
+      "id": "yt-15",
+      "videoId": "O36ToqS8qKM",
+      "title": "검단·청라·송도 '5개교 신설'…2027년 3월 개교",
+      "channelName": "ch B tv 인천",
+      "thumbnail": "https://img.youtube.com/vi/O36ToqS8qKM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=O36ToqS8qKM",
+      "publishedAt": "2024-06-16T01:41:34.593Z"
     },
     {
-      "id": "yt-11",
+      "id": "yt-9",
       "videoId": "Wk-WJvcb7DY",
       "title": "[자막뉴스] 검단 전면재시공 비용, \"1조원 육박 예상도\" / OBS 뉴스",
       "channelName": "OBS뉴스",
       "thumbnail": "https://img.youtube.com/vi/Wk-WJvcb7DY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Wk-WJvcb7DY",
-      "publishedAt": "2024-06-15T16:20:26.186Z"
+      "publishedAt": "2024-06-16T01:41:33.433Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-8",
       "videoId": "Wo53itx7yXY",
       "title": "60만 유튜버 순자엄마도 다녀간 맛집! 검단신도시 맛집 위찜 검단아라점",
       "channelName": "위찜TV",
       "thumbnail": "https://img.youtube.com/vi/Wo53itx7yXY/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Wo53itx7yXY",
-      "publishedAt": "2024-06-15T16:20:25.087Z"
+      "publishedAt": "2024-06-16T01:41:32.414Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-14",
+      "videoId": "9V84BVu3CFo",
+      "title": "예비신혼부부 집구하기 검단신도시 임장투어 l 커플 브이로그 l couple vlog l 임장",
+      "channelName": "뚱이와 노을",
+      "thumbnail": "https://img.youtube.com/vi/9V84BVu3CFo/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=9V84BVu3CFo",
+      "publishedAt": "2024-06-16T01:41:32.407Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "xFdPDGabGMs",
+      "title": "검단신도시 한신더휴 내부👽실입주민 찐공개😬고층 뻥뷰 같이 둘러보아요👻신혼집/내집마련/아파트/임장/브이로그/공인중개",
+      "channelName": "부동산프로 남수란",
+      "thumbnail": "https://img.youtube.com/vi/xFdPDGabGMs/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=xFdPDGabGMs",
+      "publishedAt": "2024-06-16T01:41:32.407Z"
+    },
+    {
+      "id": "yt-6",
       "videoId": "WY3bAdl7vfU",
       "title": "[4K HDR] 인천 서구 검단신도시 마전동에서의  드라이빙 1 #Incheon #SeoGu #Geomdan #Driving #Korea",
       "channelName": "HDR Driver",
       "thumbnail": "https://img.youtube.com/vi/WY3bAdl7vfU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=WY3bAdl7vfU",
-      "publishedAt": "2023-06-16T16:20:29.636Z"
+      "publishedAt": "2023-06-17T01:41:36.863Z"
     },
     {
-      "id": "yt-7",
+      "id": "yt-9",
       "videoId": "HUDtEhEP-Hs",
       "title": "나만 알고 싶은 인천 서구 검단신도시 공원 best 2 ｜아라보타닉파크 아라센트럴파크",
       "channelName": "서구TV",
       "thumbnail": "https://img.youtube.com/vi/HUDtEhEP-Hs/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=HUDtEhEP-Hs",
-      "publishedAt": "2023-06-16T16:20:29.636Z"
+      "publishedAt": "2023-06-17T01:41:36.863Z"
     },
     {
-      "id": "yt-12",
-      "videoId": "azhkQJbEovg",
-      "title": "[4K HDR] 인천 서구 검단신도시 원당동에서의  드라이빙 1 #Incheon #SeoGu #Geomdan #Driving #Korea",
-      "channelName": "HDR Driver",
-      "thumbnail": "https://img.youtube.com/vi/azhkQJbEovg/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=azhkQJbEovg",
-      "publishedAt": "2023-06-16T16:20:29.636Z"
-    },
-    {
-      "id": "yt-13",
-      "videoId": "zksf2V47Cuo",
-      "title": "인천 서구 검단주민들 LH와 인천시에 배신감 느껴",
-      "channelName": "검단n홍순목TV",
-      "thumbnail": "https://img.youtube.com/vi/zksf2V47Cuo/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=zksf2V47Cuo",
-      "publishedAt": "2023-06-16T16:20:29.636Z"
-    },
-    {
-      "id": "yt-9",
+      "id": "yt-15",
       "videoId": "9C9X_Y8TNJI",
       "title": "원당과 검단에서 누리는 듀얼 프리미엄의 입지ㅣ칸타빌 더 스위트 [후랭이TV]",
       "channelName": "후랭이TV",
       "thumbnail": "https://img.youtube.com/vi/9C9X_Y8TNJI/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=9C9X_Y8TNJI",
-      "publishedAt": "2023-06-16T16:20:29.610Z"
-    },
-    {
-      "id": "yt-13",
-      "videoId": "ImeZekmcEEM",
-      "title": "칸타빌 더 스위트 | UNIT 84㎡B |",
-      "channelName": "CANTAVIL LIFE",
-      "thumbnail": "https://img.youtube.com/vi/ImeZekmcEEM/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=ImeZekmcEEM",
-      "publishedAt": "2023-06-16T16:20:29.610Z"
-    },
-    {
-      "id": "yt-15",
-      "videoId": "xfRocz_sZ3Y",
-      "title": "칸타빌 더 스위트  |  UNIT 84㎡A  |",
-      "channelName": "CANTAVIL LIFE",
-      "thumbnail": "https://img.youtube.com/vi/xfRocz_sZ3Y/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=xfRocz_sZ3Y",
-      "publishedAt": "2023-06-16T16:20:29.610Z"
+      "publishedAt": "2023-06-17T01:41:36.829Z"
     },
     {
       "id": "yt-4",
@@ -2061,124 +2160,124 @@
       "channelName": "부읽남TV_내집마련부터건물주까지",
       "thumbnail": "https://img.youtube.com/vi/gXVTiJALPr4/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=gXVTiJALPr4",
-      "publishedAt": "2023-06-16T16:20:28.587Z"
+      "publishedAt": "2023-06-17T01:41:35.759Z"
     },
     {
-      "id": "yt-7",
-      "videoId": "bU33wBQm3BQ",
-      "title": "[아파트 동네 발품 산책, 임장] 점점 도시다워지는 이곳, 검단신도시 한바퀴",
-      "channelName": "헤어디자이너 일상",
-      "thumbnail": "https://img.youtube.com/vi/bU33wBQm3BQ/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=bU33wBQm3BQ",
-      "publishedAt": "2023-06-16T16:20:28.488Z"
+      "id": "yt-13",
+      "videoId": "T9CbEP5gKzQ",
+      "title": "[영상] 인천 검단 아파트 일부 붕괴...입주 예정자의 커지는 '불안' / YTN",
+      "channelName": " YTN",
+      "thumbnail": "https://img.youtube.com/vi/T9CbEP5gKzQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=T9CbEP5gKzQ",
+      "publishedAt": "2023-06-17T01:41:35.759Z"
     },
     {
-      "id": "yt-15",
+      "id": "yt-10",
       "videoId": "GzEqygrqlvo",
       "title": "검단신도시 산책",
       "channelName": "장보고",
       "thumbnail": "https://img.youtube.com/vi/GzEqygrqlvo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=GzEqygrqlvo",
-      "publishedAt": "2023-06-16T16:20:28.488Z"
+      "publishedAt": "2023-06-17T01:41:35.648Z"
     },
     {
-      "id": "yt-4",
+      "id": "yt-12",
+      "videoId": "lnyyguZ8WkQ",
+      "title": "검단 번화가 산책 (검단신도시 주변 검단사거리) Walking in a downtown of Geomdan near a newtown",
+      "channelName": "Local Korean Streets 한국 길거리 산책",
+      "thumbnail": "https://img.youtube.com/vi/lnyyguZ8WkQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=lnyyguZ8WkQ",
+      "publishedAt": "2023-06-17T01:41:35.648Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "bU33wBQm3BQ",
+      "title": "[아파트 동네 발품 산책, 임장] 점점 도시다워지는 이곳, 검단신도시 한바퀴",
+      "channelName": "헤어디자이너 일상",
+      "thumbnail": "https://img.youtube.com/vi/bU33wBQm3BQ/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=bU33wBQm3BQ",
+      "publishedAt": "2023-06-17T01:41:35.648Z"
+    },
+    {
+      "id": "yt-1",
+      "videoId": "vCaAiKdvBrc",
+      "title": "검단신도시 필라테스 창업 이유? 회원수 공개!",
+      "channelName": "부동산프로 남수란",
+      "thumbnail": "https://img.youtube.com/vi/vCaAiKdvBrc/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=vCaAiKdvBrc",
+      "publishedAt": "2023-06-17T01:41:35.641Z"
+    },
+    {
+      "id": "yt-2",
       "videoId": "xV-RIZH2Uuk",
       "title": "검단신도시와 학교 ! 학교를 보면 신도시의 미래가 보입니다. ^ㅡ^",
       "channelName": "검단신도시 이야기",
       "thumbnail": "https://img.youtube.com/vi/xV-RIZH2Uuk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=xV-RIZH2Uuk",
-      "publishedAt": "2023-06-16T16:20:27.303Z"
+      "publishedAt": "2023-06-17T01:41:34.593Z"
     },
     {
-      "id": "yt-8",
-      "videoId": "je3MCxU4D3M",
-      "title": "검단신도시 맛집 아부찌 부대찌개 오픈했어요✨",
-      "channelName": "부동산프로 남수란",
-      "thumbnail": "https://img.youtube.com/vi/je3MCxU4D3M/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=je3MCxU4D3M",
-      "publishedAt": "2023-06-16T16:20:25.087Z"
+      "id": "yt-17",
+      "videoId": "ePSBzyGo6dM",
+      "title": "[NIB 뉴스]  검단신도시에 ‘생존수영 체험장’…2025년 준공 목표",
+      "channelName": "NIB남인천방송",
+      "thumbnail": "https://img.youtube.com/vi/ePSBzyGo6dM/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=ePSBzyGo6dM",
+      "publishedAt": "2023-06-17T01:41:33.433Z"
     },
     {
-      "id": "yt-13",
-      "videoId": "q36FMu8zUFY",
-      "title": "검단맛집 밀회관 인천검단신도시점 조용하고 좋은 우리동네레스토랑 Korea Restaurant",
-      "channelName": "선식객 - Sik Agent",
-      "thumbnail": "https://img.youtube.com/vi/q36FMu8zUFY/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=q36FMu8zUFY",
-      "publishedAt": "2023-06-16T16:20:25.087Z"
-    },
-    {
-      "id": "yt-19",
-      "videoId": "Gg27fQ_RCh8",
-      "title": "검단신도시 맛집 최고당돈가스 검단신도시점 돈까스 먹고 왔어요~!",
-      "channelName": "미코유",
-      "thumbnail": "https://img.youtube.com/vi/Gg27fQ_RCh8/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Gg27fQ_RCh8",
-      "publishedAt": "2023-06-16T16:20:25.087Z"
-    },
-    {
-      "id": "yt-14",
-      "videoId": "i2ItmnzQq1c",
-      "title": "[VLOG] 한달 용돈 5만원 받는 9년차 직장인의 재테크 브이로그 (검단신도시, 부동산, 절약, 짠테크, 월급쟁이 부자들, 신혼부부, 영끌노노)",
-      "channelName": "재테크하는 정대리",
-      "thumbnail": "https://img.youtube.com/vi/i2ItmnzQq1c/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=i2ItmnzQq1c",
-      "publishedAt": "2023-06-16T16:20:25.079Z"
-    },
-    {
-      "id": "yt-10",
-      "videoId": "BU9CVinOW6Q",
-      "title": "서울근교카페ㅣ검단신도시 카페/애견동반 카페/인천서구카페 #카페투어",
-      "channelName": "오늘도 빵모닝",
-      "thumbnail": "https://img.youtube.com/vi/BU9CVinOW6Q/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=BU9CVinOW6Q",
-      "publishedAt": "2023-06-16T16:20:25.067Z"
-    },
-    {
-      "id": "yt-1",
+      "id": "yt-3",
       "videoId": "utAlfAMOZoU",
       "title": "검단 신도시 아파트의 적정가격과 장단점",
       "channelName": "작가 송희구",
       "thumbnail": "https://img.youtube.com/vi/utAlfAMOZoU/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=utAlfAMOZoU",
-      "publishedAt": "2023-06-16T16:20:25.055Z"
+      "publishedAt": "2023-06-17T01:41:32.432Z"
     },
     {
-      "id": "yt-3",
+      "id": "yt-6",
       "videoId": "N9EZP-kuCTE",
       "title": "검단신도시 잡아야 할 곳, 걸러야 할 곳 | 흥청망청",
       "channelName": "집코노미",
       "thumbnail": "https://img.youtube.com/vi/N9EZP-kuCTE/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=N9EZP-kuCTE",
-      "publishedAt": "2023-06-16T16:20:25.055Z"
+      "publishedAt": "2023-06-17T01:41:32.432Z"
     },
     {
-      "id": "yt-9",
-      "videoId": "F22Gtvd0aoA",
-      "title": "EP#11 검단신도시 일상 브이로그 / 파주 퍼스트 가든 / 보스코 카페 / 스테이크 하우스 / 근교 눈썰매장 / 식물원 / 민속놀이 체험 / 나들이 데이트 코",
-      "channelName": "Yeonsoph",
-      "thumbnail": "https://img.youtube.com/vi/F22Gtvd0aoA/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=F22Gtvd0aoA",
-      "publishedAt": "2023-06-16T16:20:25.055Z"
-    },
-    {
-      "id": "yt-10",
-      "videoId": "Du7m50Xt5DU",
-      "title": "EP#4 검단신도시 일상 브이로그 / 대학병원 워킹맘 간호사 / 검단신도시 아라동 상일회관, 핵밥, 투썸, 메머드 익스프레스 / 눈 오는 날 근무",
-      "channelName": "Yeonsoph",
-      "thumbnail": "https://img.youtube.com/vi/Du7m50Xt5DU/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=Du7m50Xt5DU",
-      "publishedAt": "2023-06-16T16:20:25.055Z"
-    },
-    {
-      "id": "yt-11",
+      "id": "yt-12",
       "videoId": "XfT-rLs6Sgg",
       "title": "EP#13 검단신도시 일상 브이로그 /  랜선집들이🙂, 검단신도시 아파트 30평대 인테리어 공개 /우드 커텐 블라인드",
       "channelName": "Yeonsoph",
       "thumbnail": "https://img.youtube.com/vi/XfT-rLs6Sgg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=XfT-rLs6Sgg",
-      "publishedAt": "2023-06-16T16:20:25.055Z"
+      "publishedAt": "2023-06-17T01:41:32.432Z"
+    },
+    {
+      "id": "yt-13",
+      "videoId": "Du7m50Xt5DU",
+      "title": "EP#4 검단신도시 일상 브이로그 / 대학병원 워킹맘 간호사 / 검단신도시 아라동 상일회관, 핵밥, 투썸, 메머드 익스프레스 / 눈 오는 날 근무",
+      "channelName": "Yeonsoph",
+      "thumbnail": "https://img.youtube.com/vi/Du7m50Xt5DU/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=Du7m50Xt5DU",
+      "publishedAt": "2023-06-17T01:41:32.432Z"
+    },
+    {
+      "id": "yt-14",
+      "videoId": "F22Gtvd0aoA",
+      "title": "EP#11 검단신도시 일상 브이로그 / 파주 퍼스트 가든 / 보스코 카페 / 스테이크 하우스 / 근교 눈썰매장 / 식물원 / 민속놀이 체험 / 나들이 데이트 코",
+      "channelName": "Yeonsoph",
+      "thumbnail": "https://img.youtube.com/vi/F22Gtvd0aoA/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=F22Gtvd0aoA",
+      "publishedAt": "2023-06-17T01:41:32.432Z"
+    },
+    {
+      "id": "yt-18",
+      "videoId": "eV7C-H40-2s",
+      "title": "EP#9 검단신도시 일상 브이로그/ 대학병원 휴직 간호사/ 오프닝 꽃집/ 보라하다 헤어살롱/ 선명희 피자/ 로코코 카페/ 바니스 뉴욕 핸드워시 크림 립밤/ 아이더 롱패딩",
+      "channelName": "Yeonsoph",
+      "thumbnail": "https://img.youtube.com/vi/eV7C-H40-2s/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=eV7C-H40-2s",
+      "publishedAt": "2023-06-17T01:41:32.432Z"
     },
     {
       "id": "yt-6",
@@ -2187,25 +2286,34 @@
       "channelName": "아파트언박싱 by 직방TV",
       "thumbnail": "https://img.youtube.com/vi/mcdQ48k3Wz0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=mcdQ48k3Wz0",
-      "publishedAt": "2022-06-16T16:20:27.316Z"
+      "publishedAt": "2022-06-17T01:41:34.688Z"
     },
     {
-      "id": "yt-10",
+      "id": "yt-8",
       "videoId": "_HralCMaJ_8",
       "title": "인천시교육청, 검단신도시 1단계 학교 신설 완료",
       "channelName": "ch B tv 인천",
       "thumbnail": "https://img.youtube.com/vi/_HralCMaJ_8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=_HralCMaJ_8",
-      "publishedAt": "2022-06-16T16:20:27.303Z"
+      "publishedAt": "2022-06-17T01:41:34.593Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-12",
       "videoId": "Lfqfgg8eBL8",
       "title": "뉴스브리핑 - 이럴 거면 검단신도시, 김포로 돌려 주세요 ! , 공원한복판 오줌싸게 동상 예술작품 VS 왠지 불편한 걸",
       "channelName": "IBS인천방송",
       "thumbnail": "https://img.youtube.com/vi/Lfqfgg8eBL8/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Lfqfgg8eBL8",
-      "publishedAt": "2022-06-16T16:20:26.186Z"
+      "publishedAt": "2022-06-17T01:41:33.433Z"
+    },
+    {
+      "id": "yt-0",
+      "videoId": "7nsz-JnbPek",
+      "title": "[검단신도시] 대방 디에트르 더 펠리체 (대방 1차) 108타입 구조 영상 !! (feat. 견부장이 간다!!)",
+      "channelName": "믿음이TV_검단신도시금호믿음 부동산",
+      "thumbnail": "https://img.youtube.com/vi/7nsz-JnbPek/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=7nsz-JnbPek",
+      "publishedAt": "2022-06-17T01:41:32.432Z"
     },
     {
       "id": "yt-11",
@@ -2214,70 +2322,70 @@
       "channelName": "♡ Outside World ♡ ( YOON HA )",
       "thumbnail": "https://img.youtube.com/vi/Yf8ISwJqlHM/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=Yf8ISwJqlHM",
-      "publishedAt": "2022-06-16T16:20:25.067Z"
+      "publishedAt": "2022-06-17T01:41:32.421Z"
     },
     {
-      "id": "yt-17",
+      "id": "yt-13",
       "videoId": "5ioOUCqRniE",
       "title": "과밀학급 해소될까?… ‘검단2고교’ 신설 관심",
       "channelName": "ch B tv 인천",
       "thumbnail": "https://img.youtube.com/vi/5ioOUCqRniE/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5ioOUCqRniE",
-      "publishedAt": "2021-06-16T16:20:27.303Z"
+      "publishedAt": "2021-06-17T01:41:34.593Z"
     },
     {
-      "id": "yt-9",
+      "id": "yt-7",
       "videoId": "5pDrzFBoGZo",
       "title": "뉴스브리핑- 검단 신도시 계속 비상할까?",
       "channelName": "IBS인천방송",
       "thumbnail": "https://img.youtube.com/vi/5pDrzFBoGZo/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=5pDrzFBoGZo",
-      "publishedAt": "2021-06-16T16:20:26.186Z"
+      "publishedAt": "2021-06-17T01:41:33.433Z"
     },
     {
-      "id": "yt-11",
+      "id": "yt-9",
       "videoId": "I52IdMws4Nk",
       "title": "아파트 셀프 사전점검 l 우리집 첫 아파트 l  검단신도시 호반써밋1차 72B 타입",
       "channelName": "똘짱TV",
       "thumbnail": "https://img.youtube.com/vi/I52IdMws4Nk/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=I52IdMws4Nk",
-      "publishedAt": "2021-06-16T16:20:25.079Z"
+      "publishedAt": "2021-06-17T01:41:32.407Z"
     },
     {
-      "id": "yt-8",
+      "id": "yt-7",
       "videoId": "-jAB1Ak8hQ0",
       "title": "[인천] 서구 검단에 첫 시립도서관 '마전도서관' 개관 / YTN",
       "channelName": " YTN",
       "thumbnail": "https://img.youtube.com/vi/-jAB1Ak8hQ0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=-jAB1Ak8hQ0",
-      "publishedAt": "2020-06-16T16:20:29.636Z"
+      "publishedAt": "2020-06-17T01:41:36.863Z"
     },
     {
-      "id": "yt-13",
+      "id": "yt-10",
       "videoId": "CT90SvKlGk0",
       "title": "검단신도시 ‘학교대란’…중·고교 없이 입주 ‘울상’",
       "channelName": "머니원샷",
       "thumbnail": "https://img.youtube.com/vi/CT90SvKlGk0/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=CT90SvKlGk0",
-      "publishedAt": "2020-06-16T16:20:27.303Z"
+      "publishedAt": "2020-06-17T01:41:34.593Z"
     },
     {
-      "id": "yt-9",
-      "videoId": "MuoS3RY4IXk",
-      "title": "침수 피해 속출한 서구 검단… 서구청 조사 착수 - 티브로드 인천방송",
-      "channelName": "ch B tv 인천",
-      "thumbnail": "https://img.youtube.com/vi/MuoS3RY4IXk/mqdefault.jpg",
-      "url": "https://www.youtube.com/watch?v=MuoS3RY4IXk",
-      "publishedAt": "2019-06-17T16:20:29.636Z"
-    },
-    {
-      "id": "yt-16",
+      "id": "yt-15",
       "videoId": "KKOV7pssGCg",
       "title": "청약 경쟁률 0.07대1…검단 2기 신도시 '분양 참사'[뉴스8]",
       "channelName": "MBN News",
       "thumbnail": "https://img.youtube.com/vi/KKOV7pssGCg/mqdefault.jpg",
       "url": "https://www.youtube.com/watch?v=KKOV7pssGCg",
-      "publishedAt": "2019-06-17T16:20:26.186Z"
+      "publishedAt": "2019-06-18T01:41:33.433Z"
+    },
+    {
+      "id": "yt-16",
+      "videoId": "oKwz3lx2Xa4",
+      "title": "[인천] 서구 검단 지구 택지개발 사업 착공식 열려 / YTN (Yes! Top News)",
+      "channelName": " YTN",
+      "thumbnail": "https://img.youtube.com/vi/oKwz3lx2Xa4/mqdefault.jpg",
+      "url": "https://www.youtube.com/watch?v=oKwz3lx2Xa4",
+      "publishedAt": "2017-06-18T01:41:36.863Z"
     }
   ]
 }
