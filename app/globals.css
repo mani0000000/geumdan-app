@@ -12,6 +12,11 @@
   --apple-border: #d2d2d7;
   --apple-red: #f04452;
   --apple-green: #00c471;
+  /* iOS safe area insets */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
@@ -31,18 +36,6 @@ html, body {
 :focus-visible {
   outline: 2px solid var(--apple-blue);
   outline-offset: 2px;
-}
-
-input:focus,
-input:focus-visible,
-textarea:focus,
-textarea:focus-visible,
-select:focus,
-select:focus-visible {
-  outline: none !important;
-  box-shadow: none !important;
-  --tw-ring-shadow: 0 0 transparent !important;
-  --tw-ring-offset-shadow: 0 0 transparent !important;
 }
 
 /* ── 전광판 애니메이션 ─────────────────────────────────── */
