@@ -1,12 +1,9 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2 } from "lucide-react";
+import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2, Calendar } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 import type { AptMarketSummary } from "@/lib/reb-price";
-
-type RentalType = "all" | "전세" | "월세";
-type Tab = "trade" | "jeonse" | "wolse";
 
 const DONG_TABS = ["전체", "검단동", "당하동", "불로동", "마전동", "대곡동", "금곡동", "원당동", "왕길동", "백석동"] as const;
 type DongTab = typeof DONG_TABS[number];
@@ -25,24 +22,6 @@ interface Trade {
   deal_day: number | null;
   deal_amount: number;
   cancel_yn: boolean;
-  fetched_at: string;
-}
-
-interface Rental {
-  id: number;
-  apt_name: string;
-  dong: string;
-  jibun: string | null;
-  exclu_use_ar: number;
-  pyeong: number | null;
-  floor_no: number | null;
-  build_year: number | null;
-  contract_year: number;
-  contract_month: number;
-  contract_day: number | null;
-  rent_type: "전세" | "월세";
-  deposit: number;
-  monthly_rent: number;
   fetched_at: string;
 }
 
@@ -72,10 +51,8 @@ function pyeongLabel(sqm: number, pyeong: number | null): string {
 }
 
 export default function RealestatePage() {
-  const [tab, setTab] = useState<Tab>("trade");
   const [dong, setDong] = useState<DongTab>("전체");
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [rentals, setRentals] = useState<Rental[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>("");
   const [hasApiKey, setHasApiKey] = useState<boolean | null>(null);
@@ -90,7 +67,7 @@ export default function RealestatePage() {
     if (raw) setFavApts(new Set((JSON.parse(raw) as {name: string}[]).map(a => a.name)));
   }, []);
 
-  function toggleFavApt(name: string, dong: string) {
+  function toggleFavApt(name: string, dongVal: string) {
     setFavApts(prev => {
       const next = new Set(prev);
       if (next.has(name)) {
@@ -101,7 +78,7 @@ export default function RealestatePage() {
       const raw = localStorage.getItem("realestateFavApts");
       const current: {name: string; dong: string}[] = raw ? JSON.parse(raw) : [];
       const updated = next.has(name)
-        ? [...current.filter(a => a.name !== name), { name, dong }]
+        ? [...current.filter(a => a.name !== name), { name, dong: dongVal }]
         : current.filter(a => a.name !== name);
       localStorage.setItem("realestateFavApts", JSON.stringify(updated));
       return next;
@@ -127,49 +104,28 @@ export default function RealestatePage() {
       .finally(() => setSummaryLoading(false));
   }, [summaryOpen]);
 
-  // ── 데이터 로드 ────────────────────────────────────────────
+  // ── 매매 실거래가 로드 ────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setLoading(true); setError("");
       try {
-        if (tab === "trade") {
-          const q = supabase.from("apartment_trades")
-            .select("id, apt_name, dong, jibun, exclu_use_ar, pyeong, floor_no, build_year, deal_year, deal_month, deal_day, deal_amount, cancel_yn, fetched_at")
-            .eq("cancel_yn", false)
-            .order("deal_year", { ascending: false })
-            .order("deal_month", { ascending: false })
-            .order("deal_day", { ascending: false })
-            .limit(200);
-          const { data, error: err } = await q;
-          if (err) throw err;
-          if (!cancelled) {
-            setTrades((data ?? []) as Trade[]);
-            const lf = (data ?? []).reduce<string | null>((acc, r) => {
-              const t = (r as Trade).fetched_at;
-              return !acc || t > acc ? t : acc;
-            }, null);
-            setLatestFetchedAt(lf);
-          }
-        } else {
-          const rentType: RentalType = tab === "jeonse" ? "전세" : "월세";
-          const q = supabase.from("apartment_rentals")
-            .select("id, apt_name, dong, jibun, exclu_use_ar, pyeong, floor_no, build_year, contract_year, contract_month, contract_day, rent_type, deposit, monthly_rent, fetched_at")
-            .eq("rent_type", rentType)
-            .order("contract_year", { ascending: false })
-            .order("contract_month", { ascending: false })
-            .order("contract_day", { ascending: false })
-            .limit(200);
-          const { data, error: err } = await q;
-          if (err) throw err;
-          if (!cancelled) {
-            setRentals((data ?? []) as Rental[]);
-            const lf = (data ?? []).reduce<string | null>((acc, r) => {
-              const t = (r as Rental).fetched_at;
-              return !acc || t > acc ? t : acc;
-            }, null);
-            setLatestFetchedAt(lf);
-          }
+        const { data, error: err } = await supabase
+          .from("apartment_trades")
+          .select("id, apt_name, dong, jibun, exclu_use_ar, pyeong, floor_no, build_year, deal_year, deal_month, deal_day, deal_amount, cancel_yn, fetched_at")
+          .eq("cancel_yn", false)
+          .order("deal_year", { ascending: false })
+          .order("deal_month", { ascending: false })
+          .order("deal_day", { ascending: false })
+          .limit(200);
+        if (err) throw err;
+        if (!cancelled) {
+          setTrades((data ?? []) as Trade[]);
+          const lf = (data ?? []).reduce<string | null>((acc, r) => {
+            const t = (r as Trade).fetched_at;
+            return !acc || t > acc ? t : acc;
+          }, null);
+          setLatestFetchedAt(lf);
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "데이터 로드 실패");
@@ -179,35 +135,25 @@ export default function RealestatePage() {
     }
     load();
     return () => { cancelled = true; };
-  }, [tab]);
+  }, []);
 
   // ── 동 필터링 ──────────────────────────────────────────────
   const tradesFiltered = useMemo(() =>
     dong === "전체" ? trades : trades.filter(t => t.dong === dong),
     [trades, dong],
   );
-  const rentalsFiltered = useMemo(() =>
-    dong === "전체" ? rentals : rentals.filter(t => t.dong === dong),
-    [rentals, dong],
-  );
 
-  const periodLabel = useMemo(() => {
-    if (tab === "trade") {
-      const r = trades[0];
-      if (!r) return null;
-      return `${r.deal_year}년 ${r.deal_month}월`;
-    }
-    const r = rentals[0];
+  const latestDealLabel = useMemo(() => {
+    const r = trades[0];
     if (!r) return null;
-    return `${r.contract_year}년 ${r.contract_month}월`;
-  }, [tab, trades, rentals]);
+    return `${r.deal_year}년 ${r.deal_month}월`;
+  }, [trades]);
 
   const dongCounts = useMemo(() => {
-    const src = tab === "trade" ? trades : rentals;
     const map = new Map<string, number>();
-    for (const r of src) map.set(r.dong, (map.get(r.dong) ?? 0) + 1);
+    for (const r of trades) map.set(r.dong, (map.get(r.dong) ?? 0) + 1);
     return map;
-  }, [tab, trades, rentals]);
+  }, [trades]);
 
   return (
     <div className="pb-20">
@@ -228,18 +174,26 @@ export default function RealestatePage() {
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-start justify-between mb-1">
           <div className="flex items-center gap-1.5">
             <TrendingUp size={14} className="text-[#0071e3]" />
-            <span className="text-[12px] font-semibold text-[#1d1d1f]">
-              {periodLabel ? `기준: ${periodLabel} 거래` : "검단신도시 실거래가"}
+            <span className="text-[13px] font-bold text-[#1d1d1f]">매매 실거래가</span>
+          </div>
+          {latestFetchedAt && (
+            <div className="flex items-center gap-1 text-[10px] text-[#86868b]">
+              <Calendar size={10} />
+              <span>수집일 {fmtFetchedDate(latestFetchedAt)}</span>
+            </div>
+          )}
+        </div>
+        {latestDealLabel && (
+          <div className="mb-1">
+            <span className="text-[11px] font-semibold text-[#0071e3] bg-[#EEF5FF] px-2 py-0.5 rounded-full">
+              최신 거래: {latestDealLabel} 기준
             </span>
           </div>
-          <span className="text-[10px] text-[#86868b]">
-            {latestFetchedAt ? `수집일 ${fmtFetchedDate(latestFetchedAt)}` : ""}
-          </span>
-        </div>
-        <p className="text-[10px] text-[#86868b] leading-relaxed">
+        )}
+        <p className="text-[10px] text-[#86868b] leading-relaxed mt-1">
           출처: 국토교통부 실거래가 공개시스템 (apis.data.go.kr) — 인천광역시 서구
         </p>
       </div>
@@ -252,7 +206,7 @@ export default function RealestatePage() {
         >
           <div className="flex items-center gap-2">
             <BarChart2 size={15} className="text-[#0071e3]" />
-            <span className="text-[13px] font-semibold text-[#1d1d1f]">단지별 평균 시세</span>
+            <span className="text-[13px] font-semibold text-[#1d1d1f]">단지별 평균 매매가</span>
             <span className="text-[10px] text-[#86868b] bg-[#F2F4F6] rounded px-1.5 py-0.5">최근 6개월 기반</span>
           </div>
           {summaryOpen ? <ChevronUp size={16} className="text-[#86868b]" /> : <ChevronDown size={16} className="text-[#86868b]" />}
@@ -277,23 +231,21 @@ export default function RealestatePage() {
 
             {!summaryLoading && summaries.length > 0 && (
               <>
-                <div className="grid grid-cols-4 gap-0 px-3 py-2 border-b border-[#F2F4F6] bg-[#F8F9FA]">
-                  <span className="text-[10px] font-semibold text-[#86868b] col-span-2">단지</span>
+                <div className="grid grid-cols-[2fr_1fr_1fr] gap-0 px-3 py-2 border-b border-[#F2F4F6] bg-[#F8F9FA]">
+                  <span className="text-[10px] font-semibold text-[#86868b]">단지</span>
+                  <span className="text-[10px] font-semibold text-[#86868b] text-center">평형대</span>
                   <span className="text-[10px] font-semibold text-[#86868b] text-right">매매 평균</span>
-                  <span className="text-[10px] font-semibold text-[#86868b] text-right">전세 평균</span>
                 </div>
                 <div className="divide-y divide-[#F2F4F6] max-h-80 overflow-y-auto">
-                  {summaries.map((s, i) => (
-                    <div key={i} className="grid grid-cols-4 gap-0 px-3 py-2.5 items-center">
-                      <div className="col-span-2 min-w-0">
+                  {summaries.filter(s => s.avg_trade_price).map((s, i) => (
+                    <div key={i} className="grid grid-cols-[2fr_1fr_1fr] gap-0 px-3 py-2.5 items-center">
+                      <div className="min-w-0">
                         <p className="text-[12px] font-semibold text-[#1d1d1f] truncate">{s.apt_name}</p>
-                        <p className="text-[10px] text-[#86868b]">{s.dong} · {s.sqm}㎡대</p>
+                        <p className="text-[10px] text-[#86868b]">{s.dong} · {s.trade_count}건</p>
                       </div>
+                      <p className="text-[11px] text-[#86868b] text-center">{s.sqm}㎡대</p>
                       <p className="text-[12px] font-bold text-[#0071e3] text-right">
                         {s.avg_trade_price ? fmt만원(s.avg_trade_price) : "—"}
-                      </p>
-                      <p className="text-[12px] font-bold text-[#10B981] text-right">
-                        {s.avg_jeonse_price ? fmt만원(s.avg_jeonse_price) : "—"}
                       </p>
                     </div>
                   ))}
@@ -307,32 +259,12 @@ export default function RealestatePage() {
         )}
       </div>
 
-      {/* ── 매매/전세/월세 탭 ── */}
-      <div className="px-4 mt-3">
-        <div className="grid grid-cols-3 gap-1 bg-[#F2F4F6] rounded-xl p-1">
-          {[
-            { id: "trade",  label: "매매" },
-            { id: "jeonse", label: "전세" },
-            { id: "wolse",  label: "월세" },
-          ].map(t => (
-            <button key={t.id}
-              onClick={() => setTab(t.id as Tab)}
-              className={`py-2 rounded-lg text-[13px] font-semibold transition-all
-                ${tab === t.id ? "bg-white shadow-sm text-[#1d1d1f]" : "text-[#8B95A1]"}`}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── 법정동 탭 ── */}
+      {/* ── 법정동 필터 탭 ── */}
       <div className="mt-3 overflow-x-auto px-4 no-scrollbar">
         <div className="flex gap-1.5 pb-1 min-w-max">
           {DONG_TABS.map(d => {
             const active = dong === d;
-            const cnt = d === "전체"
-              ? (tab === "trade" ? trades.length : rentals.length)
-              : dongCounts.get(d) ?? 0;
+            const cnt = d === "전체" ? trades.length : (dongCounts.get(d) ?? 0);
             return (
               <button key={d}
                 onClick={() => setDong(d)}
@@ -360,7 +292,7 @@ export default function RealestatePage() {
           </div>
         )}
 
-        {!loading && !error && tab === "trade" && tradesFiltered.length === 0 && (
+        {!loading && !error && tradesFiltered.length === 0 && (
           <div className="bg-white rounded-2xl border border-[#d2d2d7] p-8 text-center">
             <Building2 size={32} className="mx-auto text-[#B0B8C1] mb-2" />
             <p className="text-[13px] font-semibold text-[#1d1d1f]">수집된 매매 실거래가가 없습니다</p>
@@ -368,15 +300,7 @@ export default function RealestatePage() {
           </div>
         )}
 
-        {!loading && !error && tab !== "trade" && rentalsFiltered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-[#d2d2d7] p-8 text-center">
-            <Building2 size={32} className="mx-auto text-[#B0B8C1] mb-2" />
-            <p className="text-[13px] font-semibold text-[#1d1d1f]">수집된 {tab === "jeonse" ? "전세" : "월세"} 데이터가 없습니다</p>
-            <p className="text-[11px] text-[#86868b] mt-1">관리자 페이지 → 부동산 시세 → 배치 관리에서 데이터를 수집해주세요</p>
-          </div>
-        )}
-
-        {!loading && !error && tab === "trade" && tradesFiltered.map(t => (
+        {!loading && !error && tradesFiltered.map(t => (
           <article key={t.id} className="bg-white rounded-2xl border border-[#d2d2d7] p-3.5">
             <div className="flex items-start justify-between gap-3 mb-2">
               <div className="min-w-0">
@@ -395,48 +319,12 @@ export default function RealestatePage() {
                   <Star size={16} className={favApts.has(t.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
                 </button>
                 <p className="text-[15px] font-extrabold text-[#0071e3]">{fmt만원(t.deal_amount)}</p>
-                <p className="text-[10px] text-[#86868b]">{fmtDealDate(t.deal_year, t.deal_month, t.deal_day)}</p>
+                <p className="text-[10px] text-[#86868b]">{fmtDealDate(t.deal_year, t.deal_month, t.deal_day)} 거래</p>
               </div>
             </div>
             <div className="flex items-center gap-2 text-[11px] text-[#4E5968]">
               <span className="bg-[#F2F4F6] rounded-md px-2 py-0.5">{pyeongLabel(t.exclu_use_ar, t.pyeong)}</span>
               {t.floor_no != null && <span className="bg-[#F2F4F6] rounded-md px-2 py-0.5">{t.floor_no}층</span>}
-            </div>
-          </article>
-        ))}
-
-        {!loading && !error && tab !== "trade" && rentalsFiltered.map(r => (
-          <article key={r.id} className="bg-white rounded-2xl border border-[#d2d2d7] p-3.5">
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <div className="min-w-0">
-                <h3 className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.apt_name}</h3>
-                <p className="text-[11px] text-[#86868b] mt-0.5">
-                  {r.dong}{r.jibun ? ` · ${r.jibun}` : ""}
-                  {r.build_year ? ` · ${r.build_year}년 준공` : ""}
-                </p>
-              </div>
-              <div className="flex flex-col items-end shrink-0 gap-1">
-                <button
-                  onClick={() => toggleFavApt(r.apt_name, r.dong)}
-                  className="active:opacity-60 transition-colors"
-                  aria-label={favApts.has(r.apt_name) ? "즐겨찾기 해제" : "즐겨찾기"}
-                >
-                  <Star size={16} className={favApts.has(r.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
-                </button>
-                {r.rent_type === "전세" ? (
-                  <p className="text-[15px] font-extrabold text-[#10B981]">{fmt만원(r.deposit)}</p>
-                ) : (
-                  <>
-                    <p className="text-[13px] font-bold text-[#1d1d1f]">보증 {fmt만원(r.deposit)}</p>
-                    <p className="text-[13px] font-extrabold text-[#F59E0B]">월 {fmt만원(r.monthly_rent)}</p>
-                  </>
-                )}
-                <p className="text-[10px] text-[#86868b]">{fmtDealDate(r.contract_year, r.contract_month, r.contract_day)}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-[#4E5968]">
-              <span className="bg-[#F2F4F6] rounded-md px-2 py-0.5">{pyeongLabel(r.exclu_use_ar, r.pyeong)}</span>
-              {r.floor_no != null && <span className="bg-[#F2F4F6] rounded-md px-2 py-0.5">{r.floor_no}층</span>}
             </div>
           </article>
         ))}
