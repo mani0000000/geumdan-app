@@ -141,10 +141,10 @@ async function fetchKMA(serviceKey: string) {
     }));
 
   // 일별 예보 (오늘~6일 후)
-  const dailyMap = new Map<string, { sky: number[]; pty: number[]; tmx: number; tmn: number; pcp: number }>();
+  const dailyMap = new Map<string, { sky: number[]; pty: number[]; tmx: number | null; tmn: number | null; pcp: number }>();
   for (const item of fcstItems) {
     const d = item.fcstDate;
-    const cur = dailyMap.get(d) ?? { sky: [], pty: [], tmx: -99, tmn: 99, pcp: 0 };
+    const cur = dailyMap.get(d) ?? { sky: [], pty: [], tmx: null, tmn: null, pcp: 0 };
     if (item.category === "SKY") cur.sky.push(parseInt(item.fcstValue, 10));
     if (item.category === "PTY") cur.pty.push(parseInt(item.fcstValue, 10));
     if (item.category === "TMX") cur.tmx = Math.round(parseFloat(item.fcstValue));
@@ -155,8 +155,8 @@ async function fetchKMA(serviceKey: string) {
     dailyMap.set(d, cur);
   }
   const todayData = dailyMap.get(todayKST);
-  const high = todayData?.tmx ?? temp;
-  const low  = todayData?.tmn ?? temp;
+  const high = todayData?.tmx != null ? todayData.tmx : temp;
+  const low  = todayData?.tmn != null ? todayData.tmn : temp;
 
   const kmaWeekly = Array.from(dailyMap.entries())
     .filter(([d]) => d >= todayKST)
@@ -171,8 +171,8 @@ async function fetchKMA(serviceKey: string) {
         date: `${d2.getMonth() + 1}/${d2.getDate()}`,
         dayLabel: DAY_KO[d2.getDay()],
         emoji: kmaToWeather(mainSky, mainPty).emoji,
-        high: v.tmx !== -99 ? v.tmx : temp,
-        low: v.tmn !== 99 ? v.tmn : temp,
+        high: v.tmx != null ? v.tmx : temp,
+        low: v.tmn != null ? v.tmn : temp,
         precipitation: Math.round(v.pcp),
         isToday: dateStr === todayKST,
       };
