@@ -34,7 +34,13 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
   return (
     <header
       className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
-      style={{ top: "env(safe-area-inset-top, 0px)" }}
+      style={{
+        top: 0,
+        /* safe-area 영역(상태바 아래)까지 헤더 배경이 확장되도록
+           컨테이너의 paddingTop 만큼 위로 당겨 올림 */
+        marginTop: "calc(env(safe-area-inset-top, 0px) * -1)",
+        paddingTop: "env(safe-area-inset-top, 0px)",
+      }}
     >
       <div className="flex items-center justify-between px-4 h-[52px]">
         <div className="flex items-center gap-1">
