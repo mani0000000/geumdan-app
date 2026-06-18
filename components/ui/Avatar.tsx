@@ -24,7 +24,7 @@ export default function Avatar({ src, size = 24, alt = "프로필", className = 
   }
   return (
     <div
-      className={`rounded-full bg-[#e8f1fd] flex items-center justify-center text-[#0071e3] ${className}`}
+      className={`rounded-full bg-[#e8f1fd] flex items-center justify-center text-[#3182F6] ${className}`}
       style={{ width: size, height: size }}
       aria-label={alt}
     >

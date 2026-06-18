@@ -88,7 +88,7 @@ export default function BottomNav() {
 
             const iconSize = center ? 22 : 20;
             const iconColor = active
-              ? center ? "text-white" : "text-black"
+              ? center ? "text-white" : "text-[#3182F6]"
               : "text-[#8e8e93]";
 
             return (
@@ -100,7 +100,7 @@ export default function BottomNav() {
                 <div className={`flex items-center justify-center rounded-full transition-all
                   ${center ? "w-10 h-10" : "w-8 h-8"}
                   ${active && center
-                    ? "bg-[#2563EB] shadow-[0_0_12px_rgba(37,99,235,0.6)]"
+                    ? "bg-[#3182F6] shadow-[0_0_14px_rgba(49,130,246,0.55)]"
                     : "bg-transparent"
                   }`}>
                   {active ? (
@@ -117,7 +117,7 @@ export default function BottomNav() {
                   )}
                 </div>
                 <span className={`text-[10px] leading-none font-medium tracking-tight transition-colors
-                  ${active ? (center ? "text-[#2563EB]" : "text-black") : "text-[#8e8e93]"}`}>
+                  ${active ? "text-[#3182F6]" : "text-[#8e8e93]"}`}>
                   {label}
                 </span>
               </Link>

@@ -15,7 +15,7 @@ const GasMapView = dynamic(() => import("./GasMapView"), {
   loading: () => (
     <div className="flex items-center justify-center h-full bg-[#f5f5f7]">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 border-[3px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-[3px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
         <p className="text-[13px] text-[#6e6e73]">지도 불러오는 중...</p>
       </div>
     </div>
@@ -120,10 +120,10 @@ function StationSheet({
                 {station.prices.diesel != null && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#0071e3]" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#3182F6]" />
                       <span className="text-[14px] font-semibold text-[#424245]">경유</span>
                     </div>
-                    <span className="text-[19px] font-bold text-[#0071e3] tabular-nums">{won(station.prices.diesel)}</span>
+                    <span className="text-[19px] font-bold text-[#3182F6] tabular-nums">{won(station.prices.diesel)}</span>
                   </div>
                 )}
                 {station.prices.lpg != null && (
@@ -275,7 +275,7 @@ export default function GasPageClient() {
           {loading ? (
             <div className="flex items-center justify-center h-full bg-[#f5f5f7]">
               <div className="flex flex-col items-center gap-3">
-                <div className="w-8 h-8 border-[3px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                <div className="w-8 h-8 border-[3px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
                 <p className="text-[13px] text-[#6e6e73]">주유소 정보 불러오는 중...</p>
               </div>
             </div>
@@ -324,7 +324,7 @@ export default function GasPageClient() {
           {/* 정렬 컨트롤 */}
           <div className="bg-white px-4 py-2.5 flex items-center gap-2 border-b border-[#f0f0f3] sticky top-0 z-10">
             <button onClick={locate} disabled={locating}
-              className={`h-8 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5 transition-colors ${sort === "distance" && userLat != null ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#636366]"} disabled:opacity-40`}>
+              className={`h-8 px-3 rounded-full text-[12px] font-semibold flex items-center gap-1.5 transition-colors ${sort === "distance" && userLat != null ? "bg-[#3182F6] text-white" : "bg-[#f5f5f7] text-[#636366]"} disabled:opacity-40`}>
               {locating ? <RefreshCw size={11} className="animate-spin" /> : <Navigation size={11} />}
               거리순
             </button>

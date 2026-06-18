@@ -295,7 +295,8 @@ function CommunityTab() {
         <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {categories.map(cat => (
             <button key={cat} onClick={() => setActive(cat)}
-              className={`shrink-0 h-8 px-3.5 rounded-full text-[14px] font-medium transition-colors ${active === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}>
+              className={`shrink-0 h-8 px-3.5 rounded-full text-[13px] font-bold transition-all active:scale-95 ${active === cat ? "text-white shadow-sm" : "bg-[#f5f5f7] text-[#6e6e73]"}`}
+              style={active === cat ? { background: "linear-gradient(135deg, #3182F6, #2563EB)" } : {}}>
               {cat}
             </button>
           ))}
@@ -466,7 +467,7 @@ function YouTubeCard({ video }: { video: { id: string; videoId: string; title: s
 
 // ─── 카드뉴스 그라디언트 팔레트 ──────────────────────────────
 const NEWS_GRADIENTS = [
-  { from: "#0058b0", to: "#0071e3" },
+  { from: "#2563EB", to: "#3182F6" },
   { from: "#065F46", to: "#059669" },
   { from: "#6D28D9", to: "#8B5CF6" },
   { from: "#B45309", to: "#D97706" },
@@ -1468,7 +1469,8 @@ function SoikContent() {
         <div className="flex gap-2">
           {mainTabs.map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${tab === t ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-500"}`}>
+              className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-all active:scale-[0.97] ${tab === t ? "text-white shadow-sm" : "bg-gray-100 text-gray-500"}`}
+              style={tab === t ? { background: "linear-gradient(135deg, #3182F6, #2563EB)" } : {}}>
               {t}
             </button>
           ))}

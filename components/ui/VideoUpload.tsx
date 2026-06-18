@@ -244,11 +244,11 @@ export default function VideoUpload({
             >
               <div className="w-10 h-10 rounded-lg bg-[#f5f5f7] flex items-center justify-center shrink-0">
                 {it.status === "uploading" ? (
-                  <Loader2 size={18} className="text-[#0071e3] animate-spin" />
+                  <Loader2 size={18} className="text-[#3182F6] animate-spin" />
                 ) : it.status === "error" ? (
                   <AlertCircle size={18} className="text-[#F04452]" />
                 ) : (
-                  <Film size={18} className="text-[#0071e3]" />
+                  <Film size={18} className="text-[#3182F6]" />
                 )}
               </div>
               <div className="flex-1 min-w-0">
@@ -259,7 +259,7 @@ export default function VideoUpload({
                   <div className="mt-1 flex items-center gap-2">
                     <div className="flex-1 h-1.5 rounded-full bg-[#f0f0f3] overflow-hidden">
                       <div
-                        className="h-full bg-[#0071e3] transition-[width] duration-150"
+                        className="h-full bg-[#3182F6] transition-[width] duration-150"
                         style={{ width: `${Math.round(it.progress * 100)}%` }}
                       />
                     </div>

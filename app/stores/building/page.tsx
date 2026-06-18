@@ -50,7 +50,7 @@ function BuildingDetailContent() {
   if (loading) {
     return (
       <div className="min-h-dvh bg-white flex flex-col items-center justify-center gap-3">
-        <div className="w-8 h-8 border-[3px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-[3px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
         <p className="text-[13px] text-[#6e6e73]">상가 정보 불러오는 중...</p>
       </div>
     );
@@ -62,7 +62,7 @@ function BuildingDetailContent() {
         <div className="text-center px-8">
           <p className="text-4xl mb-3">🏢</p>
           <p className="text-[17px] font-bold text-[#1d1d1f]">상가를 찾을 수 없어요</p>
-          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:opacity-80">
+          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold active:opacity-80">
             돌아가기
           </button>
         </div>
@@ -99,7 +99,7 @@ function BuildingDetailContent() {
           <img src={image} alt={name} onError={() => setImgFailed(true)}
             className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-[#0071e3] to-[#1849A3] flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-[#3182F6] to-[#1849A3] flex items-center justify-center">
             <Building2 size={44} className="text-white/60" />
           </div>
         )}
@@ -137,7 +137,7 @@ function BuildingDetailContent() {
             </button>
             {buildingData.floors.map((f, i) => (
               <button key={f.label} onClick={() => setFloorIdx(i)}
-                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
+                className={`shrink-0 px-3.5 h-8 rounded-xl text-[13px] font-bold transition-colors ${i === floorIdx ? "bg-[#3182F6] text-white" : "bg-[#f5f5f7] text-[#424245]"}`}>
                 {f.label}
               </button>
             ))}

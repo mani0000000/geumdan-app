@@ -53,7 +53,7 @@ const myIcon = L.divIcon({
   className:  "",
   iconSize:   [22, 22] as [number, number],
   iconAnchor: [11, 11] as [number, number],
-  html: `<div style="width:22px;height:22px;background:#0071e3;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 5px rgba(49,130,246,.18),0 2px 6px rgba(0,0,0,.25)"></div>`,
+  html: `<div style="width:22px;height:22px;background:#3182F6;border-radius:50%;border:2.5px solid white;box-shadow:0 0 0 5px rgba(49,130,246,.18),0 2px 6px rgba(0,0,0,.25)"></div>`,
 });
 
 interface Props {

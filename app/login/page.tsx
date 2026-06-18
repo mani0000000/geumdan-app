@@ -61,7 +61,7 @@ export default function LoginPage() {
           placeholder="휴대폰 번호"
           value={phone}
           onChange={e => setPhone(e.target.value)}
-          className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] text-[#1d1d1f] placeholder:text-[#6e6e73] outline-none focus:ring-2 focus:ring-[#0071e3]"
+          className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] text-[#1d1d1f] placeholder:text-[#6e6e73] outline-none focus:ring-2 focus:ring-[#3182F6]"
         />
         <div className="relative">
           <input
@@ -69,7 +69,7 @@ export default function LoginPage() {
             placeholder="비밀번호"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#f5f5f7] text-[16px] text-[#1d1d1f] placeholder:text-[#6e6e73] outline-none focus:ring-2 focus:ring-[#0071e3]"
+            className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#f5f5f7] text-[16px] text-[#1d1d1f] placeholder:text-[#6e6e73] outline-none focus:ring-2 focus:ring-[#3182F6]"
           />
           <button
             type="button"
@@ -83,7 +83,7 @@ export default function LoginPage() {
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full h-[52px] rounded-xl bg-[#0071e3] text-white text-[17px] font-bold mt-1 flex items-center justify-center active:bg-[#0058b0] transition-colors disabled:opacity-60"
+          className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold mt-1 flex items-center justify-center active:bg-[#2563EB] transition-colors disabled:opacity-60"
         >
           {loading
             ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

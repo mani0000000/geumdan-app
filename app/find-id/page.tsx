@@ -54,12 +54,12 @@ export default function FindIdPage() {
                 placeholder="휴대폰 번호 (- 없이 입력)"
                 value={phone}
                 onChange={e => setPhone(e.target.value)}
-                className="flex-1 h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3] text-[#1d1d1f] placeholder:text-[#86868b]"
+                className="flex-1 h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#1d1d1f] placeholder:text-[#86868b]"
               />
               <button
                 onClick={sendCode}
                 disabled={phone.length < 10 || loading}
-                className="h-[52px] px-4 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#0058b0] transition-colors"
+                className="h-[52px] px-4 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#2563EB] transition-colors"
               >
                 {loading ? "전송 중..." : codeSent ? "재전송" : "인증번호 받기"}
               </button>
@@ -73,18 +73,18 @@ export default function FindIdPage() {
                     value={code}
                     onChange={e => setCode(e.target.value)}
                     maxLength={6}
-                    className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3] text-[#1d1d1f] placeholder:text-[#86868b]"
+                    className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6] text-[#1d1d1f] placeholder:text-[#86868b]"
                   />
                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[14px] font-bold text-[#F04452]">2:59</span>
                 </div>
-                <p className="text-[13px] text-[#0071e3] mb-4">인증번호가 발송됐어요 (유효시간 3분)</p>
+                <p className="text-[13px] text-[#3182F6] mb-4">인증번호가 발송됐어요 (유효시간 3분)</p>
               </>
             )}
             <div className="mt-auto pb-8">
               <button
                 onClick={verify}
                 disabled={code.length < 6 || loading}
-                className="w-full h-[52px] rounded-xl bg-[#0071e3] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#0058b0] transition-colors disabled:opacity-40"
+                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#2563EB] transition-colors disabled:opacity-40"
               >
                 {loading
                   ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -97,14 +97,14 @@ export default function FindIdPage() {
         {step === "result" && (
           <div className="flex flex-col items-center text-center pt-6">
             <div className="w-16 h-16 bg-[#e8f1fd] rounded-full flex items-center justify-center mb-5">
-              <CheckCircle2 size={36} className="text-[#0071e3]" />
+              <CheckCircle2 size={36} className="text-[#3182F6]" />
             </div>
             <h2 className="text-[23px] font-bold text-[#1d1d1f]">아이디를 찾았어요</h2>
             <p className="text-[15px] text-[#6e6e73] mt-2 mb-8">{phone} 로 가입된 계정이에요</p>
 
             <div className="w-full bg-[#f5f5f7] rounded-2xl px-6 py-5 mb-8">
               <p className="text-[14px] text-[#6e6e73] mb-2">가입된 아이디</p>
-              <p className="text-[23px] font-black text-[#0071e3]">{maskedId}</p>
+              <p className="text-[23px] font-black text-[#3182F6]">{maskedId}</p>
               <p className="text-[13px] text-[#86868b] mt-2">보안을 위해 일부 번호는 가려져요</p>
             </div>
 
@@ -114,7 +114,7 @@ export default function FindIdPage() {
 
             <div className="w-full flex flex-col gap-3">
               <Link href="/login/"
-                className="w-full h-[52px] rounded-xl bg-[#0071e3] text-white text-[16px] font-bold flex items-center justify-center active:bg-[#0058b0] transition-colors">
+                className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[16px] font-bold flex items-center justify-center active:bg-[#2563EB] transition-colors">
                 로그인하기
               </Link>
               <Link href="/find-password/"

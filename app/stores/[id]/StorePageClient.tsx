@@ -74,7 +74,7 @@ export default function StoreBrandPage({ params }: { params: Promise<{ id: strin
         <div className="text-center px-8">
           <p className="text-4xl mb-3">🏢</p>
           <p className="text-[17px] font-bold text-[#1d1d1f]">매장을 찾을 수 없어요</p>
-          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold">
+          <button onClick={() => router.back()} className="mt-4 h-11 px-6 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold">
             돌아가기
           </button>
         </div>
@@ -195,7 +195,7 @@ function HeroSection({
 
           <div className="mt-3 flex items-center gap-2">
             {store.phone && (
-              <a href={`tel:${store.phone}`} className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 bg-[#0071e3] text-white text-[13px] font-bold rounded-xl">
+              <a href={`tel:${store.phone}`} className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 bg-[#3182F6] text-white text-[13px] font-bold rounded-xl">
                 <Phone size={14} /> 전화
               </a>
             )}
@@ -492,7 +492,7 @@ function ReviewModal({ storeId, onClose, onCreated }: { storeId: string; onClose
         />
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 h-10 rounded-lg bg-[#F2F2F4] text-[#1d1d1f] text-[13px] font-bold">취소</button>
-          <button onClick={submit} disabled={busy} className="flex-1 h-10 rounded-lg bg-[#0071e3] text-white text-[13px] font-bold disabled:opacity-50">
+          <button onClick={submit} disabled={busy} className="flex-1 h-10 rounded-lg bg-[#3182F6] text-white text-[13px] font-bold disabled:opacity-50">
             {busy ? "전송 중…" : "등록"}
           </button>
         </div>
@@ -584,7 +584,7 @@ function ReserveSection({ storeId, onCreated }: { storeId: string; onCreated: ()
             <input type="time" value={time} onChange={e => setTime(e.target.value)} className="h-10 rounded-lg border border-[#E5E5EA] px-3 text-[14px]" />
             <input type="number" min={1} max={20} value={size} onChange={e => setSize(Number(e.target.value))} className="h-10 rounded-lg border border-[#E5E5EA] px-3 text-[14px]" />
           </div>
-          <button onClick={submit} disabled={busy} className="w-full h-11 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold disabled:opacity-50">
+          <button onClick={submit} disabled={busy} className="w-full h-11 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold disabled:opacity-50">
             {busy ? "전송 중…" : "예약 신청"}
           </button>
         </div>
@@ -626,7 +626,7 @@ function WaitingSection({ storeId, onCreated }: { storeId: string; onCreated: ()
       <section className="px-4 mt-3">
         <div className="bg-white rounded-2xl p-6 text-center">
           <p className="text-[12px] text-[#86868B]">내 대기번호</p>
-          <p className="text-5xl font-extrabold text-[#0071e3] my-2">{queue}</p>
+          <p className="text-5xl font-extrabold text-[#3182F6] my-2">{queue}</p>
           <p className="text-[13px] text-[#3C3C43]">호출 시 연락드릴게요.</p>
         </div>
       </section>

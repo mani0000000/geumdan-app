@@ -182,7 +182,7 @@ function CouponDetailSheet({
               <div className="space-y-3">
                 <div className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                    <MapPin size={13} className="text-[#0071e3]" />
+                    <MapPin size={13} className="text-[#3182F6]" />
                   </div>
                   <div>
                     <p className="text-[13px] text-[#6e6e73]">위치</p>
@@ -191,7 +191,7 @@ function CouponDetailSheet({
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                    <Clock size={13} className="text-[#0071e3]" />
+                    <Clock size={13} className="text-[#3182F6]" />
                   </div>
                   <div>
                     <p className="text-[13px] text-[#6e6e73]">영업시간</p>
@@ -200,12 +200,12 @@ function CouponDetailSheet({
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-7 h-7 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                    <Phone size={13} className="text-[#0071e3]" />
+                    <Phone size={13} className="text-[#3182F6]" />
                   </div>
                   <div>
                     <p className="text-[13px] text-[#6e6e73]">전화</p>
                     <a href={`tel:${detail.phone}`}
-                      className="text-[15px] text-[#0071e3] font-medium">{detail.phone}</a>
+                      className="text-[15px] text-[#3182F6] font-medium">{detail.phone}</a>
                   </div>
                 </div>
               </div>
@@ -213,7 +213,7 @@ function CouponDetailSheet({
               {/* 지도 버튼 */}
               <button className="mt-4 w-full flex items-center justify-between bg-[#f5f5f7] rounded-xl px-4 py-3 active:bg-[#d2d2d7]">
                 <div className="flex items-center gap-2">
-                  <MapPin size={14} className="text-[#0071e3]" />
+                  <MapPin size={14} className="text-[#3182F6]" />
                   <span className="text-[14px] font-semibold text-[#1d1d1f]">길찾기 / 지도 보기</span>
                 </div>
                 <ChevronRight size={14} className="text-[#86868b]" />
@@ -365,7 +365,7 @@ export default function CouponsPage() {
         <div className="px-4 pb-3 flex gap-2 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {BUILDINGS.map(b => (
             <button key={b} onClick={() => setBuilding(b)}
-              className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-colors border ${building === b ? "bg-[#0071e3] text-white border-[#0071e3]" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
+              className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-semibold transition-colors border ${building === b ? "bg-[#3182F6] text-white border-[#3182F6]" : "bg-white text-[#424245] border-[#d2d2d7]"}`}>
               {b}
             </button>
           ))}

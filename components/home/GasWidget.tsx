@@ -15,7 +15,7 @@ const GasWidgetMap = dynamic(() => import("./GasWidgetMap"), {
   loading: () => (
     <div className="w-full h-full flex items-center justify-center bg-[#f5f5f7]">
       <div className="flex flex-col items-center gap-2">
-        <div className="w-6 h-6 border-[2.5px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-[2.5px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
         <p className="text-[12px] text-[#6e6e73]">지도 불러오는 중...</p>
       </div>
     </div>
@@ -146,10 +146,10 @@ function StationSheet({
                 {station.prices.diesel != null && (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-[#0071e3]" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#3182F6]" />
                       <span className="text-[14px] font-semibold text-[#424245]">경유</span>
                     </div>
-                    <span className="text-[19px] font-bold text-[#0071e3] tabular-nums">
+                    <span className="text-[19px] font-bold text-[#3182F6] tabular-nums">
                       {won(station.prices.diesel)}
                     </span>
                   </div>
@@ -314,7 +314,7 @@ export default function GasWidget() {
           >
             {loading ? (
               <div className="w-full h-full flex items-center justify-center bg-[#f5f5f7]">
-                <div className="w-6 h-6 border-[2.5px] border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                <div className="w-6 h-6 border-[2.5px] border-[#3182F6] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : (
               <GasWidgetMap
@@ -333,19 +333,19 @@ export default function GasWidget() {
               style={{
                 position: "absolute", bottom: 56, right: 10, zIndex: 1000,
                 width: 38, height: 38, background: "white",
-                border: myPos ? "2px solid #0071e3" : "1.5px solid #d2d2d7",
+                border: myPos ? "2px solid #3182F6" : "1.5px solid #d2d2d7",
                 borderRadius: 11, boxShadow: "0 2px 8px rgba(0,0,0,.15)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: locating ? "wait" : "pointer",
               }}
             >
               {locating ? (
-                <div style={{ width: 14, height: 14, border: "2px solid #0071e3", borderTopColor: "transparent", borderRadius: "50%", animation: "gw-spin .8s linear infinite" }} />
+                <div style={{ width: 14, height: 14, border: "2px solid #3182F6", borderTopColor: "transparent", borderRadius: "50%", animation: "gw-spin .8s linear infinite" }} />
               ) : (
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                  stroke={myPos ? "#0071e3" : "#6e6e73"} strokeWidth="2.2"
+                  stroke={myPos ? "#3182F6" : "#6e6e73"} strokeWidth="2.2"
                   strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="3" fill={myPos ? "#0071e3" : "none"} />
+                  <circle cx="12" cy="12" r="3" fill={myPos ? "#3182F6" : "none"} />
                   <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" />
                   <circle cx="12" cy="12" r="7" strokeWidth="1.2" opacity=".35" />
                 </svg>
@@ -363,7 +363,7 @@ export default function GasWidget() {
             onClick={locate}
             disabled={locating}
             className={`h-7 px-2.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition-colors ${
-              sort === "distance" && userLat != null ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#636366]"
+              sort === "distance" && userLat != null ? "bg-[#3182F6] text-white" : "bg-[#f5f5f7] text-[#636366]"
             } disabled:opacity-40`}
           >
             {locating ? <RefreshCw size={10} className="animate-spin" /> : <Navigation size={10} />}
@@ -427,7 +427,7 @@ export default function GasWidget() {
                   key={s.id}
                   onClick={() => handleSelect(s)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border text-left transition-all active:scale-[0.99] ${
-                    isSelected ? "border-[#0071e3] bg-[#EFF6FF]" :
+                    isSelected ? "border-[#3182F6] bg-[#EFF6FF]" :
                     isLowest   ? "bg-[#FFF5F5] border-[#FECACA]" :
                                  "bg-white border-[#f0f0f3]"
                   }`}
@@ -457,7 +457,7 @@ export default function GasWidget() {
                         {s.name}
                       </span>
                       {s.isAlttul && <Tag color="#059669">알뜰</Tag>}
-                      {s.isSelf   && <Tag color="#0071e3">셀프</Tag>}
+                      {s.isSelf   && <Tag color="#3182F6">셀프</Tag>}
                     </div>
                     <p className="text-[10px] text-[#86868b] mt-0.5 flex items-center gap-0.5 truncate">
                       <MapPin size={8} className="shrink-0" />
