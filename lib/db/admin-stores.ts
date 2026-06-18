@@ -1,5 +1,5 @@
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
-import type { StoreCategory } from "@/lib/types";
+import type { StoreCategory, StructuredHours, BreakTime, SuggestionChangeType } from "@/lib/types";
 
 // ─── 건물 (Buildings) ──────────────────────────────────────────
 
@@ -12,6 +12,7 @@ export interface AdminBuilding {
   floors: number | null;
   total_stores: number | null;
   parking_info: string | null;
+  parking_spaces: number | null;
   open_time: string | null;
   has_data: boolean;
   categories: string[] | null;
@@ -20,6 +21,11 @@ export interface AdminBuilding {
   photo_south: string | null;
   photo_east: string | null;
   photo_west: string | null;
+  description: string | null;
+  website: string | null;
+  instagram: string | null;
+  kakao_place_id: string | null;
+  facilities: string[] | null;
 }
 
 export async function adminFetchBuildings(): Promise<AdminBuilding[]> {
@@ -79,8 +85,12 @@ export interface AdminStore {
   floor_label: string;
   name: string;
   category: StoreCategory;
+  sub_category: string | null;
   phone: string | null;
   hours: string | null;
+  structured_hours: StructuredHours | null;
+  closed_days: string[] | null;
+  break_time: BreakTime | null;
   is_open: boolean;
   is_premium: boolean;
   x: number;
@@ -95,6 +105,8 @@ export interface AdminStore {
   show_in_openings: boolean | null;
   open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
   extra_info: Record<string, unknown> | null;
+  avg_rating: number | null;
+  review_count: number;
   // 매장 브랜드 페이지 / 어드민
   is_published?: boolean | null;
   admin_password?: string | null;
@@ -130,10 +142,15 @@ export interface AdminCoupon {
   discount: string;
   discount_type: "rate" | "amount";
   category: StoreCategory;
+  start_date: string | null;   // 적용 시작일
   issued_date: string | null;
   expiry: string;
   quantity: number | null;     // 총 발행 수량 (null = 무제한)
   used_count: number;          // 사용 횟수
+  view_count: number;          // 노출 수
+  download_count: number;      // 다운로드 수
+  conditions: string | null;   // 이용 조건
+  max_per_user: number | null; // 1인 한도
   color: string;
   active: boolean;
   /** 값이 있으면 포인트 교환형 쿠폰 (NULL = 일반 매장 쿠폰) */
@@ -182,4 +199,115 @@ export async function adminUpsertOpening(o: AdminOpening): Promise<void> {
 
 export async function adminDeleteOpening(id: string): Promise<void> {
   await adminApiPost("store_openings", "DELETE", null, { eq: `id=eq.${id}` });
+}
+
+// ─── 매장 리뷰 (Store Reviews) ────────────────────────────────
+
+export interface AdminStoreReview {
+  id: number;
+  store_id: string;
+  store_name?: string;
+  user_id: string | null;
+  nickname: string;
+  rating: number;
+  content: string | null;
+  media_urls: string[] | null;
+  is_visible: boolean;
+  created_at: string;
+}
+
+export async function adminFetchReviews(storeId: string): Promise<AdminStoreReview[]> {
+  return adminApiGet<AdminStoreReview>("store_reviews", { order: "created_at.desc", eq: `store_id=eq.${storeId}` });
+}
+
+export async function adminUpdateReview(id: number, patch: Partial<AdminStoreReview>): Promise<void> {
+  await adminApiPost("store_reviews", "PATCH", patch, { eq: `id=eq.${id}` });
+}
+
+export async function adminDeleteReview(id: number): Promise<void> {
+  await adminApiPost("store_reviews", "DELETE", null, { eq: `id=eq.${id}` });
+}
+
+// ─── 매장/건물 미디어 (Store Media) ──────────────────────────
+
+export interface AdminStoreMedia {
+  id: number;
+  store_id: string | null;
+  building_id: string | null;
+  url: string;
+  media_type: "image" | "video";
+  caption: string | null;
+  sort_order: number;
+  is_primary: boolean;
+  uploaded_by: string | null;
+  created_at: string;
+}
+
+export async function adminFetchMedia(storeId: string): Promise<AdminStoreMedia[]> {
+  return adminApiGet<AdminStoreMedia>("store_media", { order: "sort_order", eq: `store_id=eq.${storeId}` });
+}
+
+export async function adminFetchBuildingMedia(buildingId: string): Promise<AdminStoreMedia[]> {
+  return adminApiGet<AdminStoreMedia>("store_media", { order: "sort_order", eq: `building_id=eq.${buildingId}` });
+}
+
+export async function adminCreateMedia(m: Omit<AdminStoreMedia, "id" | "created_at">): Promise<void> {
+  await adminApiPost("store_media", "POST", [m]);
+}
+
+export async function adminUpdateMedia(id: number, patch: Partial<AdminStoreMedia>): Promise<void> {
+  await adminApiPost("store_media", "PATCH", patch, { eq: `id=eq.${id}` });
+}
+
+export async function adminDeleteMedia(id: number): Promise<void> {
+  await adminApiPost("store_media", "DELETE", null, { eq: `id=eq.${id}` });
+}
+
+// ─── 정보 제안 (Store Suggestions) ───────────────────────────
+
+export interface AdminSuggestion {
+  id: number;
+  type: string;
+  suggestion_type: SuggestionChangeType | null;
+  store_id: string | null;
+  category: string | null;
+  sub_category: string | null;
+  store_name: string | null;
+  building_name: string | null;
+  floor: string | null;
+  phone: string | null;
+  hours: string | null;
+  description: string | null;
+  contact: string | null;
+  message: string | null;
+  status: "pending" | "reviewing" | "approved" | "rejected";
+  admin_note: string | null;
+  reviewed_by: string | null;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export async function adminFetchSuggestions(status?: string): Promise<AdminSuggestion[]> {
+  const eq = status ? `status=eq.${status}` : undefined;
+  return adminApiGet<AdminSuggestion>("store_suggestions", { order: "created_at.desc", eq });
+}
+
+export async function adminUpdateSuggestion(id: number, patch: Partial<AdminSuggestion>): Promise<void> {
+  await adminApiPost("store_suggestions", "PATCH", { ...patch, reviewed_at: new Date().toISOString() }, { eq: `id=eq.${id}` });
+}
+
+// ─── 쿠폰 통계 (Coupon Stats) ──────────────────────────────
+
+export interface CouponDownload {
+  id: number;
+  coupon_id: string;
+  user_id: string | null;
+  device_id: string | null;
+  downloaded_at: string;
+  used_at: string | null;
+  is_used: boolean;
+}
+
+export async function adminFetchCouponDownloads(couponId: string): Promise<CouponDownload[]> {
+  return adminApiGet<CouponDownload>("coupon_downloads", { order: "downloaded_at.desc", eq: `coupon_id=eq.${couponId}` });
 }
