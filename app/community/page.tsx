@@ -79,6 +79,16 @@ function PostCard({
 }) {
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const [liked, setLiked] = useState(false);
+  const [likeAnim, setLikeAnim] = useState(false);
+  const likeCount = post.likeCount + (liked ? 1 : 0);
+
+  function handleLike(e: React.MouseEvent) {
+    stop(e);
+    setLiked(v => !v);
+    setLikeAnim(true);
+    setTimeout(() => setLikeAnim(false), 500);
+  }
   const images = post.images ?? [];
   const videos = post.videos ?? [];
   return (
@@ -187,10 +197,14 @@ function PostCard({
 
           {/* Action row */}
           <div className="flex items-center gap-1 mt-3 -ml-2">
-            <button onClick={stop}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
-              <Heart size={17} />
-              <span className="text-[13px]">{post.likeCount}</span>
+            <button onClick={handleLike}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors ${liked ? "text-[#f04452]" : "text-gray-500"} active:bg-gray-50`}>
+              <Heart
+                size={17}
+                className={likeAnim ? "animate-[heart-bounce_0.5s_ease_both]" : ""}
+                fill={liked ? "#f04452" : "none"}
+              />
+              <span className="text-[13px]">{likeCount}</span>
             </button>
             <button onClick={goDetail}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2, Calendar } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 import type { AptMarketSummary } from "@/lib/reb-price";
@@ -153,6 +153,20 @@ export default function RealestatePage() {
     const map = new Map<string, number>();
     for (const r of trades) map.set(r.dong, (map.get(r.dong) ?? 0) + 1);
     return map;
+  }, [trades]);
+
+  // 같은 아파트 이름의 이전 거래와 가격 비교 (trades는 날짜 내림차순)
+  const priceDiff = useMemo(() => {
+    const seen = new Map<string, number>();
+    const result = new Map<number, "up" | "down" | "same">();
+    for (const t of trades) {
+      const prev = seen.get(t.apt_name);
+      if (prev !== undefined) {
+        result.set(t.id, t.deal_amount < prev ? "up" : t.deal_amount > prev ? "down" : "same");
+      }
+      if (!seen.has(t.apt_name)) seen.set(t.apt_name, t.deal_amount);
+    }
+    return result;
   }, [trades]);
 
   return (
@@ -318,7 +332,18 @@ export default function RealestatePage() {
                 >
                   <Star size={16} className={favApts.has(t.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
                 </button>
-                <p className="text-[15px] font-extrabold text-[#3182F6]">{fmt만원(t.deal_amount)}</p>
+                <div className="flex items-center gap-1">
+                  {priceDiff.get(t.id) === "up" && (
+                    <TrendingUp size={12} className="text-[#f04452]" />
+                  )}
+                  {priceDiff.get(t.id) === "down" && (
+                    <TrendingDown size={12} className="text-[#3182F6]" />
+                  )}
+                  <p className={`text-[15px] font-extrabold ${
+                    priceDiff.get(t.id) === "up" ? "text-[#f04452]" :
+                    priceDiff.get(t.id) === "down" ? "text-[#3182F6]" : "text-[#3182F6]"
+                  }`}>{fmt만원(t.deal_amount)}</p>
+                </div>
                 <p className="text-[10px] text-[#86868b]">{fmtDealDate(t.deal_year, t.deal_month, t.deal_day)} 거래</p>
               </div>
             </div>

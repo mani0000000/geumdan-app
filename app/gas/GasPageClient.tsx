@@ -365,10 +365,16 @@ export default function GasPageClient() {
                     }`}
                   >
                     {/* 순위 */}
-                    <div className="w-5 text-center shrink-0">
-                      <span className={`text-[12px] font-black ${
-                        idx === 0 ? "text-[#DC2626]" : idx === 1 ? "text-[#EA580C]" : idx === 2 ? "text-[#D97706]" : "text-[#aeaeb2]"
-                      }`}>{idx + 1}</span>
+                    <div className="w-6 text-center shrink-0">
+                      {idx === 0 ? (
+                        <span className="text-[18px] leading-none">🥇</span>
+                      ) : idx === 1 ? (
+                        <span className="text-[18px] leading-none">🥈</span>
+                      ) : idx === 2 ? (
+                        <span className="text-[18px] leading-none">🥉</span>
+                      ) : (
+                        <span className="text-[12px] font-black text-[#aeaeb2]">{idx + 1}</span>
+                      )}
                     </div>
 
                     {/* 브랜드 */}
