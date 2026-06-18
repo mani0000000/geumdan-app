@@ -9,12 +9,103 @@ import {
   adminFetchStores, adminCreateStore, adminUpdateStore, adminDeleteStore,
   type AdminBuilding, type AdminFloor, type AdminStore,
 } from "@/lib/db/admin-stores";
-import type { StoreCategory } from "@/lib/types";
-import { ALL_CATEGORIES, CAT_DOT } from "@/lib/constants/store-categories";
+import type { StoreCategory, StructuredHours, DayHours } from "@/lib/types";
+import { ALL_CATEGORIES, CAT_DOT, STORE_CATEGORY_TREE } from "@/lib/constants/store-categories";
 
 // ─── 상수 ────────────────────────────────────────────────────
 const CATS: StoreCategory[] = ALL_CATEGORIES;
 const CAT_COLOR: Record<StoreCategory, string> = CAT_DOT;
+
+const DAYS_KO: { key: keyof Omit<StructuredHours, "breakTime">; label: string }[] = [
+  { key: "mon", label: "월" }, { key: "tue", label: "화" }, { key: "wed", label: "수" },
+  { key: "thu", label: "목" }, { key: "fri", label: "금" }, { key: "sat", label: "토" },
+  { key: "sun", label: "일" },
+];
+
+const DEFAULT_DAY: DayHours = { open: "09:00", close: "21:00", closed: false };
+const DEFAULT_HOURS: StructuredHours = {
+  mon: { ...DEFAULT_DAY }, tue: { ...DEFAULT_DAY }, wed: { ...DEFAULT_DAY },
+  thu: { ...DEFAULT_DAY }, fri: { ...DEFAULT_DAY }, sat: { ...DEFAULT_DAY },
+  sun: { open: null, close: null, closed: true },
+};
+
+function StructuredHoursEditor({ value, onChange }: {
+  value: StructuredHours | null;
+  onChange: (v: StructuredHours | null) => void;
+}) {
+  const [enabled, setEnabled] = useState(value !== null);
+  const [hours, setHours] = useState<StructuredHours>(value ?? DEFAULT_HOURS);
+
+  function toggleEnabled(v: boolean) {
+    setEnabled(v);
+    onChange(v ? hours : null);
+  }
+
+  function updateDay(day: keyof Omit<StructuredHours, "breakTime">, patch: Partial<DayHours>) {
+    const next = { ...hours, [day]: { ...hours[day], ...patch } };
+    setHours(next);
+    if (enabled) onChange(next);
+  }
+
+  function updateBreak(field: "start" | "end", val: string) {
+    const bt = { ...(hours.breakTime ?? { start: "14:00", end: "15:00" }), [field]: val };
+    const next = { ...hours, breakTime: bt };
+    setHours(next);
+    if (enabled) onChange(next);
+  }
+
+  return (
+    <div className="border border-[#E5E8EB] rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between px-3 py-2.5 bg-[#F8F9FB]">
+        <span className="text-[12px] font-semibold text-[#4E5968]">구조화 영업시간</span>
+        <label className="flex items-center gap-1.5 cursor-pointer">
+          <input type="checkbox" checked={enabled} onChange={e => toggleEnabled(e.target.checked)} className="w-3.5 h-3.5" />
+          <span className="text-[11px] text-[#8B95A1]">사용</span>
+        </label>
+      </div>
+      {enabled && (
+        <div className="px-3 py-2 space-y-1.5">
+          {DAYS_KO.map(({ key, label }) => {
+            const d = hours[key];
+            return (
+              <div key={key} className="flex items-center gap-2">
+                <span className="w-5 text-[12px] font-bold text-[#4E5968] shrink-0">{label}</span>
+                <label className="flex items-center gap-1 cursor-pointer shrink-0">
+                  <input type="checkbox" checked={d.closed}
+                    onChange={e => updateDay(key, { closed: e.target.checked })}
+                    className="w-3 h-3" />
+                  <span className="text-[11px] text-[#8B95A1]">휴무</span>
+                </label>
+                {!d.closed && (
+                  <>
+                    <input type="time" value={d.open ?? ""}
+                      onChange={e => updateDay(key, { open: e.target.value })}
+                      className="border border-[#E5E8EB] rounded-lg px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-[#3182F6] w-24" />
+                    <span className="text-[11px] text-[#8B95A1]">~</span>
+                    <input type="time" value={d.close ?? ""}
+                      onChange={e => updateDay(key, { close: e.target.value })}
+                      className="border border-[#E5E8EB] rounded-lg px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-[#3182F6] w-24" />
+                  </>
+                )}
+              </div>
+            );
+          })}
+          <div className="flex items-center gap-2 pt-1 border-t border-[#F2F4F6]">
+            <span className="text-[11px] font-semibold text-[#8B95A1] shrink-0">브레이크</span>
+            <input type="time" value={hours.breakTime?.start ?? ""}
+              onChange={e => updateBreak("start", e.target.value)}
+              placeholder="없음"
+              className="border border-[#E5E8EB] rounded-lg px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-[#3182F6] w-24" />
+            <span className="text-[11px] text-[#8B95A1]">~</span>
+            <input type="time" value={hours.breakTime?.end ?? ""}
+              onChange={e => updateBreak("end", e.target.value)}
+              className="border border-[#E5E8EB] rounded-lg px-2 py-1 text-[12px] outline-none focus:ring-1 focus:ring-[#3182F6] w-24" />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
 const TEXTAREA = INPUT + " resize-none";
@@ -140,6 +231,9 @@ function FloorModal({ buildingId, onSave, onClose }: {
         level,
         has_restroom: hasRestroom,
         restroom_code: null,
+        restroom_location: null,
+        restroom_gender: null,
+        restroom_note: null,
         sort_order: level + 10,
       });
       onSave();
@@ -186,12 +280,13 @@ function FloorModal({ buildingId, onSave, onClose }: {
 
 // ─── 매장 추가/수정 모달 ──────────────────────────────────────
 const STORE_EMPTY: Omit<AdminStore, "id" | "building_id"> = {
-  floor_label: "", name: "", category: "기타",
-  phone: null, hours: null, is_open: true, is_premium: false,
+  floor_label: "", name: "", category: "기타", sub_category: null,
+  phone: null, hours: null, structured_hours: null, closed_days: null, break_time: null,
+  is_open: true, is_premium: false,
   x: 0, y: 0, w: 10, h: 10,
   open_date: null, logo_url: null, description: null,
   promo_text: null, emoji: "🏪", show_in_openings: null,
-  open_benefit: null, extra_info: null,
+  open_benefit: null, extra_info: null, avg_rating: null, review_count: 0,
 };
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
@@ -301,25 +396,49 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
               </Field>
               <Field label="업종 *">
                 <select className={SELECT} value={form.category}
-                  onChange={e => set("category", e.target.value as StoreCategory)}>
+                  onChange={e => {
+                    const cat = e.target.value as StoreCategory;
+                    set("category", cat);
+                    set("sub_category", null);
+                  }}>
                   {CATS.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
               </Field>
             </div>
+            {(STORE_CATEGORY_TREE[form.category]?.length ?? 0) > 0 && (
+              <Field label="세부업종">
+                <select className={SELECT} value={form.sub_category ?? ""}
+                  onChange={e => set("sub_category", e.target.value || null)}>
+                  <option value="">선택 안 함</option>
+                  {STORE_CATEGORY_TREE[form.category].map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </Field>
+            )}
             <Field label="매장명 *">
               <input className={INPUT} value={form.name} onChange={e => set("name", e.target.value)}
                 placeholder="예: 파리바게뜨" />
             </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="전화번호">
-                <input className={INPUT} value={form.phone ?? ""}
-                  onChange={e => set("phone", e.target.value || null)} placeholder="032-000-0000" />
-              </Field>
-              <Field label="영업시간">
-                <input className={INPUT} value={form.hours ?? ""}
-                  onChange={e => set("hours", e.target.value || null)} placeholder="10:00~22:00" />
-              </Field>
-            </div>
+            <Field label="전화번호">
+              <input className={INPUT} value={form.phone ?? ""}
+                onChange={e => set("phone", e.target.value || null)} placeholder="032-000-0000" />
+            </Field>
+            <Field label="영업시간 (간단 텍스트)">
+              <input className={INPUT} value={form.hours ?? ""}
+                onChange={e => set("hours", e.target.value || null)} placeholder="10:00~22:00 (공휴일 휴무)" />
+            </Field>
+            <StructuredHoursEditor
+              value={form.structured_hours}
+              onChange={v => set("structured_hours", v)}
+            />
+            <Field label="정기 휴무 (쉼표 구분)">
+              <input className={INPUT}
+                value={(form.closed_days ?? []).join(", ")}
+                onChange={e => {
+                  const arr = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+                  set("closed_days", arr.length > 0 ? arr : null);
+                }}
+                placeholder="매주 월요일, 공휴일" />
+            </Field>
             <div className="flex gap-4">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={form.is_open} onChange={e => set("is_open", e.target.checked)} className="w-4 h-4" />
@@ -617,13 +736,48 @@ function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSav
             onChange={e => set("total_stores", e.target.value ? Number(e.target.value) : null)} />
         </Field>
       </div>
-      <Field label="주차 안내">
-        <input className={INPUT} value={form.parking_info ?? ""}
-          onChange={e => set("parking_info", e.target.value || null)} />
-      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="주차 안내">
+          <input className={INPUT} value={form.parking_info ?? ""}
+            onChange={e => set("parking_info", e.target.value || null)} />
+        </Field>
+        <Field label="주차 대수">
+          <input className={INPUT} type="number" value={form.parking_spaces ?? ""}
+            onChange={e => set("parking_spaces", e.target.value ? Number(e.target.value) : null)}
+            placeholder="100" />
+        </Field>
+      </div>
       <Field label="영업시간">
         <input className={INPUT} value={form.open_time ?? ""}
           onChange={e => set("open_time", e.target.value || null)} />
+      </Field>
+      <Field label="건물 소개">
+        <textarea className={TEXTAREA} rows={2} value={form.description ?? ""}
+          onChange={e => set("description", e.target.value || null)}
+          placeholder="건물 한 줄 소개" />
+      </Field>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="웹사이트">
+          <input className={INPUT} value={form.website ?? ""}
+            onChange={e => set("website", e.target.value || null)} placeholder="https://..." />
+        </Field>
+        <Field label="인스타그램 아이디">
+          <input className={INPUT} value={form.instagram ?? ""}
+            onChange={e => set("instagram", e.target.value || null)} placeholder="@아이디" />
+        </Field>
+      </div>
+      <Field label="카카오 플레이스 ID">
+        <input className={INPUT} value={form.kakao_place_id ?? ""}
+          onChange={e => set("kakao_place_id", e.target.value || null)} placeholder="카카오맵 ID" />
+      </Field>
+      <Field label="편의시설 (쉼표 구분)">
+        <input className={INPUT}
+          value={(form.facilities ?? []).join(", ")}
+          onChange={e => {
+            const arr = e.target.value.split(",").map(s => s.trim()).filter(Boolean);
+            set("facilities", arr.length > 0 ? arr : null);
+          }}
+          placeholder="무료주차, 엘리베이터, 휠체어 접근" />
       </Field>
       <Field label="이미지">
         <ImageUpload

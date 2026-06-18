@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+const DEFAULT_ANON = "";
 
 function candidateKeys(): string[] {
   return [
@@ -187,7 +188,10 @@ async function runSql(key: string, sql: string): Promise<{ ok: boolean; error?: 
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const keys = candidateKeys();
   let lastError = "";
 
@@ -208,6 +212,9 @@ export async function POST() {
   }, { status: 500 });
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   return NextResponse.json({ sql: SETUP_SQL.trim() });
 }

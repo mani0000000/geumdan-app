@@ -31,8 +31,9 @@ const today = () => new Date().toISOString().slice(0, 10);
 const EMPTY_COUPON: AdminCoupon = {
   id: "", store_id: "", store_name: "", building_name: "",
   title: "", discount: "", discount_type: "rate",
-  category: "기타", issued_date: today(), expiry: "",
-  quantity: null, used_count: 0,
+  category: "기타", start_date: null, issued_date: today(), expiry: "",
+  quantity: null, used_count: 0, view_count: 0, download_count: 0,
+  conditions: null, max_per_user: null,
   color: "#3182F6", active: true,
   required_points: null, stock: null,
 };

@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://plwpfnbhyzblgvliiole.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
 // supabaseUrl/AnonKey have hard-coded fallbacks above, so the client is always
 // usable. Modules should import this flag instead of re-checking process.env,

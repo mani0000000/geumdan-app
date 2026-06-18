@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,7 +8,7 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyz
 
 function getKey() {
   // Must match app/api/admin/db/route.ts exactly
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   const key =
     process.env.SUPABASE_SERVICE_KEY ||
     process.env.NEXT_PUBLIC_ADMIN_DB_KEY ||
@@ -37,7 +38,10 @@ async function pgReq(key: string, method: string, path: string, body?: unknown) 
   return { ok: res.ok, status: res.status, body: text.slice(0, 200) };
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const { key, keySource, isServiceKey } = getKey();
 
   // ── 1. 읽기 테스트 ──────────────────────────────────────────

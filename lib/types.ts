@@ -156,13 +156,75 @@ export type StoreCategory =
   | "꽃집"
   | "기타";
 
+// 구조화 영업시간
+export interface DayHours {
+  open: string | null;   // "09:00"
+  close: string | null;  // "21:00"
+  closed: boolean;
+}
+
+export interface BreakTime {
+  start: string;  // "14:00"
+  end: string;    // "15:00"
+}
+
+export interface StructuredHours {
+  mon: DayHours;
+  tue: DayHours;
+  wed: DayHours;
+  thu: DayHours;
+  fri: DayHours;
+  sat: DayHours;
+  sun: DayHours;
+  breakTime?: BreakTime | null;
+}
+
+// 매장 리뷰
+export interface StoreReview {
+  id: number;
+  storeId: string;
+  userId?: string | null;
+  nickname: string;
+  rating: 1 | 2 | 3 | 4 | 5;
+  content?: string | null;
+  mediaUrls?: string[];
+  isVisible: boolean;
+  createdAt: string;
+}
+
+// 매장/건물 미디어
+export interface StoreMedia {
+  id: number;
+  storeId?: string | null;
+  buildingId?: string | null;
+  url: string;
+  mediaType: "image" | "video";
+  caption?: string | null;
+  sortOrder: number;
+  isPrimary: boolean;
+  uploadedBy?: string | null;
+  createdAt: string;
+}
+
 // Store suggestion (사용자 제안)
+export type SuggestionChangeType =
+  | "new_store"
+  | "closed"
+  | "name_change"
+  | "hours_change"
+  | "phone_change"
+  | "category_change"
+  | "other";
+
 export type SuggestionType = "simple" | "detail";
 
 export interface StoreSuggestion {
   id?: string;
   type: SuggestionType;
+  suggestionType?: SuggestionChangeType;
+  storeId?: string | null;
   category?: StoreCategory | string;
+  subCategory?: string;
   storeName?: string;
   buildingName?: string;
   floor?: string;
@@ -171,6 +233,8 @@ export interface StoreSuggestion {
   description?: string;
   message?: string;
   contact?: string;
+  status?: "pending" | "reviewing" | "approved" | "rejected";
+  adminNote?: string;
   createdAt?: string;
 }
 
@@ -303,9 +367,15 @@ export interface Store {
   id: string;
   name: string;
   category: StoreCategory;
+  subCategory?: string | null;
   phone?: string;
   hours?: string;
+  structuredHours?: StructuredHours | null;
+  closedDays?: string[] | null;
+  breakTime?: BreakTime | null;
   description?: string;
+  avgRating?: number | null;
+  reviewCount?: number;
   x: number; // SVG map position %
   y: number;
   w: number;

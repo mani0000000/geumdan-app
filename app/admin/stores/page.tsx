@@ -32,8 +32,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const EMPTY: Omit<AdminBuilding, "id"> = {
   name: "", address: "", lat: null, lng: null,
   floors: null, total_stores: null,
-  parking_info: null, open_time: null,
+  parking_info: null, parking_spaces: null, open_time: null,
   has_data: true, categories: null, image_url: null,
+  photo_north: null, photo_south: null, photo_east: null, photo_west: null,
+  description: null, website: null, instagram: null, kakao_place_id: null, facilities: null,
 };
 
 function BuildingModal({
@@ -153,7 +155,11 @@ function newCouponId() { return "cp_" + Date.now().toString(36); }
 const EMPTY_COUPON: AdminCoupon = {
   id: "", store_id: "", store_name: "", building_name: "",
   title: "", discount: "", discount_type: "rate",
-  category: "기타", expiry: "", color: "#3182F6", active: true,
+  category: "기타", start_date: null, issued_date: null, expiry: "",
+  quantity: null, used_count: 0, view_count: 0, download_count: 0,
+  conditions: null, max_per_user: null,
+  color: "#3182F6", active: true,
+  required_points: null, stock: null,
 };
 
 function CouponFormModal({ initial, buildingName, onSave, onClose }: {
@@ -421,6 +427,10 @@ export default function AdminStoresPage() {
           <p className="text-[13px] text-[#8B95A1] mt-0.5">DB: buildings 테이블 · {buildings.length}개 건물</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/admin/stores/suggestions"
+            className="flex items-center gap-1.5 px-3 py-2 border border-[#E5E8EB] rounded-xl text-[13px] font-bold text-[#4E5968] hover:bg-[#F2F4F6]">
+            💬 정보 제안
+          </Link>
           <button onClick={load} className="p-2 rounded-xl border border-[#E5E8EB] hover:bg-[#F2F4F6]">
             <RefreshCw size={15} className={loading ? "animate-spin text-[#3182F6]" : "text-[#8B95A1]"} />
           </button>

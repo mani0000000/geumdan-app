@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+const DEFAULT_ANON = "";
 
 function candidateKeys(): string[] {
   return [
@@ -84,6 +85,9 @@ END $$;`;
 
 // GET /api/admin/settings?key=xxx
 export async function GET(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const settingKey = req.nextUrl.searchParams.get("key");
   if (!settingKey) return NextResponse.json({ error: "key is required" }, { status: 400 });
 
@@ -96,6 +100,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/admin/settings  { key, value }
 export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const body = await req.json().catch(() => null);
   if (!body?.key || body.value === undefined) {
     return NextResponse.json({ error: "key and value are required" }, { status: 400 });

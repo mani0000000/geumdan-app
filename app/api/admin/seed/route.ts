@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/app/api/admin/auth/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getKey() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || anonKey;
   return { url, key };
 }
@@ -266,7 +267,10 @@ const SITE_SETTINGS = [
 
 // ─── 핸들러 ───────────────────────────────────────────────────
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
+  }
   const { url, key } = getKey();
 
   const results: Record<string, string> = {};

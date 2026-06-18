@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
-  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone, User, Fuel,
+  Building2, Tag, Store, ChevronRight, LogOut, LayoutDashboard, Menu, X, MessageSquare, TrendingUp, LayoutGrid, MapPin, Search, Image, Pill, Siren, Newspaper, Settings, ShoppingBag, Trophy, Camera, Users, Megaphone, User, Fuel, ExternalLink,
 } from "lucide-react";
 
 const NAV_GROUPS = [
@@ -119,7 +119,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           ))}
         </nav>
-        <div className="px-4 py-4 border-t border-white/10">
+        <div className="px-4 py-4 border-t border-white/10 space-y-1">
+          <Link href="/home" target="_blank"
+            className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] text-white/50 hover:text-white hover:bg-white/10 transition-all">
+            <ExternalLink size={14} />검단앱 바로가기
+          </Link>
           <button onClick={logout}
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-[13px] text-white/50 hover:text-white hover:bg-white/10 transition-all">
             <LogOut size={14} />로그아웃
@@ -174,7 +178,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </div>
               ))}
             </nav>
-            <div className="px-4 py-4 border-t border-white/10">
+            <div className="px-4 py-4 border-t border-white/10 space-y-1">
+              <Link href="/home" target="_blank" onClick={() => setDrawerOpen(false)}
+                className="w-full flex items-center gap-2 px-3 py-3 rounded-xl text-[14px] text-white/50 hover:text-white hover:bg-white/10">
+                <ExternalLink size={15} />검단앱 바로가기
+              </Link>
               <button onClick={logout}
                 className="w-full flex items-center gap-2 px-3 py-3 rounded-xl text-[14px] text-white/50 hover:text-white hover:bg-white/10">
                 <LogOut size={15} />로그아웃

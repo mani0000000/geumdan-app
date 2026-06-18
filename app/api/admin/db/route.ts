@@ -24,7 +24,7 @@ const ADMIN_TABLES = new Set([
 const ALLOWED_TABLES = new Set([...PUBLIC_TABLES, ...ADMIN_TABLES]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON  = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+const DEFAULT_ANON  = "";
 
 // 서버 인스턴스 내 작동 확인된 키 캐시 (재시작 시 초기화)
 let _cachedKey: string | null = null;

@@ -7,7 +7,7 @@ const SUPABASE_URL =
   "https://plwpfnbhyzblgvliiole.supabase.co";
 const SUPABASE_ANON_KEY =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
+  "";
 
 const BUCKET = "community-videos";
 const MAX_FILES = 3;

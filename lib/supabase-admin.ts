@@ -1,13 +1,8 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url =
-  process.env.NEXT_PUBLIC_SUPABASE_URL ||
-  "https://plwpfnbhyzblgvliiole.supabase.co";
-const FALLBACK_KEY = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
-const rawKey = process.env.NEXT_PUBLIC_ADMIN_DB_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || FALLBACK_KEY;
-const adminKey = (rawKey.startsWith("sb_publishable_") || rawKey.startsWith("sb_secret_"))
-  ? rawKey
-  : FALLBACK_KEY;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const rawKey = process.env.NEXT_PUBLIC_ADMIN_DB_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const adminKey = rawKey;
 
 // PostgREST (/rest/v1/) rejects sb_* keys as Bearer ("Invalid Compact JWS").
 // Storage (/storage/v1/) requires Authorization: Bearer even for sb_* keys.
