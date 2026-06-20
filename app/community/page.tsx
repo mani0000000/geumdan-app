@@ -79,6 +79,16 @@ function PostCard({
 }) {
   const goDetail = () => router.push(`/community/detail/?id=${post.id}`);
   const stop = (e: React.MouseEvent) => e.stopPropagation();
+  const [liked, setLiked] = useState(false);
+  const [likeAnim, setLikeAnim] = useState(false);
+  const likeCount = post.likeCount + (liked ? 1 : 0);
+
+  function handleLike(e: React.MouseEvent) {
+    stop(e);
+    setLiked(v => !v);
+    setLikeAnim(true);
+    setTimeout(() => setLikeAnim(false), 500);
+  }
   const images = post.images ?? [];
   const videos = post.videos ?? [];
   return (
@@ -187,10 +197,14 @@ function PostCard({
 
           {/* Action row */}
           <div className="flex items-center gap-1 mt-3 -ml-2">
-            <button onClick={stop}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
-              <Heart size={17} />
-              <span className="text-[13px]">{post.likeCount}</span>
+            <button onClick={handleLike}
+              className={`flex items-center gap-1.5 px-2 py-1.5 rounded-full transition-colors ${liked ? "text-[#f04452]" : "text-gray-500"} active:bg-gray-50`}>
+              <Heart
+                size={17}
+                className={likeAnim ? "animate-[heart-bounce_0.5s_ease_both]" : ""}
+                fill={liked ? "#f04452" : "none"}
+              />
+              <span className="text-[13px]">{likeCount}</span>
             </button>
             <button onClick={goDetail}
               className="flex items-center gap-1.5 px-2 py-1.5 rounded-full text-gray-500 active:bg-gray-50">
@@ -295,7 +309,8 @@ function CommunityTab() {
         <div className="flex gap-2 px-4 py-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
           {categories.map(cat => (
             <button key={cat} onClick={() => setActive(cat)}
-              className={`shrink-0 h-8 px-3.5 rounded-full text-[14px] font-medium transition-colors ${active === cat ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}>
+              className={`shrink-0 h-8 px-3.5 rounded-full text-[13px] font-bold transition-all active:scale-95 ${active === cat ? "text-white shadow-sm" : "bg-[#f5f5f7] text-[#6e6e73]"}`}
+              style={active === cat ? { background: "linear-gradient(135deg, #3182F6, #2563EB)" } : {}}>
               {cat}
             </button>
           ))}
@@ -466,7 +481,7 @@ function YouTubeCard({ video }: { video: { id: string; videoId: string; title: s
 
 // ─── 카드뉴스 그라디언트 팔레트 ──────────────────────────────
 const NEWS_GRADIENTS = [
-  { from: "#0058b0", to: "#0071e3" },
+  { from: "#2563EB", to: "#3182F6" },
   { from: "#065F46", to: "#059669" },
   { from: "#6D28D9", to: "#8B5CF6" },
   { from: "#B45309", to: "#D97706" },
@@ -1468,7 +1483,8 @@ function SoikContent() {
         <div className="flex gap-2">
           {mainTabs.map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-colors active:opacity-70 ${tab === t ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-500"}`}>
+              className={`flex-1 h-9 flex items-center justify-center text-[14px] font-semibold rounded-xl transition-all active:scale-[0.97] ${tab === t ? "text-white shadow-sm" : "bg-gray-100 text-gray-500"}`}
+              style={tab === t ? { background: "linear-gradient(135deg, #3182F6, #2563EB)" } : {}}>
               {t}
             </button>
           ))}

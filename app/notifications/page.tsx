@@ -21,7 +21,7 @@ const typeMeta: Record<NotificationType, {
 }> = {
   coupon_expiry: { icon: Ticket,         bg: "bg-[#FEF3C7]", fg: "text-[#D97706]", label: "쿠폰" },
   post_like:     { icon: ThumbsUp,       bg: "bg-[#FFE8EF]", fg: "text-[#D63384]", label: "좋아요" },
-  post_comment:  { icon: MessageSquare,  bg: "bg-[#e8f1fd]", fg: "text-[#0071e3]", label: "댓글" },
+  post_comment:  { icon: MessageSquare,  bg: "bg-[#e8f1fd]", fg: "text-[#3182F6]", label: "댓글" },
   comment_reply: { icon: MessageCircle,  bg: "bg-[#F3E5F5]", fg: "text-[#6A1B9A]", label: "답글" },
 };
 
@@ -89,7 +89,7 @@ export default function NotificationsPage() {
           <h1 className="text-[18px] font-bold text-[#1d1d1f] flex-1">알림</h1>
           {unreadCount > 0 && (
             <button onClick={handleMarkAll}
-              className="flex items-center gap-1 text-[13px] font-semibold text-[#0071e3] active:opacity-60">
+              className="flex items-center gap-1 text-[13px] font-semibold text-[#3182F6] active:opacity-60">
               <Check size={14} /> 전체 읽음
             </button>
           )}
@@ -126,7 +126,7 @@ export default function NotificationsPage() {
               return (
                 <button key={n.id} onClick={() => handleClick(n)}
                   className={`w-full text-left bg-white rounded-2xl px-4 py-3.5 flex items-start gap-3 active:bg-[#f5f5f7] transition-colors relative ${
-                    n.isRead ? "" : "ring-1 ring-[#0071e3]/20"
+                    n.isRead ? "" : "ring-1 ring-[#3182F6]/20"
                   }`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${meta.bg}`}>
                     <Icon size={18} className={meta.fg} />

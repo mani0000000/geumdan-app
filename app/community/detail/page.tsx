@@ -35,7 +35,7 @@ const catColor: Record<string, string> = {
   "분실/목격": "bg-[#FFEBEE] text-[#C62828]",
   동네질문: "bg-[#e8f1fd] text-[#1565C0]",
   소모임: "bg-[#F3E5F5] text-[#6A1B9A]",
-  전체: "bg-[#e8f1fd] text-[#0071e3]",
+  전체: "bg-[#e8f1fd] text-[#3182F6]",
   생활정보: "bg-[#F0FDF4] text-[#166534]",
   "육아/교육": "bg-[#FFF7ED] text-[#9A3412]",
   "취미/운동": "bg-[#EFF6FF] text-[#1D4ED8]",
@@ -439,7 +439,7 @@ function DetailContent() {
         </button>
         <div className="flex items-center gap-2">
           <button onClick={() => setBookmarked(!bookmarked)} className="active:opacity-60">
-            <Bookmark size={22} className={bookmarked ? "text-[#0071e3] fill-[#0071e3]" : "text-[#6e6e73]"} />
+            <Bookmark size={22} className={bookmarked ? "text-[#3182F6] fill-[#3182F6]" : "text-[#6e6e73]"} />
           </button>
           <button onClick={handleShare} className="active:opacity-60">
             <Share2 size={20} className="text-[#6e6e73]" />
@@ -478,10 +478,10 @@ function DetailContent() {
       <div className="flex-1 overflow-y-auto" onClick={() => setShowMenu(false)}>
         <article className="px-5 py-5 border-b border-[#f5f5f7]">
           <div className="flex items-center gap-2 mb-3">
-            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#0071e3]"}`}>
+            <span className={`text-[12px] font-bold px-2.5 py-0.5 rounded-full ${catColor[post.category] ?? "bg-[#e8f1fd] text-[#3182F6]"}`}>
               {post.category}
             </span>
-            {post.isPinned && <span className="text-[12px] text-[#0071e3] font-medium">📌 공지</span>}
+            {post.isPinned && <span className="text-[12px] text-[#3182F6] font-medium">📌 공지</span>}
           </div>
 
           <h1 className="text-[21px] font-bold text-[#1d1d1f] leading-snug mb-4">{post.title}</h1>
@@ -502,8 +502,8 @@ function DetailContent() {
           {/* Reaction bar */}
           <div className="flex items-center gap-4 mt-6 pt-5 border-t border-[#f5f5f7]">
             <button onClick={toggleLike}
-              className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#0071e3]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
-              <ThumbsUp size={15} className={liked ? "fill-[#0071e3]" : ""} />
+              className={`flex items-center gap-1.5 h-9 px-4 rounded-full transition-colors active:opacity-70 ${liked ? "bg-[#e8f1fd] text-[#3182F6]" : "bg-[#f5f5f7] text-[#6e6e73]"}`}>
+              <ThumbsUp size={15} className={liked ? "fill-[#3182F6]" : ""} />
               <span className="text-[14px] font-semibold">{likeCount}</span>
             </button>
             <div className="flex items-center gap-1.5 text-[#6e6e73]">
@@ -535,8 +535,8 @@ function DetailContent() {
                   <p className="text-[15px] text-[#1d1d1f] leading-relaxed">{c.content}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <button onClick={() => handleCommentLike(c.id)} className="flex items-center gap-1 active:opacity-60">
-                      <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#0071e3] fill-[#0071e3]" : "text-[#86868b]"} />
-                      <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                      <ThumbsUp size={12} className={commentLikes.has(c.id) ? "text-[#3182F6] fill-[#3182F6]" : "text-[#86868b]"} />
+                      <span className={`text-[13px] ${commentLikes.has(c.id) ? "text-[#3182F6]" : "text-[#86868b]"}`}>
                         {c.likeCount}
                       </span>
                     </button>
@@ -575,7 +575,7 @@ function DetailContent() {
                 className="flex-1 bg-transparent text-[15px] text-[#1d1d1f] placeholder:text-[#86868b] outline-none" />
               <button onClick={submitComment} disabled={!commentText.trim() || submittingComment}
                 className="shrink-0 active:opacity-60 disabled:opacity-30">
-                <Send size={18} className="text-[#0071e3]" />
+                <Send size={18} className="text-[#3182F6]" />
               </button>
             </div>
           </div>

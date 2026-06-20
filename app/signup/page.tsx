@@ -55,13 +55,13 @@ export default function SignupPage() {
   const CheckRow = ({ k, label, detailType }: { k: keyof typeof agree; label: string; detailType?: string }) => (
     <div className="flex items-center gap-3 py-3">
       <button onClick={() => toggle(k)} className="flex items-center gap-3 flex-1 active:opacity-70 text-left">
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${agree[k] ? "bg-[#0071e3] border-[#0071e3]" : "border-[#d2d2d7]"}`}>
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${agree[k] ? "bg-[#3182F6] border-[#3182F6]" : "border-[#d2d2d7]"}`}>
           {agree[k] && <Check size={11} className="text-white" strokeWidth={3} />}
         </div>
         <span className="text-[15px] text-[#1d1d1f]">{label}</span>
       </button>
       {detailType && (
-        <Link href={`/terms/${detailType}`} className="text-[13px] text-[#0071e3] font-semibold shrink-0 active:opacity-60">
+        <Link href={`/terms/${detailType}`} className="text-[13px] text-[#3182F6] font-semibold shrink-0 active:opacity-60">
           보기
         </Link>
       )}
@@ -82,7 +82,7 @@ export default function SignupPage() {
       <div className="px-6 pb-0">
         <div className="flex gap-1 mb-4">
           {steps.map((_, i) => (
-            <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`} />
+            <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i <= step ? "bg-[#3182F6]" : "bg-[#d2d2d7]"}`} />
           ))}
         </div>
         <p className="text-[13px] text-[#6e6e73] mb-1">{step + 1} / {steps.length}</p>
@@ -97,7 +97,7 @@ export default function SignupPage() {
         {step === 0 && (
           <div className="flex flex-col gap-1">
             <button onClick={toggleAll} className="flex items-center gap-3 p-4 rounded-2xl bg-[#f5f5f7] active:opacity-70">
-              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${agree.all ? "bg-[#0071e3] border-[#0071e3]" : "border-[#d2d2d7]"}`}>
+              <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${agree.all ? "bg-[#3182F6] border-[#3182F6]" : "border-[#d2d2d7]"}`}>
                 {agree.all && <Check size={13} className="text-white" strokeWidth={3} />}
               </div>
               <span className="text-[16px] font-bold text-[#1d1d1f]">전체 동의</span>
@@ -115,18 +115,18 @@ export default function SignupPage() {
           <div className="flex flex-col gap-3">
             <div className="flex gap-2">
               <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="휴대폰 번호"
-                className="flex-1 h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3]" />
+                className="flex-1 h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6]" />
               <button onClick={async () => { setLoading(true); await new Promise(r=>setTimeout(r,800)); setCodeSent(true); setLoading(false); }}
                 disabled={phone.length < 10 || loading}
-                className="h-[52px] px-4 rounded-xl bg-[#0071e3] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#0058b0]">
+                className="h-[52px] px-4 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#2563EB]">
                 {loading ? "전송중..." : "인증번호"}
               </button>
             </div>
             {codeSent && (
               <>
                 <input value={code} onChange={e => setCode(e.target.value)} type="text" placeholder="인증번호 6자리" maxLength={6}
-                  className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3]" />
-                <p className="text-[13px] text-[#0071e3] pl-1">인증번호가 발송됐어요 (유효시간 3분)</p>
+                  className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6]" />
+                <p className="text-[13px] text-[#3182F6] pl-1">인증번호가 발송됐어요 (유효시간 3분)</p>
               </>
             )}
           </div>
@@ -135,13 +135,13 @@ export default function SignupPage() {
         {step === 2 && (
           <div className="flex flex-col gap-4">
             <input value={nickname} onChange={e => setNickname(e.target.value)} placeholder="닉네임 (2~12자)"
-              className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3]" />
+              className="w-full h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6]" />
             <div>
               <p className="text-[14px] text-[#6e6e73] mb-2">거주 동네</p>
               <div className="grid grid-cols-3 gap-2">
                 {dongs.map(d => (
                   <button key={d} onClick={() => setDong(d)}
-                    className={`h-10 rounded-xl text-[14px] font-medium transition-colors active:opacity-70 ${dong === d ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"}`}>
+                    className={`h-10 rounded-xl text-[14px] font-medium transition-colors active:opacity-70 ${dong === d ? "bg-[#3182F6] text-white" : "bg-[#f5f5f7] text-[#1d1d1f]"}`}>
                     {d}
                   </button>
                 ))}
@@ -155,7 +155,7 @@ export default function SignupPage() {
                   onChange={e => setPw(e.target.value)}
                   type={showPw ? "text" : "password"}
                   placeholder="비밀번호"
-                  className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#0071e3]"
+                  className="w-full h-[52px] px-4 pr-12 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6]"
                 />
                 <button
                   type="button"
@@ -199,7 +199,7 @@ export default function SignupPage() {
                       ? "bg-[#FEF2F2] focus:ring-[#F04452] ring-1 ring-[#F04452]"
                       : pwMatch
                       ? "bg-[#F0FDF4] focus:ring-[#34C759] ring-1 ring-[#34C759]"
-                      : "bg-[#f5f5f7] focus:ring-[#0071e3]"
+                      : "bg-[#f5f5f7] focus:ring-[#3182F6]"
                   }`}
                 />
                 <button
@@ -227,7 +227,7 @@ export default function SignupPage() {
               (step === 2 && (!nickname || !dong || !pwRulesPassed || !pwMatch)) ||
               loading
             }
-            className="w-full h-[52px] rounded-xl bg-[#0071e3] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#0058b0] transition-colors disabled:opacity-40">
+            className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#2563EB] transition-colors disabled:opacity-40">
             {loading
               ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               : step === 2 ? "가입 완료" : "다음"}

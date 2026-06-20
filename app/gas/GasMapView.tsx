@@ -66,7 +66,7 @@ const myLocationIcon = L.divIcon({
   className:  "",
   iconSize:   [28, 28] as [number, number],
   iconAnchor: [14, 14] as [number, number],
-  html: `<div style="width:28px;height:28px;background:#0071e3;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(49,130,246,.2),0 2px 8px rgba(0,0,0,.3)"></div>`,
+  html: `<div style="width:28px;height:28px;background:#3182F6;border-radius:50%;border:3px solid white;box-shadow:0 0 0 6px rgba(49,130,246,.2),0 2px 8px rgba(0,0,0,.3)"></div>`,
 });
 
 // ── Props ─────────────────────────────────────────────────────
@@ -143,7 +143,7 @@ export default function GasMapView({ stations, selectedId, onSelect, flyToStatio
         style={{
           position: "absolute", bottom: 80, right: 16, zIndex: 1000,
           width: 46, height: 46, background: "white",
-          border: myPos ? "2px solid #0071e3" : "1.5px solid #d2d2d7",
+          border: myPos ? "2px solid #3182F6" : "1.5px solid #d2d2d7",
           borderRadius: 14, boxShadow: "0 2px 10px rgba(0,0,0,.15)",
           display: "flex", alignItems: "center", justifyContent: "center",
           cursor: locating ? "wait" : "pointer",
@@ -152,16 +152,16 @@ export default function GasMapView({ stations, selectedId, onSelect, flyToStatio
         {locating ? (
           <div style={{
             width: 18, height: 18,
-            border: "2.5px solid #0071e3",
+            border: "2.5px solid #3182F6",
             borderTopColor: "transparent",
             borderRadius: "50%",
             animation: "spin .8s linear infinite",
           }} />
         ) : (
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-            stroke={myPos ? "#0071e3" : "#6e6e73"} strokeWidth="2.2"
+            stroke={myPos ? "#3182F6" : "#6e6e73"} strokeWidth="2.2"
             strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="3" fill={myPos ? "#0071e3" : "none"} />
+            <circle cx="12" cy="12" r="3" fill={myPos ? "#3182F6" : "none"} />
             <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22" />
             <circle cx="12" cy="12" r="7" strokeWidth="1.2" opacity=".35" />
           </svg>

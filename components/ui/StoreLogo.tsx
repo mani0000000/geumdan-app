@@ -33,7 +33,7 @@ const BRANDS: Record<string, { bg: string; color: string; label: string; logo?: 
     logo: "https://logo.clearbit.com/theborn.co.kr",
   },
   "약국": {
-    bg: "#0071e3", color: "#fff", label: "약",
+    bg: "#3182F6", color: "#fff", label: "약",
   },
   "파리바게뜨": {
     bg: "#003087", color: "#fff", label: "P",

@@ -110,7 +110,7 @@ function SectionLabel({
         <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
       </div>
       {onClick ? (
-        <button onClick={onClick} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5 active:opacity-60">
+        <button onClick={onClick} className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5 active:opacity-60">
           {linkLabel} <ChevronRight size={13} />
         </button>
       ) : right}
@@ -265,7 +265,7 @@ export default function MyPage() {
     {
       title: "내 활동",
       items: [
-        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#0071e3]", href: "/community/" },
+        { icon: FileText, label: "내가 쓴 글", badge: String(postCount), color: "text-[#3182F6]", href: "/community/" },
         { icon: MessageSquare, label: "내가 쓴 댓글", badge: String(commentCount), color: "text-[#8B5CF6]", href: null, action: handleShowMyComments },
         { icon: Bookmark, label: "저장한 글", badge: savedCount > 0 ? String(savedCount) : null, color: "text-[#00C471]", href: "/mypage/saved/" },
         { icon: Tag, label: "다운로드한 쿠폰", badge: String(couponCount), color: "text-[#F59E0B]", href: "/mypage/coupons/" },
@@ -328,10 +328,10 @@ export default function MyPage() {
           <div className="mt-4">
             <div className="flex justify-between mb-1.5">
               <span className="text-[12px] text-[#6e6e73]">레벨 진행도</span>
-              <span className="text-[12px] font-bold text-[#0071e3]">{levelPct[level] ?? 15}%</span>
+              <span className="text-[12px] font-bold text-[#3182F6]">{levelPct[level] ?? 15}%</span>
             </div>
             <div className="h-1.5 bg-[#f5f5f7] rounded-full overflow-hidden">
-              <div className="h-full bg-[#0071e3] rounded-full transition-all" style={{ width: `${levelPct[level] ?? 15}%` }} />
+              <div className="h-full bg-[#3182F6] rounded-full transition-all" style={{ width: `${levelPct[level] ?? 15}%` }} />
             </div>
           </div>
           <div className="flex mt-4 bg-[#f5f5f7] rounded-xl overflow-hidden">
@@ -457,8 +457,8 @@ export default function MyPage() {
       {widgetCfg.rewards && <>
       <SectionLabel
         label="포인트 교환"
-        icon={<Gift size={18} className="text-[#0071e3]" />}
-        right={<span className="text-[13px] font-bold text-[#0071e3]">{gameStats.points.toLocaleString()}P 보유</span>}
+        icon={<Gift size={18} className="text-[#3182F6]" />}
+        right={<span className="text-[13px] font-bold text-[#3182F6]">{gameStats.points.toLocaleString()}P 보유</span>}
       />
       <div className={`mx-4 ${CARD}`}>
         <div className="p-3 space-y-2">
@@ -471,7 +471,7 @@ export default function MyPage() {
                 <div className="flex-1 min-w-0">
                   <p className="text-[14px] font-bold text-[#1d1d1f] truncate">{r.title}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[13px] font-bold text-[#0071e3]">{r.cost}P</span>
+                    <span className="text-[13px] font-bold text-[#3182F6]">{r.cost}P</span>
                     <span className="text-[12px] text-[#6e6e73]">잔여 {r.stock}개</span>
                   </div>
                 </div>
@@ -485,14 +485,14 @@ export default function MyPage() {
                     <button onClick={() => setRedeemTarget(null)}
                       className="h-8 px-2.5 bg-[#d2d2d7] rounded-xl text-[12px] font-bold text-[#424245] active:opacity-70">취소</button>
                     <button onClick={() => handleRedeemConfirm(r)}
-                      className="h-8 px-2.5 bg-[#0071e3] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
+                      className="h-8 px-2.5 bg-[#3182F6] rounded-xl text-[12px] font-bold text-white active:opacity-70">확인</button>
                   </div>
                 ) : (
                   <button
                     onClick={() => canRedeem && setRedeemTarget(r.id)}
                     disabled={!canRedeem}
                     className={`h-8 px-3 rounded-xl text-[13px] font-bold transition-colors ${
-                      canRedeem ? "bg-[#0071e3] text-white active:bg-[#0058b0]" : "bg-[#d2d2d7] text-[#86868b]"
+                      canRedeem ? "bg-[#3182F6] text-white active:bg-[#2563EB]" : "bg-[#d2d2d7] text-[#86868b]"
                     }`}>
                     교환
                   </button>
@@ -501,7 +501,7 @@ export default function MyPage() {
             );
           })}
           <div className="bg-[#e8f1fd] rounded-xl px-3 py-2.5">
-            <p className="text-[13px] text-[#0071e3] leading-relaxed">
+            <p className="text-[13px] text-[#3182F6] leading-relaxed">
               💡 글 작성 <strong>+10P</strong> · 댓글 <strong>+3P</strong> · 좋아요 <strong>+2P</strong> (주 {WEEKLY_LIKES_MAX}회)
             </p>
           </div>
@@ -516,7 +516,7 @@ export default function MyPage() {
         {posts.slice(0, 3).map(p => (
           <button key={p.id} onClick={() => router.push(`/community/detail/?id=${p.id}`)}
             className="w-full px-4 py-3 flex items-start gap-3 active:bg-[#f5f5f7] text-left">
-            <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
+            <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">{p.category}</span>
             <div className="flex-1 min-w-0">
               <p className="text-[14px] font-medium text-[#1d1d1f] truncate">{p.title}</p>
               <p className="text-[12px] text-[#86868b] mt-0.5">{p.createdAt.slice(0, 10)} · ❤️ {p.likeCount}</p>
@@ -544,7 +544,7 @@ export default function MyPage() {
                   <Icon size={18} className={`${color} mr-3 shrink-0`} />
                   <span className="flex-1 text-[15px] text-[#1d1d1f] text-left">{label}</span>
                   {badge !== null && badge !== "0" && (
-                    <span className="bg-[#e8f1fd] text-[#0071e3] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
+                    <span className="bg-[#e8f1fd] text-[#3182F6] text-[13px] font-bold px-2 py-0.5 rounded-full mr-2">{badge}</span>
                   )}
                   <ChevronRight size={16} className="text-[#d2d2d7]" />
                 </button>
@@ -559,12 +559,12 @@ export default function MyPage() {
                 <p className="text-[15px] font-bold text-[#1d1d1f] mb-3">
                   내가 쓴 댓글
                   {myComments.length > 0 && (
-                    <span className="ml-1.5 text-[13px] font-semibold text-[#0071e3]">{myComments.length}개</span>
+                    <span className="ml-1.5 text-[13px] font-semibold text-[#3182F6]">{myComments.length}개</span>
                   )}
                 </p>
                 {myCommentsLoading ? (
                   <div className="py-6 flex flex-col items-center gap-2">
-                    <div className="w-6 h-6 border-2 border-[#0071e3] border-t-transparent rounded-full animate-spin" />
+                    <div className="w-6 h-6 border-2 border-[#3182F6] border-t-transparent rounded-full animate-spin" />
                     <p className="text-[12px] text-[#86868b]">불러오는 중...</p>
                   </div>
                 ) : myComments.length === 0 ? (
@@ -582,7 +582,7 @@ export default function MyPage() {
                         <div className="flex items-center gap-1.5 mb-2">
                           <MessageSquare size={11} className="text-[#8B5CF6] shrink-0" />
                           {c.postCategory && (
-                            <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#0071e3] px-1.5 py-0.5 rounded-full shrink-0">{c.postCategory}</span>
+                            <span className="text-[10px] font-bold bg-[#e8f1fd] text-[#3182F6] px-1.5 py-0.5 rounded-full shrink-0">{c.postCategory}</span>
                           )}
                           <span className="text-[11px] text-[#86868b] truncate flex-1">{c.postTitle ?? "게시글"}</span>
                         </div>

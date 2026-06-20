@@ -51,7 +51,7 @@ export default function SavedPostsPage() {
           <p className="text-[13px] text-[#86868b]">게시글 상세에서 북마크 버튼을 눌러 저장해 보세요.</p>
           <button
             onClick={() => router.push("/community/")}
-            className="mt-2 h-10 px-6 bg-[#0071e3] text-white rounded-xl text-[14px] font-medium"
+            className="mt-2 h-10 px-6 bg-[#3182F6] text-white rounded-xl text-[14px] font-medium"
           >
             커뮤니티 보기
           </button>
@@ -64,7 +64,7 @@ export default function SavedPostsPage() {
                 onClick={() => router.push(`/community/detail/?id=${post.post_id}`)}
                 className="flex-1 flex items-start gap-3 text-left active:opacity-70 min-w-0"
               >
-                <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
+                <span className="text-[12px] font-bold bg-[#e8f1fd] text-[#3182F6] px-2 py-0.5 rounded-full shrink-0 mt-0.5">
                   {post.category}
                 </span>
                 <div className="flex-1 min-w-0">

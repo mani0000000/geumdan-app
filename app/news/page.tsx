@@ -16,7 +16,7 @@ const tabIcon: Record<NewsType, string> = { 뉴스: "📰", 유튜브: "▶️",
 
 // Gradient palettes for card news
 const cardGradients = [
-  "from-[#0058b0] to-[#0071e3]",
+  "from-[#2563EB] to-[#3182F6]",
   "from-[#065F46] to-[#00C471]",
   "from-[#7C3AED] to-[#A78BFA]",
   "from-[#B45309] to-[#F59E0B]",

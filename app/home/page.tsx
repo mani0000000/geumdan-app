@@ -142,7 +142,7 @@ function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose:
         {dDay !== null && (
           <div className={`mx-5 mb-3 rounded-xl px-4 py-2.5 flex items-center justify-between ${dDay <= 3 ? "bg-[#FFF0F0]" : "bg-[#e8f1fd]"}`}>
             <span className="text-[13px] font-semibold text-[#424245]">혜택 마감까지</span>
-            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
               {dDay > 0 ? `D-${dDay}` : dDay === 0 ? "오늘 마감!" : "종료"}
             </span>
           </div>
@@ -169,7 +169,7 @@ function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose:
         )}
         <div className="px-5 pb-10 pt-1">
           <button onClick={onClose}
-            className="w-full h-12 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:bg-[#0058b0]">
+            className="w-full h-12 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:bg-[#2563EB]">
             확인
           </button>
         </div>
@@ -231,7 +231,7 @@ function NewOpeningsSection() {
               <div className="px-3 py-2.5">
                 <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{s.storeName}</p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] font-semibold text-[#0071e3]">{s.floor}</span>
+                  <span className="text-[11px] font-semibold text-[#3182F6]">{s.floor}</span>
                   <span className="text-[10px] text-[#d2d2d7]">·</span>
                   <span className="text-[11px] text-[#6e6e73]">{s.category}</span>
                 </div>
@@ -287,7 +287,7 @@ function CommunityWidget() {
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[11px] font-semibold text-[#0071e3] bg-[#e8f1fd] px-1.5 py-0.5 rounded-full">
+                <span className="text-[11px] font-semibold text-[#3182F6] bg-[#EFF6FF] px-1.5 py-0.5 rounded-full">
                   {post.category}
                 </span>
                 {post.isHot && (
@@ -313,7 +313,7 @@ function CommunityWidget() {
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold active:bg-[#f5f5f7]">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#3182F6] font-semibold active:bg-[#f5f5f7]">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -335,7 +335,7 @@ function NewsWidget() {
     <section className="mx-4 mb-1 space-y-2">
       <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
         className="block rounded-2xl overflow-hidden active:opacity-90"
-        style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
+        style={{ background: "linear-gradient(135deg, #3182F6, #7C3AED)" }}>
         <div className="p-4">
           <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
             {topNews[0].source}
@@ -354,7 +354,7 @@ function NewsWidget() {
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] text-[#0071e3] font-semibold">{item.source}</span>
+                <span className="text-[11px] text-[#3182F6] font-semibold">{item.source}</span>
                 <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
               </div>
             </div>
@@ -362,7 +362,7 @@ function NewsWidget() {
           </a>
         ))}
         <Link href="/community?tab=뉴스"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#3182F6] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -417,7 +417,7 @@ function YouTubeCard({ v }: { v: YouTubeVideo }) {
           <p className="text-[11px] text-[#86868b]">{v.channelName}</p>
           <a href={v.url} target="_blank" rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            className="text-[11px] text-[#0071e3] active:opacity-70">외부 열기</a>
+            className="text-[11px] text-[#3182F6] active:opacity-70">외부 열기</a>
         </div>
       </div>
     </div>
@@ -582,7 +582,7 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
               {place.phone && (
                 <div className="flex items-start gap-2.5">
                   <Phone size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
-                  <a href={`tel:${place.phone}`} className="text-[13px] text-[#0071e3]">{place.phone}</a>
+                  <a href={`tel:${place.phone}`} className="text-[13px] text-[#3182F6]">{place.phone}</a>
                 </div>
               )}
             </div>
@@ -722,7 +722,7 @@ function TideSection() {
             {nextLowTide && (
               <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[78px]">
                 <p className="text-[11px] text-blue-500 font-semibold">다음 저조</p>
-                <p className="text-[21px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
+                <p className="text-[21px] font-black text-[#3182F6] leading-tight">{nextLowTide.timeStr}</p>
               </div>
             )}
           </div>
@@ -834,7 +834,7 @@ function TideSection() {
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
             <Link href="/transport/?tab=가볼만한곳"
-              className="text-[12px] text-[#0071e3] font-medium flex items-center gap-0.5">
+              className="text-[12px] text-[#3182F6] font-medium flex items-center gap-0.5">
               전체보기 <ChevronRight size={12} />
             </Link>
           </div>
@@ -1206,8 +1206,8 @@ function MartSection() {
         {/* 위치 기준 표시줄 */}
         <div className="px-4 py-2 flex items-center justify-between gap-2 border-b border-[#f5f5f7]">
           <div className="flex items-center gap-1.5">
-            <MapPin size={11} className={locState === "ok" ? "text-[#0071e3]" : "text-[#86868b]"} />
-            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#0071e3]" : "text-[#6e6e73]"}`}>
+            <MapPin size={11} className={locState === "ok" ? "text-[#3182F6]" : "text-[#86868b]"} />
+            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#3182F6]" : "text-[#6e6e73]"}`}>
               {locLabel}
             </span>
           </div>
@@ -1216,8 +1216,8 @@ function MartSection() {
             className="flex items-center gap-1 px-2 py-1 rounded-lg active:bg-[#f5f5f7]"
             aria-label="위치 새로고침"
           >
-            <RefreshCw size={11} className={`text-[#0071e3] ${locState === "loading" ? "animate-spin" : ""}`} />
-            <span className="text-[11px] text-[#0071e3] font-semibold">위치 갱신</span>
+            <RefreshCw size={11} className={`text-[#3182F6] ${locState === "loading" ? "animate-spin" : ""}`} />
+            <span className="text-[11px] text-[#3182F6] font-semibold">위치 갱신</span>
           </button>
         </div>
 
@@ -1322,7 +1322,7 @@ function MartSection() {
                     {mart.phone && (
                       <a href={`tel:${mart.phone}`}
                         className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center">
-                        <Phone size={14} className="text-[#0071e3]" />
+                        <Phone size={14} className="text-[#3182F6]" />
                       </a>
                     )}
                     <button
@@ -1341,7 +1341,7 @@ function MartSection() {
         {marts.length > MART_INITIAL_COUNT && (
           <button
             onClick={() => setShowAll(v => !v)}
-            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#0071e3] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
+            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#3182F6] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
           >
             {showAll
               ? <>접기 <ChevronUp size={14} /></>
@@ -1664,8 +1664,8 @@ function PharmacySection() {
         {/* 상태 배너 */}
         {(isWeekend || isNight) && mainType === "약국" && (
           <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#e8f1fd]"}`}>
-            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#0071e3]"} />
-            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#0071e3]"}`}>
+            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#3182F6]"} />
+            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#3182F6]"}`}>
               {isNight ? "지금은 심야 시간이에요 — 운영 중인 약국을 확인하세요" : "오늘은 주말이에요 — 운영 약국을 확인하세요"}
             </span>
           </div>
@@ -1684,7 +1684,7 @@ function PharmacySection() {
           {(["약국", "응급실", "소아응급실"] as EmergencyType[]).map(t => (
             <button key={t} onClick={() => { setMainType(t); setShowAll(false); }}
               className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${mainType === t
-                ? t === "약국" ? "text-[#0071e3] border-[#0071e3]"
+                ? t === "약국" ? "text-[#3182F6] border-[#3182F6]"
                   : t === "응급실" ? "text-[#F04452] border-[#F04452]"
                   : "text-[#F97316] border-[#F97316]"
                 : "text-[#86868b] border-transparent"}`}>
@@ -1699,10 +1699,10 @@ function PharmacySection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 {geoStatus === "loading"
-                  ? <Loader2 size={12} className="text-[#0071e3] animate-spin shrink-0" />
-                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"} />
+                  ? <Loader2 size={12} className="text-[#3182F6] animate-spin shrink-0" />
+                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#3182F6]" : "text-[#86868b]"} />
                 }
-                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#3182F6]" : "text-[#86868b]"}`}>
                   {locLabel}
                 </span>
               </div>
@@ -1754,7 +1754,7 @@ function PharmacySection() {
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
-                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
+                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#3182F6]" : "text-[#86868b]"}`}>
                           {distLabel}
                         </span>
                       </div>
@@ -1787,7 +1787,7 @@ function PharmacySection() {
                         )}
                         {p.weekendHours && todayLabel !== "주말" && (
                           <span className="text-[11px] text-[#86868b]">
-                            <span className="font-semibold text-[#0071e3]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
+                            <span className="font-semibold text-[#3182F6]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
                           </span>
                         )}
                         {p.nightHours && todayLabel !== "심야" && (
@@ -1801,12 +1801,12 @@ function PharmacySection() {
                     <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
                       <div className="flex items-center gap-1.5">
                         <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                          <Phone size={14} className="text-[#0071e3]" />
+                          <Phone size={14} className="text-[#3182F6]" />
                         </a>
                         <button
                           onClick={() => setMapTarget({ name: p.name, address: p.address })}
                           className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                          <MapPin size={14} className="text-[#0071e3]" />
+                          <MapPin size={14} className="text-[#3182F6]" />
                         </button>
                       </div>
                     </div>
@@ -2012,7 +2012,7 @@ function WidgetSettingsSheet({
               초기화
             </button>
             <button onClick={() => { onSave(draft); onClose(); }}
-              className="flex-1 h-12 rounded-2xl bg-[#0071e3] text-white text-[15px] font-bold active:bg-[#0058b0] transition-colors">
+              className="flex-1 h-12 rounded-2xl bg-[#0071e3] text-white text-[15px] font-bold active:bg-[#2563EB] transition-colors">
               완료
             </button>
           </div>
@@ -2037,12 +2037,15 @@ function SectionLabel({
   return (
     <div className="flex items-center justify-between px-4 pt-6 pb-3">
       <div className="flex items-center gap-2.5">
-        <div className="w-[3px] h-[18px] bg-[#0071e3] rounded-full shrink-0" />
-        <span className="text-[19px] font-extrabold text-[#1d1d1f] tracking-tight">{label}</span>
+        <span
+          className="w-1 h-5 rounded-full shrink-0"
+          style={{ background: "linear-gradient(180deg, #3182F6 0%, #7C3AED 100%)" }}
+        />
+        <span className="text-[20px] font-extrabold text-[#1d1d1f] tracking-tight">{label}</span>
         {badge}
       </div>
       {href && (
-        <Link href={href} className="text-[13px] text-[#0071e3] font-semibold flex items-center gap-0.5 active:opacity-60">
+        <Link href={href} className="text-[13px] text-[#3182F6] font-semibold flex items-center gap-0.5 active:opacity-60">
           {linkLabel} <ChevronRight size={13} />
         </Link>
       )}
@@ -2110,7 +2113,7 @@ function GreetingBanner({ weather, weatherLoading, nickname }: {
     hour < 6  ? { gradFrom: "#1a1a2e", gradTo: "#0f3460" }
     : hour < 9  ? { gradFrom: "#1e3a8a", gradTo: "#3b82f6" }
     : hour < 12 ? { gradFrom: "#0071e3", gradTo: "#38bdf8" }
-    : hour < 17 ? { gradFrom: "#0058b0", gradTo: "#0071e3" }
+    : hour < 17 ? { gradFrom: "#2563EB", gradTo: "#0071e3" }
     : hour < 20 ? { gradFrom: "#7c3aed", gradTo: "#c026d3" }
     :             { gradFrom: "#1e1b4b", gradTo: "#312e81" };
 
@@ -2440,7 +2443,7 @@ function HomeTransportWidget() {
           <button onClick={() => router.push("/transport/")}
             className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-              <Bus size={18} className="text-[#0071e3]" />
+              <Bus size={18} className="text-[#3182F6]" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
@@ -2476,13 +2479,13 @@ function HomeTransportWidget() {
             <div className="w-full flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Bus size={18} className="text-[#0071e3]" />
+                  <Bus size={18} className="text-[#3182F6]" />
                 </div>
                 <div className="text-left">
                   <p className="text-[15px] font-bold text-[#1d1d1f]">{stopName}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <Navigation size={10} className="text-[#0071e3]" />
-                    <span className="text-[12px] font-semibold text-[#0071e3]">즐겨찾기</span>
+                    <Navigation size={10} className="text-[#3182F6]" />
+                    <span className="text-[12px] font-semibold text-[#3182F6]">즐겨찾기</span>
                     {!isLoading && stopArrivals.length > 0 && (
                       <span className="text-[12px] text-[#86868b]">· 노선 {stopArrivals.length}개</span>
                     )}
@@ -2540,7 +2543,7 @@ function HomeTransportWidget() {
                               <Zap size={9} />급행
                             </span>
                           )}
-                          {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+                          {a.isLowFloor && <Accessibility size={12} className="text-[#3182F6] shrink-0" />}
                         </div>
                         <p className="text-[12px] text-[#6e6e73]">
                           {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
@@ -2631,7 +2634,7 @@ function HomeTransportWidget() {
                             <span className="text-[9px] text-[#E65100] font-bold block">{a.trainTypeName ?? "급행"}</span>
                           )}
                         </div>
-                        <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                        <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
                           {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
                         </span>
                       </div>
@@ -2704,16 +2707,14 @@ export default function HomePage() {
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
     quickmenu: () => (
       <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
+        <div className="grid grid-cols-4 gap-x-4 gap-y-4">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
-              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
-                style={{
-                  background: "#f5f5f7",
-                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
-                }}>
-                <Icon size={22} strokeWidth={2} color={color} />
+              className="flex flex-col items-center gap-[8px] active:scale-[0.93] transition-transform duration-150"
+              style={{ transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)" }}>
+              <div className="w-[54px] h-[54px] rounded-[18px] flex items-center justify-center bg-white"
+                style={{ boxShadow: "var(--shadow-card)" }}>
+                <Icon size={23} strokeWidth={1.9} color={color} />
               </div>
               <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>

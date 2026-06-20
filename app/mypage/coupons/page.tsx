@@ -30,7 +30,7 @@ function ExpiryBadge({ expiry }: { expiry: string }) {
     );
   }
   return (
-    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#e8f1fd] text-[#0071e3]">
+    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#e8f1fd] text-[#3182F6]">
       D-{days}
     </span>
   );
@@ -83,7 +83,7 @@ export default function DownloadedCouponsPage() {
           <p className="text-[13px] text-[#86868b]">상가 쿠폰 페이지에서 쿠폰을 받아보세요.</p>
           <button
             onClick={() => router.push("/")}
-            className="mt-2 h-10 px-6 bg-[#0071e3] text-white rounded-xl text-[14px] font-medium"
+            className="mt-2 h-10 px-6 bg-[#3182F6] text-white rounded-xl text-[14px] font-medium"
           >
             홈으로
           </button>

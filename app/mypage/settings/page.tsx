@@ -8,7 +8,7 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   return (
     <button
       onClick={onToggle}
-      className={`relative w-12 h-6 rounded-full transition-colors ${on ? "bg-[#0071e3]" : "bg-[#d2d2d7]"}`}
+      className={`relative w-12 h-6 rounded-full transition-colors ${on ? "bg-[#3182F6]" : "bg-[#d2d2d7]"}`}
     >
       <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${on ? "translate-x-6" : "translate-x-0.5"}`} />
     </button>

@@ -193,7 +193,7 @@ export default function InstagramFeedSection() {
         <div className="flex justify-center gap-1.5 mt-3">
           {pages.map((pg, i) => pg ? (
             <button key={i} onClick={() => setCur(i)}
-              className={`rounded-full transition-all duration-200 ${i === cur ? "w-4 h-1.5 bg-[#0071e3]" : "w-1.5 h-1.5 bg-[#D2D2D7]"}`} />
+              className={`rounded-full transition-all duration-200 ${i === cur ? "w-4 h-1.5 bg-[#3182F6]" : "w-1.5 h-1.5 bg-[#D2D2D7]"}`} />
           ) : null)}
           {hasMore && <span className="w-1.5 h-1.5 rounded-full bg-[#D2D2D7]" />}
         </div>

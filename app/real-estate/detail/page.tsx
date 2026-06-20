@@ -14,7 +14,7 @@ function estWolse(avgPrice: number) {
 }
 function eok(manwon: number) { return (manwon / 10000).toFixed(1); }
 
-function MiniChart({ history, color = "#0071e3" }: { history: { date: string; price: number }[]; color?: string }) {
+function MiniChart({ history, color = "#3182F6" }: { history: { date: string; price: number }[]; color?: string }) {
   if (history.length < 2) return null;
   const w = 300, h = 90, pad = 8;
   const prices = history.map(p => p.price);
@@ -54,7 +54,7 @@ function DetailContent() {
           <p className="text-4xl mb-3">🏠</p>
           <p className="text-[17px] font-bold text-[#1d1d1f]">단지를 찾을 수 없어요</p>
           <button onClick={() => router.push("/community/?tab=시세")}
-            className="mt-4 h-11 px-6 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold">
+            className="mt-4 h-11 px-6 bg-[#3182F6] rounded-xl text-white text-[15px] font-bold">
             시세 목록으로
           </button>
         </div>
@@ -120,7 +120,7 @@ function DetailContent() {
               {apt.sizes.map((s, i) => (
                 <button key={i} onClick={() => setSzIdx(i)}
                   className={`h-9 px-4 rounded-xl text-[14px] font-bold transition-colors ${
-                    i === szIdx ? "bg-[#0071e3] text-white" : "bg-[#f5f5f7] text-[#424245]"
+                    i === szIdx ? "bg-[#3182F6] text-white" : "bg-[#f5f5f7] text-[#424245]"
                   }`}>
                   {s.pyeong}평 ({s.sqm}㎡)
                 </button>
@@ -133,7 +133,7 @@ function DetailContent() {
         <div className="bg-white px-5 py-4">
           <div className="flex items-center justify-between mb-3">
             <p className="text-[16px] font-bold text-[#1d1d1f]">{sz.pyeong}평 시세</p>
-            <span className={`flex items-center gap-1 text-[13px] font-bold ${chg >= 0 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+            <span className={`flex items-center gap-1 text-[13px] font-bold ${chg >= 0 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
               <TrendingUp size={13} /> {chg >= 0 ? "▲" : "▼"} {Math.abs(chg).toLocaleString()}만
             </span>
           </div>
@@ -163,7 +163,7 @@ function DetailContent() {
           <div className="bg-white px-5 py-4">
             <p className="text-[16px] font-bold text-[#1d1d1f] mb-3">최근 실거래</p>
             <div className="flex items-center gap-3 bg-[#f5f5f7] rounded-xl px-4 py-3">
-              <Building2 size={18} className="text-[#0071e3] shrink-0" />
+              <Building2 size={18} className="text-[#3182F6] shrink-0" />
               <div className="flex-1">
                 <p className="text-[15px] font-bold text-[#1d1d1f]">
                   {eok(apt.recentDeal.price)}억원 ({apt.recentDeal.price.toLocaleString()}만)

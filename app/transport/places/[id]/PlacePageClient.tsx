@@ -24,7 +24,7 @@ export async function generateStaticParams() {
 
 // ── 카테고리별 그라디언트 ──────────────────────────────────────
 const CAT_GRADS: Record<PlaceCategory, [string, string]> = {
-  kids:    ["#0071e3", "#38BDF8"],
+  kids:    ["#3182F6", "#38BDF8"],
   nature:  ["#2E7D32", "#4CAF50"],
   culture: ["#6B21A8", "#9C27B0"],
   travel:  ["#C2410C", "#F97316"],
@@ -105,7 +105,7 @@ export default function PlaceDetailPage() {
         <MapPin size={48} className="text-[#c7c7cc]" />
         <p className="text-[#86868b] text-[15px]">장소를 찾을 수 없습니다</p>
         <button onClick={() => router.back()}
-          className="text-[#0071e3] text-[15px] font-semibold">
+          className="text-[#3182F6] text-[15px] font-semibold">
           돌아가기
         </button>
       </div>
@@ -205,7 +205,7 @@ export default function PlaceDetailPage() {
             {place.operating_hours && (
               <div className="flex items-start gap-3 py-3.5">
                 <div className="w-8 h-8 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Clock size={14} className="text-[#0071e3]" />
+                  <Clock size={14} className="text-[#3182F6]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[11px] text-[#86868b] font-semibold mb-0.5">운영시간</p>
@@ -238,10 +238,10 @@ export default function PlaceDetailPage() {
             {place.phone && (
               <div className="flex items-center gap-3 py-3.5">
                 <div className="w-8 h-8 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Phone size={14} className="text-[#0071e3]" />
+                  <Phone size={14} className="text-[#3182F6]" />
                 </div>
                 <a href={`tel:${place.phone}`}
-                  className="text-[13px] text-[#0071e3] font-semibold">
+                  className="text-[13px] text-[#3182F6] font-semibold">
                   {place.phone}
                 </a>
               </div>
@@ -249,10 +249,10 @@ export default function PlaceDetailPage() {
             {place.website && (
               <div className="flex items-center gap-3 py-3.5">
                 <div className="w-8 h-8 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Globe size={14} className="text-[#0071e3]" />
+                  <Globe size={14} className="text-[#3182F6]" />
                 </div>
                 <a href={place.website} target="_blank" rel="noopener noreferrer"
-                  className="text-[13px] text-[#0071e3] font-semibold truncate flex-1">
+                  className="text-[13px] text-[#3182F6] font-semibold truncate flex-1">
                   {place.website.replace(/^https?:\/\//, "")}
                 </a>
                 <ChevronRight size={14} className="text-[#c7c7cc] shrink-0" />

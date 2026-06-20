@@ -85,7 +85,7 @@ function ArrivalBadge({ min, live }: { min: number; live: boolean }) {
       </div>
     );
   }
-  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#0071e3]";
+  const bg = min <= 3 ? "bg-[#F04452]" : min <= 7 ? "bg-[#FF9500]" : "bg-[#3182F6]";
   return (
     <div className={`${bg} rounded-xl px-3 py-1.5 text-center min-w-[68px]`}>
       {min <= 1
@@ -276,7 +276,7 @@ function BusDetailSheet({
         <div className="shrink-0 px-5 pt-5 pb-4 border-b border-[#f5f5f7]">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2.5">
-              <div className="bg-[#0071e3] rounded-xl px-3.5 py-1.5">
+              <div className="bg-[#3182F6] rounded-xl px-3.5 py-1.5">
                 <span className="text-white text-[20px] font-black">{arrival.routeNo}</span>
               </div>
               {arrival.isExpress && (
@@ -285,7 +285,7 @@ function BusDetailSheet({
                 </span>
               )}
               {arrival.isLowFloor && (
-                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#e8f1fd] text-[#0071e3] px-2 py-1 rounded-lg">
+                <span className="flex items-center gap-1 text-[12px] font-bold bg-[#e8f1fd] text-[#3182F6] px-2 py-1 rounded-lg">
                   <Accessibility size={10} />저상
                 </span>
               )}
@@ -342,7 +342,7 @@ function BusDetailSheet({
             {([0, 1] as const).map(dir => (
               <button key={dir} onClick={() => setDirTab(dir)}
                 className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
-                  dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
+                  dirTab === dir ? "text-[#3182F6] border-[#3182F6]" : "text-[#86868b] border-transparent"
                 }`}>
                 {dir === 0 ? "⬆ 상행" : "⬇ 하행"}
                 {busesOnDir.length > 0 && dirTab === dir && (
@@ -402,14 +402,14 @@ function BusDetailSheet({
                       <div key={st.stationId + st.seq} className="flex items-center gap-3 py-2">
                         <div className={`relative z-10 w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${
                           hasBus ? "bg-[#F04452] shadow-lg shadow-red-200" :
-                          (isFirst || isLast) ? "bg-[#0071e3]" : "bg-white border-2 border-[#D1D5DB]"
+                          (isFirst || isLast) ? "bg-[#3182F6]" : "bg-white border-2 border-[#D1D5DB]"
                         }`}>
                           {hasBus && <span className="text-[8px]">🚌</span>}
                         </div>
                         <div className="flex-1 flex items-center justify-between">
                           <span className={`text-[13px] ${
                             hasBus ? "font-bold text-[#F04452]" :
-                            (isFirst || isLast) ? "font-bold text-[#0071e3]" : "text-[#424245]"
+                            (isFirst || isLast) ? "font-bold text-[#3182F6]" : "text-[#424245]"
                           }`}>
                             {st.stationName}
                           </span>
@@ -557,7 +557,7 @@ function TransferHubCard({
                       </span>
                     )}
                   </div>
-                  <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                  <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
                     {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
                   </span>
                 </div>
@@ -682,7 +682,7 @@ function SubwayTimetableSheet({
               }`}>
               {day === "weekday" ? "평일" : "토·일·공휴일"}
               {dayTab === day && currentDayType() === day && (
-                <span className="ml-1 text-[10px] text-[#0071e3]">·오늘</span>
+                <span className="ml-1 text-[10px] text-[#3182F6]">·오늘</span>
               )}
             </button>
           ))}
@@ -693,7 +693,7 @@ function SubwayTimetableSheet({
           {(["up", "down"] as const).map(dir => (
             <button key={dir} onClick={() => setDirTab(dir)}
               className={`flex-1 h-10 text-[13px] font-semibold border-b-2 transition-colors ${
-                dirTab === dir ? "text-[#0071e3] border-[#0071e3]" : "text-[#86868b] border-transparent"
+                dirTab === dir ? "text-[#3182F6] border-[#3182F6]" : "text-[#86868b] border-transparent"
               }`}>
               {dir === "up" ? `⬆ ${station.timetable.upDirection}` : `⬇ ${station.timetable.downDirection}`}
             </button>
@@ -714,9 +714,9 @@ function SubwayTimetableSheet({
               {isToday && nextIdx >= 0 && (
                 <div className="bg-[#e8f1fd] rounded-xl px-4 py-3 mb-4 flex items-center justify-between">
                   <div>
-                    <p className="text-[11px] text-[#0071e3] font-medium">다음 열차</p>
-                    <p className="text-[20px] font-black text-[#0071e3]">{curTimes[nextIdx]}</p>
-                    <p className="text-[11px] text-[#0071e3]/70">{curDest} 방면</p>
+                    <p className="text-[11px] text-[#3182F6] font-medium">다음 열차</p>
+                    <p className="text-[20px] font-black text-[#3182F6]">{curTimes[nextIdx]}</p>
+                    <p className="text-[11px] text-[#3182F6]/70">{curDest} 방면</p>
                   </div>
                   <div className="text-right">
                     {(() => {
@@ -727,8 +727,8 @@ function SubwayTimetableSheet({
                         <span className="text-[20px] font-black text-[#F04452]">곧 도착 예정</span>
                       ) : (
                         <>
-                          <span className="text-[28px] font-black text-[#0071e3]">{diff}</span>
-                          <span className="text-[13px] text-[#0071e3]/70">분 후</span>
+                          <span className="text-[28px] font-black text-[#3182F6]">{diff}</span>
+                          <span className="text-[13px] text-[#3182F6]/70">분 후</span>
                         </>
                       );
                     })()}
@@ -743,7 +743,7 @@ function SubwayTimetableSheet({
                   const isNext = idx === nextIdx;
                   return (
                     <div key={t} className={`rounded-xl py-2.5 text-center transition-colors ${
-                      isNext ? "bg-[#0071e3] shadow-sm shadow-blue-200" :
+                      isNext ? "bg-[#3182F6] shadow-sm shadow-blue-200" :
                       isPast ? "bg-[#f5f5f7]" : "bg-[#f5f5f7]"
                     }`}>
                       <span className={`text-[14px] font-bold ${
@@ -756,7 +756,7 @@ function SubwayTimetableSheet({
 
               <div className="flex items-center gap-3 mt-4 px-1">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded bg-[#0071e3]" />
+                  <div className="w-3 h-3 rounded bg-[#3182F6]" />
                   <span className="text-[11px] text-[#6e6e73]">다음 열차</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -1424,7 +1424,7 @@ export default function TransportPage() {
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[100px] right-4 z-50 w-12 h-12 bg-[#0071e3] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[100px] right-4 z-50 w-12 h-12 bg-[#3182F6] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
         <RefreshCw size={20} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
@@ -1454,15 +1454,18 @@ export default function TransportPage() {
       )}
 
       {/* 탭 */}
-      <div className="flex gap-2 px-4 py-2 bg-white border-b border-gray-100 sticky top-[56px] z-30">
-        {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`flex-1 h-9 flex items-center justify-center text-[13px] font-semibold rounded-xl transition-colors active:opacity-70 ${
-              t === tab ? "bg-blue-600 text-white shadow-sm" : "bg-gray-100 text-gray-500"
-            }`}>
-            {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "📍 가볼만한곳"}
-          </button>
-        ))}
+      <div className="bg-white border-b border-gray-100 sticky top-[56px] z-30">
+        <div className="flex relative px-4 py-2 gap-2">
+          {(["가볼만한곳", "버스", "지하철"] as Tab[]).map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex-1 h-9 flex items-center justify-center text-[13px] font-semibold rounded-xl transition-all active:scale-[0.97] ${
+                t === tab ? "text-white shadow-sm" : "bg-gray-100 text-gray-500"
+              }`}
+              style={t === tab ? { background: "linear-gradient(135deg, #3182F6, #2563EB)" } : {}}>
+              {t === "버스" ? "🚌 버스" : t === "지하철" ? "🚇 지하철" : "📍 가볼만한곳"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══ 권역 밖 안내 배너 ══════════════════════════════════════ */}
@@ -1509,7 +1512,7 @@ export default function TransportPage() {
               <div key={card.arrival.routeNo}
                 className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3 cursor-pointer active:bg-[#f5f5f7]"
                 onClick={() => { selectedStopRef.current = { id: card.stopId, name: card.stopName, distM: card.stopDistM }; setSelectedArrival(card.arrival); }}>
-                <div className={`${card.arrival.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-2 min-w-[44px] text-center shrink-0`}>
+                <div className={`${card.arrival.isScheduled ? "bg-[#86868b]" : "bg-[#3182F6]"} rounded-lg px-2.5 py-2 min-w-[44px] text-center shrink-0`}>
                   <span className="text-white text-[14px] font-black">{card.arrival.routeNo}</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1522,13 +1525,13 @@ export default function TransportPage() {
                         <Zap size={9} />급행
                       </span>
                     )}
-                    {card.arrival.isLowFloor && <Accessibility size={11} className="text-[#0071e3] shrink-0" />}
+                    {card.arrival.isLowFloor && <Accessibility size={11} className="text-[#3182F6] shrink-0" />}
                   </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <MapPin size={9} className="text-[#86868b] shrink-0" />
                     <span className="text-[12px] text-[#86868b] truncate">{card.stopName}</span>
                     <span className="text-[11px] text-[#d2d2d7] shrink-0">·</span>
-                    <span className="text-[11px] text-[#0071e3] shrink-0 font-medium">{distLabel(card.stopDistM)}</span>
+                    <span className="text-[11px] text-[#3182F6] shrink-0 font-medium">{distLabel(card.stopDistM)}</span>
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
@@ -1637,7 +1640,7 @@ export default function TransportPage() {
                                 <span className="text-[9px] text-[#E65100] font-bold">{a.trainTypeName ?? "급행"}</span>
                               )}
                             </div>
-                            <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                            <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
                               {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
                             </span>
                           </div>
@@ -1724,7 +1727,7 @@ export default function TransportPage() {
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded ${
-                            dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#0071e3]"
+                            dir === "상행" ? "bg-[#d2d2d7] text-[#424245]" : "bg-[#e8f1fd] text-[#3182F6]"
                           }`}>{dir}</span>
                           {a.isExpress && (
                             <span className={`text-[11px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
@@ -1788,7 +1791,7 @@ export default function TransportPage() {
               {tab === "버스" ? "주변 정류장" : "주변 지하철역"}
             </span>
             <span className="flex items-center gap-1 text-[12px] text-[#86868b]">
-              <MapPin size={11} className="text-[#0071e3]" />가까운 순
+              <MapPin size={11} className="text-[#3182F6]" />가까운 순
             </span>
             <LocBadge />
           </div>
@@ -1823,7 +1826,7 @@ export default function TransportPage() {
             <div className="space-y-2">
               {searching && (
                 <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex items-center gap-2">
-                  <RefreshCw size={14} className="text-[#0071e3] animate-spin" />
+                  <RefreshCw size={14} className="text-[#3182F6] animate-spin" />
                   <span className="text-[13px] text-[#6e6e73]">검색 중...</span>
                 </div>
               )}
@@ -1844,7 +1847,7 @@ export default function TransportPage() {
                           isScheduled: true,
                         })}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#f5f5f7] text-left">
-                        <div className="bg-[#0071e3] rounded-lg px-2.5 py-1 min-w-[48px] text-center shrink-0">
+                        <div className="bg-[#3182F6] rounded-lg px-2.5 py-1 min-w-[48px] text-center shrink-0">
                           <span className="text-white text-[14px] font-black">{r.routeNo}</span>
                         </div>
                         <div className="flex-1 min-w-0">
@@ -1881,7 +1884,7 @@ export default function TransportPage() {
                             }}
                             className="w-full flex items-center gap-3 px-4 py-3 active:bg-[#f5f5f7] text-left">
                             <div className="w-8 h-8 rounded-lg bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                              <Bus size={14} className="text-[#0071e3]" />
+                              <Bus size={14} className="text-[#3182F6]" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-[13px] font-semibold text-[#1d1d1f] truncate">{s.stationName}</p>
@@ -1910,7 +1913,7 @@ export default function TransportPage() {
                                   <button key={i}
                                     onClick={() => setSelectedArrival(a)}
                                     className="w-full flex items-center gap-2.5 bg-[#f5f5f7] rounded-lg px-3 py-2 active:bg-[#eaeaea]">
-                                    <div className="bg-[#0071e3] rounded px-2 py-0.5 min-w-[40px] text-center shrink-0">
+                                    <div className="bg-[#3182F6] rounded px-2 py-0.5 min-w-[40px] text-center shrink-0">
                                       <span className="text-white text-[12px] font-black">{a.routeNo}</span>
                                     </div>
                                     <span className="text-[12px] text-[#1d1d1f] truncate flex-1 text-left">{a.destination} 방면</span>
@@ -1950,7 +1953,7 @@ export default function TransportPage() {
           {!loading && locState !== "far" && stopSource === "osm" && (
             <div className="bg-[#e8f1fd] rounded-xl px-3.5 py-2.5 flex items-center gap-2">
               <span className="text-[13px]">🗺️</span>
-              <p className="text-[12px] text-[#0071e3] font-medium">지도 기반 정류장 · 경유 노선만 표시</p>
+              <p className="text-[12px] text-[#3182F6] font-medium">지도 기반 정류장 · 경유 노선만 표시</p>
             </div>
           )}
 
@@ -1976,10 +1979,10 @@ export default function TransportPage() {
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <div className="w-11 h-11 rounded-xl bg-[#e8f1fd] flex items-center justify-center">
-                          <Bus size={20} className="text-[#0071e3]" />
+                          <Bus size={20} className="text-[#3182F6]" />
                         </div>
                         {idx === 0 && (
-                          <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#0071e3] text-white px-1 rounded-full leading-tight py-0.5">
+                          <span className="absolute -top-1 -right-1 text-[9px] font-black bg-[#3182F6] text-white px-1 rounded-full leading-tight py-0.5">
                             최근접
                           </span>
                         )}
@@ -1987,8 +1990,8 @@ export default function TransportPage() {
                       <div className="text-left">
                         <p className="text-[16px] font-bold text-[#1d1d1f] leading-tight">{stop.name}</p>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <Navigation size={10} className="text-[#0071e3]" />
-                          <span className="text-[12px] font-semibold text-[#0071e3]">{distLabel(stop.distM)}</span>
+                          <Navigation size={10} className="text-[#3182F6]" />
+                          <span className="text-[12px] font-semibold text-[#3182F6]">{distLabel(stop.distM)}</span>
                           {!stop.loadingArrivals && stop.arrivals.length > 0 && (
                             <span className="text-[12px] text-[#86868b]">
                               · 노선 {stop.arrivals.length}개
@@ -2035,7 +2038,7 @@ export default function TransportPage() {
                             className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
                             onClick={() => { selectedStopRef.current = { id: stop.id, name: stop.name, distM: stop.distM }; setSelectedArrival(a); }}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                              <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#0071e3]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
+                              <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#3182F6]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
                                 <span className="text-white text-[14px] font-black">{a.routeNo}</span>
                               </div>
                               <div className="min-w-0">
@@ -2046,7 +2049,7 @@ export default function TransportPage() {
                                       <Zap size={9} />급행
                                     </span>
                                   )}
-                                  {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
+                                  {a.isLowFloor && <Accessibility size={12} className="text-[#3182F6] shrink-0" />}
                                 </div>
                                 <p className="text-[12px] text-[#6e6e73]">
                                   {a.isScheduled ? "경유 노선 · 탭하여 전 경로 보기" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착 예정"}
@@ -2066,7 +2069,7 @@ export default function TransportPage() {
                         ))}
                         {!open && stop.arrivals.length > 3 && (
                           <button onClick={() => setExpanded(stop.id)}
-                            className="w-full text-[13px] text-[#0071e3] text-center py-1">
+                            className="w-full text-[13px] text-[#3182F6] text-center py-1">
                             {stop.arrivals.length - 3}개 노선 더 보기
                           </button>
                         )}
@@ -2082,19 +2085,19 @@ export default function TransportPage() {
           {!loading && busSearch.trim().length < 2 && stopsWithRoutes.length > 4 && (
             <button onClick={() => setShowAllStops(s => !s)}
               className="w-full bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3.5 flex items-center justify-center gap-1.5 active:bg-[#f5f5f7]">
-              <span className="text-[13px] font-semibold text-[#0071e3]">
+              <span className="text-[13px] font-semibold text-[#3182F6]">
                 {showAllStops ? "가까운 정류장만 보기" : `더 보기 (${stopsWithRoutes.length - 4}개)`}
               </span>
               {showAllStops
-                ? <ChevronUp size={14} className="text-[#0071e3]" />
-                : <ChevronDown size={14} className="text-[#0071e3]" />}
+                ? <ChevronUp size={14} className="text-[#3182F6]" />
+                : <ChevronDown size={14} className="text-[#3182F6]" />}
             </button>
           )}
 
           {/* 범례 — 실시간 연동 시에만 의미 있음 */}
           {isLive && busSearch.trim().length < 2 && (
             <div className="bg-white border border-gray-200 rounded-xl shadow-sm px-4 py-3 flex gap-4">
-              {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#0071e3]", "8분 이상"]].map(([c, l]) => (
+              {[["bg-[#F04452]", "3분 이내"], ["bg-[#FF9500]", "7분 이내"], ["bg-[#3182F6]", "8분 이상"]].map(([c, l]) => (
                 <div key={l} className="flex items-center gap-1.5">
                   <div className={`w-2 h-2 rounded-full ${c}`} />
                   <span className="text-[12px] text-[#6e6e73]">{l}</span>
@@ -2112,8 +2115,8 @@ export default function TransportPage() {
           {/* 검단 2호선 연장 예정 — 즐겨찾기와 일반 역 정보 사이 */}
           {!subwayLoading && (
             <div className="bg-[#e8f1fd] border border-[#bcd9f7] rounded-xl shadow-sm px-4 py-3.5">
-              <p className="text-[14px] font-bold text-[#0071e3]">🚇 검단 2호선 연장 예정</p>
-              <p className="text-[13px] text-[#0071e3]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
+              <p className="text-[14px] font-bold text-[#3182F6]">🚇 검단 2호선 연장 예정</p>
+              <p className="text-[13px] text-[#3182F6]/80 mt-1">2026년 하반기 착공 · 2030년 개통 목표</p>
             </div>
           )}
 
@@ -2125,7 +2128,7 @@ export default function TransportPage() {
               <p className="text-[14px] font-bold text-[#6e6e73]">역 목록을 불러오는 중입니다</p>
               <button
                 onClick={() => loadSubwayData(GEUMDAN_DEFAULT.lat, GEUMDAN_DEFAULT.lng)}
-                className="mt-3 text-[12px] font-bold text-[#0071e3] active:opacity-60"
+                className="mt-3 text-[12px] font-bold text-[#3182F6] active:opacity-60"
               >
                 다시 시도
               </button>
@@ -2262,7 +2265,7 @@ export default function TransportPage() {
                                   </span>
                                 )}
                               </div>
-                              <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
+                              <span className={`text-[18px] font-black shrink-0 ${a.arrivalMin <= 1 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
                                 {a.arrivalMin <= 1 ? "곧 도착" : `${a.arrivalMin}분`}
                               </span>
                             </div>
@@ -2339,7 +2342,7 @@ export default function TransportPage() {
               <button key={a} onClick={() => setPlacesAreaFilter(a)}
                 className={`shrink-0 h-7 px-3 rounded-full text-[12px] font-medium transition-all ${
                   placesAreaFilter === a
-                    ? "bg-[#0071e3] text-white"
+                    ? "bg-[#3182F6] text-white"
                     : "bg-white text-[#6e6e73]"
                 }`}>
                 {a === "all" ? "전체 지역" : a}
@@ -2386,7 +2389,7 @@ export default function TransportPage() {
             const [featured, ...rest] = filtered;
             const featCat = CATEGORY_META[featured.category];
             const catGrads: Record<PlaceCategory, [string, string]> = {
-              kids:    ["#0071e3", "#38BDF8"],
+              kids:    ["#3182F6", "#38BDF8"],
               nature:  ["#2E7D32", "#4CAF50"],
               culture: ["#6B21A8", "#9C27B0"],
               travel:  ["#C2410C", "#F97316"],
@@ -2422,7 +2425,7 @@ export default function TransportPage() {
                       </div>
                       {/* PICK 배지 */}
                       <div className="absolute top-3 right-3 bg-white/90 rounded-full px-2 py-0.5">
-                        <span className="text-[10px] font-black text-[#0071e3]">PICK</span>
+                        <span className="text-[10px] font-black text-[#3182F6]">PICK</span>
                       </div>
                       {/* 하단 텍스트 오버레이 */}
                       <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -2510,7 +2513,7 @@ export default function TransportPage() {
         const p = selectedPlace;
         const cat = CATEGORY_META[p.category];
         const catGrads: Record<PlaceCategory, [string, string]> = {
-          kids:    ["#0071e3", "#38BDF8"],
+          kids:    ["#3182F6", "#38BDF8"],
           nature:  ["#2E7D32", "#4CAF50"],
           culture: ["#6B21A8", "#9C27B0"],
           travel:  ["#C2410C", "#F97316"],
@@ -2604,7 +2607,7 @@ export default function TransportPage() {
                         {p.operating_hours && (
                           <div className="flex items-start gap-3 pt-0">
                             <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0 mt-0.5">
-                              <Clock size={13} className="text-[#0071e3]" />
+                              <Clock size={13} className="text-[#3182F6]" />
                             </div>
                             <div>
                               <p className="text-[11px] text-[#86868b] font-semibold mb-0.5">운영시간</p>
@@ -2637,18 +2640,18 @@ export default function TransportPage() {
                         {p.phone && (
                           <div className="flex items-center gap-3 pt-3">
                             <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
-                              <Phone size={13} className="text-[#0071e3]" />
+                              <Phone size={13} className="text-[#3182F6]" />
                             </div>
-                            <a href={`tel:${p.phone}`} className="text-[13px] text-[#0071e3] font-semibold">{p.phone}</a>
+                            <a href={`tel:${p.phone}`} className="text-[13px] text-[#3182F6] font-semibold">{p.phone}</a>
                           </div>
                         )}
                         {p.website && (
                           <div className="flex items-center gap-3 pt-3">
                             <div className="w-7 h-7 rounded-lg bg-white flex items-center justify-center shrink-0">
-                              <Globe size={13} className="text-[#0071e3]" />
+                              <Globe size={13} className="text-[#3182F6]" />
                             </div>
                             <a href={p.website} target="_blank" rel="noopener noreferrer"
-                              className="text-[13px] text-[#0071e3] font-semibold truncate">{p.website.replace(/^https?:\/\//, "")}</a>
+                              className="text-[13px] text-[#3182F6] font-semibold truncate">{p.website.replace(/^https?:\/\//, "")}</a>
                           </div>
                         )}
                       </div>

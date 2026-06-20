@@ -162,7 +162,7 @@ function SuggestSheet({ onClose }: { onClose: () => void }) {
         {/* 타이틀 */}
         <div className="px-5 pb-2.5 flex items-start justify-between shrink-0">
           <div>
-            <p className="text-[11px] font-bold text-[#0071e3] tracking-wide">SUGGEST</p>
+            <p className="text-[11px] font-bold text-[#3182F6] tracking-wide">SUGGEST</p>
             <p className="text-[20px] font-black text-[#1d1d1f] leading-tight mt-0.5">새 매장 제안하기</p>
             <p className="text-[12px] text-[#6e6e73] mt-1">
               검단에서 발견한 가게를 알려주세요. 등록 검토 후 반영됩니다.
@@ -271,9 +271,9 @@ function Field({ label, required, children }: { label: string; required?: boolea
 }
 
 const INPUT =
-  "w-full h-11 px-3.5 rounded-xl bg-[#f5f5f7] border border-transparent text-[14px] text-[#1d1d1f] placeholder:text-[#86868b] focus:bg-white focus:border-[#0071e3] focus:outline-none transition-colors";
+  "w-full h-11 px-3.5 rounded-xl bg-[#f5f5f7] border border-transparent text-[14px] text-[#1d1d1f] placeholder:text-[#86868b] focus:bg-white focus:border-[#3182F6] focus:outline-none transition-colors";
 const TEXTAREA =
-  "w-full px-3.5 py-3 rounded-xl bg-[#f5f5f7] border border-transparent text-[14px] text-[#1d1d1f] placeholder:text-[#86868b] focus:bg-white focus:border-[#0071e3] focus:outline-none resize-none transition-colors";
+  "w-full px-3.5 py-3 rounded-xl bg-[#f5f5f7] border border-transparent text-[14px] text-[#1d1d1f] placeholder:text-[#86868b] focus:bg-white focus:border-[#3182F6] focus:outline-none resize-none transition-colors";
 
 function SimpleForm({
   cat, setCat, msg, setMsg,
@@ -350,7 +350,7 @@ function DetailForm({
                 onClick={() => setCat(c.value)}
                 className={`h-8 px-3 rounded-full text-[12px] font-bold inline-flex items-center gap-1 transition-colors ${
                   sel
-                    ? "bg-[#0071e3] text-white"
+                    ? "bg-[#3182F6] text-white"
                     : "bg-[#f5f5f7] text-[#424245] active:bg-[#e5e5ea]"
                 }`}
               >

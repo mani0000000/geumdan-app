@@ -29,7 +29,7 @@ export default function InstagramWidget() {
         </div>
         <Link
           href="/community/?tab=뉴스"
-          className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5"
+          className="text-[13px] text-[#3182F6] font-medium flex items-center gap-0.5"
         >
           더보기 <ChevronRight size={13} />
         </Link>
@@ -87,7 +87,7 @@ function InstaCard({ post }: { post: InstagramPost }) {
           {formatCount(post.likeCount)}
         </span>
         <span className="flex items-center gap-1 text-[11px] font-semibold text-[#4E5968]">
-          <MessageCircle size={11} className="text-[#0071e3]" />
+          <MessageCircle size={11} className="text-[#3182F6]" />
           {formatCount(post.commentCount)}
         </span>
       </div>

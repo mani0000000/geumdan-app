@@ -138,7 +138,7 @@ export default function WritePage() {
             {categories.map(c => (
               <button key={c} onClick={() => { setCategory(c); setShowCatPicker(false); }}
                 className={`h-8 px-4 rounded-full text-[14px] font-medium transition-colors active:opacity-70 ${
-                  category === c ? "bg-[#0071e3] text-white" : "bg-white text-[#424245] border border-[#d2d2d7]"
+                  category === c ? "bg-[#3182F6] text-white" : "bg-white text-[#424245] border border-[#d2d2d7]"
                 }`}>
                 {c}
               </button>
@@ -182,7 +182,7 @@ export default function WritePage() {
             ))}
             {uploading && (
               <div className="w-20 h-20 rounded-xl bg-[#f5f5f7] flex items-center justify-center">
-                <Loader2 size={20} className="text-[#0071e3] animate-spin" />
+                <Loader2 size={20} className="text-[#3182F6] animate-spin" />
               </div>
             )}
           </div>
@@ -229,7 +229,7 @@ export default function WritePage() {
           <button
             onClick={submit}
             disabled={!canSubmit || submitting}
-            className="w-full h-12 rounded-xl bg-[#0071e3] text-white text-[16px] font-bold disabled:opacity-40 active:bg-[#0058b0] transition-colors"
+            className="w-full h-12 rounded-xl bg-[#3182F6] text-white text-[16px] font-bold disabled:opacity-40 active:bg-[#2563EB] transition-colors"
           >
             {submitting ? "등록 중..." : "등록하기"}
           </button>
@@ -237,8 +237,8 @@ export default function WritePage() {
 
         {/* Tips */}
         <div className="mx-4 mb-4 bg-[#e8f1fd] rounded-xl px-4 py-3">
-          <p className="text-[13px] font-bold text-[#0071e3] mb-1">💡 이런 글은 삭제될 수 있어요</p>
-          <p className="text-[13px] text-[#0071e3]/80 leading-relaxed">
+          <p className="text-[13px] font-bold text-[#3182F6] mb-1">💡 이런 글은 삭제될 수 있어요</p>
+          <p className="text-[13px] text-[#3182F6]/80 leading-relaxed">
             광고·홍보 목적 게시글, 타인 비방·협오 표현, 개인정보 노출, 불법 정보 공유
           </p>
         </div>

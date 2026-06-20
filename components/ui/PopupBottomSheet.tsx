@@ -145,7 +145,7 @@ export default function PopupBottomSheet({ popups }: Props) {
           {current.link_url ? (
             <a href={current.link_url} target="_blank" rel="noopener noreferrer" style={{
               flex: 2, height: 44, borderRadius: 14,
-              background: "#0071e3",
+              background: "#3182F6",
               fontSize: 14, fontWeight: 700, color: "white",
               display: "flex", alignItems: "center", justifyContent: "center", gap: 4,
               textDecoration: "none",
@@ -156,7 +156,7 @@ export default function PopupBottomSheet({ popups }: Props) {
           ) : (
             <button onClick={closeAll} style={{
               flex: 2, height: 44, borderRadius: 14,
-              background: "#0071e3",
+              background: "#3182F6",
               fontSize: 14, fontWeight: 700, color: "white",
               border: "none", cursor: "pointer",
             }}>
@@ -173,7 +173,7 @@ export default function PopupBottomSheet({ popups }: Props) {
                 <div style={{
                   width: i === idx ? 18 : 6, height: 6,
                   borderRadius: 3,
-                  background: i === idx ? "#0071e3" : "#d2d2d7",
+                  background: i === idx ? "#3182F6" : "#d2d2d7",
                   transition: "all 0.2s",
                 }} />
               </button>

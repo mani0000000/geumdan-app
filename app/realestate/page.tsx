@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { TrendingUp, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2, Calendar } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertTriangle, RefreshCw, Building2, Star, ChevronDown, ChevronUp, BarChart2, Calendar } from "lucide-react";
 import Header from "@/components/layout/Header";
 import { supabase } from "@/lib/supabase";
 import type { AptMarketSummary } from "@/lib/reb-price";
@@ -155,6 +155,22 @@ export default function RealestatePage() {
     return map;
   }, [trades]);
 
+  // 같은 아파트 이름의 이전 거래와 가격 비교 (trades는 날짜 내림차순 — 첫 항목이 최신)
+  const priceDiff = useMemo(() => {
+    const seen = new Map<string, { amount: number; id: number }>();
+    const result = new Map<number, "up" | "down" | "same">();
+    for (const t of trades) {
+      const prev = seen.get(t.apt_name);
+      if (prev !== undefined) {
+        // prev = 최신 거래, t = 이전 거래 → 최신 카드(prev.id)에 결과 표시
+        const dir = prev.amount > t.deal_amount ? "up" : prev.amount < t.deal_amount ? "down" : "same";
+        result.set(prev.id, dir);
+      }
+      if (!seen.has(t.apt_name)) seen.set(t.apt_name, { amount: t.deal_amount, id: t.id });
+    }
+    return result;
+  }, [trades]);
+
   return (
     <div className="pb-20">
       <Header title="검단신도시 시세" showBack />
@@ -176,7 +192,7 @@ export default function RealestatePage() {
 
         <div className="flex items-start justify-between mb-1">
           <div className="flex items-center gap-1.5">
-            <TrendingUp size={14} className="text-[#0071e3]" />
+            <TrendingUp size={14} className="text-[#3182F6]" />
             <span className="text-[13px] font-bold text-[#1d1d1f]">매매 실거래가</span>
           </div>
           {latestFetchedAt && (
@@ -188,7 +204,7 @@ export default function RealestatePage() {
         </div>
         {latestDealLabel && (
           <div className="mb-1">
-            <span className="text-[11px] font-semibold text-[#0071e3] bg-[#EEF5FF] px-2 py-0.5 rounded-full">
+            <span className="text-[11px] font-semibold text-[#3182F6] bg-[#EEF5FF] px-2 py-0.5 rounded-full">
               최신 거래: {latestDealLabel} 기준
             </span>
           </div>
@@ -205,7 +221,7 @@ export default function RealestatePage() {
           className="w-full flex items-center justify-between bg-white border border-[#d2d2d7] rounded-2xl px-4 py-3"
         >
           <div className="flex items-center gap-2">
-            <BarChart2 size={15} className="text-[#0071e3]" />
+            <BarChart2 size={15} className="text-[#3182F6]" />
             <span className="text-[13px] font-semibold text-[#1d1d1f]">단지별 평균 매매가</span>
             <span className="text-[10px] text-[#86868b] bg-[#F2F4F6] rounded px-1.5 py-0.5">최근 6개월 기반</span>
           </div>
@@ -244,7 +260,7 @@ export default function RealestatePage() {
                         <p className="text-[10px] text-[#86868b]">{s.dong} · {s.trade_count}건</p>
                       </div>
                       <p className="text-[11px] text-[#86868b] text-center">{s.sqm}㎡대</p>
-                      <p className="text-[12px] font-bold text-[#0071e3] text-right">
+                      <p className="text-[12px] font-bold text-[#3182F6] text-right">
                         {s.avg_trade_price ? fmt만원(s.avg_trade_price) : "—"}
                       </p>
                     </div>
@@ -269,7 +285,7 @@ export default function RealestatePage() {
               <button key={d}
                 onClick={() => setDong(d)}
                 className={`px-3 py-1.5 rounded-full text-[12px] font-semibold whitespace-nowrap transition-colors
-                  ${active ? "bg-[#0071e3] text-white" : "bg-white border border-[#d2d2d7] text-[#1d1d1f]"}`}>
+                  ${active ? "bg-[#3182F6] text-white" : "bg-white border border-[#d2d2d7] text-[#1d1d1f]"}`}>
                 {d}{cnt > 0 && <span className={`ml-1 ${active ? "text-white/70" : "text-[#86868b]"}`}>{cnt}</span>}
               </button>
             );
@@ -318,7 +334,18 @@ export default function RealestatePage() {
                 >
                   <Star size={16} className={favApts.has(t.apt_name) ? "fill-[#FBBF24] text-[#FBBF24]" : "text-[#D1D5DB]"} />
                 </button>
-                <p className="text-[15px] font-extrabold text-[#0071e3]">{fmt만원(t.deal_amount)}</p>
+                <div className="flex items-center gap-1">
+                  {priceDiff.get(t.id) === "up" && (
+                    <TrendingUp size={12} className="text-[#f04452]" />
+                  )}
+                  {priceDiff.get(t.id) === "down" && (
+                    <TrendingDown size={12} className="text-[#3182F6]" />
+                  )}
+                  <p className={`text-[15px] font-extrabold ${
+                    priceDiff.get(t.id) === "up" ? "text-[#f04452]" :
+                    priceDiff.get(t.id) === "down" ? "text-[#3182F6]" : "text-[#3182F6]"
+                  }`}>{fmt만원(t.deal_amount)}</p>
+                </div>
                 <p className="text-[10px] text-[#86868b]">{fmtDealDate(t.deal_year, t.deal_month, t.deal_day)} 거래</p>
               </div>
             </div>
