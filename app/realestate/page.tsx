@@ -155,16 +155,18 @@ export default function RealestatePage() {
     return map;
   }, [trades]);
 
-  // 같은 아파트 이름의 이전 거래와 가격 비교 (trades는 날짜 내림차순)
+  // 같은 아파트 이름의 이전 거래와 가격 비교 (trades는 날짜 내림차순 — 첫 항목이 최신)
   const priceDiff = useMemo(() => {
-    const seen = new Map<string, number>();
+    const seen = new Map<string, { amount: number; id: number }>();
     const result = new Map<number, "up" | "down" | "same">();
     for (const t of trades) {
       const prev = seen.get(t.apt_name);
       if (prev !== undefined) {
-        result.set(t.id, t.deal_amount < prev ? "up" : t.deal_amount > prev ? "down" : "same");
+        // prev = 최신 거래, t = 이전 거래 → 최신 카드(prev.id)에 결과 표시
+        const dir = prev.amount > t.deal_amount ? "up" : prev.amount < t.deal_amount ? "down" : "same";
+        result.set(prev.id, dir);
       }
-      if (!seen.has(t.apt_name)) seen.set(t.apt_name, t.deal_amount);
+      if (!seen.has(t.apt_name)) seen.set(t.apt_name, { amount: t.deal_amount, id: t.id });
     }
     return result;
   }, [trades]);
