@@ -14,8 +14,7 @@ import {
 import Header from "@/components/layout/Header";
 import StoreLogo from "@/components/ui/StoreLogo";
 import CouponCard, { loadDownloaded, saveDownloaded } from "@/components/ui/CouponCard";
-import { posts, newsItems, apartments as mockApartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
-import { fetchApartments } from "@/lib/db/apartments";
+import { posts, newsItems, apartments, myHomes as initialMyHomes, coupons as mockCoupons, pharmacies as mockPharmacies } from "@/lib/mockData";
 import { fetchThisMonthOpenings } from "@/lib/db/stores";
 import type { NewStoreOpening } from "@/lib/types";
 import { fetchGeumdanNews, type NewsArticle } from "@/lib/api/news";
@@ -25,7 +24,7 @@ import { fetchAllPharmacies, fetchEmergencyRooms } from "@/lib/db/pharmacies";
 import { getUserProfile } from "@/lib/db/userdata";
 import { formatRelativeTime, formatPrice } from "@/lib/utils";
 import { fetchWeather, getCachedWeather, type WeatherData } from "@/lib/api/weather";
-import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, searchStationsByName, type BusArrival } from "@/lib/api/bus";
+import { fetchArrivalsByStationId, fetchArrivalsByNodeId, GEUMDAN_BUS_STATIONS, haversineM, type BusArrival } from "@/lib/api/bus";
 import { getAllSubwayStations, fetchSubwayArrivals, estimateNextArrivals, dayTimetable, type SubwayStationWithDist, type SubwayArrival } from "@/lib/api/subway";
 import { loadFavStops, loadFavRoutes, routeFavKey, type FavStopMeta, type FavRouteMeta } from "@/lib/transport/favorites";
 import { fetchWidgetConfig, type WidgetConfig, DEFAULT_WIDGETS } from "@/lib/db/widget-config";
@@ -42,17 +41,44 @@ import { fetchPublishedPlaces, CATEGORY_META, type Place } from "@/lib/db/places
 import { addFavoritePlace, removeFavoritePlace, isFavoritePlace } from "@/lib/db/placeFavorites";
 import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
-import { OUTDOOR_SPOTS, type OutdoorType, type OutdoorSpot } from "@/lib/data/outdoor-spots";
 import { fetchYouTubeVideos, type YouTubeVideo } from "@/lib/api/news";
-import type { NewsItem, Post } from "@/lib/types";
-import { fetchDBPosts } from "@/lib/db/posts";
+
+// ─── DEBUG 오버레이 (측정 후 삭제) ───────────────────────────────
+function DebugOverlay() {
+  const [info, setInfo] = React.useState<string>("측정 중...");
+  React.useEffect(() => {
+    const div = document.createElement("div");
+    div.style.paddingTop = "env(safe-area-inset-top, 0px)";
+    document.body.appendChild(div);
+    const sat = parseFloat(getComputedStyle(div).paddingTop) || 0;
+    document.body.removeChild(div);
+    const header = document.querySelector("header");
+    const hr = header ? header.getBoundingClientRect() : null;
+    const container = document.querySelector("[style*='padding-top']");
+    const cr = container ? container.getBoundingClientRect() : null;
+    setInfo(
+      `SAT=${sat}px | ` +
+      `header: top=${hr ? Math.round(hr.top) : "?"} bottom=${hr ? Math.round(hr.bottom) : "?"} h=${hr ? Math.round(hr.height) : "?"}px | ` +
+      `container.top=${cr ? Math.round(cr.top) : "?"}`
+    );
+  }, []);
+  return (
+    <div style={{
+      position: "fixed", bottom: 80, left: 8, right: 8, zIndex: 9999,
+      background: "rgba(0,0,0,0.85)", color: "#0f0", fontSize: 10,
+      padding: "6px 8px", borderRadius: 8, fontFamily: "monospace", lineHeight: 1.5,
+    }}>
+      {info}
+    </div>
+  );
+}
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
   { icon: Bus,           label: "버스",    href: "/transport/?tab=버스",                          color: "#3B5BDB" },
-  { icon: HomeIcon,      label: "부동산",  href: "/community?tab=시세",                           color: "#2F9E44" },
-  { icon: Newspaper,     label: "뉴스",    href: "/community?tab=뉴스",                           color: "#E03131" },
-  { icon: MessageCircle, label: "커뮤니티",href: "/community?tab=커뮤니티",                       color: "#7048E8" },
+  { icon: HomeIcon,      label: "부동산",  href: "/community/?tab=시세",                          color: "#2F9E44" },
+  { icon: Newspaper,     label: "뉴스",    href: "/community/?tab=뉴스",                          color: "#E03131" },
+  { icon: MessageCircle, label: "커뮤니티",href: "/community/?tab=커뮤니티",                      color: "#7048E8" },
   { icon: Ticket,        label: "쿠폰",    href: "/coupons/",                                     color: "#E67700" },
   { icon: Store,         label: "상가",    href: "/stores/",                                      color: "#0C8599" },
   { icon: ShoppingBag,   label: "중고거래",href: "/community/?tab=커뮤니티&category=중고거래",    color: "#C2255C" },
@@ -66,6 +92,206 @@ function greeting() {
   if (h < 12) return "좋은 아침이에요 ☀️";
   if (h < 18) return "좋은 오후예요 🌤️";
   return "좋은 저녁이에요 🌆";
+}
+
+// ─── 주간 날씨 모달 ────────────────────────────────────────────
+function WeeklyModal({ weekly, onClose }: {
+  weekly: NonNullable<WeatherData["weekly"]>;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[300]">
+      {/* 배경 클릭 시 닫기 */}
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      {/* 시트 */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
+        <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
+          </div>
+          <div className="flex items-center justify-between px-5 py-3 border-b border-[#f5f5f7]">
+            <div className="flex items-center gap-2">
+              <Calendar size={16} className="text-[#0071e3]" />
+              <span className="text-[17px] font-bold text-[#1d1d1f]">주간 날씨</span>
+            </div>
+            <button onClick={onClose} className="active:opacity-60">
+              <X size={20} className="text-[#6e6e73]" />
+            </button>
+          </div>
+          <div className="px-4 py-3 pb-10 space-y-1">
+            {weekly.map((day, i) => (
+              <div key={i}
+                className={`flex items-center gap-3 px-3 py-3 rounded-2xl transition-colors ${
+                  day.isToday ? "bg-[#e8f1fd]" : "hover:bg-[#f5f5f7]"
+                }`}>
+                <div className="w-14 shrink-0">
+                  <p className={`text-[14px] font-bold ${day.isToday ? "text-[#0071e3]" : "text-[#424245]"}`}>
+                    {day.isToday ? "오늘" : day.dayLabel}
+                  </p>
+                  <p className="text-[12px] text-[#86868b]">{day.date}</p>
+                </div>
+                <span className="text-[25px] w-8 shrink-0">{day.emoji}</span>
+                <div className="flex-1">
+                  {day.precipitation > 0 && (
+                    <p className="text-[12px] text-[#0071e3]">💧 {day.precipitation}mm</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[15px] font-bold text-[#F04452]">{day.high}°</span>
+                  <span className="text-[13px] text-[#86868b]">/</span>
+                  <span className="text-[15px] font-semibold text-[#0071e3]">{day.low}°</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 날씨 위젯 ────────────────────────────────────────────────
+function WeatherWidget({ weather, loading }: { weather: WeatherData | null; loading: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const [showWeekly, setShowWeekly] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="mx-4 mt-3 mb-3 bg-[#0071e3] rounded-2xl p-4 animate-pulse">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 bg-white/20 rounded-xl" />
+          <div className="flex-1 space-y-2">
+            <div className="h-6 w-20 bg-white/20 rounded-lg" />
+            <div className="h-3 w-36 bg-white/20 rounded-lg" />
+          </div>
+          <div className="h-8 w-16 bg-white/20 rounded-xl" />
+        </div>
+      </div>
+    );
+  }
+  if (!weather) return null;
+
+  const gradient =
+    weather.weatherCode <= 1 ? "from-[#0071e3] to-[#0EA5E9]"
+    : weather.weatherCode <= 3 ? "from-[#424245] to-[#6B7684]"
+    : weather.weatherCode >= 61 ? "from-[#0058b0] to-[#0071e3]"
+    : "from-[#0071e3] to-[#6366F1]";
+
+  // 어제 대비 온도 차이
+  const tempDiff = weather.yesterdayTemp != null ? weather.temp - weather.yesterdayTemp : null;
+
+  return (
+    <>
+      <div className={`mx-4 mt-3 mb-3 bg-gradient-to-br ${gradient} rounded-2xl overflow-hidden`}>
+        {/* 항상 보이는 바 */}
+        <button onClick={() => setExpanded(e => !e)}
+          className="w-full flex items-center gap-3 px-4 py-3.5 active:opacity-80">
+          <span className="text-[33px] leading-none shrink-0">{weather.emoji}</span>
+          <div className="flex-1 text-left">
+            <div className="flex items-baseline gap-2">
+              <span className="text-[29px] font-black text-white leading-none">{weather.temp}°</span>
+              <span className="text-[14px] text-white/80">{weather.label}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+              <span className="text-[13px] text-white/60">최고 {weather.high}° · 최저 {weather.low}°</span>
+              {tempDiff !== null && (
+                <span className={`flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full ${
+                  tempDiff > 0 ? "bg-red-400/30 text-red-100" : tempDiff < 0 ? "bg-blue-300/30 text-blue-100" : "bg-white/20 text-white/70"
+                }`}>
+                  {tempDiff > 0 ? <TrendingUp size={10} /> : tempDiff < 0 ? <TrendingDown size={10} /> : null}
+                  어제보다 {tempDiff > 0 ? `+${tempDiff}°` : tempDiff < 0 ? `${tempDiff}°` : "동일"}
+                </span>
+              )}
+            </div>
+            {(weather.pm10 != null || weather.pm25 != null) && (
+              <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                {weather.pm10 != null && (
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    weather.pm10Label === "좋음" ? "bg-blue-300/25 text-blue-100"
+                    : weather.pm10Label === "보통" ? "bg-white/20 text-white/80"
+                    : weather.pm10Label === "나쁨" ? "bg-orange-300/35 text-orange-200"
+                    : "bg-red-400/40 text-red-200"
+                  }`}>
+                    미세 {weather.pm10}㎍ · {weather.pm10Label}
+                  </span>
+                )}
+                {weather.pm25 != null && (
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                    weather.pm25Label === "좋음" ? "bg-blue-300/25 text-blue-100"
+                    : weather.pm25Label === "보통" ? "bg-white/20 text-white/80"
+                    : weather.pm25Label === "나쁨" ? "bg-orange-300/35 text-orange-200"
+                    : "bg-red-400/40 text-red-200"
+                  }`}>
+                    초미세 {weather.pm25}㎍ · {weather.pm25Label}
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={e => { e.stopPropagation(); setShowWeekly(true); }}
+            className="shrink-0 bg-white/20 rounded-xl px-3 py-2 active:bg-white/30">
+            <span className="text-[12px] font-bold text-white">주간</span>
+          </button>
+          {expanded
+            ? <ChevronUp size={15} className="text-white/60 shrink-0" />
+            : <ChevronDown size={15} className="text-white/60 shrink-0" />}
+        </button>
+
+        {/* 확장 영역 */}
+        {expanded && (
+          <div className="px-4 pb-4 border-t border-white/20">
+            <div className="flex items-center gap-4 py-2.5 mb-2 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Droplets size={12} className="text-white/70" />
+                <span className="text-[13px] text-white/80">습도 {weather.humidity}%</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Wind size={12} className="text-white/70" />
+                <span className="text-[13px] text-white/80">바람 {weather.windSpeed}m/s</span>
+              </div>
+              <span className="text-[13px] text-white/60 ml-auto">체감 {weather.feelsLike}°</span>
+              {weather.pm10 != null && (
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
+                  weather.pm10Label === "좋음" ? "bg-blue-300/30 text-blue-100"
+                  : weather.pm10Label === "보통" ? "bg-green-300/30 text-green-100"
+                  : weather.pm10Label === "나쁨" ? "bg-orange-300/30 text-orange-100"
+                  : "bg-red-400/30 text-red-100"
+                }`}>
+                  미세 {weather.pm10}㎍ {weather.pm10Label}
+                </span>
+              )}
+              {weather.pm25 != null && (
+                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${
+                  weather.pm25Label === "좋음" ? "bg-blue-300/30 text-blue-100"
+                  : weather.pm25Label === "보통" ? "bg-green-300/30 text-green-100"
+                  : weather.pm25Label === "나쁨" ? "bg-orange-300/30 text-orange-100"
+                  : "bg-red-400/30 text-red-100"
+                }`}>
+                  초미세 {weather.pm25}㎍ {weather.pm25Label}
+                </span>
+              )}
+            </div>
+            {weather.hourly.length > 0 && (
+              <div className="flex gap-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                {weather.hourly.map(h => (
+                  <div key={h.hour} className="flex flex-col items-center gap-1.5 shrink-0">
+                    <span className="text-[12px] text-white/60">{h.hour}</span>
+                    <span className="text-[19px]">{h.emoji}</span>
+                    <span className="text-[13px] text-white font-bold">{h.temp}°</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showWeekly && weather.weekly && (
+        <WeeklyModal weekly={weather.weekly} onClose={() => setShowWeekly(false)} />
+      )}
+    </>
+  );
 }
 
 // ─── 쿠폰 섹션 ────────────────────────────────────────────────
@@ -142,7 +368,7 @@ function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose:
         {dDay !== null && (
           <div className={`mx-5 mb-3 rounded-xl px-4 py-2.5 flex items-center justify-between ${dDay <= 3 ? "bg-[#FFF0F0]" : "bg-[#e8f1fd]"}`}>
             <span className="text-[13px] font-semibold text-[#424245]">혜택 마감까지</span>
-            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
+            <span className={`text-[15px] font-black ${dDay <= 3 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
               {dDay > 0 ? `D-${dDay}` : dDay === 0 ? "오늘 마감!" : "종료"}
             </span>
           </div>
@@ -169,7 +395,7 @@ function OpenBenefitSheet({ store, onClose }: { store: NewStoreOpening; onClose:
         )}
         <div className="px-5 pb-10 pt-1">
           <button onClick={onClose}
-            className="w-full h-12 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:bg-[#2563EB]">
+            className="w-full h-12 bg-[#0071e3] rounded-xl text-white text-[15px] font-bold active:bg-[#0058b0]">
             확인
           </button>
         </div>
@@ -231,7 +457,7 @@ function NewOpeningsSection() {
               <div className="px-3 py-2.5">
                 <p className="text-[13px] font-bold text-[#1d1d1f] truncate">{s.storeName}</p>
                 <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[11px] font-semibold text-[#3182F6]">{s.floor}</span>
+                  <span className="text-[11px] font-semibold text-[#0071e3]">{s.floor}</span>
                   <span className="text-[10px] text-[#d2d2d7]">·</span>
                   <span className="text-[11px] text-[#6e6e73]">{s.category}</span>
                 </div>
@@ -249,71 +475,39 @@ function NewOpeningsSection() {
 // ─── 커뮤니티 위젯 ────────────────────────────────────────────
 function CommunityWidget() {
   const router = useRouter();
-  const [communityPosts, setCommunityPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchDBPosts(undefined, 10)
-      .then(data => {
-        const visible = data.filter(p => !p.isHidden);
-        const hot = visible.filter(p => p.isHot);
-        setCommunityPosts(hot.length >= 3 ? hot.slice(0, 5) : visible.slice(0, 5));
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  if (loading) return (
-    <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7] animate-pulse">
-        {[0, 1, 2].map(i => <div key={i} className="h-[68px] px-4" />)}
-      </div>
-    </section>
-  );
-
-  if (communityPosts.length === 0) return null;
-
+  const hotPosts = posts.filter(p => p.isHot).slice(0, 3);
+  if (hotPosts.length === 0) return null;
   return (
     <section className="mx-4 mb-1">
-      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-[#f5f5f7]">
-        {communityPosts.slice(0, 5).map((post, idx) => (
+      <div className="bg-white rounded-2xl overflow-hidden shadow-sm divide-y divide-gray-100">
+        {hotPosts.map((post, idx) => (
           <button key={post.id}
             onClick={() => router.push(`/community/detail/?id=${post.id}`)}
-            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-[#f5f5f7] transition-colors">
+            className="w-full px-4 py-3.5 flex items-center gap-3 text-left active:bg-gray-50 transition-colors">
             <span className={`shrink-0 w-7 h-7 rounded-full text-[13px] font-bold flex items-center justify-center ${
-              idx === 0 ? "bg-[#2563EB] text-white" : idx === 1 ? "bg-[#f5f5f7] text-[#424245]" : "bg-[#f5f5f7] text-[#86868b]"
+              idx === 0 ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-500"
             }`}>
               {idx + 1}
             </span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <span className="text-[11px] font-semibold text-[#3182F6] bg-[#EFF6FF] px-1.5 py-0.5 rounded-full">
-                  {post.category}
+                <span className="text-[11px] font-semibold text-gray-500">{post.category}</span>
+                <span className="flex items-center gap-0.5 text-[10px] font-bold text-orange-500">
+                  <Flame size={9} />HOT
                 </span>
-                {post.isHot && (
-                  <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#F04452] bg-[#FEF2F2] px-1.5 py-0.5 rounded-full">
-                    <Flame size={9} />HOT
-                  </span>
-                )}
               </div>
-              <p className="text-[14px] font-semibold text-[#1d1d1f] leading-snug truncate mt-0.5">{post.title}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] text-[#86868b]">{post.authorDong}</span>
-                <span className="text-[11px] text-[#d2d2d7]">·</span>
-                <span className="text-[11px] text-[#86868b]">{formatRelativeTime(post.createdAt)}</span>
-                <div className="ml-auto flex items-center gap-2">
-                  <span className="text-[11px] text-[#86868b]">❤️ {post.likeCount}</span>
-                  {post.commentCount > 0 && (
-                    <span className="text-[11px] text-[#86868b]">💬 {post.commentCount}</span>
-                  )}
-                </div>
+              <p className="text-[14px] font-medium text-gray-900 leading-snug truncate">{post.title}</p>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className="text-[12px] text-gray-400">{post.authorDong}</span>
+                <span className="text-[12px] text-gray-300">·</span>
+                <span className="text-[12px] text-gray-400">{formatRelativeTime(post.createdAt)}</span>
+                <span className="text-[12px] text-gray-400 ml-auto">❤️ {post.likeCount}</span>
               </div>
             </div>
-            <ChevronRight size={14} className="text-[#d2d2d7] shrink-0" />
           </button>
         ))}
         <Link href="/community/"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#3182F6] font-semibold active:bg-[#f5f5f7]">
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-blue-600 font-semibold active:bg-gray-50">
           전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -335,7 +529,7 @@ function NewsWidget() {
     <section className="mx-4 mb-1 space-y-2">
       <a href={(topNews[0] as NewsArticle).url || "#"} target="_blank" rel="noopener noreferrer"
         className="block rounded-2xl overflow-hidden active:opacity-90"
-        style={{ background: "linear-gradient(135deg, #3182F6, #7C3AED)" }}>
+        style={{ background: "linear-gradient(135deg, #0071e3, #6366F1)" }}>
         <div className="p-4">
           <span className="text-[11px] font-bold bg-white/20 text-white px-2.5 py-0.5 rounded-full">
             {topNews[0].source}
@@ -354,15 +548,15 @@ function NewsWidget() {
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-medium text-[#1d1d1f] leading-snug line-clamp-2">{item.title}</p>
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[11px] text-[#3182F6] font-semibold">{item.source}</span>
+                <span className="text-[11px] text-[#0071e3] font-semibold">{item.source}</span>
                 <span className="text-[11px] text-[#86868b]">{formatRelativeTime(item.publishedAt)}</span>
               </div>
             </div>
             <ChevronRight size={14} className="text-[#d2d2d7] shrink-0 mt-1" />
           </a>
         ))}
-        <Link href="/community?tab=뉴스"
-          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#3182F6] font-semibold">
+        <Link href="/community/?tab=뉴스"
+          className="flex items-center justify-center gap-1 py-3 text-[13px] text-[#0071e3] font-semibold">
           뉴스 전체 보기 <ChevronRight size={13} />
         </Link>
       </div>
@@ -417,7 +611,7 @@ function YouTubeCard({ v }: { v: YouTubeVideo }) {
           <p className="text-[11px] text-[#86868b]">{v.channelName}</p>
           <a href={v.url} target="_blank" rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            className="text-[11px] text-[#3182F6] active:opacity-70">외부 열기</a>
+            className="text-[11px] text-[#0071e3] active:opacity-70">외부 열기</a>
         </div>
       </div>
     </div>
@@ -582,7 +776,7 @@ function PlaceDetailSheet({ place, onClose }: { place: Place; onClose: () => voi
               {place.phone && (
                 <div className="flex items-start gap-2.5">
                   <Phone size={14} className="text-[#3182F6] mt-0.5 shrink-0" />
-                  <a href={`tel:${place.phone}`} className="text-[13px] text-[#3182F6]">{place.phone}</a>
+                  <a href={`tel:${place.phone}`} className="text-[13px] text-[#0071e3]">{place.phone}</a>
                 </div>
               )}
             </div>
@@ -666,6 +860,23 @@ function PlacesSection() {
 }
 
 // ─── 조석/해루질/낚시 위젯 ──────────────────────────────────────
+// timeOffsetMin: 인천 기준 대비 시간 보정(분), rangeRatio: 조차 비율
+const TIDE_SPOTS = {
+  haerujil: [
+    { name: "강화 여차리 갯벌",     type: "갯벌", dist: "약 45km", timeOffsetMin:  20, rangeRatio: 1.05, lat: 37.6124, lng: 126.4343 },
+    { name: "영종도 북쪽 갯벌",     type: "갯벌", dist: "약 20km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.5396, lng: 126.4768 },
+    { name: "소래습지생태공원",     type: "갯벌", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4278, lng: 126.7373 },
+    { name: "시흥 오이도 갯벌",     type: "갯벌", dist: "약 35km", timeOffsetMin:  25, rangeRatio: 0.87, lat: 37.3476, lng: 126.6765 },
+    { name: "대부도 방아머리 갯벌", type: "갯벌", dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
+  ],
+  fishing: [
+    { name: "소래포구 방파제",    type: "방파제", dist: "약 15km", timeOffsetMin:  10, rangeRatio: 0.90, lat: 37.4264, lng: 126.7456 },
+    { name: "인천항 갑문 선착장", type: "선착장", dist: "약 18km", timeOffsetMin:   0, rangeRatio: 1.00, lat: 37.4604, lng: 126.5949 },
+    { name: "영종도 삼목선착장",  type: "선착장", dist: "약 22km", timeOffsetMin:  -5, rangeRatio: 0.97, lat: 37.4959, lng: 126.4462 },
+    { name: "강화 외포리 선착장", type: "선착장", dist: "약 45km", timeOffsetMin:  25, rangeRatio: 1.02, lat: 37.6441, lng: 126.4176 },
+    { name: "대부도 방아머리항",  type: "항구",   dist: "약 50km", timeOffsetMin:  35, rangeRatio: 0.80, lat: 37.2543, lng: 126.5671 },
+  ],
+};
 
 function TideSection() {
   const [report, setReport] = useState<TideReport | null>(null);
@@ -678,7 +889,7 @@ function TideSection() {
 
   if (!report) return null;
 
-  const { multtae, todayTides, nextLowTide, actualRangeM, haerujil, fishing, seasonalNote } = report;
+  const { multtae, todayTides, nextLowTide, haerujil, fishing, seasonalNote } = report;
   const activity = tab === "haerujil" ? haerujil : fishing;
 
   const sizeLabel = multtae.size === "large" ? "대조기" : multtae.size === "medium" ? "중간" : "소조기";
@@ -691,12 +902,15 @@ function TideSection() {
   };
   const rm = ratingMeta[activity.rating];
 
-  const spots: OutdoorSpot[] = tab === "haerujil"
-    ? OUTDOOR_SPOTS.filter(s => s.type === "해루질")
-    : OUTDOOR_SPOTS.filter(s => s.type === "바다낚시" || s.type === "민물낚시");
+  const spots = TIDE_SPOTS[tab];
+  const maxH = Math.max(...todayTides.map(t => t.heightM));
+  const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
 
-  const _now = new Date();
-  const nowMin = _now.getHours() * 60 + _now.getMinutes();
+  // 분 → HH:MM 변환 (인라인)
+  const toTime = (min: number) => {
+    const m = ((min % 1440) + 1440) % 1440;
+    return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  };
 
   return (
     <>
@@ -716,13 +930,13 @@ function TideSection() {
                 </span>
               </div>
               <p className="text-[13px] text-gray-500 mt-1">
-                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {actualRangeM}m
+                음력 {multtae.lunarMonth}월 {multtae.lunarDay}일 · 인천 조차 {multtae.rangeM}m
               </p>
             </div>
             {nextLowTide && (
               <div className="bg-blue-50 rounded-xl px-3 py-2 text-center min-w-[78px]">
                 <p className="text-[11px] text-blue-500 font-semibold">다음 저조</p>
-                <p className="text-[21px] font-black text-[#3182F6] leading-tight">{nextLowTide.timeStr}</p>
+                <p className="text-[21px] font-black text-[#0071e3] leading-tight">{nextLowTide.timeStr}</p>
               </div>
             )}
           </div>
@@ -731,7 +945,6 @@ function TideSection() {
           {(() => {
             const W = 320; const H = 78; const PAD_X = 14; const PAD_Y = 8;
             const minH2 = Math.min(...todayTides.map(t => t.heightM));
-            const maxH = Math.max(...todayTides.map(t => t.heightM));
             const range = maxH - minH2 || 1;
             const toX = (i: number) => PAD_X + (i / (todayTides.length - 1)) * (W - PAD_X * 2);
             const toY = (h: number) => PAD_Y + (1 - (h - minH2) / range) * (H - PAD_Y * 2);
@@ -787,11 +1000,7 @@ function TideSection() {
           {([["haerujil", "🦀 해루질"], ["fishing", "🎣 낚시"]] as const).map(([key, label]) => (
             <button key={key} onClick={() => setTab(key)}
               className={`flex-1 py-2.5 rounded-lg text-[15px] font-bold transition-all ${
-                tab === key
-                  ? key === "haerujil"
-                    ? "bg-orange-50 text-orange-700 shadow-sm"
-                    : "bg-blue-50 text-blue-700 shadow-sm"
-                  : "text-gray-400"
+                tab === key ? "bg-white text-[#1d1d1f] shadow-sm" : "text-gray-500"
               }`}>
               {label}
             </button>
@@ -829,69 +1038,51 @@ function TideSection() {
 
         {/* ── 추천 스팟 ── */}
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-50 flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-gray-50">
             <p className="text-[14px] font-bold text-gray-700">
               📍 {tab === "haerujil" ? "해루질" : "낚시"} 추천 스팟
             </p>
-            <Link href="/transport/?tab=가볼만한곳"
-              className="text-[12px] text-[#3182F6] font-medium flex items-center gap-0.5">
-              전체보기 <ChevronRight size={12} />
-            </Link>
           </div>
-
-          {/* 법 개정 안내 */}
-          <div className="mx-3 mt-3 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-            <span className="text-[12px] shrink-0">⚠️</span>
-            <p className="text-[11px] text-amber-800 leading-snug">
-              <span className="font-bold">수산자원관리법 2026 개정</span> — 비어업인 해루질 시간·장소 제한 강화. 어촌계 어업권 구역 진입 시 절도죄 위험. 현지 공고 확인 필수.
-            </p>
-          </div>
-
-          <div className="divide-y divide-gray-50 mt-2">
-            {spots.map((s) => {
-              const typeColor = s.type === "해루질" ? "#0891B2"
-                : s.type === "민물낚시" ? "#2E7D32" : "#1E40AF";
-              const typeBg = s.type === "해루질" ? "#E0F7FA"
-                : s.type === "민물낚시" ? "#E8F5E9" : "#EFF6FF";
-              const typeEmoji = s.type === "해루질" ? "🌊" : s.type === "민물낚시" ? "🏞️" : "⚓";
+          <div className="divide-y divide-gray-50">
+            {spots.map((s, i) => {
+              // 스팟별 조석 보정
+              const spotRange = parseFloat((multtae.rangeM * s.rangeRatio).toFixed(1));
+              const spotLowTides = todayTides
+                .filter(t => t.type === "low")
+                .map(t => {
+                  const corrMin = ((t.minutes + s.timeOffsetMin) + 1440) % 1440;
+                  return { ...t, minutes: corrMin, timeStr: toTime(corrMin) };
+                });
+              const nextSpotLow = spotLowTides.find(t => t.minutes > nowMin) ?? spotLowTides[0];
+              const sameAsIncheon = Math.abs(s.timeOffsetMin) < 5 && Math.abs(s.rangeRatio - 1) < 0.03;
 
               return (
-                <div key={s.id} className="flex items-start gap-3 px-4 py-3">
+                <div key={i} className="flex items-center gap-3 px-4 py-3">
                   <div className="flex-1 min-w-0">
-                    {/* 이름 + 타입 배지 */}
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0"
-                        style={{ color: typeColor, background: typeBg }}>
-                        {typeEmoji} {s.type}
-                      </span>
-                      {s.boat && (
-                        <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full shrink-0">🚢 배편</span>
+                    <p className="text-[15px] font-semibold text-[#1d1d1f]">{s.name}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className="text-[12px] text-gray-500">{s.type} · {s.dist}</span>
+                      {!sameAsIncheon && nextSpotLow && (
+                        <>
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-600">
+                            저조 <span className="font-semibold text-[#0071e3]">{nextSpotLow.timeStr}</span>
+                          </span>
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-600">조차 <span className="font-semibold">{spotRange}m</span></span>
+                        </>
                       )}
-                    </div>
-                    <p className="text-[15px] font-bold text-[#1d1d1f] leading-snug">{s.name}</p>
-                    {/* 거리 */}
-                    <p className="text-[12px] text-gray-500 mt-0.5">
-                      검단 기준 {s.distKm}km · 차로 {s.driveMin}분
-                    </p>
-                    {/* 어종 칩 */}
-                    <div className="flex flex-wrap gap-1 mt-1.5">
-                      {s.species.slice(0, 4).map(sp => (
-                        <span key={sp} className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-600">{sp}</span>
-                      ))}
-                    </div>
-                    {/* 금어기 경고 */}
-                    {s.regulation && (
-                      <p className="text-[11px] text-orange-600 font-medium mt-1">🚫 {s.regulation}</p>
-                    )}
-                    {/* 안전도 */}
-                    <div className="flex items-center gap-1 mt-1">
-                      <span className="text-[10px] text-gray-400">안전</span>
-                      <span className="text-[11px] text-yellow-500">{"★".repeat(s.safety)}{"☆".repeat(5 - s.safety)}</span>
+                      {sameAsIncheon && (
+                        <>
+                          <span className="text-[12px] text-gray-300">·</span>
+                          <span className="text-[12px] text-gray-500">인천과 동일</span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <button
                     onClick={() => setMapTarget({ name: s.name, address: s.name, lat: s.lat, lng: s.lng })}
-                    className="shrink-0 mt-1 flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-gray-900 text-[12px] font-bold text-white"
+                    className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-lg bg-yellow-50 text-[12px] font-bold text-yellow-700"
                   >
                     지도 ↗
                   </button>
@@ -929,14 +1120,12 @@ function RealEstateWidget() {
   const [myAptId, setMyAptId] = useState<string | null>(null);
   const [myAptSzIdx, setMyAptSzIdx] = useState(0);
   const [pyeongFilter, setPyeongFilter] = useState<PyeongFilter>("전체");
-  const [aptData, setAptData] = useState(mockApartments);
   useEffect(() => {
     setMyAptId(localStorage.getItem("myAptId"));
     setMyAptSzIdx(parseInt(localStorage.getItem("myAptSzIdx") ?? "0", 10));
-    fetchApartments().then(data => { if (data.length > 0) setAptData(data); });
   }, []);
 
-  const myApt = myAptId ? aptData.find(a => a.id === myAptId) ?? null : null;
+  const myApt = myAptId ? apartments.find(a => a.id === myAptId) ?? null : null;
   const mySzIdx = Math.min(myAptSzIdx, (myApt?.sizes.length ?? 1) - 1);
   const mySz    = myApt?.sizes[mySzIdx] ?? myApt?.sizes[0];
   const myH     = mySz?.priceHistory ?? [];
@@ -947,10 +1136,10 @@ function RealEstateWidget() {
 
   // 검단신도시 평균 (평수 필터 반영)
   const avgTrend = (() => {
-    const months = aptData[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
+    const months = apartments[0]?.sizes[0]?.priceHistory.map(p => p.date) ?? [];
     return months.map(month => {
       let total = 0, count = 0;
-      aptData.forEach(apt => apt.sizes.forEach(sz => {
+      apartments.forEach(apt => apt.sizes.forEach(sz => {
         if (pyeongFilter !== "전체" && pyeongBucket(sz.pyeong) !== pyeongFilter) return;
         const entry = sz.priceHistory.find(p => p.date === month);
         if (entry) { total += entry.price; count++; }
@@ -1206,8 +1395,8 @@ function MartSection() {
         {/* 위치 기준 표시줄 */}
         <div className="px-4 py-2 flex items-center justify-between gap-2 border-b border-[#f5f5f7]">
           <div className="flex items-center gap-1.5">
-            <MapPin size={11} className={locState === "ok" ? "text-[#3182F6]" : "text-[#86868b]"} />
-            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#3182F6]" : "text-[#6e6e73]"}`}>
+            <MapPin size={11} className={locState === "ok" ? "text-[#0071e3]" : "text-[#86868b]"} />
+            <span className={`text-[11px] font-semibold ${locState === "ok" ? "text-[#0071e3]" : "text-[#6e6e73]"}`}>
               {locLabel}
             </span>
           </div>
@@ -1216,8 +1405,8 @@ function MartSection() {
             className="flex items-center gap-1 px-2 py-1 rounded-lg active:bg-[#f5f5f7]"
             aria-label="위치 새로고침"
           >
-            <RefreshCw size={11} className={`text-[#3182F6] ${locState === "loading" ? "animate-spin" : ""}`} />
-            <span className="text-[11px] text-[#3182F6] font-semibold">위치 갱신</span>
+            <RefreshCw size={11} className={`text-[#0071e3] ${locState === "loading" ? "animate-spin" : ""}`} />
+            <span className="text-[11px] text-[#0071e3] font-semibold">위치 갱신</span>
           </button>
         </div>
 
@@ -1322,7 +1511,7 @@ function MartSection() {
                     {mart.phone && (
                       <a href={`tel:${mart.phone}`}
                         className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center">
-                        <Phone size={14} className="text-[#3182F6]" />
+                        <Phone size={14} className="text-[#0071e3]" />
                       </a>
                     )}
                     <button
@@ -1341,7 +1530,7 @@ function MartSection() {
         {marts.length > MART_INITIAL_COUNT && (
           <button
             onClick={() => setShowAll(v => !v)}
-            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#3182F6] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
+            className="w-full py-2.5 flex items-center justify-center gap-1 text-[13px] font-semibold text-[#0071e3] border-t border-[#f5f5f7] active:bg-[#f5f5f7]"
           >
             {showAll
               ? <>접기 <ChevronUp size={14} /></>
@@ -1626,10 +1815,11 @@ function PharmacySection() {
     return enriched;
   }, [pharmacies, userLoc, now]);
 
-  const filtered = sortedPharmacies.filter(({ p }) => {
-    const tags = p.tags ?? [];
-    if (filter === "주말") return tags.includes("주말");
-    if (filter === "심야") return tags.includes("심야");
+  const filtered = sortedPharmacies.filter(({ p, distM }) => {
+    // 거리를 알 수 없는 항목 제외 (GPS 미허용 시 Infinity)
+    if (!Number.isFinite(distM)) return false;
+    if (filter === "주말") return p.tags.includes("주말");
+    if (filter === "심야") return p.tags.includes("심야");
     return true;
   });
 
@@ -1664,8 +1854,8 @@ function PharmacySection() {
         {/* 상태 배너 */}
         {(isWeekend || isNight) && mainType === "약국" && (
           <div className={`px-4 py-2.5 flex items-center gap-2 ${isNight ? "bg-[#1B2B4B]" : "bg-[#e8f1fd]"}`}>
-            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#3182F6]"} />
-            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#3182F6]"}`}>
+            <Clock size={13} className={isNight ? "text-blue-300" : "text-[#0071e3]"} />
+            <span className={`text-[12px] font-semibold ${isNight ? "text-blue-200" : "text-[#0071e3]"}`}>
               {isNight ? "지금은 심야 시간이에요 — 운영 중인 약국을 확인하세요" : "오늘은 주말이에요 — 운영 약국을 확인하세요"}
             </span>
           </div>
@@ -1684,7 +1874,7 @@ function PharmacySection() {
           {(["약국", "응급실", "소아응급실"] as EmergencyType[]).map(t => (
             <button key={t} onClick={() => { setMainType(t); setShowAll(false); }}
               className={`flex-1 h-10 text-[13px] font-bold border-b-2 transition-colors ${mainType === t
-                ? t === "약국" ? "text-[#3182F6] border-[#3182F6]"
+                ? t === "약국" ? "text-[#0071e3] border-[#0071e3]"
                   : t === "응급실" ? "text-[#F04452] border-[#F04452]"
                   : "text-[#F97316] border-[#F97316]"
                 : "text-[#86868b] border-transparent"}`}>
@@ -1699,10 +1889,10 @@ function PharmacySection() {
             <div className="flex items-center justify-between px-4 pt-3 pb-1">
               <div className="flex items-center gap-1.5 min-w-0">
                 {geoStatus === "loading"
-                  ? <Loader2 size={12} className="text-[#3182F6] animate-spin shrink-0" />
-                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#3182F6]" : "text-[#86868b]"} />
+                  ? <Loader2 size={12} className="text-[#0071e3] animate-spin shrink-0" />
+                  : <LocateFixed size={12} className={geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"} />
                 }
-                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#3182F6]" : "text-[#86868b]"}`}>
+                <span className={`text-[11px] font-semibold truncate ${geoStatus === "ready" ? "text-[#0071e3]" : "text-[#86868b]"}`}>
                   {locLabel}
                 </span>
               </div>
@@ -1726,14 +1916,6 @@ function PharmacySection() {
             </div>
             {/* 약국 목록 */}
             <div className="divide-y divide-[#f5f5f7]">
-              {displayed.length === 0 && (
-                <div className="px-4 py-8 flex flex-col items-center gap-2">
-                  <PillBottle size={28} className="text-[#d2d2d7]" />
-                  <p className="text-[14px] text-[#86868b] font-medium">
-                    {filter === "주말" ? "주말 운영 약국 정보가 없어요" : filter === "심야" ? "심야 운영 약국 정보가 없어요" : "약국 정보를 불러오는 중이에요"}
-                  </p>
-                </div>
-              )}
               {displayed.map(({ p, distM, isOpen }) => {
                 const { todayHours, todayLabel } = getPharmacyStatus(p, now);
                 const distLabel = Number.isFinite(distM) ? formatDistanceKm(distM) : "거리 미정";
@@ -1750,11 +1932,11 @@ function PharmacySection() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-wrap min-w-0">
                           <span className="text-[14px] font-bold text-[#1d1d1f]">{p.name}</span>
-                          {(p.tags ?? []).includes("24시") && (
+                          {p.tags.includes("24시") && (
                             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#FEF3C7] text-[#B45309] shrink-0">24시간</span>
                           )}
                         </div>
-                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#3182F6]" : "text-[#86868b]"}`}>
+                        <span className={`text-[12px] shrink-0 font-semibold ${Number.isFinite(distM) ? "text-[#0071e3]" : "text-[#86868b]"}`}>
                           {distLabel}
                         </span>
                       </div>
@@ -1787,7 +1969,7 @@ function PharmacySection() {
                         )}
                         {p.weekendHours && todayLabel !== "주말" && (
                           <span className="text-[11px] text-[#86868b]">
-                            <span className="font-semibold text-[#3182F6]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
+                            <span className="font-semibold text-[#0071e3]">주말</span> {p.weekendHours.replace(/^토·일\s*/, "")}
                           </span>
                         )}
                         {p.nightHours && todayLabel !== "심야" && (
@@ -1801,12 +1983,12 @@ function PharmacySection() {
                     <div className="flex flex-col items-end gap-1.5 shrink-0 mt-0.5">
                       <div className="flex items-center gap-1.5">
                         <a href={`tel:${p.phone}`} className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                          <Phone size={14} className="text-[#3182F6]" />
+                          <Phone size={14} className="text-[#0071e3]" />
                         </a>
                         <button
                           onClick={() => setMapTarget({ name: p.name, address: p.address })}
                           className="w-8 h-8 bg-[#e8f1fd] rounded-xl flex items-center justify-center active:bg-[#d0e4fb]">
-                          <MapPin size={14} className="text-[#3182F6]" />
+                          <MapPin size={14} className="text-[#0071e3]" />
                         </button>
                       </div>
                     </div>
@@ -2012,7 +2194,7 @@ function WidgetSettingsSheet({
               초기화
             </button>
             <button onClick={() => { onSave(draft); onClose(); }}
-              className="flex-1 h-12 rounded-2xl bg-[#0071e3] text-white text-[15px] font-bold active:bg-[#2563EB] transition-colors">
+              className="flex-1 h-12 rounded-2xl bg-[#0071e3] text-white text-[15px] font-bold active:bg-[#0058b0] transition-colors">
               완료
             </button>
           </div>
@@ -2036,16 +2218,12 @@ function SectionLabel({
 }) {
   return (
     <div className="flex items-center justify-between px-4 pt-6 pb-3">
-      <div className="flex items-center gap-2.5">
-        <span
-          className="w-1 h-5 rounded-full shrink-0"
-          style={{ background: "linear-gradient(180deg, #3182F6 0%, #7C3AED 100%)" }}
-        />
-        <span className="text-[20px] font-extrabold text-[#1d1d1f] tracking-tight">{label}</span>
+      <div className="flex items-center gap-2">
+        <span className="text-[19px] font-extrabold text-[#1d1d1f]">{label}</span>
         {badge}
       </div>
       {href && (
-        <Link href={href} className="text-[13px] text-[#3182F6] font-semibold flex items-center gap-0.5 active:opacity-60">
+        <Link href={href} className="text-[13px] text-[#0071e3] font-medium flex items-center gap-0.5">
           {linkLabel} <ChevronRight size={13} />
         </Link>
       )}
@@ -2096,190 +2274,17 @@ function getPersonalizedMessage(name: string, weather: WeatherData | null): { su
   return { sub: `${name}님, 오늘도 고생하셨어요 🌙`, main: "편안한 밤 되세요" };
 }
 
-function GreetingBanner({ weather, weatherLoading, nickname }: {
-  weather: WeatherData | null;
-  weatherLoading: boolean;
-  nickname: string;
-}) {
-  const [showHourly, setShowHourly] = useState(false);
-  const [showWeekly, setShowWeekly] = useState(false);
-
+function GreetingBanner({ weather, nickname }: { weather: WeatherData | null; nickname: string }) {
   const { sub, main } = getPersonalizedMessage(nickname, weather);
   const now = new Date();
-  const hour = now.getHours();
   const dateStr = now.toLocaleDateString("ko-KR", { month: "long", day: "numeric", weekday: "short" });
 
-  const { gradFrom, gradTo } =
-    hour < 6  ? { gradFrom: "#1a1a2e", gradTo: "#0f3460" }
-    : hour < 9  ? { gradFrom: "#1e3a8a", gradTo: "#3b82f6" }
-    : hour < 12 ? { gradFrom: "#0071e3", gradTo: "#38bdf8" }
-    : hour < 17 ? { gradFrom: "#2563EB", gradTo: "#0071e3" }
-    : hour < 20 ? { gradFrom: "#7c3aed", gradTo: "#c026d3" }
-    :             { gradFrom: "#1e1b4b", gradTo: "#312e81" };
-
-  const tempDiff = weather?.yesterdayTemp != null ? weather.temp - weather.yesterdayTemp : null;
-  const hasHourly = !!(weather && weather.hourly.length > 0);
-  const hasWeekly = !!(weather && weather.weekly && weather.weekly.length > 0);
-
-  function toggleHourly() { setShowHourly(v => !v); if (!showHourly) setShowWeekly(false); }
-  function toggleWeekly() { setShowWeekly(v => !v); if (!showWeekly) setShowHourly(false); }
-
   return (
-    <div className="px-4 pt-3 pb-2">
-      <div
-        className="rounded-3xl relative overflow-hidden"
-        style={{ background: `linear-gradient(140deg, ${gradFrom}, ${gradTo})` }}>
-        {/* 장식용 원 */}
-        <div className="absolute -right-8 -top-8 w-32 h-32 rounded-full bg-white/[0.06] pointer-events-none" />
-        <div className="absolute right-5 bottom-5 w-16 h-16 rounded-full bg-white/[0.04] pointer-events-none" />
-
-        {/* 인사 + 날씨 요약 */}
-        <div className="px-4 pt-4 pb-3 relative z-10">
-          <p className="text-[10px] font-semibold text-white/45 tracking-widest uppercase mb-0.5">{dateStr}</p>
-          <p className="text-[13px] font-medium text-white/70 leading-snug">
-            {sub.replace(/^(.+?님),\s*/, (_, n) => `${n}, `)}
-          </p>
-          <h1 className="text-[20px] font-black text-white leading-tight tracking-tight mt-0.5">{main}</h1>
-
-          {weather ? (
-            <div className="mt-2.5 flex items-center gap-1.5 flex-wrap">
-              {/* 현재 기온 */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-1">
-                <span className="text-[17px] leading-none">{weather.emoji}</span>
-                <span className="text-[14px] font-black text-white">{weather.temp}°</span>
-                <span className="text-[11px] text-white/55">{weather.label}</span>
-              </div>
-              {/* 최고·최저 */}
-              <div className="bg-white/15 backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-1">
-                <span className="text-[12px] font-bold text-[#fca5a5]">최고 {weather.high}°</span>
-                <span className="text-[10px] text-white/25">·</span>
-                <span className="text-[12px] font-bold text-[#93c5fd]">최저 {weather.low}°</span>
-              </div>
-              {/* 어제 대비 */}
-              {tempDiff !== null && (
-                <div className={`backdrop-blur-sm rounded-xl px-2.5 py-1 flex items-center gap-0.5 ${
-                  tempDiff > 0 ? "bg-red-400/30" : tempDiff < 0 ? "bg-blue-300/30" : "bg-white/15"
-                }`}>
-                  {tempDiff > 0
-                    ? <TrendingUp size={10} className="text-red-200" />
-                    : tempDiff < 0
-                    ? <TrendingDown size={10} className="text-blue-200" />
-                    : null}
-                  <span className="text-[11px] font-bold text-white ml-0.5">
-                    어제보다 {tempDiff > 0 ? `+${tempDiff}°` : tempDiff < 0 ? `${tempDiff}°` : "동일"}
-                  </span>
-                </div>
-              )}
-              {/* 미세먼지 */}
-              {weather.pm10 != null && (
-                <div className={`backdrop-blur-sm rounded-xl px-2.5 py-1 ${
-                  weather.pm10 <= 30 ? "bg-[#059669]/30"
-                  : weather.pm10 <= 80 ? "bg-[#D97706]/30"
-                  : "bg-[#DC2626]/30"
-                }`}>
-                  <span className="text-[11px] font-bold text-white">
-                    미세먼지 {weather.pm10 <= 30 ? "😊 좋음" : weather.pm10 <= 80 ? "😐 보통" : "😷 나쁨"}
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : weatherLoading ? (
-            <div className="mt-2.5 flex gap-1.5">
-              <div className="h-7 w-24 bg-white/15 rounded-xl animate-pulse" />
-              <div className="h-7 w-20 bg-white/15 rounded-xl animate-pulse" />
-            </div>
-          ) : null}
-        </div>
-
-        {/* 아코디언 토글 버튼 행 — 아이콘+화살표만 */}
-        {(hasHourly || hasWeekly) && (
-          <div className="border-t border-white/10 flex relative z-10">
-            {hasHourly && (
-              <button
-                onClick={toggleHourly}
-                className={`flex-1 flex items-center justify-center gap-1 py-2 active:opacity-60 transition-opacity ${
-                  showHourly ? "bg-white/10" : ""
-                } ${hasWeekly ? "border-r border-white/10" : ""}`}>
-                <Clock size={12} className="text-white/50" />
-                {showHourly
-                  ? <ChevronUp size={13} className="text-white/50" />
-                  : <ChevronDown size={13} className="text-white/50" />}
-              </button>
-            )}
-            {hasWeekly && (
-              <button
-                onClick={toggleWeekly}
-                className={`flex-1 flex items-center justify-center gap-1 py-2 active:opacity-60 transition-opacity ${
-                  showWeekly ? "bg-white/10" : ""
-                }`}>
-                <Calendar size={12} className="text-white/50" />
-                {showWeekly
-                  ? <ChevronUp size={13} className="text-white/50" />
-                  : <ChevronDown size={13} className="text-white/50" />}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* 시간별 날씨 펼침 */}
-        {showHourly && weather && (
-          <div className="border-t border-white/10 relative z-10 px-4 pt-3 pb-4">
-            <p className="text-[11px] font-bold text-white/50 uppercase tracking-wide mb-2.5">시간별 날씨</p>
-            <div className="flex gap-4 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
-              {weather.hourly.map(h => (
-                <div key={h.hour} className="flex flex-col items-center gap-1 shrink-0">
-                  <span className="text-[11px] text-white/50">{h.hour}</span>
-                  <span className="text-[19px]">{h.emoji}</span>
-                  <span className="text-[13px] font-bold text-white">{h.temp}°</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-white/10 flex-wrap">
-              <div className="flex items-center gap-1">
-                <Droplets size={11} className="text-white/50" />
-                <span className="text-[12px] text-white/65">습도 {weather.humidity}%</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Wind size={11} className="text-white/50" />
-                <span className="text-[12px] text-white/65">바람 {weather.windSpeed}m/s</span>
-              </div>
-              <span className="text-[12px] text-white/50 ml-auto">체감 {weather.feelsLike}°</span>
-            </div>
-          </div>
-        )}
-
-        {/* 주간 날씨 펼침 */}
-        {showWeekly && weather && weather.weekly && (
-          <div className="border-t border-white/10 relative z-10 px-4 pt-3 pb-4">
-            <p className="text-[11px] font-bold text-white/50 uppercase tracking-wide mb-2">주간 날씨</p>
-            <div className="space-y-1">
-              {weather.weekly.map((day, i) => (
-                <div key={i} className={`flex items-center gap-2 px-3 py-2 rounded-xl ${
-                  day.isToday ? "bg-white/20" : "bg-white/[0.07]"
-                }`}>
-                  <div className="w-[48px] shrink-0">
-                    <p className={`text-[13px] font-bold leading-tight ${day.isToday ? "text-white" : "text-white/80"}`}>
-                      {day.isToday ? "오늘" : day.dayLabel}
-                    </p>
-                    <p className="text-[10px] text-white/40">{day.date}</p>
-                  </div>
-                  <span className="text-[20px] w-7 shrink-0">{day.emoji}</span>
-                  <div className="flex-1 text-left">
-                    {day.precipitation > 0 && (
-                      <p className="text-[10px] text-[#93c5fd]">💧{day.precipitation}mm</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <span className="text-[13px] font-bold text-[#fca5a5]">{day.high}°</span>
-                    <span className="text-[10px] text-white/25">/</span>
-                    <span className="text-[13px] font-semibold text-[#93c5fd]">{day.low}°</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="px-4 pt-5 pb-2">
+      <p className="text-[12px] font-semibold text-[#86868b] mb-1 tracking-wide">
+        {dateStr} &nbsp;·&nbsp; {sub.replace(/^.+?님,\s*/, "")}
+      </p>
+      <h1 className="text-[26px] font-black text-[#1d1d1f] leading-tight tracking-tight">{main}</h1>
     </div>
   );
 }
@@ -2354,10 +2359,6 @@ function HomeTransportWidget() {
   const favRouteStopIds = favRoutes.map(r => r.stopId);
   const allBusStopIds = Array.from(new Set([...favStopIds, ...favRouteStopIds]));
   const favRouteKeySet = new Set(favRoutes.map(r => r.key));
-  // routeNo-based fallback for when arrival has routeId but favorites were saved by routeNo
-  const favRouteNoKeySet = new Set(favRoutes.map(r => `${r.stopId}::${r.routeNo}`));
-  const isFavRoute = (stopId: string, a: BusArrival) =>
-    favRouteKeySet.has(routeFavKey(stopId, a)) || favRouteNoKeySet.has(`${stopId}::${a.routeNo}`);
 
   // 표시할 정류장 목록: 즐겨찾기 정류장 + 즐겨찾기 노선의 부모 정류장 (중복 제거)
   const busStopsToShow: { id: string; name: string }[] = (() => {
@@ -2371,29 +2372,15 @@ function HomeTransportWidget() {
 
   const favSubwayStations: SubwayStationWithDist[] = ALL_SUBWAY_STATIONS.filter(s => favSubways.has(s.id));
 
-  const refreshBusStop = useCallback(async (stopId: string, stopName?: string) => {
+  const refreshBusStop = useCallback(async (stopId: string) => {
     setBusLoading(prev => new Set([...prev, stopId]));
     try {
       // stationId lookup: 구버전 "gd-X" 형식 저장 호환
       const station = GEUMDAN_BUS_STATIONS.find(s => s.id === stopId);
       const apiId = station?.stationId ?? stopId;
-      let data = await fetchArrivalsByStationId(apiId);
-      if (data.length === 0) data = await fetchArrivalsByNodeId(apiId);
-      // OSM ID로 저장된 정류장은 이름으로 TAGO 역 검색 후 재시도 (검단 중심에서 가장 가까운 역 선택)
-      if (data.length === 0 && stopName && stopName !== "정류장" && stopName !== "버스 정류장") {
-        const found = await searchStationsByName(stopName).catch(() => []);
-        if (found.length > 0) {
-          const GEUMDAN_LAT = 37.594, GEUMDAN_LNG = 126.710;
-          const closest = found.reduce((best, s) => {
-            const d = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, s.lat, s.lng);
-            const bd = haversineM(GEUMDAN_LAT, GEUMDAN_LNG, best.lat, best.lng);
-            return d < bd ? s : best;
-          });
-          const tagoId = closest.stationId;
-          data = await fetchArrivalsByStationId(tagoId);
-          if (data.length === 0) data = await fetchArrivalsByNodeId(tagoId);
-        }
-      }
+      // NodeId(TAGO) 먼저: 권역 밖 정류장도 전국 단위로 조회 가능
+      let data = await fetchArrivalsByNodeId(apiId);
+      if (data.length === 0) data = await fetchArrivalsByStationId(apiId);
       setBusArrivals(prev => ({ ...prev, [stopId]: data }));
 
       // 이름 자동 저장: stationName이 있으면 favStops_meta에 백필
@@ -2426,7 +2413,7 @@ function HomeTransportWidget() {
   }, []);
 
   useEffect(() => {
-    busStopsToShow.forEach(stop => refreshBusStop(stop.id, stop.name));
+    allBusStopIds.forEach(id => refreshBusStop(id));
     favSubwayStations.forEach(st => refreshSubwayStation(st));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -2443,7 +2430,7 @@ function HomeTransportWidget() {
           <button onClick={() => router.push("/transport/")}
             className="w-full rounded-2xl bg-white px-4 py-4 flex items-center gap-3 active:bg-[#f5f5f7] shadow-sm">
             <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center shrink-0">
-              <Bus size={18} className="text-[#3182F6]" />
+              <Bus size={18} className="text-[#0071e3]" />
             </div>
             <div className="flex-1 text-left">
               <p className="text-[14px] font-bold text-[#1d1d1f]">즐겨찾기한 교통수단이 없어요</p>
@@ -2479,13 +2466,13 @@ function HomeTransportWidget() {
             <div className="w-full flex items-center justify-between px-4 py-3.5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-[#e8f1fd] flex items-center justify-center shrink-0">
-                  <Bus size={18} className="text-[#3182F6]" />
+                  <Bus size={18} className="text-[#0071e3]" />
                 </div>
                 <div className="text-left">
                   <p className="text-[15px] font-bold text-[#1d1d1f]">{stopName}</p>
                   <div className="flex items-center gap-1.5 mt-0.5">
-                    <Navigation size={10} className="text-[#3182F6]" />
-                    <span className="text-[12px] font-semibold text-[#3182F6]">즐겨찾기</span>
+                    <Navigation size={10} className="text-[#0071e3]" />
+                    <span className="text-[12px] font-semibold text-[#0071e3]">즐겨찾기</span>
                     {!isLoading && stopArrivals.length > 0 && (
                       <span className="text-[12px] text-[#86868b]">· 노선 {stopArrivals.length}개</span>
                     )}
@@ -2543,7 +2530,7 @@ function HomeTransportWidget() {
                               <Zap size={9} />급행
                             </span>
                           )}
-                          {a.isLowFloor && <Accessibility size={12} className="text-[#3182F6] shrink-0" />}
+                          {a.isLowFloor && <Accessibility size={12} className="text-[#0071e3] shrink-0" />}
                         </div>
                         <p className="text-[12px] text-[#6e6e73]">
                           {a.isScheduled ? "경유 노선" : a.remainingStops > 0 ? `${a.remainingStops}정류장 전` : "곧 도착"}
@@ -2634,7 +2621,7 @@ function HomeTransportWidget() {
                             <span className="text-[9px] text-[#E65100] font-bold block">{a.trainTypeName ?? "급행"}</span>
                           )}
                         </div>
-                        <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#3182F6]"}`}>
+                        <span className={`text-[16px] font-black shrink-0 ${a.arrivalMin <= 2 ? "text-[#F04452]" : "text-[#0071e3]"}`}>
                           {a.arrivalMin <= 2 ? "곧" : `${a.arrivalMin}분`}
                         </span>
                       </div>
@@ -2703,18 +2690,21 @@ export default function HomePage() {
 
   // 위젯 ID → 렌더 함수 맵 (weather/router 클로저 캡처)
   const widgetRenderers: Record<string, () => React.ReactNode> = {
-    greeting: () => <GreetingBanner weather={weather} weatherLoading={weatherLoading} nickname={userNickname} />,
+    greeting: () => <GreetingBanner weather={weather} nickname={userNickname} />,
     banners: () => homeBanners.length > 0 ? <BannerCarousel banners={homeBanners} /> : null,
+    weather: () => <WeatherWidget weather={weather} loading={weatherLoading} />,
     quickmenu: () => (
       <div className="px-5 mt-10 mb-10">
-        <div className="grid grid-cols-4 gap-x-4 gap-y-4">
+        <div className="grid grid-cols-4 gap-x-4 gap-y-3">
           {quickMenus.map(({ icon: Icon, label, href, color }) => (
             <Link key={label} href={href}
-              className="flex flex-col items-center gap-[8px] active:scale-[0.93] transition-transform duration-150"
-              style={{ transitionTimingFunction: "cubic-bezier(0.34,1.56,0.64,1)" }}>
-              <div className="w-[54px] h-[54px] rounded-[18px] flex items-center justify-center bg-white"
-                style={{ boxShadow: "var(--shadow-card)" }}>
-                <Icon size={23} strokeWidth={1.9} color={color} />
+              className="flex flex-col items-center gap-[7px] active:scale-95 transition-transform">
+              <div className="w-[52px] h-[52px] rounded-[16px] flex items-center justify-center"
+                style={{
+                  background: "#f5f5f7",
+                  boxShadow: "4px 4px 8px #cfd0d3, -4px -4px 8px #ffffff",
+                }}>
+                <Icon size={22} strokeWidth={2} color={color} />
               </div>
               <span className="text-[11px] font-semibold text-[#3c3c43] leading-none">{label}</span>
             </Link>
@@ -2728,22 +2718,6 @@ export default function HomePage() {
     pharmacy: () => (
       <>
         <SectionLabel label="약국·응급실" />
-        {/* 응급 신속 전화 버튼 */}
-        <div className="mx-4 mb-3 flex gap-2">
-          {[
-            { num: "119", label: "소방·응급", color: "#F04452", bg: "#FEF2F2" },
-            { num: "112", label: "경찰신고",  color: "#2563EB", bg: "#EFF6FF" },
-            { num: "1339", label: "의료상담", color: "#059669", bg: "#ECFDF5" },
-          ].map(({ num, label, color, bg }) => (
-            <div key={num}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 py-2.5 rounded-2xl"
-              style={{ background: bg }}>
-              <Phone size={14} color={color} />
-              <span className="text-[14px] font-black" style={{ color }}>{num}</span>
-              <span className="text-[10px] font-semibold" style={{ color: `${color}99` }}>{label}</span>
-            </div>
-          ))}
-        </div>
         <PharmacySection />
       </>
     ),
@@ -2756,7 +2730,7 @@ export default function HomePage() {
     ),
     news: () => (
       <>
-        <SectionLabel label="검단 뉴스" href="/community?tab=뉴스" linkLabel="전체보기" />
+        <SectionLabel label="검단 뉴스" href="/community/?tab=뉴스" linkLabel="전체보기" />
         <NewsWidget />
       </>
     ),
@@ -2764,7 +2738,7 @@ export default function HomePage() {
     instagram: () => <InstagramFeedSection />,
     realestate: () => (
       <>
-        <SectionLabel label="실거래가" href="/community?tab=시세" linkLabel="전체보기" />
+        <SectionLabel label="실거래가" href="/community/?tab=시세" linkLabel="전체보기" />
         <RealEstateWidget />
       </>
     ),
@@ -2789,6 +2763,9 @@ export default function HomePage() {
           </button>
         }
       />
+
+      {/* DEBUG OVERLAY — 측정 후 삭제 */}
+      <DebugOverlay />
 
       {showSettings && (
         <WidgetSettingsSheet
