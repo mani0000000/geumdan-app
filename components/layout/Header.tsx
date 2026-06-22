@@ -32,39 +32,44 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
   }, [showLocation]);
 
   return (
-    <header
-      className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
-      style={{ top: "env(safe-area-inset-top, 0px)" }}
-    >
-      <div className="flex items-center justify-between px-4 h-[52px]">
-        <div className="flex items-center gap-1">
-          {showBack && (
-            <button onClick={() => backHref ? router.push(backHref) : router.back()}
-              className="mr-1 active:opacity-50 transition-opacity">
-              <ChevronLeft size={24} className="text-[#1d1d1f]" />
-            </button>
-          )}
-          {showLocation ? (
-            <div className="active:opacity-50 transition-opacity">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="검단신도시라이프" className="h-8 w-auto object-contain" />
-              ) : (
-                <span className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">검단 신도시</span>
-              )}
-            </div>
-          ) : (
-            <h1 className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">{title}</h1>
-          )}
+    <>
+      {/* fixed: overflow:hidden 부모 영향을 받지 않아 WKWebView에서 sticky 오작동 방지 */}
+      <header
+        className="fixed inset-x-0 z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
+        <div className="flex items-center justify-between px-4 h-[52px]">
+          <div className="flex items-center gap-1">
+            {showBack && (
+              <button onClick={() => backHref ? router.push(backHref) : router.back()}
+                className="mr-1 active:opacity-50 transition-opacity">
+                <ChevronLeft size={24} className="text-[#1d1d1f]" />
+              </button>
+            )}
+            {showLocation ? (
+              <div className="active:opacity-50 transition-opacity">
+                {logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={logoUrl} alt="검단신도시라이프" className="h-8 w-auto object-contain" />
+                ) : (
+                  <span className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">검단 신도시</span>
+                )}
+              </div>
+            ) : (
+              <h1 className="text-[18px] font-semibold text-[#1d1d1f] tracking-tight">{title}</h1>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {rightAction}
+            <Link href="/mypage/" className="relative active:opacity-50 transition-opacity">
+              <Bell size={22} className="text-[#1d1d1f]" />
+              <span className="absolute -top-0.5 -right-0.5 w-[7px] h-[7px] bg-[#f04452] rounded-full" />
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          {rightAction}
-          <Link href="/mypage/" className="relative active:opacity-50 transition-opacity">
-            <Bell size={22} className="text-[#1d1d1f]" />
-            <span className="absolute -top-0.5 -right-0.5 w-[7px] h-[7px] bg-[#f04452] rounded-full" />
-          </Link>
-        </div>
-      </div>
-    </header>
+      </header>
+      {/* 고정 헤더 높이만큼 document flow 공간 확보 */}
+      <div className="h-[52px]" />
+    </>
   );
 }
