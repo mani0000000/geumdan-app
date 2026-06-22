@@ -32,17 +32,18 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
   }, [showLocation]);
 
   return (
-    <header
-      className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
-      style={{
-        top: 0,
-        /* viewport-fit:cover 로 뷰포트가 상태바 아래까지 확장됨.
-           헤더 배경(글래스블러)이 상태바 영역까지 자연스럽게 채워지고,
-           paddingTop으로 실제 콘텐츠(아이콘·텍스트)를 Dynamic Island 아래로 밀어줌.
-           negative marginTop 대신 이 방식을 사용해야 overflow-x:hidden 클리핑 없음. */
-        paddingTop: "env(safe-area-inset-top, 0px)",
-      }}
-    >
+    <>
+      {/* 상태바 유리 캡 — position:fixed 로 viewport 기준 배치.
+          overflow-x:hidden 클리핑 영향 없음. 헤더와 동일한 glass 스타일로
+          Dynamic Island / 노치 뒤를 자연스럽게 채움. */}
+      <div
+        className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl backdrop-saturate-180"
+        style={{ height: "env(safe-area-inset-top, 0px)" }}
+      />
+      <header
+        className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
       <div className="flex items-center justify-between px-4 h-[52px]">
         <div className="flex items-center gap-1">
           {showBack && (
@@ -73,5 +74,6 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
         </div>
       </div>
     </header>
+    </>
   );
 }
