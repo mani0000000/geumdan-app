@@ -32,18 +32,10 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
   }, [showLocation]);
 
   return (
-    <>
-      {/* 상태바 유리 캡 — position:fixed 로 viewport 기준 배치.
-          overflow-x:hidden 클리핑 영향 없음. 헤더와 동일한 glass 스타일로
-          Dynamic Island / 노치 뒤를 자연스럽게 채움. */}
-      <div
-        className="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl backdrop-saturate-180"
-        style={{ height: "env(safe-area-inset-top, 0px)" }}
-      />
-      <header
-        className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
-        style={{ top: "env(safe-area-inset-top, 0px)" }}
-      >
+    <header
+      className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
+      style={{ top: "env(safe-area-inset-top, 0px)" }}
+    >
       <div className="flex items-center justify-between px-4 h-[52px]">
         <div className="flex items-center gap-1">
           {showBack && (
@@ -74,6 +66,5 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
         </div>
       </div>
     </header>
-    </>
   );
 }
