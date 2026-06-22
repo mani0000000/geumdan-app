@@ -18,7 +18,6 @@ interface HeaderProps {
 export default function Header({ title, showLocation, showBack, backHref, rightAction }: HeaderProps) {
   const router = useRouter();
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
-  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     if (!showLocation) return;
@@ -32,32 +31,28 @@ export default function Header({ title, showLocation, showBack, backHref, rightA
     });
   }, [showLocation]);
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
     <header
-      className="sticky z-40 bg-white/85 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.06] transition-shadow duration-200"
+      className="sticky z-40 bg-white/80 backdrop-blur-xl backdrop-saturate-180 border-b border-black/[0.08]"
       style={{
         top: 0,
-        marginTop: "calc(env(safe-area-inset-top, 0px) * -1)",
+        /* viewport-fit:cover 로 뷰포트가 상태바 아래까지 확장됨.
+           헤더 배경(글래스블러)이 상태바 영역까지 자연스럽게 채워지고,
+           paddingTop으로 실제 콘텐츠(아이콘·텍스트)를 Dynamic Island 아래로 밀어줌.
+           negative marginTop 대신 이 방식을 사용해야 overflow-x:hidden 클리핑 없음. */
         paddingTop: "env(safe-area-inset-top, 0px)",
-        boxShadow: scrolled ? "0 1px 8px rgba(0,0,0,0.08)" : "none",
       }}
     >
       <div className="flex items-center justify-between px-4 h-[52px]">
         <div className="flex items-center gap-1">
           {showBack && (
             <button onClick={() => backHref ? router.push(backHref) : router.back()}
-              className="mr-1 active:scale-90 transition-transform duration-100">
+              className="mr-1 active:opacity-50 transition-opacity">
               <ChevronLeft size={24} className="text-[#1d1d1f]" />
             </button>
           )}
           {showLocation ? (
-            <div className="active:opacity-70 transition-opacity">
+            <div className="active:opacity-50 transition-opacity">
               {logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={logoUrl} alt="검단신도시라이프" className="h-8 w-auto object-contain" />
