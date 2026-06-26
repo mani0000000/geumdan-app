@@ -32,7 +32,7 @@ export function ReportModal({ open, onClose, onSubmit }: ReportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-end justify-center bg-black/40 backdrop-blur-[2px]"
+    <div className="fixed inset-0 z-[9500] flex items-end justify-center bg-black/40 backdrop-blur-[2px]"
       onClick={onClose}>
       <div className="w-full max-w-lg bg-white rounded-t-3xl p-6 pb-10" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">

@@ -332,7 +332,7 @@ export default function CouponsPage() {
   }
 
   return (
-    <div className="min-h-dvh bg-[#f5f5f7] pb-20">
+    <div className="min-h-dvh bg-[#f5f5f7] pb-28">
       {/* 헤더 */}
       <div className="bg-white sticky top-0 z-40 border-b border-[#f5f5f7]">
         <div className="flex items-center gap-3 px-4 h-14">

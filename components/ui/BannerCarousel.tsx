@@ -198,7 +198,7 @@ export default function BannerCarousel({ banners }: Props) {
           />
         )}
         <div
-          className="flex h-full"
+          className="relative z-10 flex h-full"
           style={{
             transform,
             transition: withTransition ? `transform ${DURATION}ms ${EASE}` : "none",
