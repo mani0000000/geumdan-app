@@ -172,7 +172,7 @@ export default function RealestatePage() {
   }, [trades]);
 
   return (
-    <div className="pb-20">
+    <div className="pb-28">
       <Header title="검단신도시 시세" showBack />
 
       {/* ── 안내 / 출처 ── */}

@@ -291,7 +291,7 @@ export default function GasPageClient() {
           {/* 최저가 배너 (지도 위) */}
           {!loading && lowestGasoline != null && (
             <div
-              className="absolute top-3 left-3 right-16 z-[500] bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2.5 flex items-center gap-2.5"
+              className="absolute top-3 left-3 right-16 z-[9100] bg-white/95 backdrop-blur-sm rounded-2xl px-3 py-2.5 flex items-center gap-2.5"
               style={{ boxShadow: "0 2px 12px rgba(0,0,0,.15)" }}
             >
               <div className="w-6 h-6 rounded-lg bg-[#DC2626] flex items-center justify-center shrink-0">
@@ -320,7 +320,7 @@ export default function GasPageClient() {
         </div>
       ) : (
         /* ── 목록 탭 ── */
-        <div className="flex-1 overflow-y-auto pb-24">
+        <div className="flex-1 overflow-y-auto pb-32">
           {/* 정렬 컨트롤 */}
           <div className="bg-white px-4 py-2.5 flex items-center gap-2 border-b border-[#f0f0f3] sticky top-0 z-10">
             <button onClick={locate} disabled={locating}
