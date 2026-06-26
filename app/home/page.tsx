@@ -2147,7 +2147,7 @@ function WidgetSettingsSheet({
   }
 
   return (
-    <div className="fixed inset-0 z-[200]">
+    <div className="fixed inset-0 z-[9500]">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
         <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden">
