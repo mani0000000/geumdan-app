@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -2116,7 +2117,7 @@ function WidgetSettingsSheet({
     setDraft(DEFAULT_WIDGETS.map((w, i) => ({ ...w, sort_order: i + 1 })));
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[9500]">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div className="absolute bottom-0 left-0 right-0 z-10 flex justify-center">
@@ -2170,7 +2171,8 @@ function WidgetSettingsSheet({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
