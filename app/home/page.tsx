@@ -43,35 +43,6 @@ import SportsWidget from "@/components/home/SportsWidget";
 import { getTideReport, type TideReport, type ConditionRating } from "@/lib/api/tides";
 import { fetchYouTubeVideos, type YouTubeVideo } from "@/lib/api/news";
 
-// ─── DEBUG 오버레이 (측정 후 삭제) ───────────────────────────────
-function DebugOverlay() {
-  const [info, setInfo] = React.useState<string>("측정 중...");
-  React.useEffect(() => {
-    const div = document.createElement("div");
-    div.style.paddingTop = "env(safe-area-inset-top, 0px)";
-    document.body.appendChild(div);
-    const sat = parseFloat(getComputedStyle(div).paddingTop) || 0;
-    document.body.removeChild(div);
-    const header = document.querySelector("header");
-    const hr = header ? header.getBoundingClientRect() : null;
-    const container = document.querySelector("[style*='padding-top']");
-    const cr = container ? container.getBoundingClientRect() : null;
-    setInfo(
-      `SAT=${sat}px | ` +
-      `header: top=${hr ? Math.round(hr.top) : "?"} bottom=${hr ? Math.round(hr.bottom) : "?"} h=${hr ? Math.round(hr.height) : "?"}px | ` +
-      `container.top=${cr ? Math.round(cr.top) : "?"}`
-    );
-  }, []);
-  return (
-    <div style={{
-      position: "fixed", bottom: 80, left: 8, right: 8, zIndex: 9999,
-      background: "rgba(0,0,0,0.85)", color: "#0f0", fontSize: 10,
-      padding: "6px 8px", borderRadius: 8, fontFamily: "monospace", lineHeight: 1.5,
-    }}>
-      {info}
-    </div>
-  );
-}
 
 // ─── 퀵 메뉴 ─────────────────────────────────────────────────
 const quickMenus = [
@@ -2763,9 +2734,6 @@ export default function HomePage() {
           </button>
         }
       />
-
-      {/* DEBUG OVERLAY — 측정 후 삭제 */}
-      <DebugOverlay />
 
       {showSettings && (
         <WidgetSettingsSheet
