@@ -389,8 +389,8 @@ const catGradients: Record<string, [string, string]> = {
 };
 
 function NewOpeningsSection() {
+  const router = useRouter();
   const [openings, setOpenings] = useState<NewStoreOpening[]>([]);
-  const [sheetStore, setSheetStore] = useState<NewStoreOpening | null>(null);
 
   useEffect(() => {
     fetchThisMonthOpenings().then(setOpenings);
@@ -409,7 +409,7 @@ function NewOpeningsSection() {
         {openings.map(s => {
           const [from, to] = catGradients[s.category] ?? catGradients["기타"];
           return (
-            <button key={s.id} onClick={() => setSheetStore(s)}
+            <button key={s.id} onClick={() => router.push(`/stores/detail/?id=${s.storeId}`)}
               className="shrink-0 w-[156px] bg-white rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform border border-[#f0f0f0]">
               <div className="relative h-[108px] flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${from}, ${to})` }}>
@@ -438,7 +438,6 @@ function NewOpeningsSection() {
           );
         })}
       </div>
-      {sheetStore && <OpenBenefitSheet store={sheetStore} onClose={() => setSheetStore(null)} />}
     </section>
   );
 }
