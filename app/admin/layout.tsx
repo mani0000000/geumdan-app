@@ -69,15 +69,27 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isLoginPage = pathname === "/admin/login" || pathname === "/admin/login/";
 
   useEffect(() => {
-    const ok = sessionStorage.getItem("admin_auth") === "1";
-    if (!ok && !isLoginPage) {
-      router.replace("/admin/login");
-    } else {
-      setAuthed(ok);
-    }
+    if (isLoginPage) return;
+    let cancelled = false;
+    fetch("/api/admin/auth", { cache: "no-store" })
+      .then(res => {
+        if (cancelled) return;
+        if (!res.ok) {
+          sessionStorage.removeItem("admin_auth");
+          router.replace("/admin/login");
+          return;
+        }
+        sessionStorage.setItem("admin_auth", "1");
+        setAuthed(true);
+      })
+      .catch(() => {
+        if (!cancelled) router.replace("/admin/login");
+      });
+    return () => { cancelled = true; };
   }, [pathname, router, isLoginPage]);
 
-  function logout() {
+  async function logout() {
+    await fetch("/api/admin/auth", { method: "DELETE" }).catch(() => undefined);
     sessionStorage.removeItem("admin_auth");
     router.replace("/admin/login");
   }

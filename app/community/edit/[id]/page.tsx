@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { fetchDBPost, updatePost } from "@/lib/db/posts";
+import { authenticatedHeaders, requireAccessToken } from "@/lib/auth-session";
 
 const categories: CommunityCategory[] = [
   "맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임",
@@ -14,7 +15,6 @@ const categories: CommunityCategory[] = [
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON = "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk";
 
 function storageKeyFromUrl(url: string): string | null {
   // URL 패턴: .../storage/v1/object/public/<bucket>/<path>
@@ -29,15 +29,16 @@ async function deleteFromStorage(url: string): Promise<void> {
     if (!key) return; // data URL 등 storage 파일 아님
     const [bucket, ...pathParts] = key.split("/");
     const path = pathParts.join("/");
-    const apiKey =
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? DEFAULT_ANON;
+    const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!apiKey) return;
+    const accessToken = await requireAccessToken();
     await fetch(
       `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`,
       {
         method: "DELETE",
         headers: {
           apikey: apiKey,
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
@@ -114,7 +115,11 @@ function EditPageContent() {
         const form = new FormData();
         form.append("file", file);
         form.append("folder", "community");
-        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: await authenticatedHeaders(),
+          body: form,
+        });
         const json = (await res.json()) as { url?: string; error?: string };
         if (!res.ok || !json.url) {
           throw new Error(json.error ?? "업로드 실패");

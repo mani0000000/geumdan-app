@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON = "";
-
 function candidateKeys(): string[] {
-  return [
-    process.env.SUPABASE_SERVICE_KEY,
-    process.env.NEXT_PUBLIC_ADMIN_DB_KEY,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    DEFAULT_ANON,
-  ].filter((k): k is string => typeof k === "string" && k.length > 10);
+  const key = process.env.SUPABASE_ACCESS_TOKEN;
+  return key && key.length > 10 ? [key] : [];
 }
 
 async function runSQL(sql: string): Promise<{ ok: boolean; error?: string }> {
@@ -105,14 +99,11 @@ DO $$
 DECLARE t TEXT;
 BEGIN
   FOREACH t IN ARRAY ARRAY['sport_categories','leagues','teams','broadcasters'] LOOP
+    EXECUTE format('DROP POLICY IF EXISTS anon_insert ON %I', t);
+    EXECUTE format('DROP POLICY IF EXISTS anon_update ON %I', t);
+    EXECUTE format('DROP POLICY IF EXISTS anon_delete ON %I', t);
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename=t AND policyname='anon_select') THEN
       EXECUTE format('CREATE POLICY anon_select ON %I FOR SELECT TO anon USING (true)', t); END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename=t AND policyname='anon_insert') THEN
-      EXECUTE format('CREATE POLICY anon_insert ON %I FOR INSERT TO anon WITH CHECK (true)', t); END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename=t AND policyname='anon_update') THEN
-      EXECUTE format('CREATE POLICY anon_update ON %I FOR UPDATE TO anon USING (true) WITH CHECK (true)', t); END IF;
-    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename=t AND policyname='anon_delete') THEN
-      EXECUTE format('CREATE POLICY anon_delete ON %I FOR DELETE TO anon USING (true)', t); END IF;
   END LOOP;
 END $$;
 

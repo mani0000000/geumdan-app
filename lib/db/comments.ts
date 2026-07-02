@@ -18,10 +18,13 @@
  * );
  *
  * ALTER TABLE community_comments ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "public read"   ON community_comments FOR SELECT USING (true);
- * CREATE POLICY "public write"  ON community_comments FOR INSERT WITH CHECK (true);
- * CREATE POLICY "public update" ON community_comments FOR UPDATE USING (true);
- * CREATE POLICY "public delete" ON community_comments FOR DELETE USING (true);
+ * CREATE POLICY "public read" ON community_comments FOR SELECT USING (true);
+ * CREATE POLICY "owner insert" ON community_comments FOR INSERT TO authenticated
+ *   WITH CHECK (user_id = auth.uid());
+ * CREATE POLICY "owner update" ON community_comments FOR UPDATE TO authenticated
+ *   USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+ * CREATE POLICY "owner delete" ON community_comments FOR DELETE TO authenticated
+ *   USING (user_id = auth.uid());
  *
  * CREATE INDEX idx_comments_post_id    ON community_comments(post_id);
  * CREATE INDEX idx_comments_created_at ON community_comments(created_at ASC);
@@ -60,19 +63,6 @@ function rowToComment(row: Record<string, unknown>): DBComment {
   };
 }
 
-/** 서버 라우트를 통해 service key로 Supabase 쓰기 */
-async function dbPost(
-  method: "POST" | "PATCH" | "DELETE",
-  rows: unknown,
-  opts: { eq?: string } = {}
-): Promise<Response> {
-  return fetch("/api/admin/db", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ table: "community_comments", method, rows, ...opts }),
-  });
-}
-
 // ── 목록 조회 ────────────────────────────────────────────────
 export async function fetchComments(postId: string): Promise<DBComment[]> {
   try {
@@ -103,6 +93,8 @@ export async function createComment(
   input: CommentInput
 ): Promise<DBComment | null> {
   try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return null;
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     const row: Record<string, unknown> = {
@@ -115,24 +107,17 @@ export async function createComment(
       like_count: 0,
       created_at: now,
     };
-    if (input.userId) row.user_id = input.userId;
-    const res = await dbPost("POST", [row]);
-    if (!res.ok) {
-      const body = await res.text();
-      console.error('[comments] createComment server error:', res.status, body);
+    row.user_id = authData.user.id;
+    const { data, error } = await supabase
+      .from("community_comments")
+      .insert(row)
+      .select()
+      .single();
+    if (error || !data) {
+      console.error('[comments] createComment error:', error?.message);
       return null;
     }
-    return {
-      id,
-      postId: input.postId,
-      userId: input.userId,
-      author: input.author,
-      authorDong: input.authorDong,
-      content: input.content,
-      likeCount: 0,
-      isAnonymous: input.isAnonymous,
-      createdAt: now,
-    };
+    return rowToComment(data as Record<string, unknown>);
   } catch (e) {
     console.error('[comments] createComment error:', e);
     return null;
@@ -142,12 +127,14 @@ export async function createComment(
 // ── 삭제 ─────────────────────────────────────────────────────
 export async function deleteComment(id: string): Promise<boolean> {
   try {
-    const res = await dbPost("DELETE", null, { eq: `id=eq.${id}` });
-    if (!res.ok) {
-      console.error('[comments] deleteComment error:', res.status);
-      return false;
-    }
-    return true;
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return false;
+    const { error } = await supabase
+      .from("community_comments")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", authData.user.id);
+    return !error;
   } catch (e) {
     console.error('[comments] deleteComment error:', e);
     return false;
@@ -160,14 +147,11 @@ export async function toggleCommentLike(
   delta: 1 | -1
 ): Promise<void> {
   try {
-    // 현재값 조회
-    const { data } = await supabase
-      .from('community_comments')
-      .select('like_count')
-      .eq('id', id)
-      .single();
-    const current = (data as Record<string, number> | null)?.like_count ?? 0;
-    await dbPost("PATCH", { like_count: Math.max(0, current + delta) }, { eq: `id=eq.${id}` });
+    await supabase.rpc("set_community_reaction", {
+      p_target_type: "comment",
+      p_target_id: id,
+      p_liked: delta === 1,
+    });
   } catch { /* silent */ }
 }
 

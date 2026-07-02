@@ -103,7 +103,7 @@ export default function LiveFeedWidget() {
   }
 
   async function handlePin(post: Post) {
-    await togglePin(post.id, post.isPinned);
+    await togglePin(post.id, Boolean(post.isPinned));
     await load();
   }
 

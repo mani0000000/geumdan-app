@@ -148,12 +148,13 @@ export function getIncheonTides(date: Date): TideEntry[] {
   const highH = parseFloat((INCHEON_MSL + rangeM / 2).toFixed(1));
   const lowH  = parseFloat(Math.max(0.1, INCHEON_MSL - rangeM / 2).toFixed(1));
 
-  return [
+  const tides: TideEntry[] = [
     { type: "high", timeStr: minutesToTimeStr(high1), minutes: high1, heightM: highH },
     { type: "low",  timeStr: minutesToTimeStr(low1),  minutes: low1,  heightM: lowH  },
     { type: "high", timeStr: minutesToTimeStr(high2), minutes: high2, heightM: highH },
     { type: "low",  timeStr: minutesToTimeStr(low2),  minutes: low2,  heightM: lowH  },
-  ].sort((a, b) => a.minutes - b.minutes);
+  ];
+  return tides.sort((a, b) => a.minutes - b.minutes);
 }
 
 function getNextLowTide(tides: TideEntry[], date: Date): TideEntry | null {

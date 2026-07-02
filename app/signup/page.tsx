@@ -3,6 +3,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Check, Eye, EyeOff, X } from "lucide-react";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase";
+import { isValidKoreanMobile, normalizeKoreanPhone } from "@/lib/auth";
 
 const PW_RULES = [
   { label: "8자 이상",          test: (v: string) => v.length >= 8 },
@@ -15,6 +17,31 @@ const PW_RULES = [
 const steps = ["약관 동의", "본인 인증", "프로필 설정"];
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
 const dongs = DONG_SELECT_OPTIONS;
+
+interface AgreementRowProps {
+  checked: boolean;
+  label: string;
+  detailType?: string;
+  onToggle: () => void;
+}
+
+function AgreementRow({ checked, label, detailType, onToggle }: AgreementRowProps) {
+  return (
+    <div className="flex items-center gap-3 py-3">
+      <button onClick={onToggle} className="flex items-center gap-3 flex-1 active:opacity-70 text-left">
+        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${checked ? "bg-[#3182F6] border-[#3182F6]" : "border-[#d2d2d7]"}`}>
+          {checked && <Check size={11} className="text-white" strokeWidth={3} />}
+        </div>
+        <span className="text-[15px] text-[#1d1d1f]">{label}</span>
+      </button>
+      {detailType && (
+        <Link href={`/terms/${detailType}`} className="text-[13px] text-[#3182F6] font-semibold shrink-0 active:opacity-60">
+          보기
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default function SignupPage() {
   const router = useRouter();
@@ -30,6 +57,7 @@ export default function SignupPage() {
   const [showPw, setShowPw] = useState(false);
   const [showPwConfirm, setShowPwConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const pwRulesPassed = PW_RULES.every(r => r.test(pw));
   const pwMatch = pw.length > 0 && pwConfirm.length > 0 && pw === pwConfirm;
@@ -44,29 +72,78 @@ export default function SignupPage() {
     setAgree(u);
   };
 
-  const next = async () => {
-    if (step === 2) {
-      setLoading(true);
-      await new Promise(r => setTimeout(r, 800));
-      router.push("/home/");
-    } else setStep(s => s + 1);
+  const sendCode = async () => {
+    setError("");
+    if (!isValidKoreanMobile(phone)) {
+      setError("올바른 휴대폰 번호를 입력해 주세요.");
+      return;
+    }
+    setLoading(true);
+    const { error: authError } = await supabase.auth.signInWithOtp({
+      phone: normalizeKoreanPhone(phone),
+      options: { shouldCreateUser: true },
+    });
+    if (authError) setError(authError.message);
+    else setCodeSent(true);
+    setLoading(false);
   };
 
-  const CheckRow = ({ k, label, detailType }: { k: keyof typeof agree; label: string; detailType?: string }) => (
-    <div className="flex items-center gap-3 py-3">
-      <button onClick={() => toggle(k)} className="flex items-center gap-3 flex-1 active:opacity-70 text-left">
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${agree[k] ? "bg-[#3182F6] border-[#3182F6]" : "border-[#d2d2d7]"}`}>
-          {agree[k] && <Check size={11} className="text-white" strokeWidth={3} />}
-        </div>
-        <span className="text-[15px] text-[#1d1d1f]">{label}</span>
-      </button>
-      {detailType && (
-        <Link href={`/terms/${detailType}`} className="text-[13px] text-[#3182F6] font-semibold shrink-0 active:opacity-60">
-          보기
-        </Link>
-      )}
-    </div>
-  );
+  const next = async () => {
+    setError("");
+    if (step === 0) {
+      setStep(1);
+      return;
+    }
+
+    setLoading(true);
+    if (step === 1) {
+      const { error: authError } = await supabase.auth.verifyOtp({
+        phone: normalizeKoreanPhone(phone),
+        token: code,
+        type: "sms",
+      });
+      if (authError) setError(authError.message);
+      else setStep(2);
+      setLoading(false);
+      return;
+    }
+
+    const { data, error: authError } = await supabase.auth.updateUser({
+      password: pw,
+      data: {
+        nickname,
+        dong,
+        marketing_agreed: agree.marketing,
+      },
+    });
+    if (authError || !data.user) {
+      setError(authError?.message ?? "회원 정보를 저장하지 못했습니다.");
+      setLoading(false);
+      return;
+    }
+
+    const now = new Date().toISOString();
+    const { error: profileError } = await supabase.from("users").upsert({
+      id: data.user.id,
+      nickname: nickname.trim(),
+      dong,
+      terms_agreed_at: now,
+      privacy_agreed_at: now,
+      location_agreed_at: now,
+      marketing_agreed_at: agree.marketing ? now : null,
+      is_verified: true,
+      updated_at: now,
+    });
+    if (profileError) {
+      setError(profileError.message);
+      setLoading(false);
+      return;
+    }
+
+    localStorage.setItem("geumdan_uid", data.user.id);
+    localStorage.setItem("gd_nickname", nickname.trim());
+    router.replace("/home/");
+  };
 
   return (
     <div className="min-h-dvh bg-white flex flex-col">
@@ -103,10 +180,10 @@ export default function SignupPage() {
               <span className="text-[16px] font-bold text-[#1d1d1f]">전체 동의</span>
             </button>
             <div className="mt-2 px-1">
-              <CheckRow k="terms" label="[필수] 이용약관" detailType="service" />
-              <CheckRow k="privacy" label="[필수] 개인정보처리방침" detailType="privacy" />
-              <CheckRow k="location" label="[필수] 위치정보 이용약관" detailType="location" />
-              <CheckRow k="marketing" label="[선택] 마케팅 정보 수신" detailType="marketing" />
+              <AgreementRow checked={agree.terms} onToggle={() => toggle("terms")} label="[필수] 이용약관" detailType="service" />
+              <AgreementRow checked={agree.privacy} onToggle={() => toggle("privacy")} label="[필수] 개인정보처리방침" detailType="privacy" />
+              <AgreementRow checked={agree.location} onToggle={() => toggle("location")} label="[필수] 위치정보 이용약관" detailType="location" />
+              <AgreementRow checked={agree.marketing} onToggle={() => toggle("marketing")} label="[선택] 마케팅 정보 수신" detailType="marketing" />
             </div>
           </div>
         )}
@@ -116,7 +193,7 @@ export default function SignupPage() {
             <div className="flex gap-2">
               <input value={phone} onChange={e => setPhone(e.target.value)} type="tel" placeholder="휴대폰 번호"
                 className="flex-1 h-[52px] px-4 rounded-xl bg-[#f5f5f7] text-[16px] outline-none focus:ring-2 focus:ring-[#3182F6]" />
-              <button onClick={async () => { setLoading(true); await new Promise(r=>setTimeout(r,800)); setCodeSent(true); setLoading(false); }}
+              <button onClick={sendCode}
                 disabled={phone.length < 10 || loading}
                 className="h-[52px] px-4 rounded-xl bg-[#3182F6] text-white text-[14px] font-bold whitespace-nowrap disabled:opacity-40 active:bg-[#2563EB]">
                 {loading ? "전송중..." : "인증번호"}
@@ -220,11 +297,12 @@ export default function SignupPage() {
         )}
 
         <div className="mt-auto pt-6 pb-8">
+          {error && <p className="mb-3 text-[13px] text-[#F04452] text-center">{error}</p>}
           <button onClick={next}
             disabled={
               (step === 0 && (!agree.terms || !agree.privacy || !agree.location)) ||
-              (step === 1 && code.length < 6) ||
-              (step === 2 && (!nickname || !dong || !pwRulesPassed || !pwMatch)) ||
+              (step === 1 && (!codeSent || code.length < 6)) ||
+              (step === 2 && (nickname.trim().length < 2 || nickname.trim().length > 12 || !dong || !pwRulesPassed || !pwMatch)) ||
               loading
             }
             className="w-full h-[52px] rounded-xl bg-[#3182F6] text-white text-[17px] font-bold flex items-center justify-center active:bg-[#2563EB] transition-colors disabled:opacity-40">

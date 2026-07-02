@@ -4,12 +4,12 @@ import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
 export interface Popup {
   id: string;
   title: string;
-  body?: string;
-  image_url?: string;
-  link_url?: string;
-  button_text?: string;
-  starts_at?: string;
-  ends_at?: string;
+  body?: string | null;
+  image_url?: string | null;
+  link_url?: string | null;
+  button_text?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
   priority: number;
   active?: boolean;
   sort_order?: number;

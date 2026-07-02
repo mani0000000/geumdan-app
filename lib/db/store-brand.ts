@@ -105,6 +105,7 @@ export interface StoreReservation {
   status: "pending" | "confirmed" | "cancelled" | "completed" | "no_show";
   note: string | null;
   created_at: string;
+  user_id?: string;
 }
 
 export interface StoreWaiting {
@@ -117,6 +118,7 @@ export interface StoreWaiting {
   queue_number: number | null;
   note: string | null;
   created_at: string;
+  user_id?: string;
 }
 
 export interface StoreReview {
@@ -129,6 +131,7 @@ export interface StoreReview {
   is_hidden: boolean;
   owner_reply: string | null;
   created_at: string;
+  user_id?: string;
 }
 
 // ─── 공개 읽기 ──────────────────────────────────────────────
@@ -186,7 +189,7 @@ export async function fetchStoreBrandBundle(storeId: string) {
     supabase.from("store_hours").select("*").eq("store_id", storeId).order("day_of_week"),
     supabase.from("store_events").select("*").eq("store_id", storeId).eq("is_active", true).order("created_at", { ascending: false }),
     supabase.from("store_coupons").select("*").eq("store_id", storeId).eq("active", true).order("expiry"),
-    supabase.from("store_reviews").select("*").eq("store_id", storeId).eq("is_hidden", false).order("created_at", { ascending: false }),
+    supabase.from("store_reviews").select("*").eq("store_id", storeId).eq("is_visible", true).order("created_at", { ascending: false }),
   ]);
   return {
     store,
@@ -268,39 +271,56 @@ export async function adminDeleteReview(id: string): Promise<void> {
   await adminApiPost("store_reviews", "DELETE", null, { eq: `id=eq.${id}` });
 }
 
-// ─── 일반 사용자 쓰기 (공개) ────────────────────────────────
+// ─── 일반 사용자 쓰기 ──────────────────────────────────────
+async function requireUserId(): Promise<string> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("로그인이 필요합니다.");
+  return data.user.id;
+}
+
 export async function publicCreateReservation(r: Omit<StoreReservation, "id" | "created_at">): Promise<{ id: string }> {
   const id = genId("rsv");
-  const { error } = await supabase.from("store_reservations").insert({ ...r, id });
+  const user_id = await requireUserId();
+  const { error } = await supabase.from("store_reservations").insert({ ...r, id, user_id });
   if (error) throw new Error(error.message);
   return { id };
 }
 
 export async function publicCreateWaiting(w: Omit<StoreWaiting, "id" | "created_at" | "queue_number">): Promise<{ id: string; queue_number: number }> {
   const id = genId("wt");
-  // 같은 매장의 대기 중 인원 수 + 1 = 큐 번호
-  const { count } = await supabase
+  const user_id = await requireUserId();
+  const { data, error } = await supabase
     .from("store_waitings")
-    .select("id", { count: "exact", head: true })
-    .eq("store_id", w.store_id)
-    .in("status", ["waiting", "called"]);
-  const queue_number = (count ?? 0) + 1;
-  const { error } = await supabase.from("store_waitings").insert({ ...w, id, queue_number });
+    .insert({ ...w, id, user_id })
+    .select("queue_number")
+    .single();
   if (error) throw new Error(error.message);
-  return { id, queue_number };
+  return { id, queue_number: Number(data?.queue_number ?? 0) };
 }
 
 export async function publicCreateReview(r: Omit<StoreReview, "id" | "created_at" | "is_hidden" | "owner_reply">): Promise<void> {
   const id = genId("rv");
+  const user_id = await requireUserId();
   const { error } = await supabase.from("store_reviews").insert({
-    ...r, id, is_hidden: false, owner_reply: null,
+    ...r,
+    id,
+    user_id,
+    nickname: r.author_nickname,
+    media_urls: r.images,
+    is_visible: true,
+    is_hidden: false,
+    owner_reply: null,
   });
   if (error) throw new Error(error.message);
 }
 
 export async function publicUseCoupon(couponId: string, userNickname: string | null): Promise<void> {
   const id = genId("cu");
-  await supabase.from("coupon_uses").insert({ id, coupon_id: couponId, user_nickname: userNickname });
+  const user_id = await requireUserId();
+  const { error } = await supabase
+    .from("coupon_uses")
+    .insert({ id, coupon_id: couponId, user_nickname: userNickname, user_id });
+  if (error) throw new Error(error.message);
 }
 
 // ─── 어드민용 (전체 조회) ──────────────────────────────────

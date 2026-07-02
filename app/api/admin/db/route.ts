@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 공개 읽기 전용 테이블 (인증 없이 접근 가능 — 콘텐츠 데이터)
+// 관리 화면에서 조회 가능한 콘텐츠 테이블
 const PUBLIC_TABLES = new Set([
   "banners", "buildings", "floors", "stores", "store_coupons", "store_openings",
   "pharmacies", "emergency_rooms", "news_articles",
@@ -24,18 +24,13 @@ const ADMIN_TABLES = new Set([
 const ALLOWED_TABLES = new Set([...PUBLIC_TABLES, ...ADMIN_TABLES]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-const DEFAULT_ANON  = "";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 
 // 서버 인스턴스 내 작동 확인된 키 캐시 (재시작 시 초기화)
 let _cachedKey: string | null = null;
 
 function candidateKeys(): string[] {
-  return [
-    process.env.SUPABASE_SERVICE_KEY,
-    process.env.NEXT_PUBLIC_ADMIN_DB_KEY,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    DEFAULT_ANON,
-  ].filter((k): k is string => typeof k === "string" && k.length > 10);
+  return SERVICE_KEY.length > 10 ? [SERVICE_KEY] : [];
 }
 
 function makeHeaders(key: string, prefer?: string): Record<string, string> {
@@ -68,6 +63,12 @@ async function callSupabase(
 
   // 후보 키 순서대로 시도
   const keys = candidateKeys();
+  if (keys.length === 0) {
+    return new Response(JSON.stringify({ error: "SUPABASE_SERVICE_KEY is not configured" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
   for (const key of keys) {
     const res = await fetch(url, {
       method,
@@ -83,10 +84,9 @@ async function callSupabase(
   }
 
   // 모든 키 실패 시 마지막 응답 반환 (401)
-  return fetch(url, {
-    method,
-    headers: makeHeaders(keys.at(-1) ?? DEFAULT_ANON, prefer),
-    body: method !== "GET" ? body : undefined,
+  return new Response(JSON.stringify({ error: "Supabase service key was rejected" }), {
+    status: 502,
+    headers: { "Content-Type": "application/json" },
   });
 }
 
@@ -96,8 +96,7 @@ export async function GET(req: NextRequest) {
   if (!table || !ALLOWED_TABLES.has(table)) {
     return NextResponse.json({ error: "허용되지 않은 테이블" }, { status: 400 });
   }
-  // 민감 테이블은 어드민 세션 필수
-  if (ADMIN_TABLES.has(table) && !validateAdminCookie(req)) {
+  if (!validateAdminCookie(req)) {
     return NextResponse.json({ error: "관리자 인증이 필요합니다." }, { status: 401 });
   }
 

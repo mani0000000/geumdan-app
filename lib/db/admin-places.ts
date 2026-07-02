@@ -3,7 +3,7 @@ import type { Place, PlaceCategory, PlaceArea } from "./places";
 
 export type { Place, PlaceCategory, PlaceArea };
 
-export interface AdminPlace extends Place {}
+export type AdminPlace = Place;
 
 export async function adminFetchPlaces(): Promise<AdminPlace[]> {
   return adminApiGet<AdminPlace>("places", { order: "sort_order,created_at" });

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,22 +11,23 @@ const DEFAULT_ANON  = "";
 const MAX_BASE64_BYTES = 8 * 1024 * 1024; // 8MB — data URL 폴백 허용 상한
 const MAX_VIDEO_BYTES  = 100 * 1024 * 1024; // 100MB — 동영상 최대 크기
 
-const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","avif","svg"];
+const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","avif"];
 const VIDEO_EXTS = ["mp4","mov","m4v","webm","ogg"];
+const PUBLIC_FOLDERS = new Set(["community", "avatars"]);
+const ADMIN_FOLDERS = new Set([
+  "banners", "buildings", "emergency", "instagram", "marts", "misc",
+  "news", "pharmacies", "places", "popups", "settings", "stores",
+]);
 
 function candidateKeys(): string[] {
-  return [
-    process.env.SUPABASE_SERVICE_KEY,
-    process.env.NEXT_PUBLIC_ADMIN_DB_KEY,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    DEFAULT_ANON,
-  ].filter((k): k is string => typeof k === "string" && k.length > 10);
+  const keys = [process.env.SUPABASE_SERVICE_KEY];
+  return keys.filter((k): k is string => typeof k === "string" && k.length > 10);
 }
 
-function storageHeaders(key: string, contentType: string): Record<string, string> {
+function storageHeaders(apiKey: string, bearer: string, contentType: string): Record<string, string> {
   return {
-    "apikey": key,
-    "Authorization": `Bearer ${key}`,
+    "apikey": apiKey,
+    "Authorization": `Bearer ${bearer}`,
     "Content-Type": contentType,
     "x-upsert": "false",
   };
@@ -42,11 +45,11 @@ async function tryCreateBucket(key: string): Promise<boolean> {
 }
 
 async function tryStorageUpload(
-  key: string, path: string, bytes: ArrayBuffer, contentType: string,
+  apiKey: string, bearer: string, path: string, bytes: ArrayBuffer, contentType: string,
 ): Promise<{ ok: true; url: string } | { ok: false; status: number; error: string }> {
   const res = await fetch(
     `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`,
-    { method: "POST", headers: storageHeaders(key, contentType), body: bytes },
+    { method: "POST", headers: storageHeaders(apiKey, bearer, contentType), body: bytes },
   );
   if (res.ok) {
     return { ok: true, url: `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}` };
@@ -57,9 +60,42 @@ async function tryStorageUpload(
 
 export async function POST(req: NextRequest) {
   try {
+    const isAdminSession = validateAdminCookie(req);
+    const userToken = req.headers.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1] ?? null;
+    let userId: string | null = null;
+
+    if (!isAdminSession && !userToken) {
+      return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
+    }
+    if (userToken) {
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_ANON;
+      if (!anonKey) {
+        return NextResponse.json({ error: "업로드 서비스 설정이 필요합니다" }, { status: 503 });
+      }
+      const authClient = createClient(SUPABASE_URL, anonKey, {
+        auth: { persistSession: false, autoRefreshToken: false },
+      });
+      const { data, error } = await authClient.auth.getUser(userToken);
+      if (error || !data.user) {
+        return NextResponse.json({ error: "유효하지 않은 로그인입니다" }, { status: 401 });
+      }
+      userId = data.user.id;
+    }
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const folder = (formData.get("folder") as string) || "misc";
+    const folder = ((formData.get("folder") as string) || "misc").trim().toLowerCase();
+    const isAdminUpload = ADMIN_FOLDERS.has(folder);
+
+    if (!isAdminUpload && !PUBLIC_FOLDERS.has(folder)) {
+      return NextResponse.json({ error: "허용되지 않은 업로드 폴더입니다" }, { status: 400 });
+    }
+    if (isAdminUpload && !isAdminSession) {
+      return NextResponse.json({ error: "관리자 인증이 필요합니다" }, { status: 401 });
+    }
+    if (!isAdminUpload && !userId) {
+      return NextResponse.json({ error: "로그인이 필요합니다" }, { status: 401 });
+    }
 
     if (!file || !file.size) {
       return NextResponse.json({ error: "파일이 없습니다" }, { status: 400 });
@@ -69,7 +105,15 @@ export async function POST(req: NextRequest) {
     if (![...IMAGE_EXTS, ...VIDEO_EXTS].includes(ext)) {
       return NextResponse.json({ error: "지원하지 않는 파일 형식입니다" }, { status: 400 });
     }
-    const isVideo = VIDEO_EXTS.includes(ext) || (file.type || "").startsWith("video/");
+    const isVideo = VIDEO_EXTS.includes(ext) && (file.type || "").startsWith("video/");
+    const isImage = IMAGE_EXTS.includes(ext) && (file.type || "").startsWith("image/");
+
+    if (!isVideo && !isImage) {
+      return NextResponse.json({ error: "파일 형식과 MIME 타입이 일치하지 않습니다" }, { status: 400 });
+    }
+    if (folder === "avatars" && isVideo) {
+      return NextResponse.json({ error: "프로필에는 이미지만 업로드할 수 있습니다" }, { status: 400 });
+    }
 
     const bytes = await file.arrayBuffer();
 
@@ -80,24 +124,34 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
+    if (!isVideo && bytes.byteLength > MAX_BASE64_BYTES) {
+      return NextResponse.json(
+        { error: `이미지는 최대 ${MAX_BASE64_BYTES / 1024 / 1024}MB까지 업로드할 수 있어요.` },
+        { status: 400 },
+      );
+    }
 
     const contentType = file.type || "application/octet-stream";
-    const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-    const keys = candidateKeys();
+    const pathPrefix = userId ? `${folder}/${userId}` : folder;
+    const path = `${pathPrefix}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_ANON;
+    const credentials = isAdminUpload
+      ? candidateKeys().map((key) => ({ apiKey: key, bearer: key }))
+      : anonKey && userToken ? [{ apiKey: anonKey, bearer: userToken }] : [];
     let bucketCreated = false;
 
     // ── 1. Supabase Storage 업로드 시도 ──────────────────────
-    for (const key of keys) {
-      const result = await tryStorageUpload(key, path, bytes, contentType);
+    for (const { apiKey, bearer } of credentials) {
+      const result = await tryStorageUpload(apiKey, bearer, path, bytes, contentType);
       if (result.ok) return NextResponse.json({ url: result.url });
 
-      console.warn("[upload] Storage 실패:", key.slice(0, 20), result.status, result.error);
+      console.warn("[upload] Storage 실패:", result.status, result.error);
 
       // 버킷 없음(404) → 생성 후 재시도
-      if (result.status === 404 && !bucketCreated) {
-        bucketCreated = await tryCreateBucket(key);
+      if (isAdminUpload && result.status === 404 && !bucketCreated) {
+        bucketCreated = await tryCreateBucket(apiKey);
         if (bucketCreated) {
-          const retry = await tryStorageUpload(key, path, bytes, contentType);
+          const retry = await tryStorageUpload(apiKey, bearer, path, bytes, contentType);
           if (retry.ok) return NextResponse.json({ url: retry.url });
         }
       }
@@ -107,16 +161,15 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Storage 실패 → base64 data URL 폴백 (이미지만) ────
     // 동영상은 base64 폴백을 쓰지 않는다 — payload가 너무 커서 DB/네트워크에 부담
-    if (!isVideo && bytes.byteLength <= MAX_BASE64_BYTES) {
+    if (isAdminUpload && !isVideo && bytes.byteLength <= MAX_BASE64_BYTES) {
       const base64 = Buffer.from(bytes).toString("base64");
       const dataUrl = `data:${contentType};base64,${base64}`;
       console.log("[upload] base64 폴백 사용:", file.name, bytes.byteLength, "bytes");
       return NextResponse.json({ url: dataUrl });
     }
 
-    // 파일이 너무 커서 폴백도 불가
     return NextResponse.json(
-      { error: `업로드에 실패했어요. ${isVideo ? "동영상은 Supabase Storage 설정이 필요합니다." : `파일이 너무 큽니다 (${(bytes.byteLength / 1024 / 1024).toFixed(1)}MB).`}` },
+      { error: "업로드에 실패했어요. Supabase Storage 설정과 권한을 확인해주세요." },
       { status: 500 },
     );
   } catch (err) {

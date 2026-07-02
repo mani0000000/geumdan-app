@@ -194,7 +194,6 @@ export default function AdminPharmacyPage() {
 
   useEffect(() => {
     load();
-    fetch("/api/admin/init-db", { method: "POST" }).catch(() => {});
   }, [load]);
 
   async function handleDelete(id: string, name: string) {
@@ -252,7 +251,7 @@ export default function AdminPharmacyPage() {
             {loading ? (
               <tr><td colSpan={8} className="px-4 py-8 text-center text-[#B0B8C1]">로딩 중...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#B0B8C1]">약국 정보 없음 · "기본 데이터 삽입"으로 시작하세요</td></tr>
+              <tr><td colSpan={8} className="px-4 py-8 text-center text-[#B0B8C1]">약국 정보 없음 · &quot;기본 데이터 삽입&quot;으로 시작하세요</td></tr>
             ) : items.map(p => (
               <tr key={p.id} className="hover:bg-[#F8F9FB]">
                 <td className="px-4 py-3 font-semibold text-[#191F28] whitespace-nowrap">{p.name}</td>
@@ -286,7 +285,7 @@ export default function AdminPharmacyPage() {
         {loading ? (
           <div className="py-8 text-center text-[#B0B8C1] text-[13px]">로딩 중...</div>
         ) : items.length === 0 ? (
-          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">약국 정보 없음 · "기본 데이터 삽입"으로 시작하세요</div>
+          <div className="py-8 text-center text-[#B0B8C1] text-[13px]">약국 정보 없음 · &quot;기본 데이터 삽입&quot;으로 시작하세요</div>
         ) : items.map(p => (
           <div key={p.id} className="bg-white rounded-2xl border border-[#E5E8EB] p-4">
             <div className="flex items-start justify-between mb-2">

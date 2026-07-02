@@ -659,7 +659,7 @@ function BatchTab() {
       <div className="bg-[#F8F9FB] border border-[#E5E8EB] rounded-2xl p-4 mb-4 text-[12px] text-[#4E5968]">
         <p className="font-bold text-[#191F28] mb-1">⚙️ 국토교통부 실거래가 배치 시스템</p>
         <p>인천광역시 서구(28260) → 검단신도시 9개 법정동 필터링 → <code>apartment_trades</code> / <code>apartment_rentals</code> 적재</p>
-        <p className="mt-1 text-[#8B95A1]">필요 환경변수: <code>MOLIT_API_KEY</code>, <code>SUPABASE_SERVICE_KEY</code>, (선택) <code>CRON_SECRET</code></p>
+        <p className="mt-1 text-[#8B95A1]">필요 환경변수: <code>MOLIT_API_KEY</code>, <code>SUPABASE_SERVICE_KEY</code>, <code>CRON_SECRET</code></p>
         <p className="text-[#8B95A1]">Vercel Cron: 매일 02:00 UTC 자동 실행 → 전월 1개월 수집</p>
       </div>
 

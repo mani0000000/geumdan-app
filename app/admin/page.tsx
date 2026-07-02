@@ -18,23 +18,10 @@ interface DiagResult {
   advice: string;
 }
 
-interface FixRlsResult {
-  success: boolean;
-  writeTest: { ok: boolean; msg: string };
-  policyResults?: { table: string; ok: boolean; msg: string }[];
-  message?: string;
-  sql?: string | null;
-}
-
 export default function AdminPage() {
   const router = useRouter();
   const [diag, setDiag] = useState<DiagResult | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fixing, setFixing] = useState(false);
-  const [fixResult, setFixResult] = useState<FixRlsResult | null>(null);
-  const [initing, setIniting] = useState(false);
-  const [initResult, setInitResult] = useState<{ success: boolean; message?: string; error?: string; sql?: string } | null>(null);
-  const [initSqlCopied, setInitSqlCopied] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/diag")
@@ -102,38 +89,6 @@ export default function AdminPage() {
           <p className="font-bold text-blue-700 text-[14px] mb-1">해결 방법</p>
           <p className="text-[13px] text-blue-800 leading-relaxed">{diag.advice}</p>
 
-          {/* 자동 수정 버튼 */}
-          {!diag.writeOk && (
-            <button
-              onClick={async () => {
-                setFixing(true);
-                setFixResult(null);
-                try {
-                  const res = await fetch("/api/admin/fix-rls", { method: "POST" });
-                  const data = await res.json();
-                  setFixResult(data);
-                  if (data.success) setTimeout(() => window.location.reload(), 1500);
-                } catch {
-                  setFixResult({ success: false, writeTest: { ok: false, msg: "요청 실패" } });
-                } finally {
-                  setFixing(false);
-                }
-              }}
-              disabled={fixing}
-              className="mt-3 w-full py-2.5 rounded-xl bg-blue-600 text-white text-[13px] font-bold disabled:opacity-50"
-            >
-              {fixing ? "자동 수정 중…" : "⚡ RLS 자동 수정 시도"}
-            </button>
-          )}
-
-          {fixResult && (
-            <div className={`mt-3 rounded-xl p-3 text-[12px] ${fixResult.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"}`}>
-              <p className="font-bold mb-1">{fixResult.success ? "✅ 자동 수정 성공 — 새로고침 중…" : "❌ 자동 수정 실패"}</p>
-              <p className="font-mono">{fixResult.writeTest?.msg}</p>
-              {fixResult.message && <p className="mt-1">{fixResult.message}</p>}
-            </div>
-          )}
-
           {!diag.isServiceKey && (
             <div className="mt-3 bg-white/60 rounded-xl p-3 text-[12px] text-gray-700 space-y-1">
               <p className="font-bold">서비스 롤 키 설정 (영구 해결)</p>
@@ -142,23 +97,14 @@ export default function AdminPage() {
             </div>
           )}
 
-          {diag.isServiceKey && !diag.writeOk && !fixResult?.success && (
+          {diag.isServiceKey && !diag.writeOk && (
             <div className="mt-3 bg-white/60 rounded-xl p-3 text-[12px] text-gray-700">
-              <p className="font-bold mb-1">수동 방법 (Supabase SQL Editor):</p>
-              <pre className="bg-gray-100 rounded p-2 overflow-x-auto text-[11px] whitespace-pre-wrap">{`DO $$
-DECLARE t text;
-BEGIN
-  FOREACH t IN ARRAY ARRAY[
-    'banners','marts','stores','pharmacies',
-    'community_posts','site_settings','sports_matches',
-    'home_widget_config','news_articles','store_coupons',
-    'store_openings','places','youtube_videos','instagram_posts'
-  ] LOOP
-    EXECUTE format(
-      'CREATE POLICY IF NOT EXISTS "anon_all" ON %I FOR ALL USING (true) WITH CHECK (true)',
-      t);
-  END LOOP;
-END $$;`}</pre>
+              <p className="font-bold mb-1">스키마 변경 필요</p>
+              <p className="mb-2">저장소의 검토된 Supabase 마이그레이션을 SQL Editor에서 실행하세요.</p>
+              <a href={SQL_EDITOR_URL} target="_blank" rel="noopener noreferrer"
+                className="inline-flex px-3 py-2 rounded-lg bg-[#3182F6] text-white text-[12px] font-bold">
+                SQL Editor 열기
+              </a>
             </div>
           )}
         </div>
@@ -177,54 +123,10 @@ END $$;`}</pre>
             ))}
           </div>
 
-          {/* DB 테이블 생성 버튼 */}
-          <button
-            disabled={initing}
-            onClick={async () => {
-              setIniting(true); setInitResult(null);
-              try {
-                const res = await fetch("/api/admin/init-db", { method: "POST" });
-                const data = await res.json();
-                setInitResult(data);
-                if (data.success) setTimeout(() => window.location.reload(), 1500);
-              } catch { setInitResult({ success: false, error: "요청 실패" }); }
-              finally { setIniting(false); }
-            }}
-            className="w-full py-2.5 rounded-xl bg-red-600 text-white text-[13px] font-bold disabled:opacity-50">
-            {initing ? "테이블 생성 중…" : "🗄️ 누락 테이블 자동 생성"}
-          </button>
-
-          {initResult && (
-            <div className={`rounded-xl p-3 text-[12px] ${initResult.success ? "bg-green-50 text-green-800" : "bg-white text-gray-700"}`}>
-              {initResult.success ? (
-                <p className="font-bold">✅ 완료! 새로고침 중…</p>
-              ) : (
-                <>
-                  <p className="font-bold text-red-600 mb-2">자동 생성 실패 (서비스 키 필요) — SQL을 직접 실행해 주세요</p>
-                  {initResult.sql && (
-                    <>
-                      <pre className="bg-gray-50 border rounded-lg p-2 overflow-x-auto text-[10px] leading-relaxed mb-2 max-h-40">{initResult.sql}</pre>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={async () => {
-                            await navigator.clipboard.writeText(initResult.sql ?? "").catch(() => {});
-                            setInitSqlCopied(true);
-                            setTimeout(() => setInitSqlCopied(false), 2000);
-                          }}
-                          className="flex-1 py-2 rounded-lg bg-gray-100 text-[12px] font-bold text-gray-700">
-                          {initSqlCopied ? "✅ 복사됨" : "SQL 복사"}
-                        </button>
-                        <a href={SQL_EDITOR_URL} target="_blank" rel="noopener noreferrer"
-                          className="flex-1 py-2 rounded-lg bg-[#3182F6] text-white text-[12px] font-bold text-center">
-                          SQL Editor 열기
-                        </a>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+          <a href={SQL_EDITOR_URL} target="_blank" rel="noopener noreferrer"
+            className="block w-full py-2.5 rounded-xl bg-red-600 text-white text-[13px] font-bold text-center">
+            SQL Editor 열기
+          </a>
         </div>
       )}
 

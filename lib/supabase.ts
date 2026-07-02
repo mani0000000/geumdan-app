@@ -3,10 +3,6 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '';
 
-// supabaseUrl/AnonKey have hard-coded fallbacks above, so the client is always
-// usable. Modules should import this flag instead of re-checking process.env,
-// which is undefined in client bundles built without env vars and would
-// otherwise silently disable DB writes.
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
 // PostgREST (/rest/v1/) rejects sb_* keys as Bearer ("Invalid Compact JWS").
@@ -25,5 +21,5 @@ function makeFetch(key: string): typeof fetch {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   global: { fetch: makeFetch(supabaseAnonKey) },
-  auth: { autoRefreshToken: false, persistSession: false },
+  auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true },
 });

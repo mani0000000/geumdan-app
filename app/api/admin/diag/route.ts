@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,16 +7,10 @@ export const dynamic = "force-dynamic";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
 
 function getKey() {
-  // Must match app/api/admin/db/route.ts exactly
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  const key =
-    process.env.SUPABASE_SERVICE_KEY ||
-    process.env.NEXT_PUBLIC_ADMIN_DB_KEY ||
-    anonKey;
+  const key = process.env.SUPABASE_SERVICE_KEY || "";
 
   const isServiceKey = !!process.env.SUPABASE_SERVICE_KEY;
-  const isAdminKey = !isServiceKey && !!process.env.NEXT_PUBLIC_ADMIN_DB_KEY;
-  const keySource = isServiceKey ? "SUPABASE_SERVICE_KEY" : isAdminKey ? "NEXT_PUBLIC_ADMIN_DB_KEY" : "ANON_KEY(기본값)";
+  const keySource = isServiceKey ? "SUPABASE_SERVICE_KEY" : "MISSING";
 
   return { key, keySource, isServiceKey };
 }
@@ -43,6 +37,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
   const { key, keySource, isServiceKey } = getKey();
+  if (!key) {
+    return NextResponse.json({ error: "SUPABASE_SERVICE_KEY가 설정되지 않았습니다." }, { status: 503 });
+  }
 
   // ── 1. 읽기 테스트 ──────────────────────────────────────────
   const TABLES = ["banners", "marts", "stores", "pharmacies", "community_posts", "sports_matches", "home_widget_config"];
@@ -92,7 +89,7 @@ export async function GET(req: NextRequest) {
       ? "SUPABASE_SERVICE_KEY가 잘못됐습니다. Supabase → Settings → API → service_role 키를 복사해 Vercel 환경변수에 다시 설정하세요."
       : "Supabase 키 인증 실패. SUPABASE_SERVICE_KEY(service_role 키)를 Vercel 환경변수에 추가하세요.";
   } else if (hasRls403 || !writeOk) {
-    advice = "RLS(Row Level Security)가 쓰기를 막고 있습니다. Supabase SQL Editor에서 각 테이블에 anon 쓰기 정책을 추가하거나, SUPABASE_SERVICE_KEY(service_role 키)를 설정하세요.";
+    advice = "SUPABASE_SERVICE_KEY 권한과 보안 마이그레이션 적용 상태를 확인하세요.";
   } else if (allReadOk && writeOk) {
     advice = "정상 — 읽기·쓰기 모두 OK";
   }

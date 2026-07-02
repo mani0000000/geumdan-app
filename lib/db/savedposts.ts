@@ -13,7 +13,8 @@
  *     UNIQUE(user_id, post_id)
  *   );
  *   ALTER TABLE user_favorite_posts ENABLE ROW LEVEL SECURITY;
- *   CREATE POLICY "public_fav_posts" ON user_favorite_posts FOR ALL USING (true) WITH CHECK (true);
+ *   CREATE POLICY "own_fav_posts" ON user_favorite_posts FOR ALL TO authenticated
+ *     USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
  *   CREATE INDEX IF NOT EXISTS idx_fav_posts_user ON user_favorite_posts(user_id);
  */
 import { supabase } from "@/lib/supabase";
