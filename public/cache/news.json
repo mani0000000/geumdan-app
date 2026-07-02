@@ -1,9 +1,79 @@
 {
-  "fetchedAt": "2026-07-02T00:08:47.374Z",
+  "fetchedAt": "2026-07-02T13:00:18.561Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-16",
+      "id": "gr2-1",
+      "title": "대한노인회 인천 검단구지회, 초대 지회장에 박만서 후보 당선 - 백세시대",
+      "summary": "",
+      "source": "백세시대",
+      "publishedAt": "2026-07-02T12:15:49.000Z",
+      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBBN25XTl9sTlpMV2l2RnFYelEwb043a0o1a0pEMjNQS3dVUUNqS2JSd1F2Q3ZuVTN5TGI5bzVBV011eTNRVXNLYkx4dTZ0T3NsclFSVXM5ckx6QVlRS2JJNkpxLWFlTXhJZk1J?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-1",
+      "title": "인천 검단구 공식 출범… 초대 김진규 구청장 “구민 중심 자족도시 도약” - 녹색경제신문",
+      "summary": "",
+      "source": "녹색경제신문",
+      "publishedAt": "2026-07-02T09:39:48.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiaEFVX3lxTE1qcW1jQkhoclM5N19aSGxXWXVhUVQ3UEJnalhua1pCMmVibjRrVDVsYnBSRl9lMFVQZWtEZmg0ZEFFUXoxc1JXZmJDTkp2ZENBb3d6R1VidXZvZXNic2pETGhrOWRvd3BZ?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-2",
+      "title": "인천 검단구 공식 출범…김진규 초대 구청장 \"자족도시 완성할 것\" - 매일뉴스",
+      "summary": "",
+      "source": "매일뉴스",
+      "publishedAt": "2026-07-02T09:32:32.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE9TeXdpay0tYXFyRUMyWVF0RnlfNENTYk9lLWtjSFl2SDEzT240V215b196LVFfdEtONjhZZmRXZVF5MlpDUWFKU0dPWU5mY1BKMC1XbzVpMzZZT3c5YkRGeg?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr3-0",
+      "title": "김진규 검단구청장 취임…“교통·인프라·재정 기반 갖춘 도시 만들겠다” - 인천일보",
+      "summary": "",
+      "source": "인천일보",
+      "publishedAt": "2026-07-02T08:05:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE1oMUU3VHA4MDZiREc2TzVuMjlOenQxcHMzbXVDQ3ZYSFlpRGNNWTc5TGpCS1NqdmNZTm1majViZFYzVlBMODRBdTA4aE94NXVydV9VTFFSWkwyanZ4dXB3YlA5RWdMTFp1akQ5akM0QnM?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-7",
+      "title": "인천시, ‘육아친화 특화주택’공모…검단AA7블록 선정 - 동방일보",
+      "summary": "",
+      "source": "동방일보",
+      "publishedAt": "2026-07-02T05:57:37.000Z",
+      "url": "https://news.google.com/rss/articles/CBMickFVX3lxTFBFa3N5eVlCMFEwbE5DUXVfVV9BMG0wWWJ5TGRJa1dzdUVnZ2N2ODlxV29kYVgtTTdreEFPUFJMOG50c1dBZlF5SXcyNHVTWWV6a0ZVZ1YtMlVaTEVZSG1QRzhJV0h5X2ludm1RZnFtNXhxQQ?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr2-2",
+      "title": "인천 검단구, 출범 기념 현판 제막식…새로운 행정의 시작 알리다 - 기호일보",
+      "summary": "",
+      "source": "기호일보",
+      "publishedAt": "2026-07-02T04:54:13.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE01QUhYRWpaS051Ri1KYWpJT2FZQnR5clNMak1LRmFCdjNOX3gwSThQWXNYdWh2T0drWUZ0MnplNzVndWY0N1lWRFZGMzkzNDdNSzBkVU82dXRoV0M5eWFmUmMyNjRnVHFqZkRuMjRoOA?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-3",
+      "title": "[아파트의 미학(美學)] 신검단중앙역 디에트르더에듀 \"완성형 녹색 학세권\" - 메트로신문",
+      "summary": "",
+      "source": "메트로신문",
+      "publishedAt": "2026-07-02T04:34:24.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE05TG04NEt2LUE1czg4RXlxbi0tS3pRQlVrQm9OTU0xMURoZ3pNS25zblpNektDWndIUXM4ellTNkdnMFlyRFNqc3d2cFFQZGk0SW5NVTBmMGFSVU5TMEw3ZA?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-34",
       "title": "인천시, ‘육아친화 특화주택’공모에 검단AA7블록 선정돼 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -13,7 +83,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-24",
+      "id": "gr0-41",
       "title": "인천시, 육아친화 특화주택 검단AA7블록에 선정 - onulnews.com",
       "summary": "",
       "source": "onulnews.com",
@@ -28,22 +98,12 @@
       "summary": "",
       "source": "한국경제",
       "publishedAt": "2026-07-01T08:38:41.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE1VZGVmY1JvSVFndFJvdFducWxGbVM1SzE5c2dFUk1xTXRTQXpWWGdBY2JLc1piUWMxMjYyUnh2V3hJb0h6OTcwOXJPeWVJbmZ3bzRVS0ZOYUJEUdIBVEFVX3lxTE5tcTlvY1g4WldSbW8xSGRXeXJWVG9VWDBQZkI0Mk9mLVZ2VzNWb0I2NDZ5cnUta1J3RjlISk0xSkxOWFgyT1kzQnAtR2lyZGh0OVdpYQ?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
-    },
-    {
-      "id": "gr0-8",
-      "title": "'여의도공원 48배' 검단신도시, 2028년 베일 벗는다 - 한국경제",
-      "summary": "",
-      "source": "한국경제",
-      "publishedAt": "2026-07-01T08:38:41.000Z",
       "url": "https://news.google.com/rss/articles/CBMiVEFVX3lxTE5tcTlvY1g4WldSbW8xSGRXeXJWVG9VWDBQZkI0Mk9mLVZ2VzNWb0I2NDZ5cnUta1J3RjlISk0xSkxOWFgyT1kzQnAtR2lyZGh0OVdpYdIBVEFVX3lxTE5tcTlvY1g4WldSbW8xSGRXeXJWVG9VWDBQZkI0Mk9mLVZ2VzNWb0I2NDZ5cnUta1J3RjlISk0xSkxOWFgyT1kzQnAtR2lyZGh0OVdpYQ?oc=5",
       "type": "뉴스",
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-10",
+      "id": "gr0-19",
       "title": "“구청 찾아 멀리 가야 했던 불편 없어졌어요”… 1일 출범한 검단구·영종구 주민들 ‘웃음’ - 조선일보",
       "summary": "",
       "source": "조선일보",
@@ -53,7 +113,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-13",
+      "id": "gr0-23",
       "title": "인천시, ‘육아친화 특화주택’ 공모에 검단AA7블록 선정…총 80가구 조성 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -63,17 +123,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr3-0",
-      "title": "검단연장선 개통 1년, ‘검단구’ 시대 대동맥으로 도약 - v.daum.net",
-      "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-07-01T07:11:51.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1KWGwyVUpWT1BRZ016VW1nRzAtY1kwM3l5dE9OVmVIVkU2VWhEOXFTQ3pLN0ExdjZuMVVrYXhCMllncVdHYkV3ZTFtUHotbWM?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
-    },
-    {
-      "id": "gr0-9",
+      "id": "gr0-18",
       "title": "검단연장선 개통 1년, ‘검단구’ 시대 대동맥으로 도약 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -83,7 +133,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-19",
       "title": "인천 검단구·서해구, 출범 첫날 긴급 재정 대응…공동 TF 구성 - 매일일보",
       "summary": "",
       "source": "매일일보",
@@ -93,7 +143,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-6",
+      "id": "gr0-8",
       "title": "인천시, 검단신도시에 '육아친화 특화주택' 조성 - 경기신문",
       "summary": "",
       "source": "경기신문",
@@ -103,7 +153,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-14",
+      "id": "gr0-21",
       "title": "인천시, 검단신도시 육아친화 특화주택 공모 선정…국비 38억 확보 - 뉴스21 통신",
       "summary": "",
       "source": "뉴스21 통신",
@@ -113,7 +163,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-16",
       "title": "인천 검단신도시, 국토부 육아친화 특화주택 공모 선정 - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -133,7 +183,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-13",
       "title": "대방건설, ‘신검단중앙역 디에트르 더 에듀’ 준공…검단신도시 브랜드 주거단지 완성 - 이코노미스트",
       "summary": "",
       "source": "이코노미스트",
@@ -143,7 +193,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-23",
+      "id": "gr0-30",
       "title": "검단신도시에 '육아특화 공공임대' 들어선다…인천시, 국비 38억 확보 - 뉴스프리존",
       "summary": "",
       "source": "뉴스프리존",
@@ -153,44 +203,31 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr2-8",
+      "id": "gr2-10",
       "title": "인천 서구, 38년 만에 ‘서해구’로 새 출발··· 1일 현판식 - 인천투데이",
       "summary": "",
       "source": "인천투데이",
       "publishedAt": "2026-07-01T04:24:16.000Z",
       "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE5hV0U1ZUhtVEIyQUVRMkswT2tCUGM1OW95NFRobUJTdExyX0NPZkpfNEFndXBnVVFfeXNYanhKRjRHTmJ5MEU4RHdIeDVwVTBRNlJJZW0taVNMaUhsN0JBRS1OZGhvcFplUUVXRXZmOUk?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
-      "id": "gr0-15",
-      "title": "[철도투데이] 인천1호선 검단연장선 개통 1년··· 912만명 수송·이용객 22.18% 증가 - 인천투데이",
-      "summary": "",
-      "source": "인천투데이",
-      "publishedAt": "2026-07-01T04:19:40.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTFBuWGVsbDhsWEdLUi11Si1mUFdoQUpueVg5ZTYtdlJXMUItRDhYMjZyTWdJZGlnS2pZR2NpNW93dU9XLVhOTEU4bUNONmE0MVlOUXVjTzJlajNDcEFTWFVNaUU3OS1iQTNaMFJFNWM1M1c?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
-    },
-    {
-      "id": "gr0-28",
+      "id": "gr0-33",
       "title": "인천시, 검단에 육아친화 공공임대…국비 38억 지원 - 매일일보",
       "summary": "",
       "source": "매일일보",
       "publishedAt": "2026-07-01T02:58:01.000Z",
       "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE84aV82aGctdDhiWGJuZV9qMGRpc2l4bFJSUHpmTlFVMENfbUZqaE1TYVp1U1ppVERrNExGOTl6aFp6ZnJ2OVM3MkZ0ZGZvdXVaS3hVM0ZpbmRETmY1aEhPazNiRTI?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
-      "id": "gr0-34",
+      "id": "gr0-39",
       "title": "인천 검단 AA7블록, 국토부 '육아친화 특화주택' 공모 최종 선정 - 메트로신문",
       "summary": "",
       "source": "메트로신문",
       "publishedAt": "2026-07-01T02:47:13.000Z",
       "url": "https://news.google.com/rss/articles/CBMiYEFVX3lxTE44Vmd6MVd1azkxRjlLb0hPMEJiVV9qTDZHa21JWGFlRkZPNE9USE5HQWhWWUczdW9ROW9QQnREMHRMVjZteFcyTTV1bVdkVDVDTDFVM3F1T05Xbm9YekFVdA?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
       "id": "gr3-11",
@@ -199,11 +236,10 @@
       "source": "incheonin.com",
       "publishedAt": "2026-07-01T01:40:26.000Z",
       "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTE9kelZIWXRrbEtVa1haQjNLUExkb2Y3WGpTb09JdFFLbmdrMTVselZlUHpuY3BrNjJfRjJGM0U5QmVaWU9fNnFVc2F4V0J1b043S0hYTXVsdXF5b3RPRk5PYkJ1eFBIWFRFUXdV?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
-      "id": "gr0-33",
+      "id": "gr0-36",
       "title": "인천 검단에 ‘육아특화 공공주택’ 들어선다… 국토부 공모 선정 - 복지투데이",
       "summary": "",
       "source": "복지투데이",
@@ -212,7 +248,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-3",
+      "id": "gr0-14",
       "title": "인천 검단신도시 AA7블록, 육아친화 특화주택 선정…80호 조성 - 프레시안",
       "summary": "",
       "source": "프레시안",
@@ -221,7 +257,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-38",
+      "id": "gr0-43",
       "title": "인천시, 검단신도시 AA7블록 ‘육아친화 특화주택’ 사업 선정 - 웹이코노미",
       "summary": "",
       "source": "웹이코노미",
@@ -230,7 +266,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-10",
       "title": "검단신도시에 ‘아이 키우기 좋은 집’ 들어선다 - 아시아투데이",
       "summary": "",
       "source": "아시아투데이",
@@ -239,7 +275,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-26",
+      "id": "gr0-25",
       "title": "인천 검단AA7블록, 육아친화 특화주택 선정…주거·돌봄 결합한 공공주택 조성 - 미디어생활",
       "summary": "",
       "source": "미디어생활",
@@ -248,7 +284,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-25",
+      "id": "gr0-24",
       "title": "검단신도시 AA7블록, 국토부 육아친화 특화주택 공모 선정 - livesnews.com",
       "summary": "",
       "source": "livesnews.com",
@@ -257,7 +293,16 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-47",
+      "title": "인천시, 검단AA7블록 '육아친화 특화주택' 공모 선정 - 보도자료 | 기사 - 더팩트",
+      "summary": "",
+      "source": "더팩트",
+      "publishedAt": "2026-07-01T00:56:49.000Z",
+      "url": "https://news.google.com/rss/articles/CBMiX0FVX3lxTE1xeFJuR2tUSEFtN3Vqa1p6a25XRkJMVjRDc2tObEIyU3pMZGtIbTZHYjg3RWFldm1mejVieDFmNDVDY25KTVVnM2VsTmdvREUtaC1RdWM4T1RKYmQxNF8w?oc=5",
+      "type": "뉴스"
+    },
+    {
+      "id": "gr0-28",
       "title": "인천 검단신도시 ‘육아친화 특화주택’ 조성… 80가구 규모 - 헤럴드경제",
       "summary": "",
       "source": "헤럴드경제",
@@ -266,7 +311,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-21",
+      "id": "gr0-20",
       "title": "인천시, 검단신도시 AA7블록 육아친화 특화주택 사업 최종 선정 - 디스커버리뉴스(DISCOVERYNEWS)",
       "summary": "",
       "source": "디스커버리뉴스(DISCOVERYNEWS)",
@@ -284,7 +329,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-31",
+      "id": "gr0-29",
       "title": "인천시, 검단신도시 육아친화 특화주택 선정… 국비 38억2천만 원 확보 - 연합시민의소리",
       "summary": "",
       "source": "연합시민의소리",
@@ -293,7 +338,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-51",
+      "id": "gr0-53",
       "title": "인천시, 검단 AA7블록 '육아친화 특화주택' 선정 - 중도일보",
       "summary": "",
       "source": "중도일보",
@@ -302,7 +347,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-47",
+      "id": "gr0-50",
       "title": "아이 키우기 좋은 집 만든다…인천 검단 국비 38억 확보한'육아특화주택' 선정 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -329,57 +374,12 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-30",
+      "id": "gr0-27",
       "title": "인천시, 검단신도시 육아친화 특화주택 선정… 국비 38억 원 확보 - 여성종합뉴스",
       "summary": "",
       "source": "여성종합뉴스",
       "publishedAt": "2026-06-30T23:48:45.000Z",
       "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE5IWHVtZ1Z3TUZzaTMtZG5xa2dHcVptMXVaNmRMNEhrQnRzcUJ5X2xxTWtkRGdLUENvazRHSnEtVVpCVnhYWEhIdzBMWnVlNmN1b2dxZVBlN0cxS3U3cm05VXVMcEwwZHVfOTdlaExLQQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr3-4",
-      "title": "인천김포고속도로 북청라IC~검단·양촌IC 구간 교통 통제 - incheonin.com",
-      "summary": "",
-      "source": "incheonin.com",
-      "publishedAt": "2026-06-30T23:39:54.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9nM1ZMMUJ1ZXozbElsT3NQV091MUVBT2lCX09NTUIyMFVSaWc3dGc0NThkVy1WcjcySzJvZ0JZT0U5ZlR0YVBNVkFnOTd0UWhINV9FQThCU09nMEVyOHBTeG0yX3dKODA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr2-15",
-      "title": "인천 검단IC 인근 적재물 낙하 사고…통행 전면 통제 - 연합뉴스",
-      "summary": "",
-      "source": "연합뉴스",
-      "publishedAt": "2026-06-30T23:34:25.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiW0FVX3lxTE1SY3ktY0Jsci1DaTRDMHlhUGdzckltYkFucHJRaEZXdkZRRWwyaUs3akxFN3dJVk5pU2JYeFpxcExDZW44NjlvT3lqZEdQejBwcWJzNTBmc0pTeEnSAWBBVV95cUxPby1IQUktRGlqOG5YZzAyVUNHVjBYZWRXUkRNRmNGaEMzVmg3bXJBQXEyVDBPXzYzTEstdmt5NTJpQWluUGMzT2JPREZKUTZCaHhJRVl3clJ4YjhLZzNqWDA?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-0",
-      "title": "주거와 돌봄을 한곳에…검단신도시, 육아특화 공공임대 시동 - 데일리안",
-      "summary": "",
-      "source": "데일리안",
-      "publishedAt": "2026-06-30T23:30:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiV0FVX3lxTFAwdU9HYXR4dVRuOHVfQmwtcmJZWUwxRGtvOVV1RjhVMVBtTGVJbmZaenpqMkhVckV5bHFMNndqY3RSdEpRSkNPLU9CemRNZkNYdmoxSUYwONIBpAJBVV95cUxQT1hnN2NhWXp6c05SM3hZRXJEeWlWcGZLWWQ5d3lTZjNnZXlYSUEyTmJRaVp5Mm5qUFBGNmJ4Y2Q4aFZWU2FWWTNURmFaQkxLbVBOTFA1NTFNZGl1LTJrQW5feTl4S0Y1UkpWQ2VKbnlIWDlvRmlhZldYckJZQnVaekkxR3hReW9mallQc19tR0JzdXl2MW12TUJ5NTYtVzMyQ2tsRXpTczIxNjlzU3RCR3Qwa2ExRVBXclBJYTMtTGlJTzY4bm5WMTNuYjZVRU16M1R4WlNDWUI3ZXZxVlhFTG9rcElkeDJhRmZoYV9jSGpjQ01icF9qLXRpaUNGamo2a3VkZTVGVHZnMzRVVkhhU3hVT0pXZTV4S29IeHQ0aVZVb1dG?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-27",
-      "title": "검단에 '육아 친화형' 특화주택 들어선다 - 인천일보",
-      "summary": "",
-      "source": "인천일보",
-      "publishedAt": "2026-06-30T10:53:00.000Z",
-      "url": "https://news.google.com/rss/articles/CBMicEFVX3lxTE51OXdaX1JMTTNxUU9aVldaWHNvMmRCWVNmQlVXYnFHcFd0VTdjWDRRZUo5VlFqUWp1dDU2SWc2bTFraGZHLVZMT0hNZld3dkFtV1JLX1Y5SlRSVkhyVEtsZV9oSGVZdzhaWWZnUW1pVUI?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-20",
-      "title": "[인천 행정개편으로 돌아보는 역사] 희망과 소망의 마을 검단구의 탄생 - 기호일보",
-      "summary": "",
-      "source": "기호일보",
-      "publishedAt": "2026-06-30T10:31:20.000Z",
-      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTFB3R0VQbkx2d09uckJEYi1aSzFyT1JBcHBmX21wOC1yWWJBTVZ4U09UazFkbjd5QTlFRmRqUVRkOFZ1eGV4WEVJU0N3UEVMWXgtaVEyN2s5Y29ib3F6MXFoNHdCaVdiUlpLTGpCbjJmOA?oc=5",
       "type": "뉴스"
     }
   ]
