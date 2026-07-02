@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,7 +8,7 @@ const BUCKET = "admin-images";
 
 function getStorageKey() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-  const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || "";
+  const key = process.env.SUPABASE_SERVICE_KEY || "";
   return { url, key };
 }
 
@@ -94,6 +95,9 @@ async function downloadAndReupload(
 
 // GET /api/instagram/thumb?url=https://www.instagram.com/p/...
 export async function GET(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ error: "관리자 인증이 필요합니다" }, { status: 401 });
+  }
   const postUrl = req.nextUrl.searchParams.get("url");
   if (!postUrl) return NextResponse.json({ error: "url 파라미터 필요" }, { status: 400 });
 

@@ -136,15 +136,18 @@ export function getLocalUserId(): string | null {
 
 export async function getOrCreateUserId(): Promise<string> {
   let uid = lsGet("geumdan_uid");
-  if (uid) return uid;
-
-  uid = crypto.randomUUID();
 
   if (isConfigured()) {
-    const { error } = await supabase.from("users").insert({ id: uid });
-    if (error) console.warn("[userdata] insert user:", error.message);
+    const { data } = await supabase.auth.getUser();
+    if (data.user) {
+      uid = data.user.id;
+      lsSet("geumdan_uid", uid);
+      return uid;
+    }
   }
 
+  if (uid) return uid;
+  uid = crypto.randomUUID();
   lsSet("geumdan_uid", uid);
   return uid;
 }

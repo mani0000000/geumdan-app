@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function getKey() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-  const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_ADMIN_DB_KEY || anonKey;
+  const key = process.env.SUPABASE_SERVICE_KEY || "";
   return { url, key };
 }
 
@@ -272,6 +271,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
   const { url, key } = getKey();
+  if (!key) {
+    return NextResponse.json({ error: "SUPABASE_SERVICE_KEY가 설정되지 않았습니다." }, { status: 503 });
+  }
 
   const results: Record<string, string> = {};
 

@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
+import {
+  ADMIN_COOKIE_NAME,
+  adminCookieOptions,
+  createAdminSessionToken,
+  validateAdminCookie,
+} from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD ||
-  process.env.NEXT_PUBLIC_ADMIN_PASSWORD ||
-  process.env.CRON_SECRET ||
-  "";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
 
 function safeEqual(a: string, b: string): boolean {
   const ab = Buffer.from(a, "utf8");
@@ -17,9 +19,11 @@ function safeEqual(a: string, b: string): boolean {
   return timingSafeEqual(ab, bb);
 }
 
-// 개발/테스트 중 인증 비활성화 — 운영 전 복원 필요
-export function validateAdminCookie(_req: NextRequest): boolean {
-  return true;
+export async function GET(req: NextRequest) {
+  if (!validateAdminCookie(req)) {
+    return NextResponse.json({ ok: false }, { status: 401 });
+  }
+  return NextResponse.json({ ok: true });
 }
 
 export async function POST(req: NextRequest) {
@@ -27,15 +31,10 @@ export async function POST(req: NextRequest) {
     const { password } = await req.json() as { password?: string };
 
     if (!ADMIN_PASSWORD) {
-      const res = NextResponse.json({ ok: true });
-      res.cookies.set("admin_session", "1", {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24 * 7,
-        path: "/",
-      });
-      return res;
+      return NextResponse.json(
+        { error: "관리자 인증 환경변수가 설정되지 않았습니다." },
+        { status: 503 },
+      );
     }
 
     if (!password) {
@@ -47,15 +46,18 @@ export async function POST(req: NextRequest) {
     }
 
     const res = NextResponse.json({ ok: true });
-    res.cookies.set("admin_session", "1", {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 7,
-      path: "/",
-    });
+    res.cookies.set(ADMIN_COOKIE_NAME, createAdminSessionToken(), adminCookieOptions());
     return res;
   } catch {
     return NextResponse.json({ error: "서버 오류가 발생했습니다." }, { status: 500 });
   }
+}
+
+export async function DELETE() {
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(ADMIN_COOKIE_NAME, "", {
+    ...adminCookieOptions(),
+    maxAge: 0,
+  });
+  return res;
 }

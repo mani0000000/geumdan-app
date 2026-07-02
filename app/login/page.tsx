@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { fetchSiteSetting } from "@/lib/db/site-settings";
+import { supabase } from "@/lib/supabase";
+import { isValidKoreanMobile, normalizeKoreanPhone } from "@/lib/auth";
 
 const LOGO_CACHE_KEY = "site_logo_url";
 
@@ -14,6 +16,7 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const cached = localStorage.getItem(LOGO_CACHE_KEY);
@@ -28,15 +31,36 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    if (!isValidKoreanMobile(phone) || !password) {
+      setError("휴대폰 번호와 비밀번호를 확인해 주세요.");
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 700));
-    router.push("/home/");
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
+      phone: normalizeKoreanPhone(phone),
+      password,
+    });
+    if (authError || !data.user) {
+      setError(authError?.message ?? "로그인에 실패했습니다.");
+      setLoading(false);
+      return;
+    }
+    localStorage.setItem("geumdan_uid", data.user.id);
+    router.replace("/home/");
   };
 
   const handleSocial = async () => {
+    setError("");
     setLoading(true);
-    await new Promise(r => setTimeout(r, 500));
-    router.push("/home/");
+    const { error: authError } = await supabase.auth.signInWithOAuth({
+      provider: "kakao",
+      options: { redirectTo: `${window.location.origin}/home/` },
+    });
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+    }
   };
 
   return (
@@ -89,6 +113,8 @@ export default function LoginPage() {
             ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
             : "로그인"}
         </button>
+
+        {error && <p className="text-[13px] text-[#F04452] text-center">{error}</p>}
 
         {/* Divider */}
         <div className="flex items-center gap-3 my-1">

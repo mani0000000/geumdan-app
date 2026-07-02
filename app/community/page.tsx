@@ -40,6 +40,13 @@ const catColor: Record<CommunityCategory, string> = {
   "분실/목격": "bg-red-50 text-red-800",
   동네질문: "bg-blue-50 text-blue-800",
   소모임: "bg-purple-50 text-purple-800",
+  생활정보: "bg-cyan-50 text-cyan-800",
+  "육아/교육": "bg-rose-50 text-rose-800",
+  "취미/운동": "bg-emerald-50 text-emerald-800",
+  반려동물: "bg-amber-50 text-amber-800",
+  교통정보: "bg-indigo-50 text-indigo-800",
+  이웃모임: "bg-violet-50 text-violet-800",
+  "공구/나눔": "bg-lime-50 text-lime-800",
 };
 
 type CommSortKey = "latest" | "likes" | "comments" | "views";

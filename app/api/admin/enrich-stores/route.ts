@@ -9,7 +9,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +53,7 @@ function formatTime(t: string | undefined): string {
   return `${t.slice(0, 2)}:${t.slice(2, 4)}`;
 }
 
-function parseHours(openHour: KakaoPlaceDetail["basicInfo"]["openHour"]): string | null {
+function parseHours(openHour: NonNullable<KakaoPlaceDetail["basicInfo"]>["openHour"]): string | null {
   if (!openHour?.periodList?.length) return null;
   const lines: string[] = [];
   for (const period of openHour.periodList) {

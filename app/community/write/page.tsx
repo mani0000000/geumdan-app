@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, Image as ImageIcon, ChevronDown, X, Loader2, Play } from "lucide-react";
 import type { CommunityCategory } from "@/lib/types";
 import { createPost } from "@/lib/db/posts";
+import { authenticatedHeaders } from "@/lib/auth-session";
 
 const categories: CommunityCategory[] = ["맘카페","맛집","부동산","중고거래","분실/목격","동네질문","소모임"];
 
@@ -42,7 +43,11 @@ export default function WritePage() {
         const form = new FormData();
         form.append("file", file);
         form.append("folder", "community");
-        const res = await fetch("/api/upload", { method: "POST", body: form });
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          headers: await authenticatedHeaders(),
+          body: form,
+        });
         const json = (await res.json()) as { url?: string; error?: string };
         if (!res.ok || !json.url) {
           throw new Error(json.error ?? "업로드 실패");
@@ -66,7 +71,7 @@ export default function WritePage() {
     setSubmitting(true);
     setError("");
     try {
-      const post = await createPost({
+      const result = await createPost({
         category: category as CommunityCategory,
         title: title.trim(),
         content: content.trim(),
@@ -76,15 +81,10 @@ export default function WritePage() {
         images,
         videos,
       });
-      if (post) {
-        saveMyPostId(post.id);
-        router.push(`/community/detail/?id=${post.id}`);
-      } else {
-        // Supabase 미설정 시 목록으로 이동
-        router.push("/community/");
-      }
-    } catch {
-      setError("글 등록에 실패했습니다. 다시 시도해주세요.");
+      saveMyPostId(result.post.id);
+      router.push(`/community/detail/?id=${result.post.id}`);
+    } catch (submitError) {
+      setError(submitError instanceof Error ? submitError.message : "글 등록에 실패했습니다. 다시 시도해주세요.");
       setSubmitting(false);
     }
   };

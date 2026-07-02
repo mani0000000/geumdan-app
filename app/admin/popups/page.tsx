@@ -15,10 +15,10 @@ const EMPTY_FORM = {
   title: "",
   image_url: "",
   link_url: "",
-  link_label: "자세히 보기",
-  start_at: "",
-  end_at: "",
-  is_active: true,
+  button_text: "자세히 보기",
+  starts_at: "",
+  ends_at: "",
+  active: true,
 };
 
 type FormData = typeof EMPTY_FORM;
@@ -36,9 +36,9 @@ function fromLocalInput(local: string): string | null {
 
 function StatusBadge({ p }: { p: Popup }) {
   const now = Date.now();
-  const starts = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
-  const ends = p.end_at ? new Date(p.end_at).getTime() : Infinity;
-  if (!p.is_active) return <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>;
+  const starts = p.starts_at ? new Date(p.starts_at).getTime() : -Infinity;
+  const ends = p.ends_at ? new Date(p.ends_at).getTime() : Infinity;
+  if (p.active === false) return <span className="text-[11px] font-semibold bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">비활성</span>;
   if (now < starts) return <span className="text-[11px] font-semibold bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">예약</span>;
   if (now > ends)   return <span className="text-[11px] font-semibold bg-orange-50 text-orange-600 px-2 py-0.5 rounded-full">만료</span>;
   return <span className="text-[11px] font-semibold bg-green-50 text-green-600 px-2 py-0.5 rounded-full">● 노출 중</span>;
@@ -70,12 +70,12 @@ function PopupRow({
       </div>
       <div className="flex-1 px-4 py-3 min-w-0">
         <div className="flex items-start gap-2 flex-wrap">
-          <span className="text-[12px] font-bold text-gray-400">#{p.sort_order}</span>
+          <span className="text-[12px] font-bold text-gray-400">#{p.sort_order ?? p.priority}</span>
           <p className="text-[14px] font-bold text-[#191F28] truncate flex-1">{p.title || "(제목 없음)"}</p>
           <StatusBadge p={p} />
         </div>
         <p className="text-[11px] text-gray-400 mt-1">
-          {fmt(p.start_at)} ~ {fmt(p.end_at)}
+          {fmt(p.starts_at)} ~ {fmt(p.ends_at)}
         </p>
       </div>
       <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100">
@@ -88,7 +88,7 @@ function PopupRow({
           <ChevronDown size={16} className="text-gray-500" />
         </button>
         <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
-          {p.is_active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
+          {p.active !== false ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
         </button>
         <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
           <Pencil size={14} className="text-gray-500" />
@@ -139,14 +139,14 @@ export default function AdminPopupsPage() {
 
   function openEdit(p: Popup) {
     setForm({
-      sort_order: p.sort_order,
+      sort_order: p.sort_order ?? p.priority,
       title: p.title ?? "",
       image_url: p.image_url ?? "",
       link_url: p.link_url ?? "",
-      link_label: p.link_label,
-      start_at: toLocalInput(p.start_at),
-      end_at: toLocalInput(p.end_at),
-      is_active: p.is_active,
+      button_text: p.button_text ?? "자세히 보기",
+      starts_at: toLocalInput(p.starts_at),
+      ends_at: toLocalInput(p.ends_at),
+      active: p.active !== false,
     });
     setEditingId(p.id);
     setShowForm(true);
@@ -158,13 +158,14 @@ export default function AdminPopupsPage() {
     try {
       const payload = {
         sort_order: form.sort_order,
+        priority: form.sort_order,
         title: form.title,
         image_url: form.image_url || null,
         link_url: form.link_url || null,
-        link_label: form.link_label,
-        start_at: fromLocalInput(form.start_at),
-        end_at: fromLocalInput(form.end_at),
-        is_active: form.is_active,
+        button_text: form.button_text || null,
+        starts_at: fromLocalInput(form.starts_at),
+        ends_at: fromLocalInput(form.ends_at),
+        active: form.active,
       };
       if (editingId) {
         await adminUpdatePopup(editingId, payload);
@@ -193,7 +194,7 @@ export default function AdminPopupsPage() {
 
   async function toggleActive(p: Popup) {
     try {
-      await adminUpdatePopup(p.id, { is_active: !p.is_active });
+      await adminUpdatePopup(p.id, { active: p.active === false });
       await reload();
     } catch { showToast("변경 실패", false); }
   }
@@ -214,9 +215,9 @@ export default function AdminPopupsPage() {
 
   const activeCount = popups.filter(p => {
     const now = Date.now();
-    const s = p.start_at ? new Date(p.start_at).getTime() : -Infinity;
-    const e = p.end_at ? new Date(p.end_at).getTime() : Infinity;
-    return p.is_active && s <= now && e >= now;
+    const s = p.starts_at ? new Date(p.starts_at).getTime() : -Infinity;
+    const e = p.ends_at ? new Date(p.ends_at).getTime() : Infinity;
+    return p.active !== false && s <= now && e >= now;
   }).length;
 
   return (
@@ -307,18 +308,28 @@ export default function AdminPopupsPage() {
               </div>
 
               <div className="space-y-2">
+                <label className="text-[12px] font-bold text-gray-600">버튼 문구</label>
+                <input
+                  value={form.button_text}
+                  onChange={e => setForm(f => ({ ...f, button_text: e.target.value }))}
+                  placeholder="자세히 보기"
+                  className="w-full h-11 rounded-xl border border-gray-200 px-3.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-[12px] font-bold text-gray-600">노출 기간 (비워두면 제한 없음)</label>
                 <div className="flex items-center gap-2">
                   <div className="flex-1">
                     <p className="text-[11px] text-gray-400 mb-1">시작</p>
-                    <input type="datetime-local" value={form.start_at}
-                      onChange={e => setForm(f => ({ ...f, start_at: e.target.value }))}
+                    <input type="datetime-local" value={form.starts_at}
+                      onChange={e => setForm(f => ({ ...f, starts_at: e.target.value }))}
                       className="w-full h-11 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]" />
                   </div>
                   <div className="flex-1">
                     <p className="text-[11px] text-gray-400 mb-1">종료</p>
-                    <input type="datetime-local" value={form.end_at}
-                      onChange={e => setForm(f => ({ ...f, end_at: e.target.value }))}
+                    <input type="datetime-local" value={form.ends_at}
+                      onChange={e => setForm(f => ({ ...f, ends_at: e.target.value }))}
                       className="w-full h-11 rounded-xl border border-gray-200 px-3 text-[13px] focus:outline-none focus:ring-2 focus:ring-[#3182F6]" />
                   </div>
                 </div>
@@ -333,12 +344,12 @@ export default function AdminPopupsPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-bold text-gray-600">활성화</label>
-                  <button onClick={() => setForm(f => ({ ...f, is_active: !f.is_active }))}
+                  <button onClick={() => setForm(f => ({ ...f, active: !f.active }))}
                     className={`flex items-center gap-2 h-11 px-4 rounded-xl font-bold text-[14px] border-2 transition-colors ${
-                      form.is_active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
+                      form.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-500 border-gray-200"
                     }`}>
-                    {form.is_active ? <Eye size={15} /> : <EyeOff size={15} />}
-                    {form.is_active ? "활성" : "비활성"}
+                    {form.active ? <Eye size={15} /> : <EyeOff size={15} />}
+                    {form.active ? "활성" : "비활성"}
                   </button>
                 </div>
               </div>

@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { Film, Loader2, Plus, X, AlertCircle } from "lucide-react";
+import { requireAccessToken } from "@/lib/auth-session";
+import { supabase } from "@/lib/supabase";
 
 const SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -46,10 +48,10 @@ function newId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
-function buildPath(file: File): string {
+function buildPath(userId: string, file: File): string {
   const ext = (file.name.split(".").pop() ?? "mp4").toLowerCase();
   const safeExt = /^[a-z0-9]+$/.test(ext) ? ext : "mp4";
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${safeExt}`;
+  return `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${safeExt}`;
 }
 
 function publicUrl(path: string): string {
@@ -64,13 +66,14 @@ function formatSize(bytes: number): string {
 function uploadToStorage(
   file: File,
   path: string,
+  accessToken: string,
   onProgress: (p: number) => void,
 ): { promise: Promise<void>; xhr: XMLHttpRequest } {
   const xhr = new XMLHttpRequest();
   const promise = new Promise<void>((resolve, reject) => {
     xhr.open("POST", `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`);
     xhr.setRequestHeader("apikey", SUPABASE_ANON_KEY);
-    xhr.setRequestHeader("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+    xhr.setRequestHeader("Authorization", `Bearer ${accessToken}`);
     xhr.setRequestHeader(
       "Content-Type",
       file.type || "application/octet-stream",
@@ -105,11 +108,12 @@ function uploadToStorage(
 }
 
 async function deleteFromStorage(path: string): Promise<void> {
+  const accessToken = await requireAccessToken();
   await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
     method: "DELETE",
     headers: {
       apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${accessToken}`,
     },
   });
 }
@@ -153,9 +157,8 @@ export default function VideoUpload({
     return null;
   }
 
-  function startUpload(file: File) {
+  async function startUpload(file: File) {
     const id = newId();
-    const path = buildPath(file);
     const errMsg = validate(file);
     if (errMsg) {
       setItems((prev) => [
@@ -165,7 +168,33 @@ export default function VideoUpload({
       return;
     }
 
-    const { promise, xhr } = uploadToStorage(file, path, (p) => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) {
+      setItems((prev) => [
+        ...prev,
+        { id, file, status: "error", progress: 0, error: "로그인이 필요합니다." },
+      ]);
+      return;
+    }
+    let accessToken: string;
+    try {
+      accessToken = await requireAccessToken();
+    } catch (authError) {
+      setItems((prev) => [
+        ...prev,
+        {
+          id,
+          file,
+          status: "error",
+          progress: 0,
+          error: authError instanceof Error ? authError.message : "로그인이 필요합니다.",
+        },
+      ]);
+      return;
+    }
+    const path = buildPath(data.user.id, file);
+
+    const { promise, xhr } = uploadToStorage(file, path, accessToken, (p) => {
       setItems((prev) =>
         prev.map((it) => (it.id === id ? { ...it, progress: p } : it)),
       );
@@ -208,7 +237,7 @@ export default function VideoUpload({
     e.target.value = "";
     if (!files.length) return;
     const slots = MAX_FILES - items.length;
-    files.slice(0, slots).forEach(startUpload);
+    files.slice(0, slots).forEach((file) => void startUpload(file));
   }
 
   function removeItem(id: string) {

@@ -31,6 +31,8 @@ export interface SubwayStationEntry {
   lng: number;
   apiType: SubwayApiType;
   stationCode: string;
+  groupKey?: string;
+  shortLineLabel?: string;
   planned?: boolean;
   timetable: {
     upFirst: string; upLast: string;
@@ -67,6 +69,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "arex",
     stationCode: "계양",
+    groupKey: "계양역",
+    shortLineLabel: "공항철도",
     timetable: { upFirst: "05:28", upLast: "23:36", downFirst: "05:35", downLast: "23:43", intervalMin: 10, intervalDisplay: "6~15분", upDirection: "서울역", downDirection: "인천공항2터미널" },
   },
 
@@ -91,6 +95,8 @@ const STATION_DB: SubwayStationEntry[] = [
     lat: 37.5655, lng: 126.7294,
     apiType: "ic1",
     stationCode: "I023",
+    groupKey: "계양역",
+    shortLineLabel: "인천1호선",
     timetable: { upFirst: "05:35", upLast: "23:55", downFirst: "05:27", downLast: "23:47", intervalMin: 6, upDirection: "국제업무지구", downDirection: "검단호수공원" },
   },
   {

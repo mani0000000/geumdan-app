@@ -25,10 +25,13 @@
  * ALTER TABLE community_posts ADD COLUMN IF NOT EXISTS video_urls TEXT[] DEFAULT '{}';
  *
  * ALTER TABLE community_posts ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "public read"  ON community_posts FOR SELECT USING (true);
- * CREATE POLICY "public write" ON community_posts FOR INSERT WITH CHECK (true);
- * CREATE POLICY "public update" ON community_posts FOR UPDATE USING (true);
- * CREATE POLICY "public delete" ON community_posts FOR DELETE USING (true);
+ * CREATE POLICY "public read" ON community_posts FOR SELECT USING (true);
+ * CREATE POLICY "owner insert" ON community_posts FOR INSERT TO authenticated
+ *   WITH CHECK (user_id = auth.uid());
+ * CREATE POLICY "owner update" ON community_posts FOR UPDATE TO authenticated
+ *   USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid());
+ * CREATE POLICY "owner delete" ON community_posts FOR DELETE TO authenticated
+ *   USING (user_id = auth.uid());
  *
  * CREATE INDEX idx_posts_created_at ON community_posts(created_at DESC);
  * CREATE INDEX idx_posts_category   ON community_posts(category);
@@ -169,6 +172,10 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
   if (!isConfigured()) {
     throw new Error('서비스 설정이 완료되지 않았어요. 관리자에게 문의해주세요.');
   }
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    throw new Error('로그인 후 글을 작성할 수 있어요.');
+  }
   const base = {
     category: input.category,
     title: input.title,
@@ -177,7 +184,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
     author_dong: input.authorDong,
     author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
     is_anonymous: input.isAnonymous,
-    user_id: input.userId ?? null,
+    user_id: authData.user.id,
   };
   const hasMedia = (input.images?.length ?? 0) > 0 || (input.videos?.length ?? 0) > 0;
   const payload = hasMedia
@@ -203,7 +210,7 @@ export async function createPost(input: PostInput): Promise<CreatePostResult> {
         author: input.author,
         author_dong: input.authorDong,
         author_avatar_url: input.isAnonymous ? null : (input.authorAvatarUrl ?? null),
-        user_id: input.userId ?? null,
+        user_id: authData.user.id,
         is_anonymous: input.isAnonymous,
       })
       .select()
@@ -238,14 +245,24 @@ export async function fetchMyPosts(userId: string, limit = 100): Promise<Post[]>
 // ── 수정 ─────────────────────────────────────────────────────────
 export async function updatePost(
   id: string,
-  input: Partial<Pick<PostInput, 'title' | 'content' | 'category'>>
+  input: Partial<Pick<PostInput, 'title' | 'content' | 'category' | 'images' | 'videos'>>
 ): Promise<Post | null> {
   if (!isConfigured()) return null;
   try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return null;
+    const { images, videos, ...textFields } = input;
+    const payload = {
+      ...textFields,
+      ...(images !== undefined ? { image_urls: images } : {}),
+      ...(videos !== undefined ? { video_urls: videos } : {}),
+      updated_at: new Date().toISOString(),
+    };
     const { data, error } = await supabase
       .from('community_posts')
-      .update({ ...input, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq('id', id)
+      .eq('user_id', authData.user.id)
       .select(POST_SELECT)
       .single();
     if (error) throw error;
@@ -260,10 +277,13 @@ export async function updatePost(
 export async function deletePost(id: string): Promise<boolean> {
   if (!isConfigured()) return false;
   try {
+    const { data: authData } = await supabase.auth.getUser();
+    if (!authData.user) return false;
     const { error } = await supabase
       .from('community_posts')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', authData.user.id);
     if (error) throw error;
     return true;
   } catch (e) {
@@ -289,16 +309,11 @@ export async function togglePostLike(
 ): Promise<void> {
   if (!isConfigured()) return;
   try {
-    const { data } = await supabase
-      .from('community_posts')
-      .select('like_count')
-      .eq('id', id)
-      .single();
-    const current = (data as Record<string, number> | null)?.like_count ?? 0;
-    await supabase
-      .from('community_posts')
-      .update({ like_count: Math.max(0, current + delta) })
-      .eq('id', id);
+    await supabase.rpc('set_community_reaction', {
+      p_target_type: 'post',
+      p_target_id: id,
+      p_liked: delta === 1,
+    });
   } catch { /* silent */ }
 }
 
@@ -307,19 +322,9 @@ export async function syncCommentCount(
   id: string,
   delta: 1 | -1
 ): Promise<void> {
-  if (!isConfigured()) return;
-  try {
-    const { data } = await supabase
-      .from('community_posts')
-      .select('comment_count')
-      .eq('id', id)
-      .single();
-    const current = (data as Record<string, number> | null)?.comment_count ?? 0;
-    await supabase
-      .from('community_posts')
-      .update({ comment_count: Math.max(0, current + delta) })
-      .eq('id', id);
-  } catch { /* silent */ }
+  void id;
+  void delta;
+  // Comment counts are maintained by the database trigger in the security migration.
 }
 
 // mock post ID 여부 (p1, p2, ...)

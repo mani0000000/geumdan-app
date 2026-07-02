@@ -365,8 +365,12 @@ function CouponsSection({ coupons }: { coupons: StoreCouponDetail[] }) {
   const [used, setUsed] = useState<Record<string, boolean>>({});
   async function use(c: StoreCouponDetail) {
     if (used[c.id]) return;
-    setUsed(s => ({ ...s, [c.id]: true }));
-    try { await publicUseCoupon(c.id, null); } catch {}
+    try {
+      await publicUseCoupon(c.id, null);
+      setUsed(s => ({ ...s, [c.id]: true }));
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "쿠폰 사용 처리에 실패했습니다.");
+    }
   }
   return (
     <section className="px-4 mt-3">

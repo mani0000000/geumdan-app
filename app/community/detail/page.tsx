@@ -103,10 +103,12 @@ function ImageLightbox({
   const [idx, setIdx] = useState(startIndex);
   const [zoom, setZoom] = useState(1);
   const lastDist = useRef<number | null>(null);
+  const [pinching, setPinching] = useState(false);
   const clamp = (z: number) => Math.min(5, Math.max(1, z));
 
   function onTouchStart(e: React.TouchEvent) {
     if (e.touches.length === 2) {
+      setPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastDist.current = Math.sqrt(dx * dx + dy * dy);
@@ -122,7 +124,7 @@ function ImageLightbox({
       lastDist.current = dist;
     }
   }
-  function onTouchEnd() { lastDist.current = null; }
+  function onTouchEnd() { lastDist.current = null; setPinching(false); }
 
   function prev() { setIdx(i => i - 1); setZoom(1); }
   function next() { setIdx(i => i + 1); setZoom(1); }
@@ -155,7 +157,7 @@ function ImageLightbox({
         draggable={false}
         style={{
           transform: `scale(${zoom})`,
-          transition: lastDist.current ? "none" : "transform 0.15s",
+          transition: pinching ? "none" : "transform 0.15s",
           maxWidth: "100%",
           maxHeight: "100%",
           objectFit: "contain",

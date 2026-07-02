@@ -1,19 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
 );
 
-function isAdmin(req: NextRequest) {
-  const key = req.headers.get("x-admin-key") || req.nextUrl.searchParams.get("admin_key");
-  return key === process.env.ADMIN_API_KEY;
-}
-
 // GET /api/admin/suggestions?status=pending
 export async function GET(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!validateAdminCookie(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   const status = req.nextUrl.searchParams.get("status");
   let query = supabase
@@ -31,7 +27,7 @@ export async function GET(req: NextRequest) {
 
 // PATCH /api/admin/suggestions/:id
 export async function PATCH(req: NextRequest) {
-  if (!isAdmin(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  if (!validateAdminCookie(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
 
   let body: { id: number; status: string; admin_note?: string };
   try {

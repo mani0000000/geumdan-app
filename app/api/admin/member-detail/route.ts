@@ -9,7 +9,7 @@
  *  5. 최대 100건 제한
  */
 import { NextRequest, NextResponse } from "next/server";
-import { validateAdminCookie } from "@/app/api/admin/auth/route";
+import { validateAdminCookie } from "@/lib/admin-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -66,9 +66,10 @@ export async function GET(req: NextRequest) {
 
   // ── 3. 데이터 조회 (user_id 강제 필터) ───────────────────────
   const cfg = DATA_CONFIG[type];
-  const apiKey = process.env.SUPABASE_SERVICE_KEY
-    ?? process.env.NEXT_PUBLIC_ADMIN_DB_KEY
-    ?? DEFAULT_KEY;
+  const apiKey = process.env.SUPABASE_SERVICE_KEY ?? DEFAULT_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "Supabase 서비스 키가 설정되지 않았습니다." }, { status: 503 });
+  }
 
   const url = new URL(`${SUPABASE_URL}/rest/v1/${cfg.table}`);
   url.searchParams.set("select", cfg.select);

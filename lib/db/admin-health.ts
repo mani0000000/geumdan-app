@@ -1,5 +1,4 @@
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
-import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export interface AdminPharmacy {
   id: string;
@@ -88,7 +87,6 @@ export async function adminDeleteEmergencyRoom(id: string): Promise<void> {
   await saveLogo("emergency", id, null).catch(() => {});
 }
 
-// Seed functions still use supabaseAdmin (server-side batch scripts only)
 const SEED_PHARMACIES: AdminPharmacy[] = [
   { id: "ph1", name: "가온약국", address: "인천 서구 봉오재 3로 90 (검단동)", phone: "032-567-0879", weekday_hours: "09:00~21:00", weekend_hours: "토·일 10:00~18:00", night_hours: "매일 22:00~01:00", is_night_pharmacy: true, is_weekend_pharmacy: true, logo_url: null },
   { id: "ph2", name: "검단아라태평양약국", address: "인천 서구 이음대로 378 (원당동)", phone: "032-561-7768", weekday_hours: "09:00~21:00", weekend_hours: "토·일 10:00~18:00", night_hours: "매일 22:00~01:00", is_night_pharmacy: true, is_weekend_pharmacy: true, logo_url: null },
@@ -107,11 +105,9 @@ const SEED_EMERGENCY_ROOMS: AdminEmergencyRoom[] = [
 ];
 
 export async function seedPharmacies(): Promise<void> {
-  const { error } = await supabaseAdmin.from("pharmacies").upsert(SEED_PHARMACIES, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+  await adminApiPost("pharmacies", "POST", SEED_PHARMACIES, { onConflict: "id" });
 }
 
 export async function seedEmergencyRooms(): Promise<void> {
-  const { error } = await supabaseAdmin.from("emergency_rooms").upsert(SEED_EMERGENCY_ROOMS, { onConflict: "id" });
-  if (error) throw new Error(error.message);
+  await adminApiPost("emergency_rooms", "POST", SEED_EMERGENCY_ROOMS, { onConflict: "id" });
 }

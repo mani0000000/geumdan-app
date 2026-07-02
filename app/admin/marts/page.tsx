@@ -202,8 +202,6 @@ export default function AdminMartsPage() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Mart | null>(null);
   const [tableErr, setTableErr] = useState(false);
-  const [initing, setIniting] = useState(false);
-  const [initDone, setInitDone] = useState(false);
   const [sqlCopied, setSqlCopied] = useState(false);
 
   async function reload() {
@@ -332,26 +330,11 @@ export default function AdminMartsPage() {
 
       {/* 테이블 없음 오류 패널 */}
       {tableErr && (() => {
-        const sql = `CREATE TABLE IF NOT EXISTS marts (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  brand TEXT NOT NULL DEFAULT '',\n  type TEXT NOT NULL DEFAULT '동네마트',\n  address TEXT NOT NULL DEFAULT '',\n  phone TEXT,\n  distance TEXT,\n  weekday_hours TEXT,\n  saturday_hours TEXT,\n  sunday_hours TEXT,\n  closing_pattern TEXT NOT NULL DEFAULT 'open',\n  notice TEXT,\n  logo_url TEXT,\n  image_url TEXT,\n  lat DOUBLE PRECISION,\n  lng DOUBLE PRECISION,\n  sort_order INT NOT NULL DEFAULT 0,\n  active BOOLEAN NOT NULL DEFAULT TRUE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\nALTER TABLE marts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE marts ENABLE ROW LEVEL SECURITY;\nCREATE POLICY IF NOT EXISTS anon_all ON marts FOR ALL TO anon USING (true) WITH CHECK (true);`;
+        const sql = `CREATE TABLE IF NOT EXISTS marts (\n  id TEXT PRIMARY KEY,\n  name TEXT NOT NULL,\n  brand TEXT NOT NULL DEFAULT '',\n  type TEXT NOT NULL DEFAULT '동네마트',\n  address TEXT NOT NULL DEFAULT '',\n  phone TEXT,\n  distance TEXT,\n  weekday_hours TEXT,\n  saturday_hours TEXT,\n  sunday_hours TEXT,\n  closing_pattern TEXT NOT NULL DEFAULT 'open',\n  notice TEXT,\n  logo_url TEXT,\n  image_url TEXT,\n  lat DOUBLE PRECISION,\n  lng DOUBLE PRECISION,\n  sort_order INT NOT NULL DEFAULT 0,\n  active BOOLEAN NOT NULL DEFAULT TRUE,\n  created_at TIMESTAMPTZ DEFAULT NOW()\n);\nALTER TABLE marts ADD COLUMN IF NOT EXISTS image_url TEXT;\nALTER TABLE marts ENABLE ROW LEVEL SECURITY;\nDROP POLICY IF EXISTS marts_public_read ON marts;\nCREATE POLICY marts_public_read ON marts FOR SELECT TO anon, authenticated USING (active = TRUE);`;
         return (
           <div className="mt-4 bg-red-50 border border-red-200 rounded-2xl p-4 space-y-3">
             <p className="text-[13px] font-bold text-red-700">marts 테이블이 없습니다</p>
-            <button
-              disabled={initing}
-              onClick={async () => {
-                setIniting(true);
-                try {
-                  const r = await fetch("/api/admin/init-db", { method: "POST" });
-                  const d = await r.json();
-                  if (d.success) { setInitDone(true); setTimeout(() => reload(), 1000); }
-                  else { setInitDone(false); }
-                } catch {}
-                setIniting(false);
-              }}
-              className="w-full py-2.5 rounded-xl bg-red-600 text-white text-[13px] font-bold disabled:opacity-50">
-              {initing ? "생성 중…" : initDone ? "✅ 완료" : "🗄️ 자동 생성 시도"}
-            </button>
-            <p className="text-[12px] text-red-600">자동 생성이 안 되면 아래 SQL을 직접 실행하세요.</p>
+            <p className="text-[12px] text-red-600">아래 SQL을 검토한 뒤 Supabase SQL Editor에서 실행하세요.</p>
             <pre className="bg-white border border-red-200 rounded-xl p-3 text-[10px] text-red-800 overflow-x-auto whitespace-pre leading-relaxed">{sql}</pre>
             <div className="flex gap-2">
               <button

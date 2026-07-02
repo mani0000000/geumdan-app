@@ -5,6 +5,7 @@ import { ChevronLeft, Camera, Loader2, X } from "lucide-react";
 import Avatar from "@/components/ui/Avatar";
 import { getUserProfile, updateUserProfile } from "@/lib/db/userdata";
 import { DONG_SELECT_OPTIONS } from "@/lib/geumdan";
+import { authenticatedHeaders } from "@/lib/auth-session";
 
 const dongs = DONG_SELECT_OPTIONS;
 
@@ -43,7 +44,11 @@ export default function ProfileEditPage() {
       const fd = new FormData();
       fd.append("file", f);
       fd.append("folder", "avatars");
-      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        headers: await authenticatedHeaders(),
+        body: fd,
+      });
       const json = await res.json() as { url?: string; error?: string };
       if (!res.ok || !json.url) throw new Error(json.error ?? "업로드 실패");
       await updateUserProfile({ avatar_url: json.url });
