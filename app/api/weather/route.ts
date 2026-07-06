@@ -80,7 +80,7 @@ async function fetchKMA(serviceKey: string) {
 
   const base = "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0";
   const params = (extra: Record<string, string>) =>
-    new URLSearchParams({ serviceKey, dataType: "JSON", numOfRows: "300", pageNo: "1", nx: String(NX), ny: String(NY), ...extra }).toString();
+    new URLSearchParams({ serviceKey, dataType: "JSON", numOfRows: "1000", pageNo: "1", nx: String(NX), ny: String(NY), ...extra }).toString();
 
   const openMeteoWeeklyUrl = [
     "https://api.open-meteo.com/v1/forecast",
@@ -91,7 +91,7 @@ async function fetchKMA(serviceKey: string) {
 
   const [ncstRes, fcstRes, airRes, omWeeklyRes] = await Promise.all([
     fetch(`${base}/getUltraSrtNcst?${params({ base_date: ncstDate, base_time: ncstTime })}`, { next: { revalidate: 1800 } }),
-    fetch(`${base}/getVilageFcst?${params({ base_date: fcstDate, base_time: fcstTime, numOfRows: "500" })}`, { next: { revalidate: 1800 } }),
+    fetch(`${base}/getVilageFcst?${params({ base_date: fcstDate, base_time: fcstTime, numOfRows: "1000" })}`, { next: { revalidate: 1800 } }),
     fetch("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5446&longitude=126.6861&current=pm10,pm2_5", { next: { revalidate: 1800 } }),
     fetch(openMeteoWeeklyUrl, { next: { revalidate: 1800 } }),
   ]);
@@ -155,51 +155,86 @@ async function fetchKMA(serviceKey: string) {
     dailyMap.set(d, cur);
   }
   const todayData = dailyMap.get(todayKST);
-  const high = todayData?.tmx != null ? todayData.tmx : temp;
-  const low  = todayData?.tmn != null ? todayData.tmn : temp;
+  const todayISO = `${todayKST.slice(0, 4)}-${todayKST.slice(4, 6)}-${todayKST.slice(6, 8)}`;
 
+  // KMA 주간 예보 — 날짜 파싱을 숫자 직접 분리로 처리 (Vercel UTC 환경에서 +09:00 Date의 getDate()가 UTC 날짜를 반환하는 버그 방지)
   const kmaWeekly = Array.from(dailyMap.entries())
     .filter(([d]) => d >= todayKST)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 7)
     .map(([dateStr, v]) => {
-      const d2 = new Date(`${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}T00:00:00+09:00`);
+      const y  = parseInt(dateStr.slice(0, 4));
+      const mo = parseInt(dateStr.slice(4, 6)) - 1; // 0-indexed
+      const dy = parseInt(dateStr.slice(6, 8));
       const mainSky = v.sky.length > 0 ? Math.round(v.sky.reduce((a, b) => a + b, 0) / v.sky.length) : 1;
       const hasPty = v.pty.some(p => p > 0);
       const mainPty = hasPty ? v.pty.find(p => p > 0) ?? 0 : 0;
       return {
-        date: `${d2.getMonth() + 1}/${d2.getDate()}`,
-        dayLabel: DAY_KO[d2.getDay()],
+        date: `${mo + 1}/${dy}`,
+        dayLabel: DAY_KO[new Date(Date.UTC(y, mo, dy)).getUTCDay()],
         emoji: kmaToWeather(mainSky, mainPty).emoji,
-        high: v.tmx != null ? v.tmx : temp,
-        low: v.tmn != null ? v.tmn : temp,
+        high: v.tmx,   // null if KMA didn't include this slot
+        low:  v.tmn,   // null if KMA didn't include this slot
         precipitation: Math.round(v.pcp),
         isToday: dateStr === todayKST,
       };
     });
 
-  // 기상청 단기예보는 최대 3일 → Open-Meteo로 나머지 7일치 보완
-  let weekly = kmaWeekly;
-  if (kmaWeekly.length < 7 && omWeeklyRes.ok) {
+  // Open-Meteo 7일 예보 파싱 — 주간 기본값 + KMA TMX/TMN 미제공 시 폴백
+  type WeekEntry = { date: string; dayLabel: string; emoji: string; high: number; low: number; precipitation: number; isToday: boolean };
+  let omWeekly: WeekEntry[] = [];
+  if (omWeeklyRes.ok) {
     try {
       const om = await omWeeklyRes.json();
-      const existingDates = new Set(kmaWeekly.map(d => d.date));
-      const omExtra = (om.daily.time as string[])
+      omWeekly = (om.daily.time as string[])
         .map((date: string, i: number) => {
-          const d2 = new Date(date + "T00:00:00");
+          const [y, m, d] = date.split("-").map(Number);
           return {
-            date: `${d2.getMonth() + 1}/${d2.getDate()}`,
-            dayLabel: DAY_KO[d2.getDay()],
+            date: `${m}/${d}`,
+            dayLabel: DAY_KO[new Date(Date.UTC(y, m - 1, d)).getUTCDay()],
             emoji: wmo(om.daily.weather_code[i] as number).emoji,
             high: Math.round(om.daily.temperature_2m_max[i] as number),
-            low: Math.round(om.daily.temperature_2m_min[i] as number),
+            low:  Math.round(om.daily.temperature_2m_min[i] as number),
             precipitation: Math.round(om.daily.precipitation_sum[i] as number),
-            isToday: date === `${todayKST.slice(0, 4)}-${todayKST.slice(4, 6)}-${todayKST.slice(6, 8)}`,
+            isToday: date === todayISO,
           };
         })
-        .filter(d => !existingDates.has(d.date));
-      weekly = [...kmaWeekly, ...omExtra].slice(0, 7);
-    } catch { /* Open-Meteo 보완 실패 시 기상청 데이터만 사용 */ }
+        .filter((_: unknown, i: number) => (om.daily.time as string[])[i] >= todayISO)
+        .slice(0, 7);
+    } catch { /* Open-Meteo 파싱 실패 — KMA 데이터만 사용 */ }
+  }
+
+  // 오늘 최고/최저: KMA TMX/TMN 우선, 없으면 Open-Meteo 사용 (현재기온 폴백은 최후)
+  const omToday = omWeekly.find(d => d.isToday);
+  const high = todayData?.tmx != null ? todayData.tmx : (omToday?.high ?? temp);
+  const low  = todayData?.tmn != null ? todayData.tmn : (omToday?.low ?? temp);
+
+  // 주간 7일: Open-Meteo를 기반으로 KMA 날씨코드·강수량 병합 (온도는 KMA가 있을 때만 우선)
+  let weekly: WeekEntry[];
+  if (omWeekly.length >= 7) {
+    const kmaMap = new Map(kmaWeekly.map(d => [d.date, d]));
+    weekly = omWeekly.map(omDay => {
+      const kma = kmaMap.get(omDay.date);
+      if (!kma) return omDay;
+      return {
+        ...omDay,
+        emoji: kma.emoji,
+        high: kma.high ?? omDay.high,
+        low:  kma.low  ?? omDay.low,
+        precipitation: kma.precipitation > 0 ? kma.precipitation : omDay.precipitation,
+      };
+    });
+  } else if (omWeekly.length > 0) {
+    // Open-Meteo 7일 미만 → KMA + Open-Meteo 보완
+    const existingDates = new Set(kmaWeekly.map(d => d.date));
+    const omExtra = omWeekly.filter(d => !existingDates.has(d.date));
+    weekly = [
+      ...kmaWeekly.map(d => ({ ...d, high: d.high ?? temp, low: d.low ?? temp })),
+      ...omExtra,
+    ].slice(0, 7);
+  } else {
+    // Open-Meteo 전혀 없음 — KMA만 (최대 3일)
+    weekly = kmaWeekly.map(d => ({ ...d, high: d.high ?? temp, low: d.low ?? temp }));
   }
 
   const pm10: number | null = air?.current?.pm10 != null ? Math.round(air.current.pm10) : null;
