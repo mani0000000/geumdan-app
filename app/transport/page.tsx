@@ -144,6 +144,7 @@ function BusDetailSheet({
   const [locations, setLocations] = useState<BusLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [noRouteData, setNoRouteData] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
   const [dirTab, setDirTab] = useState<0 | 1>(0);
   // 실시간 위치 갱신을 위해 어떤 API로 어떤 routeId를 쓰는지 기억
   const locSourceRef = useRef<{ kind: "incheon" | "tago"; routeId: string } | null>(null);
@@ -227,7 +228,7 @@ function BusDetailSheet({
 
     load();
     return () => { cancelled = true; };
-  }, [arrival.routeId, arrival.routeNo, onSaveMeta]);
+  }, [arrival.routeId, arrival.routeNo, onSaveMeta, retryCount]);
 
   // 바텀시트가 열려 있는 동안 바디 스크롤 잠금 (모바일 스크롤 전파 방지)
   useEffect(() => {
@@ -268,8 +269,8 @@ function BusDetailSheet({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
-      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
+      <div className="fixed inset-0 bg-black/40 z-[9400]" onClick={onClose} />
+      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[9450]"
         style={{ maxHeight: "86%", display: "flex", flexDirection: "column" }}>
 
         {/* 헤더 */}
@@ -370,10 +371,16 @@ function BusDetailSheet({
             <div className="py-10 text-center">
               <Bus size={28} className="mx-auto text-[#D1D5DB] mb-2" />
               <p className="text-[14px] font-semibold text-[#424245]">
-                {arrival.routeNo}번 {arrival.destination !== "종점" && arrival.destination !== "방향 미상" ? `· ${arrival.destination} 방면` : ""}
+                {arrival.routeNo}번 {arrival.destination && arrival.destination !== "종점" && arrival.destination !== "방향 미상" ? `· ${arrival.destination} 방면` : ""}
               </p>
               <p className="text-[12px] text-[#86868b] mt-1.5">상세 노선 정보를 불러오지 못했습니다</p>
-              <p className="text-[11px] text-[#a1a1a6] mt-0.5">잠시 후 새로고침해 주세요</p>
+              <p className="text-[11px] text-[#a1a1a6] mt-0.5">잠시 후 다시 시도해 주세요</p>
+              <button
+                onClick={() => { setNoRouteData(false); setLoading(true); setRetryCount(c => c + 1); }}
+                className="mt-3 text-[13px] font-semibold text-[#3182F6] bg-[#e8f1fd] px-4 py-2 rounded-xl active:opacity-70"
+              >
+                다시 시도
+              </button>
             </div>
           ) : curStations.length === 0 ? (
             <div className="py-16 flex flex-col items-center gap-2">
@@ -639,8 +646,8 @@ function SubwayTimetableSheet({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/40 z-[200]" onClick={onClose} />
-      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250]"
+      <div className="fixed inset-0 bg-black/40 z-[9400]" onClick={onClose} />
+      <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[9450]"
         style={{ maxHeight: "88%", display: "flex", flexDirection: "column" }}>
 
         {/* 핸들 */}
@@ -1424,7 +1431,7 @@ export default function TransportPage() {
       <button
         onClick={refresh}
         disabled={refreshing}
-        className="fixed bottom-[100px] right-4 z-50 w-12 h-12 bg-[#3182F6] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+        className="fixed bottom-[100px] left-4 z-50 w-12 h-12 bg-[#3182F6] rounded-full shadow-lg flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
         aria-label="새로고침"
       >
         <RefreshCw size={20} className={`text-white ${refreshing ? "animate-spin" : ""}`} />
@@ -1685,8 +1692,8 @@ export default function TransportPage() {
         const downArr = displayArrivals.filter(a => a.direction === "하행");
         return (
           <>
-            <div className="fixed inset-0 bg-black/40 z-[200]" onClick={() => setSelectedSubway(null)} />
-            <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[250] max-h-[70%] overflow-y-auto">
+            <div className="fixed inset-0 bg-black/40 z-[9400]" onClick={() => setSelectedSubway(null)} />
+            <div className="fixed left-0 right-0 bottom-0 bg-white rounded-t-3xl z-[9450] max-h-[70%] overflow-y-auto">
               <div className="flex justify-center pt-3 pb-1">
                 <div className="w-10 h-1 bg-[#d2d2d7] rounded-full" />
               </div>
@@ -1916,7 +1923,7 @@ export default function TransportPage() {
                                     <div className="bg-[#3182F6] rounded px-2 py-0.5 min-w-[40px] text-center shrink-0">
                                       <span className="text-white text-[12px] font-black">{a.routeNo}</span>
                                     </div>
-                                    <span className="text-[12px] text-[#1d1d1f] truncate flex-1 text-left">{a.destination} 방면</span>
+                                    <span className="text-[12px] text-[#1d1d1f] truncate flex-1 text-left">{a.destination || "방향 미상"} 방면</span>
                                     <ArrivalBadge min={a.arrivalMin} live={isLive} />
                                   </button>
                                 ))
@@ -1972,7 +1979,7 @@ export default function TransportPage() {
               const open = expanded === stop.id;
               const displayArrivals = open ? stop.arrivals : stop.arrivals.slice(0, 3);
               return (
-                <div key={stop.id} className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div key={stop.id} className="bg-white border border-[#e5e5ea] rounded-2xl shadow-sm overflow-hidden">
                   {/* 정류장 헤더 */}
                   <button onClick={() => setExpanded(open ? null : stop.id)}
                     className="w-full flex items-center justify-between px-4 py-4 active:bg-[#f5f5f7]">
@@ -2035,7 +2042,7 @@ export default function TransportPage() {
                       <>
                         {displayArrivals.map((a, i) => (
                           <div key={i}
-                            className="flex items-center justify-between bg-[#f5f5f7] rounded-xl px-3 py-3 cursor-pointer active:bg-[#eaeaea]"
+                            className="flex items-center justify-between bg-[#f5f5f7] rounded-2xl px-3.5 py-3.5 cursor-pointer active:bg-[#eaeaea]"
                             onClick={() => { selectedStopRef.current = { id: stop.id, name: stop.name, distM: stop.distM }; setSelectedArrival(a); }}>
                             <div className="flex items-center gap-2.5 flex-1 min-w-0">
                               <div className={`${a.isScheduled ? "bg-[#86868b]" : "bg-[#3182F6]"} rounded-lg px-2.5 py-1 min-w-[44px] text-center shrink-0`}>
@@ -2043,7 +2050,7 @@ export default function TransportPage() {
                               </div>
                               <div className="min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination} 방면</p>
+                                  <p className="text-[14px] font-semibold text-[#1d1d1f] truncate">{a.destination || "방향 미상"} 방면</p>
                                   {a.isExpress && (
                                     <span className="flex items-center gap-0.5 text-[11px] font-bold bg-[#FFF3E0] text-[#E65100] px-1 py-0.5 rounded shrink-0">
                                       <Zap size={9} />급행
@@ -2522,8 +2529,8 @@ export default function TransportPage() {
         const [gFrom, gTo] = catGrads[p.category];
         return (
           <>
-            <div className="fixed inset-0 bg-black/50 z-[200]" onClick={() => setSelectedPlace(null)} />
-            <div className="fixed left-0 right-0 bottom-0 z-[250] flex justify-center">
+            <div className="fixed inset-0 bg-black/50 z-[9400]" onClick={() => setSelectedPlace(null)} />
+            <div className="fixed left-0 right-0 bottom-0 z-[9450] flex justify-center">
               <div className="w-full max-w-[430px] bg-white rounded-t-3xl overflow-hidden"
                 style={{ maxHeight: "92dvh", display: "flex", flexDirection: "column" }}>
 
