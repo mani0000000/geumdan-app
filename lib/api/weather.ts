@@ -59,6 +59,8 @@ export interface WeatherData {
   pm25?: number | null;
   pm10Label?: string;
   pm25Label?: string;
+  source?: string;
+  fetchedAt?: string;
 }
 
 const DAY_KO = ["일", "월", "화", "수", "목", "금", "토"];

@@ -81,14 +81,18 @@ async function fetchKMA() {
 
   const base = 'https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0';
   const p = extra => new URLSearchParams({
-    serviceKey: KMA_KEY, dataType: 'JSON', numOfRows: '500', pageNo: '1',
+    serviceKey: KMA_KEY, dataType: 'JSON', numOfRows: '1000', pageNo: '1',
     nx: String(NX), ny: String(NY), ...extra,
   }).toString();
 
-  const [ncstRes, fcstRes, airRes] = await Promise.all([
+  const omWeeklyUrl = 'https://api.open-meteo.com/v1/forecast?latitude=37.5446&longitude=126.6861&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Asia%2FSeoul&forecast_days=7';
+  const WMO_EMOJI = { 0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'❄️',80:'🌦️',95:'⛈️' };
+
+  const [ncstRes, fcstRes, airRes, omWeeklyRes] = await Promise.all([
     fetch(`${base}/getUltraSrtNcst?${p({ base_date: ncstDate, base_time: ncstTime })}`),
     fetch(`${base}/getVilageFcst?${p({ base_date: fcstDate, base_time: fcstTime })}`),
     fetch('https://air-quality-api.open-meteo.com/v1/air-quality?latitude=37.5446&longitude=126.6861&current=pm10,pm2_5'),
+    fetch(omWeeklyUrl),
   ]);
 
   if (!ncstRes.ok || !fcstRes.ok) throw new Error(`기상청 HTTP ${ncstRes.status}/${fcstRes.status}`);
@@ -140,27 +144,70 @@ async function fetchKMA() {
     dailyMap.set(d, cur);
   }
   const todayData = dailyMap.get(todayKST);
-  const high = todayData?.tmx !== -99 ? todayData?.tmx ?? temp : temp;
-  const low  = todayData?.tmn !== 99  ? todayData?.tmn ?? temp : temp;
+  const todayISO = `${todayKST.slice(0,4)}-${todayKST.slice(4,6)}-${todayKST.slice(6,8)}`;
 
-  const weekly = Array.from(dailyMap.entries())
+  // KMA 주간 예보 — 날짜를 숫자 직접 분리 (GitHub Actions UTC 환경에서 +09:00 Date의 getDate()가 UTC 날짜를 반환하는 버그 방지)
+  const kmaWeekly = Array.from(dailyMap.entries())
     .filter(([d]) => d >= todayKST)
     .sort(([a], [b]) => a.localeCompare(b))
     .slice(0, 7)
     .map(([dateStr, v]) => {
-      const d2 = new Date(`${dateStr.slice(0,4)}-${dateStr.slice(4,6)}-${dateStr.slice(6,8)}T00:00:00+09:00`);
+      const y  = parseInt(dateStr.slice(0, 4));
+      const mo = parseInt(dateStr.slice(4, 6)) - 1;
+      const dy = parseInt(dateStr.slice(6, 8));
       const mainSky = v.sky.length > 0 ? Math.round(v.sky.reduce((a, b) => a + b, 0) / v.sky.length) : 1;
       const mainPty = v.pty.find(p => p > 0) ?? 0;
       return {
-        date: `${d2.getMonth()+1}/${d2.getDate()}`,
-        dayLabel: DAY_KO[d2.getDay()],
+        date: `${mo + 1}/${dy}`,
+        dayLabel: DAY_KO[new Date(Date.UTC(y, mo, dy)).getUTCDay()],
         emoji: kmaWeather(mainSky, mainPty).emoji,
-        high: v.tmx !== -99 ? v.tmx : temp,
-        low:  v.tmn !== 99  ? v.tmn : temp,
+        high: v.tmx !== -99 ? v.tmx : null,
+        low:  v.tmn !== 99  ? v.tmn : null,
         precipitation: Math.round(v.pcp),
         isToday: dateStr === todayKST,
       };
     });
+
+  // Open-Meteo 7일 예보 파싱
+  let omWeekly = [];
+  if (omWeeklyRes.ok) {
+    try {
+      const om = await omWeeklyRes.json();
+      omWeekly = om.daily.time
+        .map((date, i) => {
+          const [y, m, d] = date.split('-').map(Number);
+          return {
+            date: `${m}/${d}`,
+            dayLabel: DAY_KO[new Date(Date.UTC(y, m - 1, d)).getUTCDay()],
+            emoji: WMO_EMOJI[om.daily.weather_code[i]] ?? '🌡️',
+            high: Math.round(om.daily.temperature_2m_max[i]),
+            low:  Math.round(om.daily.temperature_2m_min[i]),
+            precipitation: Math.round(om.daily.precipitation_sum[i]),
+            isToday: date === todayISO,
+          };
+        })
+        .filter((_, i) => om.daily.time[i] >= todayISO)
+        .slice(0, 7);
+    } catch { /* 파싱 실패 무시 */ }
+  }
+
+  // 오늘 최고/최저: KMA 우선, 없으면 Open-Meteo 사용
+  const omToday = omWeekly.find(d => d.isToday);
+  const high = (todayData?.tmx !== -99 && todayData?.tmx != null) ? todayData.tmx : (omToday?.high ?? temp);
+  const low  = (todayData?.tmn !== 99  && todayData?.tmn != null) ? todayData.tmn : (omToday?.low  ?? temp);
+
+  // 주간 7일: Open-Meteo 기반 + KMA 날씨코드·온도 병합
+  let weekly;
+  if (omWeekly.length >= 7) {
+    const kmaMap = new Map(kmaWeekly.map(d => [d.date, d]));
+    weekly = omWeekly.map(omDay => {
+      const kma = kmaMap.get(omDay.date);
+      if (!kma) return omDay;
+      return { ...omDay, emoji: kma.emoji, high: kma.high ?? omDay.high, low: kma.low ?? omDay.low, precipitation: kma.precipitation > 0 ? kma.precipitation : omDay.precipitation };
+    });
+  } else {
+    weekly = kmaWeekly.map(d => ({ ...d, high: d.high ?? temp, low: d.low ?? temp }));
+  }
 
   const pm10 = air?.current?.pm10 != null ? Math.round(air.current.pm10) : null;
   const pm25 = air?.current?.pm2_5 != null ? Math.round(air.current.pm2_5) : null;

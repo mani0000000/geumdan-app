@@ -166,6 +166,9 @@ function WeatherWidget({ weather, loading }: { weather: WeatherData | null; load
             </div>
             <div className="flex items-center gap-2 mt-0.5 flex-wrap">
               <span className="text-[13px] text-white/60">최고 {weather.high}° · 최저 {weather.low}°</span>
+              {weather.source && (
+                <span className="text-[10px] text-white/40 font-medium">{weather.source}</span>
+              )}
               {tempDiff !== null && (
                 <span className={`flex items-center gap-0.5 text-[12px] font-bold px-1.5 py-0.5 rounded-full ${
                   tempDiff > 0 ? "bg-red-400/30 text-red-100" : tempDiff < 0 ? "bg-blue-300/30 text-blue-100" : "bg-white/20 text-white/70"
