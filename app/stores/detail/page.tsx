@@ -289,25 +289,6 @@ function DetailContent() {
       </div>
 
       <div className="pb-8 space-y-3">
-<<<<<<< Updated upstream
-        {/* Hero card */}
-        <div className="bg-white px-5 py-5">
-          <div className="flex items-start gap-4 mb-5">
-            <StoreLogo name={store.name} category={store.category} size={72} rounded="rounded-2xl" />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className={`text-[12px] font-bold px-2 py-0.5 rounded-full ${catBg[store.category as keyof typeof catBg] ?? "bg-[#F3F4F6] text-[#374151]"}`}>
-                  {store.sub_category ? `${store.category} · ${store.sub_category}` : store.category}
-                </span>
-                {store.is_premium && (
-                  <span className="text-[12px] font-bold bg-[#FEF3C7] text-[#92400E] px-2 py-0.5 rounded-full">⭐ 인기</span>
-                )}
-                {store.avg_rating != null && (
-                  <span className="text-[12px] font-bold bg-[#FFF7ED] text-[#C2410C] px-2 py-0.5 rounded-full flex items-center gap-0.5">
-                    ★ {store.avg_rating.toFixed(1)} <span className="font-normal text-[10px]">({store.review_count})</span>
-                  </span>
-                )}
-=======
         {/* Hero card — gradient banner + white info area */}
         <div className="bg-white overflow-hidden">
           {/* 카테고리 그라디언트 배너 */}
@@ -321,7 +302,6 @@ function DetailContent() {
                 <div className="w-16 h-16 rounded-2xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-lg">
                   <StoreLogo name={store.name} category={store.category} size={56} rounded="rounded-xl" />
                 </div>
->>>>>>> Stashed changes
               </div>
             );
           })()}
@@ -670,19 +650,8 @@ function DetailContent() {
 
         {/* 정보 수정 제안 */}
         <div className="mx-4">
-<<<<<<< Updated upstream
           {suggestionSent ? (
             <div className="w-full h-12 bg-[#D1FAE5] rounded-2xl flex items-center justify-center gap-2">
-=======
-          {!editSent ? (
-            <button onClick={() => setEditSent(true)}
-              className="w-full h-12 bg-white rounded-2xl flex items-center justify-center gap-2 text-[14px] text-[#424245] font-semibold active:scale-[0.98] transition-transform duration-100"
-              style={{ boxShadow: "var(--shadow-card)" }}>
-              <Pencil size={14} className="text-[#6e6e73]" /> 정보 수정 제안하기
-            </button>
-          ) : (
-            <div className="w-full h-12 bg-[#D1FAE5] rounded-2xl flex items-center justify-center gap-2 animate-spring-in">
->>>>>>> Stashed changes
               <CheckCircle2 size={16} className="text-[#00C471]" />
               <span className="text-[14px] text-[#065F46] font-medium">제안이 접수됐어요. 감사해요!</span>
             </div>
