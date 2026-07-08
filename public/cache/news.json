@@ -1,9 +1,19 @@
 {
-  "fetchedAt": "2026-07-07T00:08:55.743Z",
+  "fetchedAt": "2026-07-07T23:58:39.207Z",
   "count": 40,
   "articles": [
     {
-      "id": "gr0-3",
+      "id": "gr3-12",
+      "title": "인천 검단 교통체증 숨통 트인다…검단산단~안동포사거리 확장도로 7월 1일 개통 - MSN",
+      "summary": "",
+      "source": "MSN",
+      "publishedAt": "2026-07-06T20:46:50.000Z",
+      "url": "https://news.google.com/rss/articles/CBMi4gNBVV95cUxPcWtxOWNJcEZXRTVfZFVkLVFBbnZrWThaWGpRNGNwWHdDZFhCeUdvbjZwUGxsdFhMeERZZ2pOcnNTRnBQZlJEMXNYbWszRzc5RmE0bzJMdjI3MEVpbkV0MUJmTjJWMDRaM2FhbnJOR253YUNGaF90QVFqMjljU19SMEdPVC11dll3M1JmSks5ZW0yRlJtOE1acGdkSTY5VnFNUTJVeDhIR2NNanlpaXFnSFFhSVJwR2JBVjM2Z2ZOdnVzNDZfYWw0NHhVNlFWWFV1cjhwS3BNVHpJNERWbGxQM09JQ3N3OGszM2w2MWp5bVNaYjF3UmZoenVWQjZMeGhQQldYOWJEZkYzRm5ocHE5aFRWTFppdUpuYy1PbzN0NXBkU09WbHVsVF9ybWhEUXJ5UHJ6R1ZqVElWVTRfdUtjODZmQzZMOXAyLThiaElzSExObnI1aHdJbFdrZlo2SHY1TjV0VnA3OGhZRGRzSWVXbWpuSzM0LWNfM0E1UVdGa3RlbFJsUjJRamw2Z21WUGhuYm9zcTJGb3ZNb3RJeUoydUMwU3VoUkFDWVp1Rkh4NTFSZFM5VEpKRkVDbWRsVTJfTndvNWFDaTlnMVR2VDZUTE41SzNqdVlOS0RkdW85X0k4QQ?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr0-8",
       "title": "김진규 검단구청장 과밀학급 해소 위해 인천교육청 찾았다 - 일간경기",
       "summary": "",
       "source": "일간경기",
@@ -23,7 +33,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-8",
+      "id": "gr0-7",
       "title": "김진규 검단구청장, 교육감 만나 '교실 부족·안전 위협' 해결 건의 - 위키트리",
       "summary": "",
       "source": "위키트리",
@@ -33,7 +43,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-1",
+      "id": "gr0-2",
       "title": "김진규 검단구청장, 도성훈 교육감과 지역 교육현안 논의 - 미디어인천신문",
       "summary": "",
       "source": "미디어인천신문",
@@ -43,7 +53,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-18",
+      "id": "gr0-20",
       "title": "검단구, 교육청과 첫 공조…과밀학급·통학안전 해법 찾는다 - 네이트",
       "summary": "",
       "source": "네이트",
@@ -63,7 +73,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr2-5",
+      "id": "gr2-10",
       "title": "김진규 초대 검단구청장 취임… “새로운 검단구 시대 열겠다” - 동방일보",
       "summary": "",
       "source": "동방일보",
@@ -73,7 +83,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-11",
+      "id": "gr0-3",
       "title": "인천지하철 1호선 검단연장선 누적 이용객 900만명 돌파 - v.daum.net",
       "summary": "",
       "source": "v.daum.net",
@@ -104,16 +114,16 @@
     },
     {
       "id": "gr3-14",
-      "title": "(기획) 검단 중심 철도망 확충 … 인천 서북부 교통환경 바뀐다. - 인천광역시청",
+      "title": "(기획) 검단 중심 철도망 확충 … 인천 서북부 교통환경 바뀐다. - 인천광역시 대표",
       "summary": "",
-      "source": "인천광역시청",
+      "source": "인천광역시 대표",
       "publishedAt": "2026-07-04T13:05:16.000Z",
       "url": "https://news.google.com/rss/articles/CBMi7wFBVV95cUxPLXJhSTFQQVVXMVQ2RzJTWGp5WW1EclJ6WldLNUpidEtIZGwzTThWNmR5YlA2REh4d3AtY1B5Mnpnb3M2aEE0VnFlUElZczlSV1ZHMVdoWTVzQndqQW1IV0RVRHZtQjF4YlRtVW9LY2RwTDhnUWRoT01sQjNPeGlGZVFWNXQ4RmxqYXh2bHNaTWtaQ2NrNC1vSEM4NXZLVjRvZ21Bci0tYnl4MTljZGtzRldhUkNOS00xVU9ZMENQTk5zWk0tQWMzS0ZaX0llMncyWEZCSmRPcXZKc1c4MnBfLV9mODZWc1dHcGFvbHdCTQ?oc=5",
       "type": "뉴스",
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr0-2",
+      "id": "gr0-1",
       "title": "서울 가까워지는 검단···5호선·GTX-D에 집값 들썩 - 시사저널e",
       "summary": "",
       "source": "시사저널e",
@@ -133,7 +143,7 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr3-13",
+      "id": "gr3-16",
       "title": "검단연장선 개통 1주년…누적 이용객 912만 명 돌파, 인천교통공사 고객 감사 행사 개최 - 연합시민의소리",
       "summary": "",
       "source": "연합시민의소리",
@@ -153,10 +163,20 @@
       "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
     },
     {
-      "id": "gr3-0",
-      "title": "보도자료 - 인천광역시청",
+      "id": "gr2-3",
+      "title": "보도자료 - 인천광역시 대표",
       "summary": "",
-      "source": "인천광역시청",
+      "source": "인천광역시 대표",
+      "publishedAt": "2026-07-03T09:49:02.000Z",
+      "url": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxOVEZUa1c1akJueFZnZGJCT1VwZEZUQ0NzOUxpcjhrUV9Zcmw5cUdUaWlRSWRwOTJOdFBScVV5NTJXLXpFMXNpcW15ckF1Yy1uQjdqSml4RzZldUxEMTV1andkRU44TDg1VldiVDlSZ2w3U3d5WUo3Nk9nQVQwUWZjQkl6ZHZMLXFJMlRUZWZtZEpLLUpDTFprYkxlUUNtaTBSSTl4Z3U0RTN5Mzd3YjJHamhtYWJZYWVZTnluTGdnV3NPa3ltRkNYOE5ZM0VMNXp4VXdhQks0RTRjd1AwUUw5WWE0THdsRzY1T1pmbGZxUFQ?oc=5",
+      "type": "뉴스",
+      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+    },
+    {
+      "id": "gr3-0",
+      "title": "보도자료 - 인천광역시 대표",
+      "summary": "",
+      "source": "인천광역시 대표",
       "publishedAt": "2026-07-03T09:47:06.000Z",
       "url": "https://news.google.com/rss/articles/CBMi8AFBVV95cUxPcnhad25jWlJhRGN5amZYYkdTaXF6MzdzNk1yTW8zY21nZmxuZVRCUWNMd2RPQmNwSTc0dXhONEdkSnVCRFNUcGpRUzlUNWswbnBVcDV4eXpTR25PZHBpV1VsOTZKbHEwMnVDcjBsaTRFMWJaSmUzcE5LTUNvVHpCUnlLcnoyZGdrUVhCREZZMkRzM0M0bkxLVTNVOEF5b1hZYU5Za0M5cExvLWRYb0hpZHI1S0R5UW5FME1ld28tckxUSlZCbTh3TGF5cVh3Zk1RUmRGaGVXM01RMFpBcTF4X2x0SENERUg0Tnd0ckRTTTM?oc=5",
       "type": "뉴스",
@@ -189,8 +209,7 @@
       "source": "브릿지경제",
       "publishedAt": "2026-07-03T08:09:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMiWkFVX3lxTE84WDZHbWtjVFRtcmNoTmtpN0JZLW5zelpCSEpzN3JpblJRY0NxWmxuM1NlaFFxYTFWMXpKdHd6d3hxbk14bF9WRWdDbTBERVd2d05LaHFDaFUzZw?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
       "id": "gr3-10",
@@ -199,8 +218,7 @@
       "source": "전국매일신문",
       "publishedAt": "2026-07-03T07:00:00.000Z",
       "url": "https://news.google.com/rss/articles/CBMibkFVX3lxTE9wMXIyaEtnc2NZdWY1VFJaX2ExSThkTnJ4ckxFUE9SQVB1bzBFVVlzQUxzVlFheC1QVXBPbW9MdEhUVzFtLWZsUmM4N2UwQVVDU2lZV0Nra1BmdUpjZmRSUXdpZ1JabmY3ZGRpMUtR?oc=5",
-      "type": "뉴스",
-      "thumbnail": "https://lh3.googleusercontent.com/J6_coFbogxhRI9iM864NL_liGXvsQp2AupsKei7z0cNNfDvGUmWUy20nuUhkREQyrpY4bEeIBuc=s0-w300"
+      "type": "뉴스"
     },
     {
       "id": "gr3-6",
@@ -212,16 +230,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-4",
-      "title": "대한노인회 인천 검단구지회, 초대 지회장에 박만서 후보 당선 - 백세시대",
-      "summary": "",
-      "source": "백세시대",
-      "publishedAt": "2026-07-02T12:15:49.000Z",
-      "url": "https://news.google.com/rss/articles/CBMia0FVX3lxTFBBN25XTl9sTlpMV2l2RnFYelEwb043a0o1a0pEMjNQS3dVUUNqS2JSd1F2Q3ZuVTN5TGI5bzVBV011eTNRVXNLYkx4dTZ0T3NsclFSVXM5ckx6QVlRS2JJNkpxLWFlTXhJZk1J?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-12",
+      "id": "gr0-11",
       "title": "인천 검단구 공식 출범… 초대 김진규 구청장 “구민 중심 자족도시 도약” - 녹색경제신문",
       "summary": "",
       "source": "녹색경제신문",
@@ -230,7 +239,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-30",
+      "id": "gr0-31",
       "title": "인천 검단구 공식 출범…김진규 초대 구청장 취임식 개최, \"자족도시 완성할 것\" - 매일뉴스",
       "summary": "",
       "source": "매일뉴스",
@@ -257,7 +266,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-36",
+      "id": "gr0-39",
       "title": "인천시, ‘육아친화 특화주택’공모…검단AA7블록 선정 - 동방일보",
       "summary": "",
       "source": "동방일보",
@@ -266,7 +275,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-11",
+      "id": "gr2-14",
       "title": "인천 검단구, 출범 기념 현판 제막식…새로운 행정의 시작 알리다 - 기호일보",
       "summary": "",
       "source": "기호일보",
@@ -284,7 +293,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-41",
+      "id": "gr0-77",
       "title": "인천시, ‘육아친화 특화주택’공모에 검단AA7블록 선정돼 - 일간투데이",
       "summary": "",
       "source": "일간투데이",
@@ -293,7 +302,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-48",
+      "id": "gr0-92",
       "title": "인천시, 육아친화 특화주택 검단AA7블록에 선정 - onulnews.com",
       "summary": "",
       "source": "onulnews.com",
@@ -302,7 +311,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-5",
+      "id": "gr0-6",
       "title": "'여의도공원 48배' 검단신도시, 2028년 베일 벗는다 - 한국경제",
       "summary": "",
       "source": "한국경제",
@@ -311,7 +320,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-20",
+      "id": "gr0-26",
       "title": "인천시, ‘육아친화 특화주택’ 공모에 검단AA7블록 선정…총 80가구 조성 - 경기일보",
       "summary": "",
       "source": "경기일보",
@@ -320,34 +329,25 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-16",
-      "title": "검단연장선 개통 1년, ‘검단구’ 시대 대동맥으로 도약 - v.daum.net",
+      "id": "gr0-19",
+      "title": "검단연장선 개통 1년, ‘검단구’ 시대 대동맥으로 도약 - 기호일보",
       "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-07-01T07:11:51.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiT0FVX3lxTE1KWGwyVUpWT1BRZ016VW1nRzAtY1kwM3l5dE9OVmVIVkU2VWhEOXFTQ3pLN0ExdjZuMVVrYXhCMllncVdHYkV3ZTFtUHotbWM?oc=5",
+      "source": "기호일보",
+      "publishedAt": "2026-07-01T07:11:42.000Z",
+      "url": "https://news.google.com/rss/articles/CBMib0FVX3lxTE9TVlhsdXZnWjhrRU80eE9tWjZLSGpVNmpNYlBpbF8wNEFzdmxlcUlyY3pYQk5TZkEyZlZRbjZtMkk0RVo5Q0x1V1U1Wl9DYXhyTk9oaDlad3k5WFp5Vm56Rnp6MGlDaUNQbkM0N1BMaw?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr3-17",
-      "title": "검단연장선 개통 1년, ‘검단구’ 시대 대동맥으로 도약 - v.daum.net",
+      "id": "gr2-6",
+      "title": "인천 서구, 38년 만에 '서해구' 전환…검단 분구와 행정판 다시 짠다 - 오늘경제",
       "summary": "",
-      "source": "v.daum.net",
-      "publishedAt": "2026-07-01T07:11:51.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiS0FVX3lxTFBtYktORkhfci1OcEZ1b3h4ZEZCX196eTNhREloS0xWLXN1STRVNHlOZDZVQXFBQWlHVzlhUGxiZ3NBOGdHVlhUUUJhQQ?oc=5",
+      "source": "오늘경제",
+      "publishedAt": "2026-07-01T07:00:00.000Z",
+      "url": "https://news.google.com/rss/articles/CBMic0FVX3lxTFBpR084Z3NzOG02YVZncGFpMTBROFl4cGVnYzhGd1VLelJYc3FHUzRXT0VfeEo0Z1dGTFdNdC0xNGQ4Sl9Kb1JRYlBubDJKU1VnXzZlWXRXMnhLMkl3R1JpM09jemQ5LU05NF9Ic1RsYUR3Nmc?oc=5",
       "type": "뉴스"
     },
     {
-      "id": "gr2-17",
-      "title": "인천 검단구·서해구, 출범 첫날 긴급 재정 대응…공동 TF 구성 - 매일일보",
-      "summary": "",
-      "source": "매일일보",
-      "publishedAt": "2026-07-01T07:00:08.000Z",
-      "url": "https://news.google.com/rss/articles/CBMiZEFVX3lxTE1wRFBhWHdENzZvRkhUU0dNWVBWS3hBNG1JVUVTeXl1UEktTzBqZl9zV1dPOUxpQkxSZ09xOU52LWdaeW1zR2g2NXhmb3d5aHRCQ0hRc21SYTM3NjNISHZFN2pXcHQ?oc=5",
-      "type": "뉴스"
-    },
-    {
-      "id": "gr0-7",
+      "id": "gr0-9",
       "title": "인천시, 검단신도시에 '육아친화 특화주택' 조성 - 경기신문",
       "summary": "",
       "source": "경기신문",
@@ -356,7 +356,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-22",
+      "id": "gr0-29",
       "title": "인천시, 검단신도시 육아친화 특화주택 공모 선정…국비 38억 확보 - 뉴스21 통신",
       "summary": "",
       "source": "뉴스21 통신",
@@ -365,7 +365,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr0-9",
+      "id": "gr0-15",
       "title": "인천 검단신도시, 국토부 육아친화 특화주택 공모 선정 - 신아일보",
       "summary": "",
       "source": "신아일보",
@@ -374,7 +374,7 @@
       "type": "뉴스"
     },
     {
-      "id": "gr2-14",
+      "id": "gr2-18",
       "title": "인천 서해구·검단구 출범부터 재정 빨간불 “공동 TF 구성해 대응” - 인천투데이",
       "summary": "",
       "source": "인천투데이",
