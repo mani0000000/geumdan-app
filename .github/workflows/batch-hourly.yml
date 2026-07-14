@@ -64,4 +64,4 @@ jobs:
           HIKERAPI_KEY: ${{ secrets.HIKERAPI_KEY }}
           APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
           # DB의 어드민 키워드가 우선이며 이 값은 초기/장애 시 폴백입니다.
-          INSTAGRAM_HASHTAGS: ${{ secrets.INSTAGRAM_HASHTAGS || '검단신도시,검단소식,인천검단,검단맛집,검단신도시맛집,검단카페,검단가볼만한곳,검단핫플,검단데이트,검단아이와' }}
+          INSTAGRAM_HASHTAGS: ${{ secrets.INSTAGRAM_HASHTAGS || '검단신도시,검단소식,인천검단,검단구,검단맛집,검단신도시맛집,검단카페,검단신상맛집,검단브런치,검단베이커리,아라동맛집,원당동맛집,당하동맛집,검단가볼만한곳,검단핫플,검단데이트코스,검단아이랑,검단나들이,검단축제,검단행사,검단생활,검단교통,검단신규오픈,검단상가,검단운동,검단반려동물,검단육아,검단교육' }}
