@@ -12,6 +12,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { clusterNewsArticles } from '../../lib/news/deduplicate.mjs';
 
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -262,8 +263,12 @@ try {
     }
   }
 
-  const rows = Array.from(allRows.values());
-  console.log(`\n  Total unique articles: ${rows.length}`);
+  const collectedRows = Array.from(allRows.values());
+  const issueClusters = clusterNewsArticles(collectedRows, { maxHours: 96 });
+  const rows = issueClusters.map(cluster => cluster.article);
+  const duplicateCount = collectedRows.length - rows.length;
+  console.log(`\n  URL unique articles: ${collectedRows.length}`);
+  console.log(`  Issue unique articles: ${rows.length} (${duplicateCount} same-issue articles grouped)`);
 
   // 3. Fetch og:image thumbnails (concurrency=4)
   console.log('\n🖼  Fetching thumbnails...');
