@@ -22,6 +22,10 @@ const GEUMDAN_LEGAL_DONGS = new Set([
   '검암동', '백석동', '시천동', '원당동', '당하동', '마전동',
   '불로동', '대곡동', '금곡동', '오류동', '왕길동',
 ]);
+const GEUMDAN_ADMIN_DONGS = [
+  '검단동', '불로대곡동', '원당동', '당하동',
+  '오류왕길동', '마전동', '아라1동', '아라2동',
+];
 
 const args = process.argv.slice(2);
 const monthsArg = args.find(arg => arg.startsWith('--months='));
@@ -368,10 +372,10 @@ await finishLog(logId, {
   detail: {
     months: details,
     district_codes: DISTRICTS.map(district => district.code),
+    administrative_dongs: GEUMDAN_ADMIN_DONGS,
     legal_dongs: [...new Set([...trades, ...rentals].map(row => row.dong))].sort(),
     complex_count: new Set([...trades, ...rentals].map(row => `${row.apt_name}|${row.dong}`)).size,
   },
 });
 
 if (status === 'failed') process.exit(1);
-
