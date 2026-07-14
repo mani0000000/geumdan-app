@@ -1,59 +1,36 @@
 #!/usr/bin/env node
 /**
- * fetch-instagram.mjs — GitHub Actions 매시간 실행
+ * 검단 로컬 SNS 정기 수집기
  *
- * 해시태그 기반으로 최신 Instagram 게시물을 수집해
- * Supabase instagram_posts 테이블에 upsert.
- *
- * 수집 방법 (우선순위):
- *   1. HikerAPI (HIKERAPI_KEY 설정 시) — 가장 안정적, $0.0006/req
- *      → GET https://api.hikerapi.com/v1/hashtag/medias/top/recent/chunk
- *   2. Instagram 내부 웹 API (sections / legacy) — 무료지만 차단 가능
- *
- * 수집 해시태그 (기본값):
- *   검단신도시, 검단, 인천검단, 검단라이프, 검단맛집, 검단카페,
- *   검단동, 검단원당, 검단아파트, 인천서구맛집
- * (INSTAGRAM_HASHTAGS 환경 변수로 덮어쓸 수 있음)
- *
- * Usage:
- *   SUPABASE_URL=xxx SUPABASE_SERVICE_KEY=xxx HIKERAPI_KEY=xxx \
- *     node scripts/batch/fetch-instagram.mjs
+ * - 관리자 키워드: 해시태그의 최신 게시물/릴스를 수집
+ * - 관리자 계정: 게시물/릴스/스토리를 계정별 설정에 맞춰 수집
+ * - 해시태그에서 발견한 계정: 비활성 후보로 자동 저장해 관리자 검토 지원
+ * - 스토리는 만료 시간을 기록하고, 만료된 데이터는 자동 정리
  */
 
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL  = process.env.SUPABASE_URL  ?? '';
-const SUPABASE_KEY  = process.env.SUPABASE_SERVICE_KEY ?? '';
-const HIKERAPI_KEY  = process.env.HIKERAPI_KEY  ?? '';
+const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
+const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
+const HIKERAPI_KEY = process.env.HIKERAPI_KEY ?? '';
+const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN ?? '';
 
-const DEFAULT_HASHTAGS = [
-  '검단신도시',
-  '검단',
-  '인천검단',
-  '검단라이프',
-  '검단맛집',
-  '검단카페',
-  '검단동',
-  '검단원당',
-  '검단아파트',
-  '인천서구맛집',
+const DEFAULT_KEYWORDS = [
+  ['검단신도시', '지역소식'], ['검단소식', '지역소식'], ['인천검단', '지역소식'],
+  ['검단맛집', '맛집'], ['검단신도시맛집', '맛집'], ['검단카페', '맛집'],
+  ['검단가볼만한곳', '가볼만한 곳'], ['검단핫플', '가볼만한 곳'],
+  ['검단데이트', '가볼만한 곳'], ['검단아이와', '가볼만한 곳'],
 ];
-
-const HASHTAGS = process.env.INSTAGRAM_HASHTAGS
-  ? process.env.INSTAGRAM_HASHTAGS.split(',').map(h => h.trim()).filter(Boolean)
-  : DEFAULT_HASHTAGS;
-
-// 설정
-const POSTS_PER_TAG = 8;    // 해시태그당 수집 건수
-const MAX_STORED    = 800;  // DB에 유지할 최대 레코드 수
-const DELAY_MS      = 1500; // 태그 간 요청 딜레이
+const POSTS_PER_KEYWORD = 10;
+const ACCOUNT_MEDIA_LIMIT = 24;
+const MAX_STORED = 1200;
+const DELAY_MS = 900;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ SUPABASE_URL, SUPABASE_SERVICE_KEY 가 설정되지 않았습니다.');
+  console.error('SUPABASE_URL, SUPABASE_SERVICE_KEY가 필요합니다.');
   process.exit(1);
 }
 
-// sb_* 키는 JWT가 아니므로 Authorization 헤더 제거
 function makeFetch(key) {
   return (input, init) => {
     const url = typeof input === 'string' ? input : input.url;
@@ -69,323 +46,479 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const asArray = value => Array.isArray(value?.[0]) ? value[0]
+  : Array.isArray(value?.items) ? value.items
+  : Array.isArray(value?.data) ? value.data
+  : Array.isArray(value) ? value
+  : [];
+const cleanUsername = value => String(value ?? '').trim().replace(/^@/, '').toLowerCase();
 
 function extractHashtags(text) {
-  if (!text) return [];
-  const matches = text.match(/#([^\s#]+)/g) ?? [];
-  return matches.map(h => h.slice(1)).slice(0, 20);
+  return [...new Set((String(text ?? '').match(/#([^\s#]+)/g) ?? []).map(tag => tag.slice(1)))].slice(0, 30);
 }
 
-// ── 방법 1: HikerAPI (안정적, 유료) ──────────────────────────────
-// Docs: https://hiker-doc.readthedocs.io/en/latest/api-reference/v1/hashtags/
-// Cost: $0.0006/request (100 free requests on signup)
-// Endpoint: GET /v1/hashtag/medias/top/recent/chunk
-//   Response: [[...media], nextMaxId]
-async function fetchHashtagPostsHiker(hashtag) {
-  const res = await fetch(
-    `https://api.hikerapi.com/v1/hashtag/medias/top/recent/chunk?name=${encodeURIComponent(hashtag)}`,
+function imageUrl(media) {
+  return media?.thumbnail_url
+    ?? media?.image_versions2?.candidates?.[0]?.url
+    ?? media?.image_versions?.[0]?.url
+    ?? media?.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url
+    ?? media?.display_url
+    ?? media?.thumbnail_src
+    ?? '';
+}
+
+function captionText(media) {
+  return media?.caption_text ?? media?.caption?.text
+    ?? media?.edge_media_to_caption?.edges?.[0]?.node?.text ?? '';
+}
+
+function timestamp(media) {
+  const raw = Number(media?.taken_at_ts ?? media?.taken_at ?? media?.taken_at_timestamp ?? 0);
+  return new Date(raw > 1_000_000_000 ? raw * 1000 : Date.now()).toISOString();
+}
+
+function inferCategory(text, keywordRows, fallback = '지역소식') {
+  const haystack = String(text ?? '').replaceAll('#', '').toLowerCase();
+  const match = keywordRows
+    .filter(row => haystack.includes(String(row.keyword).toLowerCase()))
+    .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))[0];
+  if (match?.category) return match.category;
+  if (/맛집|카페|디저트|빵집|브런치|먹방/.test(haystack)) return '맛집';
+  if (/가볼만|핫플|데이트|나들이|공원|축제|아이와/.test(haystack)) return '가볼만한 곳';
+  if (/교통|버스|지하철|병원|약국|생활/.test(haystack)) return '생활정보';
+  return fallback;
+}
+
+function relevanceScore(media, discoveryKeyword, source) {
+  const caption = captionText(media);
+  const localHits = (caption.match(/검단|아라동|원당동|당하동|불로동|마전동|오류동|왕길동/gi) ?? []).length;
+  const engagement = Number(media?.like_count ?? 0) + Number(media?.comment_count ?? 0) * 3;
+  return Math.min(100, 35 + localHits * 12 + (discoveryKeyword ? 15 : 0)
+    + (source?.featured ? 15 : 0) + Math.min(15, Math.floor(Math.log10(engagement + 1) * 5)));
+}
+
+function normalizeMedia(media, context) {
+  const username = cleanUsername(media?.user?.username ?? media?.owner?.username ?? context.username);
+  const code = media?.code ?? media?.shortcode;
+  const id = String(media?.pk ?? media?.id ?? code ?? '');
+  const story = context.contentType === 'STORY';
+  if ((!code && !story) || !id || !username) return null;
+
+  const reel = !story && (media?.media_type === 2 || media?.product_type === 'clips' || context.contentType === 'REEL');
+  const carousel = !story && media?.media_type === 8;
+  const contentType = story ? 'STORY' : reel ? 'REEL' : carousel ? 'CAROUSEL' : 'POST';
+  const postedAt = timestamp(media);
+  const caption = captionText(media);
+  const hashtags = extractHashtags(caption);
+  const category = inferCategory(`${context.discoveryKeyword ?? ''} ${caption}`, context.keywords, context.category);
+  const source = context.source;
+  const profileImage = source?.profile_image_url ?? media?.user?.profile_pic_url ?? '';
+  const url = story
+    ? `https://www.instagram.com/stories/${username}/${id}/`
+    : `https://www.instagram.com/${reel ? 'reel' : 'p'}/${code}/`;
+
+  return {
+    shortcode: story ? `story-${id}` : code,
+    post_url: url,
+    account_name: source?.display_name || username,
+    username,
+    // Instagram CDN query parameters include signed delivery information.
+    // Removing them makes otherwise valid thumbnails fail immediately.
+    image_url: String(imageUrl(media)),
+    caption,
+    media_type: contentType,
+    content_type: contentType,
+    is_reel: reel,
+    is_story: story,
+    like_count: Number(media?.like_count ?? 0),
+    comment_count: Number(media?.comment_count ?? 0),
+    view_count: Number(media?.view_count ?? media?.play_count ?? 0) || null,
+    hashtags: [...new Set([context.discoveryKeyword, ...hashtags].filter(Boolean))],
+    posted_at: postedAt,
+    expires_at: story ? new Date(new Date(postedAt).getTime() + 24 * 60 * 60 * 1000).toISOString() : null,
+    source_id: source?.id ?? null,
+    category,
+    profile_image_url: profileImage,
+    follower_count: Number(source?.follower_count ?? media?.user?.follower_count ?? 0),
+    relevance_score: relevanceScore(media, context.discoveryKeyword, source),
+    discovery_keyword: context.discoveryKeyword ?? null,
+    collected_at: new Date().toISOString(),
+    active: true,
+    is_manual: false,
+  };
+}
+
+async function hikerGet(path, params = {}) {
+  if (!HIKERAPI_KEY) throw new Error('HIKERAPI_KEY 없음');
+  const url = new URL(`https://api.hikerapi.com${path}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value != null && value !== '') url.searchParams.set(key, String(value));
+  });
+  const response = await fetch(url, {
+    headers: { 'x-access-key': HIKERAPI_KEY },
+    signal: AbortSignal.timeout(20_000),
+  });
+  if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    throw new Error(`HikerAPI ${response.status}: ${body.slice(0, 160)}`);
+  }
+  return response.json();
+}
+
+async function fetchHashtagHiker(keyword, keywordRows) {
+  const raw = await hikerGet('/v1/hashtag/medias/top/recent/chunk', { name: keyword });
+  return asArray(raw).slice(0, POSTS_PER_KEYWORD).map(media => normalizeMedia(media, {
+    discoveryKeyword: keyword,
+    category: inferCategory(keyword, keywordRows),
+    keywords: keywordRows,
+  })).filter(Boolean);
+}
+
+async function fetchHashtagScrape(keyword, keywordRows) {
+  const response = await fetch(
+    `https://i.instagram.com/api/v1/tags/${encodeURIComponent(keyword)}/sections/?count=${POSTS_PER_KEYWORD}&tab=recent`,
     {
-      headers: { 'x-access-key': HIKERAPI_KEY },
-      signal: AbortSignal.timeout(15000),
-    }
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile Instagram 311.0.0.31.109',
+        'X-IG-App-ID': '936619743392459',
+        Accept: 'application/json',
+      },
+      signal: AbortSignal.timeout(15_000),
+    },
   );
-
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`HikerAPI ${res.status}: ${body.slice(0, 200)}`);
-  }
-
-  // Response shape: [ mediaArray, "cursor_string" ]
-  const raw = await res.json();
-  const medias = Array.isArray(raw[0]) ? raw[0] : (Array.isArray(raw) ? raw : []);
-
-  return medias.slice(0, POSTS_PER_TAG).map(m => parseHikerMedia(m, hashtag)).filter(Boolean);
+  if (!response.ok) return [];
+  const data = await response.json();
+  const media = (data?.sections ?? []).flatMap(section => section?.layout_content?.medias ?? []).map(item => item?.media).filter(Boolean);
+  return media.slice(0, POSTS_PER_KEYWORD).map(item => normalizeMedia(item, {
+    discoveryKeyword: keyword,
+    category: inferCategory(keyword, keywordRows),
+    keywords: keywordRows,
+  })).filter(Boolean);
 }
 
-function parseHikerMedia(m, hashtag) {
-  const code = m.code;
-  if (!code) return null;
-
-  // media_type: 1=IMAGE/CAROUSEL_ITEM, 2=VIDEO/REEL, 8=CAROUSEL
-  // product_type: "feed" | "clips"
-  const isReel = m.media_type === 2 || m.product_type === 'clips';
-  const isCarousel = m.media_type === 8;
-  const mediaType = isReel ? 'REEL' : isCarousel ? 'CAROUSEL' : 'IMAGE';
-
-  // thumbnail: prefer thumbnail_url, fallback to image_versions[0].url
-  const thumb =
-    m.thumbnail_url ??
-    m.image_versions?.[0]?.url ??
-    '';
-  if (!thumb) return null;
-
-  const caption = m.caption_text ?? '';
-  const tags = extractHashtags(caption);
-
-  return {
-    shortcode:     code,
-    post_url:      `https://www.instagram.com/p/${code}/`,
-    account_name:  m.user?.username ?? 'unknown',
-    username:      m.user?.username,
-    image_url:     thumb.split('?')[0],
-    caption,
-    media_type:    mediaType,
-    is_reel:       isReel,
-    like_count:    m.like_count ?? 0,
-    comment_count: m.comment_count ?? 0,
-    view_count:    m.view_count || m.play_count || null,
-    hashtags:      [...new Set([hashtag, ...tags])],
-    posted_at:     new Date((m.taken_at_ts ?? Date.now() / 1000) * 1000).toISOString(),
+async function fetchApifyBatch(keywordRows, sources) {
+  if (!APIFY_API_TOKEN) return [];
+  const input = {
+    hashtags: keywordRows.map(row => row.keyword),
+    usernames: sources.map(source => source.username),
+    resultsLimit: 120,
+    addParentData: true,
   };
+  const response = await fetch(
+    `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_TOKEN)}&timeout=180`,
+    {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(input), signal: AbortSignal.timeout(190_000),
+    },
+  );
+  if (!response.ok) throw new Error(`Apify ${response.status}: ${(await response.text()).slice(0, 160)}`);
+  const items = await response.json();
+  const sourceMap = new Map(sources.map(source => [source.username, source]));
+  return (Array.isArray(items) ? items : []).map(item => {
+    const username = cleanUsername(item.ownerUsername ?? item.username ?? item.owner?.username);
+    const source = sourceMap.get(username);
+    const caption = item.caption ?? item.alt ?? '';
+    const matchingKeyword = keywordRows.find(row => String(caption).includes(row.keyword))?.keyword
+      ?? item.hashtags?.find(tag => keywordRows.some(row => row.keyword === tag));
+    const type = String(item.type ?? item.productType ?? '').toLowerCase();
+    const story = type.includes('story');
+    return normalizeMedia({
+      id: item.id,
+      pk: item.id,
+      code: item.shortCode ?? item.shortcode,
+      shortcode: item.shortCode ?? item.shortcode,
+      product_type: type.includes('reel') || type.includes('clip') ? 'clips' : 'feed',
+      media_type: type.includes('sidecar') || type.includes('carousel') ? 8 : type.includes('video') || type.includes('reel') ? 2 : 1,
+      display_url: item.displayUrl ?? item.imageUrl ?? item.thumbnailUrl,
+      caption_text: caption,
+      like_count: item.likesCount ?? item.likes,
+      comment_count: item.commentsCount ?? item.comments,
+      view_count: item.videoViewCount ?? item.views,
+      taken_at: item.timestamp ? new Date(item.timestamp).getTime() / 1000 : undefined,
+      user: { username, profile_pic_url: item.ownerProfilePicUrl },
+    }, {
+      source, username, discoveryKeyword: matchingKeyword,
+      category: source?.category ?? inferCategory(`${matchingKeyword ?? ''} ${caption}`, keywordRows),
+      keywords: keywordRows, contentType: story ? 'STORY' : undefined,
+    });
+  }).filter(Boolean);
 }
 
-// ── 방법 2: Instagram 내부 웹 API (무료, 차단 가능) ──────────────
-async function fetchHashtagPostsScrape(hashtag) {
-  const encoded = encodeURIComponent(hashtag);
+async function loadKeywords() {
+  const { data, error } = await supabase.from('social_content_keywords').select('*')
+    .eq('active', true).eq('collect_hashtag', true).order('priority', { ascending: false });
+  if (!error && data?.length) return data;
 
-  // 시도 1: Instagram 내부 sections API
-  try {
-    const res = await fetch(
-      `https://i.instagram.com/api/v1/tags/${encoded}/sections/?count=${POSTS_PER_TAG}&tab=recent`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/21A329 Instagram 311.0.0.31.109',
-          'X-IG-App-ID': '936619743392459',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'ko-KR,ko;q=0.9',
-          'Referer': 'https://www.instagram.com/',
-          'Origin': 'https://www.instagram.com',
-        },
-        signal: AbortSignal.timeout(12000),
-      }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const posts = parseSectionsResponse(data, hashtag);
-      if (posts.length > 0) return posts;
-    }
-  } catch (e) {
-    console.warn(`  [sections API 실패] ${hashtag}: ${e.message}`);
-  }
-
-  // 시도 2: 구형 ?__a=1 쿼리스트링 JSON
-  try {
-    const res = await fetch(
-      `https://www.instagram.com/explore/tags/${encoded}/?__a=1&__d=dis`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/html, */*',
-          'Accept-Language': 'ko-KR,ko;q=0.9',
-          'Referer': 'https://www.instagram.com/',
-          'X-Requested-With': 'XMLHttpRequest',
-        },
-        signal: AbortSignal.timeout(12000),
-      }
-    );
-    if (res.ok) {
-      const text = await res.text();
-      if (text.trimStart().startsWith('{')) {
-        const data = JSON.parse(text);
-        const posts = parseLegacyResponse(data, hashtag);
-        if (posts.length > 0) return posts;
-      }
-    }
-  } catch (e) {
-    console.warn(`  [legacy API 실패] ${hashtag}: ${e.message}`);
-  }
-
-  return [];
-}
-
-function parseSectionsResponse(data, hashtag) {
-  const posts = [];
-  const sections = data?.sections ?? [];
-  for (const section of sections) {
-    const medias = section?.layout_content?.medias ?? [];
-    for (const item of medias) {
-      const media = item?.media;
-      if (!media) continue;
-      const post = parseMediaNode(media, hashtag);
-      if (post) posts.push(post);
-    }
-  }
-  return posts;
-}
-
-function parseLegacyResponse(data, hashtag) {
-  const posts = [];
-  const edges =
-    data?.graphql?.hashtag?.edge_hashtag_to_media?.edges ??
-    data?.data?.hashtag?.edge_hashtag_to_media?.edges ?? [];
-  for (const { node } of edges) {
-    if (!node) continue;
-    const post = parseLegacyNode(node, hashtag);
-    if (post) posts.push(post);
-  }
-  return posts;
-}
-
-function parseMediaNode(media, hashtag) {
-  const code = media.code ?? media.shortcode;
-  if (!code) return null;
-  const mediaType = media.media_type === 2 ? 'REEL'
-    : media.media_type === 8 ? 'CAROUSEL'
-    : 'IMAGE';
-  const thumb =
-    media.image_versions2?.candidates?.[0]?.url ??
-    media.carousel_media?.[0]?.image_versions2?.candidates?.[0]?.url ?? '';
-  const caption = media.caption?.text ?? '';
-  const tags = extractHashtags(caption);
-  return {
-    shortcode:     code,
-    post_url:      `https://www.instagram.com/p/${code}/`,
-    account_name:  media.user?.username ?? media.owner?.username ?? 'unknown',
-    username:      media.user?.username ?? media.owner?.username,
-    image_url:     thumb.split('?')[0],
-    caption,
-    media_type:    mediaType,
-    is_reel:       mediaType === 'REEL',
-    like_count:    media.like_count ?? 0,
-    comment_count: media.comment_count ?? 0,
-    view_count:    media.view_count ?? media.play_count ?? null,
-    hashtags:      [...new Set([hashtag, ...tags])],
-    posted_at:     new Date((media.taken_at ?? Date.now() / 1000) * 1000).toISOString(),
-  };
-}
-
-function parseLegacyNode(node, hashtag) {
-  const code = node.shortcode;
-  if (!code) return null;
-  const mediaType = node.__typename === 'GraphVideo' ? 'REEL'
-    : node.__typename === 'GraphSidecar' ? 'CAROUSEL'
-    : 'IMAGE';
-  const thumb =
-    node.thumbnail_src ?? node.display_url ?? node.thumbnail_resources?.[0]?.src ?? '';
-  const caption = node.edge_media_to_caption?.edges?.[0]?.node?.text ?? '';
-  const tags = extractHashtags(caption);
-  return {
-    shortcode:     code,
-    post_url:      `https://www.instagram.com/p/${code}/`,
-    account_name:  node.owner?.username ?? 'unknown',
-    username:      node.owner?.username,
-    image_url:     thumb.split('?')[0],
-    caption,
-    media_type:    mediaType,
-    is_reel:       mediaType === 'REEL',
-    like_count:    node.edge_liked_by?.count ?? node.edge_media_preview_like?.count ?? 0,
-    comment_count: node.edge_media_to_comment?.count ?? 0,
-    view_count:    node.video_view_count ?? null,
-    hashtags:      [...new Set([hashtag, ...tags])],
-    posted_at:     new Date((node.taken_at_timestamp ?? Date.now() / 1000) * 1000).toISOString(),
-  };
-}
-
-// ── 통합 수집 함수 ────────────────────────────────────────────────
-async function fetchHashtagPosts(hashtag) {
-  if (HIKERAPI_KEY) {
+  const { data: settings } = await supabase.from('site_settings').select('key,value')
+    .in('key', ['instagram_keywords_config', 'instagram_keywords']);
+  const configured = settings?.find(row => row.key === 'instagram_keywords_config')?.value
+    ?? settings?.find(row => row.key === 'instagram_keywords')?.value;
+  if (configured) {
     try {
-      const posts = await fetchHashtagPostsHiker(hashtag);
-      if (posts.length > 0) return { posts, method: 'hikerapi' };
-      console.warn(`  [HikerAPI] 결과 없음, 스크래핑으로 전환`);
-    } catch (e) {
-      console.warn(`  [HikerAPI 실패] ${e.message}, 스크래핑으로 전환`);
-    }
+      const parsed = JSON.parse(configured);
+      if (Array.isArray(parsed) && parsed.length) return parsed
+        .map((item, index) => typeof item === 'string'
+          ? { keyword: item, category: '지역소식', priority: 100 - index, active: true, collect_hashtag: true }
+          : item)
+        .filter(item => item.active !== false && item.collect_hashtag !== false && item.keyword);
+    } catch { /* environment/default fallback below */ }
   }
 
-  const posts = await fetchHashtagPostsScrape(hashtag);
-  return { posts, method: 'scrape' };
+  const env = process.env.INSTAGRAM_HASHTAGS?.split(',').map(value => value.trim()).filter(Boolean);
+  const values = env?.length ? env : DEFAULT_KEYWORDS.map(([keyword]) => keyword);
+  return values.map((keyword, index) => ({
+    keyword,
+    category: DEFAULT_KEYWORDS.find(([value]) => value === keyword)?.[1] ?? '지역소식',
+    priority: values.length - index,
+  }));
 }
 
-// ── Supabase upsert ──────────────────────────────────────────────
-async function upsertPosts(posts) {
-  if (!posts.length) return 0;
-
-  const unique = Object.values(
-    Object.fromEntries(posts.map(p => [p.post_url, p]))
-  );
-  const valid = unique.filter(p => p.image_url);
-  if (!valid.length) return 0;
-
-  const { error } = await supabase
-    .from('instagram_posts')
-    .upsert(valid, { onConflict: 'post_url', ignoreDuplicates: false });
-
+async function loadSources() {
+  const { data, error } = await supabase.from('social_content_sources').select('*')
+    .eq('active', true).order('featured', { ascending: false }).order('priority', { ascending: false });
   if (error) {
-    console.error('  upsert 오류:', error.message);
-    let saved = 0;
-    for (const p of valid) {
-      const { error: e2 } = await supabase
-        .from('instagram_posts')
-        .upsert(p, { onConflict: 'post_url', ignoreDuplicates: true });
-      if (!e2) saved++;
-    }
-    return saved;
+    console.warn(`계정 테이블을 불러오지 못했습니다: ${error.message}`);
+    const { data: settings } = await supabase.from('site_settings').select('value')
+      .eq('key', 'instagram_managed_sources').maybeSingle();
+    try {
+      const parsed = JSON.parse(settings?.value ?? '[]');
+      return Array.isArray(parsed) ? parsed.filter(source => source.active !== false) : [];
+    } catch { return []; }
   }
+  return data ?? [];
+}
+
+async function discoverSources(posts) {
+  const candidates = [...new Map(posts.map(post => [post.username, post]).filter(([username]) => username)).values()];
+  if (!candidates.length) return;
+  const rows = candidates.map(post => ({
+    platform: 'instagram',
+    username: post.username,
+    display_name: post.account_name || post.username,
+    profile_url: `https://www.instagram.com/${post.username}/`,
+    profile_image_url: post.profile_image_url || null,
+    category: post.category || '지역소식',
+    follower_count: post.follower_count || 0,
+    active: false,
+    featured: false,
+    discovered_by: post.discovery_keyword ? `#${post.discovery_keyword}` : 'hashtag',
+    last_status: '검토 대기',
+  }));
+  const { error } = await supabase.from('social_content_sources')
+    .upsert(rows, { onConflict: 'platform,username', ignoreDuplicates: true });
+  if (error) {
+    const { data: settings } = await supabase.from('site_settings').select('value')
+      .eq('key', 'instagram_managed_sources').maybeSingle();
+    let current = [];
+    try { current = JSON.parse(settings?.value ?? '[]'); } catch { /* empty */ }
+    const merged = new Map(current.map(source => [source.username, source]));
+    for (const row of rows) {
+      if (!merged.has(row.username)) merged.set(row.username, { id: `settings-${row.username}`, ...row });
+    }
+    await supabase.from('site_settings').upsert([{
+      key: 'instagram_managed_sources', value: JSON.stringify([...merged.values()].slice(0, 300)),
+    }], { onConflict: 'key' });
+  }
+}
+
+async function refreshSourceProfile(source) {
+  const profile = await hikerGet('/v1/user/by/username', { username: source.username });
+  const user = profile?.user ?? profile?.data ?? profile;
+  const patch = {
+    display_name: user?.full_name || source.display_name || source.username,
+    profile_url: `https://www.instagram.com/${source.username}/`,
+    profile_image_url: user?.profile_pic_url_hd ?? user?.profile_pic_url ?? source.profile_image_url,
+    biography: user?.biography ?? source.biography,
+    external_id: String(user?.pk ?? user?.id ?? source.external_id ?? ''),
+    follower_count: Number(user?.follower_count ?? source.follower_count ?? 0),
+    is_verified: Boolean(user?.is_verified ?? source.is_verified),
+  };
+  await supabase.from('social_content_sources').update(patch).eq('id', source.id);
+  return { ...source, ...patch };
+}
+
+async function fetchAccountContent(source, keywords) {
+  let refreshed = source;
+  if (!source.external_id || !source.profile_image_url) refreshed = await refreshSourceProfile(source);
+  const userId = refreshed.external_id;
+  if (!userId) throw new Error('Instagram 사용자 ID를 확인할 수 없음');
+
+  const collected = [];
+  if (refreshed.collect_posts || refreshed.collect_reels) {
+    const raw = await hikerGet('/v1/user/medias/chunk', { user_id: userId });
+    for (const media of asArray(raw).slice(0, ACCOUNT_MEDIA_LIMIT)) {
+      const post = normalizeMedia(media, { source: refreshed, category: refreshed.category, keywords });
+      if (!post) continue;
+      if (post.is_reel ? refreshed.collect_reels : refreshed.collect_posts) collected.push(post);
+    }
+  }
+
+  if (refreshed.collect_reels && !collected.some(post => post.is_reel)) {
+    try {
+      const raw = await hikerGet('/v1/user/clips/chunk', { user_id: userId });
+      collected.push(...asArray(raw).slice(0, 12).map(media => normalizeMedia(media, {
+        source: refreshed, category: refreshed.category, keywords, contentType: 'REEL',
+      })).filter(Boolean));
+    } catch (error) {
+      console.warn(`  @${source.username} 릴스 보조 수집 실패: ${error.message}`);
+    }
+  }
+
+  if (refreshed.collect_stories) {
+    try {
+      const raw = await hikerGet('/v2/user/stories/by/username', { username: refreshed.username });
+      collected.push(...asArray(raw).map(media => normalizeMedia(media, {
+        source: refreshed, category: refreshed.category, keywords, contentType: 'STORY',
+      })).filter(Boolean));
+    } catch (error) {
+      console.warn(`  @${source.username} 스토리 수집 실패: ${error.message}`);
+    }
+  }
+  return [...new Map(collected.map(post => [post.post_url, post])).values()];
+}
+
+async function mapKnownSources(posts) {
+  const usernames = [...new Set(posts.map(post => post.username).filter(Boolean))];
+  if (!usernames.length) return posts;
+  const { data } = await supabase.from('social_content_sources').select('*').in('username', usernames);
+  const byUsername = new Map((data ?? []).map(source => [source.username, source]));
+  return posts.map(post => {
+    const source = byUsername.get(post.username);
+    return source ? {
+      ...post,
+      source_id: source.id,
+      profile_image_url: source.profile_image_url || post.profile_image_url,
+      follower_count: source.follower_count || post.follower_count,
+      account_name: source.display_name || post.account_name,
+    } : post;
+  });
+}
+
+async function upsertPosts(posts) {
+  const valid = [...new Map(posts.filter(post => post.image_url && post.post_url).map(post => [post.post_url, post])).values()];
+  if (!valid.length) return 0;
+  const { error } = await supabase.from('instagram_posts').upsert(valid, { onConflict: 'post_url' });
+  if (error && ['42703', 'PGRST204'].includes(error.code)) {
+    const extendedColumns = [
+      'account_name', 'post_url', 'image_url', 'caption', 'posted_at', 'shortcode',
+      'media_type', 'is_reel', 'like_count', 'comment_count', 'view_count', 'hashtags', 'username',
+    ];
+    const compatible = valid.map(post => Object.fromEntries(
+      Object.entries(post).filter(([key]) => extendedColumns.includes(key)),
+    ));
+    const fallback = await supabase.from('instagram_posts').upsert(compatible, { onConflict: 'post_url' });
+    if (!fallback.error) return compatible.length;
+    const minimal = compatible.map(post => ({
+      account_name: post.account_name, post_url: post.post_url, image_url: post.image_url,
+      caption: post.caption, posted_at: post.posted_at,
+    }));
+    const last = await supabase.from('instagram_posts').upsert(minimal, { onConflict: 'post_url' });
+    if (last.error) throw new Error(`게시물 저장 실패: ${last.error.message}`);
+    return minimal.length;
+  }
+  if (error) throw new Error(`게시물 저장 실패: ${error.message}`);
   return valid.length;
 }
 
-// ── 오래된 레코드 정리 ────────────────────────────────────────────
-async function pruneOldPosts() {
-  const { count } = await supabase
-    .from('instagram_posts')
-    .select('*', { count: 'exact', head: true });
-  if ((count ?? 0) <= MAX_STORED) return;
-
-  const excess = (count ?? 0) - MAX_STORED;
-  const { data: old } = await supabase
-    .from('instagram_posts')
-    .select('id')
-    .order('posted_at', { ascending: true })
-    .limit(excess);
-
-  if (old?.length) {
-    const ids = old.map(r => r.id);
-    await supabase.from('instagram_posts').delete().in('id', ids);
-    console.log(`🗑️  오래된 게시물 ${ids.length}개 삭제 (총 ${count}개 → ${MAX_STORED}개 유지)`);
-  }
+async function updateSourceStatus(source, status, error = null) {
+  await supabase.from('social_content_sources').update({
+    last_collected_at: new Date().toISOString(), last_status: status, last_error: error,
+  }).eq('id', source.id);
 }
 
-// ── 메인 ─────────────────────────────────────────────────────────
+async function saveBatchStatus(status) {
+  const rows = [
+    { key: 'instagram_last_collected_at', value: new Date().toISOString() },
+    { key: 'instagram_last_status', value: JSON.stringify(status) },
+  ];
+  const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
+  if (error) console.warn(`배치 상태 저장 실패: ${error.message}`);
+}
+
+async function prune() {
+  const storyPrune = await supabase.from('instagram_posts').delete().eq('is_story', true).lt('expires_at', new Date().toISOString());
+  if (storyPrune.error) {
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await supabase.from('instagram_posts').delete().eq('media_type', 'STORY').lt('posted_at', yesterday);
+  }
+  const { count } = await supabase.from('instagram_posts').select('*', { count: 'exact', head: true });
+  if ((count ?? 0) <= MAX_STORED) return;
+  const { data } = await supabase.from('instagram_posts').select('id')
+    .eq('is_manual', false).order('posted_at', { ascending: true }).limit((count ?? 0) - MAX_STORED);
+  if (data?.length) await supabase.from('instagram_posts').delete().in('id', data.map(row => row.id));
+}
+
 async function main() {
-  const method = HIKERAPI_KEY ? 'HikerAPI' : '스크래핑 (HIKERAPI_KEY 없음)';
-  console.log(`\n📷 Instagram 수집 시작 — 방법: ${method}`);
-  console.log(`   해시태그: ${HASHTAGS.join(', ')}`);
-  console.log(`   ${new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}\n`);
+  const startedAt = Date.now();
+  const keywords = await loadKeywords();
+  const sources = await loadSources();
+  const stats = { keywords: keywords.length, sources: sources.length, posts: 0, reels: 0, stories: 0, errors: 0 };
+  console.log(`검단 로컬 SNS 수집 시작 · 키워드 ${keywords.length}개 · 관리 계정 ${sources.length}개`);
 
-  let totalSaved = 0;
-  const methodStats = { hikerapi: 0, scrape: 0 };
-
-  for (const tag of HASHTAGS) {
-    console.log(`  #${tag} 수집 중...`);
+  if (!HIKERAPI_KEY && APIFY_API_TOKEN) {
     try {
-      const { posts, method } = await fetchHashtagPosts(tag);
-      if (!posts.length) {
-        console.log(`  → 수집된 게시물 없음`);
-      } else {
-        const saved = await upsertPosts(posts);
-        totalSaved += saved;
-        methodStats[method] = (methodStats[method] ?? 0) + posts.length;
-        console.log(`  → ${posts.length}개 가져옴 (${method}), ${saved}개 저장`);
-      }
-    } catch (e) {
-      console.error(`  → 오류: ${e.message}`);
+      let posts = await fetchApifyBatch(keywords, sources);
+      await discoverSources(posts);
+      posts = await mapKnownSources(posts);
+      await upsertPosts(posts);
+      stats.posts += posts.filter(post => !post.is_reel && !post.is_story).length;
+      stats.reels += posts.filter(post => post.is_reel).length;
+      stats.stories += posts.filter(post => post.is_story).length;
+    } catch (error) {
+      stats.errors += 1;
+      console.warn(`Apify 일괄 수집 실패: ${error.message}`);
     }
-    if (HASHTAGS.indexOf(tag) < HASHTAGS.length - 1) {
+  } else {
+    for (const row of keywords) {
+      console.log(`#${row.keyword}`);
+      try {
+        let posts = [];
+        if (HIKERAPI_KEY) posts = await fetchHashtagHiker(row.keyword, keywords);
+        if (!posts.length) posts = await fetchHashtagScrape(row.keyword, keywords);
+        await discoverSources(posts);
+        posts = await mapKnownSources(posts);
+        stats.posts += await upsertPosts(posts);
+      } catch (error) {
+        stats.errors += 1;
+        console.warn(`  실패: ${error.message}`);
+      }
       await sleep(DELAY_MS);
     }
   }
 
-  await pruneOldPosts();
+  for (const source of sources) {
+    console.log(`@${source.username}`);
+    if (!HIKERAPI_KEY && APIFY_API_TOKEN) {
+      await updateSourceStatus(source, '정상 · Apify 일괄 수집');
+      continue;
+    }
+    if (!HIKERAPI_KEY) {
+      await updateSourceStatus(source, '웹 폴백', '스토리 수집에는 HIKERAPI_KEY 또는 APIFY_API_TOKEN이 필요합니다.');
+      continue;
+    }
+    try {
+      const posts = await fetchAccountContent(source, keywords);
+      await upsertPosts(posts);
+      stats.posts += posts.filter(post => !post.is_reel && !post.is_story).length;
+      stats.reels += posts.filter(post => post.is_reel).length;
+      stats.stories += posts.filter(post => post.is_story).length;
+      await updateSourceStatus(source, `정상 · ${posts.length}개`);
+    } catch (error) {
+      stats.errors += 1;
+      await updateSourceStatus(source, '오류', error.message);
+      console.warn(`  실패: ${error.message}`);
+    }
+    await sleep(DELAY_MS);
+  }
 
-  console.log(`\n✅ 완료 — 총 ${totalSaved}개 저장됨`);
-  if (methodStats.hikerapi) console.log(`   HikerAPI: ${methodStats.hikerapi}개`);
-  if (methodStats.scrape)   console.log(`   스크래핑: ${methodStats.scrape}개`);
-  console.log('');
+  await prune();
+  const status = { ...stats, durationSeconds: Math.round((Date.now() - startedAt) / 1000), api: HIKERAPI_KEY ? 'HikerAPI' : APIFY_API_TOKEN ? 'Apify' : 'web-fallback' };
+  await saveBatchStatus(status);
+  console.log('수집 완료', status);
 }
 
-main().catch(e => {
-  console.error('❌ 예기치 않은 오류:', e);
+main().catch(error => {
+  console.error('수집 실패', error);
   process.exit(1);
 });
