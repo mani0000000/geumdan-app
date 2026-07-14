@@ -17,10 +17,18 @@ const APIFY_API_TOKEN = process.env.APIFY_API_TOKEN ?? '';
 
 const DEFAULT_KEYWORDS = [
   ['검단신도시', '지역소식'], ['검단소식', '지역소식'], ['인천검단', '지역소식'],
+  ['검단구', '지역소식'], ['검단축제', '지역소식'], ['검단행사', '지역소식'],
   ['검단맛집', '맛집'], ['검단신도시맛집', '맛집'], ['검단카페', '맛집'],
+  ['검단신상맛집', '맛집'], ['검단브런치', '맛집'], ['검단베이커리', '맛집'],
+  ['아라동맛집', '맛집'], ['원당동맛집', '맛집'], ['당하동맛집', '맛집'],
   ['검단가볼만한곳', '가볼만한 곳'], ['검단핫플', '가볼만한 곳'],
-  ['검단데이트', '가볼만한 곳'], ['검단아이와', '가볼만한 곳'],
+  ['검단데이트', '가볼만한 곳'], ['검단데이트코스', '가볼만한 곳'],
+  ['검단아이와', '가볼만한 곳'], ['검단아이랑', '가볼만한 곳'], ['검단나들이', '가볼만한 곳'],
+  ['검단생활', '생활정보'], ['검단교통', '생활정보'], ['검단신규오픈', '생활정보'],
+  ['검단상가', '생활정보'], ['검단운동', '생활정보'], ['검단반려동물', '생활정보'],
+  ['검단육아', '육아·교육'], ['검단교육', '육아·교육'], ['검단학교', '육아·교육'],
 ];
+const KEYWORD_SEED_VERSION = 2;
 const POSTS_PER_KEYWORD = 10;
 const ACCOUNT_MEDIA_LIMIT = 24;
 const MAX_STORED = 1200;
@@ -302,8 +310,9 @@ async function loadKeywords() {
   if (!error && data?.length) return data;
 
   const { data: settings } = await supabase.from('site_settings').select('key,value')
-    .in('key', ['instagram_keywords_config', 'instagram_keywords']);
+    .in('key', ['instagram_keywords_config', 'instagram_keywords', 'instagram_keyword_seed_version']);
   const configRow = settings?.find(row => row.key === 'instagram_keywords_config');
+  const seedVersion = Number(settings?.find(row => row.key === 'instagram_keyword_seed_version')?.value ?? 0);
   const configured = configRow?.value ?? settings?.find(row => row.key === 'instagram_keywords')?.value;
   if (configured) {
     try {
@@ -318,7 +327,7 @@ async function loadKeywords() {
             collect_hashtag: true,
           }
           : item);
-        if (!configRow || parsed.some(item => typeof item === 'string')) {
+        if (!configRow || parsed.some(item => typeof item === 'string') || seedVersion < KEYWORD_SEED_VERSION) {
           const byKeyword = new Map(normalized.map(item => [item.keyword, item]));
           for (const [keyword, category] of DEFAULT_KEYWORDS) {
             if (!byKeyword.has(keyword)) byKeyword.set(keyword, {
@@ -326,9 +335,10 @@ async function loadKeywords() {
             });
           }
           normalized = [...byKeyword.values()];
-          await supabase.from('site_settings').upsert([{
-            key: 'instagram_keywords_config', value: JSON.stringify(normalized),
-          }], { onConflict: 'key' });
+          await supabase.from('site_settings').upsert([
+            { key: 'instagram_keywords_config', value: JSON.stringify(normalized) },
+            { key: 'instagram_keyword_seed_version', value: String(KEYWORD_SEED_VERSION) },
+          ], { onConflict: 'key' });
         }
         return normalized.filter(item => item.active !== false && item.collect_hashtag !== false && item.keyword);
       }
