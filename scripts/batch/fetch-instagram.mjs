@@ -197,39 +197,90 @@ async function fetchHashtagScrape(keyword, keywordRows) {
   })).filter(Boolean);
 }
 
-async function fetchApifyBatch(keywordRows, sources) {
-  if (!APIFY_API_TOKEN) return [];
-  const input = {
-    hashtags: keywordRows.map(row => row.keyword),
-    usernames: sources.map(source => source.username),
-    resultsLimit: 120,
-    addParentData: true,
-  };
+async function runApify(input) {
   const response = await fetch(
-    `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_TOKEN)}&timeout=180`,
+    `https://api.apify.com/v2/acts/apify~instagram-scraper/run-sync-get-dataset-items?token=${encodeURIComponent(APIFY_API_TOKEN)}&timeout=240`,
     {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(input), signal: AbortSignal.timeout(190_000),
+      body: JSON.stringify(input), signal: AbortSignal.timeout(250_000),
     },
   );
   if (!response.ok) throw new Error(`Apify ${response.status}: ${(await response.text()).slice(0, 160)}`);
   const items = await response.json();
+  return Array.isArray(items) ? items : [];
+}
+
+function apifyInputKeyword(item, keywordRows) {
+  const inputUrl = String(
+    item.inputUrl ?? item.inputURL ?? item.input?.url
+    ?? item.parentData?.inputUrl ?? item.parentData?.inputURL ?? item.parentData?.url ?? '',
+  );
+  const match = inputUrl.match(/\/explore\/tags\/([^/?#]+)/i);
+  if (!match?.[1]) return null;
+  const hashtag = decodeURIComponent(match[1]).replace(/^#/, '');
+  return keywordRows.find(row => row.keyword === hashtag)?.keyword ?? hashtag;
+}
+
+async function fetchApifyBatch(keywordRows, sources) {
+  if (!APIFY_API_TOKEN) return [];
+  const hashtagUrls = keywordRows.map(row => `https://www.instagram.com/explore/tags/${encodeURIComponent(row.keyword)}/`);
+  const profileUrls = sources.map(source => `https://www.instagram.com/${encodeURIComponent(source.username)}/`);
+  const directUrls = [...new Set([...hashtagUrls, ...profileUrls])];
+  if (!directUrls.length) return [];
+
+  // The current Instagram Scraper accepts URL-mode inputs. Keep content types in
+  // separate runs because Apify does not allow search mode and URL mode together.
+  const requests = [
+    {
+      label: 'POST',
+      input: {
+        directUrls, resultsType: 'posts', resultsLimit: 6,
+        onlyPostsNewerThan: '14 days', addParentData: true, skipPinnedPosts: true,
+      },
+    },
+    {
+      label: 'REEL',
+      input: {
+        directUrls, resultsType: 'reels', resultsLimit: 4,
+        onlyPostsNewerThan: '30 days', addParentData: true, skipPinnedPosts: true,
+      },
+    },
+  ];
+  if (profileUrls.length) {
+    requests.push({
+      label: 'STORY',
+      input: { directUrls: profileUrls, resultsType: 'stories', resultsLimit: 10, addParentData: true },
+    });
+  }
+
+  const results = await Promise.allSettled(requests.map(async request => {
+    const items = await runApify(request.input);
+    return items.map(item => ({ ...item, __requestedType: request.label }));
+  }));
+  const failures = results.filter(result => result.status === 'rejected');
+  failures.forEach(result => console.warn(`  Apify 부분 수집 실패: ${result.reason?.message ?? result.reason}`));
+  const items = results.flatMap(result => result.status === 'fulfilled' ? result.value : []);
+  if (!items.length && failures.length === requests.length) throw failures[0].reason;
+
   const sourceMap = new Map(sources.map(source => [source.username, source]));
-  return (Array.isArray(items) ? items : []).map(item => {
+  return items.map(item => {
     const username = cleanUsername(item.ownerUsername ?? item.username ?? item.owner?.username);
     const source = sourceMap.get(username);
     const caption = item.caption ?? item.alt ?? '';
     const matchingKeyword = keywordRows.find(row => String(caption).includes(row.keyword))?.keyword
-      ?? item.hashtags?.find(tag => keywordRows.some(row => row.keyword === tag));
+      ?? item.hashtags?.find(tag => keywordRows.some(row => row.keyword === tag))
+      ?? apifyInputKeyword(item, keywordRows);
     const type = String(item.type ?? item.productType ?? '').toLowerCase();
-    const story = type.includes('story');
+    const story = item.__requestedType === 'STORY' || type.includes('story');
+    const requestedReel = item.__requestedType === 'REEL';
     return normalizeMedia({
       id: item.id,
       pk: item.id,
       code: item.shortCode ?? item.shortcode,
       shortcode: item.shortCode ?? item.shortcode,
-      product_type: type.includes('reel') || type.includes('clip') ? 'clips' : 'feed',
-      media_type: type.includes('sidecar') || type.includes('carousel') ? 8 : type.includes('video') || type.includes('reel') ? 2 : 1,
+      product_type: requestedReel || type.includes('reel') || type.includes('clip') ? 'clips' : 'feed',
+      media_type: type.includes('sidecar') || type.includes('carousel') ? 8
+        : requestedReel || type.includes('video') || type.includes('reel') ? 2 : 1,
       display_url: item.displayUrl ?? item.imageUrl ?? item.thumbnailUrl,
       caption_text: caption,
       like_count: item.likesCount ?? item.likes,
@@ -240,7 +291,7 @@ async function fetchApifyBatch(keywordRows, sources) {
     }, {
       source, username, discoveryKeyword: matchingKeyword,
       category: source?.category ?? inferCategory(`${matchingKeyword ?? ''} ${caption}`, keywordRows),
-      keywords: keywordRows, contentType: story ? 'STORY' : undefined,
+      keywords: keywordRows, contentType: story ? 'STORY' : requestedReel ? 'REEL' : undefined,
     });
   }).filter(Boolean);
 }
