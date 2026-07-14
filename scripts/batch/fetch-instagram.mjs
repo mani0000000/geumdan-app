@@ -303,16 +303,35 @@ async function loadKeywords() {
 
   const { data: settings } = await supabase.from('site_settings').select('key,value')
     .in('key', ['instagram_keywords_config', 'instagram_keywords']);
-  const configured = settings?.find(row => row.key === 'instagram_keywords_config')?.value
-    ?? settings?.find(row => row.key === 'instagram_keywords')?.value;
+  const configRow = settings?.find(row => row.key === 'instagram_keywords_config');
+  const configured = configRow?.value ?? settings?.find(row => row.key === 'instagram_keywords')?.value;
   if (configured) {
     try {
       const parsed = JSON.parse(configured);
-      if (Array.isArray(parsed) && parsed.length) return parsed
-        .map((item, index) => typeof item === 'string'
-          ? { keyword: item, category: '지역소식', priority: 100 - index, active: true, collect_hashtag: true }
-          : item)
-        .filter(item => item.active !== false && item.collect_hashtag !== false && item.keyword);
+      if (Array.isArray(parsed) && parsed.length) {
+        let normalized = parsed.map((item, index) => typeof item === 'string'
+          ? {
+            keyword: item,
+            category: inferCategory(item, [], '지역소식'),
+            priority: 100 - index,
+            active: true,
+            collect_hashtag: true,
+          }
+          : item);
+        if (!configRow || parsed.some(item => typeof item === 'string')) {
+          const byKeyword = new Map(normalized.map(item => [item.keyword, item]));
+          for (const [keyword, category] of DEFAULT_KEYWORDS) {
+            if (!byKeyword.has(keyword)) byKeyword.set(keyword, {
+              keyword, category, priority: 70 - byKeyword.size, active: true, collect_hashtag: true,
+            });
+          }
+          normalized = [...byKeyword.values()];
+          await supabase.from('site_settings').upsert([{
+            key: 'instagram_keywords_config', value: JSON.stringify(normalized),
+          }], { onConflict: 'key' });
+        }
+        return normalized.filter(item => item.active !== false && item.collect_hashtag !== false && item.keyword);
+      }
     } catch { /* environment/default fallback below */ }
   }
 
