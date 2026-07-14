@@ -13,6 +13,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { clusterNewsArticles } from '../../lib/news/deduplicate.mjs';
+import { isGoogleNewsUrl, resolveGoogleNewsArticle } from '../../lib/news/google-news.mjs';
 
 const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID;
 const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET;
@@ -42,8 +43,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
-function stripHtml(str) {
-  return str.replace(/<[^>]+>/g, '').replace(/&quot;/g, '"').replace(/&amp;/g, '&').replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n));
+function decodeEntities(str = '') {
+  let decoded = str;
+  for (let i = 0; i < 2; i += 1) {
+    decoded = decoded
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&nbsp;|&#160;/gi, ' ')
+      .replace(/&quot;|&#34;/gi, '"')
+      .replace(/&apos;|&#39;/gi, "'")
+      .replace(/&amp;/gi, '&')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+  }
+  return decoded;
+}
+
+function stripHtml(str = '') {
+  return decodeEntities(str).replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
 function tagVal(xml, tag) {
@@ -54,41 +70,18 @@ function tagVal(xml, tag) {
 // ─── og:image extraction ───────────────────────────────────────────────────
 
 /**
- * Follow Google News redirect to get the real article URL.
- * Google News RSS links like https://news.google.com/rss/articles/... are
- * redirects — we must follow them to get the actual publisher URL.
- */
-async function resolveGoogleNewsUrl(googleUrl, timeoutMs = 6000) {
-  try {
-    const ctrl = new AbortController();
-    const tid = setTimeout(() => ctrl.abort(), timeoutMs);
-    const res = await fetch(googleUrl, {
-      redirect: 'follow',
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
-      signal: ctrl.signal,
-    });
-    clearTimeout(tid);
-    const finalUrl = res.url;
-    // If redirect resolved to a real site (not google.com), return it
-    if (finalUrl && !finalUrl.includes('google.com') && !finalUrl.includes('gstatic.com')) {
-      return finalUrl;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * Fetch og:image from a real article URL.
  * Reads up to 1MB to find the og:image meta tag.
  */
-async function fetchOgImage(articleUrl, timeoutMs = 6000) {
+async function fetchOpenGraph(articleUrl, timeoutMs = 6000) {
   try {
     const ctrl = new AbortController();
     const tid = setTimeout(() => ctrl.abort(), timeoutMs);
     const res = await fetch(articleUrl, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsBot/1.0)' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1',
+        'Accept-Language': 'ko-KR,ko;q=0.9,en;q=0.7',
+      },
       signal: ctrl.signal,
     });
     clearTimeout(tid);
@@ -111,23 +104,20 @@ async function fetchOgImage(articleUrl, timeoutMs = 6000) {
     const m = text.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
       ?? text.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
 
-    if (!m) return null;
+    const descriptionMatch = text.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
+      ?? text.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i)
+      ?? text.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+    const description = descriptionMatch?.[1] ? stripHtml(descriptionMatch[1]).slice(0, 220) : null;
+    if (!m) return { thumbnail: null, description };
     const img = m[1].trim();
     // Reject Google / gstatic assets
-    if (img.includes('google.com') || img.includes('gstatic.com')) return null;
-    return img;
+    if (img.includes('google.com') || img.includes('gstatic.com')) return { thumbnail: null, description };
+    let thumbnail = img;
+    try { thumbnail = new URL(img, res.url || articleUrl).toString(); } catch { /* keep original */ }
+    return { thumbnail, description };
   } catch {
-    return null;
+    return { thumbnail: null, description: null };
   }
-}
-
-/**
- * Given a Google News URL, resolve it to the real article URL then fetch og:image.
- */
-async function getThumbFromGoogleUrl(googleUrl) {
-  const realUrl = await resolveGoogleNewsUrl(googleUrl);
-  if (!realUrl) return null;
-  return fetchOgImage(realUrl);
 }
 
 // ─── Google News RSS ───────────────────────────────────────────────────────
@@ -152,7 +142,11 @@ function parseGoogleRss(xml) {
     const pubDate = tagVal(raw, 'pubDate');
     const sourceTag = raw.match(/<source[^>]+url="([^"]*)"[^>]*>([^<]*)<\/source>/);
     const source = sourceTag ? sourceTag[2].trim() : (rawTitle.match(/ - ([^-]+)$/) || ['', '뉴스'])[1].trim();
-    const description = stripHtml(tagVal(raw, 'description')).slice(0, 200);
+    const description = stripHtml(tagVal(raw, 'description'))
+      .replace(title, '')
+      .replace(source, '')
+      .trim()
+      .slice(0, 220);
 
     if (title.length > 5 && link) {
       items.push({ title, link, pubDate, source, description });
@@ -263,38 +257,51 @@ try {
     }
   }
 
-  const collectedRows = Array.from(allRows.values());
-  const issueClusters = clusterNewsArticles(collectedRows, { maxHours: 96 });
-  const rows = issueClusters.map(cluster => cluster.article);
-  const duplicateCount = collectedRows.length - rows.length;
-  console.log(`\n  URL unique articles: ${collectedRows.length}`);
-  console.log(`  Issue unique articles: ${rows.length} (${duplicateCount} same-issue articles grouped)`);
+  const collectedRows = Array.from(allRows.values())
+    .sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+    .slice(0, 90);
 
-  // 3. Fetch og:image thumbnails (concurrency=4)
-  console.log('\n🖼  Fetching thumbnails...');
-  const CONCURRENCY = 4;
-  for (let i = 0; i < rows.length; i += CONCURRENCY) {
-    const batch = rows.slice(i, i + CONCURRENCY);
+  // 3. Google News 중계 URL을 실제 언론사 URL로 복원한 뒤 OG 이미지/설명을 수집한다.
+  console.log('\n🖼  Resolving publisher URLs and metadata...');
+  const CONCURRENCY = 6;
+  for (let i = 0; i < collectedRows.length; i += CONCURRENCY) {
+    const batch = collectedRows.slice(i, i + CONCURRENCY);
     await Promise.all(batch.map(async (row) => {
       try {
-        let thumb = null;
-        if (row._isGoogleUrl) {
-          thumb = await getThumbFromGoogleUrl(row.url);
-        } else {
-          thumb = await fetchOgImage(row.url);
+        let googleThumbnail = null;
+        if (row._isGoogleUrl || isGoogleNewsUrl(row.url)) {
+          const resolved = await resolveGoogleNewsArticle(row.url, { timeoutMs: 9000 });
+          googleThumbnail = resolved.thumbnail;
+          if (!isGoogleNewsUrl(resolved.url)) row.url = resolved.url;
         }
-        if (thumb) {
-          row.thumbnail = thumb;
+
+        const metadata = isGoogleNewsUrl(row.url)
+          ? { thumbnail: null, description: null }
+          : await fetchOpenGraph(row.url, 8000);
+        row.thumbnail = metadata.thumbnail || googleThumbnail || null;
+        if (row.thumbnail) {
           process.stdout.write('✓');
         } else {
           process.stdout.write('·');
+        }
+        if (metadata.description && metadata.description.length >= 24) {
+          row.summary = metadata.description;
+        } else if (!row.summary || row.summary.length < 20) {
+          row.summary = `${row.title.replace(/[.!?]+$/, '')} 관련 검단 지역 소식입니다.`;
         }
       } catch {
         process.stdout.write('·');
       }
     }));
   }
-  console.log(`\n  Thumbnails found: ${rows.filter(r => r.thumbnail).length}/${rows.length}`);
+
+  // 실제 URL 복원 뒤 같은 이슈를 다시 묶어 이미지와 설명이 좋은 대표 기사만 남긴다.
+  const issueClusters = clusterNewsArticles(collectedRows, { maxHours: 96 });
+  const rows = issueClusters.map(cluster => cluster.article);
+  const duplicateCount = collectedRows.length - rows.length;
+  console.log(`\n  URL unique articles: ${collectedRows.length}`);
+  console.log(`  Issue unique articles: ${rows.length} (${duplicateCount} same-issue articles grouped)`);
+  console.log(`  Thumbnails found: ${rows.filter(r => r.thumbnail).length}/${rows.length}`);
 
   // 4. Remove internal flag before upsert
   for (const row of rows) delete row._isGoogleUrl;
@@ -310,6 +317,19 @@ try {
       console.warn('⚠️  Supabase upsert failed:', error.message);
     } else {
       console.log(`✅ Upserted ${rows.length} news articles`);
+
+      const enrichedCount = rows.filter(row => row.thumbnail && !isGoogleNewsUrl(row.url)).length;
+      if (enrichedCount >= 6) {
+        const { error: cleanupGoogleError } = await supabase
+          .from('news_articles')
+          .delete()
+          .like('url', 'https://news.google.com/%');
+        if (cleanupGoogleError) {
+          console.warn('⚠️  Could not clean up Google relay rows:', cleanupGoogleError.message);
+        } else {
+          console.log('✅ Google relay rows replaced with publisher URLs');
+        }
+      }
     }
   }
 

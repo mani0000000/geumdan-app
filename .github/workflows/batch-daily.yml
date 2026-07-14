@@ -7,12 +7,14 @@ on:
 jobs:
   fetch-realstate:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22' }
       - run: npm ci
-      - run: node scripts/batch/fetch-realstate.mjs
+      - name: 검단구 실거래·전월세·신규 단지 일일 조사
+        run: node scripts/batch/fetch-realestate-daily.mjs --months=18
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
