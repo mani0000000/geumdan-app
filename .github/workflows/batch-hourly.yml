@@ -3,6 +3,11 @@ on:
   schedule:
     - cron: '0 * * * *'  # every hour
   workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: geumdan-hourly-collectors
+  cancel-in-progress: false
 jobs:
   fetch-news:
     runs-on: ubuntu-latest
@@ -29,3 +34,34 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+
+  fetch-gas-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: node scripts/batch/fetch-gas-prices.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          OPINET_API_KEY: ${{ secrets.OPINET_API_KEY }}
+
+  fetch-instagram:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: node scripts/batch/fetch-instagram.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          HIKERAPI_KEY: ${{ secrets.HIKERAPI_KEY }}
+          APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
+          # DB의 어드민 키워드가 우선이며 이 값은 초기/장애 시 폴백입니다.
+          INSTAGRAM_HASHTAGS: ${{ secrets.INSTAGRAM_HASHTAGS || '검단신도시,검단소식,인천검단,검단맛집,검단신도시맛집,검단카페,검단가볼만한곳,검단핫플,검단데이트,검단아이와' }}

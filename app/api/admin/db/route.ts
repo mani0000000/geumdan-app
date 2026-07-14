@@ -8,8 +8,10 @@ const ALLOWED_TABLES = new Set([
   "pharmacies", "emergency_rooms", "community_posts", "community_comments", "news_articles",
   "apartments", "apartment_sizes", "apartment_price_history", "apt_price_index",
   "home_widget_config", "places", "search_keywords", "marts",
-  "site_settings", "youtube_videos", "instagram_posts", "sports_matches",
+  "site_settings", "youtube_videos", "instagram_posts", "social_content_sources",
+  "social_content_keywords", "sports_matches",
   "sport_categories", "leagues", "teams", "broadcasters",
+  "notices",
 ]);
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
