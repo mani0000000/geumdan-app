@@ -1,3 +1,5 @@
+import { deduplicateNewsArticles } from "@/lib/news/deduplicate.mjs";
+
 /**
  * 뉴스/유튜브 데이터 수집
  *
@@ -23,6 +25,27 @@ export interface NewsArticle {
   type: "뉴스";
 }
 
+export function normalizeNewsText(value = ""): string {
+  let decoded = value;
+
+  // RSS/DB에 HTML이 한두 번 이스케이프된 상태로 들어오는 경우까지 정리한다.
+  for (let i = 0; i < 2; i += 1) {
+    decoded = decoded
+      .replace(/&lt;/gi, "<")
+      .replace(/&gt;/gi, ">")
+      .replace(/&quot;|&#34;/gi, '"')
+      .replace(/&apos;|&#39;/gi, "'")
+      .replace(/&nbsp;|&#160;/gi, " ")
+      .replace(/&amp;/gi, "&");
+  }
+
+  return decoded
+    .replace(/<[^>]+>/g, " ")
+    .replace(/https?:\/\/\S+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export interface YouTubeVideo {
   id: string;
   videoId: string;
@@ -30,6 +53,14 @@ export interface YouTubeVideo {
   channelName: string;
   thumbnail: string;
   url: string;
+  publishedAt?: string; // ISO 날짜 (캐시 수집 시 저장)
+  topic?: string;
+  query?: string;
+  channelId?: string;
+  subscriberCount?: number;
+  viewCountText?: string;
+  relevanceScore?: number;
+  fetchedAt?: string;
 }
 
 const BASE_PATH     = process.env.NEXT_PUBLIC_BASE_PATH     ?? "";
@@ -38,6 +69,176 @@ const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
 const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
+
+const YOUTUBE_TOPIC_LABELS: Record<string, string> = {
+  food: "맛집",
+  cafe: "카페",
+  news: "소식",
+  places: "가볼만한 곳",
+  transport: "교통",
+  realestate: "부동산",
+  family: "아이·가족",
+  shopping: "상가·쇼핑",
+  life: "동네생활",
+  culture: "문화·행사",
+  health: "운동·건강",
+  education: "교육",
+  pet: "반려생활",
+};
+
+const GEUMDAN_LOCAL_KEYWORDS = [
+  "검단신도시", "검단", "검단구", "아라동", "원당동", "당하동", "마전동",
+  "불로동", "왕길동", "오류동", "금곡동", "대곡동", "검단아라", "아라역",
+  "검단호수공원", "검단중앙", "완정", "드림로", "인천서구", "인천 서구",
+];
+
+const YOUTUBE_TOPIC_KEYWORDS: Record<string, string[]> = {
+  food: ["맛집", "먹방", "식당", "고기", "회식", "데이트", "브런치", "밥집", "술집", "샤브", "국밥", "파스타"],
+  cafe: ["카페", "커피", "디저트", "베이커리", "브런치", "대형카페"],
+  news: ["소식", "뉴스", "근황", "개발", "착공", "준공", "개통", "행사", "축제", "출범", "구청장", "행정", "재정"],
+  places: ["공원", "산책", "나들이", "가볼만", "여행", "호수공원", "아라뱃길", "드림파크"],
+  transport: ["교통", "버스", "지하철", "역", "5호선", "인천1호선", "노선", "출퇴근"],
+  realestate: ["부동산", "아파트", "분양", "입주", "청약", "시세", "임장", "단지", "매매", "전세", "월세", "매물", "당첨", "계약", "잔여세대"],
+  family: ["아이", "가족", "키즈", "학교", "학원", "어린이", "육아"],
+  shopping: ["상가", "쇼핑", "마트", "병원", "약국", "오픈", "매장", "창업"],
+  life: ["일상", "브이로그", "동네", "생활", "리뷰", "후기", "산책"],
+  culture: ["문화", "공연", "축제", "행사", "플리마켓", "전시", "체험", "버스킹"],
+  health: ["운동", "헬스", "수영", "러닝", "필라테스", "요가", "체육", "배드민턴", "댄스"],
+  education: ["교육", "학교", "학원", "초등학교", "중학교", "고등학교", "진학", "청소년"],
+  pet: ["반려", "애견", "강아지", "고양이", "동물병원", "펫"],
+};
+
+const TRUSTED_CHANNEL_HINTS = [
+  "B tv 뉴스", "OBS뉴스", "YTN", "연합뉴스", "KBS", "MBC", "SBS", "JTBC",
+  "인천시", "인천광역시", "인천 서구", "서구청", "국토교통부", "LH", "iH",
+];
+
+function normalizeKoText(value = ""): string {
+  return value.toLowerCase().replace(/\s+/g, "");
+}
+
+function inferYouTubeTopic(video: Pick<YouTubeVideo, "title" | "topic" | "query" | "channelName">): string {
+  const haystack = normalizeKoText(video.title);
+  if (TRUSTED_CHANNEL_HINTS.some(name => video.channelName.includes(name))) return "news";
+  let best = video.topic && YOUTUBE_TOPIC_LABELS[video.topic] ? video.topic : "life";
+  let bestScore = 0;
+  for (const [topic, keywords] of Object.entries(YOUTUBE_TOPIC_KEYWORDS)) {
+    const score = keywords.reduce((sum, keyword) => sum + (haystack.includes(normalizeKoText(keyword)) ? 1 : 0), 0);
+    if (score > bestScore) {
+      best = topic;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+function localRelevanceScore(video: Pick<YouTubeVideo, "title" | "channelName" | "query">): number {
+  const haystack = normalizeKoText(`${video.title} ${video.channelName}`);
+  if ((haystack.includes("검단산") || haystack.includes("검단산역")) && !haystack.includes("검단신도시") && !haystack.includes("인천")) {
+    return -80;
+  }
+  let score = 0;
+  for (const keyword of GEUMDAN_LOCAL_KEYWORDS) {
+    if (haystack.includes(normalizeKoText(keyword))) score += keyword.includes("검단") ? 18 : 8;
+  }
+  if (haystack.includes("김포") && haystack.includes("검단")) score += 4;
+  if (haystack.includes("계양") && haystack.includes("검단")) score += 4;
+  return Math.min(score, 60);
+}
+
+function qualityPenalty(video: Pick<YouTubeVideo, "title">): number {
+  const haystack = normalizeKoText(video.title);
+  let penalty = 0;
+  if (/010[-\s]?\d{3,4}[-\s]?\d{4}/.test(video.title) || haystack.includes("매물번호") || haystack.includes("분양문의")) penalty -= 90;
+  if (haystack.includes("빌라매매") || haystack.includes("신축빌라") || haystack.includes("상가주택") || haystack.includes("토지f")) penalty -= 90;
+  if (haystack.includes("분양권") || haystack.includes("매수타이밍") || haystack.includes("잔여세대") || haystack.includes("계약전꼭") || haystack.includes("당첨발표")) penalty -= 46;
+  if (haystack.includes("충격") || haystack.includes("대박") || haystack.includes("폭등임박")) penalty -= 36;
+  if (haystack.includes("개표") || haystack.includes("투표지") || haystack.includes("부정선거")) penalty -= 24;
+  if (haystack.includes("검단산") || haystack.includes("하남검단")) penalty -= 50;
+  return penalty;
+}
+
+function isHardRejectedYouTube(video: Pick<YouTubeVideo, "title">): boolean {
+  const haystack = normalizeKoText(video.title);
+  return /010[-\s]?\d{3,4}[-\s]?\d{4}/.test(video.title)
+    || haystack.includes("매물번호")
+    || haystack.includes("분양문의")
+    || haystack.includes("빌라매매")
+    || haystack.includes("신축빌라")
+    || haystack.includes("상가주택")
+    || haystack.includes("토지f")
+    || haystack.includes("잔여세대")
+    || haystack.includes("계약전꼭")
+    || haystack.includes("당첨발표")
+    || haystack.includes("청약당첨");
+}
+
+function freshnessScore(publishedAt?: string): number {
+  const ts = publishedAt ? new Date(publishedAt).getTime() : 0;
+  if (!Number.isFinite(ts) || ts <= 0) return 0;
+  const days = (Date.now() - ts) / 86400000;
+  if (days <= 30) return 28;
+  if (days <= 90) return 23;
+  if (days <= 180) return 17;
+  if (days <= 365) return 10;
+  if (days <= 730) return 3;
+  return -18;
+}
+
+function channelAuthorityScore(video: Pick<YouTubeVideo, "channelName" | "subscriberCount">): number {
+  const subs = video.subscriberCount ?? 0;
+  if (subs >= 500000) return 26;
+  if (subs >= 100000) return 22;
+  if (subs >= 50000) return 18;
+  if (subs >= 10000) return 13;
+  if (subs >= 3000) return 8;
+  if (TRUSTED_CHANNEL_HINTS.some(name => video.channelName.includes(name))) return 16;
+  return 0;
+}
+
+export function getYouTubeTopicLabel(topic?: string): string {
+  return topic && YOUTUBE_TOPIC_LABELS[topic] ? YOUTUBE_TOPIC_LABELS[topic] : "검단";
+}
+
+export function formatCompactCount(value?: number): string {
+  if (!value || value <= 0) return "";
+  if (value >= 10000) {
+    const rounded = value >= 100000 ? Math.round(value / 10000) : Math.round(value / 1000) / 10;
+    return `${rounded}만`;
+  }
+  if (value >= 1000) return `${Math.round(value / 100) / 10}천`;
+  return String(value);
+}
+
+export function scoreYouTubeVideo(video: YouTubeVideo): number {
+  const topic = inferYouTubeTopic(video);
+  const topicScore = YOUTUBE_TOPIC_KEYWORDS[topic]?.some(keyword => normalizeKoText(video.title).includes(normalizeKoText(keyword))) ? 8 : 0;
+  return localRelevanceScore(video) + freshnessScore(video.publishedAt) + channelAuthorityScore(video) + topicScore + qualityPenalty(video);
+}
+
+export function rankYouTubeVideos(videos: YouTubeVideo[], options: { minScore?: number; limit?: number } = {}): YouTubeVideo[] {
+  const minScore = options.minScore ?? 34;
+  const seen = new Set<string>();
+  const ranked = videos
+    .filter(video => video.videoId && !seen.has(video.videoId) && (seen.add(video.videoId), true))
+    .map(video => {
+      const topic = inferYouTubeTopic(video);
+      const localScore = localRelevanceScore(video);
+      const relevanceScore = scoreYouTubeVideo({ ...video, topic });
+      return { ...video, topic, relevanceScore, localScore };
+    })
+    .filter(video => !isHardRejectedYouTube(video) && video.localScore >= 18 && (video.relevanceScore ?? 0) >= minScore)
+    .sort((a, b) => {
+      const aDate = new Date(a.publishedAt ?? 0).getTime();
+      const bDate = new Date(b.publishedAt ?? 0).getTime();
+      const dateDiff = bDate - aDate;
+      if (Math.abs(dateDiff) > 1000 * 60 * 60 * 24 * 7) return dateDiff;
+      const scoreDiff = (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0);
+      if (scoreDiff !== 0) return scoreDiff;
+      return dateDiff;
+    });
+  return typeof options.limit === "number" ? ranked.slice(0, options.limit) : ranked;
+}
 
 // ── 캐시 ──────────────────────────────────────────────────────
 function isFresh(fetchedAt: string): boolean {
@@ -50,8 +251,16 @@ export async function fetchCachedNews(): Promise<NewsArticle[]> {
     const res = await fetch(`${BASE_PATH}/cache/news.json`, { cache: "no-store" });
     if (!res.ok) return [];
     const d = await res.json();
-    if (Array.isArray(d.articles) && d.articles.length > 0 && isFresh(d.fetchedAt)) {
-      return d.articles as NewsArticle[];
+    // DB 배치가 일시적으로 느리거나 비어 있을 때도 목업 대신
+    // 마지막으로 수집한 실제 기사 스냅샷을 즉시 노출한다.
+    if (Array.isArray(d.articles) && d.articles.length > 0) {
+      const articles = (d.articles as NewsArticle[]).map(article => ({
+        ...article,
+        title: normalizeNewsText(article.title),
+        summary: normalizeNewsText(article.summary),
+        source: normalizeNewsText(article.source),
+      }));
+      return deduplicateNewsArticles(articles, { limit: 60, maxPerSource: 3, maxHours: 96 });
     }
   } catch { /* ignore */ }
   return [];
@@ -242,9 +451,12 @@ async function fetchYouTubeDataAPI(query: string): Promise<YouTubeVideo[]> {
         id: `ytapi-${i}`, videoId,
         title: (item.snippet?.title as string) ?? `검단 영상 ${i + 1}`,
         channelName: (item.snippet?.channelTitle as string) ?? "YouTube",
+        channelId: (item.snippet?.channelId as string) ?? undefined,
         thumbnail: (item.snippet?.thumbnails?.medium?.url as string)
           ?? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         url: `https://www.youtube.com/watch?v=${videoId}`,
+        publishedAt: (item.snippet?.publishedAt as string) ?? new Date().toISOString(),
+        query,
       };
     }).filter((v: YouTubeVideo) => v.videoId);
   } catch { return []; }
@@ -273,6 +485,7 @@ async function fetchYouTubePiped(query: string): Promise<YouTubeVideo[]> {
           channelName: v.uploaderName ?? "YouTube",
           thumbnail: v.thumbnail ?? `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
           url: `https://www.youtube.com/watch?v=${videoId}`,
+          query,
         };
       }).filter(v => v.videoId.length === 11);
     } catch { continue; }
@@ -290,7 +503,7 @@ const INVIDIOUS_INSTANCES = [
 async function fetchYouTubeInvidious(query: string): Promise<YouTubeVideo[]> {
   for (const base of INVIDIOUS_INSTANCES) {
     try {
-      const apiUrl = `${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video&fields=videoId,title,author,videoThumbnails`;
+      const apiUrl = `${base}/api/v1/search?q=${encodeURIComponent(query)}&type=video&fields=videoId,title,author,authorId,publishedText,videoThumbnails`;
       const content = await corsGet(apiUrl, 8000);
       if (!content) continue;
       const items = JSON.parse(content);
@@ -305,8 +518,11 @@ async function fetchYouTubeInvidious(query: string): Promise<YouTubeVideo[]> {
           id: `iv-${i}`, videoId,
           title: (v.title as string) ?? `검단 영상 ${i + 1}`,
           channelName: (v.author as string) ?? "YouTube",
+          channelId: (v.authorId as string) ?? undefined,
           thumbnail: thumb,
           url: `https://www.youtube.com/watch?v=${videoId}`,
+          publishedAt: typeof v.publishedText === "string" ? undefined : undefined,
+          query,
         };
       }).filter(v => v.videoId.length === 11);
     } catch { continue; }
@@ -330,6 +546,7 @@ function extractVideoIdsOnly(html: string, query: string): YouTubeVideo[] {
         channelName: "YouTube",
         thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         url: `https://www.youtube.com/watch?v=${videoId}`,
+        query,
       });
       if (videos.length >= 12) break;
     }
@@ -360,8 +577,10 @@ async function fetchYouTubeHTML(query: string): Promise<YouTubeVideo[]> {
               id: `ythtml-${videos.length}`, videoId,
               title: vr.title?.runs?.[0]?.text ?? `${query} 영상 ${videos.length + 1}`,
               channelName: vr.ownerText?.runs?.[0]?.text ?? "YouTube",
+              channelId: vr.ownerText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId,
               thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
               url: `https://www.youtube.com/watch?v=${videoId}`,
+              query,
             });
             if (videos.length >= 12) break;
           }
@@ -382,23 +601,23 @@ export async function fetchYouTubeVideos(query = "검단신도시"): Promise<{ v
   // 0. Static cache
   if (query === "검단신도시") {
     const cached = await fetchCachedYouTube();
-    if (cached.length > 0) return { videos: cached, source: "캐시", ms: Math.round(performance.now() - t0) };
+    if (cached.length > 0) return { videos: rankYouTubeVideos(cached, { minScore: 24, limit: 60 }), source: "캐시", ms: Math.round(performance.now() - t0) };
   }
 
   // 1–4. Live sources — YouTube Data API first (most reliable + fast)
   //      then Piped & Invidious in parallel, then HTML fallback
   const apiResult = await fetchYouTubeDataAPI(query);
-  if (apiResult.length > 0) return { videos: apiResult, source: "YouTube API", ms: Math.round(performance.now() - t0) };
+  if (apiResult.length > 0) return { videos: rankYouTubeVideos(apiResult, { minScore: 24, limit: 40 }), source: "YouTube API", ms: Math.round(performance.now() - t0) };
 
   const [piped, invidious] = await Promise.all([
     fetchYouTubePiped(query),
     fetchYouTubeInvidious(query),
   ]);
-  if (piped.length > 0)    return { videos: piped,    source: "Piped API",     ms: Math.round(performance.now() - t0) };
-  if (invidious.length > 0) return { videos: invidious, source: "Invidious API", ms: Math.round(performance.now() - t0) };
+  if (piped.length > 0)    return { videos: rankYouTubeVideos(piped, { minScore: 24, limit: 40 }),    source: "Piped API",     ms: Math.round(performance.now() - t0) };
+  if (invidious.length > 0) return { videos: rankYouTubeVideos(invidious, { minScore: 24, limit: 40 }), source: "Invidious API", ms: Math.round(performance.now() - t0) };
 
   const html = await fetchYouTubeHTML(query);
-  return { videos: html, source: "HTML파싱", ms: Math.round(performance.now() - t0) };
+  return { videos: rankYouTubeVideos(html, { minScore: 24, limit: 40 }), source: "HTML파싱", ms: Math.round(performance.now() - t0) };
 }
 
 export async function fetchGeumdanNews(): Promise<{ articles: NewsArticle[]; source: string; ms: number }> {

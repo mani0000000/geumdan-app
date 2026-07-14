@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./mobile-form-stability.css";
 
 :root {
   --apple-blue: #0071e3;

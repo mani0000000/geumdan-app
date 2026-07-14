@@ -4,7 +4,7 @@
  * Supabase 미설정 시 public/cache/youtube.json 정적 캐시 fallback
  */
 import { supabase } from '@/lib/supabase';
-import type { YouTubeVideo } from '@/lib/api/news';
+import { rankYouTubeVideos, type YouTubeVideo } from '@/lib/api/news';
 
 function isSupabaseConfigured(): boolean {
   return Boolean(
@@ -21,10 +21,35 @@ async function fetchFromStaticCache(): Promise<YouTubeVideo[]> {
     if (!res.ok) return [];
     const d = await res.json();
     if (Array.isArray(d.videos) && d.videos.length > 0) {
-      return d.videos as YouTubeVideo[];
+      return rankYouTubeVideos(d.videos as YouTubeVideo[], { minScore: 24, limit: 80 });
     }
   } catch { /* ignore */ }
   return [];
+}
+
+type YouTubeRow = Record<string, unknown>;
+
+function mapRows(rows: YouTubeRow[]): YouTubeVideo[] {
+  return rows.map((row, i) => ({
+    id: `db-${i}`,
+    videoId: row.video_id as string,
+    title: (row.title as string) ?? '검단 영상',
+    channelName: (row.channel_name as string) ?? 'YouTube',
+    channelId: (row.channel_id as string) ?? undefined,
+    thumbnail:
+      (row.thumbnail as string) ??
+      `https://img.youtube.com/vi/${row.video_id}/mqdefault.jpg`,
+    url:
+      (row.url as string) ??
+      `https://www.youtube.com/watch?v=${row.video_id}`,
+    publishedAt: (row.published_at as string) ?? (row.fetched_at as string) ?? undefined,
+    topic: (row.topic as string) ?? undefined,
+    query: (row.query as string) ?? undefined,
+    subscriberCount: typeof row.subscriber_count === 'number' ? row.subscriber_count : undefined,
+    viewCountText: (row.view_count_text as string) ?? undefined,
+    relevanceScore: typeof row.relevance_score === 'number' ? row.relevance_score : undefined,
+    fetchedAt: (row.fetched_at as string) ?? undefined,
+  }));
 }
 
 export async function fetchYouTubeVideosFromDB(limit = 200): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
@@ -36,11 +61,33 @@ export async function fetchYouTubeVideosFromDB(limit = 200): Promise<{ videos: Y
   }
 
   try {
-    const { data, error } = await supabase
+    const advancedSelect = [
+      'video_id', 'title', 'channel_name', 'channel_id', 'thumbnail', 'url',
+      'published_at', 'topic', 'query', 'subscriber_count', 'view_count_text',
+      'relevance_score', 'fetched_at',
+    ].join(',');
+
+    const advanced = await supabase
       .from('youtube_videos')
-      .select('*')
-      .order('fetched_at', { ascending: false })
+      .select(advancedSelect)
+      .order('published_at', { ascending: false })
+      .order('relevance_score', { ascending: false })
       .limit(limit);
+
+    let data = advanced.data as YouTubeRow[] | null;
+    let error: unknown = advanced.error;
+
+    let usedLegacyShape = false;
+    if (error) {
+      const fallback = await supabase
+        .from('youtube_videos')
+        .select('video_id,title,channel_name,thumbnail,url,fetched_at')
+        .order('fetched_at', { ascending: false })
+        .limit(limit);
+      data = fallback.data as YouTubeRow[] | null;
+      error = fallback.error;
+      usedLegacyShape = true;
+    }
 
     if (error) throw error;
 
@@ -50,20 +97,13 @@ export async function fetchYouTubeVideosFromDB(limit = 200): Promise<{ videos: Y
       return { videos, source: '캐시', ms: Math.round(performance.now() - t0) };
     }
 
-    const videos: YouTubeVideo[] = data.map((row, i) => ({
-      id: `db-${i}`,
-      videoId: row.video_id as string,
-      title: (row.title as string) ?? '검단 영상',
-      channelName: (row.channel_name as string) ?? 'YouTube',
-      thumbnail:
-        (row.thumbnail as string) ??
-        `https://img.youtube.com/vi/${row.video_id}/mqdefault.jpg`,
-      url:
-        (row.url as string) ??
-        `https://www.youtube.com/watch?v=${row.video_id}`,
-    }));
+    const videos = rankYouTubeVideos(mapRows(data as YouTubeRow[]), { minScore: 24, limit });
 
-    return { videos, source: 'DB', ms: Math.round(performance.now() - t0) };
+    return {
+      videos,
+      source: usedLegacyShape ? '실시간 DB' : '큐레이션 DB',
+      ms: Math.round(performance.now() - t0),
+    };
   } catch (err) {
     console.error('[youtube-db] Supabase 오류, 정적 캐시 사용:', err);
     const videos = await fetchFromStaticCache();
