@@ -446,30 +446,59 @@ async function mapKnownSources(posts) {
   });
 }
 
+function isSchemaCompatibilityError(error) {
+  return ['42703', 'PGRST204', '42P10'].includes(error?.code)
+    || /no unique or exclusion constraint|column .* does not exist|schema cache/i.test(error?.message ?? '');
+}
+
+async function writePosts(rows) {
+  const upsert = await supabase.from('instagram_posts').upsert(rows, { onConflict: 'post_url' });
+  if (!upsert.error) return { count: rows.length, error: null };
+  if (!['42P10'].includes(upsert.error.code)
+    && !/no unique or exclusion constraint/i.test(upsert.error.message ?? '')) {
+    return { count: 0, error: upsert.error };
+  }
+
+  // Older production schemas do not have a unique index on post_url. Avoid
+  // duplicate inserts there without requiring the migration to finish first.
+  const existingUrls = new Set();
+  for (let index = 0; index < rows.length; index += 40) {
+    const urls = rows.slice(index, index + 40).map(row => row.post_url);
+    const existing = await supabase.from('instagram_posts').select('post_url').in('post_url', urls);
+    if (existing.error) return { count: 0, error: existing.error };
+    existing.data?.forEach(row => existingUrls.add(row.post_url));
+  }
+  const missing = rows.filter(row => !existingUrls.has(row.post_url));
+  if (!missing.length) return { count: rows.length, error: null };
+  const inserted = await supabase.from('instagram_posts').insert(missing);
+  return inserted.error
+    ? { count: 0, error: inserted.error }
+    : { count: rows.length, error: null };
+}
+
 async function upsertPosts(posts) {
   const valid = [...new Map(posts.filter(post => post.image_url && post.post_url).map(post => [post.post_url, post])).values()];
   if (!valid.length) return 0;
-  const { error } = await supabase.from('instagram_posts').upsert(valid, { onConflict: 'post_url' });
-  if (error && ['42703', 'PGRST204'].includes(error.code)) {
-    const extendedColumns = [
-      'account_name', 'post_url', 'image_url', 'caption', 'posted_at', 'shortcode',
-      'media_type', 'is_reel', 'like_count', 'comment_count', 'view_count', 'hashtags', 'username',
-    ];
-    const compatible = valid.map(post => Object.fromEntries(
-      Object.entries(post).filter(([key]) => extendedColumns.includes(key)),
-    ));
-    const fallback = await supabase.from('instagram_posts').upsert(compatible, { onConflict: 'post_url' });
-    if (!fallback.error) return compatible.length;
-    const minimal = compatible.map(post => ({
-      account_name: post.account_name, post_url: post.post_url, image_url: post.image_url,
-      caption: post.caption, posted_at: post.posted_at,
-    }));
-    const last = await supabase.from('instagram_posts').upsert(minimal, { onConflict: 'post_url' });
-    if (last.error) throw new Error(`게시물 저장 실패: ${last.error.message}`);
-    return minimal.length;
+  const extendedColumns = [
+    'account_name', 'post_url', 'image_url', 'caption', 'posted_at', 'shortcode',
+    'media_type', 'is_reel', 'like_count', 'comment_count', 'view_count', 'hashtags', 'username',
+  ];
+  const compatible = valid.map(post => Object.fromEntries(
+    Object.entries(post).filter(([key]) => extendedColumns.includes(key)),
+  ));
+  const minimal = compatible.map(post => ({
+    account_name: post.account_name, post_url: post.post_url, image_url: post.image_url,
+    caption: post.caption, posted_at: post.posted_at,
+  }));
+
+  let lastError = null;
+  for (const rows of [valid, compatible, minimal]) {
+    const result = await writePosts(rows);
+    if (!result.error) return result.count;
+    lastError = result.error;
+    if (!isSchemaCompatibilityError(result.error)) break;
   }
-  if (error) throw new Error(`게시물 저장 실패: ${error.message}`);
-  return valid.length;
+  throw new Error(`게시물 저장 실패: ${lastError?.message ?? '알 수 없는 저장 오류'}`);
 }
 
 async function updateSourceStatus(source, status, error = null) {
