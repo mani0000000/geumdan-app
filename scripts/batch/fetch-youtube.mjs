@@ -87,20 +87,39 @@ async function supportsCurationSchema() {
 
 async function pruneOutsideCollection(keepIds) {
   const keep = new Set(keepIds);
-  const { data, error } = await supabase.from('youtube_videos').select('video_id');
-  if (error) {
-    console.warn(`  ⚠️ 이전 영상 정리 생략: ${error.message}`);
-    return 0;
+  const allRows = [];
+  const pageSize = 1000;
+
+  // PostgREST의 서버측 최대 1,000행 제한을 넘는 누적 데이터도 모두 읽는다.
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from('youtube_videos')
+      .select('video_id')
+      .order('video_id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error) {
+      console.warn(`  ⚠️ 이전 영상 정리 생략: ${error.message}`);
+      return 0;
+    }
+    allRows.push(...(data ?? []));
+    if ((data?.length ?? 0) < pageSize) break;
   }
-  const stale = (data ?? []).map(row => row.video_id).filter(id => id && !keep.has(id));
+
+  const stale = allRows.map(row => row.video_id).filter(id => id && !keep.has(id));
+  let deleted = 0;
   for (let index = 0; index < stale.length; index += 80) {
-    const removed = await supabase.from('youtube_videos').delete().in('video_id', stale.slice(index, index + 80));
+    const batch = stale.slice(index, index + 80);
+    const removed = await supabase
+      .from('youtube_videos')
+      .delete({ count: 'exact' })
+      .in('video_id', batch);
     if (removed.error) {
       console.warn(`  ⚠️ 이전 영상 정리 실패: ${removed.error.message}`);
       break;
     }
+    deleted += removed.count ?? batch.length;
   }
-  return stale.length;
+  return deleted;
 }
 
 async function saveBatchStatus(status) {
