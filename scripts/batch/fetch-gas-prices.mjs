@@ -14,12 +14,15 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 
 const SUPABASE_URL        = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const OPINET_KEY          = (process.env.OPINET_API_KEY ?? 'F260518486').trim();
+const CACHE_OUTPUT        = process.env.BATCH_CACHE_OUTPUT ?? '';
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+if ((!SUPABASE_URL || !SUPABASE_SERVICE_KEY) && !CACHE_OUTPUT) {
   console.error('❌ Missing: SUPABASE_URL, SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
@@ -35,10 +38,17 @@ function makeFetch(key) {
   };
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-  global: { fetch: makeFetch(SUPABASE_SERVICE_KEY) },
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = SUPABASE_URL && SUPABASE_SERVICE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+      global: { fetch: makeFetch(SUPABASE_SERVICE_KEY) },
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null;
+
+function isRestrictedProjectError(error) {
+  const message = String(error?.message ?? error ?? '');
+  return /exceed(?:ed)?_cached_egress_quota|project is restricted|spend cap/i.test(message);
+}
 
 // ── WGS84 → KATEC (오피넷 API 파라미터) ─────────────────────────
 const D2R = Math.PI / 180;
@@ -178,6 +188,75 @@ function extractArea(address) {
   return /서구/.test(address) ? '서구' : '인근';
 }
 
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * D2R;
+  const dLng = (lng2 - lng1) * D2R;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * D2R) * Math.cos(lat2 * D2R) * Math.sin(dLng / 2) ** 2;
+  return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)) * 10) / 10;
+}
+
+function isGeumdanServiceArea(entry) {
+  const station = entry.station;
+  const address = station.NEW_ADR || station.VAN_ADR || '';
+  if (GEUMDAN_KEYWORDS.some(keyword => address.includes(keyword))) return true;
+
+  // aroundAll 응답은 호출 환경에 따라 주소를 생략하기도 한다. 이 경우
+  // KATEC 좌표를 기준으로 검단·김포 생활권만 남겨 전체 삭제를 방지한다.
+  const point = katecToWgs84(Number(station.GIS_X_COOR), Number(station.GIS_Y_COOR));
+  return Boolean(point
+    && point.lat >= 37.48 && point.lat <= 37.72
+    && point.lng >= 126.58 && point.lng <= 126.83);
+}
+
+async function writeGasCache(stationMap, fetchedAt) {
+  if (!CACHE_OUTPUT) return false;
+  const stations = Array.from(stationMap, ([uniId, entry]) => {
+    const station = entry.station;
+    const point = katecToWgs84(Number(station.GIS_X_COOR), Number(station.GIS_Y_COOR));
+    if (!point) return null;
+    const address = station.NEW_ADR || station.VAN_ADR || '검단·김포 생활권';
+    const brandCode = BRAND_META[station.POLL_DIV_CD] ? station.POLL_DIV_CD : 'ETC';
+    const meta = BRAND_META[brandCode];
+    return {
+      id: `opinet-${uniId}`,
+      name: station.OS_NM,
+      brandCode,
+      brandName: meta.name,
+      brandColor: meta.color,
+      brandBg: meta.bg,
+      brandShort: meta.short,
+      address,
+      distanceKm: haversineKm(37.56, 126.69, point.lat, point.lng),
+      lat: point.lat,
+      lng: point.lng,
+      area: extractArea(address),
+      isSelf: /셀프/i.test(station.OS_NM),
+      isAlttul: ['RTO', 'RTX', 'NHO'].includes(brandCode),
+      prices: {
+        ...(entry.gasoline > 0 ? { gasoline: Number(entry.gasoline) } : {}),
+        ...(entry.diesel > 0 ? { diesel: Number(entry.diesel) } : {}),
+        ...(entry.lpg > 0 ? { lpg: Number(entry.lpg) } : {}),
+      },
+      priceStatus: 'cached',
+      priceReason: '오피넷 정기 수집 가격',
+      matchedName: station.OS_NM,
+    };
+  }).filter(Boolean);
+
+  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
+  await writeFile(CACHE_OUTPUT, `${JSON.stringify({
+    stations,
+    source: 'cache',
+    timestamp: fetchedAt,
+    success: stations.length > 0,
+    message: `오피넷 정기 수집 ${stations.length}개`,
+  }, null, 2)}\n`, 'utf8');
+  console.log(`  ✅ 정적 캐시 저장: ${CACHE_OUTPUT} (${stations.length}개)`);
+  return stations.length > 0;
+}
+
 // ── 이름 정규화 + Jaccard 유사도 ────────────────────────────────
 function normName(s) {
   return s.toLowerCase()
@@ -268,18 +347,35 @@ async function main() {
     process.exit(0);
   }
 
-  // 주소 기반 필터: 검단 + 인천서구 + 김포만
+  // 주소가 있으면 행정구역, 없으면 좌표 기반으로 검단 + 김포 생활권 필터
   for (const [id, entry] of stationMap) {
-    const addr = entry.station.NEW_ADR || entry.station.VAN_ADR || '';
-    if (!GEUMDAN_KEYWORDS.some(k => addr.includes(k))) stationMap.delete(id);
+    if (!isGeumdanServiceArea(entry)) stationMap.delete(id);
   }
   console.log(`  ✅ 고유 주유소 (검단+인근): ${stationMap.size}개`);
+
+  if (stationMap.size === 0) {
+    throw new Error('오피넷 응답은 받았지만 검단 생활권 좌표로 변환된 주유소가 없습니다.');
+  }
+
+  const collectedAt = new Date().toISOString();
+  const cacheSaved = await writeGasCache(stationMap, collectedAt);
+  if (!supabase) {
+    console.log(`✅ 완료 — DB 없이 오피넷 ${stationMap.size}개 캐시 저장`);
+    return;
+  }
 
   // 2. 기존 DB 레코드 로드
   const { data: dbRows, error: dbLoadErr } = await supabase
     .from('gas_stations')
     .select('id,opinet_id,name,sort_order');
-  if (dbLoadErr) throw new Error(`DB 로드 실패: ${dbLoadErr.message}`);
+  if (dbLoadErr) {
+    if (isRestrictedProjectError(dbLoadErr) && cacheSaved) {
+      console.warn(`  ⚠️ Supabase 제한 감지 — 정적 캐시로 수집 결과 보존: ${dbLoadErr.message}`);
+      console.log('✅ DB 복구 전까지 data-cache 폴백으로 서비스합니다.');
+      return;
+    }
+    throw new Error(`DB 로드 실패: ${dbLoadErr.message}`);
+  }
 
   const dbByOpinetId = new Map();
   const dbRawRows = [];
@@ -293,7 +389,7 @@ async function main() {
   console.log(`  ✅ DB 기존 레코드: ${dbRawRows.length}개`);
 
   // 3. 각 오피넷 주유소 upsert
-  const now = new Date().toISOString();
+  const now = collectedAt;
   let inserted = 0, updated = 0, skipped = 0;
   let sortCounter = maxSort;
 

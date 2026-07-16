@@ -4,7 +4,7 @@ on:
     - cron: '0 * * * *'  # every hour
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 concurrency:
   group: geumdan-hourly-collectors
   cancel-in-progress: false
@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22', cache: 'npm' }
       - run: npm ci
       - run: node scripts/batch/fetch-news.mjs
         env:
@@ -23,31 +23,60 @@ jobs:
           NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
           NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
 
-  fetch-youtube:
+  fetch-youtube-gas-cache:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22', cache: 'npm' }
       - run: npm ci
-      - run: node scripts/batch/fetch-youtube.mjs
+      - name: 검단 YouTube 수집 및 복구 캐시 생성
+        run: node scripts/batch/fetch-youtube.mjs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-
-  fetch-gas-prices:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: '20' }
-      - run: npm ci
-      - run: node scripts/batch/fetch-gas-prices.mjs
+          BATCH_CACHE_OUTPUT: public/cache/youtube.json
+      - name: 오피넷 가격 수집 및 복구 캐시 생성
+        run: node scripts/batch/fetch-gas-prices.mjs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           OPINET_API_KEY: ${{ secrets.OPINET_API_KEY }}
+          BATCH_CACHE_OUTPUT: public/cache/gas.json
+      - name: DB 장애용 캐시 브랜치 갱신
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache_dir="$(mktemp -d)"
+          cp public/cache/youtube.json "$cache_dir/youtube.json"
+          cp public/cache/gas.json "$cache_dir/gas.json"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin data-cache >/dev/null 2>&1; then
+            git fetch origin data-cache
+            git reset --hard
+            git clean -fd
+            git checkout --detach FETCH_HEAD
+          else
+            git reset --hard
+            git clean -fd
+            git checkout --orphan data-cache
+            git rm -rf .
+          fi
+
+          mkdir -p cache
+          cp "$cache_dir/youtube.json" cache/youtube.json
+          cp "$cache_dir/gas.json" cache/gas.json
+          git add cache/youtube.json cache/gas.json
+          if git diff --cached --quiet; then
+            echo "캐시 변경 없음"
+            exit 0
+          fi
+          git commit -m "chore(cache): refresh resilient content [skip ci]"
+          git push origin HEAD:data-cache
 
   fetch-instagram:
     runs-on: ubuntu-latest
@@ -55,7 +84,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22', cache: 'npm' }
       - run: npm ci
       - run: node scripts/batch/fetch-instagram.mjs
         env:

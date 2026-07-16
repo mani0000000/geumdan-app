@@ -10,8 +10,11 @@
  * - 맛집·카페·소식·가볼만한 곳·교통·부동산·가족·상가·생활 주제별 검색
  */
 import { createClient } from '@supabase/supabase-js';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
 import {
   fetchCuratedYouTubeVideos,
+  toCacheVideo,
   toSupabaseRow,
   YOUTUBE_TOPIC_GROUPS,
 } from './youtube-curation.mjs';
@@ -19,8 +22,9 @@ import {
 const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY ?? process.env.NEXT_PUBLIC_YOUTUBE_API_KEY ?? '';
+const CACHE_OUTPUT = process.env.BATCH_CACHE_OUTPUT ?? '';
 
-if (!SUPABASE_URL || !SUPABASE_KEY) {
+if ((!SUPABASE_URL || !SUPABASE_KEY) && !CACHE_OUTPUT) {
   console.error('❌ SUPABASE_URL or SUPABASE_SERVICE_KEY not set');
   process.exit(1);
 }
@@ -35,10 +39,29 @@ function makeFetch(key) {
   };
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
-  global: { fetch: makeFetch(SUPABASE_KEY) },
-  auth: { autoRefreshToken: false, persistSession: false },
-});
+const supabase = SUPABASE_URL && SUPABASE_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_KEY, {
+      global: { fetch: makeFetch(SUPABASE_KEY) },
+      auth: { autoRefreshToken: false, persistSession: false },
+    })
+  : null;
+
+function isRestrictedProjectError(error) {
+  const message = String(error?.message ?? error ?? '');
+  return /exceed(?:ed)?_cached_egress_quota|project is restricted|spend cap/i.test(message);
+}
+
+async function writeCache(videos, fetchedAt) {
+  if (!CACHE_OUTPUT) return false;
+  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
+  await writeFile(CACHE_OUTPUT, `${JSON.stringify({
+    fetchedAt,
+    source: 'youtube-curation',
+    videos: videos.map((video, index) => toCacheVideo(video, index)),
+  }, null, 2)}\n`, 'utf8');
+  console.log(`  ✅ 정적 캐시 저장: ${CACHE_OUTPUT} (${videos.length}개)`);
+  return true;
+}
 
 function stripColumn(rows, column) {
   return rows.map(row => {
@@ -49,6 +72,7 @@ function stripColumn(rows, column) {
 }
 
 async function upsertWithColumnFallback(rows) {
+  if (!supabase) return { ok: false, error: new Error('Supabase not configured') };
   let currentRows = rows;
   const skippedColumns = [];
 
@@ -78,6 +102,7 @@ async function upsertWithColumnFallback(rows) {
 }
 
 async function supportsCurationSchema() {
+  if (!supabase) return false;
   const { error } = await supabase
     .from('youtube_videos')
     .select('published_at,topic,query,relevance_score')
@@ -86,6 +111,7 @@ async function supportsCurationSchema() {
 }
 
 async function pruneOutsideCollection(keepIds) {
+  if (!supabase) return 0;
   const keep = new Set(keepIds);
   const allRows = [];
   const pageSize = 1000;
@@ -123,6 +149,7 @@ async function pruneOutsideCollection(keepIds) {
 }
 
 async function saveBatchStatus(status) {
+  if (!supabase) return;
   const rows = [
     { key: 'youtube_last_collected_at', value: new Date().toISOString() },
     { key: 'youtube_last_status', value: JSON.stringify(status) },
@@ -156,6 +183,13 @@ if (videos.length === 0) {
 }
 
 const now = new Date().toISOString();
+const cacheSaved = await writeCache(videos, now);
+
+if (!supabase) {
+  console.log(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s): DB 없이 ${videos.length}개 캐시 저장`);
+  process.exit(0);
+}
+
 const advancedSchema = await supportsCurationSchema();
 const rows = advancedSchema
   ? videos.map(video => toSupabaseRow(video, now))
@@ -179,8 +213,14 @@ if (advancedSchema) {
 }
 
 if (!result.ok) {
-  console.error('❌ Supabase upsert 실패:', result.error?.message ?? result.error);
+  const restricted = isRestrictedProjectError(result.error);
+  const label = restricted && cacheSaved ? '⚠️ Supabase 제한 감지 — 정적 캐시로 수집 결과 보존:' : '❌ Supabase upsert 실패:';
+  console.error(label, result.error?.message ?? result.error);
   await saveBatchStatus({ videos: 0, errors: 1, reason: result.error?.message ?? 'upsert-failed' });
+  if (restricted && cacheSaved) {
+    console.log('✅ DB 복구 전까지 data-cache 폴백으로 서비스합니다.');
+    process.exit(0);
+  }
   process.exit(1);
 }
 
