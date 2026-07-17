@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 const BUCKET = "admin-images";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://plwpfnbhyzblgvliiole.supabase.co";
 const DEFAULT_ANON  = "";
-const MAX_BASE64_BYTES = 8 * 1024 * 1024; // 8MB — data URL 폴백 허용 상한
+const MAX_IMAGE_BYTES  = 10 * 1024 * 1024;
 const MAX_VIDEO_BYTES  = 100 * 1024 * 1024; // 100MB — 동영상 최대 크기
 
 const IMAGE_EXTS = ["jpg","jpeg","png","gif","webp","avif"];
@@ -124,9 +124,9 @@ export async function POST(req: NextRequest) {
         { status: 400 },
       );
     }
-    if (!isVideo && bytes.byteLength > MAX_BASE64_BYTES) {
+    if (!isVideo && bytes.byteLength > MAX_IMAGE_BYTES) {
       return NextResponse.json(
-        { error: `이미지는 최대 ${MAX_BASE64_BYTES / 1024 / 1024}MB까지 업로드할 수 있어요.` },
+        { error: `이미지는 최대 ${MAX_IMAGE_BYTES / 1024 / 1024}MB까지 업로드할 수 있어요.` },
         { status: 400 },
       );
     }
@@ -139,11 +139,13 @@ export async function POST(req: NextRequest) {
       ? candidateKeys().map((key) => ({ apiKey: key, bearer: key }))
       : anonKey && userToken ? [{ apiKey: anonKey, bearer: userToken }] : [];
     let bucketCreated = false;
+    let lastFailure: { status: number; error: string } | null = null;
 
     // ── 1. Supabase Storage 업로드 시도 ──────────────────────
     for (const { apiKey, bearer } of credentials) {
       const result = await tryStorageUpload(apiKey, bearer, path, bytes, contentType);
       if (result.ok) return NextResponse.json({ url: result.url });
+      lastFailure = result;
 
       console.warn("[upload] Storage 실패:", result.status, result.error);
 
@@ -159,18 +161,16 @@ export async function POST(req: NextRequest) {
       if (result.status !== 401 && result.status !== 403) break;
     }
 
-    // ── 2. Storage 실패 → base64 data URL 폴백 (이미지만) ────
-    // 동영상은 base64 폴백을 쓰지 않는다 — payload가 너무 커서 DB/네트워크에 부담
-    if (isAdminUpload && !isVideo && bytes.byteLength <= MAX_BASE64_BYTES) {
-      const base64 = Buffer.from(bytes).toString("base64");
-      const dataUrl = `data:${contentType};base64,${base64}`;
-      console.log("[upload] base64 폴백 사용:", file.name, bytes.byteLength, "bytes");
-      return NextResponse.json({ url: dataUrl });
-    }
-
+    const restricted = lastFailure?.status === 402
+      || /exceed(?:ed)?_[a-z_]*quota|service.+restricted/i.test(lastFailure?.error ?? "");
     return NextResponse.json(
-      { error: "업로드에 실패했어요. Supabase Storage 설정과 권한을 확인해주세요." },
-      { status: 500 },
+      {
+        error: restricted
+          ? "현재 이미지 저장소 사용량 제한으로 업로드할 수 없습니다. 연결 복구 후 다시 시도해 주세요."
+          : "이미지를 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+        code: restricted ? "SERVICE_RESTRICTED" : "UPLOAD_FAILED",
+      },
+      { status: restricted ? 503 : 502 },
     );
   } catch (err) {
     console.error("[upload]", err);

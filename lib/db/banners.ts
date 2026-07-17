@@ -20,6 +20,11 @@ export interface Banner {
   created_at: string;
 }
 
+function withoutEmbeddedImage<T extends { image_url?: string | null }>(banner: T): T {
+  if (!banner.image_url?.startsWith("data:image/")) return banner;
+  return { ...banner, image_url: null };
+}
+
 export async function fetchActiveBanners(
   pageType?: "home" | "stores"
 ): Promise<Banner[]> {
@@ -36,30 +41,30 @@ export async function fetchActiveBanners(
   }
   const { data, error } = await query;
   if (error) return [];
-  return (data ?? []) as Banner[];
+  return ((data ?? []) as Banner[]).map(withoutEmbeddedImage);
 }
 
 // ── Admin ───────────────────────────────────────────────────────
 
 export async function adminFetchBanners(): Promise<Banner[]> {
-  return adminApiGet<Banner>("banners", { order: "sort_order" });
+  const banners = await adminApiGet<Banner>("banners", { order: "sort_order" });
+  return banners.map(withoutEmbeddedImage);
 }
 
 export async function adminCreateBanner(
   b: Omit<Banner, "id" | "created_at">
 ): Promise<void> {
   const id = "bnr_" + Date.now().toString(36);
-  await adminApiPost("banners", "POST", [{ ...b, id }]);
+  await adminApiPost("banners", "POST", [{ ...withoutEmbeddedImage(b), id }]);
 }
 
 export async function adminUpdateBanner(
   id: string,
   data: Partial<Omit<Banner, "id" | "created_at">>
 ): Promise<void> {
-  await adminApiPost("banners", "PATCH", data, { eq: `id=eq.${id}` });
+  await adminApiPost("banners", "PATCH", withoutEmbeddedImage(data), { eq: `id=eq.${id}` });
 }
 
 export async function adminDeleteBanner(id: string): Promise<void> {
   await adminApiPost("banners", "DELETE", null, { eq: `id=eq.${id}` });
 }
-

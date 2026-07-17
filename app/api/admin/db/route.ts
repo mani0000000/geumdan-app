@@ -29,6 +29,26 @@ const SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || "";
 // 서버 인스턴스 내 작동 확인된 키 캐시 (재시작 시 초기화)
 let _cachedKey: string | null = null;
 
+const SERVICE_RESTRICTED_MESSAGE =
+  "현재 데이터 저장소 사용량 제한으로 관리자 기능을 잠시 이용할 수 없습니다. 연결 복구 후 다시 시도해 주세요.";
+
+function upstreamErrorResponse(status: number, raw: string, action: "read" | "write") {
+  const restricted = status === 402 || /exceed(?:ed)?_[a-z_]*quota|service.+restricted/i.test(raw);
+  if (restricted) {
+    return NextResponse.json(
+      { error: SERVICE_RESTRICTED_MESSAGE, code: "SERVICE_RESTRICTED", retryable: true },
+      { status: 503 },
+    );
+  }
+  const message = action === "read"
+    ? "데이터를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요."
+    : "변경 내용을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+  return NextResponse.json(
+    { error: message, code: "UPSTREAM_ERROR", retryable: status >= 500 },
+    { status: status >= 400 && status < 600 ? status : 502 },
+  );
+}
+
 function candidateKeys(): string[] {
   return SERVICE_KEY.length > 10 ? [SERVICE_KEY] : [];
 }
@@ -114,7 +134,7 @@ export async function GET(req: NextRequest) {
   if (!res.ok) {
     const err = await res.text();
     console.error("[admin/db GET]", table, res.status, err.slice(0, 200));
-    return NextResponse.json({ error: `${res.status} — ${err.slice(0, 200)}` }, { status: res.status });
+    return upstreamErrorResponse(res.status, err, "read");
   }
   const data = await res.json();
   return NextResponse.json({ data });
@@ -169,7 +189,7 @@ export async function POST(req: NextRequest) {
     }
 
     console.error("[admin/db POST]", table, method, res.status, errText.slice(0, 200));
-    return NextResponse.json({ error: `${res.status} — ${errText.slice(0, 200)}` }, { status: res.status });
+    return upstreamErrorResponse(res.status, errText, "write");
   }
 
   return NextResponse.json({ error: "너무 많은 컬럼 오류" }, { status: 500 });

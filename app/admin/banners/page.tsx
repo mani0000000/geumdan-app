@@ -2,13 +2,33 @@
 import { useState, useEffect } from "react";
 import {
   Plus, Pencil, Trash2, Eye, EyeOff, ChevronUp, ChevronDown,
-  Image as ImageIcon, X, Loader2, AlertCircle, CheckCircle2,
+  Image as ImageIcon, X, Loader2, AlertCircle, CheckCircle2, RefreshCw,
 } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBanners, adminCreateBanner, adminUpdateBanner, adminDeleteBanner,
   type Banner,
 } from "@/lib/db/banners";
+import { adminErrorMessage, isAdminServiceRestricted } from "@/lib/db/admin-api";
+
+const BANNER_CACHE_KEY = "admin_banners_last_success_v1";
+
+function readBannerCache(): Banner[] {
+  try {
+    const value = localStorage.getItem(BANNER_CACHE_KEY);
+    return value ? JSON.parse(value) as Banner[] : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeBannerCache(banners: Banner[]) {
+  try {
+    localStorage.setItem(BANNER_CACHE_KEY, JSON.stringify(banners));
+  } catch {
+    // 브라우저 저장공간이 가득 찬 경우에도 서버 데이터 표시는 유지한다.
+  }
+}
 
 const BADGE_PRESETS = ["SALE", "NEW", "HOT", "EVENT", "FREE", "COUPON", "GIFT"];
 const BADGE_COLOR_PRESETS = [
@@ -100,9 +120,9 @@ function BannerPreview({ form }: { form: FormData }) {
 }
 
 function BannerRow({
-  b, idx, total, deletingId, onMoveUp, onMoveDown, onToggle, onEdit, onDelete,
+  b, idx, total, deletingId, disabled, onMoveUp, onMoveDown, onToggle, onEdit, onDelete,
 }: {
-  b: Banner; idx: number; total: number; deletingId: string | null;
+  b: Banner; idx: number; total: number; deletingId: string | null; disabled: boolean;
   onMoveUp: () => void; onMoveDown: () => void;
   onToggle: () => void; onEdit: () => void; onDelete: () => void;
 }) {
@@ -139,22 +159,22 @@ function BannerRow({
         </p>
       </div>
       <div className="shrink-0 flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100">
-        <button onClick={onMoveUp} disabled={idx === 0}
+        <button onClick={onMoveUp} disabled={disabled || idx === 0}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
           <ChevronUp size={16} className="text-gray-500" />
         </button>
-        <button onClick={onMoveDown} disabled={idx === total - 1}
+        <button onClick={onMoveDown} disabled={disabled || idx === total - 1}
           className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-20">
           <ChevronDown size={16} className="text-gray-500" />
         </button>
-        <button onClick={onToggle} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+        <button onClick={onToggle} disabled={disabled} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30">
           {b.active ? <Eye size={15} className="text-[#3182F6]" /> : <EyeOff size={15} className="text-gray-400" />}
         </button>
-        <button onClick={onEdit} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100">
+        <button onClick={onEdit} disabled={disabled} className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 disabled:opacity-30">
           <Pencil size={14} className="text-gray-500" />
         </button>
-        <button onClick={onDelete} disabled={deletingId === b.id}
-          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50">
+        <button onClick={onDelete} disabled={disabled || deletingId === b.id}
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-red-50 disabled:opacity-30">
           {deletingId === b.id
             ? <Loader2 size={14} className="animate-spin text-gray-400" />
             : <Trash2 size={14} className="text-red-400" />}
@@ -192,6 +212,8 @@ export default function AdminBannersPage() {
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [usingCache, setUsingCache] = useState(false);
 
   function showToast(msg: string, ok = true) {
     setToast({ msg, ok });
@@ -200,10 +222,18 @@ export default function AdminBannersPage() {
 
   async function reload() {
     setLoading(true);
+    setLoadError(null);
     try {
-      setBanners(await adminFetchBanners());
+      const rows = await adminFetchBanners();
+      setBanners(rows);
+      writeBannerCache(rows);
+      setUsingCache(false);
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "데이터 로드 실패 — 콘솔 확인", false);
+      const cached = readBannerCache();
+      setBanners(cached);
+      setUsingCache(cached.length > 0);
+      setLoadError(adminErrorMessage(e, "배너 목록을 불러오지 못했습니다."));
+      if (!isAdminServiceRestricted(e)) console.error("[admin/banners] load failed", e);
     } finally {
       setLoading(false);
     }
@@ -244,7 +274,7 @@ export default function AdminBannersPage() {
       const payload = {
         ...form,
         subtitle: form.subtitle || null,
-        image_url: form.image_url || null,
+        image_url: form.image_url && !form.image_url.startsWith("data:image/") ? form.image_url : null,
         link_url: form.link_url || null,
         badge: form.badge || null,
         starts_at: fromLocalInput(form.starts_at),
@@ -260,7 +290,7 @@ export default function AdminBannersPage() {
       setShowForm(false);
       await reload();
     } catch (e) {
-      showToast(e instanceof Error ? e.message : "저장 실패", false);
+      showToast(adminErrorMessage(e, "배너를 저장하지 못했습니다."), false);
     } finally { setSaving(false); }
   }
 
@@ -271,7 +301,7 @@ export default function AdminBannersPage() {
       await adminDeleteBanner(id);
       showToast("배너가 삭제됐어요");
       await reload();
-    } catch { showToast("삭제 실패", false); }
+    } catch (e) { showToast(adminErrorMessage(e, "배너를 삭제하지 못했습니다."), false); }
     finally { setDeletingId(null); }
   }
 
@@ -279,7 +309,7 @@ export default function AdminBannersPage() {
     try {
       await adminUpdateBanner(b.id, { active: !b.active });
       await reload();
-    } catch { showToast("변경 실패", false); }
+    } catch (e) { showToast(adminErrorMessage(e, "노출 상태를 변경하지 못했습니다."), false); }
   }
 
   async function moveOrder(b: Banner, dir: -1 | 1) {
@@ -293,13 +323,14 @@ export default function AdminBannersPage() {
         adminUpdateBanner(target.id, { sort_order: b.sort_order }),
       ]);
       await reload();
-    } catch { showToast("순서 변경 실패", false); }
+    } catch (e) { showToast(adminErrorMessage(e, "노출 순서를 변경하지 못했습니다."), false); }
   }
 
   const activeCount = banners.filter(b => {
     const now = Date.now();
     return b.active && new Date(b.starts_at).getTime() <= now && new Date(b.ends_at).getTime() >= now;
   }).length;
+  const serviceUnavailable = loadError !== null;
 
   return (
     <div className="p-4 md:p-8 max-w-4xl">
@@ -313,12 +344,35 @@ export default function AdminBannersPage() {
         </div>
         <button
           onClick={openCreate}
-          disabled={banners.length >= 20}
+          disabled={serviceUnavailable || banners.length >= 20}
+          title={serviceUnavailable ? "데이터 저장소 연결 후 추가할 수 있습니다" : undefined}
           className="flex items-center gap-2 h-10 px-4 bg-[#3182F6] text-white rounded-xl text-[14px] font-bold active:opacity-80 disabled:opacity-40"
         >
           <Plus size={16} />새 배너
         </button>
       </div>
+
+      {loadError && (
+        <div className="mb-5 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3.5 text-amber-950">
+          <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100">
+            <AlertCircle size={17} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[14px] font-extrabold">배너 서버 연결을 확인하고 있어요</p>
+            <p className="mt-0.5 text-[12px] leading-relaxed text-amber-800">
+              {loadError}{usingCache ? " 마지막으로 불러온 목록을 읽기 전용으로 표시합니다." : " 연결 전에는 추가·수정이 제한됩니다."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={reload}
+            disabled={loading}
+            className="flex h-9 shrink-0 items-center gap-1.5 rounded-xl bg-white px-3 text-[12px] font-bold text-amber-900 shadow-sm disabled:opacity-50"
+          >
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} /> 다시 연결
+          </button>
+        </div>
+      )}
 
       {/* 배너 목록 */}
       {loading ? (
@@ -328,14 +382,16 @@ export default function AdminBannersPage() {
       ) : banners.length === 0 ? (
         <div className="flex flex-col items-center py-16 gap-2 text-gray-400">
           <ImageIcon size={36} />
-          <p className="text-[14px]">배너가 없습니다. 새 배너를 추가해 보세요.</p>
+          <p className="text-[14px]">
+            {serviceUnavailable ? "서버 연결 후 배너 목록을 표시할 수 있어요." : "배너가 없습니다. 새 배너를 추가해 보세요."}
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
           {banners.map((b, idx) => (
             <BannerRow
               key={b.id}
-              b={b} idx={idx} total={banners.length} deletingId={deletingId}
+              b={b} idx={idx} total={banners.length} deletingId={deletingId} disabled={serviceUnavailable}
               onMoveUp={() => moveOrder(b, -1)}
               onMoveDown={() => moveOrder(b, 1)}
               onToggle={() => toggleActive(b)}
