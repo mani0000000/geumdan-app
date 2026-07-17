@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+import { mkdir, writeFile } from 'node:fs/promises';
+import { dirname } from 'node:path';
+
 /**
  * fetch-weather.mjs — 기상청 API → Supabase weather_cache 저장
  * 30분마다 GitHub Actions에서 실행
@@ -11,11 +14,8 @@
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const KMA_KEY      = process.env.DATA_GO_KR_API_KEY ?? '';
-
-if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('❌ SUPABASE_URL / SUPABASE_SERVICE_KEY 환경변수 필요');
-  process.exit(1);
-}
+const CACHE_OUTPUT = process.env.BATCH_CACHE_OUTPUT ?? '';
+const canSaveToSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 // ── 기상청 격자 (검단신도시) ──────────────────────────────────
 const NX = 54;
@@ -272,6 +272,19 @@ async function saveToSupabase(data) {
   }
 }
 
+async function writeWeatherCache(data) {
+  if (!CACHE_OUTPUT) return false;
+  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
+  await writeFile(CACHE_OUTPUT, `${JSON.stringify({ timestamp: data.fetchedAt, weather: data }, null, 2)}\n`, 'utf8');
+  console.log(`  ✓ 복구 캐시 저장: ${CACHE_OUTPUT}`);
+  return true;
+}
+
+function isSupabaseRestriction(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return /Supabase 저장 실패:\s*402|exceed(?:ed)?_[a-z_]*quota|service.+restricted/i.test(message);
+}
+
 // 오래된 데이터 정리 (3일 이상)
 async function cleanupOld() {
   const cutoff = new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString();
@@ -300,7 +313,21 @@ if (KMA_KEY) {
   console.log(`  ✓ Open-Meteo (키 없음): ${data.temp}°C`);
 }
 
-await saveToSupabase(data);
-await cleanupOld();
+const cacheSaved = await writeWeatherCache(data);
+
+if (canSaveToSupabase) {
+  try {
+    await saveToSupabase(data);
+    await cleanupOld();
+    console.log('  ✓ Supabase 저장 완료');
+  } catch (error) {
+    if (!cacheSaved || !isSupabaseRestriction(error)) throw error;
+    console.warn('  ⚠️  Supabase 사용량 제한: 복구 캐시로 서비스를 계속합니다.');
+  }
+} else if (cacheSaved) {
+  console.warn('  ⚠️  Supabase 환경변수 없음: 캐시 전용으로 완료합니다.');
+} else {
+  throw new Error('SUPABASE_URL / SUPABASE_SERVICE_KEY 또는 BATCH_CACHE_OUTPUT이 필요합니다.');
+}
 
 console.log(`✅ 완료 (${Date.now() - t0}ms): ${data.source} ${data.temp}°C ${data.emoji}`);

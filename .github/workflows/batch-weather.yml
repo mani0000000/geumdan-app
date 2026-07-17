@@ -2,8 +2,15 @@ name: Batch - Weather (30분)
 
 on:
   schedule:
-    - cron: '0,30 * * * *'   # 매시 0분·30분 실행 (UTC)
+    - cron: '15,45 * * * *'   # 다른 캐시 배치와 겹치지 않게 30분 간격 실행 (UTC)
   workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geumdan-weather-cache
+  cancel-in-progress: false
 
 jobs:
   fetch-weather:
@@ -11,11 +18,42 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22', cache: 'npm' }
       - run: npm ci
-      - name: 기상청 날씨 수집 → Supabase 저장
+      - name: 기상청 날씨 수집 → DB·복구 캐시 저장
         run: node scripts/batch/fetch-weather.mjs
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          BATCH_CACHE_OUTPUT: public/cache/weather.json
+      - name: DB 장애용 날씨 캐시 갱신
+        shell: bash
+        run: |
+          set -euo pipefail
+          cache_file="$(mktemp)"
+          cp public/cache/weather.json "$cache_file"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin data-cache >/dev/null 2>&1; then
+            git fetch origin data-cache
+            git reset --hard
+            git clean -fd
+            git checkout --detach FETCH_HEAD
+          else
+            git reset --hard
+            git clean -fd
+            git checkout --orphan data-cache
+            git rm -rf .
+          fi
+
+          mkdir -p cache
+          cp "$cache_file" cache/weather.json
+          git add cache/weather.json
+          if git diff --cached --quiet; then
+            echo "날씨 캐시 변경 없음"
+            exit 0
+          fi
+          git commit -m "chore(cache): refresh weather [skip ci]"
+          git push origin HEAD:data-cache

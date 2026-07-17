@@ -14,6 +14,8 @@ export const revalidate = 1800;
 // 검단신도시 (인천 서구 검단동) 격자 좌표
 const NX = 54;
 const NY = 124;
+const REMOTE_WEATHER_CACHE_URL =
+  "https://raw.githubusercontent.com/mani0000000/geumdan-app/data-cache/cache/weather.json";
 
 // 기상청 SKY/PTY → 날씨 코드 매핑
 function kmaToWeather(sky: number, pty: number): { label: string; emoji: string } {
@@ -305,7 +307,29 @@ async function fetchOpenMeteo() {
 }
 
 // ── Route Handler ────────────────────────────────────────────
-// 우선순위: Supabase DB (30분 배치) → 기상청 직접 → Open-Meteo 폴백
+async function fetchRemoteWeatherCache(): Promise<Record<string, unknown> | null> {
+  try {
+    const response = await fetch(REMOTE_WEATHER_CACHE_URL, {
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(2500),
+    });
+    if (!response.ok) return null;
+
+    const payload = await response.json() as Record<string, unknown>;
+    const candidate = (payload.weather ?? payload) as Record<string, unknown>;
+    const fetchedAt = typeof candidate.fetchedAt === "string" ? candidate.fetchedAt : null;
+    const ageMs = fetchedAt ? Date.now() - new Date(fetchedAt).getTime() : Number.POSITIVE_INFINITY;
+    if (typeof candidate.temp !== "number" || !Number.isFinite(ageMs) || ageMs > 75 * 60 * 1000) {
+      return null;
+    }
+    return candidate;
+  } catch (error) {
+    console.warn("[weather] 복구 캐시 조회 실패:", error);
+    return null;
+  }
+}
+
+// 우선순위: Supabase DB → GitHub 복구 캐시 → 기상청 직접 → Open-Meteo 폴백
 export async function GET() {
   try {
     // 1. Supabase DB (배치가 저장한 최신 데이터 — 가장 빠름)
@@ -334,7 +358,18 @@ export async function GET() {
       console.warn("[weather] DB 조회 실패:", dbErr);
     }
 
-    // 2. 기상청 직접 호출 (DB 데이터 없거나 오래됨)
+    // 2. DB 제한 시 30분 배치가 남긴 복구 캐시
+    const remoteCache = await fetchRemoteWeatherCache();
+    if (remoteCache) {
+      return NextResponse.json(remoteCache, {
+        headers: {
+          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
+          "X-Weather-Source": "data-cache",
+        },
+      });
+    }
+
+    // 3. 기상청 직접 호출 (DB·복구 캐시가 없거나 오래됨)
     const serviceKey = process.env.DATA_GO_KR_API_KEY ?? "";
     let data;
     if (serviceKey) {
