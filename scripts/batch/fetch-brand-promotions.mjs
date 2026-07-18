@@ -198,8 +198,10 @@ export async function collectBrandPromotions(triggerType = process.env.PROMOTION
     .order("priority");
   if (sourceError) throw sourceError;
 
-  const { data: existing } = await supabase.from("brand_promotions").select("id,title").eq("active", true).limit(500);
-  const invalidIds = (existing || []).filter((item) => lowQualityTitle(item.title) || /404|not found|종단|종료된/i.test(item.title)).map((item) => item.id);
+  const { data: existing } = await supabase.from("brand_promotions").select("id,title,brand_name").eq("active", true).limit(500);
+  const invalidIds = (existing || [])
+    .filter((item) => lowQualityTitle(item.title, item.brand_name) || /404|not found|종단|종료된/i.test(item.title))
+    .map((item) => item.id);
   if (invalidIds.length) await supabase.from("brand_promotions").update({ active: false, updated_at: new Date().toISOString() }).in("id", invalidIds);
 
   for (const source of sources || []) {
