@@ -19,7 +19,7 @@ function makeFetch(key) {
 let supabase;
 
 const PROMOTION_WORDS = /(할인|증정|쿠폰|이벤트|행사|혜택|특가|무료|1\s*\+\s*1|2\s*\+\s*1|sale|event|promotion|benefit|coupon|gift|new)/i;
-const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|진행중(?:인)?\s*이벤트(?:\s.*)?|종료(?:된)?\s*이벤트|지난\s*프로모션|공식\s*이벤트|행사\s*상품|event|promotion|news|notice|payment|what'?s new|starbucks|메가mgc커피|404)(\s*[|\-].*)?$/i;
+const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|이벤트|진행중(?:인)?\s*이벤트(?:\s.*)?|종료(?:된)?\s*이벤트|지난\s*프로모션|공식\s*이벤트|행사\s*상품|event|promotion|news|notice|payment|what'?s new|starbucks|메가mgc커피|404)(\s*[|\-].*)?$/i;
 
 function normalizedTitle(value = "") {
   return cleanText(value).replace(/(?:-->|\u2192|\u25B6)+/g, " ").replace(/\s+/g, " ").trim();
