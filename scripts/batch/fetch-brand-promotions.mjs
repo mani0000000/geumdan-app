@@ -154,7 +154,8 @@ async function enrichCandidate(candidate, source) {
     || (!PROMOTION_WORDS.test(pageTitle) && PROMOTION_WORDS.test(candidateTitle));
   const title = (pageTitleIsGeneric ? candidateTitle : pageTitle).slice(0, 140);
   const summary = cleanText(metaValue(html, "og:description") || metaValue(html, "description") || "").slice(0, 320);
-  const image = absoluteUrl(metaValue(html, "og:image") || candidate.image_url, finalUrl);
+  // 상세 페이지의 공통 OG 로고보다 이벤트 목록에서 찾은 실제 배너 이미지를 우선합니다.
+  const image = absoluteUrl(candidate.image_url || metaValue(html, "og:image"), finalUrl);
   const combined = `${title} ${summary}`;
   if (lowQualityTitle(title, source.brand_name) || /404|not found|종료된/i.test(combined) || (!PROMOTION_WORDS.test(combined) && !/\/(event|promotion|campaign)\//i.test(finalUrl))) return null;
   const dates = extractDates(combined);
