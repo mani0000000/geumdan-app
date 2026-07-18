@@ -19,7 +19,7 @@ function makeFetch(key) {
 let supabase;
 
 const PROMOTION_WORDS = /(할인|증정|쿠폰|이벤트|행사|혜택|특가|무료|1\s*\+\s*1|2\s*\+\s*1|sale|event|promotion|benefit|coupon|gift|new)/i;
-const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|진행중인\s*이벤트|종료된\s*이벤트|행사\s*상품|event|promotion|news|notice|404)(\s*[|\-].*)?$/i;
+const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|진행중(?:인)?\s*이벤트(?:\s.*)?|종료(?:된)?\s*이벤트|지난\s*프로모션|공식\s*이벤트|행사\s*상품|event|promotion|news|notice|payment|what'?s new|starbucks|메가mgc커피|404)(\s*[|\-].*)?$/i;
 
 function normalizedTitle(value = "") {
   return cleanText(value).replace(/(?:-->|\u2192|\u25B6)+/g, " ").replace(/\s+/g, " ").trim();
@@ -148,7 +148,11 @@ async function enrichCandidate(candidate, source) {
     // 목록에서 확보한 정보라도 저장한다.
   }
   const pageTitle = normalizedTitle(metaValue(html, "og:title") || "").slice(0, 140);
-  const title = (!pageTitle || lowQualityTitle(pageTitle, source.brand_name) ? normalizedTitle(candidate.title) : pageTitle).slice(0, 140);
+  const candidateTitle = normalizedTitle(candidate.title);
+  const pageTitleIsGeneric = !pageTitle
+    || lowQualityTitle(pageTitle, source.brand_name)
+    || (!PROMOTION_WORDS.test(pageTitle) && PROMOTION_WORDS.test(candidateTitle));
+  const title = (pageTitleIsGeneric ? candidateTitle : pageTitle).slice(0, 140);
   const summary = cleanText(metaValue(html, "og:description") || metaValue(html, "description") || "").slice(0, 320);
   const image = absoluteUrl(metaValue(html, "og:image") || candidate.image_url, finalUrl);
   const combined = `${title} ${summary}`;
