@@ -19,6 +19,7 @@ function makeFetch(key) {
 let supabase;
 
 const PROMOTION_WORDS = /(할인|증정|쿠폰|이벤트|행사|혜택|특가|무료|1\s*\+\s*1|2\s*\+\s*1|sale|event|promotion|benefit|coupon|gift|new)/i;
+const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|진행중인\s*이벤트|종료된\s*이벤트|행사\s*상품|event|promotion|news|notice|404)(\s*[|\-].*)?$/i;
 
 function cleanText(value = "") {
   return value
@@ -115,9 +116,9 @@ function listCandidates(html, source) {
     const image = absoluteUrl(attr(imageTag, "data-src") || attr(imageTag, "src"), href);
     const title = cleanText(attr(imageTag, "alt") || match[2]).slice(0, 140);
     const haystack = `${title} ${href}`;
-    const include = source.include_patterns?.some((word) => haystack.toLowerCase().includes(word.toLowerCase()));
     const exclude = source.exclude_patterns?.some((word) => haystack.toLowerCase().includes(word.toLowerCase()));
-    if (exclude || (!PROMOTION_WORDS.test(haystack) && !include) || title.length < 3) continue;
+    const eventPath = /\/(event|events|promotion|campaign|benefit)(\/|\?|$)/i.test(href);
+    if (exclude || GENERIC_TITLE.test(title) || title.length < 4 || (!PROMOTION_WORDS.test(title) && !eventPath)) continue;
     rows.push({ source_url: href, title, image_url: image });
   }
   const unique = [...new Map(rows.map((row) => [row.source_url, row])).values()];
@@ -134,10 +135,12 @@ async function enrichCandidate(candidate, source) {
   } catch {
     // 목록에서 확보한 정보라도 저장한다.
   }
-  const title = cleanText(metaValue(html, "og:title") || candidate.title).slice(0, 140);
+  const pageTitle = cleanText(metaValue(html, "og:title") || "").slice(0, 140);
+  const title = (!pageTitle || GENERIC_TITLE.test(pageTitle) || /404|not found|종료된/i.test(pageTitle) ? candidate.title : pageTitle).slice(0, 140);
   const summary = cleanText(metaValue(html, "og:description") || metaValue(html, "description") || "").slice(0, 320);
   const image = absoluteUrl(metaValue(html, "og:image") || candidate.image_url, finalUrl);
   const combined = `${title} ${summary}`;
+  if (GENERIC_TITLE.test(title) || /404|not found|종료된/i.test(combined) || (!PROMOTION_WORDS.test(combined) && !/\/(event|promotion|campaign)\//i.test(finalUrl))) return null;
   const dates = extractDates(combined);
   const contentHash = crypto.createHash("sha256").update(`${source.id}|${finalUrl}|${title}|${summary}|${image || ""}`).digest("hex");
   const id = `promo_${crypto.createHash("sha1").update(finalUrl).digest("hex").slice(0, 20)}`;
@@ -183,6 +186,10 @@ export async function collectBrandPromotions(triggerType = process.env.PROMOTION
     .order("priority");
   if (sourceError) throw sourceError;
 
+  const { data: existing } = await supabase.from("brand_promotions").select("id,title").eq("active", true).limit(500);
+  const invalidIds = (existing || []).filter((item) => GENERIC_TITLE.test(item.title) || /404|not found|종료된/i.test(item.title)).map((item) => item.id);
+  if (invalidIds.length) await supabase.from("brand_promotions").update({ active: false, updated_at: new Date().toISOString() }).in("id", invalidIds);
+
   for (const source of sources || []) {
     try {
       const { html } = await fetchHtml(source.event_url);
@@ -195,7 +202,10 @@ export async function collectBrandPromotions(triggerType = process.env.PROMOTION
       }
       found += candidates.length;
       const rows = [];
-      for (const candidate of candidates) rows.push(await enrichCandidate(candidate, source));
+      for (const candidate of candidates) {
+        const row = await enrichCandidate(candidate, source);
+        if (row) rows.push(row);
+      }
       if (rows.length) {
         const { error } = await supabase.from("brand_promotions").upsert(rows, { onConflict: "source_url" });
         if (error) throw error;
