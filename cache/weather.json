@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-19T17:16:17.038Z",
+  "timestamp": "2026-07-19T18:38:07.070Z",
   "weather": {
     "temp": 24,
     "feelsLike": 24,
@@ -108,11 +108,11 @@
         "isToday": false
       }
     ],
-    "pm10": 46,
-    "pm25": 45,
+    "pm10": 47,
+    "pm25": 47,
     "pm10Label": "보통",
     "pm25Label": "나쁨",
     "source": "기상청",
-    "fetchedAt": "2026-07-19T17:16:17.038Z"
+    "fetchedAt": "2026-07-19T18:38:07.070Z"
   }
 }
