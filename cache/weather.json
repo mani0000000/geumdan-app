@@ -1,26 +1,16 @@
 {
-  "timestamp": "2026-07-19T07:15:05.507Z",
+  "timestamp": "2026-07-19T09:19:19.102Z",
   "weather": {
     "temp": 26,
     "feelsLike": 26,
     "weatherCode": 0,
     "label": "맑음",
     "emoji": "☀️",
-    "humidity": 73,
-    "windSpeed": 2,
+    "humidity": 76,
+    "windSpeed": 3,
     "high": 26,
     "low": 22,
     "hourly": [
-      {
-        "hour": "16:00",
-        "temp": 28,
-        "emoji": "⛅"
-      },
-      {
-        "hour": "17:00",
-        "temp": 28,
-        "emoji": "⛅"
-      },
       {
         "hour": "18:00",
         "temp": 27,
@@ -29,7 +19,7 @@
       {
         "hour": "19:00",
         "temp": 26,
-        "emoji": "⛅"
+        "emoji": "☀️"
       },
       {
         "hour": "20:00",
@@ -38,6 +28,16 @@
       },
       {
         "hour": "21:00",
+        "temp": 24,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "22:00",
+        "temp": 24,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "23:00",
         "temp": 24,
         "emoji": "☁️"
       }
@@ -59,7 +59,7 @@
         "emoji": "🌧️",
         "high": 28,
         "low": 23,
-        "precipitation": 32,
+        "precipitation": 20,
         "isToday": false
       },
       {
@@ -68,7 +68,7 @@
         "emoji": "🌧️",
         "high": 28,
         "low": 24,
-        "precipitation": 41,
+        "precipitation": 44,
         "isToday": false
       },
       {
@@ -77,16 +77,16 @@
         "emoji": "🌧️",
         "high": 28,
         "low": 24,
-        "precipitation": 6,
+        "precipitation": 22,
         "isToday": false
       },
       {
         "date": "7/23",
         "dayLabel": "목",
-        "emoji": "⛅",
+        "emoji": "🌧️",
         "high": 26,
-        "low": 22,
-        "precipitation": 29,
+        "low": 24,
+        "precipitation": 5,
         "isToday": false
       },
       {
@@ -109,10 +109,10 @@
       }
     ],
     "pm10": 15,
-    "pm25": 14,
+    "pm25": 15,
     "pm10Label": "좋음",
     "pm25Label": "좋음",
     "source": "기상청",
-    "fetchedAt": "2026-07-19T07:15:05.507Z"
+    "fetchedAt": "2026-07-19T09:19:19.102Z"
   }
 }
