@@ -1,6 +1,29 @@
 {
   "stations": [
     {
+      "id": "opinet-A0007958",
+      "name": "(주)석산에너지 태양주유소",
+      "brandCode": "HDO",
+      "brandName": "현대오일뱅크",
+      "brandColor": "#16A34A",
+      "brandBg": "#F0FDF4",
+      "brandShort": "현대",
+      "address": "검단·김포 생활권",
+      "distanceKm": 6.5,
+      "lat": 37.508825,
+      "lng": 126.653413,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1808,
+        "diesel": 1796
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "(주)석산에너지 태양주유소"
+    },
+    {
       "id": "opinet-A0007817",
       "name": "신현주유소",
       "brandCode": "SOL",
@@ -47,27 +70,27 @@
       "matchedName": "서광유업㈜청도3주유소"
     },
     {
-      "id": "opinet-A0007958",
-      "name": "(주)석산에너지 태양주유소",
+      "id": "opinet-A0008037",
+      "name": "(주)서울에너지 서인천주유소",
       "brandCode": "HDO",
       "brandName": "현대오일뱅크",
       "brandColor": "#16A34A",
       "brandBg": "#F0FDF4",
       "brandShort": "현대",
       "address": "검단·김포 생활권",
-      "distanceKm": 6.5,
-      "lat": 37.508825,
-      "lng": 126.653413,
+      "distanceKm": 1.9,
+      "lat": 37.543871,
+      "lng": 126.681438,
       "area": "인근",
       "isSelf": false,
       "isAlttul": false,
       "prices": {
-        "gasoline": 1808,
-        "diesel": 1796
+        "gasoline": 1814,
+        "diesel": 1794
       },
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "(주)석산에너지 태양주유소"
+      "matchedName": "(주)서울에너지 서인천주유소"
     },
     {
       "id": "opinet-A0007966",
@@ -114,29 +137,6 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "차오름에너지㈜"
-    },
-    {
-      "id": "opinet-A0008037",
-      "name": "(주)서울에너지 서인천주유소",
-      "brandCode": "HDO",
-      "brandName": "현대오일뱅크",
-      "brandColor": "#16A34A",
-      "brandBg": "#F0FDF4",
-      "brandShort": "현대",
-      "address": "검단·김포 생활권",
-      "distanceKm": 1.9,
-      "lat": 37.543871,
-      "lng": 126.681438,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1814,
-        "diesel": 1794
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "(주)서울에너지 서인천주유소"
     },
     {
       "id": "opinet-A0001708",
@@ -231,29 +231,6 @@
       "matchedName": "미담주유소"
     },
     {
-      "id": "opinet-A0007965",
-      "name": "신인천주유소",
-      "brandCode": "HDO",
-      "brandName": "현대오일뱅크",
-      "brandColor": "#16A34A",
-      "brandBg": "#F0FDF4",
-      "brandShort": "현대",
-      "address": "검단·김포 생활권",
-      "distanceKm": 1.4,
-      "lat": 37.547976,
-      "lng": 126.6872,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1835,
-        "diesel": 1815
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "신인천주유소"
-    },
-    {
       "id": "opinet-A0001792",
       "name": "부평IC주유소",
       "brandCode": "HDO",
@@ -277,50 +254,27 @@
       "matchedName": "부평IC주유소"
     },
     {
-      "id": "opinet-A0001769",
-      "name": "동일석유㈜임학주유소",
-      "brandCode": "SKE",
-      "brandName": "SK에너지",
-      "brandColor": "#EF4444",
-      "brandBg": "#FEF2F2",
-      "brandShort": "SK",
+      "id": "opinet-A0007965",
+      "name": "신인천주유소",
+      "brandCode": "HDO",
+      "brandName": "현대오일뱅크",
+      "brandColor": "#16A34A",
+      "brandBg": "#F0FDF4",
+      "brandShort": "현대",
       "address": "검단·김포 생활권",
-      "distanceKm": 5,
-      "lat": 37.538768,
-      "lng": 126.740604,
+      "distanceKm": 1.4,
+      "lat": 37.547976,
+      "lng": 126.6872,
       "area": "인근",
       "isSelf": false,
       "isAlttul": false,
       "prices": {
-        "gasoline": 1837,
-        "diesel": 1797
+        "gasoline": 1835,
+        "diesel": 1815
       },
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "동일석유㈜임학주유소"
-    },
-    {
-      "id": "opinet-A0001815",
-      "name": "명품주유소",
-      "brandCode": "GSC",
-      "brandName": "GS칼텍스",
-      "brandColor": "#0058B0",
-      "brandBg": "#EFF6FF",
-      "brandShort": "GS",
-      "address": "검단·김포 생활권",
-      "distanceKm": 3.4,
-      "lat": 37.539914,
-      "lng": 126.718934,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1837,
-        "diesel": 1817
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "명품주유소"
+      "matchedName": "신인천주유소"
     },
     {
       "id": "opinet-A0007982",
@@ -346,6 +300,29 @@
       "matchedName": "미래주유소"
     },
     {
+      "id": "opinet-A0001815",
+      "name": "명품주유소",
+      "brandCode": "GSC",
+      "brandName": "GS칼텍스",
+      "brandColor": "#0058B0",
+      "brandBg": "#EFF6FF",
+      "brandShort": "GS",
+      "address": "검단·김포 생활권",
+      "distanceKm": 3.4,
+      "lat": 37.539914,
+      "lng": 126.718934,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1837,
+        "diesel": 1817
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "명품주유소"
+    },
+    {
       "id": "opinet-A0001770",
       "name": "동일석유㈜동일주유소",
       "brandCode": "SKE",
@@ -367,6 +344,29 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "동일석유㈜동일주유소"
+    },
+    {
+      "id": "opinet-A0001769",
+      "name": "동일석유㈜임학주유소",
+      "brandCode": "SKE",
+      "brandName": "SK에너지",
+      "brandColor": "#EF4444",
+      "brandBg": "#FEF2F2",
+      "brandShort": "SK",
+      "address": "검단·김포 생활권",
+      "distanceKm": 5,
+      "lat": 37.538768,
+      "lng": 126.740604,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1837,
+        "diesel": 1797
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "동일석유㈜임학주유소"
     },
     {
       "id": "opinet-A0001681",
@@ -438,29 +438,6 @@
       "matchedName": "솔로몬주유소"
     },
     {
-      "id": "opinet-A0008020",
-      "name": "검단농협주유소",
-      "brandCode": "NHO",
-      "brandName": "농협알뜰",
-      "brandColor": "#059669",
-      "brandBg": "#ECFDF5",
-      "brandShort": "NH",
-      "address": "검단·김포 생활권",
-      "distanceKm": 2.8,
-      "lat": 37.58354,
-      "lng": 126.678693,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": true,
-      "prices": {
-        "gasoline": 1847,
-        "diesel": 1837
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "검단농협주유소"
-    },
-    {
       "id": "opinet-A0007967",
       "name": "(주)재원에너지",
       "brandCode": "SKE",
@@ -482,6 +459,29 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "(주)재원에너지"
+    },
+    {
+      "id": "opinet-A0008020",
+      "name": "검단농협주유소",
+      "brandCode": "NHO",
+      "brandName": "농협알뜰",
+      "brandColor": "#059669",
+      "brandBg": "#ECFDF5",
+      "brandShort": "NH",
+      "address": "검단·김포 생활권",
+      "distanceKm": 2.8,
+      "lat": 37.58354,
+      "lng": 126.678693,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": true,
+      "prices": {
+        "gasoline": 1847,
+        "diesel": 1837
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "검단농협주유소"
     },
     {
       "id": "opinet-A0033674",
@@ -528,29 +528,6 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "영부에너지주유소"
-    },
-    {
-      "id": "opinet-A0001768",
-      "name": "동양산업(주)직영 효성주유소",
-      "brandCode": "GSC",
-      "brandName": "GS칼텍스",
-      "brandColor": "#0058B0",
-      "brandBg": "#EFF6FF",
-      "brandShort": "GS",
-      "address": "검단·김포 생활권",
-      "distanceKm": 5.1,
-      "lat": 37.517989,
-      "lng": 126.71428,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1849,
-        "diesel": 1829
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "동양산업(주)직영 효성주유소"
     },
     {
       "id": "opinet-A0001599",
@@ -623,6 +600,29 @@
       "matchedName": "태평주유소"
     },
     {
+      "id": "opinet-A0001768",
+      "name": "동양산업(주)직영 효성주유소",
+      "brandCode": "GSC",
+      "brandName": "GS칼텍스",
+      "brandColor": "#0058B0",
+      "brandBg": "#EFF6FF",
+      "brandShort": "GS",
+      "address": "검단·김포 생활권",
+      "distanceKm": 5.1,
+      "lat": 37.517989,
+      "lng": 126.71428,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1849,
+        "diesel": 1829
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "동양산업(주)직영 효성주유소"
+    },
+    {
       "id": "opinet-A0011892",
       "name": "씨앤에스유통(주) 청중로주유소",
       "brandCode": "SOL",
@@ -669,29 +669,6 @@
       "matchedName": "(주)명진제1주유소"
     },
     {
-      "id": "opinet-A0001787",
-      "name": "SK에너지(주) 행복날개주유소",
-      "brandCode": "SKE",
-      "brandName": "SK에너지",
-      "brandColor": "#EF4444",
-      "brandBg": "#FEF2F2",
-      "brandShort": "SK",
-      "address": "검단·김포 생활권",
-      "distanceKm": 4.8,
-      "lat": 37.527785,
-      "lng": 126.726414,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1859,
-        "diesel": 1799
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "SK에너지(주) 행복날개주유소"
-    },
-    {
       "id": "opinet-A0008091",
       "name": "HD현대오일뱅크㈜직영 북인천ic셀프주유소",
       "brandCode": "HDO",
@@ -713,29 +690,6 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "HD현대오일뱅크㈜직영 북인천ic셀프주유소"
-    },
-    {
-      "id": "opinet-A0033255",
-      "name": "HD현대오일뱅크㈜직영 가정셀프주유소",
-      "brandCode": "HDO",
-      "brandName": "현대오일뱅크",
-      "brandColor": "#16A34A",
-      "brandBg": "#F0FDF4",
-      "brandShort": "현대",
-      "address": "검단·김포 생활권",
-      "distanceKm": 4.9,
-      "lat": 37.520156,
-      "lng": 126.666404,
-      "area": "인근",
-      "isSelf": true,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1859,
-        "diesel": 1829
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "HD현대오일뱅크㈜직영 가정셀프주유소"
     },
     {
       "id": "opinet-A0006287",
@@ -784,6 +738,29 @@
       "matchedName": "HD현대오일뱅크㈜직영 보령주유소"
     },
     {
+      "id": "opinet-A0007993",
+      "name": "(주)삼일에너지",
+      "brandCode": "SKE",
+      "brandName": "SK에너지",
+      "brandColor": "#EF4444",
+      "brandBg": "#FEF2F2",
+      "brandShort": "SK",
+      "address": "검단·김포 생활권",
+      "distanceKm": 3.1,
+      "lat": 37.548567,
+      "lng": 126.658463,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1859,
+        "diesel": 1849
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "(주)삼일에너지"
+    },
+    {
       "id": "opinet-A0007682",
       "name": "스카이주유소",
       "brandCode": "HDO",
@@ -807,27 +784,50 @@
       "matchedName": "스카이주유소"
     },
     {
-      "id": "opinet-A0007993",
-      "name": "(주)삼일에너지",
+      "id": "opinet-A0033255",
+      "name": "HD현대오일뱅크㈜직영 가정셀프주유소",
+      "brandCode": "HDO",
+      "brandName": "현대오일뱅크",
+      "brandColor": "#16A34A",
+      "brandBg": "#F0FDF4",
+      "brandShort": "현대",
+      "address": "검단·김포 생활권",
+      "distanceKm": 4.9,
+      "lat": 37.520156,
+      "lng": 126.666404,
+      "area": "인근",
+      "isSelf": true,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1859,
+        "diesel": 1829
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "HD현대오일뱅크㈜직영 가정셀프주유소"
+    },
+    {
+      "id": "opinet-A0001787",
+      "name": "SK에너지(주) 행복날개주유소",
       "brandCode": "SKE",
       "brandName": "SK에너지",
       "brandColor": "#EF4444",
       "brandBg": "#FEF2F2",
       "brandShort": "SK",
       "address": "검단·김포 생활권",
-      "distanceKm": 3.1,
-      "lat": 37.548567,
-      "lng": 126.658463,
+      "distanceKm": 4.8,
+      "lat": 37.527785,
+      "lng": 126.726414,
       "area": "인근",
       "isSelf": false,
       "isAlttul": false,
       "prices": {
         "gasoline": 1859,
-        "diesel": 1849
+        "diesel": 1799
       },
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "(주)삼일에너지"
+      "matchedName": "SK에너지(주) 행복날개주유소"
     },
     {
       "id": "opinet-A0001772",
@@ -943,28 +943,6 @@
       "matchedName": "서일산업㈜ 부평충전소"
     },
     {
-      "id": "opinet-A0001659",
-      "name": "부평IC충전소",
-      "brandCode": "ETC",
-      "brandName": "자가상표",
-      "brandColor": "#6B7280",
-      "brandBg": "#F3F4F6",
-      "brandShort": "일반",
-      "address": "검단·김포 생활권",
-      "distanceKm": 5.6,
-      "lat": 37.518568,
-      "lng": 126.725459,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "lpg": 1106
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "부평IC충전소"
-    },
-    {
       "id": "opinet-A0001742",
       "name": "부평충전소",
       "brandCode": "ETC",
@@ -985,6 +963,28 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "부평충전소"
+    },
+    {
+      "id": "opinet-A0001659",
+      "name": "부평IC충전소",
+      "brandCode": "ETC",
+      "brandName": "자가상표",
+      "brandColor": "#6B7280",
+      "brandBg": "#F3F4F6",
+      "brandShort": "일반",
+      "address": "검단·김포 생활권",
+      "distanceKm": 5.6,
+      "lat": 37.518568,
+      "lng": 126.725459,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "lpg": 1106
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "부평IC충전소"
     },
     {
       "id": "opinet-A0000521",
@@ -1211,29 +1211,6 @@
       "matchedName": "태리알뜰주유소"
     },
     {
-      "id": "opinet-A0008098",
-      "name": "(주)태리주유소",
-      "brandCode": "GSC",
-      "brandName": "GS칼텍스",
-      "brandColor": "#0058B0",
-      "brandBg": "#EFF6FF",
-      "brandShort": "GS",
-      "address": "검단·김포 생활권",
-      "distanceKm": 7.5,
-      "lat": 37.601196,
-      "lng": 126.757495,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1829,
-        "diesel": 1799
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "(주)태리주유소"
-    },
-    {
       "id": "opinet-A0007645",
       "name": "창신주유소",
       "brandCode": "GSC",
@@ -1255,6 +1232,29 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "창신주유소"
+    },
+    {
+      "id": "opinet-A0008098",
+      "name": "(주)태리주유소",
+      "brandCode": "GSC",
+      "brandName": "GS칼텍스",
+      "brandColor": "#0058B0",
+      "brandBg": "#EFF6FF",
+      "brandShort": "GS",
+      "address": "검단·김포 생활권",
+      "distanceKm": 7.5,
+      "lat": 37.601196,
+      "lng": 126.757495,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1829,
+        "diesel": 1799
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "(주)태리주유소"
     },
     {
       "id": "opinet-A0007597",
@@ -1532,28 +1532,6 @@
       "matchedName": "㈜그린에너지"
     },
     {
-      "id": "opinet-A0007795",
-      "name": "불로충전소",
-      "brandCode": "ETC",
-      "brandName": "자가상표",
-      "brandColor": "#6B7280",
-      "brandBg": "#F3F4F6",
-      "brandShort": "일반",
-      "address": "검단·김포 생활권",
-      "distanceKm": 5.2,
-      "lat": 37.606714,
-      "lng": 126.681357,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "lpg": 1077
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "불로충전소"
-    },
-    {
       "id": "opinet-A0007946",
       "name": "검단신도시충전소",
       "brandCode": "ETC",
@@ -1574,6 +1552,28 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "검단신도시충전소"
+    },
+    {
+      "id": "opinet-A0007795",
+      "name": "불로충전소",
+      "brandCode": "ETC",
+      "brandName": "자가상표",
+      "brandColor": "#6B7280",
+      "brandBg": "#F3F4F6",
+      "brandShort": "일반",
+      "address": "검단·김포 생활권",
+      "distanceKm": 5.2,
+      "lat": 37.606714,
+      "lng": 126.681357,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "lpg": 1077
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "불로충전소"
     },
     {
       "id": "opinet-A0001709",
@@ -1620,17 +1620,17 @@
       "matchedName": "갈현LPG충전소"
     },
     {
-      "id": "opinet-A0007805",
-      "name": "SK행복충전 대현E＆C충전소",
-      "brandCode": "ETC",
-      "brandName": "자가상표",
-      "brandColor": "#6B7280",
-      "brandBg": "#F3F4F6",
-      "brandShort": "일반",
+      "id": "opinet-A0007883",
+      "name": "금파충전소",
+      "brandCode": "GSC",
+      "brandName": "GS칼텍스",
+      "brandColor": "#0058B0",
+      "brandBg": "#EFF6FF",
+      "brandShort": "GS",
       "address": "검단·김포 생활권",
-      "distanceKm": 7.7,
-      "lat": 37.626176,
-      "lng": 126.716027,
+      "distanceKm": 7.6,
+      "lat": 37.625372,
+      "lng": 126.716732,
       "area": "인근",
       "isSelf": false,
       "isAlttul": false,
@@ -1639,29 +1639,7 @@
       },
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "SK행복충전 대현E＆C충전소"
-    },
-    {
-      "id": "opinet-A0011951",
-      "name": "김포IC충전소",
-      "brandCode": "ETC",
-      "brandName": "자가상표",
-      "brandColor": "#6B7280",
-      "brandBg": "#F3F4F6",
-      "brandShort": "일반",
-      "address": "검단·김포 생활권",
-      "distanceKm": 7.8,
-      "lat": 37.600189,
-      "lng": 126.762085,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "lpg": 1116
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "김포IC충전소"
+      "matchedName": "금파충전소"
     },
     {
       "id": "opinet-A0033538",
@@ -1686,17 +1664,17 @@
       "matchedName": "풍무LPG충전소"
     },
     {
-      "id": "opinet-A0007883",
-      "name": "금파충전소",
-      "brandCode": "GSC",
-      "brandName": "GS칼텍스",
-      "brandColor": "#0058B0",
-      "brandBg": "#EFF6FF",
-      "brandShort": "GS",
+      "id": "opinet-A0007805",
+      "name": "SK행복충전 대현E＆C충전소",
+      "brandCode": "ETC",
+      "brandName": "자가상표",
+      "brandColor": "#6B7280",
+      "brandBg": "#F3F4F6",
+      "brandShort": "일반",
       "address": "검단·김포 생활권",
-      "distanceKm": 7.6,
-      "lat": 37.625372,
-      "lng": 126.716732,
+      "distanceKm": 7.7,
+      "lat": 37.626176,
+      "lng": 126.716027,
       "area": "인근",
       "isSelf": false,
       "isAlttul": false,
@@ -1705,7 +1683,7 @@
       },
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "금파충전소"
+      "matchedName": "SK행복충전 대현E＆C충전소"
     },
     {
       "id": "opinet-A0011952",
@@ -1728,6 +1706,28 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "SK고촌LPG충전소"
+    },
+    {
+      "id": "opinet-A0011951",
+      "name": "김포IC충전소",
+      "brandCode": "ETC",
+      "brandName": "자가상표",
+      "brandColor": "#6B7280",
+      "brandBg": "#F3F4F6",
+      "brandShort": "일반",
+      "address": "검단·김포 생활권",
+      "distanceKm": 7.8,
+      "lat": 37.600189,
+      "lng": 126.762085,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "lpg": 1116
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "김포IC충전소"
     },
     {
       "id": "opinet-A0008084",
@@ -1891,29 +1891,6 @@
       "matchedName": "현대오일뱅크㈜직영 김포나루셀프주유소"
     },
     {
-      "id": "opinet-A0005311",
-      "name": "대화주유소",
-      "brandCode": "HDO",
-      "brandName": "현대오일뱅크",
-      "brandColor": "#16A34A",
-      "brandBg": "#F0FDF4",
-      "brandShort": "현대",
-      "address": "검단·김포 생활권",
-      "distanceKm": 11.8,
-      "lat": 37.662041,
-      "lng": 126.72852,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "gasoline": 1849,
-        "diesel": 1847
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "대화주유소"
-    },
-    {
       "id": "opinet-A0005190",
       "name": "자유로주유소",
       "brandCode": "SKE",
@@ -1935,6 +1912,29 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "자유로주유소"
+    },
+    {
+      "id": "opinet-A0005311",
+      "name": "대화주유소",
+      "brandCode": "HDO",
+      "brandName": "현대오일뱅크",
+      "brandColor": "#16A34A",
+      "brandBg": "#F0FDF4",
+      "brandShort": "현대",
+      "address": "검단·김포 생활권",
+      "distanceKm": 11.8,
+      "lat": 37.662041,
+      "lng": 126.72852,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "gasoline": 1849,
+        "diesel": 1847
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "대화주유소"
     },
     {
       "id": "opinet-A0005574",
@@ -1983,28 +1983,6 @@
       "matchedName": "사우디제 7 주유소"
     },
     {
-      "id": "opinet-A0005412",
-      "name": "일산오렌지충전소",
-      "brandCode": "ETC",
-      "brandName": "자가상표",
-      "brandColor": "#6B7280",
-      "brandBg": "#F3F4F6",
-      "brandShort": "일반",
-      "address": "검단·김포 생활권",
-      "distanceKm": 11,
-      "lat": 37.638642,
-      "lng": 126.765241,
-      "area": "인근",
-      "isSelf": false,
-      "isAlttul": false,
-      "prices": {
-        "lpg": 1124
-      },
-      "priceStatus": "cached",
-      "priceReason": "오피넷 정기 수집 가격",
-      "matchedName": "일산오렌지충전소"
-    },
-    {
       "id": "opinet-A0005065",
       "name": "이산포충전소",
       "brandCode": "SKE",
@@ -2025,6 +2003,28 @@
       "priceStatus": "cached",
       "priceReason": "오피넷 정기 수집 가격",
       "matchedName": "이산포충전소"
+    },
+    {
+      "id": "opinet-A0005412",
+      "name": "일산오렌지충전소",
+      "brandCode": "ETC",
+      "brandName": "자가상표",
+      "brandColor": "#6B7280",
+      "brandBg": "#F3F4F6",
+      "brandShort": "일반",
+      "address": "검단·김포 생활권",
+      "distanceKm": 11,
+      "lat": 37.638642,
+      "lng": 126.765241,
+      "area": "인근",
+      "isSelf": false,
+      "isAlttul": false,
+      "prices": {
+        "lpg": 1124
+      },
+      "priceStatus": "cached",
+      "priceReason": "오피넷 정기 수집 가격",
+      "matchedName": "일산오렌지충전소"
     },
     {
       "id": "opinet-A0005314",
@@ -2050,7 +2050,7 @@
     }
   ],
   "source": "cache",
-  "timestamp": "2026-07-21T21:13:32.078Z",
+  "timestamp": "2026-07-21T23:00:15.363Z",
   "success": true,
   "message": "오피넷 정기 수집 90개"
 }
