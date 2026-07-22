@@ -123,6 +123,23 @@ export const YOUTUBE_TOPIC_GROUPS = [
       '검단 반려동물', '인천 서구 애견 동반',
     ],
   },
+  {
+    id: 'deals',
+    label: '할인·신규오픈',
+    queries: [
+      '검단신도시 할인 행사', '검단신도시 오픈 이벤트', '검단 신규 오픈 매장',
+      '검단 마트 할인', '검단 쿠폰 이벤트', '검단 팝업스토어',
+      '검단신도시 세일', '검단 이번주 행사',
+    ],
+  },
+  {
+    id: 'community',
+    label: '취미·모임',
+    queries: [
+      '검단 주민 모임', '검단 동호회', '검단 플리마켓', '검단 원데이클래스',
+      '검단 취미 생활', '검단 주민 프로그램', '검단 봉사 활동', '검단 청년 모임',
+    ],
+  },
 ];
 
 const LOCAL_KEYWORDS = [
@@ -145,6 +162,8 @@ const TOPIC_KEYWORDS = {
   health: ['운동', '헬스', '수영', '러닝', '필라테스', '요가', '체육', '배드민턴', '댄스'],
   education: ['교육', '학교', '학원', '초등학교', '중학교', '고등학교', '진학', '청소년'],
   pet: ['반려', '애견', '강아지', '고양이', '동물병원', '펫'],
+  deals: ['할인', '세일', '쿠폰', '이벤트', '신규오픈', '오픈', '팝업', '증정'],
+  community: ['모임', '동호회', '플리마켓', '클래스', '취미', '봉사', '주민', '청년'],
 };
 
 const TRUSTED_CHANNEL_HINTS = [
@@ -348,7 +367,7 @@ export function rankAndFilterVideos(videos, { minScore = 38, limit = 240 } = {})
       while (bucket.length) {
         const video = bucket.shift();
         const channelCount = channelCounts.get(video.channel_name) ?? 0;
-        if (channelCount >= 6) continue;
+        if (channelCount >= 4) continue;
         result.push(video);
         channelCounts.set(video.channel_name, channelCount + 1);
         added = true;
@@ -464,7 +483,7 @@ async function fetchContinuation(token, topic, query) {
 
 async function enrichSubscribers(videos, youtubeApiKey) {
   if (!youtubeApiKey) return videos;
-  const channelIds = [...new Set(videos.map(v => v.channel_id).filter(Boolean))].slice(0, 250);
+  const channelIds = [...new Set(videos.map(v => v.channel_id).filter(Boolean))].slice(0, 400);
   if (channelIds.length === 0) return videos;
   const stats = new Map();
 
@@ -496,9 +515,9 @@ async function enrichSubscribers(videos, youtubeApiKey) {
 export async function fetchCuratedYouTubeVideos({
   youtubeApiKey = '',
   minScore = 38,
-  limit = 240,
+  limit = 360,
   includeContinuation = true,
-  queriesPerTopic = 6,
+  queriesPerTopic = 8,
 } = {}) {
   const rotation = Math.floor(Date.now() / 3600000);
   const queryItems = YOUTUBE_TOPIC_GROUPS.flatMap((group, groupIndex) => {
@@ -532,7 +551,7 @@ export async function fetchCuratedYouTubeVideos({
   }
 
   if (includeContinuation && continuations.length > 0) {
-    const priorityContinuations = continuations.slice(0, 24);
+    const priorityContinuations = continuations.slice(0, 42);
     for (let i = 0; i < priorityContinuations.length; i += 6) {
       const batch = priorityContinuations.slice(i, i + 6);
       const results = await Promise.allSettled(batch.map(item => fetchContinuation(item.token, item.topic, item.query)));

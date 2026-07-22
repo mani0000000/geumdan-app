@@ -27,11 +27,22 @@ const DEFAULT_KEYWORDS = [
   ['검단생활', '생활정보'], ['검단교통', '생활정보'], ['검단신규오픈', '생활정보'],
   ['검단상가', '생활정보'], ['검단운동', '생활정보'], ['검단반려동물', '생활정보'],
   ['검단육아', '육아·교육'], ['검단교육', '육아·교육'], ['검단학교', '육아·교육'],
+  ['검단디저트', '카페·디저트'], ['검단대형카페', '카페·디저트'],
+  ['검단베이커리카페', '카페·디저트'], ['아라동카페', '카페·디저트'],
+  ['원당동카페', '카페·디저트'], ['당하동카페', '카페·디저트'],
+  ['검단공연', '문화·행사'], ['검단전시', '문화·행사'], ['검단플리마켓', '문화·행사'],
+  ['검단원데이클래스', '문화·행사'], ['검단도서관', '문화·행사'],
+  ['검단헬스', '운동·건강'], ['검단러닝', '운동·건강'], ['검단수영', '운동·건강'],
+  ['검단필라테스', '운동·건강'], ['검단반려견', '반려생활'], ['검단애견카페', '반려생활'],
+  ['검단동물병원', '반려생활'], ['검단아파트', '부동산'], ['검단부동산', '부동산'],
+  ['검단입주', '부동산'], ['검단지하철', '교통'], ['검단버스', '교통'],
+  ['검단아라역', '교통'], ['검단호수공원역', '교통'], ['검단할인', '쇼핑·신규오픈'],
+  ['검단이벤트', '쇼핑·신규오픈'], ['검단팝업', '쇼핑·신규오픈'],
 ];
-const KEYWORD_SEED_VERSION = 2;
-const POSTS_PER_KEYWORD = 10;
-const ACCOUNT_MEDIA_LIMIT = 24;
-const MAX_STORED = 1200;
+const KEYWORD_SEED_VERSION = 3;
+const POSTS_PER_KEYWORD = 16;
+const ACCOUNT_MEDIA_LIMIT = 36;
+const MAX_STORED = 2400;
 const DELAY_MS = 900;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
@@ -92,9 +103,16 @@ function inferCategory(text, keywordRows, fallback = '지역소식') {
     .filter(row => haystack.includes(String(row.keyword).toLowerCase()))
     .sort((a, b) => (b.priority ?? 0) - (a.priority ?? 0))[0];
   if (match?.category) return match.category;
-  if (/맛집|카페|디저트|빵집|브런치|먹방/.test(haystack)) return '맛집';
+  if (/카페|디저트|빵집|베이커리|브런치/.test(haystack)) return '카페·디저트';
+  if (/맛집|먹방|식당|고기|회|국밥|술집/.test(haystack)) return '맛집';
   if (/가볼만|핫플|데이트|나들이|공원|축제|아이와/.test(haystack)) return '가볼만한 곳';
-  if (/교통|버스|지하철|병원|약국|생활/.test(haystack)) return '생활정보';
+  if (/공연|전시|플리마켓|클래스|도서관|문화/.test(haystack)) return '문화·행사';
+  if (/헬스|러닝|수영|필라테스|요가|운동/.test(haystack)) return '운동·건강';
+  if (/반려|애견|강아지|고양이|동물병원/.test(haystack)) return '반려생활';
+  if (/아파트|부동산|입주|분양/.test(haystack)) return '부동산';
+  if (/교통|버스|지하철|아라역|호수공원역/.test(haystack)) return '교통';
+  if (/할인|이벤트|팝업|신규오픈|쇼핑/.test(haystack)) return '쇼핑·신규오픈';
+  if (/병원|약국|생활/.test(haystack)) return '생활정보';
   return fallback;
 }
 
@@ -242,22 +260,22 @@ async function fetchApifyBatch(keywordRows, sources) {
     {
       label: 'POST',
       input: {
-        directUrls, resultsType: 'posts', resultsLimit: 6,
-        onlyPostsNewerThan: '14 days', addParentData: true, skipPinnedPosts: true,
+        directUrls, resultsType: 'posts', resultsLimit: 10,
+        onlyPostsNewerThan: '21 days', addParentData: true, skipPinnedPosts: true,
       },
     },
     {
       label: 'REEL',
       input: {
-        directUrls, resultsType: 'reels', resultsLimit: 4,
-        onlyPostsNewerThan: '30 days', addParentData: true, skipPinnedPosts: true,
+        directUrls, resultsType: 'reels', resultsLimit: 8,
+        onlyPostsNewerThan: '45 days', addParentData: true, skipPinnedPosts: true,
       },
     },
   ];
   if (profileUrls.length) {
     requests.push({
       label: 'STORY',
-      input: { directUrls: profileUrls, resultsType: 'stories', resultsLimit: 10, addParentData: true },
+      input: { directUrls: profileUrls, resultsType: 'stories', resultsLimit: 14, addParentData: true },
     });
   }
 
@@ -306,8 +324,20 @@ async function fetchApifyBatch(keywordRows, sources) {
 
 async function loadKeywords() {
   const { data, error } = await supabase.from('social_content_keywords').select('*')
-    .eq('active', true).eq('collect_hashtag', true).order('priority', { ascending: false });
-  if (!error && data?.length) return data;
+    .order('priority', { ascending: false });
+  if (!error && data) {
+    const existing = new Map(data.map(row => [row.keyword, row]));
+    const missing = DEFAULT_KEYWORDS.filter(([keyword]) => !existing.has(keyword)).map(([keyword, category], index) => ({
+      keyword, category, priority: Math.max(30, 70 - index), active: true, collect_hashtag: true,
+    }));
+    if (missing.length) {
+      const inserted = await supabase.from('social_content_keywords').insert(missing);
+      if (inserted.error) console.warn(`기본 수집 키워드 보강 저장 생략: ${inserted.error.message}`);
+    }
+    const merged = [...data, ...missing];
+    const active = merged.filter(item => item.active !== false && item.collect_hashtag !== false && item.keyword);
+    if (active.length) return active;
+  }
 
   const { data: settings } = await supabase.from('site_settings').select('key,value')
     .in('key', ['instagram_keywords_config', 'instagram_keywords', 'instagram_keyword_seed_version']);

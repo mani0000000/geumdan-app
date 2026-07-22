@@ -85,8 +85,7 @@ async function supportsCurationSchema() {
   return !error;
 }
 
-async function pruneOutsideCollection(keepIds) {
-  const keep = new Set(keepIds);
+async function pruneCollection(maxStored = 1200) {
   const allRows = [];
   const pageSize = 1000;
 
@@ -94,8 +93,8 @@ async function pruneOutsideCollection(keepIds) {
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await supabase
       .from('youtube_videos')
-      .select('video_id')
-      .order('video_id', { ascending: true })
+      .select('video_id,published_at,fetched_at,relevance_score')
+      .order('published_at', { ascending: false, nullsFirst: false })
       .range(from, from + pageSize - 1);
     if (error) {
       console.warn(`  ⚠️ 이전 영상 정리 생략: ${error.message}`);
@@ -105,7 +104,9 @@ async function pruneOutsideCollection(keepIds) {
     if ((data?.length ?? 0) < pageSize) break;
   }
 
-  const stale = allRows.map(row => row.video_id).filter(id => id && !keep.has(id));
+  // 검색어가 시간대별로 순환하므로 이번 실행에 없다는 이유만으로 이전 영상을
+  // 지우면 피드가 매번 비슷해진다. 최신·고연관 콘텐츠를 충분히 누적하고 상한만 정리한다.
+  const stale = allRows.slice(maxStored).map(row => row.video_id).filter(Boolean);
   let deleted = 0;
   for (let index = 0; index < stale.length; index += 80) {
     const batch = stale.slice(index, index + 80);
@@ -140,8 +141,9 @@ try {
   videos = await fetchCuratedYouTubeVideos({
     youtubeApiKey: YOUTUBE_API_KEY,
     minScore: 38,
-    limit: 240,
+    limit: 360,
     includeContinuation: true,
+    queriesPerTopic: 8,
   });
   console.log(`  ✓ 큐레이션 통과: ${videos.length}개`);
 } catch (e) {
@@ -184,7 +186,7 @@ if (!result.ok) {
   process.exit(1);
 }
 
-const pruned = await pruneOutsideCollection(videos.map(video => video.video_id));
+const pruned = await pruneCollection(1200);
 
 const topicCounts = videos.reduce((acc, video) => {
   acc[video.topic] = (acc[video.topic] ?? 0) + 1;
@@ -193,7 +195,7 @@ const topicCounts = videos.reduce((acc, video) => {
 
 console.log(`✅ 완료 (${((Date.now() - t0) / 1000).toFixed(1)}s): ${videos.length}개 Supabase 저장`);
 console.log('  주제별:', topicCounts);
-console.log(`  스키마: ${advancedSchema ? '큐레이션 확장' : '레거시 호환'} · 이전 영상 ${pruned}개 정리`);
+console.log(`  스키마: ${advancedSchema ? '큐레이션 확장' : '레거시 호환'} · 보관 상한 초과 ${pruned}개 정리`);
 if (result.skippedColumns.length > 0) {
   console.log(`  참고: DB 미적용 컬럼 제외 저장 (${result.skippedColumns.join(', ')})`);
 }
