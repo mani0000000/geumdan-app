@@ -29,6 +29,22 @@ async function fetchOgImage(postUrl: string): Promise<string | null> {
     "Referer": "https://www.instagram.com/",
   };
 
+  // Instagram의 공개 oEmbed는 게시물 페이지보다 안정적으로 현재 CDN의
+  // 지역별 서명 URL을 돌려준다. 수집 시점의 만료 URL을 복구할 때 우선 사용한다.
+  try {
+    const oembed = new URL("https://www.instagram.com/api/v1/oembed/");
+    oembed.searchParams.set("url", postUrl);
+    const response = await fetch(oembed, {
+      headers,
+      signal: AbortSignal.timeout(8000),
+      cache: "no-store",
+    });
+    if (response.ok) {
+      const payload = await response.json() as { thumbnail_url?: string };
+      if (payload.thumbnail_url?.startsWith("https://")) return payload.thumbnail_url;
+    }
+  } catch { /* continue with HTML fallbacks */ }
+
   // 1) Try embed page for og:image
   try {
     const res = await fetch(embedUrl, { headers });
@@ -95,6 +111,7 @@ async function downloadAndReupload(
 // GET /api/instagram/thumb?url=https://www.instagram.com/p/...
 export async function GET(req: NextRequest) {
   const postUrl = req.nextUrl.searchParams.get("url");
+  const imageResponse = req.nextUrl.searchParams.get("image") === "1";
   if (!postUrl) return NextResponse.json({ error: "url 파라미터 필요" }, { status: 400 });
 
   const shortcode = extractShortcode(postUrl);
@@ -109,7 +126,14 @@ export async function GET(req: NextRequest) {
   for (const cached of [existingJpg, existingWebp, existingPng]) {
     try {
       const check = await fetch(cached, { method: "HEAD" });
-      if (check.ok) return NextResponse.json({ thumbnail: cached, cached: true });
+      if (check.ok) {
+        if (imageResponse) {
+          const response = NextResponse.redirect(cached, 307);
+          response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");
+          return response;
+        }
+        return NextResponse.json({ thumbnail: cached, cached: true });
+      }
     } catch { /* continue */ }
   }
 
@@ -122,9 +146,21 @@ export async function GET(req: NextRequest) {
   // Re-upload to Supabase for permanent URL
   if (key) {
     const permanent = await downloadAndReupload(ogImage, shortcode, supabaseUrl, key);
-    if (permanent) return NextResponse.json({ thumbnail: permanent, cached: false });
+    if (permanent) {
+      if (imageResponse) {
+        const response = NextResponse.redirect(permanent, 307);
+        response.headers.set("Cache-Control", "public, s-maxage=86400, stale-while-revalidate=604800");
+        return response;
+      }
+      return NextResponse.json({ thumbnail: permanent, cached: false });
+    }
   }
 
   // Fallback: return original CDN URL (may expire)
+  if (imageResponse) {
+    const response = NextResponse.redirect(ogImage, 307);
+    response.headers.set("Cache-Control", "public, s-maxage=1800, stale-while-revalidate=3600");
+    return response;
+  }
   return NextResponse.json({ thumbnail: ogImage, cached: false, warning: "임시 URL — 만료될 수 있습니다" });
 }

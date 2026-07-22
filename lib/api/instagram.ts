@@ -61,15 +61,22 @@ function normalize(raw: any): InstagramPost | null {
   const isReel = Boolean(
     raw.isReel ?? raw.is_reel ?? raw.reel ?? String(mediaType).toUpperCase().includes("REEL")
   );
+  const permalink = String(raw.permalink ?? raw.post_url ?? raw.url ?? "");
+  const originalThumbnail = String(
+    raw.thumbnailUrl ?? raw.thumbnail_url ?? raw.image_url ?? raw.display_url ?? ""
+  );
+  // Instagram CDN 서명 URL은 수 시간 뒤 403이 되므로 게시물 주소가 있으면
+  // 서버에서 최신 oEmbed URL을 복구하고 Storage에 영구 캐시하는 경로를 사용한다.
+  const thumbnailUrl = /instagram\.com\/(?:p|reel|tv)\//i.test(permalink)
+    ? `/api/instagram/thumb?url=${encodeURIComponent(permalink)}&image=1`
+    : originalThumbnail;
   return {
     id,
     shortcode: raw.shortcode ?? raw.short_code ?? undefined,
-    permalink: String(raw.permalink ?? raw.post_url ?? raw.url ?? ""),
+    permalink,
     mediaType: mediaType || undefined,
     isReel,
-    thumbnailUrl: String(
-      raw.thumbnailUrl ?? raw.thumbnail_url ?? raw.image_url ?? raw.display_url ?? ""
-    ),
+    thumbnailUrl,
     caption: raw.caption ?? raw.text ?? "",
     username: raw.username ?? raw.account_name ?? raw.owner ?? undefined,
     likeCount: Number(raw.likeCount ?? raw.like_count ?? raw.likes ?? 0),
@@ -97,6 +104,27 @@ function extractList(payload: any): any[] {
   if (Array.isArray(payload?.posts)) return payload.posts;
   if (Array.isArray(payload?.feeds)) return payload.feeds;
   return [];
+}
+
+const INSTAGRAM_TOPIC_PRIORITY: Record<string, number> = {
+  "맛집": 0,
+  "가볼만한 곳": 0,
+  "육아·교육": 2,
+  "생활정보": 3,
+  "지역소식": 4,
+};
+
+function sortInstagramForResidents(posts: InstagramPost[], sort: FetchFeedsParams["sort"] = "latest") {
+  return [...posts].sort((a, b) => {
+    const topicDiff = (INSTAGRAM_TOPIC_PRIORITY[a.category ?? "지역소식"] ?? 9)
+      - (INSTAGRAM_TOPIC_PRIORITY[b.category ?? "지역소식"] ?? 9);
+    if (topicDiff !== 0) return topicDiff;
+    if (sort === "popular") {
+      const relevanceDiff = (b.relevanceScore ?? 0) - (a.relevanceScore ?? 0);
+      if (relevanceDiff !== 0) return relevanceDiff;
+    }
+    return new Date(b.postedAt).getTime() - new Date(a.postedAt).getTime();
+  });
 }
 
 // Fallback: fetch from Supabase instagram_posts when Fastify backend is unavailable.
@@ -160,6 +188,13 @@ async function fetchFromCache(params: FetchFeedsParams): Promise<InstagramPost[]
       );
     }
     if (params.reel) posts = posts.filter(p => p.isReel);
+    if (params.category && params.category !== "전체") {
+      posts = posts.filter(p => p.category === params.category);
+    }
+    if (params.contentType && params.contentType !== "ALL") {
+      posts = posts.filter(p => String(p.contentType ?? "").toUpperCase() === params.contentType);
+    }
+    posts = sortInstagramForResidents(posts, params.sort);
 
     const limit = params.limit ?? 12;
     const page  = params.page  ?? 1;
@@ -185,7 +220,7 @@ export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promis
     if (response.ok) {
       const payload = await response.json();
       const list = extractList(payload).map(normalize).filter((post): post is InstagramPost => post !== null);
-      if (list.length > 0) return list;
+      if (list.length > 0) return sortInstagramForResidents(list, params.sort);
     }
   } catch { /* use the existing compatibility fallbacks */ }
 
@@ -207,7 +242,7 @@ export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promis
       if (res.ok) {
         const json = await res.json();
         const list = extractList(json).map(normalize).filter((p): p is InstagramPost => p !== null);
-        if (list.length > 0) return list;
+        if (list.length > 0) return sortInstagramForResidents(list, params.sort);
       }
     } catch { /* fall through to Supabase */ }
   }
@@ -217,7 +252,7 @@ export async function fetchInstagramFeeds(params: FetchFeedsParams = {}): Promis
   if (cached.length > 0) return cached;
 
   // Supabase fallback
-  return fetchFromSupabase(params);
+  return sortInstagramForResidents(await fetchFromSupabase(params), params.sort);
 }
 
 export async function fetchInstagramReels(limit = 10): Promise<InstagramPost[]> {
