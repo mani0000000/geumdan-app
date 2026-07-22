@@ -56,7 +56,6 @@ export async function fetchActiveBrandPromotions(limit = 24): Promise<BrandPromo
     .from("brand_promotions")
     .select("id,source_id,brand_name,title,summary,image_url,source_url,benefit_type,category,terms_text,starts_at,ends_at,featured,active,sort_order,fetched_at")
     .eq("active", true)
-    .not("image_url", "is", null)
     .or(`ends_at.is.null,ends_at.gte.${now}`)
     .order("featured", { ascending: false })
     .order("sort_order")
@@ -68,7 +67,6 @@ export async function fetchActiveBrandPromotions(limit = 24): Promise<BrandPromo
       const endpoint = new URL("https://plwpfnbhyzblgvliiole.supabase.co/rest/v1/brand_promotions");
       endpoint.searchParams.set("select", "id,source_id,brand_name,title,summary,image_url,source_url,benefit_type,category,terms_text,starts_at,ends_at,featured,active,sort_order,fetched_at");
       endpoint.searchParams.set("active", "eq.true");
-      endpoint.searchParams.set("image_url", "not.is.null");
       endpoint.searchParams.set("order", "featured.desc,sort_order.asc,fetched_at.desc");
       endpoint.searchParams.set("limit", "80");
       const response = await fetch(endpoint, { headers: { apikey: "sb_publishable_yusGAVx2uI09v0mL145WUQ_hE_C-Ulk" }, cache: "no-store" });

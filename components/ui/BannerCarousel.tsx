@@ -3,11 +3,21 @@
 import { useRef, useState } from "react";
 import { CalendarDays, MoveRight, Percent } from "lucide-react";
 import type { Banner } from "@/lib/db/banners";
-import BrandPromotionViewer from "@/components/ui/BrandPromotionViewer";
-import type { BrandPromotion } from "@/lib/db/brand-promotions";
 import { normalizeNewsText } from "@/lib/api/news";
 
 interface Props { banners: Banner[] }
+
+function PromotionArtwork({ banner, title }: { banner: Banner; title: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!banner.image_url || failed) return (
+    <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center text-white" style={{ background: `linear-gradient(145deg, ${banner.bg_from}, ${banner.bg_to})` }}>
+      <Percent size={34} strokeWidth={2.2} />
+      <span className="mt-3 text-[13px] font-black">{banner.promotion?.brand_name || "검단 할인"}</span>
+      <span className="mt-1 line-clamp-2 text-[11px] font-semibold text-white/75">{title}</span>
+    </div>
+  );
+  return <img src={banner.image_url} alt={`${title} 행사 이미지`} className="h-full w-full object-cover transition-transform duration-500 active:scale-[1.02]" onError={() => setFailed(true)} />;
+}
 
 function periodLabel(banner: Banner) {
   if (!banner.promotion?.ends_at) return "공식 페이지에서 기간 확인";
@@ -31,15 +41,10 @@ function displayTitle(value: string) {
 
 export default function BannerCarousel({ banners }: Props) {
   const [current, setCurrent] = useState(0);
-  const [selectedPromotion, setSelectedPromotion] = useState<BrandPromotion | null>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const frameRef = useRef<number | null>(null);
 
   if (!banners.length) return null;
-
-  function openBanner(banner: Banner) {
-    if (banner.promotion) setSelectedPromotion(banner.promotion);
-  }
 
   function updateCurrentCard() {
     if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
@@ -73,25 +78,21 @@ export default function BannerCarousel({ banners }: Props) {
       >
         {banners.map((banner, index) => {
           const title = displayTitle(banner.title);
-          const isPromotion = Boolean(banner.promotion);
           return (
             <article
               key={banner.id}
               className="w-[min(68vw,268px)] flex-none snap-start scroll-ml-4 overflow-hidden rounded-[20px] border border-black/[0.055] bg-white shadow-[0_8px_22px_rgba(34,50,84,.08)]"
               aria-label={`${index + 1}번 할인 ${title}`}
             >
-              <button
-                type="button"
-                onClick={isPromotion ? () => openBanner(banner) : undefined}
+              <a
+                href={banner.link_url || undefined}
+                target={banner.link_url ? "_blank" : undefined}
+                rel={banner.link_url ? "noopener noreferrer" : undefined}
                 className="relative block aspect-square w-full overflow-hidden bg-[#f2f4f6] text-left"
                 aria-label={`${title} 자세히 보기`}
               >
-                {banner.image_url ? (
-                  <img src={banner.image_url} alt="" className="h-full w-full object-cover transition-transform duration-500 active:scale-[1.02]" referrerPolicy="no-referrer" />
-                ) : (
-                  <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${banner.bg_from}, ${banner.bg_to})` }} />
-                )}
-              </button>
+                <PromotionArtwork banner={banner} title={title} />
+              </a>
 
               <div className="p-3">
                 <div className="flex items-center gap-1.5">
@@ -102,9 +103,9 @@ export default function BannerCarousel({ banners }: Props) {
                 <div className="mt-2.5 flex items-center gap-2 border-t border-black/[0.05] pt-2.5">
                   <div className="flex min-w-0 flex-1 items-center gap-1 text-[10px] font-semibold text-[#8b95a1]"><CalendarDays size={11}/><span className="truncate">{periodLabel(banner)}</span></div>
                   {banner.promotion ? (
-                    <button type="button" onClick={() => openBanner(banner)} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#191f28] px-3 text-[10px] font-black text-white active:scale-[.96]">공식 페이지<MoveRight size={11}/></button>
+                    <a href={banner.link_url || `/api/promotions/reader?id=${encodeURIComponent(banner.promotion.id)}`} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#191f28] px-3 text-[10px] font-black text-white active:scale-[.96]">공식 페이지<MoveRight size={11}/></a>
                   ) : banner.link_url ? (
-                    <a href={banner.link_url} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#191f28] px-3 text-[10px] font-black text-white">보기<MoveRight size={11}/></a>
+                    <a href={banner.link_url} target="_blank" rel="noopener noreferrer" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-full bg-[#191f28] px-3 text-[10px] font-black text-white">보기<MoveRight size={11}/></a>
                   ) : null}
                 </div>
               </div>
@@ -113,8 +114,6 @@ export default function BannerCarousel({ banners }: Props) {
         })}
         <div aria-hidden="true" className="w-1 shrink-0" />
       </div>
-
-      {selectedPromotion && <BrandPromotionViewer promotion={selectedPromotion} onClose={() => setSelectedPromotion(null)} />}
     </section>
   );
 }

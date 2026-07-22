@@ -20,6 +20,7 @@ let supabase;
 
 const PROMOTION_WORDS = /(할인|증정|쿠폰|이벤트|행사|혜택|특가|무료|1\s*\+\s*1|2\s*\+\s*1|sale|event|promotion|benefit|coupon|gift|new)/i;
 const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|이벤트|진행중(?:인)?\s*이벤트(?:\s.*)?|종료(?:된)?\s*이벤트|지난\s*프로모션|공식\s*이벤트|행사\s*상품|event|promotion|news|notice|payment|what'?s new|starbucks|메가mgc커피|404)(\s*[|\-].*)?$/i;
+const INVALID_ASSET = /blank[_-]?img|spacer|transparent|\/common\/.*(?:logo|ci)|kakao(?:talk)?|shareimage|thumbnail\.png|%7b|\{\{/i;
 
 // 매장 DB에 실제 입점한 브랜드만 출처로 자동 보강한다. 어드민에서 이미
 // 관리 중인 출처는 덮어쓰지 않고, 누락된 공식 출처만 추가한다.
@@ -85,6 +86,10 @@ function absoluteUrl(value, base) {
   } catch {
     return null;
   }
+}
+
+function usableAsset(value) {
+  return Boolean(value && !INVALID_ASSET.test(value));
 }
 
 function metaValue(html, key) {
@@ -173,9 +178,10 @@ function listCandidates(html, source) {
   let match;
   while ((match = anchorPattern.exec(html)) !== null) {
     const href = absoluteUrl(attr(match[1], "href"), source.event_url);
-    if (!href || !sameBrandHost(href, source.homepage_url)) continue;
+    if (!href || /%7b|\{\{/i.test(href) || !sameBrandHost(href, source.homepage_url)) continue;
     const imageTag = match[2].match(/<img\b[^>]*>/i)?.[0] || "";
-    const image = absoluteUrl(attr(imageTag, "data-src") || attr(imageTag, "src"), href);
+    const rawImage = attr(imageTag, "data-original") || attr(imageTag, "data-src") || attr(imageTag, "src");
+    const image = usableAsset(rawImage) ? absoluteUrl(rawImage, href) : null;
     const title = normalizedTitle(attr(imageTag, "alt") || match[2]).slice(0, 140);
     const haystack = `${title} ${href}`;
     const exclude = source.exclude_patterns?.some((word) => haystack.toLowerCase().includes(word.toLowerCase()));
@@ -205,8 +211,12 @@ async function enrichCandidate(candidate, source) {
   const title = (pageTitleIsGeneric ? candidateTitle : pageTitle).slice(0, 140);
   const pageDescription = cleanText(metaValue(html, "og:description") || metaValue(html, "description") || "").slice(0, 500);
   const pageText = cleanText(html).slice(0, 12_000);
-  // 상세 페이지의 공통 OG 로고보다 이벤트 목록에서 찾은 실제 배너 이미지를 우선합니다.
-  const image = absoluteUrl(candidate.image_url || metaValue(html, "og:image"), finalUrl);
+  // 빈 썸네일·공통 로고를 제외하고 목록 배너 → OG 이미지 → 상세 본문 이미지 순으로 선택한다.
+  const detailImages = html.match(/<img\b[^>]*>/gi) || [];
+  const detailImage = detailImages.map((tag) => attr(tag, "data-original") || attr(tag, "data-src") || attr(tag, "src"))
+    .find((value) => usableAsset(value) && !/icon|logo|sprite|loading/i.test(value));
+  const rawImage = [candidate.image_url, detailImage, metaValue(html, "og:image")].find(usableAsset);
+  const image = absoluteUrl(rawImage, finalUrl);
   const combined = `${title} ${pageDescription} ${pageText}`;
   if (lowQualityTitle(title, source.brand_name) || /404|not found|종료된/i.test(combined) || (!PROMOTION_WORDS.test(combined) && !/\/(event|promotion|campaign)\//i.test(finalUrl))) return null;
   const dates = extractDates(combined);
@@ -255,9 +265,12 @@ export async function collectBrandPromotions(triggerType = process.env.PROMOTION
     .order("priority");
   if (sourceError) throw sourceError;
 
-  const { data: existing } = await supabase.from("brand_promotions").select("id,title,brand_name").eq("active", true).limit(500);
+  const { data: existing } = await supabase.from("brand_promotions").select("id,title,brand_name,image_url,source_url").eq("active", true).limit(500);
   const invalidIds = (existing || [])
-    .filter((item) => lowQualityTitle(item.title, item.brand_name) || /404|not found|종단|종료된/i.test(item.title))
+    .filter((item) => lowQualityTitle(item.title, item.brand_name)
+      || /404|not found|종단|종료된|\{\{#if/i.test(item.title)
+      || /%7b|\{\{/i.test(item.source_url || "")
+      || INVALID_ASSET.test(item.image_url || ""))
     .map((item) => item.id);
   if (invalidIds.length) await supabase.from("brand_promotions").update({ active: false, updated_at: new Date().toISOString() }).in("id", invalidIds);
 

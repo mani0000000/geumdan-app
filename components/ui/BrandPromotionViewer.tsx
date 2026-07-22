@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CalendarDays, ExternalLink, Loader2, X } from "lucide-react";
+import { useEffect } from "react";
+import { CalendarDays, ExternalLink, Percent, ShieldCheck, X } from "lucide-react";
 import type { BrandPromotion } from "@/lib/db/brand-promotions";
 
 function dateRange(item: BrandPromotion) {
@@ -12,8 +12,6 @@ function dateRange(item: BrandPromotion) {
 }
 
 export default function BrandPromotionViewer({ promotion, onClose }: { promotion: BrandPromotion; onClose: () => void }) {
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const previous = document.body.style.overflow;
     const keydown = (event: KeyboardEvent) => event.key === "Escape" && onClose();
@@ -35,12 +33,32 @@ export default function BrandPromotionViewer({ promotion, onClose }: { promotion
               <p className="truncate text-[14px] font-black text-[#172033]">{promotion.brand_name} 공식 홈페이지</p>
               <p className="mt-0.5 flex items-center gap-1 text-[11px] font-bold text-[#657386]"><CalendarDays size={12}/>{dateRange(promotion)}</p>
             </div>
-            <a href={promotion.source_url} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-full bg-[#eef5ff] text-[#2563eb]" aria-label="브라우저에서 공식 페이지 열기"><ExternalLink size={17}/></a>
+            <a href={`/api/promotions/reader?id=${encodeURIComponent(promotion.id)}`} target="_blank" rel="noopener noreferrer" className="grid h-10 w-10 place-items-center rounded-full bg-[#eef5ff] text-[#2563eb]" aria-label="기기에 맞는 공식 페이지 열기"><ExternalLink size={17}/></a>
           </div>
         </header>
-        <div className="relative min-h-0 flex-1 overflow-hidden">
-          {loading && <div className="absolute inset-0 z-10 grid place-items-center bg-[#f5f6f8]"><div className="text-center"><Loader2 className="mx-auto animate-spin text-[#2563eb]"/><p className="mt-3 text-[13px] font-bold text-[#566171]">공식 행사 페이지를 불러오는 중이에요</p></div></div>}
-          <iframe src={`/api/promotions/reader?id=${encodeURIComponent(promotion.id)}`} title={`${promotion.brand_name} 공식 할인`} onLoad={() => setLoading(false)} className="h-full w-full border-0 bg-white" sandbox="allow-forms allow-popups allow-popups-to-escape-sandbox allow-same-origin" referrerPolicy="no-referrer" />
+        <div className="min-h-0 flex-1 overflow-y-auto bg-[#f4f6f9] px-5 py-8 sm:px-8">
+          <article className="mx-auto max-w-[620px] overflow-hidden rounded-[28px] bg-white shadow-[0_18px_60px_rgba(15,23,42,.10)]">
+            <div className="relative grid aspect-[16/10] place-items-center overflow-hidden bg-[linear-gradient(145deg,#172033,#334155_55%,#2563eb)]">
+              <div className="absolute -left-16 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
+              <div className="absolute -bottom-20 -right-16 h-64 w-64 rounded-full bg-[#60a5fa]/25 blur-3xl" />
+              <div className="relative text-center text-white">
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-[22px] bg-white/14 shadow-xl backdrop-blur"><Percent size={30}/></span>
+                <p className="mt-4 text-[13px] font-black tracking-[.16em] text-white/65">OFFICIAL SALE</p>
+                <p className="mt-1 text-[24px] font-black tracking-[-.04em]">{promotion.brand_name}</p>
+              </div>
+            </div>
+            <div className="p-6 sm:p-8">
+              <div className="flex items-center gap-2 text-[11px] font-bold text-[#64748b]"><CalendarDays size={14}/>{dateRange(promotion)}</div>
+              <h2 className="mt-3 text-[22px] font-black leading-[1.35] tracking-[-.035em] text-[#172033]">{promotion.title}</h2>
+              <div className="mt-6 flex gap-3 rounded-[18px] bg-[#eef5ff] p-4 text-[#315b8f]">
+                <ShieldCheck size={19} className="mt-0.5 shrink-0"/>
+                <p className="text-[12px] font-semibold leading-5">원본 페이지를 복제하지 않고 브랜드 공식 홈페이지에서 직접 확인합니다. 매장별 적용 여부는 방문 전 확인해 주세요.</p>
+              </div>
+              <a href={`/api/promotions/reader?id=${encodeURIComponent(promotion.id)}`} target="_blank" rel="noopener noreferrer" className="mt-6 flex h-13 w-full items-center justify-center gap-2 rounded-[17px] bg-[#191f28] text-[13px] font-black text-white active:scale-[.99]">
+                공식 홈페이지에서 확인 <ExternalLink size={15}/>
+              </a>
+            </div>
+          </article>
         </div>
       </div>
     </div>
