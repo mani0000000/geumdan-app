@@ -1,44 +1,39 @@
 {
-  "timestamp": "2026-07-23T07:17:58.196Z",
+  "timestamp": "2026-07-23T10:05:20.934Z",
   "weather": {
     "temp": 28,
     "feelsLike": 28,
     "weatherCode": 0,
     "label": "맑음",
     "emoji": "☀️",
-    "humidity": 91,
-    "windSpeed": 4,
+    "humidity": 92,
+    "windSpeed": 2,
     "high": 28,
     "low": 25,
     "hourly": [
       {
-        "hour": "16:00",
-        "temp": 27,
-        "emoji": "🌧️"
-      },
-      {
-        "hour": "17:00",
-        "temp": 27,
-        "emoji": "☁️"
-      },
-      {
-        "hour": "18:00",
-        "temp": 26,
-        "emoji": "☁️"
-      },
-      {
         "hour": "19:00",
-        "temp": 26,
+        "temp": 27,
         "emoji": "☁️"
       },
       {
         "hour": "20:00",
-        "temp": 26,
-        "emoji": "⛅"
+        "temp": 27,
+        "emoji": "☁️"
       },
       {
         "hour": "21:00",
-        "temp": 25,
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "22:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "23:00",
+        "temp": 26,
         "emoji": "☁️"
       }
     ],
@@ -47,19 +42,19 @@
       {
         "date": "7/23",
         "dayLabel": "목",
-        "emoji": "🌧️",
+        "emoji": "☁️",
         "high": 28,
         "low": 25,
-        "precipitation": 8,
+        "precipitation": 30,
         "isToday": true
       },
       {
         "date": "7/24",
         "dayLabel": "금",
         "emoji": "🌧️",
-        "high": 28,
-        "low": 24,
-        "precipitation": 44,
+        "high": 30,
+        "low": 25,
+        "precipitation": 55,
         "isToday": false
       },
       {
@@ -76,17 +71,17 @@
         "dayLabel": "일",
         "emoji": "🌧️",
         "high": 29,
-        "low": 25,
-        "precipitation": 7,
+        "low": 24,
+        "precipitation": 9,
         "isToday": false
       },
       {
         "date": "7/27",
         "dayLabel": "월",
-        "emoji": "☁️",
+        "emoji": "🌧️",
         "high": 30,
         "low": 25,
-        "precipitation": 1,
+        "precipitation": 2,
         "isToday": false
       },
       {
@@ -109,10 +104,10 @@
       }
     ],
     "pm10": 20,
-    "pm25": 19,
+    "pm25": 17,
     "pm10Label": "좋음",
     "pm25Label": "보통",
     "source": "기상청",
-    "fetchedAt": "2026-07-23T07:17:58.196Z"
+    "fetchedAt": "2026-07-23T10:05:20.934Z"
   }
 }
