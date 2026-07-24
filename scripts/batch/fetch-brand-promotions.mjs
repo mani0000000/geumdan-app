@@ -20,11 +20,15 @@ let supabase;
 
 const PROMOTION_WORDS = /(할인|증정|쿠폰|이벤트|행사|혜택|특가|무료|1\s*\+\s*1|2\s*\+\s*1|sale|event|promotion|benefit|coupon|gift|new)/i;
 const GENERIC_TITLE = /^(바로가기|자세히\s*보기|공지사항|기업뉴스|이벤트|진행중(?:인)?\s*이벤트(?:\s.*)?|종료(?:된)?\s*이벤트|지난\s*프로모션|공식\s*이벤트|행사\s*상품|event|promotion|news|notice|payment|what'?s new|starbucks|메가mgc커피|404)(\s*[|\-].*)?$/i;
-const INVALID_ASSET = /blank[_-]?img|spacer|transparent|\/common\/.*(?:logo|ci)|kakao(?:talk)?|shareimage|thumbnail\.png|%7b|\{\{/i;
+const INVALID_ASSET = /blank[_-]?img|no[_-]?image|image[_-]?not[_-]?found|spacer|transparent|\/common\/.*(?:logo|ci)|kakao(?:talk)?|shareimage|thumbnail\.png|view\.svg|facebook\.com\/tr|(?:pixel|track)(?:[./?_-]|$)|%7b|\{\{/i;
 
 // 매장 DB에 실제 입점한 브랜드만 출처로 자동 보강한다. 어드민에서 이미
 // 관리 중인 출처는 덮어쓰지 않고, 누락된 공식 출처만 추가한다.
 const REGISTERED_FRANCHISE_SOURCES = [
+  { id: "blushaak", match: /블루샥/, brand_name: "블루샥", homepage_url: "https://www.blushaak.co.kr", event_url: "https://www.blushaak.co.kr/news", brand_color: "#16A6D8", category: "카페", priority: 20 },
+  { id: "cafegate", match: /카페게이트/, brand_name: "카페게이트", homepage_url: "https://www.cafegate.co.kr", event_url: "https://www.cafegate.co.kr", brand_color: "#E44E2B", category: "카페", priority: 21 },
+  { id: "oozycoffee", match: /우지커피/, brand_name: "우지커피", homepage_url: "https://www.oozycoffee.com", event_url: "https://www.oozycoffee.com/index", brand_color: "#F2D331", category: "카페", priority: 22 },
+  { id: "portcancoffee", match: /포트캔커피/, brand_name: "포트캔커피", homepage_url: "https://portcancoffee.kr", event_url: "https://portcancoffee.kr/NEWS", brand_color: "#184F8C", category: "카페", priority: 22 },
   { id: "gongcha", match: /공차/, brand_name: "공차", homepage_url: "https://www.gong-cha.co.kr", event_url: "https://www.gong-cha.co.kr/brand/board/event.php", brand_color: "#B79A6E", category: "카페", priority: 16 },
   { id: "dunkin", match: /던킨/, brand_name: "던킨", homepage_url: "https://www.dunkindonuts.co.kr", event_url: "https://www.dunkindonuts.co.kr/event?flag=A", brand_color: "#E11383", category: "디저트", priority: 23 },
   { id: "lotteeatz", match: /롯데리아|크리스피크림/, brand_name: "롯데리아·크리스피크림", homepage_url: "https://www.lotteeatz.com", event_url: "https://www.lotteeatz.com/event/main", brand_color: "#DA291C", category: "외식", priority: 29 },
@@ -43,6 +47,9 @@ const REGISTERED_FRANCHISE_SOURCES = [
   { id: "baeksojeong", match: /백소정/, brand_name: "백소정", homepage_url: "https://baeksojeong.com", event_url: "https://baeksojeong.com", brand_color: "#B02A2A", category: "외식", priority: 44 },
   { id: "abiko", match: /아비꼬/, brand_name: "아비꼬", homepage_url: "https://www.abiko.kr", event_url: "https://www.abiko.kr", brand_color: "#D71920", category: "외식", priority: 45 },
   { id: "bonif", match: /본도시락/, brand_name: "본도시락", homepage_url: "https://www.bonif.co.kr", event_url: "https://www.bonif.co.kr", brand_color: "#7A3E22", category: "외식", priority: 46 },
+  { id: "yumsem", match: /얌샘김밥/, brand_name: "얌샘김밥", homepage_url: "https://yumsem.com", event_url: "https://yumsem.com", brand_color: "#E1262F", category: "외식", priority: 47 },
+  { id: "mikadosushi", match: /미카도스시/, brand_name: "미카도스시", homepage_url: "https://www.mikadosushi.co.kr", event_url: "https://www.mikadosushi.co.kr/bbs/board.php?bo_table=event", brand_color: "#C52026", category: "외식", priority: 48 },
+  { id: "pizzaschool", match: /피자스쿨/, brand_name: "피자스쿨", homepage_url: "https://pizzaschool.net", event_url: "https://pizzaschool.net", brand_color: "#F5C400", category: "외식", priority: 49 },
   { id: "davich", match: /다비치안경/, brand_name: "다비치안경", homepage_url: "https://davich.com", event_url: "https://davich.com/whatsnew/davichNews", brand_color: "#0067B1", category: "쇼핑", priority: 52 },
   { id: "olens", match: /오렌즈/, brand_name: "오렌즈", homepage_url: "https://www.o-lens.com", event_url: "https://www.o-lens.com/event", brand_color: "#E6007E", category: "쇼핑", priority: 53 },
   { id: "clean-topia", match: /크린토피아/, brand_name: "크린토피아", homepage_url: "https://www.cleantopia.com", event_url: "https://www.cleantopia.com", brand_color: "#1E73BE", category: "생활", priority: 54 },
@@ -90,6 +97,52 @@ function absoluteUrl(value, base) {
 
 function usableAsset(value) {
   return Boolean(value && !INVALID_ASSET.test(value));
+}
+
+async function cachePromotionArtwork(row) {
+  if (!row.image_url || row.image_url.includes("/storage/v1/object/public/admin-images/promotion-cache/")) return row;
+  try {
+    const response = await fetch(row.image_url, {
+      redirect: "follow",
+      signal: AbortSignal.timeout(12_000),
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; GeumdanPromotionBot/1.0; +https://geumdan-app.vercel.app)",
+        Accept: "image/avif,image/webp,image/apng,image/*,*/*;q=0.8",
+        Referer: new URL(row.source_url).origin,
+      },
+    });
+    const contentType = response.headers.get("content-type") || "";
+    if (!response.ok || !contentType.startsWith("image/")) return row;
+    const input = Buffer.from(await response.arrayBuffer());
+    if (input.length < 8_000 || input.length > 15 * 1024 * 1024) return row;
+    const { default: sharp } = await import("sharp");
+    const metadata = await sharp(input).metadata();
+    if ((metadata.width || 0) < 320 || (metadata.height || 0) < 240) return row;
+    const artwork = await sharp(input)
+      .rotate()
+      .resize(960, 960, {
+        fit: "contain",
+        background: { r: 246, g: 247, b: 249, alpha: 1 },
+        withoutEnlargement: false,
+      })
+      .webp({ quality: 84, effort: 4 })
+      .toBuffer();
+    const path = `promotion-cache/${row.id}.webp`;
+    const { error } = await supabase.storage.from("admin-images").upload(path, artwork, {
+      contentType: "image/webp",
+      cacheControl: "86400",
+      upsert: true,
+    });
+    if (error) return row;
+    const { data } = supabase.storage.from("admin-images").getPublicUrl(path);
+    return {
+      ...row,
+      image_url: data.publicUrl,
+      raw_metadata: { ...row.raw_metadata, original_image_url: row.image_url, cached_artwork: true },
+    };
+  } catch {
+    return row;
+  }
 }
 
 function metaValue(html, key) {
@@ -215,7 +268,7 @@ async function enrichCandidate(candidate, source) {
   const detailImages = html.match(/<img\b[^>]*>/gi) || [];
   const detailImage = detailImages.map((tag) => attr(tag, "data-original") || attr(tag, "data-src") || attr(tag, "src"))
     .find((value) => usableAsset(value) && !/icon|logo|sprite|loading/i.test(value));
-  const rawImage = [candidate.image_url, detailImage, metaValue(html, "og:image")].find(usableAsset);
+  const rawImage = [candidate.image_url, metaValue(html, "og:image"), detailImage].find(usableAsset);
   const image = absoluteUrl(rawImage, finalUrl);
   const combined = `${title} ${pageDescription} ${pageText}`;
   if (lowQualityTitle(title, source.brand_name) || /404|not found|종료된/i.test(combined) || (!PROMOTION_WORDS.test(combined) && !/\/(event|promotion|campaign)\//i.test(finalUrl))) return null;
@@ -288,7 +341,7 @@ export async function collectBrandPromotions(triggerType = process.env.PROMOTION
       const rows = [];
       for (const candidate of candidates) {
         const row = await enrichCandidate(candidate, source);
-        if (row) rows.push(row);
+        if (row) rows.push(await cachePromotionArtwork(row));
       }
       if (rows.length) {
         const { error } = await supabase.from("brand_promotions").upsert(rows, { onConflict: "source_url" });
