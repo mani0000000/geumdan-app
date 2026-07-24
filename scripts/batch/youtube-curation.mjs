@@ -306,7 +306,7 @@ export function scoreVideo(video) {
   return localScore(video) + freshnessScore(video) + topicScore(video) + subscriberScore(video) + viewScore(video) + qualityPenalty(video);
 }
 
-export function rankAndFilterVideos(videos, { minScore = 38, limit = 240 } = {}) {
+export function rankAndFilterVideos(videos, { minScore = 34, limit = 720 } = {}) {
   const seen = new Set();
   const ranked = videos
     .filter(video => video.video_id && !seen.has(video.video_id) && (seen.add(video.video_id), true))
@@ -348,7 +348,7 @@ export function rankAndFilterVideos(videos, { minScore = 38, limit = 240 } = {})
       while (bucket.length) {
         const video = bucket.shift();
         const channelCount = channelCounts.get(video.channel_name) ?? 0;
-        if (channelCount >= 6) continue;
+        if (channelCount >= 8) continue;
         result.push(video);
         channelCounts.set(video.channel_name, channelCount + 1);
         added = true;
@@ -495,10 +495,10 @@ async function enrichSubscribers(videos, youtubeApiKey) {
 
 export async function fetchCuratedYouTubeVideos({
   youtubeApiKey = '',
-  minScore = 38,
-  limit = 240,
+  minScore = 34,
+  limit = 720,
   includeContinuation = true,
-  queriesPerTopic = 6,
+  queriesPerTopic = 8,
 } = {}) {
   const rotation = Math.floor(Date.now() / 3600000);
   const queryItems = YOUTUBE_TOPIC_GROUPS.flatMap((group, groupIndex) => {

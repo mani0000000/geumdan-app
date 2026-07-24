@@ -3,15 +3,8 @@
  * Supabase youtube_videos 테이블에서 영상 목록 조회
  * Supabase 미설정 시 public/cache/youtube.json 정적 캐시 fallback
  */
-import { supabase } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { YouTubeVideo } from '@/lib/api/news';
-
-function isSupabaseConfigured(): boolean {
-  return Boolean(
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
-}
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
@@ -27,10 +20,10 @@ async function fetchFromStaticCache(): Promise<YouTubeVideo[]> {
   return [];
 }
 
-export async function fetchYouTubeVideosFromDB(limit = 200): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
+export async function fetchYouTubeVideosFromDB(limit = 400): Promise<{ videos: YouTubeVideo[]; source: string; ms: number }> {
   const t0 = performance.now();
 
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured) {
     const videos = await fetchFromStaticCache();
     return { videos, source: '캐시', ms: Math.round(performance.now() - t0) };
   }

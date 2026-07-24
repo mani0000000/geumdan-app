@@ -601,7 +601,7 @@ function YouTubeSection() {
       // 실시간 + DB 병렬 로드 후 videoId 기준 중복 제거
       const [live, db] = await Promise.all([
         fetchYouTubeVideos("검단신도시"),
-        fetchYouTubeVideosFromDB(12),
+        fetchYouTubeVideosFromDB(80),
       ]);
       if (!alive) return;
       const seen = new Set<string>();

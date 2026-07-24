@@ -110,9 +110,8 @@ async function supportsCurationSchema() {
   return !error;
 }
 
-async function pruneOutsideCollection(keepIds) {
+async function pruneOutsideCollection(maxStored = 3000) {
   if (!supabase) return 0;
-  const keep = new Set(keepIds);
   const allRows = [];
   const pageSize = 1000;
 
@@ -120,8 +119,8 @@ async function pruneOutsideCollection(keepIds) {
   for (let from = 0; ; from += pageSize) {
     const { data, error } = await supabase
       .from('youtube_videos')
-      .select('video_id')
-      .order('video_id', { ascending: true })
+      .select('video_id,published_at,fetched_at,relevance_score')
+      .order('published_at', { ascending: false, nullsFirst: false })
       .range(from, from + pageSize - 1);
     if (error) {
       console.warn(`  ⚠️ 이전 영상 정리 생략: ${error.message}`);
@@ -131,7 +130,9 @@ async function pruneOutsideCollection(keepIds) {
     if ((data?.length ?? 0) < pageSize) break;
   }
 
-  const stale = allRows.map(row => row.video_id).filter(id => id && !keep.has(id));
+  // 시간대마다 검색어가 회전하므로 이번 실행에 없다는 이유로 삭제하지 않는다.
+  // 최신·고연관 영상을 누적하고 보관 상한을 넘긴 오래된 항목만 정리한다.
+  const stale = allRows.slice(maxStored).map(row => row.video_id).filter(Boolean);
   let deleted = 0;
   for (let index = 0; index < stale.length; index += 80) {
     const batch = stale.slice(index, index + 80);
@@ -166,9 +167,10 @@ let videos;
 try {
   videos = await fetchCuratedYouTubeVideos({
     youtubeApiKey: YOUTUBE_API_KEY,
-    minScore: 38,
-    limit: 240,
+    minScore: 34,
+    limit: 720,
     includeContinuation: true,
+    queriesPerTopic: 8,
   });
   console.log(`  ✓ 큐레이션 통과: ${videos.length}개`);
 } catch (e) {
@@ -224,7 +226,7 @@ if (!result.ok) {
   process.exit(1);
 }
 
-const pruned = await pruneOutsideCollection(videos.map(video => video.video_id));
+const pruned = await pruneOutsideCollection(3000);
 
 const topicCounts = videos.reduce((acc, video) => {
   acc[video.topic] = (acc[video.topic] ?? 0) + 1;
