@@ -3,6 +3,12 @@ on:
   schedule:
     - cron: '0 * * * *'  # every hour
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/batch/fetch-youtube.mjs'
+      - 'scripts/batch/youtube-curation.mjs'
+      - '.github/workflows/batch-hourly.yml'
 permissions:
   contents: write
 concurrency:
