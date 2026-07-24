@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-07-24T14:27:19.420Z",
+  "timestamp": "2026-07-24T17:51:03.260Z",
   "weather": {
     "temp": 27,
     "feelsLike": 27,
@@ -8,20 +8,42 @@
     "emoji": "☀️",
     "humidity": 93,
     "windSpeed": 2,
-    "high": 29,
-    "low": 25,
-    "hourly": [],
+    "high": 30,
+    "low": 26,
+    "hourly": [
+      {
+        "hour": "03:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "04:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "05:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "06:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "07:00",
+        "temp": 26,
+        "emoji": "☁️"
+      },
+      {
+        "hour": "08:00",
+        "temp": 27,
+        "emoji": "☁️"
+      }
+    ],
     "yesterdayTemp": null,
     "weekly": [
-      {
-        "date": "7/24",
-        "dayLabel": "금",
-        "emoji": "🌦️",
-        "high": 29,
-        "low": 25,
-        "precipitation": 1,
-        "isToday": true
-      },
       {
         "date": "7/25",
         "dayLabel": "토",
@@ -29,7 +51,7 @@
         "high": 30,
         "low": 26,
         "precipitation": 8,
-        "isToday": false
+        "isToday": true
       },
       {
         "date": "7/26",
@@ -46,7 +68,7 @@
         "emoji": "🌧️",
         "high": 30,
         "low": 25,
-        "precipitation": 29,
+        "precipitation": 30,
         "isToday": false
       },
       {
@@ -75,13 +97,22 @@
         "low": 26,
         "precipitation": 2,
         "isToday": false
+      },
+      {
+        "date": "7/31",
+        "dayLabel": "금",
+        "emoji": "🌦️",
+        "high": 30,
+        "low": 26,
+        "precipitation": 1,
+        "isToday": false
       }
     ],
-    "pm10": 22,
-    "pm25": 19,
+    "pm10": 18,
+    "pm25": 14,
     "pm10Label": "좋음",
-    "pm25Label": "보통",
+    "pm25Label": "좋음",
     "source": "기상청",
-    "fetchedAt": "2026-07-24T14:27:19.420Z"
+    "fetchedAt": "2026-07-24T17:51:03.260Z"
   }
 }
