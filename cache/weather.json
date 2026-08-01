@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-01T15:17:48.898Z",
+  "timestamp": "2026-08-01T16:36:57.257Z",
   "weather": {
     "temp": 28,
     "feelsLike": 28,
@@ -7,15 +7,10 @@
     "label": "맑음",
     "emoji": "☀️",
     "humidity": 95,
-    "windSpeed": 1,
+    "windSpeed": 2,
     "high": 32,
     "low": 26,
     "hourly": [
-      {
-        "hour": "00:00",
-        "temp": 27,
-        "emoji": "☀️"
-      },
       {
         "hour": "01:00",
         "temp": 27,
@@ -38,6 +33,11 @@
       },
       {
         "hour": "05:00",
+        "temp": 26,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "06:00",
         "temp": 26,
         "emoji": "☀️"
       }
@@ -108,11 +108,11 @@
         "isToday": false
       }
     ],
-    "pm10": 39,
-    "pm25": 34,
+    "pm10": 41,
+    "pm25": 36,
     "pm10Label": "보통",
-    "pm25Label": "보통",
+    "pm25Label": "나쁨",
     "source": "기상청",
-    "fetchedAt": "2026-08-01T15:17:48.898Z"
+    "fetchedAt": "2026-08-01T16:36:57.257Z"
   }
 }
