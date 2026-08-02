@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-08-02T17:44:33.325Z",
+  "timestamp": "2026-08-02T18:43:46.737Z",
   "weather": {
     "temp": 25,
-    "feelsLike": 31,
+    "feelsLike": 30,
     "weatherCode": 3,
     "label": "날씨",
     "emoji": "☁️",
@@ -11,11 +11,6 @@
     "high": 31,
     "low": 25,
     "hourly": [
-      {
-        "hour": "17:00",
-        "temp": 29,
-        "emoji": "☀️"
-      },
       {
         "hour": "18:00",
         "temp": 29,
@@ -40,6 +35,11 @@
         "hour": "22:00",
         "temp": 26,
         "emoji": "☁️"
+      },
+      {
+        "hour": "23:00",
+        "temp": 25,
+        "emoji": "☁️"
       }
     ],
     "yesterdayTemp": null,
@@ -57,8 +57,8 @@
         "date": "8/3",
         "dayLabel": "월",
         "emoji": "☁️",
-        "high": 31,
-        "low": 25,
+        "high": 32,
+        "low": 24,
         "precipitation": 0,
         "isToday": false
       },
@@ -66,7 +66,7 @@
         "date": "8/4",
         "dayLabel": "화",
         "emoji": "🌤️",
-        "high": 33,
+        "high": 34,
         "low": 25,
         "precipitation": 0,
         "isToday": false
@@ -86,33 +86,33 @@
         "emoji": "🌦️",
         "high": 36,
         "low": 27,
-        "precipitation": 2,
+        "precipitation": 0,
         "isToday": false
       },
       {
         "date": "8/7",
         "dayLabel": "금",
-        "emoji": "🌤️",
+        "emoji": "☀️",
         "high": 39,
-        "low": 28,
+        "low": 29,
         "precipitation": 0,
         "isToday": false
       },
       {
         "date": "8/8",
         "dayLabel": "토",
-        "emoji": "⛈️",
-        "high": 36,
-        "low": 28,
-        "precipitation": 4,
+        "emoji": "🌡️",
+        "high": 37,
+        "low": 27,
+        "precipitation": 20,
         "isToday": false
       }
     ],
-    "pm10": 65,
-    "pm25": 63,
+    "pm10": 70,
+    "pm25": 69,
     "pm10Label": "보통",
     "pm25Label": "나쁨",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-02T17:44:33.325Z"
+    "fetchedAt": "2026-08-02T18:43:46.737Z"
   }
 }
