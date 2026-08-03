@@ -18,6 +18,7 @@ const USER_SOURCE_ID = "geumdan-user-location";
 const USER_HALO_ID = "geumdan-user-halo";
 const USER_DOT_ID = "geumdan-user-dot";
 const REAL_BUILDING_LAYER_ID = "geumdan-real-buildings-3d";
+const OPENFREE_BUILDING_LAYER_ID = "building-3d";
 const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
 
 const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
@@ -243,10 +244,13 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     if (!containerRef.current || mapRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://tiles.openfreemap.org/styles/positron",
+      // OpenFreeMap의 주간 갱신 OSM 벡터와 기본 3D 건물 레이어를 사용한다.
+      // Positron보다 도로·단지 경계 식별성이 높은 Liberty를 기반으로 하고,
+      // 아래에서 건물 높이/색만 검단 지도 톤에 맞게 재정의한다.
+      style: "https://tiles.openfreemap.org/styles/liberty",
       center: CENTER,
-      zoom: compact ? 14.15 : 14.4,
-      pitch: compact ? 36 : 48,
+      zoom: compact ? 14.5 : 14.8,
+      pitch: compact ? 46 : 58,
       bearing: compact ? -12 : -22,
       minZoom: 12,
       maxZoom: 19,
@@ -261,7 +265,24 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
 
     map.on("load", () => {
       const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-      if (map.getSource("openmaptiles") && !map.getLayer(REAL_BUILDING_LAYER_ID)) {
+      const bundledBuildingLayer = map.getLayer(OPENFREE_BUILDING_LAYER_ID);
+      const realBuildingLayerId = bundledBuildingLayer ? OPENFREE_BUILDING_LAYER_ID : REAL_BUILDING_LAYER_ID;
+      if (bundledBuildingLayer) {
+        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-color", [
+          "case",
+          ["boolean", ["feature-state", "commercial"], false], "#F05F52",
+          [">=", ["coalesce", ["get", "render_height"], 0], 45], "#AEBBCD",
+          "#D6D3CC",
+        ]);
+        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-height", [
+          "max",
+          ["coalesce", ["feature-state", "customHeight"], 0],
+          ["coalesce", ["get", "render_height"], 0],
+          3.2,
+        ]);
+        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-base", ["coalesce", ["get", "render_min_height"], 0]);
+        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-opacity", 0.9);
+      } else if (map.getSource("openmaptiles") && !map.getLayer(REAL_BUILDING_LAYER_ID)) {
         map.addLayer({
           id: REAL_BUILDING_LAYER_ID,
           type: "fill-extrusion",
@@ -269,8 +290,18 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
           "source-layer": "building",
           minzoom: 14,
           paint: {
-            "fill-extrusion-color": ["case", ["boolean", ["feature-state", "commercial"], false], "#EF665B", "#cbc8c1"],
-            "fill-extrusion-height": ["*", ["min", ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 2], 3.2], 6], 40], 0.68],
+            "fill-extrusion-color": [
+              "case",
+              ["boolean", ["feature-state", "commercial"], false], "#F05F52",
+              [">=", ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 1], 3.2]], 45], "#AEBBCD",
+              "#D6D3CC",
+            ],
+            "fill-extrusion-height": [
+              "max",
+              ["coalesce", ["feature-state", "customHeight"], 0],
+              ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 1], 3.2]],
+              3.2,
+            ],
             "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
             "fill-extrusion-opacity": 0.76,
           },
@@ -303,17 +334,26 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       map.addLayer({ id: USER_DOT_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#1677FF", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } });
 
       const highlightCommerceFootprints = () => {
-        if (!map.getLayer(REAL_BUILDING_LAYER_ID)) return;
+        if (!map.getLayer(realBuildingLayerId)) return;
         for (const row of displayedBuildings) {
           if (!row.lng || !row.lat) continue;
           const point = map.project([row.lng, row.lat]);
           const features = map.queryRenderedFeatures([
             [point.x - 10, point.y - 10],
             [point.x + 10, point.y + 10],
-          ], { layers: [REAL_BUILDING_LAYER_ID] });
+          ], { layers: [realBuildingLayerId] });
           const feature = features.find((item) => item.id != null);
           if (feature?.id != null) {
-            map.setFeatureState({ source: "openmaptiles", sourceLayer: "building", id: feature.id }, { commercial: true });
+            const registeredFloors = Number(row.floors);
+            map.setFeatureState(
+              { source: "openmaptiles", sourceLayer: "building", id: feature.id },
+              {
+                commercial: true,
+                customHeight: Number.isFinite(registeredFloors) && registeredFloors > 0
+                  ? Math.max(4.2, registeredFloors * 3.45)
+                  : 4.2,
+              },
+            );
           }
         }
       };
@@ -360,7 +400,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
   const results = query.trim() ? buildings.filter((item) => `${item.name} ${item.address}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
   const closeSelection = () => {
     setSelectedId(null); setBuilding(null); setSelectedFloor("");
-    mapRef.current?.easeTo({ center: CENTER, zoom: 14.4, pitch: 52, bearing: -22, duration: 750, offset: [0, 0] });
+    mapRef.current?.easeTo({ center: CENTER, zoom: 14.8, pitch: 58, bearing: -22, duration: 750, offset: [0, 0] });
   };
 
   return (
