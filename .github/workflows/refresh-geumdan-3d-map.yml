@@ -1,0 +1,51 @@
+name: Refresh Geumdan 3D Map
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 19 3 * *" # 매월 4일 04:20 KST, Overture 최신 릴리스 반영
+
+concurrency:
+  group: refresh-geumdan-3d-map
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - uses: astral-sh/setup-uv@v6
+      - name: 최신 검단 건물 외곽 수집
+        run: uvx overturemaps download --bbox=126.675,37.565,126.755,37.635 -f geojson --type=building -o /tmp/geumdan-buildings.geojson
+      - name: 운영 상가 건물 인벤토리 수집
+        run: |
+          curl --fail --silent --show-error \
+            "$SUPABASE_URL/rest/v1/buildings?select=id,name,address,lat,lng,floors,ground_floors,floor_verification,building_type,total_stores&is_published=eq.true&limit=1000" \
+            -H "apikey: $SUPABASE_SERVICE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_KEY" \
+            -o /tmp/geumdan-commerce-buildings.json
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: 모바일 3D 데이터셋 생성
+        run: node scripts/batch/build-geumdan-3d-dataset.mjs /tmp/geumdan-buildings.geojson /tmp/geumdan-commerce-buildings.json public/data/geumdan-buildings.geojson
+      - name: 변경된 지도 데이터만 반영
+        run: |
+          if git diff --quiet -- public/data/geumdan-buildings.geojson; then
+            echo "No map dataset changes"
+            exit 0
+          fi
+          git config user.name "geumdan-map-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data/geumdan-buildings.geojson
+          git commit -m "data: refresh Geumdan 3D buildings"
+          git push

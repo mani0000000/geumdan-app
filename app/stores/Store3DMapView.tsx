@@ -9,7 +9,9 @@ import type { Building, Store, StoreCategory } from "@/lib/types";
 import type { BuildingRow } from "@/lib/db/buildings";
 import { fetchBuildingWithFloors } from "@/lib/db/buildings";
 
-const CENTER: [number, number] = [126.7107, 37.5924];
+// 검단신도시 공동주택·중심상업지의 실제 공간 분포 중심.
+// 이전 좌표는 원당동 서측에 치우쳐 신도시 동측 고층 주거군이 첫 화면 밖에 있었다.
+const CENTER: [number, number] = [126.7172, 37.5962];
 const SOURCE_ID = "geumdan-commerce";
 const LAYER_ID = "geumdan-commerce-3d";
 const LABEL_SOURCE_ID = "geumdan-commerce-labels";
@@ -17,8 +19,9 @@ const LABEL_LAYER_ID = "geumdan-commerce-labels-layer";
 const USER_SOURCE_ID = "geumdan-user-location";
 const USER_HALO_ID = "geumdan-user-halo";
 const USER_DOT_ID = "geumdan-user-dot";
-const REAL_BUILDING_LAYER_ID = "geumdan-real-buildings-3d";
 const OPENFREE_BUILDING_LAYER_ID = "building-3d";
+const CITY_BUILDING_SOURCE_ID = "geumdan-buildings-2026";
+const CITY_BUILDING_LAYER_ID = "geumdan-buildings-2026-3d";
 const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
 
 const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
@@ -265,48 +268,29 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
 
     map.on("load", () => {
       const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
-      const bundledBuildingLayer = map.getLayer(OPENFREE_BUILDING_LAYER_ID);
-      const realBuildingLayerId = bundledBuildingLayer ? OPENFREE_BUILDING_LAYER_ID : REAL_BUILDING_LAYER_ID;
-      if (bundledBuildingLayer) {
-        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-color", [
-          "case",
-          ["boolean", ["feature-state", "commercial"], false], "#F05F52",
-          [">=", ["coalesce", ["get", "render_height"], 0], 45], "#AEBBCD",
-          "#D6D3CC",
-        ]);
-        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-height", [
-          "max",
-          ["coalesce", ["feature-state", "customHeight"], 0],
-          ["coalesce", ["get", "render_height"], 0],
-          3.2,
-        ]);
-        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-base", ["coalesce", ["get", "render_min_height"], 0]);
-        map.setPaintProperty(realBuildingLayerId, "fill-extrusion-opacity", 0.9);
-      } else if (map.getSource("openmaptiles") && !map.getLayer(REAL_BUILDING_LAYER_ID)) {
-        map.addLayer({
-          id: REAL_BUILDING_LAYER_ID,
-          type: "fill-extrusion",
-          source: "openmaptiles",
-          "source-layer": "building",
-          minzoom: 14,
-          paint: {
-            "fill-extrusion-color": [
-              "case",
-              ["boolean", ["feature-state", "commercial"], false], "#F05F52",
-              [">=", ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 1], 3.2]], 45], "#AEBBCD",
-              "#D6D3CC",
-            ],
-            "fill-extrusion-height": [
-              "max",
-              ["coalesce", ["feature-state", "customHeight"], 0],
-              ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 1], 3.2]],
-              3.2,
-            ],
-            "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-            "fill-extrusion-opacity": 0.76,
-          },
-        }, firstSymbolLayer);
-      }
+      if (map.getLayer(OPENFREE_BUILDING_LAYER_ID)) map.setLayoutProperty(OPENFREE_BUILDING_LAYER_ID, "visibility", "none");
+      map.addSource(CITY_BUILDING_SOURCE_ID, {
+        type: "geojson",
+        data: "/data/geumdan-buildings.geojson",
+        generateId: true,
+      });
+      map.addLayer({
+        id: CITY_BUILDING_LAYER_ID,
+        type: "fill-extrusion",
+        source: CITY_BUILDING_SOURCE_ID,
+        minzoom: 12.8,
+        paint: {
+          "fill-extrusion-color": [
+            "match", ["get", "kind"],
+            "commerce", "#F05F52",
+            "apartment", "#AAB8CB",
+            "#D7D3CB",
+          ],
+          "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12.8, 0, 14, ["get", "height"]],
+          "fill-extrusion-base": 0,
+          "fill-extrusion-opacity": 0.88,
+        },
+      }, firstSymbolLayer);
       map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
       map.addSource(LABEL_SOURCE_ID, { type: "geojson", data: labelGeojson });
       const currentLocation = userLocationRef.current;
@@ -333,32 +317,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       map.addLayer({ id: USER_HALO_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 16, "circle-color": "#1677FF", "circle-opacity": 0.16, "circle-stroke-width": 0 } });
       map.addLayer({ id: USER_DOT_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#1677FF", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } });
 
-      const highlightCommerceFootprints = () => {
-        if (!map.getLayer(realBuildingLayerId)) return;
-        for (const row of displayedBuildings) {
-          if (!row.lng || !row.lat) continue;
-          const point = map.project([row.lng, row.lat]);
-          const features = map.queryRenderedFeatures([
-            [point.x - 10, point.y - 10],
-            [point.x + 10, point.y + 10],
-          ], { layers: [realBuildingLayerId] });
-          const feature = features.find((item) => item.id != null);
-          if (feature?.id != null) {
-            const registeredFloors = Number(row.floors);
-            map.setFeatureState(
-              { source: "openmaptiles", sourceLayer: "building", id: feature.id },
-              {
-                commercial: true,
-                customHeight: Number.isFinite(registeredFloors) && registeredFloors > 0
-                  ? Math.max(4.2, registeredFloors * 3.45)
-                  : 4.2,
-              },
-            );
-          }
-        }
-      };
-      map.once("idle", highlightCommerceFootprints);
-      map.on("moveend", highlightCommerceFootprints);
+      map.on("click", CITY_BUILDING_LAYER_ID, (event) => {
+        const commerceId = String(event.features?.[0]?.properties?.commerceId ?? "");
+        if (commerceId) selectBuilding(commerceId);
+      });
       map.on("click", LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
@@ -407,6 +369,9 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     <div className={`relative h-full overflow-hidden bg-[#e9e6dd] ${compact ? "min-h-0" : "min-h-[520px]"}`}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(250,249,244,.15),transparent_24%,rgba(244,240,231,.12))]" />
+      <div className={`pointer-events-none absolute z-[5] rounded-full bg-white/78 px-2 py-1 text-[8px] font-bold text-[#77736c] backdrop-blur ${compact ? "bottom-2 right-2" : "bottom-[82px] left-3 md:bottom-3"}`}>
+        © OpenStreetMap · Overture Maps
+      </div>
 
       {!compact && <div className="absolute left-4 right-4 top-4 z-10 md:left-6 md:right-auto md:w-[360px]">
         <div className="flex h-12 items-center gap-2 rounded-full bg-white/94 px-4 shadow-[0_8px_25px_rgba(68,61,47,.13)] backdrop-blur-xl">
