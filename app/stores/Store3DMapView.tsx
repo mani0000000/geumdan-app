@@ -187,7 +187,7 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
   );
 }
 
-export default function Store3DMapView({ buildings, userLocation, locating, onRequestLocation }: { buildings: BuildingRow[]; userLocation: { lat: number; lng: number } | null; locating?: boolean; onRequestLocation: () => void }) {
+export default function Store3DMapView({ buildings, userLocation, locating, onRequestLocation, compact = false }: { buildings: BuildingRow[]; userLocation: { lat: number; lng: number } | null; locating?: boolean; onRequestLocation: () => void; compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const userLocationRef = useRef(userLocation);
@@ -195,8 +195,11 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
   const [building, setBuilding] = useState<Building | null>(null);
   const [selectedFloor, setSelectedFloor] = useState("");
   const [query, setQuery] = useState("");
-  const geojson = useMemo(() => toGeoJSON(buildings), [buildings]);
-  const labelGeojson = useMemo(() => toLabelGeoJSON(buildings), [buildings]);
+  const displayedBuildings = useMemo(() => compact
+    ? [...buildings].sort((a, b) => (b.total_stores ?? 0) - (a.total_stores ?? 0)).slice(0, 24)
+    : buildings, [buildings, compact]);
+  const geojson = useMemo(() => toGeoJSON(displayedBuildings), [displayedBuildings]);
+  const labelGeojson = useMemo(() => toLabelGeoJSON(displayedBuildings), [displayedBuildings]);
   const selectedRow = useMemo(() => buildings.find((item) => item.id === selectedId) ?? null, [buildings, selectedId]);
 
   const selectBuilding = useCallback((id: string) => {
@@ -242,17 +245,19 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       container: containerRef.current,
       style: "https://tiles.openfreemap.org/styles/positron",
       center: CENTER,
-      zoom: 14.4,
-      pitch: 52,
-      bearing: -22,
+      zoom: compact ? 14.15 : 14.4,
+      pitch: compact ? 36 : 48,
+      bearing: compact ? -12 : -22,
       minZoom: 12,
       maxZoom: 19,
       attributionControl: false,
       canvasContextAttributes: { antialias: true },
     });
     mapRef.current = map;
-    map.dragRotate.enable();
-    map.touchZoomRotate.enableRotation();
+    if (!compact) {
+      map.dragRotate.enable();
+      map.touchZoomRotate.enableRotation();
+    }
 
     map.on("load", () => {
       const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
@@ -264,10 +269,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
           "source-layer": "building",
           minzoom: 14,
           paint: {
-            "fill-extrusion-color": ["interpolate", ["linear"], ["coalesce", ["get", "render_height"], 6], 0, "#dedbd4", 30, "#c9c5bc", 80, "#aaa69d"],
-            "fill-extrusion-height": ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 2], 3.2], 6],
+            "fill-extrusion-color": ["case", ["boolean", ["feature-state", "commercial"], false], "#EF665B", "#cbc8c1"],
+            "fill-extrusion-height": ["*", ["min", ["coalesce", ["get", "render_height"], ["*", ["coalesce", ["get", "levels"], 2], 3.2], 6], 40], 0.68],
             "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0],
-            "fill-extrusion-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0.72, 17, 0.9],
+            "fill-extrusion-opacity": 0.76,
           },
         }, firstSymbolLayer);
       }
@@ -279,14 +284,14 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         features: currentLocation ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [currentLocation.lng, currentLocation.lat] } }] : [],
       } });
       map.addLayer({ id: BUILDING_HALO_LAYER_ID, type: "circle", source: SOURCE_ID, minzoom: 13, paint: {
-        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 19, 13],
-        "circle-color": ["case", ["boolean", ["feature-state", "selected"], false], "#EF665B", "#ffffff"],
-        "circle-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 0.3, 0.82],
-        "circle-stroke-color": "rgba(50,47,42,.12)", "circle-stroke-width": 1,
+        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 20, compact ? 14 : 15],
+        "circle-color": "#ffffff",
+        "circle-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 0.42, 0.92],
+        "circle-stroke-color": "rgba(239,102,91,.22)", "circle-stroke-width": 2,
       }});
       map.addLayer({ id: LAYER_ID, type: "circle", source: SOURCE_ID, minzoom: 13, paint: {
-        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 8, 6],
-        "circle-color": ["case", ["boolean", ["feature-state", "selected"], false], "#EF665B", ["boolean", ["get", "hasKnownFloors"], false], "#6F675B", "#A8A39A"],
+        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 9, compact ? 7 : 7.5],
+        "circle-color": "#EF665B",
         "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
       }});
       map.addLayer({ id: LABEL_LAYER_ID, type: "symbol", source: LABEL_SOURCE_ID, minzoom: 13.2, layout: {
@@ -296,6 +301,24 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       }, paint: { "text-color": "#292722", "text-halo-color": "rgba(255,255,255,.96)", "text-halo-width": 2, "text-halo-blur": 0.5 } });
       map.addLayer({ id: USER_HALO_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 16, "circle-color": "#1677FF", "circle-opacity": 0.16, "circle-stroke-width": 0 } });
       map.addLayer({ id: USER_DOT_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#1677FF", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } });
+
+      const highlightCommerceFootprints = () => {
+        if (!map.getLayer(REAL_BUILDING_LAYER_ID)) return;
+        for (const row of displayedBuildings) {
+          if (!row.lng || !row.lat) continue;
+          const point = map.project([row.lng, row.lat]);
+          const features = map.queryRenderedFeatures([
+            [point.x - 10, point.y - 10],
+            [point.x + 10, point.y + 10],
+          ], { layers: [REAL_BUILDING_LAYER_ID] });
+          const feature = features.find((item) => item.id != null);
+          if (feature?.id != null) {
+            map.setFeatureState({ source: "openmaptiles", sourceLayer: "building", id: feature.id }, { commercial: true });
+          }
+        }
+      };
+      map.once("idle", highlightCommerceFootprints);
+      map.on("moveend", highlightCommerceFootprints);
       map.on("click", LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
@@ -308,7 +331,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       });
     });
     return () => { map.remove(); mapRef.current = null; };
-  }, [geojson, labelGeojson, selectBuilding]);
+  }, [compact, displayedBuildings, geojson, labelGeojson, selectBuilding]);
 
   useEffect(() => {
     const source = mapRef.current?.getSource(SOURCE_ID) as GeoJSONSource | undefined;
@@ -341,24 +364,24 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
   };
 
   return (
-    <div className="relative h-full min-h-[520px] overflow-hidden bg-[#e9e6dd]">
+    <div className={`relative h-full overflow-hidden bg-[#e9e6dd] ${compact ? "min-h-0" : "min-h-[520px]"}`}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(250,249,244,.15),transparent_24%,rgba(244,240,231,.12))]" />
 
-      <div className="absolute left-4 right-4 top-4 z-10 md:left-6 md:right-auto md:w-[360px]">
+      {!compact && <div className="absolute left-4 right-4 top-4 z-10 md:left-6 md:right-auto md:w-[360px]">
         <div className="flex h-12 items-center gap-2 rounded-full bg-white/94 px-4 shadow-[0_8px_25px_rgba(68,61,47,.13)] backdrop-blur-xl">
           <Search size={18} className="text-[#77736c]"/>
           <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="상가 건물·매장 검색" className="min-w-0 flex-1 bg-transparent text-[14px] font-bold text-[#25231f] outline-none placeholder:text-[#9a968e]"/>
           {query && <button type="button" onClick={() => setQuery("")} className="grid h-7 w-7 place-items-center rounded-full bg-[#efede7]"><X size={14}/></button>}
         </div>
         {results.length > 0 && <div className="mt-2 overflow-hidden rounded-[20px] bg-white/96 p-2 shadow-[0_14px_35px_rgba(68,61,47,.16)] backdrop-blur-xl">{results.map((item) => <button key={item.id} type="button" onClick={() => { selectBuilding(item.id); setQuery(""); }} className="flex w-full items-center gap-3 rounded-[14px] px-3 py-2.5 text-left active:bg-[#f3f1eb]"><Building2 size={17} className="text-[#EF665B]"/><span className="min-w-0 flex-1"><b className="block truncate text-[13px] text-[#25231f]">{item.name}</b><small className="block truncate text-[10px] text-[#8b877f]">{Number.isFinite(item.floors) && Number(item.floors) > 1 ? `${item.floors}층` : "층수 미확인"} · {item.total_stores ?? 0}개 매장</small></span><ChevronRight size={15} className="text-[#aaa59c]"/></button>)}</div>}
-      </div>
+      </div>}
 
-      {!selectedId && <div className="absolute bottom-[92px] right-4 z-10 md:bottom-6 md:right-6">
+      {!compact && !selectedId && <div className="absolute bottom-[92px] right-4 z-10 md:bottom-6 md:right-6">
         <button type="button" onClick={focusMyLocation} aria-label="내 위치로 이동" className="relative grid h-11 w-11 place-items-center rounded-full bg-white/94 text-[#1677FF] shadow-lg backdrop-blur"><LocateFixed size={19}/>{locating && <span className="absolute inset-0 animate-ping rounded-full border-2 border-[#1677FF]/30"/>}</button>
       </div>}
-      {selectedId && !building && <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-[12px] font-black text-[#EF665B] shadow-xl">층별 정보를 불러오는 중…</div>}
-      {building && <FloorPlan building={building} row={selectedRow} userLocation={userLocation} selectedFloor={selectedFloor} onFloor={setSelectedFloor} onClose={closeSelection}/>} 
+      {!compact && selectedId && !building && <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2 rounded-full bg-white px-4 py-2 text-[12px] font-black text-[#EF665B] shadow-xl">층별 정보를 불러오는 중…</div>}
+      {!compact && building && <FloorPlan building={building} row={selectedRow} userLocation={userLocation} selectedFloor={selectedFloor} onFloor={setSelectedFloor} onClose={closeSelection}/>}
     </div>
   );
 }
