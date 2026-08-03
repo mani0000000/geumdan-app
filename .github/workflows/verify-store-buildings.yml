@@ -1,0 +1,49 @@
+name: Verify Store Buildings
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 18 * * *" # 매일 03:30 KST
+  push:
+    paths:
+      - "scripts/batch/verify-building-register.mjs"
+      - ".github/workflows/verify-store-buildings.yml"
+
+concurrency:
+  group: verify-store-buildings
+  cancel-in-progress: false
+
+jobs:
+  verify-building-register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: 필수 공식 API 키 확인
+        shell: bash
+        run: |
+          missing=0
+          for name in SUPABASE_URL SUPABASE_SERVICE_KEY KAKAO_REST_API_KEY DATA_GO_KR_API_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name GitHub Actions secret이 비어 있습니다."
+              missing=1
+            fi
+          done
+          exit "$missing"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+      - name: 공식 건축물대장 기반 상가 건물 층수 검증
+        run: node scripts/batch/verify-building-register.mjs --apply
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
