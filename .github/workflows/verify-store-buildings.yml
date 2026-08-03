@@ -51,6 +51,7 @@ jobs:
       - name: 동일 도로명주소 매장 정보 수집·정리
         run: node scripts/batch/collect-exact-address-stores.mjs
         env:
+          ADDRESS_SCHEMA_VERSION: "2026-geumdan-gu"
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
