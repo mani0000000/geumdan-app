@@ -1,38 +1,49 @@
 {
-  "timestamp": "2026-08-03T13:48:31.924Z",
+  "timestamp": "2026-08-03T16:40:25.638Z",
   "weather": {
     "temp": 29,
     "feelsLike": 29,
     "weatherCode": 0,
     "label": "맑음",
     "emoji": "☀️",
-    "humidity": 83,
-    "windSpeed": 1,
-    "high": 33,
-    "low": 24,
+    "humidity": 87,
+    "windSpeed": 2,
+    "high": 36,
+    "low": 27,
     "hourly": [
       {
-        "hour": "22:00",
+        "hour": "01:00",
         "temp": 28,
         "emoji": "☀️"
       },
       {
-        "hour": "23:00",
+        "hour": "02:00",
         "temp": 28,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "03:00",
+        "temp": 28,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "04:00",
+        "temp": 27,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "05:00",
+        "temp": 27,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "06:00",
+        "temp": 27,
         "emoji": "☀️"
       }
     ],
     "yesterdayTemp": null,
     "weekly": [
-      {
-        "date": "8/3",
-        "dayLabel": "월",
-        "emoji": "☀️",
-        "high": 33,
-        "low": 24,
-        "precipitation": 0,
-        "isToday": true
-      },
       {
         "date": "8/4",
         "dayLabel": "화",
@@ -40,7 +51,7 @@
         "high": 36,
         "low": 27,
         "precipitation": 0,
-        "isToday": false
+        "isToday": true
       },
       {
         "date": "8/5",
@@ -72,7 +83,7 @@
       {
         "date": "8/8",
         "dayLabel": "토",
-        "emoji": "🌡️",
+        "emoji": "☀️",
         "high": 36,
         "low": 27,
         "precipitation": 11,
@@ -86,13 +97,22 @@
         "low": 25,
         "precipitation": 1,
         "isToday": false
+      },
+      {
+        "date": "8/10",
+        "dayLabel": "월",
+        "emoji": "☁️",
+        "high": 33,
+        "low": 23,
+        "precipitation": 0,
+        "isToday": false
       }
     ],
-    "pm10": 33,
-    "pm25": 32,
+    "pm10": 36,
+    "pm25": 35,
     "pm10Label": "보통",
     "pm25Label": "보통",
     "source": "기상청",
-    "fetchedAt": "2026-08-03T13:48:31.924Z"
+    "fetchedAt": "2026-08-03T16:40:25.638Z"
   }
 }
