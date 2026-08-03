@@ -28,12 +28,14 @@ function similarity(left, right) {
   return (2 * overlap / Math.max(1, aa.size + bb.size)) * 100;
 }
 
-async function search(query) {
+async function search(query, useBias = true) {
   const requestUrl = new URL("https://dapi.kakao.com/v2/local/search/keyword.json");
   requestUrl.searchParams.set("query", query);
-  requestUrl.searchParams.set("x", "126.708");
-  requestUrl.searchParams.set("y", "37.589");
-  requestUrl.searchParams.set("radius", "20000");
+  if (useBias) {
+    requestUrl.searchParams.set("x", "126.708");
+    requestUrl.searchParams.set("y", "37.589");
+    requestUrl.searchParams.set("radius", "20000");
+  }
   requestUrl.searchParams.set("size", "15");
   const response = await fetch(requestUrl, {
     headers: { Authorization: `KakaoAK ${kakaoKey}` },
@@ -49,13 +51,30 @@ if (error) throw error;
 const report = [];
 for (const apartment of apartments ?? []) {
   try {
-    const documents = await search(`${apartment.name} 인천 서구`);
+    const withoutRegion = apartment.name.replace(/^검단\s*/i, "");
+    const queries = [
+      apartment.name,
+      `${apartment.name} 아파트`,
+      `${apartment.dong ?? ""} ${apartment.name}`,
+      `${withoutRegion} 검단`,
+      `${withoutRegion} 인천 서구`,
+    ];
+    const documents = [];
+    for (const query of [...new Set(queries.map(value => value.trim()).filter(Boolean))]) {
+      documents.push(...await search(query, false));
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     const ranked = documents
       .filter(item => `${item.road_address_name} ${item.address_name}`.includes("인천 서구"))
-      .map(item => ({ item, score: similarity(apartment.name, item.place_name) }))
+      .map(item => ({
+        item,
+        score: similarity(apartment.name, item.place_name)
+          + (/아파트|주거/.test(item.category_name ?? "") ? 12 : 0)
+          + (String(item.place_name ?? "").includes("상가") ? -8 : 0),
+      }))
       .sort((a, b) => b.score - a.score);
     const best = ranked[0];
-    if (!best || best.score < 58) {
+    if (!best || best.score < 52) {
       report.push({ id: apartment.id, name: apartment.name, status: "not_matched", best: best?.item?.place_name ?? null, score: best?.score ?? 0 });
       continue;
     }
@@ -80,3 +99,5 @@ console.log(JSON.stringify({
   report,
 }, null, 2));
 
+const completed = report.filter(item => /updated|matched/.test(item.status)).length;
+if (completed === 0) throw new Error("No apartment coordinates were matched; do not treat this batch as successful");
