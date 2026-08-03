@@ -15,7 +15,12 @@ const categoryCodes = ["FD6", "CE7", "CS2", "MT1", "HP8", "PM9", "AG2", "BK9"];
 const keywordGroups = ["학원", "미용실", "네일", "세탁소", "필라테스", "헬스", "안경", "베이커리", "동물병원"];
 
 function normalizedAddress(value) {
-  return String(value ?? "").replace(/인천광역시/g, "인천").replace(/[\s,()-]/g, "").toLowerCase();
+  return String(value ?? "")
+    .replace(/인천광역시/g, "인천")
+    // 2026 행정구역 개편 전 DB의 '서구'와 개편 후 API의 '검단구'를 동일시한다.
+    .replace(/인천\s*검단구/g, "인천 서구")
+    .replace(/[\s,()-]/g, "")
+    .toLowerCase();
 }
 function category(place) {
   const map = { CE7: "카페", FD6: "음식점", CS2: "편의점", MT1: "마트", HP8: "병원/약국", PM9: "병원/약국", AG2: "부동산", BK9: "기타" };
