@@ -11,7 +11,7 @@ on:
 
 concurrency:
   group: verify-store-buildings
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   verify-building-register:

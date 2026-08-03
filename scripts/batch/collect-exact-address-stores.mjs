@@ -37,13 +37,16 @@ async function kakao(path, params) {
 }
 async function collect(building) {
   const found = new Map();
-  for (const code of categoryCodes) {
-    const data = await kakao("category", { category_group_code: code, x: building.lng, y: building.lat, radius: 120, size: 15, sort: "distance" });
-    for (const place of data.documents ?? []) found.set(place.id, place);
-  }
-  for (const word of keywordGroups) {
-    const data = await kakao("keyword", { query: `${building.name} ${word}`, x: building.lng, y: building.lat, radius: 160, size: 15, sort: "distance" });
-    for (const place of data.documents ?? []) found.set(place.id, place);
+  const categoryResults = await Promise.all(categoryCodes.map(code =>
+    kakao("category", { category_group_code: code, x: building.lng, y: building.lat, radius: 120, size: 15, sort: "distance" })
+      .catch(error => ({ documents: [], _error: error.message })),
+  ));
+  const keywordResults = await Promise.all(keywordGroups.map(word =>
+    kakao("keyword", { query: `${building.name} ${word}`, x: building.lng, y: building.lat, radius: 160, size: 15, sort: "distance" })
+      .catch(error => ({ documents: [], _error: error.message })),
+  ));
+  for (const result of [...categoryResults, ...keywordResults]) {
+    for (const place of result.documents ?? []) found.set(place.id, place);
   }
   const target = normalizedAddress(building.address);
   return [...found.values()].filter(place => target && normalizedAddress(place.road_address_name) === target);
