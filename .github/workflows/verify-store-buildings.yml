@@ -41,6 +41,12 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+      - name: 검단 공동주택 위치 전수 보정
+        run: node scripts/batch/enrich-apartment-map.mjs --apply
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
       - name: 공식 건축물대장 기반 상가 건물 층수 검증
         continue-on-error: true
         run: node scripts/batch/verify-building-register.mjs --apply
@@ -49,12 +55,6 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
-      - name: 검단 공동주택 위치 전수 보정
-        run: node scripts/batch/enrich-apartment-map.mjs --apply
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
       - name: 동일 도로명주소 매장 정보 수집·정리
         run: node scripts/batch/collect-exact-address-stores.mjs
         env:
