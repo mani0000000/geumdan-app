@@ -2,6 +2,9 @@
 @import "./mobile-form-stability.css";
 
 :root {
+  color-scheme: light;
+  --app-shell-max: 430px;
+  --app-shell-gutter: 0px;
   --apple-blue: #0071e3;
   --apple-blue-press: #0058b0;
   --apple-blue-dark: #2997ff;
@@ -23,12 +26,95 @@
 * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
 
 html, body {
+  min-width: 320px;
   font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
   background: var(--apple-bg);
   color: var(--apple-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.2px;
+  text-rendering: optimizeLegibility;
+  font-variant-numeric: tabular-nums;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+.app-shell {
+  width: min(100vw, var(--app-shell-max));
+  max-width: var(--app-shell-max);
+}
+
+.app-fab {
+  right: max(20px, calc((100vw - var(--app-shell-max)) / 2 + 20px));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --app-shell-max: 720px;
+    --app-shell-gutter: 32px;
+  }
+
+  body {
+    background:
+      radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 34vw),
+      radial-gradient(circle at bottom right, rgba(0, 196, 113, 0.10), transparent 30vw),
+      var(--apple-bg);
+  }
+
+  .app-shell {
+    width: min(calc(100vw - var(--app-shell-gutter)), var(--app-shell-max));
+    min-height: calc(100dvh - 32px);
+    margin-top: 16px;
+    margin-bottom: 16px;
+    border: 1px solid rgba(29, 29, 31, 0.06);
+    border-radius: 28px;
+    box-shadow:
+      0 30px 80px rgba(15, 23, 42, 0.13),
+      0 1px 0 rgba(255, 255, 255, 0.75) inset;
+    isolation: isolate;
+  }
+
+  .app-shell > [class*="min-h-dvh"] {
+    min-height: calc(100dvh - 32px);
+  }
+
+  .app-shell header {
+    top: 0 !important;
+  }
+
+  .app-shell [data-home-news-story-card],
+  .app-shell [data-youtube-card],
+  .app-shell [data-news-story-card] {
+    width: min(42vw, 340px) !important;
+    max-width: 340px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --app-shell-max: 960px;
+    --app-shell-gutter: 48px;
+  }
+
+  .app-shell {
+    border-radius: 32px;
+  }
+
+  .app-shell [data-home-news-story-card],
+  .app-shell [data-youtube-card],
+  .app-shell [data-news-story-card] {
+    width: min(30vw, 360px) !important;
+    max-width: 360px !important;
+  }
+}
+
+@media (min-width: 1440px) {
+  :root {
+    --app-shell-max: 1080px;
+    --app-shell-gutter: 64px;
+  }
 }
 
 ::-webkit-scrollbar { display: none; }
@@ -37,6 +123,53 @@ html, body {
 :focus-visible {
   outline: 2px solid var(--apple-blue);
   outline-offset: 2px;
+}
+
+/* 검색 필드는 활성화돼도 파란 링/외곽선으로 튀지 않게 통일한다. */
+:is(input[type="search"], input[role="searchbox"], input[placeholder*="검색"]):focus,
+:is(input[type="search"], input[role="searchbox"], input[placeholder*="검색"]):focus-visible {
+  outline: none !important;
+  border-color: #d2d2d7 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+:is(label, div, form):has(> :is(input[type="search"], input[role="searchbox"], input[placeholder*="검색"])):focus-within {
+  outline: none !important;
+  --tw-ring-color: transparent !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  border-color: #d2d2d7 !important;
+}
+
+/* 바텀시트가 열리면 아래 페이지는 스크롤·터치되지 않는다. */
+html:has([data-bottom-sheet][data-state="open"]),
+body:has([data-bottom-sheet][data-state="open"]),
+body:has(.fixed.inset-0.flex.items-end) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+[data-bottom-sheet][data-state="open"] {
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+/* 상가 층별 패널은 전역 하단 내비게이션보다 우선하며, 열려 있는 동안 내비게이션을 숨긴다. */
+html:has([data-store-floor-sheet]),
+body:has([data-store-floor-sheet]) {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+
+body:has([data-store-floor-sheet]) [data-bottom-nav-layer] {
+  display: none !important;
+}
+
+/* 기존 바텀시트도 투명 배경으로 아래 화면이 노출·작동하지 않도록 통일한다. */
+:where(.fixed.inset-0.flex.items-end):not([class*="bg-"]) {
+  pointer-events: auto;
+  background-color: rgb(7 17 31 / 48%);
+  backdrop-filter: blur(2px);
 }
 
 /* ── 전광판 애니메이션 ─────────────────────────────────── */
@@ -61,9 +194,50 @@ html, body {
   0%   { transform: translateY(-40%); opacity: 0; }
   100% { transform: translateY(0);    opacity: 1; }
 }
+@keyframes subway-card-rise {
+  0%   { opacity: 0; transform: translateY(14px) scale(0.98); filter: blur(3px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
 
 .animate-led-blink  { animation: led-blink   0.85s ease-in-out infinite; }
 .animate-dot-pulse  { animation: dot-pulse   1s    ease-in-out infinite; }
 .animate-train-glide{ animation: train-glide 2s    ease-in-out infinite; }
 .animate-slide-up   { animation: slide-up-in 0.25s ease-out  both;       }
 .animate-num-tick   { animation: number-tick 0.2s  ease-out  both;       }
+.subway-card-enter  { animation: subway-card-rise 0.42s cubic-bezier(.2,.8,.2,1) both; }
+
+/* 검단 상징 아이콘이 한 형태에서 다음 형태로 이어지는 공통 로딩 모션 */
+@keyframes geumdan-icon-morph {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(.45) rotate(-22deg); filter: blur(5px); }
+  12%  { opacity: 1; transform: translate(-50%, -50%) scale(1.06) rotate(2deg); filter: blur(0); }
+  25%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(0); filter: blur(0); }
+  34%  { opacity: 0; transform: translate(-50%, -50%) scale(.58) rotate(18deg); filter: blur(4px); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(.45) rotate(22deg); filter: blur(5px); }
+}
+@keyframes geumdan-loader-orbit {
+  0% { transform: rotate(0deg) scale(.94); border-radius: 28px; }
+  50% { transform: rotate(180deg) scale(1.04); border-radius: 50%; }
+  100% { transform: rotate(360deg) scale(.94); border-radius: 28px; }
+}
+@keyframes geumdan-loader-ping {
+  0%, 100% { transform: scale(.72); opacity: .55; }
+  50% { transform: scale(1); opacity: 1; }
+}
+@keyframes geumdan-loader-dot {
+  0%, 70%, 100% { transform: translateY(0) scale(.72); opacity: .3; }
+  35% { transform: translateY(-4px) scale(1); opacity: 1; }
+}
+.geumdan-loader-icon { opacity: 0; animation: geumdan-icon-morph 3.6s cubic-bezier(.4,0,.2,1) infinite; }
+.geumdan-loader-orbit { animation: geumdan-loader-orbit 3.6s linear infinite; }
+.geumdan-loader-ping { animation: geumdan-loader-ping 1.15s ease-in-out infinite; }
+.geumdan-loader-dot { animation: geumdan-loader-dot 1.15s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

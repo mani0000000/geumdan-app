@@ -150,7 +150,8 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
     ?? building.floors.find((item) => item.label === defaultFloorLabel(building.floors))
     ?? building.floors[0];
   const [photoDirection, setPhotoDirection] = useState("대표");
-  const orderedFloors = useMemo(() => [...building.floors].sort((a, b) => b.level - a.level), [building.floors]);
+  const groundFloors = useMemo(() => building.floors.filter((item) => item.level > 0).sort((a, b) => b.level - a.level), [building.floors]);
+  const basementFloors = useMemo(() => building.floors.filter((item) => item.level < 0).sort((a, b) => b.level - a.level), [building.floors]);
   const photos = [
     ["대표", row?.image_url], ["북", row?.photo_north], ["동", row?.photo_east],
     ["남", row?.photo_south], ["서", row?.photo_west],
@@ -163,7 +164,7 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
   return (
     <>
       <button type="button" aria-label="상가 정보 닫기" onClick={onClose} className="fixed inset-0 z-[9490] cursor-default bg-black/35 backdrop-blur-[2px]" />
-      <section role="dialog" aria-modal="true" aria-label={`${building.name} 층별 매장`} className="fixed inset-x-0 bottom-0 z-[9500] max-h-[78dvh] overflow-hidden rounded-t-[28px] bg-[#fbfaf6] shadow-[0_-20px_60px_rgba(28,25,20,.28)] md:bottom-5 md:left-auto md:right-5 md:w-[430px] md:rounded-[28px]">
+      <section data-store-floor-sheet role="dialog" aria-modal="true" aria-label={`${building.name} 층별 매장`} className="fixed inset-x-0 bottom-0 z-[9500] max-h-[78dvh] overflow-hidden rounded-t-[28px] bg-[#fbfaf6] shadow-[0_-20px_60px_rgba(28,25,20,.28)] md:bottom-5 md:left-auto md:right-5 md:w-[430px] md:rounded-[28px]">
       <div className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[#d8d4ca]" />
       <div className="flex items-start gap-3 px-4 pb-3 pt-3">
         <div className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-[16px] bg-[#ebe8df] text-[#a09b91]">
@@ -195,11 +196,18 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
           <span className="text-[11px] font-black text-[#EF665B]">{floor?.stores.length ?? 0}곳</span>
         </div>
         <div className="flex min-h-[210px] gap-3">
-          <div className="scrollbar-hide flex w-[60px] shrink-0 flex-col gap-1.5 overflow-y-auto py-1">
-            {orderedFloors.map((item) => {
+          <div className="scrollbar-hide flex w-[60px] shrink-0 flex-col overflow-y-auto py-1">
+            <div className="flex flex-col overflow-hidden rounded-t-[12px] border-x border-t border-[#d8d3c9] bg-[#e9e5dc] shadow-[0_8px_18px_rgba(54,48,38,.10)]">
+            {groundFloors.map((item) => {
               const active = item.label === floor?.label;
-              return <button key={item.label} type="button" onClick={() => onFloor(item.label)} className={`flex min-h-10 items-center justify-center rounded-[12px] text-[12px] font-black transition ${active ? "bg-[#25231f] text-white shadow-md" : "bg-[#efede7] text-[#625f59]"}`}>{item.label}</button>;
+              const isGround = item.level === 1;
+              return <button key={item.label} type="button" onClick={() => onFloor(item.label)} className={`relative flex min-h-9 items-center justify-center border-b border-[#d8d3c9] text-[12px] font-black transition ${active ? "z-[1] bg-[#25231f] text-white shadow-md" : isGround ? "bg-[#fff8e9] text-[#8A5A18]" : "bg-[#f5f2eb] text-[#625f59]"}`}>{item.label}{isGround && <span className="absolute bottom-0.5 text-[7px] font-bold opacity-70">출입층</span>}</button>;
             })}
+            </div>
+            {basementFloors.length > 0 && <div className="mt-2 border-t-2 border-dashed border-[#bbb4a8] pt-1"><p className="mb-1 text-center text-[7px] font-black text-[#918a7e]">지하</p>{basementFloors.map((item) => {
+              const active = item.label === floor?.label;
+              return <button key={item.label} type="button" onClick={() => onFloor(item.label)} className={`mb-1 flex min-h-8 w-full items-center justify-center rounded-[9px] text-[11px] font-black ${active ? "bg-[#25231f] text-white" : "bg-[#ddd9d1] text-[#625f59]"}`}>{item.label}</button>;
+            })}</div>}
           </div>
           <div className="scrollbar-hide flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 pr-[16%]">
             {floor?.stores.length ? floor.stores.map((store) => {
