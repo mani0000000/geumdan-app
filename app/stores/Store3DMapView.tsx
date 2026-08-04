@@ -317,10 +317,14 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         source: OFFICIAL_APARTMENT_SOURCE_ID,
         minzoom: 12.8,
         paint: {
-          "fill-extrusion-color": "#607EA8",
+          "fill-extrusion-color": [
+            "match", ["get", "kind"],
+            "apartment", "#607EA8",
+            "#D8D3C9",
+          ],
           "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12.8, 0, 14, ["get", "height"]],
           "fill-extrusion-base": 0,
-          "fill-extrusion-opacity": 0.92,
+          "fill-extrusion-opacity": 0.94,
         },
       }, firstSymbolLayer);
       map.addLayer({
@@ -328,12 +332,20 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         type: "symbol",
         source: OFFICIAL_APARTMENT_SOURCE_ID,
         minzoom: 14.7,
+        filter: ["==", ["get", "kind"], "apartment"],
         layout: {
           "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 10,
           "text-anchor": "center", "text-max-width": 8, "text-allow-overlap": false,
         },
         paint: { "text-color": "#1F304A", "text-halo-color": "rgba(255,255,255,.96)", "text-halo-width": 2 },
       }, firstSymbolLayer);
+      // 공식 건물통합정보가 도착하면 오래된 Overture 건물은 숨겨 중복·오배치를 방지한다.
+      map.on("sourcedata", (event) => {
+        if (event.sourceId !== OFFICIAL_APARTMENT_SOURCE_ID || !event.isSourceLoaded) return;
+        if (map.querySourceFeatures(OFFICIAL_APARTMENT_SOURCE_ID).length > 0 && map.getLayer(CITY_BUILDING_LAYER_ID)) {
+          map.setLayoutProperty(CITY_BUILDING_LAYER_ID, "visibility", "none");
+        }
+      });
       map.addLayer({
         id: APARTMENT_LABEL_LAYER_ID,
         type: "symbol",
