@@ -145,27 +145,12 @@ function distanceKm(a: { lat: number; lng: number } | null, row: BuildingRow | n
   return 6371 * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
-function safeStoreLayout(store: Store, index: number, total: number) {
-  const valid = store.w > 2 && store.h > 2 && (store.x > 0 || store.y > 0);
-  if (valid) return { left: store.x, top: store.y, width: store.w, height: store.h };
-  const cols = total <= 4 ? 2 : total <= 9 ? 3 : 4;
-  const rows = Math.ceil(total / cols);
-  const gap = 2;
-  const width = (100 - gap * (cols + 1)) / cols;
-  const height = (100 - gap * (rows + 1)) / rows;
-  return { left: gap + (index % cols) * (width + gap), top: gap + Math.floor(index / cols) * (height + gap), width, height };
-}
-
 function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClose }: { building: Building; row: BuildingRow | null; userLocation: { lat: number; lng: number } | null; selectedFloor: string; onFloor: (value: string) => void; onClose: () => void }) {
   const floor = building.floors.find((item) => item.label === selectedFloor)
     ?? building.floors.find((item) => item.label === defaultFloorLabel(building.floors))
     ?? building.floors[0];
-  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
-  const [planPage, setPlanPage] = useState(0);
   const [photoDirection, setPhotoDirection] = useState("대표");
-  const pageSize = 12;
-  const pageCount = Math.max(1, Math.ceil((floor?.stores.length ?? 0) / pageSize));
-  const visibleStores = floor?.stores.slice(planPage * pageSize, (planPage + 1) * pageSize) ?? [];
+  const orderedFloors = useMemo(() => [...building.floors].sort((a, b) => b.level - a.level), [building.floors]);
   const photos = [
     ["대표", row?.image_url], ["북", row?.photo_north], ["동", row?.photo_east],
     ["남", row?.photo_south], ["서", row?.photo_west],
@@ -173,12 +158,14 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
   const imageUrl = photos.find(([label]) => label === photoDirection)?.[1] ?? photos[0]?.[1] ?? buildingImage(row);
   const distance = distanceKm(userLocation, row);
 
-  useEffect(() => { setSelectedStore(null); setPlanPage(0); }, [selectedFloor, building.id]);
   useEffect(() => { setPhotoDirection(photos[0]?.[0] ?? "대표"); }, [building.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="absolute inset-x-3 bottom-[72px] z-20 overflow-hidden rounded-[26px] bg-[#fbfaf6]/95 shadow-[0_18px_50px_rgba(42,38,31,.22)] backdrop-blur-2xl md:bottom-5 md:left-auto md:right-5 md:w-[410px]">
-      <div className="flex items-start gap-3 px-4 pb-3 pt-4">
+    <>
+      <button type="button" aria-label="상가 정보 닫기" onClick={onClose} className="fixed inset-0 z-[9490] cursor-default bg-black/35 backdrop-blur-[2px]" />
+      <section role="dialog" aria-modal="true" aria-label={`${building.name} 층별 매장`} className="fixed inset-x-0 bottom-0 z-[9500] max-h-[78dvh] overflow-hidden rounded-t-[28px] bg-[#fbfaf6] shadow-[0_-20px_60px_rgba(28,25,20,.28)] md:bottom-5 md:left-auto md:right-5 md:w-[430px] md:rounded-[28px]">
+      <div className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[#d8d4ca]" />
+      <div className="flex items-start gap-3 px-4 pb-3 pt-3">
         <div className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-[16px] bg-[#ebe8df] text-[#a09b91]">
           {imageUrl ? <img src={imageUrl} alt={`${building.name} 건물`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <ImageIcon size={22}/>} 
         </div>
@@ -202,43 +189,43 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
         </div>
       )}
 
-      <div className="scrollbar-hide flex gap-2 overflow-x-auto px-5 pb-3">
-        {building.floors.map((item) => {
-          const active = item.label === floor?.label;
-          return <button key={item.label} type="button" onClick={() => onFloor(item.label)} className="h-9 min-w-12 rounded-full px-3 text-[12px] font-black transition-colors" style={{ background: active ? "#EF665B" : "#efede7", color: active ? "white" : "#625f59" }}>{item.label}</button>;
-        })}
-      </div>
-
-      <div className="mx-4 flex items-center justify-between pb-1.5 text-[10px] font-bold text-[#8b877f]">
-        <span>{floor?.label} · {floor?.stores.length ?? 0}개 매장</span>
-        {pageCount > 1 && <span className="flex items-center gap-2"><button type="button" onClick={() => setPlanPage((value) => Math.max(0, value - 1))} disabled={planPage === 0} className="rounded-full bg-[#efede7] px-2 py-1 disabled:opacity-35">이전</button>{planPage + 1}/{pageCount}<button type="button" onClick={() => setPlanPage((value) => Math.min(pageCount - 1, value + 1))} disabled={planPage === pageCount - 1} className="rounded-full bg-[#efede7] px-2 py-1 disabled:opacity-35">다음</button></span>}
-      </div>
-      <div className="mx-4 rounded-[18px] border border-[#ddd8cc] bg-[#eeeae0] p-2 shadow-inner">
-        <div className="relative h-[190px] overflow-hidden rounded-[13px] bg-[#f9f7f1] sm:h-[220px]">
-          {visibleStores.length ? visibleStores.map((store, index) => {
-            const layout = safeStoreLayout({ ...store, x: 0, y: 0, w: 0, h: 0 }, index, visibleStores.length);
-            const active = selectedStore?.id === store.id;
-            const color = CATEGORY_COLOR[store.category] ?? CATEGORY_COLOR.기타!;
-            return (
-              <button key={store.id} type="button" onClick={() => setSelectedStore(store)} className="absolute flex min-h-0 flex-col items-start justify-center overflow-hidden rounded-[8px] border px-2 text-left transition-[transform,box-shadow] active:scale-[.97]" style={{ left: `${layout.left}%`, top: `${layout.top}%`, width: `${layout.width}%`, height: `${layout.height}%`, borderColor: active ? color : "#d6d0c5", background: active ? color : "#fffefa", color: active ? "white" : "#292722", boxShadow: active ? `0 7px 16px ${color}45` : "none", zIndex: active ? 2 : 1 }}>
-                <span className="line-clamp-2 text-[10px] font-black leading-tight sm:text-[11px]">{store.name}</span>
-                <span className={`mt-0.5 text-[8px] font-bold ${active ? "text-white/75" : "text-[#8b877f]"}`}>{store.category}</span>
-              </button>
-            );
-          }) : <div className="grid h-full place-items-center text-center"><div><StoreIcon className="mx-auto text-[#b4afa5]"/><p className="mt-2 text-[12px] font-bold text-[#8b877f]">등록된 매장을 정리하고 있어요</p></div></div>}
+      <div className="border-t border-[#ece8df] px-4 pb-[max(18px,env(safe-area-inset-bottom))] pt-3">
+        <div className="mb-2 flex items-end justify-between pl-[72px]">
+          <div><p className="text-[15px] font-black text-[#25231f]">{floor?.label} 입점 매장</p><p className="text-[10px] font-bold text-[#8b877f]">좌우로 넘겨 매장 정보를 확인하세요</p></div>
+          <span className="text-[11px] font-black text-[#EF665B]">{floor?.stores.length ?? 0}곳</span>
+        </div>
+        <div className="flex min-h-[210px] gap-3">
+          <div className="scrollbar-hide flex w-[60px] shrink-0 flex-col gap-1.5 overflow-y-auto py-1">
+            {orderedFloors.map((item) => {
+              const active = item.label === floor?.label;
+              return <button key={item.label} type="button" onClick={() => onFloor(item.label)} className={`flex min-h-10 items-center justify-center rounded-[12px] text-[12px] font-black transition ${active ? "bg-[#25231f] text-white shadow-md" : "bg-[#efede7] text-[#625f59]"}`}>{item.label}</button>;
+            })}
+          </div>
+          <div className="scrollbar-hide flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 pr-[16%]">
+            {floor?.stores.length ? floor.stores.map((store) => {
+              const color = CATEGORY_COLOR[store.category] ?? CATEGORY_COLOR.기타!;
+              return (
+                <article key={store.id} className="min-w-[82%] snap-start overflow-hidden rounded-[20px] border border-[#e5e0d6] bg-white shadow-[0_8px_22px_rgba(48,43,34,.08)]">
+                  <div className="relative h-[92px] overflow-hidden" style={{ background: `${color}18` }}>
+                    {store.thumbnail_url ? <img src={store.thumbnail_url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center" style={{ color }}><StoreIcon size={30}/></div>}
+                    <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black backdrop-blur" style={{ color }}>{store.category}</span>
+                  </div>
+                  <div className="p-3.5">
+                    <h4 className="truncate text-[15px] font-black text-[#25231f]">{store.name}</h4>
+                    <p className="mt-1 line-clamp-2 min-h-8 text-[11px] leading-4 text-[#77736c]">{store.description || store.hours || "매장 상세에서 영업시간과 이용 정보를 확인하세요."}</p>
+                    <div className="mt-3 flex items-center justify-between">
+                      <span className={`text-[10px] font-black ${store.isOpen === true ? "text-[#16865C]" : "text-[#8b877f]"}`}>{store.isOpen === true ? "영업 중" : store.hours || "시간 확인"}</span>
+                      <Link href={`/stores/detail/?id=${encodeURIComponent(store.id)}`} className="flex h-8 items-center gap-1 rounded-full bg-[#25231f] px-3 text-[10px] font-black text-white">상세 <ChevronRight size={12}/></Link>
+                    </div>
+                  </div>
+                </article>
+              );
+            }) : <div className="grid min-w-full place-items-center rounded-[20px] bg-[#f3f1eb] text-center"><div><StoreIcon className="mx-auto text-[#b4afa5]"/><p className="mt-2 text-[12px] font-bold text-[#8b877f]">이 층의 매장을 정리하고 있어요</p></div></div>}
+          </div>
         </div>
       </div>
-
-      <div className="min-h-[72px] px-5 py-3">
-        {selectedStore ? (
-          <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-[13px]" style={{ background: `${CATEGORY_COLOR[selectedStore.category] ?? CATEGORY_COLOR.기타}20`, color: CATEGORY_COLOR[selectedStore.category] ?? CATEGORY_COLOR.기타 }}><StoreIcon size={21}/></div>
-            <div className="min-w-0 flex-1"><p className="truncate text-[14px] font-black text-[#25231f]">{selectedStore.name}</p><p className="mt-0.5 truncate text-[11px] text-[#77736c]">{selectedStore.category} · {selectedStore.isOpen === true ? "영업 중" : selectedStore.hours || "영업시간 확인"}</p></div>
-            <Link href={`/stores/detail/?id=${encodeURIComponent(selectedStore.id)}`} className="flex h-10 shrink-0 items-center gap-1 rounded-full bg-[#EF665B] px-4 text-[12px] font-black text-white">상세 <ChevronRight size={14}/></Link>
-          </div>
-        ) : <p className="py-3 text-center text-[11px] font-bold text-[#8b877f]">매장을 누르면 상세 정보를 바로 볼 수 있어요</p>}
-      </div>
-    </div>
+      </section>
+    </>
   );
 }
 
