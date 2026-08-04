@@ -466,7 +466,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(250,249,244,.15),transparent_24%,rgba(244,240,231,.12))]" />
       <div className={`pointer-events-none absolute z-[5] rounded-full bg-white/78 px-2 py-1 text-[8px] font-bold text-[#77736c] backdrop-blur ${compact ? "bottom-2 right-2" : "bottom-[82px] left-3 md:bottom-3"}`}>
-        © OpenStreetMap · Overture Maps
+        © OpenStreetMap · 국토교통부/VWorld
       </div>
       <div className={`pointer-events-none absolute z-[6] flex items-center gap-2 rounded-full bg-white/88 px-2.5 py-1.5 text-[9px] font-black text-[#445064] shadow-sm backdrop-blur ${compact ? "left-2 top-2" : "bottom-[82px] right-3 md:bottom-3"}`}>
         <span className="h-2.5 w-2.5 rounded-[3px] bg-[#7087A8]" />공동주택
