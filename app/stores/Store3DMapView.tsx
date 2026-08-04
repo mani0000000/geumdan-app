@@ -308,7 +308,9 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       }, firstSymbolLayer);
       map.addSource(OFFICIAL_APARTMENT_SOURCE_ID, {
         type: "geojson",
-        data: "/api/map/geumdan-apartments",
+        // VWorld WFS를 배치 수집한 공식 건물 외곽선. 지도 진입 때 외부 API를
+        // 호출하지 않아 터치·렌더링 중 상류 서비스 지연의 영향을 받지 않는다.
+        data: "/data/geumdan-vworld-buildings.geojson",
         generateId: true,
       });
       map.addLayer({
@@ -397,6 +399,18 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         const commerceId = String(event.features?.[0]?.properties?.commerceId ?? "");
         if (commerceId) selectBuilding(commerceId);
       });
+      map.on("click", OFFICIAL_APARTMENT_LAYER_ID, (event) => {
+        // 상가의 작은 중심 마커가 아니라 공식 건물 외곽선 전체를 터치 영역으로 사용한다.
+        const point = event.lngLat;
+        const nearest = buildings.reduce<{ row: BuildingRow | null; distance: number }>((best, row) => {
+          if (!hasVerifiedPosition(row)) return best;
+          const x = (Number(row.lng) - point.lng) * Math.cos(point.lat * Math.PI / 180);
+          const y = Number(row.lat) - point.lat;
+          const distance = Math.sqrt(x * x + y * y) * 111_000;
+          return distance < best.distance ? { row, distance } : best;
+        }, { row: null, distance: Number.POSITIVE_INFINITY });
+        if (nearest.row && nearest.distance <= 85) selectBuilding(nearest.row.id);
+      });
       map.on("click", LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
@@ -407,6 +421,8 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       });
       map.on("mouseenter", LAYER_ID, () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", LAYER_ID, () => { map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", OFFICIAL_APARTMENT_LAYER_ID, () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", OFFICIAL_APARTMENT_LAYER_ID, () => { map.getCanvas().style.cursor = ""; });
       map.on("click", LABEL_LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
