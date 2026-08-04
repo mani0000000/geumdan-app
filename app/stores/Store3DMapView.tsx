@@ -11,7 +11,7 @@ import { fetchBuildingWithFloors } from "@/lib/db/buildings";
 
 // 검단신도시 공동주택·중심상업지의 실제 공간 분포 중심.
 // 이전 좌표는 원당동 서측에 치우쳐 신도시 동측 고층 주거군이 첫 화면 밖에 있었다.
-const CENTER: [number, number] = [126.7172, 37.5962];
+const CENTER: [number, number] = [126.7208, 37.6035];
 const SOURCE_ID = "geumdan-commerce";
 const LAYER_ID = "geumdan-commerce-3d";
 const LABEL_SOURCE_ID = "geumdan-commerce-labels";
@@ -22,6 +22,7 @@ const USER_DOT_ID = "geumdan-user-dot";
 const OPENFREE_BUILDING_LAYER_ID = "building-3d";
 const CITY_BUILDING_SOURCE_ID = "geumdan-buildings-2026";
 const CITY_BUILDING_LAYER_ID = "geumdan-buildings-2026-3d";
+const APARTMENT_LABEL_LAYER_ID = "geumdan-apartment-labels";
 const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
 
 const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
@@ -252,7 +253,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       // 아래에서 건물 높이/색만 검단 지도 톤에 맞게 재정의한다.
       style: "https://tiles.openfreemap.org/styles/liberty",
       center: CENTER,
-      zoom: compact ? 14.5 : 14.8,
+      zoom: compact ? 14.15 : 14.45,
       pitch: compact ? 46 : 58,
       bearing: compact ? -12 : -22,
       minZoom: 12,
@@ -283,12 +284,34 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
           "fill-extrusion-color": [
             "match", ["get", "kind"],
             "commerce", "#F05F52",
-            "apartment", "#AAB8CB",
+            "apartment", "#7087A8",
+            "residential", "#9EACC0",
             "#D7D3CB",
           ],
           "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12.8, 0, 14, ["get", "height"]],
           "fill-extrusion-base": 0,
-          "fill-extrusion-opacity": 0.88,
+          "fill-extrusion-opacity": 0.94,
+        },
+      }, firstSymbolLayer);
+      map.addLayer({
+        id: APARTMENT_LABEL_LAYER_ID,
+        type: "symbol",
+        source: CITY_BUILDING_SOURCE_ID,
+        minzoom: 15.2,
+        filter: ["in", ["get", "kind"], ["literal", ["apartment", "residential"]]],
+        layout: {
+          "text-field": ["coalesce", ["get", "name"], "공동주택"],
+          "text-size": ["interpolate", ["linear"], ["zoom"], 15.2, 9, 17, 11],
+          "text-font": ["Noto Sans Bold"],
+          "text-anchor": "center",
+          "text-max-width": 7,
+          "text-allow-overlap": false,
+          "symbol-sort-key": ["case", ["has", "name"], 0, 1],
+        },
+        paint: {
+          "text-color": "#27364D",
+          "text-halo-color": "rgba(255,255,255,.96)",
+          "text-halo-width": 2,
         },
       }, firstSymbolLayer);
       map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
@@ -362,7 +385,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
   const results = query.trim() ? buildings.filter((item) => `${item.name} ${item.address}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
   const closeSelection = () => {
     setSelectedId(null); setBuilding(null); setSelectedFloor("");
-    mapRef.current?.easeTo({ center: CENTER, zoom: 14.8, pitch: 58, bearing: -22, duration: 750, offset: [0, 0] });
+    mapRef.current?.easeTo({ center: CENTER, zoom: 14.45, pitch: 58, bearing: -22, duration: 750, offset: [0, 0] });
   };
 
   return (
@@ -371,6 +394,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(250,249,244,.15),transparent_24%,rgba(244,240,231,.12))]" />
       <div className={`pointer-events-none absolute z-[5] rounded-full bg-white/78 px-2 py-1 text-[8px] font-bold text-[#77736c] backdrop-blur ${compact ? "bottom-2 right-2" : "bottom-[82px] left-3 md:bottom-3"}`}>
         © OpenStreetMap · Overture Maps
+      </div>
+      <div className={`pointer-events-none absolute z-[6] flex items-center gap-2 rounded-full bg-white/88 px-2.5 py-1.5 text-[9px] font-black text-[#445064] shadow-sm backdrop-blur ${compact ? "left-2 top-2" : "bottom-[82px] right-3 md:bottom-3"}`}>
+        <span className="h-2.5 w-2.5 rounded-[3px] bg-[#7087A8]" />공동주택
+        <span className="ml-1 h-2.5 w-2.5 rounded-[3px] bg-[#F05F52]" />상가
       </div>
 
       {!compact && <div className="absolute left-4 right-4 top-4 z-10 md:left-6 md:right-auto md:w-[360px]">

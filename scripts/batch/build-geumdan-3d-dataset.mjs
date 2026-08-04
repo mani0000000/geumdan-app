@@ -77,7 +77,11 @@ const features = candidates.map(({ feature }) => {
   const commerceFloors = Number(commerce?.ground_floors ?? commerce?.floors);
   const hasSourceFloors = Number.isFinite(sourceFloors) && sourceFloors > 0;
   const hasCommerceFloors = Number.isFinite(commerceFloors) && commerceFloors > 0;
+  // Overture/OSM에서 신축 공동주택은 class=apartments 대신
+  // subtype=residential,class=residential까지만 들어오는 경우가 있다.
+  // 실제 외곽은 유지하되 이를 일반 2층 건물로 낮춰 그리지 않는다.
   const isApartment = sourceProps.class === "apartments";
+  const isResidential = isApartment || (sourceProps.subtype === "residential" && sourceProps.class === "residential");
   const isCommerce = Boolean(commerce) || sourceProps.subtype === "commercial";
   const floors = hasCommerceFloors ? commerceFloors : hasSourceFloors ? sourceFloors : null;
   const sourceHeight = Number(sourceProps.height);
@@ -89,6 +93,8 @@ const features = candidates.map(({ feature }) => {
         ? sourceFloors * 3.2
         : isApartment
           ? 48
+          : isResidential
+            ? 24
           : isCommerce
             ? 16
             : 7.5;
@@ -103,7 +109,7 @@ const features = candidates.map(({ feature }) => {
     properties: {
       id: feature.id,
       name: commerce?.name ?? sourceProps.names?.primary ?? null,
-      kind: isCommerce ? "commerce" : isApartment ? "apartment" : "building",
+      kind: isCommerce ? "commerce" : isApartment ? "apartment" : isResidential ? "residential" : "building",
       height: Math.round(height * 10) / 10,
       floors,
       confidence,
@@ -119,7 +125,7 @@ await mkdir(dirname(output), { recursive: true });
 await writeFile(output, JSON.stringify({
   type: "FeatureCollection",
   metadata: {
-    source: "Overture Maps buildings with Geumdan commerce overlay",
+    source: "Overture Maps buildings with Geumdan residential and commerce overlay",
     generatedAt: new Date().toISOString(),
     bbox: [126.675, 37.565, 126.755, 37.635],
     featureCount: features.length,
@@ -156,7 +162,7 @@ if (syncDatabase) {
     dataset_version: datasetVersion,
     source_name: "Overture Maps + Geumdan building inventory",
     feature_count: features.length,
-    apartment_count: features.filter(feature => feature.properties.kind === "apartment").length,
+    apartment_count: features.filter(feature => ["apartment", "residential"].includes(feature.properties.kind)).length,
     commerce_count: features.filter(feature => feature.properties.kind === "commerce").length,
     measured_height_count: features.filter(feature => feature.properties.confidence !== "estimated").length,
     status: "ready",
