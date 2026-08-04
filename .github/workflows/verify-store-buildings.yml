@@ -48,7 +48,8 @@ jobs:
         run: node scripts/batch/enrich-vworld-building-register.mjs
         env:
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
-          BUILDING_REGISTER_CONCURRENCY: "8"
+          BUILDING_REGISTER_CONCURRENCY: "12"
+          MIN_BUILDING_FOOTPRINT_AREA: "180"
       - name: 검증된 지도 데이터를 현재 브랜치에 저장
         shell: bash
         run: |

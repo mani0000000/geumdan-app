@@ -15,6 +15,7 @@ if (!key) throw new Error("DATA_GO_KR_API_KEY is required");
 const FILE = new URL("../../public/data/geumdan-vworld-buildings.geojson", import.meta.url);
 const TARGET = { west: 126.695, south: 37.578, east: 126.722, north: 37.614 };
 const CONCURRENCY = Math.max(1, Math.min(12, Number(process.env.BUILDING_REGISTER_CONCURRENCY ?? 8)));
+const MIN_FOOTPRINT_AREA = Number(process.env.MIN_BUILDING_FOOTPRINT_AREA ?? 180);
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const number = (value) => Number.isFinite(Number(value)) ? Number(value) : 0;
@@ -68,9 +69,7 @@ function pnuParts(pnu) {
   };
 }
 
-async function titlesForPnu(pnu, attempt = 0) {
-  const parts = pnuParts(pnu);
-  if (!parts) return [];
+async function requestTitles(parts, attempt = 0) {
   const url = new URL("https://apis.data.go.kr/1613000/BldRgstHubService/getBrTitleInfo");
   let decodedKey = key;
   try { decodedKey = decodeURIComponent(key); } catch { /* already decoded */ }
@@ -80,7 +79,7 @@ async function titlesForPnu(pnu, attempt = 0) {
   url.searchParams.set("pageNo", "1");
   url.searchParams.set("_type", "json");
   try {
-    const response = await fetch(url, { signal: AbortSignal.timeout(25_000) });
+    const response = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
     const code = String(data.response?.header?.resultCode ?? "");
@@ -88,10 +87,24 @@ async function titlesForPnu(pnu, attempt = 0) {
     const items = data.response?.body?.items?.item ?? [];
     return Array.isArray(items) ? items : [items];
   } catch (error) {
-    if (attempt >= 3) throw error;
-    await sleep(700 * 2 ** attempt);
-    return titlesForPnu(pnu, attempt + 1);
+    if (attempt >= 1) throw error;
+    await sleep(600);
+    return requestTitles(parts, attempt + 1);
   }
+}
+
+async function titlesForPnu(pnu) {
+  const parts = pnuParts(pnu);
+  if (!parts) return [];
+  const titles = await requestTitles(parts);
+  if (titles.length || parts.sigunguCd === "28260") return titles;
+
+  // 2026년 행정구역 개편 직후 GIS PNU는 검단구 신코드를 먼저 쓰지만,
+  // 건축물대장은 종전 인천 서구 코드로 조회되는 이행 구간을 지원한다.
+  if (["28245", "28290"].includes(parts.sigunguCd)) {
+    return requestTitles({ ...parts, sigunguCd: "28260" });
+  }
+  return [];
 }
 
 async function parallelMap(values, mapper) {
@@ -161,7 +174,11 @@ function applyTitle(feature, title) {
 }
 
 const collection = JSON.parse(await readFile(FILE, "utf8"));
-const targets = collection.features.filter((feature) => isTarget(feature) && feature.properties?.pnu && number(feature.properties?.floors) <= 1);
+const targets = collection.features.filter((feature) => isTarget(feature)
+  && /^282/.test(String(feature.properties?.pnu ?? ""))
+  && feature.properties?.pnu
+  && number(feature.properties?.floors) <= 1
+  && footprintArea(feature) >= MIN_FOOTPRINT_AREA);
 const grouped = Map.groupBy(targets, (feature) => String(feature.properties.pnu));
 const pnus = [...grouped.keys()];
 console.log(`target footprints=${targets.length}, parcels=${pnus.length}, concurrency=${CONCURRENCY}`);
