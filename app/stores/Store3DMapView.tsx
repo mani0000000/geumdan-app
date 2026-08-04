@@ -13,7 +13,7 @@ import { fetchBuildingWithFloors } from "@/lib/db/buildings";
 // 이전 좌표는 원당동 서측에 치우쳐 신도시 동측 고층 주거군이 첫 화면 밖에 있었다.
 // 인천 검단신도시 사업지 중심. 126.72 동쪽은 김포 풍무 생활권이 먼저 보여
 // 지도 배경이 정확한 김포를 검단으로 오인하게 만들 수 있다.
-const CENTER: [number, number] = [126.6992, 37.6000];
+const CENTER: [number, number] = [126.7080, 37.5961];
 const SOURCE_ID = "geumdan-commerce";
 const LAYER_ID = "geumdan-commerce-3d";
 const LABEL_SOURCE_ID = "geumdan-commerce-labels";
