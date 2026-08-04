@@ -7,7 +7,11 @@ on:
   push:
     paths:
       - "scripts/batch/verify-building-register.mjs"
+      - "scripts/batch/enrich-vworld-building-register.mjs"
       - ".github/workflows/verify-store-buildings.yml"
+
+permissions:
+  contents: write
 
 concurrency:
   group: verify-store-buildings
@@ -48,6 +52,23 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
           DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+      - name: 신도시 건물 도형에 건축물대장 층수·용도 결합
+        run: node scripts/batch/enrich-vworld-building-register.mjs
+        env:
+          DATA_GO_KR_API_KEY: ${{ secrets.DATA_GO_KR_API_KEY }}
+          BUILDING_REGISTER_CONCURRENCY: "8"
+      - name: 검증된 지도 데이터를 현재 브랜치에 저장
+        shell: bash
+        run: |
+          if git diff --quiet -- public/data/geumdan-vworld-buildings.geojson; then
+            echo "건축물대장 변경 없음"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data/geumdan-vworld-buildings.geojson
+          git commit -m "data: refresh Geumdan building register geometry"
+          git push
       - name: 동일 도로명주소 매장 정보 수집·정리
         run: node scripts/batch/collect-exact-address-stores.mjs
         env:

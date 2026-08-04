@@ -38,6 +38,15 @@ const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
 
 type FeatureProps = { id: string; name: string; floors: number; stores: number; floorVerified: boolean; hasKnownFloors: boolean };
 
+function defaultFloorLabel(floors: Building["floors"]): string {
+  return floors.find((floor) => floor.label === "1F")?.label
+    ?? floors.find((floor) => /^1\s*층$/.test(floor.label))?.label
+    ?? floors.find((floor) => floor.level === 1)?.label
+    ?? floors.find((floor) => floor.level > 0)?.label
+    ?? floors[0]?.label
+    ?? "";
+}
+
 function hash(value: string) {
   let result = 0;
   for (let i = 0; i < value.length; i += 1) result = ((result << 5) - result + value.charCodeAt(i)) | 0;
@@ -120,7 +129,9 @@ function safeStoreLayout(store: Store, index: number, total: number) {
 }
 
 function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClose }: { building: Building; row: BuildingRow | null; userLocation: { lat: number; lng: number } | null; selectedFloor: string; onFloor: (value: string) => void; onClose: () => void }) {
-  const floor = building.floors.find((item) => item.label === selectedFloor) ?? building.floors[0];
+  const floor = building.floors.find((item) => item.label === selectedFloor)
+    ?? building.floors.find((item) => item.label === defaultFloorLabel(building.floors))
+    ?? building.floors[0];
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   const [planPage, setPlanPage] = useState(0);
   const [photoDirection, setPhotoDirection] = useState("대표");
@@ -253,7 +264,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
           }
         : data;
       setBuilding(completeData);
-      setSelectedFloor(completeData?.floors[0]?.label ?? "");
+      setSelectedFloor(defaultFloorLabel(completeData?.floors ?? []));
     });
   }, [buildings]);
 
