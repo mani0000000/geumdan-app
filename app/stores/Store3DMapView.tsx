@@ -11,7 +11,9 @@ import { fetchBuildingWithFloors } from "@/lib/db/buildings";
 
 // 검단신도시 공동주택·중심상업지의 실제 공간 분포 중심.
 // 이전 좌표는 원당동 서측에 치우쳐 신도시 동측 고층 주거군이 첫 화면 밖에 있었다.
-const CENTER: [number, number] = [126.7208, 37.6035];
+// 인천 검단신도시 사업지 중심. 126.72 동쪽은 김포 풍무 생활권이 먼저 보여
+// 지도 배경이 정확한 김포를 검단으로 오인하게 만들 수 있다.
+const CENTER: [number, number] = [126.6992, 37.6000];
 const SOURCE_ID = "geumdan-commerce";
 const LAYER_ID = "geumdan-commerce-3d";
 const LABEL_SOURCE_ID = "geumdan-commerce-labels";
@@ -23,6 +25,9 @@ const OPENFREE_BUILDING_LAYER_ID = "building-3d";
 const CITY_BUILDING_SOURCE_ID = "geumdan-buildings-2026";
 const CITY_BUILDING_LAYER_ID = "geumdan-buildings-2026-3d";
 const APARTMENT_LABEL_LAYER_ID = "geumdan-apartment-labels";
+const OFFICIAL_APARTMENT_SOURCE_ID = "geumdan-official-apartments";
+const OFFICIAL_APARTMENT_LAYER_ID = "geumdan-official-apartments-3d";
+const OFFICIAL_APARTMENT_LABEL_ID = "geumdan-official-apartments-labels";
 const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
 
 const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
@@ -47,10 +52,16 @@ function positioned(row: BuildingRow, index: number): [number, number] {
   return [CENTER[0] + Math.cos(angle) * ring, CENTER[1] + Math.sin(angle) * ring * 0.72];
 }
 
+function hasVerifiedPosition(row: BuildingRow) {
+  return Number.isFinite(Number(row.lng)) && Number.isFinite(Number(row.lat))
+    && Number(row.lng) >= 126.675 && Number(row.lng) <= 126.725
+    && Number(row.lat) >= 37.565 && Number(row.lat) <= 37.635;
+}
+
 function toGeoJSON(rows: BuildingRow[]) {
   return {
     type: "FeatureCollection" as const,
-    features: rows.map((row, index) => {
+    features: rows.filter(hasVerifiedPosition).map((row, index) => {
       const [lng, lat] = positioned(row, index);
       const floorVerified = ["public_building_register", "official_document", "admin_verified"].includes(row.floor_verification ?? "");
       const hasKnownFloors = Number.isFinite(row.floors) && Number(row.floors) > 1;
@@ -69,7 +80,7 @@ function toGeoJSON(rows: BuildingRow[]) {
 function toLabelGeoJSON(rows: BuildingRow[]) {
   return {
     type: "FeatureCollection" as const,
-    features: rows.map((row, index) => ({
+    features: rows.filter(hasVerifiedPosition).map((row, index) => ({
       type: "Feature" as const,
       id: row.id,
       properties: {
@@ -213,8 +224,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     if (!row) return;
     setSelectedId(id);
     setBuilding(null);
-    const [lng, lat] = positioned(row, rowIndex);
-    mapRef.current?.easeTo({ center: [lng, lat], zoom: 17.1, pitch: 62, bearing: -28, duration: 950, offset: [0, -100] });
+    if (hasVerifiedPosition(row)) {
+      const [lng, lat] = positioned(row, rowIndex);
+      mapRef.current?.easeTo({ center: [lng, lat], zoom: 17.1, pitch: 62, bearing: -28, duration: 950, offset: [0, -100] });
+    }
     fetchBuildingWithFloors(id).then((data) => {
       const registeredFloorCount = Number(row.floors);
       const baseData: Building | null = data ?? (Number.isFinite(registeredFloorCount) && registeredFloorCount > 1 ? {
@@ -293,6 +306,34 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
           "fill-extrusion-opacity": 0.94,
         },
       }, firstSymbolLayer);
+      map.addSource(OFFICIAL_APARTMENT_SOURCE_ID, {
+        type: "geojson",
+        data: "/api/map/geumdan-apartments",
+        generateId: true,
+      });
+      map.addLayer({
+        id: OFFICIAL_APARTMENT_LAYER_ID,
+        type: "fill-extrusion",
+        source: OFFICIAL_APARTMENT_SOURCE_ID,
+        minzoom: 12.8,
+        paint: {
+          "fill-extrusion-color": "#607EA8",
+          "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 12.8, 0, 14, ["get", "height"]],
+          "fill-extrusion-base": 0,
+          "fill-extrusion-opacity": 0.92,
+        },
+      }, firstSymbolLayer);
+      map.addLayer({
+        id: OFFICIAL_APARTMENT_LABEL_ID,
+        type: "symbol",
+        source: OFFICIAL_APARTMENT_SOURCE_ID,
+        minzoom: 14.7,
+        layout: {
+          "text-field": ["get", "name"], "text-font": ["Noto Sans Bold"], "text-size": 10,
+          "text-anchor": "center", "text-max-width": 8, "text-allow-overlap": false,
+        },
+        paint: { "text-color": "#1F304A", "text-halo-color": "rgba(255,255,255,.96)", "text-halo-width": 2 },
+      }, firstSymbolLayer);
       map.addLayer({
         id: APARTMENT_LABEL_LAYER_ID,
         type: "symbol",
@@ -322,13 +363,13 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         features: currentLocation ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [currentLocation.lng, currentLocation.lat] } }] : [],
       } });
       map.addLayer({ id: BUILDING_HALO_LAYER_ID, type: "circle", source: SOURCE_ID, minzoom: 13, paint: {
-        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 20, compact ? 14 : 15],
+        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 26, compact ? 18 : 23],
         "circle-color": "#ffffff",
         "circle-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 0.42, 0.92],
         "circle-stroke-color": "rgba(239,102,91,.22)", "circle-stroke-width": 2,
       }});
       map.addLayer({ id: LAYER_ID, type: "circle", source: SOURCE_ID, minzoom: 13, paint: {
-        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 9, compact ? 7 : 7.5],
+        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 12, compact ? 9 : 10],
         "circle-color": "#EF665B",
         "circle-stroke-color": "#ffffff", "circle-stroke-width": 2,
       }});
@@ -345,6 +386,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         if (commerceId) selectBuilding(commerceId);
       });
       map.on("click", LAYER_ID, (event) => {
+        const id = String(event.features?.[0]?.properties?.id ?? "");
+        if (id) selectBuilding(id);
+      });
+      map.on("click", BUILDING_HALO_LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
       });
