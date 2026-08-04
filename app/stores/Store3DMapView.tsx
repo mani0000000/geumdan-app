@@ -22,8 +22,6 @@ const USER_SOURCE_ID = "geumdan-user-location";
 const USER_HALO_ID = "geumdan-user-halo";
 const USER_DOT_ID = "geumdan-user-dot";
 const OPENFREE_BUILDING_LAYER_ID = "building-3d";
-const HIT_SOURCE_ID = "geumdan-commerce-hit";
-const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
 const VERIFIED_FOOTPRINT_SOURCE_ID = "geumdan-commerce-verified-footprints";
 const VERIFIED_FOOTPRINT_LAYER_ID = "geumdan-commerce-verified-footprints-3d";
 
@@ -116,18 +114,6 @@ function toGeoJSON(rows: BuildingRow[]) {
   };
 }
 
-function toHitGeoJSON(rows: BuildingRow[]) {
-  return {
-    type: "FeatureCollection" as const,
-    features: rows.filter(hasVerifiedPosition).map((row, index) => ({
-      type: "Feature" as const,
-      id: row.id,
-      properties: { id: row.id },
-      geometry: { type: "Point" as const, coordinates: positioned(row, index) },
-    })),
-  };
-}
-
 function toLabelGeoJSON(rows: BuildingRow[]) {
   return {
     type: "FeatureCollection" as const,
@@ -138,7 +124,7 @@ function toLabelGeoJSON(rows: BuildingRow[]) {
         id: row.id,
         name: row.name,
         stores: Math.max(0, row.total_stores ?? 0),
-        label: `${row.name}\n${Number.isFinite(row.floors) && Number(row.floors) > 1 ? `${row.floors}층 · ${Math.max(0, row.total_stores ?? 0)}개 매장` : `${Math.max(0, row.total_stores ?? 0)}개 매장`}`,
+        label: `${row.name}\n${(row.categories ?? []).slice(0, 3).join(" · ") || "입점 업종 확인"}${Number.isFinite(row.floors) && Number(row.floors) > 1 ? ` · ${row.floors}층` : ""}`,
       },
       geometry: { type: "Point" as const, coordinates: positioned(row, index) },
     })),
@@ -272,7 +258,6 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       : commerceBuildings;
   }, [buildings, compact]);
   const geojson = useMemo(() => toGeoJSON(displayedBuildings), [displayedBuildings]);
-  const hitGeojson = useMemo(() => toHitGeoJSON(displayedBuildings), [displayedBuildings]);
   const labelGeojson = useMemo(() => toLabelGeoJSON(displayedBuildings), [displayedBuildings]);
   const selectedRow = useMemo(() => buildings.find((item) => item.id === selectedId) ?? null, [buildings, selectedId]);
 
@@ -363,19 +348,12 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         },
       }, firstSymbolLayer);
       map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
-      map.addSource(HIT_SOURCE_ID, { type: "geojson", data: hitGeojson });
       map.addSource(LABEL_SOURCE_ID, { type: "geojson", data: labelGeojson });
       const currentLocation = userLocationRef.current;
       map.addSource(USER_SOURCE_ID, { type: "geojson", data: {
         type: "FeatureCollection",
         features: currentLocation ? [{ type: "Feature", properties: {}, geometry: { type: "Point", coordinates: [currentLocation.lng, currentLocation.lat] } }] : [],
       } });
-      map.addLayer({ id: BUILDING_HALO_LAYER_ID, type: "circle", source: HIT_SOURCE_ID, minzoom: 13, paint: {
-        "circle-radius": ["case", ["boolean", ["feature-state", "selected"], false], 26, compact ? 18 : 23],
-        "circle-color": "#ffffff",
-        "circle-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 0.42, 0.92],
-        "circle-stroke-color": "rgba(239,102,91,.22)", "circle-stroke-width": 2,
-      }});
       map.addLayer({ id: LAYER_ID, type: "fill-extrusion", source: SOURCE_ID, minzoom: 13, paint: {
         "fill-extrusion-color": ["match", ["get", "buildingType"], "apartment_commerce", "#2FA87A", "central_commerce", "#F28A43", "#EF665B"],
         "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["get", "height"]],
@@ -385,9 +363,9 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       }}, firstSymbolLayer);
       map.addLayer({ id: LABEL_LAYER_ID, type: "symbol", source: LABEL_SOURCE_ID, minzoom: 13.2, layout: {
         "text-field": ["get", "label"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 13, 10, 16, 12, 18, 14],
-        "text-line-height": 1.05, "text-anchor": "bottom", "text-offset": [0, -1.15], "text-max-width": 10,
+        "text-line-height": 1.12, "text-anchor": "bottom", "text-offset": [0, -1.05], "text-max-width": 13,
         "symbol-sort-key": ["-", 1000, ["get", "stores"]], "text-allow-overlap": false, "text-ignore-placement": false,
-      }, paint: { "text-color": "#292722", "text-halo-color": "rgba(255,255,255,.96)", "text-halo-width": 2, "text-halo-blur": 0.5 } });
+      }, paint: { "text-color": "#201E1A", "text-halo-color": "rgba(255,255,255,.98)", "text-halo-width": 3, "text-halo-blur": 0.25 } });
       map.addLayer({ id: USER_HALO_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 16, "circle-color": "#1677FF", "circle-opacity": 0.16, "circle-stroke-width": 0 } });
       map.addLayer({ id: USER_DOT_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#1677FF", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } });
 
@@ -396,10 +374,6 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         if (id) selectBuilding(id);
       });
       map.on("click", LAYER_ID, (event) => {
-        const id = String(event.features?.[0]?.properties?.id ?? "");
-        if (id) selectBuilding(id);
-      });
-      map.on("click", BUILDING_HALO_LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
       });
@@ -412,19 +386,29 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         if (id) selectBuilding(id);
       });
 
-      // 사용권이 확인된 관리자 등록 사진을 건물 지붕 위치에 매핑한다.
-      // 스트리트뷰 화면을 복제·저장하지 않고, DB의 대표/방향별 사진만 사용한다.
+      // 방향값이 있는 사진을 건물 외벽 높이에 맞춰 파사드처럼 매핑한다.
       displayedBuildings.forEach((row, index) => {
-        const image = buildingImage(row);
-        if (!image) return;
+        const directional = [row.photo_north, row.photo_east, row.photo_south, row.photo_west];
+        const fallback = buildingImage(row);
+        if (!fallback) return;
         const element = document.createElement("button");
         element.type = "button";
-        element.className = "group overflow-hidden rounded-[9px] border-2 border-white bg-white shadow-[0_7px_18px_rgba(35,31,25,.30)] transition-transform active:scale-95";
-        element.style.width = compact ? "40px" : "50px";
-        element.style.height = compact ? "31px" : "38px";
-        element.setAttribute("aria-label", `${row.name} 건물 사진`);
+        element.className = "overflow-hidden bg-[#d9d4ca] shadow-[0_5px_13px_rgba(35,31,25,.35)] transition-opacity active:opacity-80";
+        const floors = Math.max(1, Number(row.floors) || 2);
+        element.style.width = compact ? "38px" : `${Math.min(76, 42 + (row.total_stores ?? 0) * 0.65)}px`;
+        element.style.height = compact ? "30px" : `${Math.min(82, 28 + floors * 5)}px`;
+        element.style.clipPath = "polygon(7% 8%, 100% 0, 93% 92%, 0 100%)";
+        element.style.transform = "perspective(180px) rotateY(-7deg) skewY(-1deg)";
+        element.setAttribute("aria-label", `${row.name} 외관`);
         const photo = document.createElement("img");
-        photo.src = image;
+        const updateFacade = () => {
+          const bearing = ((map.getBearing() % 360) + 360) % 360;
+          // bearing 0°에서는 카메라가 남측에서 북쪽을 바라보므로 남측 외관이 보인다.
+          const directionIndex = (Math.round(bearing / 90) + 2) % 4;
+          photo.src = directional[directionIndex] ?? fallback;
+          element.dataset.direction = ["북", "동", "남", "서"][directionIndex];
+        };
+        updateFacade();
         photo.alt = "";
         photo.loading = "lazy";
         photo.referrerPolicy = "no-referrer";
@@ -432,23 +416,21 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         photo.addEventListener("error", () => element.remove());
         element.appendChild(photo);
         element.addEventListener("click", (event) => { event.stopPropagation(); selectBuilding(row.id); });
-        const floorHeight = Math.max(4.2, (Number(row.floors) || 2) * 3.45);
-        new maplibregl.Marker({ element, anchor: "bottom", offset: [0, -Math.min(36, floorHeight * 0.65)] })
+        map.on("rotateend", updateFacade);
+        new maplibregl.Marker({ element, anchor: "bottom", offset: [0, 2] })
           .setLngLat(positioned(row, index))
           .addTo(map);
       });
     });
     return () => { map.remove(); mapRef.current = null; };
-  }, [compact, displayedBuildings, geojson, hitGeojson, labelGeojson, selectBuilding]);
+  }, [compact, displayedBuildings, geojson, labelGeojson, selectBuilding]);
 
   useEffect(() => {
     const source = mapRef.current?.getSource(SOURCE_ID) as GeoJSONSource | undefined;
     source?.setData(geojson);
-    const hits = mapRef.current?.getSource(HIT_SOURCE_ID) as GeoJSONSource | undefined;
-    hits?.setData(hitGeojson);
     const labels = mapRef.current?.getSource(LABEL_SOURCE_ID) as GeoJSONSource | undefined;
     labels?.setData(labelGeojson);
-  }, [geojson, hitGeojson, labelGeojson]);
+  }, [geojson, labelGeojson]);
 
   useEffect(() => {
     userLocationRef.current = userLocation;
@@ -467,7 +449,6 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     displayedBuildings.forEach((item) => {
       const state = { selected: item.id === selectedId };
       mapRef.current?.setFeatureState({ source: SOURCE_ID, id: item.id }, state);
-      mapRef.current?.setFeatureState({ source: HIT_SOURCE_ID, id: item.id }, state);
     });
   }, [selectedId, displayedBuildings]);
 
