@@ -24,6 +24,8 @@ const USER_DOT_ID = "geumdan-user-dot";
 const OPENFREE_BUILDING_LAYER_ID = "building-3d";
 const HIT_SOURCE_ID = "geumdan-commerce-hit";
 const BUILDING_HALO_LAYER_ID = "geumdan-commerce-hit-halo";
+const VERIFIED_FOOTPRINT_SOURCE_ID = "geumdan-commerce-verified-footprints";
+const VERIFIED_FOOTPRINT_LAYER_ID = "geumdan-commerce-verified-footprints-3d";
 
 const CATEGORY_COLOR: Partial<Record<StoreCategory, string>> = {
   카페: "#C47A34", 음식점: "#EF6351", 편의점: "#3478F6", "병원/약국": "#E34C67",
@@ -62,10 +64,17 @@ function hasVerifiedPosition(row: BuildingRow) {
     && Number(row.lat) >= 37.565 && Number(row.lat) <= 37.635;
 }
 
+function commerceType(row: BuildingRow): "apartment_commerce" | "central_commerce" | "neighborhood_commerce" {
+  if (row.building_type === "apartment_commerce") return "apartment_commerce";
+  if (row.building_type === "central_commerce") return "central_commerce";
+  if (/(타워|프라자|스퀘어|아너시티|메디컬|시티|플라자|몰)/.test(row.name) && Number(row.floors) >= 4) return "central_commerce";
+  return "neighborhood_commerce";
+}
+
 function commerceFootprint(row: BuildingRow, index: number): [number, number][][] {
   const [lng, lat] = positioned(row, index);
   const seed = hash(row.id || String(index));
-  const type = row.building_type ?? "neighborhood_commerce";
+  const type = commerceType(row);
   const stores = Math.max(1, Number(row.total_stores) || 1);
   const longMeters = type === "apartment_commerce"
     ? Math.min(72, 34 + stores * 1.35)
@@ -98,7 +107,7 @@ function toGeoJSON(rows: BuildingRow[]) {
         id: row.id,
         properties: {
           id: row.id, name: row.name, floors, stores, floorVerified, hasKnownFloors,
-          buildingType: row.building_type ?? "neighborhood_commerce",
+          buildingType: commerceType(row),
           height: Math.max(4.2, (hasKnownFloors ? floors : Math.min(5, Math.max(2, Math.ceil(stores / 5)))) * 3.45),
         } satisfies FeatureProps,
         geometry: { type: "Polygon" as const, coordinates: commerceFootprint(row, index) },
@@ -332,6 +341,27 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     map.on("load", () => {
       const firstSymbolLayer = map.getStyle().layers.find((layer) => layer.type === "symbol")?.id;
       if (map.getLayer(OPENFREE_BUILDING_LAYER_ID)) map.setLayoutProperty(OPENFREE_BUILDING_LAYER_ID, "visibility", "none");
+      // 상가 DB 좌표와 매칭된 실제 건물 외곽선만 별도 3D 레이어로 올린다.
+      // 같은 파일의 아파트·일반건물·타 지역 상가는 필터에서 완전히 제외된다.
+      map.addSource(VERIFIED_FOOTPRINT_SOURCE_ID, {
+        type: "geojson",
+        data: "/data/geumdan-buildings.geojson",
+        generateId: true,
+      });
+      map.addLayer({
+        id: VERIFIED_FOOTPRINT_LAYER_ID,
+        type: "fill-extrusion",
+        source: VERIFIED_FOOTPRINT_SOURCE_ID,
+        minzoom: 13,
+        filter: ["all", ["==", ["get", "kind"], "commerce"], ["!=", ["get", "commerceId"], null]],
+        paint: {
+          "fill-extrusion-color": "#E9574B",
+          "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["get", "height"]],
+          "fill-extrusion-base": 0,
+          "fill-extrusion-opacity": 0.98,
+          "fill-extrusion-vertical-gradient": true,
+        },
+      }, firstSymbolLayer);
       map.addSource(SOURCE_ID, { type: "geojson", data: geojson });
       map.addSource(HIT_SOURCE_ID, { type: "geojson", data: hitGeojson });
       map.addSource(LABEL_SOURCE_ID, { type: "geojson", data: labelGeojson });
@@ -351,6 +381,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         "fill-extrusion-height": ["interpolate", ["linear"], ["zoom"], 13, 0, 14, ["get", "height"]],
         "fill-extrusion-base": 0,
         "fill-extrusion-opacity": ["case", ["boolean", ["feature-state", "selected"], false], 1, 0.92],
+        "fill-extrusion-vertical-gradient": true,
       }}, firstSymbolLayer);
       map.addLayer({ id: LABEL_LAYER_ID, type: "symbol", source: LABEL_SOURCE_ID, minzoom: 13.2, layout: {
         "text-field": ["get", "label"], "text-font": ["Noto Sans Bold"], "text-size": ["interpolate", ["linear"], ["zoom"], 13, 10, 16, 12, 18, 14],
@@ -360,6 +391,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       map.addLayer({ id: USER_HALO_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 16, "circle-color": "#1677FF", "circle-opacity": 0.16, "circle-stroke-width": 0 } });
       map.addLayer({ id: USER_DOT_ID, type: "circle", source: USER_SOURCE_ID, paint: { "circle-radius": 7, "circle-color": "#1677FF", "circle-stroke-color": "#ffffff", "circle-stroke-width": 3 } });
 
+      map.on("click", VERIFIED_FOOTPRINT_LAYER_ID, (event) => {
+        const id = String(event.features?.[0]?.properties?.commerceId ?? "");
+        if (id) selectBuilding(id);
+      });
       map.on("click", LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
@@ -370,9 +405,37 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       });
       map.on("mouseenter", LAYER_ID, () => { map.getCanvas().style.cursor = "pointer"; });
       map.on("mouseleave", LAYER_ID, () => { map.getCanvas().style.cursor = ""; });
+      map.on("mouseenter", VERIFIED_FOOTPRINT_LAYER_ID, () => { map.getCanvas().style.cursor = "pointer"; });
+      map.on("mouseleave", VERIFIED_FOOTPRINT_LAYER_ID, () => { map.getCanvas().style.cursor = ""; });
       map.on("click", LABEL_LAYER_ID, (event) => {
         const id = String(event.features?.[0]?.properties?.id ?? "");
         if (id) selectBuilding(id);
+      });
+
+      // 사용권이 확인된 관리자 등록 사진을 건물 지붕 위치에 매핑한다.
+      // 스트리트뷰 화면을 복제·저장하지 않고, DB의 대표/방향별 사진만 사용한다.
+      displayedBuildings.forEach((row, index) => {
+        const image = buildingImage(row);
+        if (!image) return;
+        const element = document.createElement("button");
+        element.type = "button";
+        element.className = "group overflow-hidden rounded-[9px] border-2 border-white bg-white shadow-[0_7px_18px_rgba(35,31,25,.30)] transition-transform active:scale-95";
+        element.style.width = compact ? "40px" : "50px";
+        element.style.height = compact ? "31px" : "38px";
+        element.setAttribute("aria-label", `${row.name} 건물 사진`);
+        const photo = document.createElement("img");
+        photo.src = image;
+        photo.alt = "";
+        photo.loading = "lazy";
+        photo.referrerPolicy = "no-referrer";
+        photo.style.width = "100%"; photo.style.height = "100%"; photo.style.objectFit = "cover";
+        photo.addEventListener("error", () => element.remove());
+        element.appendChild(photo);
+        element.addEventListener("click", (event) => { event.stopPropagation(); selectBuilding(row.id); });
+        const floorHeight = Math.max(4.2, (Number(row.floors) || 2) * 3.45);
+        new maplibregl.Marker({ element, anchor: "bottom", offset: [0, -Math.min(36, floorHeight * 0.65)] })
+          .setLngLat(positioned(row, index))
+          .addTo(map);
       });
     });
     return () => { map.remove(); mapRef.current = null; };
