@@ -1,26 +1,16 @@
 {
-  "timestamp": "2026-08-06T12:30:07.458Z",
+  "timestamp": "2026-08-06T14:59:57.369Z",
   "weather": {
-    "temp": 27,
-    "feelsLike": 34,
+    "temp": 26,
+    "feelsLike": 32,
     "weatherCode": 0,
     "label": "날씨",
     "emoji": "☀️",
-    "humidity": 90,
-    "windSpeed": 4,
+    "humidity": 91,
+    "windSpeed": 6,
     "high": 34,
     "low": 25,
     "hourly": [
-      {
-        "hour": "12:00",
-        "temp": 34,
-        "emoji": "☀️"
-      },
-      {
-        "hour": "13:00",
-        "temp": 34,
-        "emoji": "☀️"
-      },
       {
         "hour": "14:00",
         "temp": 34,
@@ -40,6 +30,16 @@
         "hour": "17:00",
         "temp": 31,
         "emoji": "☀️"
+      },
+      {
+        "hour": "18:00",
+        "temp": 30,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "19:00",
+        "temp": 29,
+        "emoji": "☀️"
       }
     ],
     "yesterdayTemp": null,
@@ -56,9 +56,9 @@
       {
         "date": "8/7",
         "dayLabel": "금",
-        "emoji": "🌤️",
-        "high": 34,
-        "low": 24,
+        "emoji": "⛅",
+        "high": 35,
+        "low": 25,
         "precipitation": 0,
         "isToday": false
       },
@@ -108,11 +108,11 @@
         "isToday": false
       }
     ],
-    "pm10": 32,
-    "pm25": 32,
+    "pm10": 41,
+    "pm25": 40,
     "pm10Label": "보통",
-    "pm25Label": "보통",
+    "pm25Label": "나쁨",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-06T12:30:07.458Z"
+    "fetchedAt": "2026-08-06T14:59:57.369Z"
   }
 }
