@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-08T15:44:25.256Z",
+  "timestamp": "2026-08-08T16:05:27.017Z",
   "weather": {
     "temp": 24,
     "feelsLike": 26,
@@ -7,15 +7,10 @@
     "label": "날씨",
     "emoji": "🌤️",
     "humidity": 82,
-    "windSpeed": 16,
+    "windSpeed": 15,
     "high": 33,
     "low": 24,
     "hourly": [
-      {
-        "hour": "15:00",
-        "temp": 32,
-        "emoji": "☀️"
-      },
       {
         "hour": "16:00",
         "temp": 31,
@@ -39,6 +34,11 @@
       {
         "hour": "20:00",
         "temp": 26,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "21:00",
+        "temp": 25,
         "emoji": "☀️"
       }
     ],
@@ -113,6 +113,6 @@
     "pm10Label": "좋음",
     "pm25Label": "좋음",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-08T15:44:25.256Z"
+    "fetchedAt": "2026-08-08T16:05:27.017Z"
   }
 }
