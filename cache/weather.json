@@ -1,39 +1,44 @@
 {
-  "timestamp": "2026-08-08T10:50:32.772Z",
+  "timestamp": "2026-08-08T11:41:47.549Z",
   "weather": {
-    "temp": 29,
-    "feelsLike": 29,
-    "weatherCode": 0,
-    "label": "맑음",
-    "emoji": "☀️",
-    "humidity": 70,
-    "windSpeed": 2,
+    "temp": 26,
+    "feelsLike": 28,
+    "weatherCode": 1,
+    "label": "날씨",
+    "emoji": "🌤️",
+    "humidity": 78,
+    "windSpeed": 17,
     "high": 33,
     "low": 25,
     "hourly": [
       {
-        "hour": "19:00",
-        "temp": 30,
-        "emoji": "⛅"
-      },
-      {
-        "hour": "20:00",
-        "temp": 29,
+        "hour": "11:00",
+        "temp": 32,
         "emoji": "☀️"
       },
       {
-        "hour": "21:00",
-        "temp": 28,
+        "hour": "12:00",
+        "temp": 33,
+        "emoji": "🌤️"
+      },
+      {
+        "hour": "13:00",
+        "temp": 33,
         "emoji": "☀️"
       },
       {
-        "hour": "22:00",
-        "temp": 28,
+        "hour": "14:00",
+        "temp": 33,
         "emoji": "☀️"
       },
       {
-        "hour": "23:00",
-        "temp": 27,
+        "hour": "15:00",
+        "temp": 32,
+        "emoji": "☀️"
+      },
+      {
+        "hour": "16:00",
+        "temp": 31,
         "emoji": "☀️"
       }
     ],
@@ -42,7 +47,7 @@
       {
         "date": "8/8",
         "dayLabel": "토",
-        "emoji": "☀️",
+        "emoji": "🌤️",
         "high": 33,
         "low": 25,
         "precipitation": 0,
@@ -51,17 +56,17 @@
       {
         "date": "8/9",
         "dayLabel": "일",
-        "emoji": "☀️",
-        "high": 34,
-        "low": 25,
+        "emoji": "⛅",
+        "high": 30,
+        "low": 24,
         "precipitation": 0,
         "isToday": false
       },
       {
         "date": "8/10",
         "dayLabel": "월",
-        "emoji": "⛅",
-        "high": 34,
+        "emoji": "☁️",
+        "high": 31,
         "low": 24,
         "precipitation": 0,
         "isToday": false
@@ -69,18 +74,18 @@
       {
         "date": "8/11",
         "dayLabel": "화",
-        "emoji": "☀️",
+        "emoji": "☁️",
         "high": 33,
-        "low": 23,
+        "low": 22,
         "precipitation": 0,
         "isToday": false
       },
       {
         "date": "8/12",
         "dayLabel": "수",
-        "emoji": "☀️",
+        "emoji": "☁️",
         "high": 32,
-        "low": 25,
+        "low": 20,
         "precipitation": 0,
         "isToday": false
       },
@@ -107,7 +112,7 @@
     "pm25": 5,
     "pm10Label": "좋음",
     "pm25Label": "좋음",
-    "source": "기상청",
-    "fetchedAt": "2026-08-08T10:50:32.772Z"
+    "source": "Open-Meteo",
+    "fetchedAt": "2026-08-08T11:41:47.549Z"
   }
 }
