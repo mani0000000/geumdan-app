@@ -2,6 +2,13 @@ name: Seed Saesaem Plaza
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - fix/mypage-design-v2
+    paths:
+      - "scripts/batch/seed-saesaem-plaza.mjs"
+      - "supabase/migrations/20260811190000_seed_saesaem_plaza_verified.sql"
+      - ".github/workflows/seed-saesaem-plaza.yml"
 
 permissions:
   contents: read
