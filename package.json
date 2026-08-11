@@ -10,10 +10,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "lint:ci": "eslint . --quiet",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:smoke": "playwright test tests/e2e",
+    "qa": "npm run lint:ci && npm run typecheck && npm run build && npm run test:e2e:smoke",
     "cap:sync": "npx cap sync",
     "cap:android": "npx cap open android",
     "cap:ios": "npx cap open ios",
     "build:android": "npm run build && npx cap sync android",
+    "apk:android": "npm run build:android && cd android && ./gradlew clean assembleDebug --no-daemon --max-workers=1",
     "build:ios": "npm run build && npx cap sync ios"
   },
   "dependencies": {
@@ -21,6 +27,7 @@
     "@capacitor/cli": "^8.3.1",
     "@capacitor/core": "^8.3.1",
     "@capacitor/ios": "^8.3.1",
+    "@capacitor/local-notifications": "^8.0.0",
     "@supabase/supabase-js": "^2.101.1",
     "@types/leaflet": "^1.9.21",
     "clsx": "^2.1.1",
@@ -28,13 +35,16 @@
     "framer-motion": "^12.38.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.7.0",
-    "next": "16.2.1",
+    "maplibre-gl": "^5.24.0",
+    "next": "^16.2.11",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-leaflet": "^5.0.0",
-    "recharts": "^3.8.1"
+    "recharts": "^3.8.1",
+    "tus-js-client": "^4.3.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -43,5 +53,11 @@
     "eslint-config-next": "16.2.1",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "brace-expansion": "^5.0.8",
+    "minimatch": "^10.0.3",
+    "postcss": "^8.5.18",
+    "sharp": "^0.35.0"
   }
 }

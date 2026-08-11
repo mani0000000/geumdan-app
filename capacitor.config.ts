@@ -20,7 +20,7 @@ const config: CapacitorConfig = {
   },
 
   ios: {
-    contentInset: "automatic",
+    contentInset: "never",   // "automatic"은 native 59px inset + CSS env(59px) = 118px double inset 발생
     backgroundColor: "#f5f5f7",
   },
 
@@ -35,6 +35,9 @@ const config: CapacitorConfig = {
     StatusBar: {
       style: "Default",
       backgroundColor: "#f5f5f7",
+    },
+    LocalNotifications: {
+      iconColor: "#2563EB",
     },
   },
 };
