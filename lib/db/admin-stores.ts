@@ -12,10 +12,35 @@ export interface AdminBuilding {
   floors: number | null;
   total_stores: number | null;
   parking_info: string | null;
+  parking_type: string | null;
+  parking_base_fee: string | null;
+  parking_extra_fee: string | null;
+  parking_daily_max: string | null;
+  parking_free_minutes: number | null;
+  parking_validation: string | null;
+  parking_hours: string | null;
+  parking_phone: string | null;
+  parking_source_url: string | null;
+  parking_verified_at: string | null;
+  parking_status: "verified" | "needs_check" | "unavailable" | null;
   open_time: string | null;
   has_data: boolean;
   categories: string[] | null;
   image_url: string | null;
+  portrait_image_url: string | null;
+  photo_north: string | null;
+  photo_east: string | null;
+  photo_south: string | null;
+  photo_west: string | null;
+  is_published: boolean;
+  building_type: string;
+  floor_verification: string;
+  source_type: string;
+  source_name: string | null;
+  source_url: string | null;
+  source_checked_at: string | null;
+  ground_floors: number | null;
+  basement_floors: number | null;
 }
 
 export async function adminFetchBuildings(): Promise<AdminBuilding[]> {
@@ -88,6 +113,20 @@ export interface AdminStore {
   show_in_openings: boolean | null;
   open_benefit: { summary: string; details: string[]; validUntil?: string } | null;
   extra_info: Record<string, unknown> | null;
+  cover_image_url?: string | null;
+  landscape_image_url?: string | null;
+  short_description?: string | null;
+  website?: string | null;
+  sns_instagram?: string | null;
+  sns_kakao?: string | null;
+  parking_info?: string | null;
+  is_published?: boolean | null;
+  source_type?: string | null;
+  source_name?: string | null;
+  source_url?: string | null;
+  source_checked_at?: string | null;
+  placement_verification?: string | null;
+  floor_verification?: string | null;
 }
 
 export async function adminFetchStores(buildingId: string): Promise<AdminStore[]> {
@@ -126,6 +165,13 @@ export interface AdminCoupon {
 
 export async function adminFetchCoupons(): Promise<AdminCoupon[]> {
   return adminApiGet<AdminCoupon>("store_coupons", { order: "expiry" });
+}
+
+export async function adminFetchStoreCoupons(storeId: string): Promise<AdminCoupon[]> {
+  return adminApiGet<AdminCoupon>("store_coupons", {
+    order: "expiry",
+    eq: `store_id=eq.${storeId}`,
+  });
 }
 
 export async function adminUpsertCoupon(c: AdminCoupon): Promise<void> {

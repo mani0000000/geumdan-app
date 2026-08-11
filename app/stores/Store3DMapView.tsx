@@ -4,8 +4,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
-import { Building2, ChevronRight, ImageIcon, LocateFixed, MapPin, Search, Store as StoreIcon, X } from "lucide-react";
+import { Building2, CarFront, ChevronRight, Clock3, ImageIcon, LocateFixed, MapPin, Search, ShieldCheck, Store as StoreIcon, X } from "lucide-react";
 import type { Building, Store, StoreCategory } from "@/lib/types";
+import StoreCategoryIcon from "@/components/ui/StoreCategoryIcon";
 import type { BuildingRow } from "@/lib/db/buildings";
 import { fetchBuildingWithFloors } from "@/lib/db/buildings";
 
@@ -133,7 +134,7 @@ function toLabelGeoJSON(rows: BuildingRow[]) {
 
 function buildingImage(row: BuildingRow | null): string | null {
   if (!row) return null;
-  return row.image_url ?? row.photo_north ?? row.photo_east ?? row.photo_south ?? row.photo_west ?? null;
+  return row.portrait_image_url ?? row.image_url ?? row.photo_north ?? row.photo_east ?? row.photo_south ?? row.photo_west ?? null;
 }
 
 function distanceKm(a: { lat: number; lng: number } | null, row: BuildingRow | null) {
@@ -150,24 +151,28 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
     ?? building.floors.find((item) => item.label === defaultFloorLabel(building.floors))
     ?? building.floors[0];
   const [photoDirection, setPhotoDirection] = useState("대표");
-  const groundFloors = useMemo(() => building.floors.filter((item) => item.level > 0).sort((a, b) => b.level - a.level), [building.floors]);
-  const basementFloors = useMemo(() => building.floors.filter((item) => item.level < 0).sort((a, b) => b.level - a.level), [building.floors]);
+  const floorNumber = (label: string) => Number(label.match(/\d+/)?.[0] ?? 0);
+  const groundFloors = useMemo(() => building.floors.filter((item) => !/^B/i.test(item.label)).sort((a, b) => floorNumber(b.label) - floorNumber(a.label)), [building.floors]);
+  const basementFloors = useMemo(() => building.floors.filter((item) => /^B/i.test(item.label)).sort((a, b) => floorNumber(a.label) - floorNumber(b.label)), [building.floors]);
   const photos = [
-    ["대표", row?.image_url], ["북", row?.photo_north], ["동", row?.photo_east],
+    ["대표", row?.portrait_image_url ?? row?.image_url], ["북", row?.photo_north], ["동", row?.photo_east],
     ["남", row?.photo_south], ["서", row?.photo_west],
   ].filter((entry): entry is [string, string] => Boolean(entry[1]));
   const imageUrl = photos.find(([label]) => label === photoDirection)?.[1] ?? photos[0]?.[1] ?? buildingImage(row);
   const distance = distanceKm(userLocation, row);
+  const unassignedStores = useMemo(() => building.floors.filter((item) => /미확인|확인\s*중/.test(item.label)).flatMap((item) => item.stores), [building.floors]);
+  const displayStores = floor?.stores.length ? floor.stores : (/^1F$|^1층$/.test(floor?.label ?? "") ? unassignedStores : []);
+  const showingUnassigned = Boolean(!floor?.stores.length && displayStores.length);
 
   useEffect(() => { setPhotoDirection(photos[0]?.[0] ?? "대표"); }, [building.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <button type="button" aria-label="상가 정보 닫기" onClick={onClose} className="fixed inset-0 z-[9490] cursor-default bg-black/35 backdrop-blur-[2px]" />
-      <section data-store-floor-sheet role="dialog" aria-modal="true" aria-label={`${building.name} 층별 매장`} className="fixed inset-x-0 bottom-0 z-[9500] max-h-[78dvh] overflow-hidden rounded-t-[28px] bg-[#fbfaf6] shadow-[0_-20px_60px_rgba(28,25,20,.28)] md:bottom-5 md:left-auto md:right-5 md:w-[430px] md:rounded-[28px]">
+      <section data-store-floor-sheet role="dialog" aria-modal="true" aria-label={`${building.name} 층별 매장`} className="fixed inset-x-0 bottom-0 z-[9500] max-h-[86dvh] overflow-y-auto rounded-t-[28px] bg-[#fbfaf6] shadow-[0_-20px_60px_rgba(28,25,20,.28)] md:bottom-5 md:left-auto md:right-5 md:w-[440px] md:rounded-[28px]">
       <div className="mx-auto mt-2.5 h-1 w-9 rounded-full bg-[#d8d4ca]" />
       <div className="flex items-start gap-3 px-4 pb-3 pt-3">
-        <div className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-[16px] bg-[#ebe8df] text-[#a09b91]">
+        <div className="grid aspect-[3/4] h-[86px] shrink-0 place-items-center overflow-hidden rounded-[18px] bg-[#ebe8df] text-[#a09b91] shadow-sm">
           {imageUrl ? <img src={imageUrl} alt={`${building.name} 건물`} className="h-full w-full object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : <ImageIcon size={22}/>} 
         </div>
         <div className="min-w-0 flex-1 pt-0.5">
@@ -190,10 +195,29 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
         </div>
       )}
 
+      <div className="mx-4 mb-3 rounded-[20px] border border-[#E1E8F2] bg-white p-3.5 shadow-[0_6px_18px_rgba(38,52,74,.06)]">
+        <div className="flex items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-[13px] font-black text-[#25231f]"><span className="grid h-8 w-8 place-items-center rounded-xl bg-[#EAF3FF] text-[#1769D2]"><CarFront size={16}/></span>주차 안내</p>
+          <span className={`rounded-full px-2 py-1 text-[9px] font-black ${building.parkingStatus === "verified" ? "bg-[#DDF7EA] text-[#087A50]" : building.parkingStatus === "unavailable" ? "bg-[#EEEFF2] text-[#606975]" : "bg-[#FFF1D6] text-[#936000]"}`}>{building.parkingStatus === "verified" ? "확인 완료" : building.parkingStatus === "unavailable" ? "주차 불가" : "현장 확인"}</span>
+        </div>
+        {building.parkingStatus !== "unavailable" && <div className="mt-3 grid grid-cols-2 gap-2">
+          <ParkingChip label="기본" value={building.parkingBaseFee} />
+          <ParkingChip label="추가" value={building.parkingExtraFee} />
+          <ParkingChip label="무료" value={building.parkingFreeMinutes != null ? `${building.parkingFreeMinutes}분` : undefined} />
+          <ParkingChip label="일 최대" value={building.parkingDailyMax} />
+        </div>}
+        <p className="mt-3 text-[11px] font-semibold leading-4 text-[#5F6875]">{building.parkingValidation || building.parkingInfo || (building.parkingStatus === "unavailable" ? "건물 내 주차장을 이용할 수 없습니다." : "주차 요금과 무료 지원은 입점 매장에 확인해 주세요.")}</p>
+        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[9px] font-bold text-[#87909C]">
+          {building.parkingType && <span className="flex items-center gap-1"><CarFront size={10}/>{building.parkingType}</span>}
+          {building.parkingHours && <span className="flex items-center gap-1"><Clock3 size={10}/>{building.parkingHours}</span>}
+          {building.parkingVerifiedAt && <span className="flex items-center gap-1"><ShieldCheck size={10}/>{building.parkingVerifiedAt.slice(0,10)} 확인</span>}
+        </div>
+      </div>
+
       <div className="border-t border-[#ece8df] px-4 pb-[max(18px,env(safe-area-inset-bottom))] pt-3">
         <div className="mb-2 flex items-end justify-between pl-[72px]">
-          <div><p className="text-[15px] font-black text-[#25231f]">{floor?.label} 입점 매장</p><p className="text-[10px] font-bold text-[#8b877f]">좌우로 넘겨 매장 정보를 확인하세요</p></div>
-          <span className="text-[11px] font-black text-[#EF665B]">{floor?.stores.length ?? 0}곳</span>
+          <div><p className="text-[15px] font-black text-[#25231f]">{floor?.label} 입점 매장</p><p className="text-[10px] font-bold text-[#8b877f]">{showingUnassigned ? "층 확인 중인 연결 매장을 함께 보여드려요" : "좌우로 넘겨 매장 정보를 확인하세요"}</p></div>
+          <span className="text-[11px] font-black text-[#EF665B]">{displayStores.length}곳</span>
         </div>
         <div className="flex min-h-[210px] gap-3">
           <div className="scrollbar-hide flex w-[60px] shrink-0 flex-col overflow-y-auto py-1">
@@ -210,12 +234,12 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
             })}</div>}
           </div>
           <div className="scrollbar-hide flex min-w-0 flex-1 snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-2 pr-[16%]">
-            {floor?.stores.length ? floor.stores.map((store) => {
+            {displayStores.length ? displayStores.map((store) => {
               const color = CATEGORY_COLOR[store.category] ?? CATEGORY_COLOR.기타!;
               return (
                 <article key={store.id} className="min-w-[82%] snap-start overflow-hidden rounded-[20px] border border-[#e5e0d6] bg-white shadow-[0_8px_22px_rgba(48,43,34,.08)]">
                   <div className="relative h-[92px] overflow-hidden" style={{ background: `${color}18` }}>
-                    {store.thumbnail_url ? <img src={store.thumbnail_url} alt="" className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center" style={{ color }}><StoreIcon size={30}/></div>}
+                    {store.thumbnail_url ? <img src={store.thumbnail_url} alt={`${store.name} 대표`} className="h-full w-full object-cover" /> : <div className="grid h-full place-items-center"><StoreCategoryIcon category={store.category} size={48} rounded="rounded-[17px]" /></div>}
                     <span className="absolute left-3 top-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-black backdrop-blur" style={{ color }}>{store.category}</span>
                   </div>
                   <div className="p-3.5">
@@ -237,6 +261,10 @@ function FloorPlan({ building, row, userLocation, selectedFloor, onFloor, onClos
   );
 }
 
+function ParkingChip({ label, value }: { label: string; value?: string }) {
+  return <div className="rounded-xl bg-[#F5F7FA] px-2.5 py-2"><p className="text-[8px] font-black text-[#929AA6]">{label}</p><p className="mt-0.5 truncate text-[11px] font-black text-[#27313F]">{value || "확인 필요"}</p></div>;
+}
+
 export default function Store3DMapView({ buildings, userLocation, locating, onRequestLocation, compact = false }: { buildings: BuildingRow[]; userLocation: { lat: number; lng: number } | null; locating?: boolean; onRequestLocation: () => void; compact?: boolean }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
@@ -247,7 +275,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
   const [query, setQuery] = useState("");
   const displayedBuildings = useMemo(() => {
     const commerceBuildings = buildings.filter(hasVerifiedPosition).filter((row) => !row.building_type
-      || ["apartment_commerce", "central_commerce", "neighborhood_commerce"].includes(row.building_type));
+      || ["apartment_commerce", "central_commerce", "neighborhood_commerce", "mixed_use"].includes(row.building_type));
     return compact
       ? commerceBuildings.sort((a, b) => (b.total_stores ?? 0) - (a.total_stores ?? 0)).slice(0, 24)
       : commerceBuildings;
@@ -384,23 +412,27 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
       // 방향값이 있는 사진을 건물 외벽 높이에 맞춰 파사드처럼 매핑한다.
       displayedBuildings.forEach((row, index) => {
         const directional = [row.photo_north, row.photo_east, row.photo_south, row.photo_west];
-        const fallback = buildingImage(row);
+        const fallback = compact
+          ? (row.portrait_image_url ?? row.image_url ?? directional.find(Boolean) ?? null)
+          : (row.image_url ?? directional.find(Boolean) ?? row.portrait_image_url ?? null);
         if (!fallback) return;
         const element = document.createElement("button");
         element.type = "button";
         element.className = "overflow-hidden bg-[#d9d4ca] shadow-[0_5px_13px_rgba(35,31,25,.35)] transition-opacity active:opacity-80";
         const floors = Math.max(1, Number(row.floors) || 2);
-        element.style.width = compact ? "38px" : `${Math.min(76, 42 + (row.total_stores ?? 0) * 0.65)}px`;
-        element.style.height = compact ? "30px" : `${Math.min(82, 28 + floors * 5)}px`;
-        element.style.clipPath = "polygon(7% 8%, 100% 0, 93% 92%, 0 100%)";
-        element.style.transform = "perspective(180px) rotateY(-7deg) skewY(-1deg)";
+        element.style.width = compact ? "46px" : `${Math.min(76, 42 + (row.total_stores ?? 0) * 0.65)}px`;
+        element.style.height = compact ? "58px" : `${Math.min(82, 28 + floors * 5)}px`;
+        element.style.border = compact ? "2px solid rgba(255,255,255,.96)" : "1px solid rgba(255,255,255,.78)";
+        element.style.borderRadius = compact ? "10px 10px 5px 5px" : "4px";
+        element.style.clipPath = compact ? "none" : "polygon(7% 8%, 100% 0, 93% 92%, 0 100%)";
+        element.style.transform = compact ? "none" : "perspective(180px) rotateY(-7deg) skewY(-1deg)";
         element.setAttribute("aria-label", `${row.name} 외관`);
         const photo = document.createElement("img");
         const updateFacade = () => {
           const bearing = ((map.getBearing() % 360) + 360) % 360;
           // bearing 0°에서는 카메라가 남측에서 북쪽을 바라보므로 남측 외관이 보인다.
           const directionIndex = (Math.round(bearing / 90) + 2) % 4;
-          photo.src = directional[directionIndex] ?? fallback;
+          photo.src = compact ? fallback : (directional[directionIndex] ?? fallback);
           element.dataset.direction = ["북", "동", "남", "서"][directionIndex];
         };
         updateFacade();
@@ -408,7 +440,13 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
         photo.loading = "lazy";
         photo.referrerPolicy = "no-referrer";
         photo.style.width = "100%"; photo.style.height = "100%"; photo.style.objectFit = "cover";
-        photo.addEventListener("error", () => element.remove());
+        photo.addEventListener("error", () => {
+          photo.style.display = "none";
+          element.textContent = row.name.slice(0, 2);
+          element.style.color = "#8c4936";
+          element.style.fontSize = "11px";
+          element.style.fontWeight = "900";
+        });
         element.appendChild(photo);
         element.addEventListener("click", (event) => { event.stopPropagation(); selectBuilding(row.id); });
         map.on("rotateend", updateFacade);
@@ -447,7 +485,7 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     });
   }, [selectedId, displayedBuildings]);
 
-  const results = query.trim() ? displayedBuildings.filter((item) => `${item.name} ${item.address}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
+  const results = query.trim() ? displayedBuildings.filter((item) => `${item.name} ${item.address} ${(item.store_names ?? []).join(" ")}`.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 6) : [];
   const closeSelection = () => {
     setSelectedId(null); setBuilding(null); setSelectedFloor("");
     mapRef.current?.easeTo({ center: CENTER, zoom: 14.45, pitch: 58, bearing: -22, duration: 750, offset: [0, 0] });
@@ -457,10 +495,10 @@ export default function Store3DMapView({ buildings, userLocation, locating, onRe
     <div className={`relative h-full overflow-hidden bg-[#e9e6dd] ${compact ? "min-h-0" : "min-h-[520px]"}`}>
       <div ref={containerRef} style={{ position: "absolute", inset: 0 }} />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(250,249,244,.15),transparent_24%,rgba(244,240,231,.12))]" />
-      <div className={`pointer-events-none absolute z-[5] rounded-full bg-white/78 px-2 py-1 text-[8px] font-bold text-[#77736c] backdrop-blur ${compact ? "bottom-2 right-2" : "bottom-[82px] left-3 md:bottom-3"}`}>
+      <div className={`pointer-events-none absolute z-[7] rounded-full bg-white/82 px-2 py-1 text-[8px] font-bold text-[#77736c] backdrop-blur ${compact ? "right-2 top-2" : "bottom-[82px] left-3 md:bottom-3"}`}>
         © OpenStreetMap · 상가 건물 정보
       </div>
-      <div className={`pointer-events-none absolute z-[6] flex items-center gap-2 rounded-full bg-white/88 px-2.5 py-1.5 text-[9px] font-black text-[#445064] shadow-sm backdrop-blur ${compact ? "left-2 top-2" : "bottom-[82px] right-3 md:bottom-3"}`}>
+      <div className={`pointer-events-none absolute z-[6] flex items-center gap-2 rounded-full bg-white/88 px-2.5 py-1.5 text-[9px] font-black text-[#445064] shadow-sm backdrop-blur ${compact ? "left-2 top-2 max-w-[58%]" : "bottom-[82px] right-3 md:bottom-3"}`}>
         <span className="h-2.5 w-2.5 rounded-[3px] bg-[#2FA87A]" />단지상가
         <span className="ml-1 h-2.5 w-2.5 rounded-[3px] bg-[#F28A43]" />중심상가
         <span className="ml-1 h-2.5 w-2.5 rounded-[3px] bg-[#EF665B]" />근린상가

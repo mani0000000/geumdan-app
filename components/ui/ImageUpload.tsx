@@ -7,9 +7,10 @@ interface ImageUploadProps {
   onChange: (url: string | null) => void;
   folder?: string;
   className?: string;
+  aspect?: "auto" | "portrait" | "landscape";
 }
 
-export default function ImageUpload({ value, onChange, folder = "misc", className = "" }: ImageUploadProps) {
+export default function ImageUpload({ value, onChange, folder = "misc", className = "", aspect = "auto" }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +53,7 @@ export default function ImageUpload({ value, onChange, folder = "misc", classNam
           <img
             src={value}
             alt="업로드된 이미지"
-            className="h-32 w-auto max-w-full rounded-xl object-cover border border-gray-200"
+            className={`${aspect === "portrait" ? "aspect-[3/4] h-48 w-36" : aspect === "landscape" ? "aspect-[16/9] h-auto w-full max-w-md" : "h-32 w-auto max-w-full"} rounded-xl object-cover border border-gray-200`}
           />
           <button
             type="button"
@@ -67,7 +68,7 @@ export default function ImageUpload({ value, onChange, folder = "misc", classNam
           onClick={() => !uploading && inputRef.current?.click()}
           onDrop={handleDrop}
           onDragOver={e => e.preventDefault()}
-          className="flex flex-col items-center justify-center gap-2 h-32 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#3182F6] hover:bg-blue-50 transition-colors"
+          className={`flex flex-col items-center justify-center gap-2 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#3182F6] hover:bg-blue-50 transition-colors ${aspect === "portrait" ? "aspect-[3/4] h-48 w-36" : aspect === "landscape" ? "aspect-[16/9] h-auto w-full max-w-md" : "h-32"}`}
         >
           {uploading ? (
             <Loader2 size={22} className="text-[#3182F6] animate-spin" />

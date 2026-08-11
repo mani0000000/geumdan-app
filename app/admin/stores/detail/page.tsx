@@ -1,7 +1,8 @@
 "use client";
 import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Plus, Pencil, Trash2, ChevronLeft, RefreshCw, Check, X } from "lucide-react";
+import Link from "next/link";
+import { Plus, Trash2, ChevronLeft, RefreshCw, Check, X, Settings2, Sparkles } from "lucide-react";
 import ImageUpload from "@/components/ui/ImageUpload";
 import {
   adminFetchBuildings, adminUpdateBuilding,
@@ -9,16 +10,13 @@ import {
   adminFetchStores, adminCreateStore, adminUpdateStore, adminDeleteStore,
   type AdminBuilding, type AdminFloor, type AdminStore,
 } from "@/lib/db/admin-stores";
+import { buildGeneratedLocalProfile } from "@/lib/data/store-local-profiles";
 import type { StoreCategory } from "@/lib/types";
+import { ALL_CATEGORIES, CAT_DOT } from "@/lib/constants/store-categories";
 
 // ─── 상수 ────────────────────────────────────────────────────
-const CATS: StoreCategory[] = ["카페", "음식점", "편의점", "병원/약국", "미용", "학원", "마트", "헬스/운동", "반려동물", "세탁", "기타"];
-const CAT_COLOR: Record<StoreCategory, string> = {
-  카페: "#F59E0B", 음식점: "#F97316", 편의점: "#3B82F6",
-  "병원/약국": "#EF4444", 미용: "#EC4899", 학원: "#8B5CF6",
-  마트: "#10B981", "헬스/운동": "#0EA5E9", 반려동물: "#F472B6",
-  세탁: "#6366F1", 기타: "#9CA3AF",
-};
+const CATS: StoreCategory[] = ALL_CATEGORIES;
+const CAT_COLOR: Record<StoreCategory, string> = CAT_DOT;
 const INPUT = "w-full border border-[#E5E8EB] rounded-xl px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#3182F6]";
 const SELECT = INPUT + " bg-white";
 const TEXTAREA = INPUT + " resize-none";
@@ -169,8 +167,8 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
-  buildingId: string;
+function StoreModal({ building, floors, initial, onSave, onClose }: {
+  building: AdminBuilding;
   floors: AdminFloor[];
   initial: AdminStore | null;
   onSave: () => void;
@@ -199,6 +197,29 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
     return (v as string | boolean) ?? "";
   }
 
+  function generateLocalProfile() {
+    const generated = buildGeneratedLocalProfile({
+      id: initial?.id ?? `preview_${Date.now().toString(36)}`,
+      name: form.name || "신규 매장",
+      category: form.category,
+      phone: form.phone,
+      hours: form.hours,
+      description: form.short_description ?? form.description,
+      buildingName: building.name,
+      buildingAddress: building.address,
+      floorLabel: form.floor_label,
+      parkingInfo: form.parking_info ?? building.parking_info,
+      extraInfo: form.extra_info,
+    });
+    setForm((current) => ({
+      ...current,
+      extra_info: {
+        ...(current.extra_info ?? {}),
+        local_profile: generated,
+      },
+    }));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim()) { setErr("매장명을 입력하세요."); return; }
@@ -210,7 +231,7 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
       ...(benefitValidUntil ? { validUntil: benefitValidUntil } : {}),
     } : null;
     try {
-      const payload = { ...form, open_benefit, building_id: buildingId };
+      const payload = { ...form, open_benefit, building_id: building.id };
       if (initial) {
         await adminUpdateStore(initial.id, payload);
       } else {
@@ -285,6 +306,18 @@ function StoreModal({ buildingId, floors, initial, onSave, onClose }: {
                 onChange={e => set("description", e.target.value || null)}
                 placeholder="매장 한 줄 소개" />
             </Field>
+            <button
+              type="button"
+              onClick={generateLocalProfile}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#D6E4FF] bg-[#F4F8FF] py-2.5 text-[12px] font-bold text-[#1B64DA]"
+            >
+              <Sparkles size={14} /> 프론트 상세 브리핑 자동 생성
+            </button>
+            {Boolean(form.extra_info?.local_profile) && (
+              <p className="rounded-xl bg-[#F8F9FB] px-3 py-2 text-[11px] leading-5 text-[#6B7684]">
+                local_profile이 생성되었습니다. 저장 후 사용자 상세 화면에서 우선 노출됩니다. 세부 수정은 매장 운영 관리 화면에서 가능합니다.
+              </p>
+            )}
 
             {/* ── 오픈 정보 ── */}
             <SectionTitle>오픈 정보</SectionTitle>
@@ -464,6 +497,65 @@ function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSav
         <input className={INPUT} value={form.parking_info ?? ""}
           onChange={e => set("parking_info", e.target.value || null)} />
       </Field>
+      <div className="rounded-2xl border border-[#DCE8FA] bg-[#F7FAFF] p-4 space-y-3">
+        <div>
+          <p className="text-[13px] font-extrabold text-[#191F28]">주차 시스템 · 요금</p>
+          <p className="mt-0.5 text-[11px] text-[#6B7684]">현장 안내 또는 공식 출처로 확인한 값만 입력하세요.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="주차 방식">
+            <input className={INPUT} value={form.parking_type ?? ""} placeholder="지하주차장 · 차단기"
+              onChange={e => set("parking_type", e.target.value || null)} />
+          </Field>
+          <Field label="확인 상태">
+            <select className={SELECT} value={form.parking_status ?? "needs_check"}
+              onChange={e => set("parking_status", e.target.value as AdminBuilding["parking_status"])}>
+              <option value="needs_check">확인 필요</option>
+              <option value="verified">검증 완료</option>
+              <option value="unavailable">주차 불가</option>
+            </select>
+          </Field>
+          <Field label="기본 요금">
+            <input className={INPUT} value={form.parking_base_fee ?? ""} placeholder="30분 1,000원"
+              onChange={e => set("parking_base_fee", e.target.value || null)} />
+          </Field>
+          <Field label="추가 요금">
+            <input className={INPUT} value={form.parking_extra_fee ?? ""} placeholder="10분당 500원"
+              onChange={e => set("parking_extra_fee", e.target.value || null)} />
+          </Field>
+          <Field label="무료 주차(분)">
+            <input className={INPUT} type="number" min="0" value={form.parking_free_minutes ?? ""}
+              onChange={e => set("parking_free_minutes", e.target.value ? Number(e.target.value) : null)} />
+          </Field>
+          <Field label="일 최대 요금">
+            <input className={INPUT} value={form.parking_daily_max ?? ""} placeholder="20,000원"
+              onChange={e => set("parking_daily_max", e.target.value || null)} />
+          </Field>
+        </div>
+        <Field label="매장 이용 무료·할인 조건">
+          <textarea className={TEXTAREA} rows={2} value={form.parking_validation ?? ""}
+            placeholder="구매 영수증 인증 시 2시간 무료 · 매장별 합산 여부"
+            onChange={e => set("parking_validation", e.target.value || null)} />
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="주차장 운영시간">
+            <input className={INPUT} value={form.parking_hours ?? ""} placeholder="매일 06:00~24:00"
+              onChange={e => set("parking_hours", e.target.value || null)} />
+          </Field>
+          <Field label="주차 문의">
+            <input className={INPUT} value={form.parking_phone ?? ""} placeholder="032-000-0000"
+              onChange={e => set("parking_phone", e.target.value || null)} />
+          </Field>
+          <Field label="검증일">
+            <input className={INPUT} type="date" value={form.parking_verified_at?.slice(0, 10) ?? ""}
+              onChange={e => set("parking_verified_at", e.target.value || null)} />
+          </Field>
+          <Field label="확인 출처 URL">
+            <input className={INPUT} type="url" value={form.parking_source_url ?? ""} placeholder="https://"
+              onChange={e => set("parking_source_url", e.target.value || null)} />
+          </Field>
+        </div>
+      </div>
       <Field label="영업시간">
         <input className={INPUT} value={form.open_time ?? ""}
           onChange={e => set("open_time", e.target.value || null)} />
@@ -475,6 +567,19 @@ function BuildingInfoTab({ building, onSaved }: { building: AdminBuilding; onSav
           folder="buildings"
         />
       </Field>
+      <Field label="지도 식별용 세로 사진 (3:4)">
+        <ImageUpload value={form.portrait_image_url} onChange={url => set("portrait_image_url", url)} folder="buildings/portrait" aspect="portrait" />
+      </Field>
+      <div>
+        <p className="mb-2 text-[12px] font-bold text-[#4E5968]">방향별 실제 건물 사진</p>
+        <div className="grid grid-cols-2 gap-3">
+          {([['photo_north', '북측'], ['photo_east', '동측'], ['photo_south', '남측'], ['photo_west', '서측']] as const).map(([key, label]) => (
+            <Field key={key} label={label}>
+              <ImageUpload value={form[key]} onChange={url => set(key, url)} folder="buildings/directions" />
+            </Field>
+          ))}
+        </div>
+      </div>
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={form.has_data} onChange={e => set("has_data", e.target.checked)} className="w-4 h-4" />
         <span className="text-[13px] text-[#4E5968]">상세 데이터 있음 (has_data)</span>
@@ -582,7 +687,7 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
               <table className="hidden md:table w-full text-[13px]">
                 <thead className="bg-[#F8F9FB]">
                   <tr>
-                    {["매장명", "업종", "전화", "영업시간", "영업중", "프리미엄", "수정/삭제"].map(h => (
+                    {["매장명", "업종", "전화", "영업시간", "영업중", "프리미엄", "운영/삭제"].map(h => (
                       <th key={h} className="text-left px-4 py-2.5 text-[11px] font-bold text-[#8B95A1]">{h}</th>
                     ))}
                   </tr>
@@ -591,7 +696,9 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                   {floorStores.map(s => (
                     <tr key={s.id} className="hover:bg-[#F8F9FB]">
                       <td className="px-4 py-3 font-semibold text-[#191F28]">
-                        {s.name}
+                        <Link href={`/admin/stores/store?building=${building.id}&id=${s.id}`} className="hover:text-[#3182F6] hover:underline">
+                          {s.name}
+                        </Link>
                         {s.is_premium && <span className="ml-1.5 text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★</span>}
                       </td>
                       <td className="px-4 py-3">
@@ -612,10 +719,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex gap-1.5">
-                          <button onClick={() => setStoreModal(s)}
-                            className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#3182F6]">
-                            <Pencil size={13} />
-                          </button>
+                          <Link href={`/admin/stores/store?building=${building.id}&id=${s.id}`}
+                            className="p-1.5 rounded-lg hover:bg-[#EFF6FF] text-[#3182F6]" aria-label={`${s.name} 운영 관리`}>
+                            <Settings2 size={13} />
+                          </Link>
                           <button onClick={() => deleteStore(s)}
                             className="p-1.5 rounded-lg hover:bg-[#FFF0F0] text-[#F04452]">
                             <Trash2 size={13} />
@@ -634,7 +741,7 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1 min-w-0 pr-2">
                         <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                          <p className="font-bold text-[14px] text-[#191F28]">{s.name}</p>
+                          <Link href={`/admin/stores/store?building=${building.id}&id=${s.id}`} className="font-bold text-[14px] text-[#191F28] hover:text-[#3182F6]">{s.name}</Link>
                           {s.is_premium && (
                             <span className="text-[10px] bg-[#FEF3C7] text-[#B45309] px-1.5 py-0.5 rounded-full font-bold">★ 프리미엄</span>
                           )}
@@ -651,10 +758,10 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
                       <OpenToggle store={s} onToggled={loadData} />
                     </div>
                     <div className="flex gap-2 mt-3">
-                      <button onClick={() => setStoreModal(s)}
+                      <Link href={`/admin/stores/store?building=${building.id}&id=${s.id}`}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#3182F6] hover:bg-[#EFF6FF]">
-                        <Pencil size={13} /> 수정
-                      </button>
+                        <Settings2 size={13} /> 운영 관리
+                      </Link>
                       <button onClick={() => deleteStore(s)}
                         className="flex-1 flex items-center justify-center gap-1.5 py-2 border border-[#E5E8EB] rounded-xl text-[13px] text-[#F04452] hover:bg-[#FFF0F0]">
                         <Trash2 size={13} /> 삭제
@@ -673,7 +780,7 @@ function FloorsTab({ building }: { building: AdminBuilding }) {
       )}
       {storeModal && (
         <StoreModal
-          buildingId={building.id}
+          building={building}
           floors={floors}
           initial={storeModal === "add" ? null : storeModal as AdminStore}
           onSave={loadData}

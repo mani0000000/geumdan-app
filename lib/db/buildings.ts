@@ -39,6 +39,7 @@ export interface BuildingRow {
   floors: number | null;
   total_stores: number | null;
   image_url: string | null;
+  portrait_image_url: string | null;
   categories: string[] | null;
   has_data: boolean;
   photo_north: string | null;
@@ -49,6 +50,7 @@ export interface BuildingRow {
   building_type?: string | null;
   source_name?: string | null;
   source_checked_at?: string | null;
+  store_names?: string[];
 }
 
 function fallbackBuildingRows(): BuildingRow[] {
@@ -65,6 +67,7 @@ function fallbackBuildingRows(): BuildingRow[] {
       floors: building.floors.length,
       total_stores: storeList.length,
       image_url: null,
+      portrait_image_url: null,
       categories,
       has_data: true,
       photo_north: null,
@@ -90,6 +93,7 @@ function twosomeBuildingRow(): BuildingRow {
     floors: 2,
     total_stores: 1,
     image_url: profile.store.coverImageUrl ?? profile.store.thumbnail_url ?? null,
+    portrait_image_url: null,
     categories: ['카페'],
     has_data: true,
     photo_north: null,
@@ -278,25 +282,47 @@ function generatedStoreDescription(
 
 export async function fetchBuildings(): Promise<BuildingRow[]> {
   try {
-    const { data, error } = await supabase
-      .from('buildings')
-      .select('*')
-      .eq('is_published', true)
-      .order('name');
+    const [{ data, error }, firstLinkedStores] = await Promise.all([
+      supabase.from('buildings').select('*').eq('is_published', true).order('name'),
+      supabase.from('stores').select('building_id,category,name', { count: 'exact' }).eq('is_published', true).range(0, 999),
+    ]);
 
     if (error) throw error;
+    if (firstLinkedStores.error) throw firstLinkedStores.error;
     if (!data || data.length === 0) return [];
 
-    return data.map((row) => ({
+    const linkedTotal = firstLinkedStores.count ?? firstLinkedStores.data?.length ?? 0;
+    const linkedPages = await Promise.all(Array.from(
+      { length: Math.max(0, Math.ceil(linkedTotal / 1000) - 1) },
+      (_, index) => (index + 1) * 1000,
+    ).map((from) => supabase.from('stores').select('building_id,category,name').eq('is_published', true).range(from, from + 999)));
+    const linkedPageError = linkedPages.find((page) => page.error)?.error;
+    if (linkedPageError) throw linkedPageError;
+    const linkedStores = [...(firstLinkedStores.data ?? []), ...linkedPages.flatMap((page) => page.data ?? [])];
+
+    const storeSummary = new Map<string, { count: number; categories: Set<string>; names: string[] }>();
+    for (const store of linkedStores ?? []) {
+      const buildingId = String(store.building_id ?? '');
+      if (!buildingId) continue;
+      const summary = storeSummary.get(buildingId) ?? { count: 0, categories: new Set<string>(), names: [] };
+      summary.count += 1;
+      if (store.category) summary.categories.add(String(store.category));
+      if (store.name && summary.names.length < 12) summary.names.push(String(store.name));
+      storeSummary.set(buildingId, summary);
+    }
+
+    return data.map((row) => {
+      const linked = storeSummary.get(String(row.id));
+      return ({
       id: row.id as string,
       name: row.name as string,
       address: (row.address as string) ?? '',
       lat: (row.lat as number | null) ?? null,
       lng: (row.lng as number | null) ?? null,
       floors: (row.floors as number | null) ?? null,
-      total_stores: (row.total_stores as number | null) ?? null,
       image_url: (row.image_url as string | null) ?? null,
-      categories: (row.categories as string[] | null) ?? null,
+      portrait_image_url: (row.portrait_image_url as string | null) ?? null,
+      categories: linked ? [...linked.categories] : ((row.categories as string[] | null) ?? null),
       has_data: (row.has_data as boolean) ?? false,
       photo_north: (row.photo_north as string | null) ?? null,
       photo_south: (row.photo_south as string | null) ?? null,
@@ -306,7 +332,9 @@ export async function fetchBuildings(): Promise<BuildingRow[]> {
       building_type: (row.building_type as string | null) ?? null,
       source_name: (row.source_name as string | null) ?? null,
       source_checked_at: (row.source_checked_at as string | null) ?? null,
-    }));
+      total_stores: linked?.count ?? ((row.total_stores as number | null) ?? null),
+      store_names: linked?.names ?? [],
+    }); });
   } catch (err) {
     console.error('[buildings] fetchBuildings error:', err);
     return [];
@@ -370,8 +398,9 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
           (bRow.address as string) ?? '',
           (bRow.parking_info as string) ?? '',
         ),
-        thumbnail_url: (row.thumbnail_url as string | null)
-          ?? (row.cover_image_url as string | null)
+        thumbnail_url: (row.cover_image_url as string | null)
+          ?? (row.landscape_image_url as string | null)
+          ?? (row.thumbnail_url as string | null)
           ?? null,
       });
     }
@@ -410,6 +439,17 @@ export async function fetchBuildingWithFloors(buildingId: string): Promise<Build
       name: bRow.name as string,
       address: (bRow.address as string) ?? '',
       parkingInfo: (bRow.parking_info as string) ?? '',
+      parkingType: (bRow.parking_type as string) ?? '',
+      parkingBaseFee: (bRow.parking_base_fee as string) ?? '',
+      parkingExtraFee: (bRow.parking_extra_fee as string) ?? '',
+      parkingDailyMax: (bRow.parking_daily_max as string) ?? '',
+      parkingFreeMinutes: (bRow.parking_free_minutes as number | null) ?? undefined,
+      parkingValidation: (bRow.parking_validation as string) ?? '',
+      parkingHours: (bRow.parking_hours as string) ?? '',
+      parkingPhone: (bRow.parking_phone as string) ?? '',
+      parkingSourceUrl: (bRow.parking_source_url as string) ?? '',
+      parkingVerifiedAt: (bRow.parking_verified_at as string) ?? '',
+      parkingStatus: (bRow.parking_status as Building['parkingStatus']) ?? 'needs_check',
       openTime: (bRow.open_time as string) ?? '',
       floors,
     };
@@ -511,8 +551,9 @@ export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
         floorLabel: (row.floor_label as string) ?? '',
         buildingId: (row.building_id as string) ?? '',
         buildingName: buildingNames[(row.building_id as string) ?? ''] ?? '',
-        thumbnail_url: (row.thumbnail_url as string | null)
-          ?? (row.cover_image_url as string | null)
+        thumbnail_url: (row.cover_image_url as string | null)
+          ?? (row.landscape_image_url as string | null)
+          ?? (row.thumbnail_url as string | null)
           ?? null,
       }));
     return stores;
@@ -549,8 +590,9 @@ export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]
       ),
       isPremium: (row.is_premium as boolean | undefined) ?? false,
       description: generatedStoreDescription(row as Record<string, unknown>),
-      thumbnail_url: (row.thumbnail_url as string | null)
-        ?? (row.cover_image_url as string | null)
+      thumbnail_url: (row.cover_image_url as string | null)
+        ?? (row.landscape_image_url as string | null)
+        ?? (row.thumbnail_url as string | null)
         ?? null,
     }));
     if (stores.length > 0) return stores;

@@ -28,19 +28,26 @@ export interface Post {
   content: string;
   author: string;
   authorDong: string;
+  authorAvatarUrl?: string | null;
+  authorUserId?: string | null;
+  isAnonymous?: boolean;
   createdAt: string;
   viewCount: number;
   likeCount: number;
   commentCount: number;
   images?: string[];
+  videos?: string[];
   isPinned?: boolean;
   isHot?: boolean;
+  isHidden?: boolean;
+  contentType?: "post" | "reel" | "story";
 }
 
 export interface Comment {
   id: string;
   postId: string;
   author: string;
+  authorAvatarUrl?: string | null;
   content: string;
   createdAt: string;
   likeCount: number;
@@ -137,7 +144,30 @@ export type StoreCategory =
   | "헬스/운동"
   | "반려동물"
   | "세탁"
+  | "베이커리"
+  | "부동산"
+  | "스터디카페"
+  | "안경원"
+  | "꽃집"
   | "기타";
+
+// Store suggestion (사용자 제안)
+export type SuggestionType = "simple" | "detail";
+
+export interface StoreSuggestion {
+  id?: string;
+  type: SuggestionType;
+  category?: StoreCategory | string;
+  storeName?: string;
+  buildingName?: string;
+  floor?: string;
+  phone?: string;
+  hours?: string;
+  description?: string;
+  message?: string;
+  contact?: string;
+  createdAt?: string;
+}
 
 export interface Building {
   id: string;
@@ -145,6 +175,17 @@ export interface Building {
   address: string;
   floors: Floor[];
   parkingInfo?: string;
+  parkingType?: string;
+  parkingBaseFee?: string;
+  parkingExtraFee?: string;
+  parkingDailyMax?: string;
+  parkingFreeMinutes?: number;
+  parkingValidation?: string;
+  parkingHours?: string;
+  parkingPhone?: string;
+  parkingSourceUrl?: string;
+  parkingVerifiedAt?: string;
+  parkingStatus?: "verified" | "needs_check" | "unavailable";
   openTime?: string;
 }
 
@@ -154,6 +195,9 @@ export interface Floor {
   stores: Store[];
   hasRestroom: boolean;
   restroomCode?: string;
+  restroomLocation?: string;            // 화장실 위치 (예: "엘리베이터 옆")
+  restroomGender?: string;              // '남여공용' | '남여분리' | '남자' | '여자'
+  restroomNote?: string;                // 추가 안내
 }
 
 // Coupons
@@ -225,6 +269,43 @@ export interface Listing {
   agencyPhone: string;
   listedAt: string;
   isNew: boolean;
+}
+
+// Gas
+export interface GasStation {
+  id: string;
+  name: string;
+  brandCode: string;
+  brandName: string;
+  brandColor: string;
+  brandBg: string;
+  brandShort: string;
+  address: string;
+  distanceKm: number;
+  lat: number;
+  lng: number;
+  area: string;
+  isSelf: boolean;
+  isAlttul: boolean;
+  prices: {
+    gasoline?: number;
+    diesel?: number;
+    lpg?: number;
+  };
+  priceStatus?: "live" | "cached" | "unmatched" | "unavailable";
+  priceReason?: string;
+  matchedName?: string;
+}
+
+export type GasSource = "opinet" | "cache" | "no_key" | "empty" | "error";
+
+export interface GasApiResponse {
+  stations: GasStation[];
+  source: GasSource;
+  timestamp: string;
+  success: boolean;
+  message?: string;
+  error?: string;
 }
 
 export interface Store {
