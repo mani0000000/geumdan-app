@@ -1,0 +1,31 @@
+name: Seed Golden Square
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/mypage-design-v2
+    paths:
+      - "scripts/batch/seed-golden-square.mjs"
+      - "supabase/migrations/20260811213000_seed_golden_square_verified.sql"
+      - ".github/workflows/seed-golden-square.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: 골든스퀘어 현장 검증 데이터 반영
+        run: node scripts/batch/seed-golden-square.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
