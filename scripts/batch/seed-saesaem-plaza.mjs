@@ -14,12 +14,22 @@ const rowPattern = new RegExp(`\\((${token}),(${token}),(${token}),(${token}),($
 const decode = (value) => value === "null" ? null : value.slice(1, -1).replaceAll("''", "'");
 const stores = [...valuesBlock.matchAll(rowPattern)].map((match) => {
   const [id, floor, name, category, phone, hours, emoji] = match.slice(1).map(decode);
+  const residentPurpose = category === "학원" ? "대상 학년·상담 시간·등하원 동선"
+    : category === "음식점" ? "대표 메뉴·포장·웨이팅"
+    : category === "카페" ? "좌석·포장·아이 동반"
+    : category === "미용" ? "예약·시술 시간·가격"
+    : category === "반려동물" ? "이용 대상·예약·안전 조건"
+    : category === "편의점" ? "택배·ATM·24시간 운영"
+    : "운영시간·이용 방법";
+  const imageUrl = `/api/store-visual?name=${encodeURIComponent(name)}&category=${encodeURIComponent(category)}`;
   return {
     id, building_id: "b_saesaem", name, category, floor_label: floor, phone, hours, emoji,
-    is_published: true, description: `${floor} 새샘프라자 현장 안내판에서 확인된 입점 매장입니다.`,
-    short_description: `${floor} · 새샘프라자`, parking_info: "건물 주차장 이용 가능. 방문처에서 웹 할인 등록 후 출차하세요.",
+    is_published: true, description: `${floor} 입점 확인 · ${residentPurpose} 중심으로 확인하세요.`,
+    short_description: `${floor} · ${residentPurpose}`, thumbnail_url: imageUrl, cover_image_url: imageUrl, landscape_image_url: imageUrl,
+    parking_info: "최초 10분 무료. 방문처 웹 할인 등록 후 출차하며 추가 요금은 10분당 1,000원입니다.",
     source_type: "onsite_directory", source_name: "새샘프라자 현장 층별 안내판 (2026-08-11 사용자 제공)",
     source_checked_at: checked, placement_verification: "onsite_directory", floor_verification: "onsite_directory", x: 5, y: 5, w: 90, h: 90,
+    extra_info: { local_focus: residentPurpose, image_kind: "category_fallback", image_disclosure: "매장 제공 사진 등록 전 업종 대표 이미지" },
   };
 });
 if (stores.length !== 35) throw new Error(`매장 수 검증 실패: ${stores.length}/35`);

@@ -95,7 +95,7 @@ function commerceFootprint(row: BuildingRow, index: number): [number, number][][
 function toGeoJSON(rows: BuildingRow[]) {
   return {
     type: "FeatureCollection" as const,
-    features: rows.filter(hasVerifiedPosition).map((row, index) => {
+    features: rows.filter(hasVerifiedPosition).filter((row) => row.id !== "b_saesaem").map((row, index) => {
       const [lng, lat] = positioned(row, index);
       const floorVerified = ["public_building_register", "official_document", "admin_verified"].includes(row.floor_verification ?? "");
       const hasKnownFloors = Number.isFinite(row.floors) && Number(row.floors) > 1;

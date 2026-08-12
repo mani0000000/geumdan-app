@@ -12,12 +12,20 @@ const [official, output] = await Promise.all([
 const parcelParts = official.features.filter((feature) => feature.properties?.pnu === parcelPnu);
 if (parcelParts.length === 0) throw new Error("새샘프라자 공식 건물 외곽을 찾지 못했습니다.");
 
-const polygons = parcelParts.flatMap((feature) => {
-  if (feature.geometry?.type === "MultiPolygon") return feature.geometry.coordinates;
-  if (feature.geometry?.type === "Polygon") return [feature.geometry.coordinates];
-  return [];
+// GIS 원본은 한 동을 설비/부속동까지 5개 조각으로 나눠 제공한다. 지도에서는
+// 현장에서 보이는 단순한 직육면체를 표현하도록 전체 외곽의 중심·방향만 사용한다.
+const center = [126.715446, 37.594821];
+const widthMeters = 27.5;
+const depthMeters = 14.5;
+const bearingDegrees = 2;
+const rad = bearingDegrees * Math.PI / 180;
+const rectangle = [[-1,-1],[1,-1],[1,1],[-1,1],[-1,-1]].map(([x,y]) => {
+  const east = x * widthMeters / 2;
+  const north = y * depthMeters / 2;
+  const rotatedEast = east * Math.cos(rad) - north * Math.sin(rad);
+  const rotatedNorth = east * Math.sin(rad) + north * Math.cos(rad);
+  return [center[0] + rotatedEast / (88_000 * Math.cos(center[1] * Math.PI / 180)), center[1] + rotatedNorth / 111_000];
 });
-if (polygons.length === 0) throw new Error("새샘프라자 건물 외곽 좌표가 비어 있습니다.");
 
 output.features = output.features.filter((feature) => feature.properties?.commerceId !== "b_saesaem");
 output.features.push({
@@ -29,12 +37,12 @@ output.features.push({
     kind: "commerce",
     height: 27.6,
     floors: 8,
-    confidence: "official",
+    confidence: "official_location_simplified_shape",
     commerceId: "b_saesaem",
     source: "국토교통부 GIS건물통합정보 · VWorld WFS + 현장 층별 안내판",
     sourceCheckedAt: "2026-08-11",
   },
-  geometry: { type: "MultiPolygon", coordinates: polygons },
+  geometry: { type: "Polygon", coordinates: [rectangle] },
 });
 output.metadata = {
   ...output.metadata,
@@ -43,4 +51,4 @@ output.metadata = {
 };
 
 await writeFile(outputPath, JSON.stringify(output));
-console.log(JSON.stringify({ commerceId: "b_saesaem", parts: parcelParts.length, height: 27.6, floors: 8 }));
+console.log(JSON.stringify({ commerceId: "b_saesaem", sourceParts: parcelParts.length, shape: "rectangular_prism", bearingDegrees, height: 27.6, floors: 8 }));
