@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-16T23:33:16.674Z",
+  "timestamp": "2026-08-16T23:55:57.179Z",
   "weather": {
     "temp": 23,
     "feelsLike": 26,
@@ -7,7 +7,7 @@
     "label": "날씨",
     "emoji": "☁️",
     "humidity": 94,
-    "windSpeed": 7,
+    "windSpeed": 8,
     "high": 27,
     "low": 22,
     "hourly": [
@@ -88,6 +88,6 @@
     "pm10Label": "좋음",
     "pm25Label": "좋음",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-16T23:33:16.674Z"
+    "fetchedAt": "2026-08-16T23:55:57.179Z"
   }
 }
