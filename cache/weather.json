@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-17T11:38:45.459Z",
+  "timestamp": "2026-08-17T11:58:46.588Z",
   "weather": {
     "temp": 26,
     "feelsLike": 26,
@@ -98,6 +98,6 @@
     "pm10Label": "좋음",
     "pm25Label": "보통",
     "source": "기상청",
-    "fetchedAt": "2026-08-17T11:38:45.459Z"
+    "fetchedAt": "2026-08-17T11:58:46.588Z"
   }
 }
