@@ -1,8 +1,8 @@
 {
-  "timestamp": "2026-08-18T22:40:35.371Z",
+  "timestamp": "2026-08-18T22:59:44.439Z",
   "weather": {
-    "temp": 24,
-    "feelsLike": 29,
+    "temp": 25,
+    "feelsLike": 30,
     "weatherCode": 51,
     "label": "날씨",
     "emoji": "🌦️",
@@ -93,6 +93,6 @@
     "pm10Label": "좋음",
     "pm25Label": "보통",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-18T22:40:35.371Z"
+    "fetchedAt": "2026-08-18T22:59:44.439Z"
   }
 }
