@@ -563,6 +563,34 @@ export async function fetchAllStoresFlat(): Promise<FlatStore[]> {
   }
 }
 
+// 홈 혜택 위젯은 전체 매장 상세가 아닌 매칭·표시에 필요한 최소 필드만 읽는다.
+// 대용량 설명/모듈 JSON과 count 기반 추가 페이지 조회를 피해서 초기 응답을 줄인다.
+export async function fetchBenefitStoresFlat(): Promise<FlatStore[]> {
+  try {
+    const [{ data: rows, error }, { data: buildingRows }] = await Promise.all([
+      supabase.from('stores')
+        .select('id,name,category,building_id,floor_label,thumbnail_url,cover_image_url,landscape_image_url,hours,is_open')
+        .eq('is_published', true)
+        .order('updated_at', { ascending: false })
+        .limit(1000),
+      supabase.from('buildings').select('id,name').eq('is_published', true),
+    ]);
+    if (error) throw error;
+    const names = new Map((buildingRows ?? []).map((row) => [String(row.id), String(row.name)]));
+    return (rows ?? []).map((row) => ({
+      id: String(row.id), name: String(row.name), category: (row.category as Store['category']) ?? '기타',
+      x: 0, y: 0, w: 10, h: 10,
+      hours: row.hours ?? undefined,
+      isOpen: getStoreOpenState(row.hours, row.is_open), isPremium: false,
+      thumbnail_url: row.cover_image_url ?? row.landscape_image_url ?? row.thumbnail_url ?? null,
+      floorLabel: row.floor_label ?? '', buildingId: row.building_id ?? '',
+      buildingName: names.get(String(row.building_id)) ?? '검단 매장',
+    }));
+  } catch {
+    return fallbackFlatStores().slice(0, 1000);
+  }
+}
+
 export async function fetchStoresByBuilding(buildingId: string): Promise<Store[]> {
   try {
     const { data, error } = await supabase
