@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-08-20T08:17:47.828Z",
+  "timestamp": "2026-08-20T09:16:46.393Z",
   "weather": {
     "temp": 28,
     "feelsLike": 28,
@@ -7,7 +7,7 @@
     "label": "맑음",
     "emoji": "☀️",
     "humidity": 86,
-    "windSpeed": 1,
+    "windSpeed": 2,
     "high": 26,
     "low": 22,
     "hourly": [
@@ -108,11 +108,11 @@
         "isToday": false
       }
     ],
-    "pm10": 32,
-    "pm25": 29,
+    "pm10": 31,
+    "pm25": 28,
     "pm10Label": "보통",
     "pm25Label": "보통",
     "source": "기상청",
-    "fetchedAt": "2026-08-20T08:17:47.828Z"
+    "fetchedAt": "2026-08-20T09:16:46.393Z"
   }
 }
