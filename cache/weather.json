@@ -1,13 +1,13 @@
 {
-  "timestamp": "2026-08-21T20:39:49.624Z",
+  "timestamp": "2026-08-21T20:59:38.763Z",
   "weather": {
-    "temp": 26,
-    "feelsLike": 26,
-    "weatherCode": 0,
-    "label": "맑음",
-    "emoji": "☀️",
-    "humidity": 88,
-    "windSpeed": 2,
+    "temp": 25,
+    "feelsLike": 25,
+    "weatherCode": 1,
+    "label": "비",
+    "emoji": "🌧️",
+    "humidity": 96,
+    "windSpeed": 1,
     "high": 30,
     "low": 23,
     "hourly": [
@@ -113,6 +113,6 @@
     "pm10Label": "좋음",
     "pm25Label": "좋음",
     "source": "기상청",
-    "fetchedAt": "2026-08-21T20:39:49.624Z"
+    "fetchedAt": "2026-08-21T20:59:38.763Z"
   }
 }
