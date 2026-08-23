@@ -1,8 +1,9 @@
 import { adminApiGet, adminApiPost } from "@/lib/db/admin-api";
+import { supabase } from "@/lib/supabase";
 
 export type SportType = "축구" | "야구" | "배구" | "농구" | "A매치";
 export type MatchStatus = "upcoming" | "live" | "finished" | "cancelled";
-export type TeamCode = "incheon_utd" | "ssg_landers" | "daehan_jumpos" | "incheon_el" | "national";
+export type TeamCode = "incheon_utd" | "ssg_landers" | "daehan_jumpos" | "pink_spiders" | "shinhan_sbirds" | "incheon_el" | "national";
 
 export interface SportsMatch {
   id: string;
@@ -25,6 +26,8 @@ export const TEAM_META: Record<TeamCode, { name: string; sport: SportType; color
   incheon_utd:    { name: "인천 유나이티드",  sport: "축구",  color: "#0033A0", emoji: "⚽", league: "K리그1" },
   ssg_landers:    { name: "SSG 랜더스",        sport: "야구",  color: "#CE0E2D", emoji: "⚾", league: "KBO" },
   daehan_jumpos:  { name: "대한항공 점보스",  sport: "배구",  color: "#003087", emoji: "🏐", league: "V리그" },
+  pink_spiders:   { name: "흥국생명 핑크스파이더스", sport: "배구", color: "#D71969", emoji: "🏐", league: "V리그" },
+  shinhan_sbirds: { name: "신한은행 에스버드", sport: "농구", color: "#164194", emoji: "🏀", league: "WKBL" },
   incheon_el:     { name: "인천 전자랜드",    sport: "농구",  color: "#E31837", emoji: "🏀", league: "KBL" },
   national:       { name: "대한민국",          sport: "A매치", color: "#C60C30", emoji: "🇰🇷", league: "A매치" },
 };
@@ -55,6 +58,8 @@ export const TEAM_LOGOS: Record<TeamCode, TeamLogoData> = {
   incheon_utd:   { bg: "#0033A0", fg: "#ffffff", abbr: "ICU" },
   ssg_landers:   { bg: "#CE0E2D", fg: "#ffffff", abbr: "SSG" },
   daehan_jumpos: { bg: "#003087", fg: "#FFD700", abbr: "KAL" },
+  pink_spiders:  { bg: "#D71969", fg: "#ffffff", abbr: "HKS" },
+  shinhan_sbirds:{ bg: "#164194", fg: "#ffffff", abbr: "SHB" },
   incheon_el:    { bg: "#E31837", fg: "#ffffff", abbr: "ICH" },
   national:      { bg: "#C60C30", fg: "#ffffff", abbr: "KOR" },
 };
@@ -181,7 +186,7 @@ export async function adminFetchSportsAssets(): Promise<SportsAssets> {
   try {
     // 각 팀 로고 로드
     const teamLogos: Partial<Record<TeamCode, string>> = {};
-    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","incheon_el","national"];
+    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","pink_spiders","shinhan_sbirds","incheon_el","national"];
     await Promise.all(teamCodes.map(async tc => {
       const v = await settingsGet(`sports_team_logo_${tc}`);
       if (v) teamLogos[tc] = v;
@@ -234,16 +239,17 @@ export async function adminSaveAwayTeamLogo(teamName: string, url: string | null
 
 export async function fetchSportsAssets(): Promise<SportsAssets> {
   try {
-    // 공개 DB 라우트로 일괄 조회 (site_settings 키 패턴 매칭)
-    const res = await fetch(`/api/admin/db?table=site_settings&select=key,value&eq=key=like.sports_%25`);
-    if (!res.ok) return { ...DEFAULT_SPORTS_ASSETS };
-    const { data } = await res.json() as { data?: { key: string; value: string }[] };
-    if (!data?.length) return { ...DEFAULT_SPORTS_ASSETS };
-
-    const map = Object.fromEntries(data.map(r => [r.key, r.value]));
+    const keys = [
+      "sports_broadcast_channels",
+      "sports_away_team_logos",
+      ..."incheon_utd,ssg_landers,daehan_jumpos,pink_spiders,shinhan_sbirds,incheon_el,national".split(",").map(code => `sports_team_logo_${code}`),
+      ...["K리그1", "KBO", "V리그", "KBL", "A매치"].map(leagueKey),
+    ];
+    const values = await Promise.all(keys.map(settingsGet));
+    const map = Object.fromEntries(keys.map((key, index) => [key, values[index]]));
     const teamLogos: Partial<Record<TeamCode, string>> = {};
     const leagueLogos: Partial<Record<string, string>> = {};
-    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","incheon_el","national"];
+    const teamCodes: TeamCode[] = ["incheon_utd","ssg_landers","daehan_jumpos","pink_spiders","shinhan_sbirds","incheon_el","national"];
     const leagues = ["K리그1","KBO","V리그","KBL","A매치"];
 
     for (const tc of teamCodes) {
@@ -269,11 +275,13 @@ export async function fetchSportsAssets(): Promise<SportsAssets> {
 
 export async function fetchUpcomingSportsMatches(limit = 20): Promise<SportsMatch[]> {
   try {
-    const res = await fetch(
-      `/api/admin/db?table=sports_matches&select=*&order=match_date&eq=active.eq.true&limit=${limit}`
-    );
-    if (!res.ok) return [];
-    const { data } = await res.json();
+    const { data, error } = await supabase
+      .from("sports_matches")
+      .select("*")
+      .eq("active", true)
+      .order("match_date", { ascending: true })
+      .limit(limit);
+    if (error) return [];
     return (data ?? []) as SportsMatch[];
   } catch {
     return [];
