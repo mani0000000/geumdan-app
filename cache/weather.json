@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-08-23T11:33:51.081Z",
+  "timestamp": "2026-08-23T11:57:25.055Z",
   "weather": {
-    "temp": 26,
+    "temp": 25,
     "feelsLike": 31,
     "weatherCode": 0,
     "label": "날씨",
@@ -113,6 +113,6 @@
     "pm10Label": "좋음",
     "pm25Label": "보통",
     "source": "Open-Meteo",
-    "fetchedAt": "2026-08-23T11:33:51.081Z"
+    "fetchedAt": "2026-08-23T11:57:25.055Z"
   }
 }
