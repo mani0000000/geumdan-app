@@ -64,11 +64,17 @@ const FALLBACK: Record<string, SportsMatch[]> = {
     { id: "iu-next", sport: "축구", team_code: "incheon_utd", home_team: "인천", away_team: "전북", home_score: null, away_score: null, match_date: "2026-07-18T19:30:00+09:00", venue: "인천축구전용경기장", status: "upcoming", ticket_url: "https://www.incheonutd.com/ticket/ticket_intro.php", broadcast: null, sort_order: 1, active: true },
     { id: "iu-next2", sport: "축구", team_code: "incheon_utd", home_team: "울산", away_team: "인천", home_score: null, away_score: null, match_date: "2026-07-21T19:30:00+09:00", venue: "울산문수축구경기장", status: "upcoming", ticket_url: null, broadcast: null, sort_order: 2, active: true },
   ],
+  jumbos: [
+    { id: "jumbos-2627-opener", sport: "배구", team_code: "daehan_jumpos", home_team: "대한항공", away_team: "현대캐피탈", home_score: null, away_score: null, match_date: "2026-10-31T14:00:00+09:00", venue: "인천계양체육관", status: "upcoming", ticket_url: "https://www.ticketlink.co.kr/sports/volleyball", broadcast: null, sort_order: 0, active: true },
+  ],
   spiders: [
+    { id: "spiders-2627-opener", sport: "배구", team_code: "pink_spiders", home_team: "흥국생명", away_team: "SOOP", home_score: null, away_score: null, match_date: "2026-11-01T16:00:00+09:00", venue: "인천삼산월드체육관", status: "upcoming", ticket_url: "https://www.ticketlink.co.kr/sports/volleyball", broadcast: null, sort_order: 0, active: true },
     { id: "ps-last", sport: "배구", team_code: "pink_spiders", home_team: "흥국생명", away_team: "한국도로공사", home_score: 0, away_score: 3, match_date: "2026-03-13T19:00:00+09:00", venue: "인천삼산월드체육관", status: "finished", ticket_url: null, broadcast: null, sort_order: 0, active: true },
     { id: "ps-last2", sport: "배구", team_code: "pink_spiders", home_team: "흥국생명", away_team: "IBK기업은행", home_score: 3, away_score: 2, match_date: "2026-03-10T19:00:00+09:00", venue: "인천삼산월드체육관", status: "finished", ticket_url: null, broadcast: null, sort_order: 1, active: true },
   ],
   sbirds: [
+    { id: "sb-futures-0731", sport: "농구", team_code: "shinhan_sbirds", home_team: "우리은행", away_team: "신한은행", home_score: 59, away_score: 64, match_date: "2026-07-31T12:00:00+09:00", venue: "2026 WKBL 퓨처스리그", status: "finished", ticket_url: null, broadcast: "date-only", sort_order: 0, active: true },
+    { id: "sb-futures-0730", sport: "농구", team_code: "shinhan_sbirds", home_team: "신한은행", away_team: "베트남", home_score: 105, away_score: 27, match_date: "2026-07-30T12:00:00+09:00", venue: "2026 WKBL 퓨처스리그", status: "finished", ticket_url: null, broadcast: "date-only", sort_order: 1, active: true },
     { id: "sb-last", sport: "농구", team_code: "shinhan_sbirds", home_team: "신한은행", away_team: "하나은행", home_score: 77, away_score: 53, match_date: "2026-04-01T19:00:00+09:00", venue: "인천도원체육관", status: "finished", ticket_url: null, broadcast: null, sort_order: 0, active: true },
     { id: "sb-last2", sport: "농구", team_code: "shinhan_sbirds", home_team: "신한은행", away_team: "KB스타즈", home_score: 77, away_score: 55, match_date: "2026-03-23T19:00:00+09:00", venue: "인천도원체육관", status: "finished", ticket_url: null, broadcast: null, sort_order: 1, active: true },
   ],
@@ -193,7 +199,8 @@ export default function IncheonSports({ compact = false }: { compact?: boolean }
   }, [matches, team]);
   const upcoming = teamMatches.filter((match) => match.status === "upcoming" || match.status === "live").sort((a, b) => +new Date(a.match_date) - +new Date(b.match_date));
   const finished = teamMatches.filter((match) => match.status === "finished").sort((a, b) => +new Date(b.match_date) - +new Date(a.match_date));
-  const hero = upcoming[0] ?? (!compact ? finished[0] : undefined);
+  const latestFinishedIsRecent = finished[0] && Date.now() - +new Date(finished[0].match_date) < 45 * 24 * 60 * 60 * 1000;
+  const hero = upcoming[0] ?? ((!compact || latestFinishedIsRecent) ? finished[0] : undefined);
 
   return (
     <section className={compact ? "mb-5" : "pb-8"}>
@@ -270,7 +277,7 @@ export default function IncheonSports({ compact = false }: { compact?: boolean }
           <div className="overflow-hidden rounded-[20px] bg-white">
             {[...upcoming, ...finished].slice(0, 12).map((match, index) => (
               <div key={match.id} className={`flex items-center gap-3 px-4 py-3.5 ${index ? "border-t border-[#ececf0]" : ""}`}>
-                <div className="w-12 shrink-0 text-center"><p className="text-[11px] font-bold text-[#86868b]">{dateLabel(match.match_date)}</p><p className="text-[13px] font-black text-[#1d1d1f]">{timeLabel(match.match_date)}</p></div>
+                <div className="w-12 shrink-0 text-center"><p className="text-[11px] font-bold text-[#86868b]">{dateLabel(match.match_date)}</p><p className="text-[13px] font-black text-[#1d1d1f]">{match.broadcast === "date-only" ? "결과" : timeLabel(match.match_date)}</p></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-1.5">
                     <MiniClubMark name={match.home_team} selected={team} opponentLogos={opponentLogos} />
