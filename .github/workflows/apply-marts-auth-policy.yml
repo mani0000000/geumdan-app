@@ -1,0 +1,31 @@
+name: Apply Marts Auth Policy
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - fix/mypage-design-v2
+    paths:
+      - "scripts/apply-marts-auth-policy.mjs"
+      - "supabase/migrations/20260823100000_marts_authenticated_read.sql"
+      - ".github/workflows/apply-marts-auth-policy.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: 로그인 사용자 마트 조회 정책 적용
+        run: node scripts/apply-marts-auth-policy.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
