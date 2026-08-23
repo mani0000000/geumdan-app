@@ -15,7 +15,7 @@ export const revalidate = 1800;
 const NX = 54;
 const NY = 124;
 const REMOTE_WEATHER_CACHE_URL =
-  "https://raw.githubusercontent.com/mani0000000/geumdan-app/data-cache/cache/weather.json";
+  `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "")}/storage/v1/object/public/batch-cache/weather/latest.json`;
 
 // 기상청 SKY/PTY → 날씨 코드 매핑
 function kmaToWeather(sky: number, pty: number): { label: string; emoji: string } {
@@ -364,7 +364,7 @@ export async function GET() {
       return NextResponse.json(remoteCache, {
         headers: {
           "Cache-Control": "public, s-maxage=300, stale-while-revalidate=900",
-          "X-Weather-Source": "data-cache",
+          "X-Weather-Source": "supabase-storage",
         },
       });
     }

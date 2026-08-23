@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { uploadJsonCache } from './supabase-storage-cache.mjs';
 
 /**
  * fetch-weather.mjs — 기상청 API → Supabase weather_cache 저장
@@ -14,7 +13,6 @@ import { dirname } from 'node:path';
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const KMA_KEY      = process.env.DATA_GO_KR_API_KEY ?? '';
-const CACHE_OUTPUT = process.env.BATCH_CACHE_OUTPUT ?? '';
 const canSaveToSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
 // ── 기상청 격자 (검단신도시) ──────────────────────────────────
@@ -273,10 +271,7 @@ async function saveToSupabase(data) {
 }
 
 async function writeWeatherCache(data) {
-  if (!CACHE_OUTPUT) return false;
-  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
-  await writeFile(CACHE_OUTPUT, `${JSON.stringify({ timestamp: data.fetchedAt, weather: data }, null, 2)}\n`, 'utf8');
-  console.log(`  ✓ 복구 캐시 저장: ${CACHE_OUTPUT}`);
+  await uploadJsonCache('weather/latest.json', { timestamp: data.fetchedAt, weather: data });
   return true;
 }
 
@@ -327,7 +322,7 @@ if (canSaveToSupabase) {
 } else if (cacheSaved) {
   console.warn('  ⚠️  Supabase 환경변수 없음: 캐시 전용으로 완료합니다.');
 } else {
-  throw new Error('SUPABASE_URL / SUPABASE_SERVICE_KEY 또는 BATCH_CACHE_OUTPUT이 필요합니다.');
+  throw new Error('SUPABASE_URL / SUPABASE_SERVICE_KEY가 필요합니다.');
 }
 
 console.log(`✅ 완료 (${Date.now() - t0}ms): ${data.source} ${data.temp}°C ${data.emoji}`);

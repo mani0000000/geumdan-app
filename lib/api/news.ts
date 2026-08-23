@@ -39,6 +39,7 @@ const NAVER_ID      = process.env.NEXT_PUBLIC_NAVER_CLIENT_ID  ?? "";
 const NAVER_SECRET  = process.env.NEXT_PUBLIC_NAVER_CLIENT_SECRET ?? "";
 
 const CACHE_TTL_MS  = 4 * 60 * 60 * 1000; // 4시간
+const REMOTE_YOUTUBE_CACHE = `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "")}/storage/v1/object/public/batch-cache/youtube/latest.json`;
 
 // ── 캐시 ──────────────────────────────────────────────────────
 function isFresh(fetchedAt: string): boolean {
@@ -59,14 +60,15 @@ export async function fetchCachedNews(): Promise<NewsArticle[]> {
 }
 
 export async function fetchCachedYouTube(): Promise<YouTubeVideo[]> {
-  try {
-    const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: "no-store" });
-    if (!res.ok) return [];
-    const d = await res.json();
-    if (Array.isArray(d.videos) && d.videos.length > 0 && isFresh(d.fetchedAt)) {
-      return d.videos as YouTubeVideo[];
-    }
-  } catch { /* ignore */ }
+  for (const url of [REMOTE_YOUTUBE_CACHE, `${BASE_PATH}/cache/youtube.json`]) {
+    if (!url.startsWith("http") && !url.startsWith("/")) continue;
+    try {
+      const res = await fetch(url, { cache: "no-store", signal: AbortSignal.timeout(4500) });
+      if (!res.ok) continue;
+      const d = await res.json();
+      if (Array.isArray(d.videos) && d.videos.length > 0 && isFresh(d.fetchedAt)) return d.videos as YouTubeVideo[];
+    } catch { /* try bundled snapshot */ }
+  }
   return [];
 }
 

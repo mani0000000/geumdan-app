@@ -1,22 +1,24 @@
 /**
  * lib/db/youtube.ts
  * Supabase youtube_videos 테이블에서 영상 목록 조회
- * Supabase 미설정 시 public/cache/youtube.json 정적 캐시 fallback
+ * Supabase 조회 실패 시 Storage JSON 캐시 fallback
  */
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import type { YouTubeVideo } from '@/lib/api/news';
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+const REMOTE_YOUTUBE_CACHE = `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '')}/storage/v1/object/public/batch-cache/youtube/latest.json`;
 
 async function fetchFromStaticCache(): Promise<YouTubeVideo[]> {
-  try {
-    const res = await fetch(`${BASE_PATH}/cache/youtube.json`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const d = await res.json();
-    if (Array.isArray(d.videos) && d.videos.length > 0) {
-      return d.videos as YouTubeVideo[];
-    }
-  } catch { /* ignore */ }
+  for (const url of [REMOTE_YOUTUBE_CACHE, `${BASE_PATH}/cache/youtube.json`]) {
+    if (!url.startsWith('http') && !url.startsWith('/')) continue;
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(4500) });
+      if (!res.ok) continue;
+      const d = await res.json();
+      if (Array.isArray(d.videos) && d.videos.length > 0) return d.videos as YouTubeVideo[];
+    } catch { /* try bundled snapshot */ }
+  }
   return [];
 }
 

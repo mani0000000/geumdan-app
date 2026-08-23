@@ -14,15 +14,13 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { uploadJsonCache } from './supabase-storage-cache.mjs';
 
 const SUPABASE_URL        = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
 const OPINET_KEY          = (process.env.OPINET_API_KEY ?? 'F260518486').trim();
-const CACHE_OUTPUT        = process.env.BATCH_CACHE_OUTPUT ?? '';
 
-if ((!SUPABASE_URL || !SUPABASE_SERVICE_KEY) && !CACHE_OUTPUT) {
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   console.error('❌ Missing: SUPABASE_URL, SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
@@ -211,7 +209,6 @@ function isGeumdanServiceArea(entry) {
 }
 
 async function writeGasCache(stationMap, fetchedAt) {
-  if (!CACHE_OUTPUT) return false;
   const stations = Array.from(stationMap, ([uniId, entry]) => {
     const station = entry.station;
     const point = katecToWgs84(Number(station.GIS_X_COOR), Number(station.GIS_Y_COOR));
@@ -245,15 +242,13 @@ async function writeGasCache(stationMap, fetchedAt) {
     };
   }).filter(Boolean);
 
-  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
-  await writeFile(CACHE_OUTPUT, `${JSON.stringify({
+  await uploadJsonCache('gas/latest.json', {
     stations,
     source: 'cache',
     timestamp: fetchedAt,
     success: stations.length > 0,
     message: `오피넷 정기 수집 ${stations.length}개`,
-  }, null, 2)}\n`, 'utf8');
-  console.log(`  ✅ 정적 캐시 저장: ${CACHE_OUTPUT} (${stations.length}개)`);
+  });
   return stations.length > 0;
 }
 
@@ -371,7 +366,7 @@ async function main() {
   if (dbLoadErr) {
     if (isRestrictedProjectError(dbLoadErr) && cacheSaved) {
       console.warn(`  ⚠️ Supabase 제한 감지 — 정적 캐시로 수집 결과 보존: ${dbLoadErr.message}`);
-      console.log('✅ DB 복구 전까지 data-cache 폴백으로 서비스합니다.');
+      console.log('✅ DB 복구 전까지 Supabase Storage 폴백으로 서비스합니다.');
       return;
     }
     throw new Error(`DB 로드 실패: ${dbLoadErr.message}`);

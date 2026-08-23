@@ -1,13 +1,10 @@
-name: Update Content Cache
+name: Update Content Cache (manual no-push)
 
 on:
-  schedule:
-    - cron: '0 23 * * *'   # KST 08:00 (UTC 23:00 전날)
-    - cron: '0 11 * * *'   # KST 20:00 (UTC 11:00)
-  workflow_dispatch:          # Allow manual trigger
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   update-cache:
@@ -28,12 +25,5 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           APIFY_API_TOKEN: ${{ secrets.APIFY_API_TOKEN }}
 
-      - name: Commit and push if cache changed
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add public/cache/
-          git diff --staged --quiet || (
-            git commit -m "chore: refresh news/youtube/instagram cache $(date -u '+%Y-%m-%d %H:%M UTC')" &&
-            git push
-          )
+      - name: Show generated files without committing
+        run: git status --short public/cache/ || true

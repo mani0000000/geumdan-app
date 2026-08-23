@@ -10,21 +10,19 @@
  * - 맛집·카페·소식·가볼만한 곳·교통·부동산·가족·상가·생활 주제별 검색
  */
 import { createClient } from '@supabase/supabase-js';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
 import {
   fetchCuratedYouTubeVideos,
   toCacheVideo,
   toSupabaseRow,
   YOUTUBE_TOPIC_GROUPS,
 } from './youtube-curation.mjs';
+import { uploadJsonCache } from './supabase-storage-cache.mjs';
 
 const SUPABASE_URL = process.env.SUPABASE_URL ?? '';
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY ?? '';
 const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY ?? process.env.NEXT_PUBLIC_YOUTUBE_API_KEY ?? '';
-const CACHE_OUTPUT = process.env.BATCH_CACHE_OUTPUT ?? '';
 
-if ((!SUPABASE_URL || !SUPABASE_KEY) && !CACHE_OUTPUT) {
+if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('❌ SUPABASE_URL or SUPABASE_SERVICE_KEY not set');
   process.exit(1);
 }
@@ -52,14 +50,11 @@ function isRestrictedProjectError(error) {
 }
 
 async function writeCache(videos, fetchedAt) {
-  if (!CACHE_OUTPUT) return false;
-  await mkdir(dirname(CACHE_OUTPUT), { recursive: true });
-  await writeFile(CACHE_OUTPUT, `${JSON.stringify({
+  await uploadJsonCache('youtube/latest.json', {
     fetchedAt,
     source: 'youtube-curation',
     videos: videos.map((video, index) => toCacheVideo(video, index)),
-  }, null, 2)}\n`, 'utf8');
-  console.log(`  ✅ 정적 캐시 저장: ${CACHE_OUTPUT} (${videos.length}개)`);
+  });
   return true;
 }
 
@@ -220,7 +215,7 @@ if (!result.ok) {
   console.error(label, result.error?.message ?? result.error);
   await saveBatchStatus({ videos: 0, errors: 1, reason: result.error?.message ?? 'upsert-failed' });
   if (restricted && cacheSaved) {
-    console.log('✅ DB 복구 전까지 data-cache 폴백으로 서비스합니다.');
+    console.log('✅ DB 복구 전까지 Supabase Storage 폴백으로 서비스합니다.');
     process.exit(0);
   }
   process.exit(1);

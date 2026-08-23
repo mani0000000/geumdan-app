@@ -15,6 +15,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const FALLBACK_OPINET_KEY = "F260518486";
 const RADIUS_M = 12000;
+const REMOTE_GAS_CACHE = `${(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/$/, "")}/storage/v1/object/public/batch-cache/gas/latest.json`;
 const PRODCD = { gasoline: "B027", diesel: "D047", lpg: "K015" } as const;
 
 // ── 브랜드 메타 ─────────────────────────────────────────────────────────
@@ -29,6 +30,21 @@ const BRAND_META: Record<string, { name: string; color: string; bg: string; shor
   ETC: { name: "자가상표",     color: "#6B7280", bg: "#F3F4F6", short: "일반" },
 };
 function metaFor(code: string) { return BRAND_META[code] ?? BRAND_META.ETC; }
+
+async function fetchStorageGasCache(): Promise<GasApiResponse | null> {
+  if (!REMOTE_GAS_CACHE.startsWith("http")) return null;
+  try {
+    const response = await fetch(REMOTE_GAS_CACHE, {
+      next: { revalidate: 900 },
+      signal: AbortSignal.timeout(4500),
+    });
+    if (!response.ok) return null;
+    const payload = await response.json() as GasApiResponse;
+    return Array.isArray(payload.stations) && payload.stations.length > 0 ? payload : null;
+  } catch {
+    return null;
+  }
+}
 
 // ── KATEC → WGS84 ────────────────────────────────────────────────────────
 function katecToWgs84(x: number, y: number): { lat: number; lng: number } | null {
@@ -129,11 +145,12 @@ export async function GET(_req: NextRequest) {
   const timestamp = new Date().toISOString();
 
   // 1. DB + Opinet 병렬 로드
-  const [dbStations, gasoline, diesel, lpg] = await Promise.all([
+  const [dbStations, gasoline, diesel, lpg, storageCache] = await Promise.all([
     loadDbStations(),
     fetchOpinetByProduct(PRODCD.gasoline, apiKey),
     fetchOpinetByProduct(PRODCD.diesel,   apiKey),
     fetchOpinetByProduct(PRODCD.lpg,      apiKey),
+    fetchStorageGasCache(),
   ]);
 
   const opinetOk = gasoline.ok || diesel.ok || lpg.ok;
@@ -223,6 +240,11 @@ export async function GET(_req: NextRequest) {
     });
 
     const hasPrice = stations.some(s => s.prices.gasoline != null || s.prices.diesel != null);
+    if (!hasPrice && storageCache) {
+      return NextResponse.json(storageCache, {
+        headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" },
+      });
+    }
     const source: GasSource = hasPrice ? "opinet" : (opinetOk ? "empty" : "error");
 
     return NextResponse.json(
@@ -233,6 +255,11 @@ export async function GET(_req: NextRequest) {
 
   // 3-B. DB 없을 때 — Opinet 결과를 직접 stations 로 변환
   if (opinetAll.size === 0) {
+    if (storageCache) {
+      return NextResponse.json(storageCache, {
+        headers: { "Cache-Control": "public, s-maxage=900, stale-while-revalidate=3600" },
+      });
+    }
     return NextResponse.json(
       { stations: [], source: "error" as GasSource, timestamp, success: false } as GasApiResponse,
       { headers: { "Cache-Control": "public, s-maxage=60" } },
